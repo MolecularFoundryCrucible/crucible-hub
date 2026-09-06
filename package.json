@@ -28,8 +28,9 @@
     "design:check": "node scripts/check-design-tokens.mjs",
     "docs:check": "node scripts/check-doc-links.mjs",
     "secrets:check": "node scripts/check-secrets.mjs",
-    "skills:list": "intent list --no-notices",
-    "skills:stale": "intent stale",
+    "skills:list": "node node_modules/@tanstack/intent/dist/cli.mjs list --no-notices",
+    "skills:load": "node node_modules/@tanstack/intent/dist/cli.mjs load",
+    "skills:stale": "node node_modules/@tanstack/intent/dist/cli.mjs stale",
     "audit": "npm audit --audit-level=high",
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run api:check && npm run boundary:check && npm run design:check && npm run docs:check && npm run secrets:check && npm run build"
   },

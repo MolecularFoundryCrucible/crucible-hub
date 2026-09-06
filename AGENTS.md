@@ -4,8 +4,8 @@
 
 Before a substantial change:
 
-- Run `npx @tanstack/intent@latest list` from the workspace root.
-- If a listed skill matches the work, load it with `npx @tanstack/intent@latest load <package>#<skill>` before editing.
+- Run `npm run skills:list` from the workspace root.
+- If a listed skill matches the work, load it with `npm run skills:load -- <package>#<skill>` before editing.
 - Follow the loaded `SKILL.md`. In a monorepo, run the check at the workspace root and choose the most specific package skill.
 
 <!-- intent-skills:end -->

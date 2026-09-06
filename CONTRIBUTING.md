@@ -25,20 +25,21 @@ Add an `Unreleased` changelog entry only for user, operator, contributor, privac
 
 ## Canonical commands
 
-| Command                   | Purpose                                                                                                |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `npm run validate`        | Full formatting, lint, type, unit, contract, boundary, token, link, secret, and production-build suite |
-| `npm run test:browser`    | Chromium shell, responsive, theme, and accessibility checks                                            |
-| `npm run test:visual`     | Committed design-system, route-scenario, and project-inspector baselines                               |
-| `npm run test:production` | Production build, Node runtime, `/hub` paths, health, shutdown, and server-function checks             |
-| `npm run api:generate`    | Regenerate TypeScript from the pinned OpenAPI artifact                                                 |
-| `npm run api:check`       | Verify artifact digest and deterministic generated output                                              |
-| `npm run boundary:check`  | Verify browser-reachable code cannot import the server-only adapter                                    |
-| `npm run docs:check`      | Verify local documentation links                                                                       |
-| `npm run secrets:check`   | Scan for credentials and secret-like values                                                            |
-| `npm run skills:list`     | List allowlisted skills from installed TanStack packages                                               |
-| `npm run skills:stale`    | Report stale TanStack skill sources without updating them                                              |
-| `npm run audit`           | Fail on high or critical npm advisories                                                                |
+| Command                                    | Purpose                                                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `npm run validate`                         | Full formatting, lint, type, unit, contract, boundary, token, link, secret, and production-build suite |
+| `npm run test:browser`                     | Chromium shell, responsive, theme, and accessibility checks                                            |
+| `npm run test:visual`                      | Committed design-system, route-scenario, and project-inspector baselines                               |
+| `npm run test:production`                  | Production build, Node runtime, `/hub` paths, health, shutdown, and server-function checks             |
+| `npm run api:generate`                     | Regenerate TypeScript from the pinned OpenAPI artifact                                                 |
+| `npm run api:check`                        | Verify artifact digest and deterministic generated output                                              |
+| `npm run boundary:check`                   | Verify browser-reachable code cannot import the server-only adapter                                    |
+| `npm run docs:check`                       | Verify local documentation links                                                                       |
+| `npm run secrets:check`                    | Scan for credentials and secret-like values                                                            |
+| `npm run skills:list`                      | List allowlisted skills from installed TanStack packages                                               |
+| `npm run skills:load -- <package>#<skill>` | Load an installed TanStack skill for the current task                                                  |
+| `npm run skills:stale`                     | Report stale TanStack skill sources without updating them                                              |
+| `npm run audit`                            | Fail on high or critical npm advisories                                                                |
 
 Install Chromium once with `npx playwright install chromium`. CI runs the canonical suite. Browser and production specs use [`tests/fixtures.ts`](tests/fixtures.ts), whose automatic fixture fails tests on uncaught page errors.
 
