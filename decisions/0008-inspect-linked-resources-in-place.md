@@ -59,4 +59,4 @@ The [roadmap](../docs/roadmap.md#resource-inspector-slice) owns the ordered impl
 - [TanStack destination and history state options](https://tanstack.com/router/latest/docs/api/router/ToOptionsType)
 - [shadcn Sheet](https://ui.shadcn.com/docs/components/base/sheet)
 - [Base UI Dialog modality and dismissal](https://base-ui.com/react/components/dialog)
-- [API-owned OpenAPI artifact](../../crucible-api/openapi/crucible-api.json)
+- API-owned `crucible-api/openapi/crucible-api.json` artifact

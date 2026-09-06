@@ -54,5 +54,5 @@ Reuses Python client behavior but requires a second runtime or bridge and makes 
 
 ## References
 
-- [`crucible-api/openapi/crucible-api.json`](../../crucible-api/openapi/crucible-api.json)
+- API-owned `crucible-api/openapi/crucible-api.json` artifact
 - [OpenAPI TypeScript and openapi-fetch](https://openapi-ts.dev/openapi-fetch/)
