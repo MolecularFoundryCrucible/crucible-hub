@@ -1,0 +1,84 @@
+# Crucible Hub Product Brief
+
+Status: Draft 0.1
+
+Date: 2026-09-06
+
+## Product statement
+
+Crucible Hub is the authenticated browser workspace for scientists to find, organize, understand, share, and manage the Crucible resources they can access. It extends the approachable, capability-aware experience of Crucible Lens to dense desktop research workflows.
+
+## Product boundaries
+
+| Authority                 | Hub responsibility                                                                                                                                                      |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crucible-api`            | Hub consumes its contract and presents API-authorized resources and operations. The API owns authorization, persistence, lifecycle, uploads, and scientific processing. |
+| `crucible-lens`           | Hub follows compatible interaction principles while designing for the browser.                                                                                          |
+| `crucible_graph_explorer` | Hub incrementally replaces proven generic workflows with native experiences. Specialized viewers move only when individually ready.                                     |
+| `nano-crucible`           | Hub mirrors supported user workflows where they suit a browser, without adopting Python or CLI architecture.                                                            |
+
+Hub uses stable MFIDs for routes, links, cache identity, and relationships. Editable slugs are labels and lookup input, not canonical identity. Hub capability guidance affects presentation only: the API always authorizes the operation.
+
+## Product principles
+
+1. Make scientific context clear: resource, project, instrument, provenance, owner, access, and next action belong in one understandable story.
+2. Make mutations trustworthy: validate intent, preserve failed drafts, show partial progress, retry only incomplete work, and preview consequential operations.
+3. Keep large workspaces responsive: load collections before detail, paginate, retain readable data during refresh, and never cache credentials or signed download URLs.
+4. Keep view state shareable: filters, tabs, selections, and graph focus belong in useful, validated URLs.
+5. Design for accessible keyboard and screen-reader use, visible focus, contrast, reduced motion, and narrow layouts from the start.
+
+## Users and jobs
+
+| User                   | Primary jobs                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Researcher             | Find resources, inspect data and provenance, create records, upload files, edit allowed metadata, and recover from incomplete work.        |
+| Project manager        | Understand project data, manage direct members and roles, review future join requests, organize resources, and manage authorized access.   |
+| Instrument manager     | Maintain instrument identity and lifecycle, manage operators, and inspect produced datasets.                                               |
+| Platform administrator | Handle exceptional review and account workflows in a separate administrative area. This is not required for the first user-facing release. |
+
+## Product destinations
+
+Hub provides Home, Projects, Data, Instruments, Search, Activity, Account, and a capability-gated Admin area. The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
+
+The core product surfaces are:
+
+- Home for immediate research continuation and attention that has an accepted data and privacy basis.
+- Data for cross-project sample and dataset discovery, filtering, collection preview, and canonical detail navigation.
+- Project and instrument workspaces for scoped data browsing, context, and capability-gated management.
+- Resource detail for identity, descriptive and scientific metadata, files, relationships, access, activity, and lifecycle-aware actions.
+- Search and direct MFID lookup for bounded cross-resource discovery.
+
+Accessible and owned resources are distinct sets. Hub must not invent a personal-project model or emulate unavailable server-side filtering with incomplete client-side scans.
+
+## High-value workflows
+
+### Find and understand
+
+Scientists navigate from Home, Projects, Data, Instruments, Search, or an MFID link to canonical resource detail. Collections retain their context while an optional in-place inspector follows immediate relationships. Graphs are an alternate representation, never the only way to understand provenance.
+
+### Create and upload
+
+Creation selects a resource type and project, resolves referenced records, records descriptive and scientific metadata, creates the resource, and attaches files. Each completed stage remains visible after a later failure so retry never duplicates successful work.
+
+### Manage resources and access
+
+Descriptive edits, scientific metadata, relationship changes, file workflows, direct resource access, project assignment, ownership transfer, instrument lifecycle, and deletion review are distinct operations. Consequential changes use API previews and explicit confirmation where supported.
+
+Project membership is separate from resource ACLs. Directly adding an existing person, changing a non-owner role, removing a member, and leaving a project do not create invitation state. No invitation workflow is planned. Join requests remain a separate future workflow.
+
+Relationship management is a separate resource workflow. Canonical sample and dataset pages may manage supported parent-child and cross-type associations with explicit direction, bounded type search, confirmed unlink, and no deletion of either resource. The API authorizes both resources; Hub capability guidance controls presentation only. Relationship controls do not appear in the inspector, and production exposure waits for the API relationship contract and Hub session gate.
+
+Resource access management is a separate canonical workflow at `/samples/:sampleMfid/access` and `/datasets/:datasetMfid/access`. It provides a persistent resource header with Overview and Access navigation, loads ACL data only on Access entry, and presents manager-only controls when the exact `can_manage_access` capability allows them. Public controls and bounded user or project grants are capability-aware, capped by `max_grant_role`, and confirmed before publish, unpublish, or revoke. Owner, service-account, instrument, system, and unknown grants remain read-only. Access mutations are server-confirmed and never optimistic.
+
+## Delivery direction
+
+Phase 0 establishes the contract, security, design, and runtime foundation. Phase 1 delivers the useful read workspace. Phase 2 adds controlled self-service management, beginning with safe, independently recoverable operations. Phase 3 migrates generic Explorer workflows only after measured parity. Phase 4 adds high-scale capabilities such as bulk actions, saved views, richer audit history, and administration.
+
+The ordered packages, gates, current implementation status, and next action are authoritative in [roadmap](roadmap.md). Current verification is authoritative in [Phase 0 evidence](phase-0-evidence.md). API-owned needs are maintained only in [Crucible API handoff](crucible-api-handoff.md).
+
+## Release requirements
+
+- Production authentication keeps user credentials server-side behind opaque browser sessions.
+- Every release uses a pinned API contract and verifies the browser, server boundary, accessibility, and error-recovery behavior in scope.
+- Hub never uses a platform-administrator credential for normal user work.
+- Explorer routes retire only after measured feature, performance, accessibility, and usage parity.

@@ -1,0 +1,81 @@
+# Changelog
+
+This file records notable changes to Crucible Hub for users, operators, contributors, security and privacy reviewers, and downstream integrations.
+
+The format follows Keep a Changelog principles. Versioning policy will be selected before the first release.
+
+## Unreleased
+
+### Added
+
+- Added route-backed resource Access pages for samples and datasets with lazy ACL loading, capability-gated management, bounded user and project grants, read-only ownership and system principals, confirmed public and revoke actions, and server-confirmed non-optimistic updates.
+- Added capability-guided relationship management to canonical sample and dataset pages, with compact add and manage actions, navigation-only normal rows, explicit unlink mode, bounded target search, confirmed unlink without resource deletion, retained failure state, and authoritative source and target refresh.
+- Added capability-guided project member management with direct member addition, bounded role changes, confirmed removal, and voluntary project leave.
+- Added reviewed deletion requests to canonical sample and dataset pages with an optional reason, retained failure state, active-request status, and no direct permanent-deletion path.
+- Combined project identity and members in Overview with expanded lead identity, hierarchy-ordered members, semantic role badges, service-account labels, and a compatibility redirect from the former Members section.
+- Added capability-gated, type-preserving scientific metadata editing for samples and datasets, using changed-field merges for ordinary edits and explicit confirmation before deletion-driven full replacement.
+- Added capability-gated project and instrument Settings for bounded descriptive fields, with dedicated routes, retained failed drafts, unsaved-change protection, and server-confirmed cache updates.
+- Added capability-gated in-place Summary editing for sample name, type, description, and timestamp and dataset name, measurement, format, type, session, and timestamp, with browser-local timestamp entry, UTC API writes, legacy-string preservation, unsaved-change protection, retained failed drafts, and server-confirmed cache updates.
+- Added bounded project and instrument previews from sample and dataset context, reusing inspector history and canonical navigation without loading related collections or files.
+- Added in-place sample and dataset previews to global Data, preserving applied filters, independent cursors, table layout, and canonical full-page navigation while exploring immediate relationships.
+- Added API-backed global Data filters for project relationship, visibility, resource creation dates, and dataset acquisition instrument, with bounded selectors, explicit Apply/Clear, shareable URLs, and filtering before pagination.
+- Added recognizable icon actions for full-page navigation and on-demand dataset file downloads, with fixed geometry across ready, pending, retry, and unavailable states, accessible tooltips, and fresh transient links generated only after activation.
+- Added project Data filters for visibility, resource creation dates in UTC, and dataset acquisition instrument, with explicit Apply/Clear and shareable filter URLs.
+- Added explicit resource previews in project Data tables, preserving collection context while exploring relationships in the existing overlay. Shared detail reads now omit unused embedded datasets.
+- Added Data-first project workspaces with paginated Samples and Datasets, All/Assigned/Shared scopes, persistent project navigation, and shared-resource assignment context. Live project queries require the project-scope API contract exported from revision `9a14b28` or a compatible deployment.
+- Added sample and dataset inspection in a dismissible right-side overlay with grouped relationships, bounded preview history, full-page navigation, and local recovery without resizing the original working page.
+- Added an instrument Datasets view with scoped pagination, persistent instrument navigation, direct dataset links, and local loading and recovery states.
+- Added an authentication transition contract that separates read-only Hub development from the API-owned login exchange and defines the stable credential seam, cutover evidence, rollback, and removal of the temporary API-key bridge.
+- Added public-safe people search, canonical person detail routes, and project-member profile links without exposing privileged account fields.
+- Added canonical instrument detail with directory and search navigation, public-safe owner identity, lifecycle context, and scientific metadata.
+- Added validation for local Markdown link targets so missing agent and development documents fail the canonical repository check.
+- Added server-generated per-request Hub correlation IDs through global TanStack Start middleware, browser-visible response headers, and serializable browser-safe API error envelopes carrying the same request reference, while explicitly retaining native same-origin CSRF protection.
+- Preferred expanded dataset project and instrument references over their flat identifier fallbacks without introducing a direct project-to-instrument assignment.
+- Added native dataset context and immediate-resource navigation between canonical Hub routes, and removed planned Explorer handoffs from the product direction.
+- Added identity-scoped global search across projects, instruments, samples, and datasets with a keyboard dialog, URL-backed type filtering, grouped partial-failure results, and direct MFID lookup.
+- Added production Node and browser checks for `/hub` assets, deep links, server functions, health output, forwarded-header resistance, and graceful shutdown, plus a repeatable non-root container verification procedure.
+- Added development-only empty, restricted, dense, partial, and degraded scenarios through real application routes, identity-isolated Query caching, route visual baselines, compact theme baselines, scenario-retention coverage, and text-spacing reflow checks.
+- Added an unlinked design-system fixture surface with deterministic interface states, reviewed light and dark laptop and desktop baselines, keyboard and reduced-motion checks, and automated accessibility coverage.
+- Replaced the broad API dashboard aggregation with parallel first-page project, instrument, sample, and dataset Queries, while retaining fixture-only project resource previews until the API exposes a correct paginated assignment filter.
+
+- Added an identity-scoped, offset-paginated instrument directory Query and removed the redundant broad API instrument request from the transitional workspace loader.
+- Added approved Query dehydration and hydration, collection-to-detail cache isolation, and end-to-end cancellation propagation from TanStack Query through server functions to bounded API requests.
+- Added canonical resource detail routes with discriminated metadata, relationships, and dataset-scoped file queries, plus an accessible shared empty-state primitive.
+- Added independently cursor-paginated sample and dataset queries with URL cursor state, bounded server-function validation, and contract-shaped fixture pagination.
+- Added identity-scoped account, paginated project collection, and exact project detail queries with validated server functions and fixture coverage.
+- Added a Phase 0 evidence register and moved the rendered workspace into an identity-scoped TanStack Query entry as the first step toward decomposed API reads.
+- Added responsive data-table column priorities and more comfortable shared pill spacing while removing development-only indicators from the workspace chrome.
+- Added an explicitly local, server-only API-key bridge for developing against a configured Crucible API before production login exchange support is available.
+- Added enforceable semantic typography, container, page-gutter, and section-spacing tokens, plus shared page composition that prevents feature-level type-scale drift.
+- Added the first fixture-backed desktop workspace with a persistent collapsible sidebar, compact navigation drawer, application bar, Home, Data, Projects, project overview, and Instruments routes.
+- Added the detailed desktop information architecture and a deterministic, OpenAPI-typed demonstration workspace for UI development and validation.
+- Added a source-controlled official shadcn/ui agent skill, documented optional browser-testing and security-review skills, and established reviewed skill-update triggers for contributors.
+- Added the supported Phase 0 npm toolchain, desktop application shell, generated API contract boundary, validation commands, browser accessibility tests, and CI workflow.
+
+### Changed
+
+- Clarified project navigation and page responsibilities: Overview owns project details, scientific metadata, and read-only people; capability-gated Settings owns General and direct member management; project status remains in the persistent header.
+- Added typed canonical sample and dataset paths while retaining the generic resource path as a compatibility redirect.
+- Made resource identity more compact and actionable with copyable MFIDs, visibility beside MFID, linked abbreviated owner names, and public-safe owner hover details.
+- Aligned sample and dataset detail structure by moving project and visibility out of Summary, presenting shared project context and dataset instrument context together, and using compact accessible icon actions for Summary editing and saving.
+- Made sample descriptions explicit in Summary, standardized absent optional Summary values as `-`, and removed aggregate dataset size while retaining file-level sizes.
+- Reworked Home into a bounded research continuation view with recent samples and datasets, associated projects, canonical continuation links, and no low-value aggregate totals or redundant shortcut panel.
+- Made sample and dataset identity the primary in-place preview action in project and global Data tables, with a stable trailing icon for canonical full-page navigation and the same labeled Open action in the inspector footer.
+- Made project Data default browsing relationship-neutral, moved Assigned and Shared into ordinary filters, kept actual primary projects visible, bounded nested scientific metadata behind semantic disclosures, and moved the inspector Open action to its footer.
+- Reduced generic page and card subtitles, placed resource creation and update dates side by side, and centered dataset file actions beneath an accessible unlabeled column.
+- Allowed the development server's explicit Tailscale MagicDNS hostname while retaining loopback binding and Vite host-header protection.
+- Replaced the placeholder browser favicon with the Crucible 16×16 icon.
+- Agent guidance now recommends high-capability planning with bounded lower-cost implementation when useful, with coordinator review and final validation. Browser specs use a shared runtime-error check.
+- Cancellation-sensitive search results now use TanStack Query's cancellable standard query state, with controlled browser and upstream timeout evidence, and local development now fails clearly instead of silently changing ports when port 3000 is occupied.
+- Canonical validation now proves that TanStack Start rejects browser-reachable imports of the server-only Crucible adapter.
+- Increased light-theme muted and semantic status contrast after the fixture surface exposed values below the WCAG AA threshold.
+
+### Fixed
+
+- Restored the visible forward arrow inside Data table full-page actions while preserving their accessible labels, tooltips, and fixed geometry.
+- Kept readable collections and dataset detail available during refresh or file-panel failures, limited Data requests to the selected resource types, and added focused retries.
+- Distinguished unavailable project membership from an empty member list, linked Home's recent datasets to detail in creation order, and included public-safe person detail in SSR hydration.
+- Preserved page headers and controls during collection pagination, retained identity-safe previous pages with local update feedback, and distinguished dashboard loading from empty or unavailable results.
+- Kept the authenticated application shell mounted during navigation by moving critical route Queries into TanStack Router loaders with intent preloading and scoped skeleton fallbacks, including a results-only fallback that preserves search controls and context.
+- Configured Nitro to serve generated assets beneath `/hub`, matching the application URLs emitted by Vite.
+- Excluded generated Nitro build output from source linting so repeated validation remains deterministic.

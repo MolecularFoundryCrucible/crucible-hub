@@ -1,0 +1,93 @@
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext,
+  useRouter,
+} from "@tanstack/react-router"
+
+import { RouteProgress } from "@/components/route-progress"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Button } from "@/components/ui/button"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import type { RouterContext } from "@/router-context"
+
+import appCss from "../styles.css?url"
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  head: () => ({
+    meta: [
+      {
+        charSet: "utf-8",
+      },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
+      },
+      {
+        title: "Crucible Hub",
+      },
+    ],
+    links: [
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+      {
+        rel: "icon",
+        href: "/hub/crucible-favicon-16x16.png",
+        sizes: "16x16",
+        type: "image/png",
+      },
+    ],
+  }),
+  notFoundComponent: () => (
+    <main className="mx-auto flex min-h-screen max-w-reading flex-col justify-center px-page-gutter-wide">
+      <p className="text-overline text-muted-foreground">404</p>
+      <h1 className="mt-2 text-title-page">Page not found</h1>
+      <p className="mt-3 text-body-prominent text-muted-foreground">
+        The requested page could not be found.
+      </p>
+    </main>
+  ),
+  errorComponent: RootError,
+  component: Outlet,
+  shellComponent: RootDocument,
+})
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        <ThemeProvider>
+          <TooltipProvider>
+            <RouteProgress />
+            {children}
+          </TooltipProvider>
+        </ThemeProvider>
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
+function RootError() {
+  const router = useRouter()
+  return (
+    <main className="mx-auto flex min-h-svh max-w-reading flex-col items-start justify-center gap-4 p-page-gutter-wide">
+      <p className="text-overline text-muted-foreground uppercase">
+        Unable to load this page
+      </p>
+      <h1 className="text-title-page">
+        Crucible Hub encountered an unexpected error.
+      </h1>
+      <p className="text-body-prominent text-muted-foreground">
+        Your existing Crucible data has not been changed.
+      </p>
+      <Button onClick={() => router.invalidate()}>Try again</Button>
+    </main>
+  )
+}

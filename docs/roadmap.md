@@ -1,0 +1,110 @@
+# Crucible Hub Roadmap
+
+Status: Active
+
+Date: 2026-09-06
+
+## Purpose
+
+This document owns delivery order, entry and completion gates, current status, and the next action. [Product brief](product-brief.md) owns product intent, [information architecture](information-architecture.md) owns route behavior, [architecture](architecture.md) owns technical boundaries, and [Phase 0 evidence](phase-0-evidence.md) owns current verification detail.
+
+## Delivery rules
+
+- Build API-authorized, capability-aware workflows without recreating authorization in Hub.
+- Complete one recoverable workflow at a time and keep mutation states local.
+- Do not expose a production mutation until the shared session, authentication, same-origin, and CSRF gates are complete.
+- Record API-owned blockers in [Crucible API handoff](crucible-api-handoff.md), not as Hub workarounds.
+- Treat a package as complete only when its scoped validation and documentation are current.
+
+## Current position
+
+The local fixture workspace has the Phase 0 scaffold, server boundary, generated contract consumption, Query foundation, responsive shell, read workspace, controlled descriptive and scientific metadata editing, reviewed deletion requests, and direct project membership controls. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
+
+| Area                                       | Status                                                                                                          |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Runtime and server-only boundary           | Locally verified; production session gate remains open.                                                         |
+| Read workspace                             | Implemented and fixture/browser verified.                                                                       |
+| Controlled resource and settings mutations | Implemented and fixture/browser verified; not production-exposed.                                               |
+| Direct project membership                  | Add, role change, removal, and self-leave are implemented and fixture/browser verified; not production-exposed. |
+| Resource access management                 | Route-backed Access pages and local fixture/browser mutation coverage are implemented; not production-exposed.  |
+| Join requests                              | Deferred pending the API-owned identity, status, capability, and efficient project-state contract.              |
+| Uploads, ownership, lifecycle, and graphs  | Future work.                                                                                                    |
+
+## Ordered work packages
+
+### P0: production foundation
+
+1. Finalize the API-owned web login exchange and Hub shared-session contract.
+2. Implement and verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement.
+3. Complete upload feasibility evidence for the direct object-storage boundary.
+4. Run the production go or no-go review with container, path-prefix, authentication, and operational evidence.
+
+Entry: accepted API login and session contract. Completion: production-shaped authentication, session, security, deployment, and recovery evidence is recorded in [Phase 0 evidence](phase-0-evidence.md).
+
+### P1: useful read workspace
+
+The local read workspace is complete enough for continued feature work: Home continuation, global and project Data collections and filters, projects, instruments and scoped datasets, resource and contextual inspection, bounded search, public-safe people, and on-demand single-file downloads are implemented. Production release remains subject to P0.
+
+#### Resource inspector slice
+
+Implemented and fixture/browser verified. It provides bounded in-place relationship inspection, native history, local failure recovery, and canonical promotion. See [information architecture](information-architecture.md#resource-inspector-navigation) and decisions 0008 and 0009.
+
+#### Project collection inspection
+
+Implemented and fixture/browser verified. It reuses the inspector without altering project collection filters, cursors, geometry, or scroll. See decision 0010.
+
+#### Global Data collection inspection
+
+Implemented and fixture/browser verified. It preserves applied global Data filters and cursor state while preview navigation remains independent of collection reads. See decision 0012.
+
+#### Single-file downloads
+
+Implemented and fixture/browser verified. Links are generated only after activation and remain outside client caches, route state, and logs. The typed response and attachment behavior remain API follow-ups.
+
+### P2: controlled self-service management
+
+Completed local slices are descriptive project and instrument Settings, sample and dataset summary editing, scientific metadata editing, reviewed resource deletion requests, a consolidated Project Overview, direct project membership, and resource relationship management. Project navigation is limited to Data, Overview, and capability-gated Settings; Settings is split into route-backed General and Members subsections.
+
+Direct membership uses the accepted contract: add an existing user, change an allowed non-owner role, remove a member, or let a non-owner leave. It is separate from resource ACLs, ownership transfer, and future join requests. No invitation workflow is planned. See decisions 0020 and 0021.
+
+#### Resource relationship management
+
+Implemented and fixture/browser verified for local development. Canonical sample and dataset pages provide capability-guided parent, child, and cross-type link management with bounded target search, confirmed unlink, retained failure state, exact source and target rereads, and no resource deletion. Production exposure remains gated on the API relationship contract described in [Crucible API handoff](crucible-api-handoff.md) and the Hub session boundary.
+
+#### Resource access management
+
+Implemented and fixture/browser verified for local development. Route-backed sample and dataset Access pages reuse the canonical parent shell, load ACLs only on Access entry with preload disabled, gate manager controls on exact `can_manage_access`, cap user and project grants with `max_grant_role`, keep non-manageable principals read-only, confirm publish, unpublish, and revoke, and apply server-confirmed non-optimistic mutations. The API shape and production session gate remain the authoritative deployment constraints.
+
+#### Deferred: join requests
+
+Join submission and review remain deferred pending the API-owned workflow described in [Crucible API handoff](crucible-api-handoff.md). Hub must not scan an account-wide request history or issue N+1 identity lookups to construct project-level state and review queues.
+
+#### Next action: instrument lifecycle
+
+The next independent Hub package is capability-gated instrument lifecycle management using the dedicated status operation and authoritative instrument response. The implementation must keep lifecycle separate from descriptive Settings, confirm decommissioning, preserve local failure state, and document the API's currently untyped status values. Service-account operators, ownership transfer, project moves, and upload orchestration remain later packages.
+
+### P3: Explorer convergence
+
+Move generic graph and advanced data workflows only after Hub demonstrates feature, performance, accessibility, and usage parity. Migrate specialized viewers individually behind stable contracts and accountable ownership. Do not add new runtime handoffs to Explorer.
+
+### P4: high-scale management
+
+Add API-backed bulk operations, saved views, exports, richer activity and audit timelines, and administration only with the corresponding API, privacy, and operational contracts.
+
+## External dependencies
+
+| Dependency                      | Required outcome                                                                                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Web login exchange              | One-time, server-to-server credential exchange suitable for opaque Hub sessions.                                               |
+| Session infrastructure          | Shared storage, encryption and rotation approach, revocation behavior, and multi-replica verification.                         |
+| Upload contract                 | Authorized direct upload lifecycle, CORS, retry, resume, expiry, cleanup, and non-production feasibility evidence.             |
+| Collection and search contracts | Owned-resource filtering, stable sorting and grouping, scalable facets, and bounded summaries where requested.                 |
+| Mutation contracts              | Operation-specific capability guidance, conditional-write safety, complete authoritative responses, and clear-field semantics. |
+
+## Completion gates
+
+- Every included route or mutation has usable loading, empty, failure, authorization, and narrow-layout behavior.
+- Tests prove request scope, cache isolation, cancellation, keyboard behavior, and recovery appropriate to the package.
+- Browser-visible data and telemetry never receive credentials, signed links, or secrets.
+- Production work additionally proves the accepted session and mutation boundary. Fixture success alone does not clear this gate.
+- API-dependent gaps are omitted or labeled, never simulated with unbounded client work.

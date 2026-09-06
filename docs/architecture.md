@@ -1,0 +1,94 @@
+# Crucible Hub Architecture
+
+Status: Phase 0 implementation contract
+
+Date: 2026-09-02
+
+## Scope and authority
+
+This document owns Hub runtime boundaries, execution model, security posture, and technical gates. [`product-brief.md`](product-brief.md) owns product behavior and [`../decisions/`](../decisions/) own durable choices. [`api-integration.md`](api-integration.md), [`design-system.md`](design-system.md), and [`authentication-transition.md`](authentication-transition.md) own their respective detailed contracts.
+
+Hub owns browser presentation, interaction, sessions, client state, and bounded web-specific aggregation. `crucible-api` owns authorization, persistence, ingestion, resource semantics, and the OpenAPI contract. Hub capabilities guide presentation only. The API authorizes every operation.
+
+| Concern                                              | Authority                                             |
+| ---------------------------------------------------- | ----------------------------------------------------- |
+| HTTP contract, authorization, and pagination         | `crucible-api` and its deterministic OpenAPI artifact |
+| Python and CLI                                       | `nano-crucible`                                       |
+| Mobile-local behavior                                | `crucible-lens`                                       |
+| Generic graph and specialized viewers until migrated | `crucible_graph_explorer`                             |
+| Cross-repository ownership and compatibility         | `crucible-ecosystem`                                  |
+| Hub web behavior, sessions, and design system        | `crucible-hub`                                        |
+
+## Runtime and trust boundaries
+
+```mermaid
+flowchart LR
+    Browser -->|opaque session cookie| Hub[Hub server]
+    Hub --> Sessions[server-side session store]
+    Hub -->|user-scoped authority| API[crucible-api]
+    Browser -->|temporary scoped upload capability| Objects[object storage]
+    API --> Objects
+```
+
+- Browser input is untrusted. The browser owns rendering, navigation, forms, table state, TanStack Query, safe preferences, and direct upload bytes.
+- The browser never receives or persists a general API key. Signed download links and upload capabilities are in-memory, immediate-transfer values only: never Query data, storage, logs, telemetry, URLs, or screenshots.
+- The Hub server owns session handling, authenticated API calls, boundary validation, CSRF and same-origin enforcement, safe errors, bounded aggregation, and redacted observability. It is a backend for the frontend, not a second domain backend.
+- Production sessions use opaque browser IDs and encrypted, shared server-side state supporting expiry, revocation, rotation, and replicas. Process-local or file-backed stores are local-development only.
+- The API owns identities, permissions, mutation truth, and representations. Object-storage capabilities use the smallest supported scope and lifetime. Explorer is a reference, never a runtime authentication or navigation dependency.
+
+The selected stack is TypeScript and React, TanStack Start and Router, TanStack Query, Table, Virtual, and Form, shadcn/ui with Tailwind and Base UI primitives, `openapi-fetch` with generated types, Cytoscape, Vitest, and Playwright. The local runtime and server boundary are verified; production authentication, sessions, uploads, and deployment remain gated separately.
+
+## Module and execution boundaries
+
+Browser-reachable routes and features compose domain components and identity-scoped Query options. They call validated server functions, which authenticate and call the server-only API adapter backed by generated code. `components/ui` never imports features, generated code never imports application code, and browser-reachable modules never import sessions or API transport. `npm run boundary:check` is the canonical negative production-build proof.
+
+Ordinary loaders are isomorphic. They must not read credentials, sessions, or the API client. Use authenticated server functions for application reads and mutations; reserve server routes for external callers, raw or streaming responses, callbacks, and health endpoints. Validate route/search input and server-function input separately, propagate abort signals, and select API origins only from trusted server configuration.
+
+Generated API output is reproducible and never hand-edited. The adapter may provide trusted base URL selection, user authorization, aborts and timeouts, safe decoding, and redacted metrics. It must not recreate authorization, rename a second wire contract, or silently compensate for an API mismatch. Detailed generation, error, endpoint, and cache rules are in [`api-integration.md`](api-integration.md).
+
+## Authentication and identity
+
+Production authentication remains blocked on the API-owned one-time authorization-code exchange and the proposed server-side session boundary. The required flow is state, nonce, and PKCE transaction storage; an allowlisted callback; single-use, short-lived code exchange; encrypted server-side user authority; session-ID rotation; and an opaque `HttpOnly`, `Secure`, `SameSite=Lax` cookie. Private server functions authenticate independently, route guards are user experience only, mutations enforce same-origin and CSRF protection, logout revokes the server session, and credential or privilege changes invalidate affected sessions. Normal Hub requests never use a platform-administrator credential.
+
+Until cutover, local development may explicitly use `HUB_DATA_SOURCE=api`. Server-only code reads trusted process configuration and a developer's user-scoped key per request; browser code receives neither the key nor a configurable API origin. This mode is rejected in production and fixtures remain the default. [`authentication-transition.md`](authentication-transition.md) owns the full development seam, acceptance evidence, cutover, rollback, and removal criteria.
+
+Routes, cache keys, pins, history, and relationships use stable MFIDs. Slugs are lookup inputs and labels, resolved before canonical navigation. Search parameters are schema-validated and hold only shareable state such as filters, sorting, tabs, cursors, and graph focus. Drafts, menus, transient progress, and resource records stay out of URLs. Fixture scenarios use validated inherited search and distinct identity scope; non-default scenarios are unavailable in production.
+
+The inspector uses the validated preview MFID and a shared detail Query, never resource history state or a competing cache. Route wrappers own validated search and collection inputs. Preview changes cannot refresh or change a collection. [Decisions 0008](../decisions/0008-inspect-linked-resources-in-place.md), [0010](../decisions/0010-inspect-project-data-in-place.md), and [0012](../decisions/0012-inspect-global-data-in-place.md) own inspector behavior and privacy constraints.
+
+## Server state and UI transitions
+
+TanStack Query is the sole browser owner of Crucible server state. Loaders use `ensureQueryData`, prefetch the same Query options, or provide non-overlapping shell data. Every authenticated key begins with server and stable account identity, followed by family, canonical MFID, representation, and normalized parameters. Include server identity even though only the hosted API is initially available.
+
+- Collection rows are lightweight and never overwrite richer detail. Detail may project safely into a compatible collection only through tested code.
+- Query freshness follows volatility and workflow. Cached readable data renders during refresh; refresh and pagination failures remain local with retry. Initial skeleton, empty, unavailable, and error states are distinct.
+- Pagination placeholder data requires the same server and account scope. Replacing server, account, login state, credentials, or logging out replaces the entire Query client before another identity renders. Clearing queries alone does not reset inspector navigation ownership.
+- Query persistence is deferred pending a privacy, retention, expiry, logout, and multi-account isolation decision. Credentials, signed links, authorization codes, and upload secrets never enter Query or dehydration.
+
+Use nested routes for persistent entity identity. Parent identity, breadcrumbs, heading, and local navigation remain mounted while child pending and errors stay in the outlet. Essential identity and detail reads use `ensureQueryData`; recoverable collections prefetch and await only when no readable data exists. Search, filters, sort, tabs, and pagination inside an established page update content rather than replacing the shell or page context. [Decision 0007](../decisions/0007-coordinate-route-and-query-loading.md) defines this loading boundary.
+
+## Writes and workflows
+
+Server functions validate intent, authenticate, call the API, return the minimum confirmed representation, update exact cache data, and invalidate only dependent views. Failed fields, rows, panels, files, and workflow steps retain their drafts and readable context. Optimism is allowed only with deterministic rollback that cannot misrepresent authority or scientific provenance. ACL changes, ownership transfer, project moves, relationships, deletion, uploads, and metadata default to server-confirmed state.
+
+Multi-stage create, upload, thumbnail, and ingestion workflows record only safe completed-stage identifiers. A retry starts at the first incomplete stage and never recreates a durable resource. Secrets and signed URLs are reacquired, not checkpointed.
+
+Canonical sample and dataset routes share one generic detail representation but retain type-specific paths. Descriptive edits, scientific metadata, deletion requests, project and instrument Settings, direct membership, access, lifecycle, ownership, and assignments are independent workflows. Use the decisions for their UI and mutation constraints. Direct project membership is implemented for fixture and local-development work: add existing users immediately, change roles, remove members, or self-leave through the API contract. It has no invitation workflow and must not be exposed in production until session authentication is accepted and deployed.
+
+Resource relationship management is a canonical-page workflow for supported sample and dataset parent-child and cross-type associations. Direction is explicit, add uses a bounded type search in an accessible dialog, and unlink is confirmed without deleting either resource. The source's exact `can_edit` capability guides presentation, but the API authorizes both source and target. After mutation the current adapter rereads authoritative exact source and target relationship representations; Hub applies no optimistic update and replaces only those exact detail caches because lightweight collections do not contain relationships. The inspector remains read-only. Self-links, invalid pairs, duplicates, cycles, and target validation are API-defined errors, not client-invented authorization. Production exposure waits for the relationship-specific capability, error, validation, and typed response contract; local API-key development does not waive the production authentication gate.
+
+Resource access management uses route-backed `/samples/:sampleMfid/access` and `/datasets/:datasetMfid/access` children under a shared canonical resource shell. The parent keeps the persistent header and Overview or Access navigation mounted. Access ACL data is requested only on Access entry, with preload disabled. Exact `can_manage_access` controls the manager-only surface; public controls are separate, and user or project grants cannot exceed `max_grant_role`. Owner, service-account, instrument, system, and unknown principals are read-only. Publish, unpublish, and revoke require confirmation. Server-confirmed mutations replace the authoritative ACL representation with no optimistic update.
+
+## Errors, privacy, and deployment
+
+Browser errors distinguish validation, authentication, forbidden, not found, conflict, rate limiting, cancellation, timeout, upstream failure, unexpected contract failure, and partial success. The server returns a stable safe envelope with a generated correlation ID, safe message, category, retry guidance, and safe field details. It never exposes credentials, internal URLs, raw upstream bodies, or stack traces. Detailed mapping is in [`api-integration.md`](api-integration.md).
+
+Every Hub request gets a server-generated correlation ID in request context and `X-Correlation-ID`; Hub does not trust browser values. The current API contract has no correlation header, so Hub-to-API propagation is pending a published contract. Telemetry may contain route or API templates, status, category, duration, size, cache outcome, retry count, and non-secret upload progress. It must exclude keys, sessions, cookies, codes, signed URLs, raw search text by default, scientific metadata, file content, emails, and complete bodies. User identifiers require a privacy decision.
+
+The initial deployment is a non-root containerized Node runtime at `/hub`, separate from `/explore`. Vite and Nitro base paths must stay aligned, and the edge routes only `/hub` to this container. Untrusted forwarded host and protocol headers never influence rendering or security decisions. Authentication callbacks and secure-cookie proxy handling require an explicit trusted-proxy topology. Production checks cover prefixed assets, deep links, health, untrusted forwarded headers, server-function navigation, shutdown, and Docker health; authenticated replicas and target-edge validation remain blocked on authentication and deployment decisions.
+
+## Gates and open questions
+
+`npm run validate` is the canonical static and production-build gate. `npm run format:check`, `npm run docs:check`, `npm run secrets:check`, `npm run boundary:check`, `npm run test:browser`, `npm run test:production`, and `npm run audit` supply focused evidence. Phase 0 accepts TanStack Start only after reliable server-only import protection, per-function authentication, mutation CSRF, shared sessions, safe Query hydration, cancellation and error propagation, container runtime health, `/hub` behavior, direct resumable upload feasibility, and a workable server-function and browser test harness. A blocking failure requires a documented reconsideration and new decision record.
+
+Open questions are the API authorization-code exchange, production session and key management, SSR extent, safe preference storage, API-backed dashboard aggregates, upload browser and file-size support, and release performance, accessibility, and availability budgets.

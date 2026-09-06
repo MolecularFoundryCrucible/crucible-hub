@@ -1,0 +1,8 @@
+{
+  "sourceRepository": "crucible-api",
+  "sourceRevision": "9a14b28b6e1a1ee56b3a83aa2e69bc341d81e928",
+  "sourcePath": "scripts/export_openapi.py",
+  "sha256": "da2fbd57f9a831491247f14e95481425eeea5a724f8dd26ced5b51e310e574cb",
+  "openapi": "3.1.0",
+  "generatedAt": "2026-09-04T00:00:00Z"
+}

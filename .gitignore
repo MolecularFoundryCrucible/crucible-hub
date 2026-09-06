@@ -1,0 +1,19 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.env*
+.tanstack
+.wrangler
+.output
+.playwright-cli
+.vinxi
+__unconfig*
+todos.json
+output/
+playwright-report/
+test-results/
+
+# typescript
+*.tsbuildinfo
