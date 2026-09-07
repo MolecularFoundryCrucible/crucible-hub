@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 
+import { BrandMark } from "@/components/crucible/brand-mark"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
 import { AccountIcon, WorkspaceIcon } from "@/components/crucible/icons"
@@ -16,14 +17,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Separator } from "@/components/ui/separator"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -32,9 +31,11 @@ import {
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import type { Workspace } from "@/data/crucible/workspace-source"
 import { initials } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
 
@@ -83,30 +84,9 @@ export function AppShell({
         role="navigation"
         collapsible="icon"
       >
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                size="lg"
-                tooltip="Crucible Hub"
-                render={<Link to="/" />}
-              >
-                <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-label text-primary-foreground">
-                  C
-                </span>
-                <span className="grid min-w-0 flex-1">
-                  <span className="truncate text-label">Crucible</span>
-                  <span className="truncate text-supporting text-muted-foreground">
-                    Hub
-                  </span>
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
+        <SidebarBrand />
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Workspace</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {primaryItems.map((item) => {
@@ -120,7 +100,12 @@ export function AppShell({
                       <SidebarMenuButton
                         isActive={isActive}
                         tooltip={item.label}
-                        render={<Link to={item.to} />}
+                        render={
+                          <Link
+                            aria-current={isActive ? "page" : undefined}
+                            to={item.to}
+                          />
+                        }
                       >
                         {item.kind === "resource" ? (
                           <ResourceTypeIcon type={item.resourceType} />
@@ -145,8 +130,7 @@ export function AppShell({
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
-          <SidebarTrigger aria-label="Toggle primary navigation" />
-          <Separator className="h-5" orientation="vertical" />
+          <SidebarTrigger className="md:hidden" />
           <GlobalSearch />
           {account ? (
             <CreateMenu
@@ -201,5 +185,30 @@ export function AppShell({
         </div>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+function SidebarBrand() {
+  const { isMobile, state } = useSidebar()
+  const collapsed = !isMobile && state === "collapsed"
+
+  return (
+    <SidebarHeader className="relative h-14 justify-center">
+      <SidebarMenu className={collapsed ? "pr-0" : "pr-8"}>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            size="lg"
+            tooltip="Crucible Hub"
+            render={<Link aria-label="Crucible Hub" to="/" />}
+          >
+            <BrandMark className={collapsed ? "size-6" : undefined} />
+            <span className="truncate text-brand">Crucible Hub</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <SidebarTrigger
+        className={cn("absolute top-3.5 right-2 z-20", collapsed && "-right-3")}
+      />
+    </SidebarHeader>
   )
 }

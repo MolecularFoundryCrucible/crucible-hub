@@ -5,6 +5,11 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  ResourceSectionNavigation,
+  resourceSectionActiveProps,
+  resourceSectionLinkClassName,
+} from "@/components/crucible/resource-section-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
@@ -100,13 +105,11 @@ function InstrumentPage() {
         }
       />
 
-      <nav className="flex gap-1 border-b" aria-label="Instrument sections">
+      <ResourceSectionNavigation label="Instrument sections">
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
-          activeProps={{
-            className: "border-b-2 border-primary text-label text-foreground",
-          }}
-          className="px-3 pb-3 text-body text-muted-foreground"
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
           params={{ instrumentMfid }}
           search={{}}
           to="/instruments/$instrumentMfid"
@@ -115,10 +118,8 @@ function InstrumentPage() {
         </Link>
         <Link
           activeOptions={{ includeSearch: false }}
-          activeProps={{
-            className: "border-b-2 border-primary text-label text-foreground",
-          }}
-          className="px-3 pb-3 text-body text-muted-foreground"
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
           params={{ instrumentMfid }}
           search={{ cursor: undefined }}
           to="/instruments/$instrumentMfid/datasets"
@@ -130,10 +131,8 @@ function InstrumentPage() {
         resource.capabilities?.can_transfer === true ? (
           <Link
             activeOptions={{ includeSearch: false }}
-            activeProps={{
-              className: "border-b-2 border-primary text-label text-foreground",
-            }}
-            className="px-3 pb-3 text-body text-muted-foreground"
+            activeProps={resourceSectionActiveProps}
+            className={resourceSectionLinkClassName}
             params={{ instrumentMfid }}
             search={{}}
             to="/instruments/$instrumentMfid/settings"
@@ -141,7 +140,7 @@ function InstrumentPage() {
             Manage
           </Link>
         ) : null}
-      </nav>
+      </ResourceSectionNavigation>
 
       <Outlet />
     </PageLayout>

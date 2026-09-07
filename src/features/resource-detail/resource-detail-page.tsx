@@ -24,6 +24,11 @@ import {
 } from "@/components/crucible/resource-preview-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
+  ResourceSectionNavigation,
+  resourceSectionActiveProps,
+  resourceSectionLinkClassName,
+} from "@/components/crucible/resource-section-navigation"
+import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
@@ -234,17 +239,13 @@ function ResourceNavigation({
 }: {
   resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
 }) {
-  const linkClassName = "px-3 pb-3 text-body text-muted-foreground"
-  const activeProps = {
-    className: "border-b-2 border-primary text-label text-foreground",
-  }
   if (resource.kind === "sample") {
     return (
-      <nav aria-label="Sample sections" className="flex gap-1 border-b">
+      <ResourceSectionNavigation label="Sample sections">
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
-          activeProps={activeProps}
-          className={linkClassName}
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           search={{ preview: undefined }}
           to="/samples/$sampleMfid"
@@ -253,8 +254,8 @@ function ResourceNavigation({
         </Link>
         <Link
           activeOptions={{ includeSearch: false }}
-          activeProps={activeProps}
-          className={linkClassName}
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
           search={{ preview: undefined }}
@@ -264,8 +265,8 @@ function ResourceNavigation({
         </Link>
         <Link
           activeOptions={{ includeSearch: false }}
-          activeProps={activeProps}
-          className={linkClassName}
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
           search={{}}
@@ -273,15 +274,15 @@ function ResourceNavigation({
         >
           Manage
         </Link>
-      </nav>
+      </ResourceSectionNavigation>
     )
   }
   return (
-    <nav aria-label="Dataset sections" className="flex gap-1 border-b">
+    <ResourceSectionNavigation label="Dataset sections">
       <Link
         activeOptions={{ exact: true, includeSearch: false }}
-        activeProps={activeProps}
-        className={linkClassName}
+        activeProps={resourceSectionActiveProps}
+        className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         search={{ preview: undefined }}
         to="/datasets/$datasetMfid"
@@ -290,8 +291,8 @@ function ResourceNavigation({
       </Link>
       <Link
         activeOptions={{ includeSearch: false }}
-        activeProps={activeProps}
-        className={linkClassName}
+        activeProps={resourceSectionActiveProps}
+        className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{ preview: undefined }}
@@ -301,8 +302,8 @@ function ResourceNavigation({
       </Link>
       <Link
         activeOptions={{ includeSearch: false }}
-        activeProps={activeProps}
-        className={linkClassName}
+        activeProps={resourceSectionActiveProps}
+        className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{}}
@@ -310,7 +311,7 @@ function ResourceNavigation({
       >
         Manage
       </Link>
-    </nav>
+    </ResourceSectionNavigation>
   )
 }
 

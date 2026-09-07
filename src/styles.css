@@ -79,6 +79,9 @@
   --text-title-section: 1.125rem;
   --text-title-section--line-height: 1.75rem;
   --text-title-section--font-weight: 600;
+  --text-brand: 1rem;
+  --text-brand--line-height: 1.25rem;
+  --text-brand--font-weight: 600;
   --text-body-prominent: 1rem;
   --text-body-prominent--line-height: 1.5rem;
   --text-body-prominent--font-weight: 400;
@@ -112,6 +115,9 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-brand-crucible-dark-blue: var(--brand-crucible-dark-blue);
+  --color-brand-crucible-light-blue: var(--brand-crucible-light-blue);
+  --color-brand-crucible-orange: var(--brand-crucible-orange);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -166,6 +172,9 @@
 }
 
 :root {
+  --brand-crucible-dark-blue: #031e2d;
+  --brand-crucible-light-blue: #a8c4cd;
+  --brand-crucible-orange: #ff6600;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -209,12 +218,20 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar: color-mix(
+    in oklch,
+    var(--background) 94%,
+    var(--brand-crucible-light-blue)
+  );
+  --sidebar-foreground: var(--brand-crucible-dark-blue);
+  --sidebar-primary: var(--brand-crucible-dark-blue);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-accent: color-mix(
+    in oklch,
+    var(--background) 76%,
+    var(--brand-crucible-light-blue)
+  );
+  --sidebar-accent-foreground: var(--brand-crucible-dark-blue);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --resource-project: oklch(0.58 0.17 251);
@@ -229,7 +246,7 @@
   --graph-ring: #a1a1a1;
   --graph-resource-dataset: #009a60;
   --graph-resource-sample: #9b5bb6;
-  --sidebar-width: 17rem;
+  --sidebar-width: 16rem;
   --sidebar-width-icon: 3rem;
   --sidebar-width-mobile: 18rem;
   --motion-fast: 120ms;
@@ -295,11 +312,15 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: var(--brand-crucible-dark-blue);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: var(--brand-crucible-light-blue);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: color-mix(
+    in oklch,
+    var(--brand-crucible-dark-blue) 76%,
+    var(--brand-crucible-light-blue)
+  );
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);

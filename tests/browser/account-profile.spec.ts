@@ -64,10 +64,10 @@ test("validates profile fields and protects unsaved changes", async ({
 
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 
-  await page.getByRole("button", { name: "Toggle primary navigation" }).click()
+  await page.getByRole("button", { name: "Expand navigation" }).click()
   await page
     .getByRole("dialog", { name: "Sidebar" })
-    .getByRole("link", { name: "Home" })
+    .getByRole("link", { name: "Home", exact: true })
     .click()
   const discardDialog = page.getByRole("dialog", {
     name: "Discard unsaved changes?",

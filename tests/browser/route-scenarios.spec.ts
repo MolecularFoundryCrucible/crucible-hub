@@ -142,7 +142,7 @@ for (const zoomCase of zoomEquivalentCases) {
       zoomCase.heading
     )
     await expect(
-      page.getByRole("button", { name: "Toggle primary navigation" })
+      page.getByRole("button", { name: "Expand navigation" })
     ).toBeVisible()
     if ("evidence" in zoomCase) {
       await expect(page.getByText(zoomCase.evidence)).toBeVisible()

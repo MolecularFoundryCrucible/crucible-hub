@@ -3,6 +3,11 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import {
+  ResourceSectionNavigation,
+  resourceSectionActiveProps,
+  resourceSectionLinkClassName,
+} from "@/components/crucible/resource-section-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
@@ -99,13 +104,11 @@ function ProjectWorkspace() {
         }
       />
 
-      <nav className="flex gap-1 border-b" aria-label="Project sections">
+      <ResourceSectionNavigation label="Project sections">
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
-          activeProps={{
-            className: "border-b-2 border-primary text-label text-foreground",
-          }}
-          className="px-3 pb-3 text-body text-muted-foreground"
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
           params={{ projectMfid }}
           search={{
             datasetCursor: undefined,
@@ -121,10 +124,8 @@ function ProjectWorkspace() {
         </Link>
         <Link
           activeOptions={{ includeSearch: false }}
-          activeProps={{
-            className: "border-b-2 border-primary text-label text-foreground",
-          }}
-          className="px-3 pb-3 text-body text-muted-foreground"
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
           params={{ projectMfid }}
           search={{}}
           state={{}}
@@ -135,10 +136,8 @@ function ProjectWorkspace() {
         {hasManagement ? (
           <Link
             activeOptions={{ includeSearch: false }}
-            activeProps={{
-              className: "border-b-2 border-primary text-label text-foreground",
-            }}
-            className="px-3 pb-3 text-body text-muted-foreground"
+            activeProps={resourceSectionActiveProps}
+            className={resourceSectionLinkClassName}
             params={{ projectMfid }}
             search={{}}
             state={{}}
@@ -147,7 +146,7 @@ function ProjectWorkspace() {
             Manage
           </Link>
         ) : null}
-      </nav>
+      </ResourceSectionNavigation>
 
       <Outlet />
     </PageLayout>

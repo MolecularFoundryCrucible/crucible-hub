@@ -12,6 +12,18 @@ test("renders the desktop workspace without development chrome", async ({
   await expect(
     page.getByLabel("Primary navigation", { exact: true })
   ).toBeVisible()
+  const primaryNavigation = page.getByLabel("Primary navigation", {
+    exact: true,
+  })
+  await expect(
+    primaryNavigation.getByRole("link", { name: "Crucible Hub" })
+  ).toBeVisible()
+  await expect(
+    primaryNavigation.getByRole("link", { name: "Home", exact: true })
+  ).toHaveAttribute("aria-current", "page")
+  await expect(
+    primaryNavigation.getByRole("button", { name: "Collapse navigation" })
+  ).toBeVisible()
   await expect(page.getByText("Local demo", { exact: true })).toHaveCount(0)
   await expect(page.getByText("Fixture", { exact: true })).toHaveCount(0)
   await expect(
@@ -402,7 +414,7 @@ test("adapts navigation for a compact browser viewport", async ({ page }) => {
   await expect(
     page.getByLabel("Primary navigation", { exact: true })
   ).toBeHidden()
-  await page.getByRole("button", { name: "Toggle primary navigation" }).click()
+  await page.getByRole("button", { name: "Expand navigation" }).click()
   await expect(page.getByRole("dialog", { name: "Sidebar" })).toBeVisible()
   await expect(
     page.getByRole("dialog", { name: "Sidebar" }).getByRole("link", {
