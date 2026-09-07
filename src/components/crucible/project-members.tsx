@@ -34,7 +34,12 @@ export function sortProjectMembers(members: readonly ProjectMember[]) {
 }
 
 export function ProjectRoleBadge({ role }: { role: string }) {
-  return <AccessRoleBadge role={role} />
+  return (
+    <AccessRoleBadge
+      label={role === "owner" ? "Lead" : undefined}
+      role={role}
+    />
+  )
 }
 
 export function ProjectMembers({

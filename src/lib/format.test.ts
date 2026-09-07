@@ -23,15 +23,14 @@ describe("local date and time formatting", () => {
     expect(() => localDateTimeToUtc("2026-02-30T12:00:00")).toThrow(RangeError)
   })
 
-  it("formats the stored instant with local date, time, and timezone", () => {
+  it("formats the stored instant with local date and 24-hour time", () => {
     expect(formatLocalDateTime("2026-09-05T19:42:18.000Z")).toBe(
       new Intl.DateTimeFormat("en-US", {
         day: "numeric",
-        hour: "numeric",
+        hour: "2-digit",
+        hourCycle: "h23",
         minute: "2-digit",
         month: "short",
-        second: "2-digit",
-        timeZoneName: "short",
         year: "numeric",
       }).format(new Date("2026-09-05T19:42:18.000Z"))
     )

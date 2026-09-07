@@ -48,13 +48,19 @@ export function permittedAccessGrantRoles(
   return roles.slice(roles.indexOf(maxRole))
 }
 
-export function AccessRoleBadge({ role }: { role: string }) {
+export function AccessRoleBadge({
+  label,
+  role,
+}: {
+  label?: string
+  role: string
+}) {
   const roleClass = isAccessRole(role) ? roleClasses[role] : undefined
   return (
     <Badge
       className={roleClass ?? "border-border bg-muted text-muted-foreground"}
     >
-      {accessRoleLabel(role)}
+      {label ?? accessRoleLabel(role)}
     </Badge>
   )
 }

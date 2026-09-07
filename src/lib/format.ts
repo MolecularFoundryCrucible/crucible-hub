@@ -6,16 +6,17 @@ export function formatBytes(bytes: number | null | undefined) {
   return `${(bytes / 1_000_000_000).toFixed(1)} GB`
 }
 
-export function formatDate(value: string | null | undefined) {
-  if (!value) return "Unknown"
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeZone: "UTC",
-  }).format(new Date(value))
-}
-
 const standardTimestampPattern =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/
+
+const localDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  hour: "2-digit",
+  hourCycle: "h23",
+  minute: "2-digit",
+  month: "short",
+  year: "numeric",
+})
 
 function standardTimestampDate(value: string) {
   if (!standardTimestampPattern.test(value)) return null
@@ -23,19 +24,19 @@ function standardTimestampDate(value: string) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+function formatStandardLocalDateTime(value: string) {
+  const date = standardTimestampDate(value)
+  return date ? localDateTimeFormatter.format(date) : value
+}
+
+export function formatDate(value: string | null | undefined) {
+  if (!value) return "Unknown"
+  return formatStandardLocalDateTime(value)
+}
+
 export function formatLocalDateTime(value: string | null | undefined) {
   if (!value) return null
-  const date = standardTimestampDate(value)
-  if (!date) return value
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    month: "short",
-    second: "2-digit",
-    timeZoneName: "short",
-    year: "numeric",
-  }).format(date)
+  return formatStandardLocalDateTime(value)
 }
 
 function padDateTimePart(value: number) {
