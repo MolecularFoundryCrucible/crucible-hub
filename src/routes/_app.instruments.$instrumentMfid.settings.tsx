@@ -36,20 +36,9 @@ function InstrumentSettingsPage() {
   return (
     <div className="flex min-w-0 flex-col gap-page-section">
       <nav
-        aria-label="Instrument settings sections"
+        aria-label="Instrument management sections"
         className="flex flex-wrap gap-x-4 gap-y-2"
       >
-        {canEditDescription ? (
-          <Link
-            activeOptions={{ exact: true, includeSearch: false }}
-            activeProps={{ className: "text-label text-foreground underline" }}
-            className="text-body text-muted-foreground hover:text-foreground"
-            params={{ instrumentMfid }}
-            to="/instruments/$instrumentMfid/settings"
-          >
-            General
-          </Link>
-        ) : null}
         {canChangeStatus ? (
           <Link
             activeOptions={{ includeSearch: false }}

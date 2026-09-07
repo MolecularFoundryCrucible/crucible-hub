@@ -70,7 +70,7 @@ Implemented for local development. Canonical sample and dataset Graph tabs load 
 
 ### P2: controlled self-service management
 
-Completed local slices are descriptive project and instrument Settings, sample and dataset summary editing, scientific metadata editing, reviewed resource deletion requests, a consolidated Project Overview, direct project membership, and resource relationship management. Project navigation is limited to Data, Overview, and capability-gated Settings; Settings is split into route-backed General and Members subsections.
+Completed local slices are descriptive project and instrument Overview editing, sample and dataset summary editing, scientific metadata editing, reviewed resource deletion requests, a consolidated Project Overview, direct project membership, and resource relationship management. Project navigation uses Data and Overview plus capability-gated Manage for route-backed Members and Ownership operations.
 
 Direct membership uses the accepted contract: add an existing user, change an allowed non-owner role, remove a member, or let a non-owner leave. It is separate from resource ACLs, ownership transfer, and future join requests. No invitation workflow is planned. See decisions 0020 and 0021.
 
@@ -88,11 +88,11 @@ Join submission and review remain deferred pending the API-owned workflow descri
 
 #### Instrument lifecycle
 
-Implemented for local development. Instrument Settings now has a capability-gated Lifecycle subsection using the dedicated status operation and authoritative instrument response. Hub offers active, maintenance, and decommissioned, confirms decommissioning, preserves local failure state, keeps lifecycle separate from descriptive General Settings, and provides API-filtered directory views for every state. The API's untyped status parameter and response, transition rules, and error outcomes remain documented in [Crucible API handoff](crucible-api-handoff.md).
+Implemented for local development. Instrument Manage has a capability-gated Lifecycle subsection using the dedicated status operation and authoritative instrument response. Hub offers active, maintenance, and decommissioned, confirms decommissioning, preserves local failure state, keeps lifecycle separate from descriptive Overview editing, and provides API-filtered directory views for every state. The API's untyped status parameter and response, transition rules, and error outcomes remain documented in [Crucible API handoff](crucible-api-handoff.md).
 
 #### Instrument operators, registration, ownership, and project moves
 
-Implemented and fixture/browser verified for local development. Instrument Settings has separate Operators and Ownership subsections. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Access offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
+Implemented and fixture/browser verified for local development. Instrument Manage has separate Operators and Ownership subsections. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Access offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
 
 Dataset instrument reassignment is omitted because the API intentionally freezes the legacy PATCH fields and exposes no dedicated atomic operation. Browser upload orchestration remains blocked by proposed decision 0005 and the API requirements in [Crucible API handoff](crucible-api-handoff.md); Hub does not expose a misleading or insecure upload control.
 

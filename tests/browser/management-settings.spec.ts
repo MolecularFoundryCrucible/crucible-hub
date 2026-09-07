@@ -15,7 +15,7 @@ function serverFunctionPost(request: {
   )
 }
 
-test("project Settings edits descriptive identity through the capability-gated route", async ({
+test("project Overview edits descriptive identity through an explicit action", async ({
   page,
 }) => {
   const mutationRequests: string[] = []
@@ -30,28 +30,20 @@ test("project Settings edits descriptive identity through the capability-gated r
   await page.goto(`/hub/projects/${projectMfid}?scenario=populated`)
   await page.waitForLoadState("networkidle")
   await expect(
-    page.getByRole("link", { name: "Settings", exact: true })
+    page.getByRole("link", { name: "Manage", exact: true })
   ).toBeVisible()
-  await page.getByRole("link", { name: "Settings", exact: true }).click()
-  await expect(page).toHaveURL(
-    new RegExp(`/hub/projects/${projectMfid}/settings`)
-  )
-  const settingsSections = page.getByRole("navigation", {
-    name: "Project settings sections",
-  })
   await expect(
-    settingsSections.getByRole("link", { name: "General", exact: true })
-  ).toHaveAttribute("aria-current", "page")
-  await expect(
-    settingsSections.getByRole("link", { name: "Members", exact: true })
-  ).toHaveAttribute(
-    "href",
-    new RegExp(`/projects/${projectMfid}/settings/members`)
-  )
+    page.getByRole("link", { name: "Settings", exact: true })
+  ).toHaveCount(0)
+  await page.getByRole("link", { name: "Overview", exact: true }).click()
 
-  const card = page
+  let card = page
     .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("General", { exact: true }) })
+    .filter({ has: page.getByText("Project details", { exact: true }) })
+  await card.getByRole("button", { name: "Edit project" }).click()
+  card = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("Edit project", { exact: true }) })
   await expect(card.getByLabel("Title", { exact: true })).toHaveValue(
     "Operando Catalyst Mapping"
   )
@@ -62,18 +54,20 @@ test("project Settings edits descriptive identity through the capability-gated r
   await expect(
     page.getByRole("heading", { level: 1, name: "Operando mapping" })
   ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Edit project" })).toBeVisible()
   expect(liveApiRequests).toEqual([])
 })
 
-test("failed project Settings edits retain the inline draft", async ({
+test("failed project Overview edits retain the inline draft", async ({
   page,
 }) => {
-  await page.goto(`/hub/projects/${projectMfid}/settings?scenario=populated`)
+  await page.goto(`/hub/projects/${projectMfid}/overview?scenario=populated`)
   await page.waitForLoadState("networkidle")
 
+  await page.getByRole("button", { name: "Edit project" }).click()
   const card = page
     .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("General", { exact: true }) })
+    .filter({ has: page.getByText("Edit project", { exact: true }) })
   await card
     .getByLabel("Title", { exact: true })
     .fill("Draft kept after failure")
@@ -96,8 +90,32 @@ test("failed project Settings edits retain the inline draft", async ({
     "Draft kept after failure"
   )
   await expect(page).toHaveURL(
-    new RegExp(`/hub/projects/${projectMfid}/settings`)
+    new RegExp(`/hub/projects/${projectMfid}/overview`)
   )
+})
+
+test("legacy General Settings indexes redirect to available management", async ({
+  page,
+}) => {
+  await page.goto(`/hub/projects/${projectMfid}/settings?scenario=populated`)
+  await expect(page).toHaveURL(
+    new RegExp(`/hub/projects/${projectMfid}/settings/members`)
+  )
+  await expect(
+    page.getByRole("link", { name: "Manage", exact: true })
+  ).toHaveAttribute("aria-current", "page")
+  await expect(page.getByText("General", { exact: true })).toHaveCount(0)
+
+  await page.goto(
+    `/hub/instruments/${instrumentMfid}/settings?scenario=populated`
+  )
+  await expect(page).toHaveURL(
+    new RegExp(`/hub/instruments/${instrumentMfid}/settings/lifecycle`)
+  )
+  await expect(
+    page.getByRole("link", { name: "Manage", exact: true })
+  ).toHaveAttribute("aria-current", "page")
+  await expect(page.getByText("General", { exact: true })).toHaveCount(0)
 })
 
 test("project Settings manages direct membership through confirmed API-shaped operations", async ({
@@ -188,17 +206,16 @@ for (const theme of ["light", "dark"] as const) {
   })
 }
 
-test("instrument Settings preserves descriptive fields and updates the exact detail", async ({
+test("instrument Overview preserves descriptive fields and updates the exact detail", async ({
   page,
 }) => {
-  await page.goto(
-    `/hub/instruments/${instrumentMfid}/settings?scenario=populated`
-  )
+  await page.goto(`/hub/instruments/${instrumentMfid}?scenario=populated`)
   await page.waitForLoadState("networkidle")
 
-  const card = page
+  await page.getByRole("button", { name: "Edit instrument" }).click()
+  let card = page
     .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("Instrument settings", { exact: true }) })
+    .filter({ has: page.getByText("Edit instrument", { exact: true }) })
   await expect(card.getByLabel("Other ID", { exact: true })).toHaveValue("")
   await card.getByLabel("Name", { exact: true }).fill("Updated microprobe")
   await card.getByLabel("Other ID", { exact: true }).fill("facility-42")
@@ -207,6 +224,10 @@ test("instrument Settings preserves descriptive fields and updates the exact det
   await expect(
     page.getByRole("heading", { level: 1, name: "Updated microprobe" })
   ).toBeVisible()
+  await page.getByRole("button", { name: "Edit instrument" }).click()
+  card = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("Edit instrument", { exact: true }) })
   await expect(card.getByLabel("Other ID", { exact: true })).toHaveValue(
     "facility-42"
   )
@@ -221,7 +242,7 @@ test("instrument Lifecycle applies confirmed status changes and retains failed s
   await page.waitForLoadState("networkidle")
 
   const settingsSections = page.getByRole("navigation", {
-    name: "Instrument settings sections",
+    name: "Instrument management sections",
   })
   await expect(
     settingsSections.getByRole("link", { name: "Lifecycle", exact: true })
@@ -313,17 +334,16 @@ test("project Ownership previews and confirms the selected person", async ({
   ).toHaveCount(0)
 })
 
-test("dirty instrument Settings edits block section navigation", async ({
+test("dirty instrument Overview edits block section navigation", async ({
   page,
 }) => {
-  await page.goto(
-    `/hub/instruments/${instrumentMfid}/settings?scenario=populated`
-  )
+  await page.goto(`/hub/instruments/${instrumentMfid}?scenario=populated`)
   await page.waitForLoadState("networkidle")
 
+  await page.getByRole("button", { name: "Edit instrument" }).click()
   const card = page
     .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("Instrument settings", { exact: true }) })
+    .filter({ has: page.getByText("Edit instrument", { exact: true }) })
   await card
     .getByLabel("Name", { exact: true })
     .fill("Unsaved instrument draft")
@@ -340,7 +360,7 @@ test("dirty instrument Settings edits block section navigation", async ({
     .getByRole("button", { name: "Keep editing", exact: true })
     .click()
   await expect(page).toHaveURL(
-    new RegExp(`/hub/instruments/${instrumentMfid}/settings`)
+    new RegExp(`/hub/instruments/${instrumentMfid}(?:[?]|$)`)
   )
   await expect(card.getByLabel("Name", { exact: true })).toHaveValue(
     "Unsaved instrument draft"

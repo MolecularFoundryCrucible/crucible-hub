@@ -1,6 +1,6 @@
 # 0017: Use Dedicated Descriptive Settings for Projects and Instruments
 
-Status: Accepted
+Status: Superseded by [decision 0027](0027-edit-projects-and-instruments-from-overview.md)
 
 Date: 2026-09-05
 

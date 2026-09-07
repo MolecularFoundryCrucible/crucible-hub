@@ -125,8 +125,7 @@ function InstrumentPage() {
         >
           Datasets
         </Link>
-        {resource.capabilities?.can_edit === true ||
-        resource.capabilities?.can_change_status === true ||
+        {resource.capabilities?.can_change_status === true ||
         resource.capabilities?.can_manage_access === true ||
         resource.capabilities?.can_transfer === true ? (
           <Link
@@ -139,7 +138,7 @@ function InstrumentPage() {
             search={{}}
             to="/instruments/$instrumentMfid/settings"
           >
-            Settings
+            Manage
           </Link>
         ) : null}
       </nav>

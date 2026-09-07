@@ -2,17 +2,25 @@ import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
-import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
+import {
+  CopyIcon,
+  CopySuccessIcon,
+  EditResourceIcon,
+} from "@/components/crucible/icons"
 import {
   ContentGrid,
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import { ProjectMembers } from "@/components/crucible/project-members"
 import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -25,6 +33,7 @@ import {
 } from "@/components/ui/tooltip"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceProject } from "@/data/crucible/workspace-source"
+import { ProjectSettingsForm } from "@/features/management-settings/settings-forms"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 import { formatLocalDateTime } from "@/lib/format"
 
@@ -34,7 +43,9 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/overview")({
 
 function ProjectOverviewPage() {
   const { projectMfid } = Route.useParams()
+  const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
+  const [editing, setEditing] = useState(false)
   const { data: project } = useSuspenseQuery(
     projectQueryOptions(scope, projectMfid)
   )
@@ -64,27 +75,45 @@ function ProjectOverviewPage() {
   return (
     <ContentGrid variant="detail">
       <ContentGridItem span="wide">
-        <Card>
-          <CardHeader>
-            <CardTitle>Project details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <Field label="Project ID" value={project.project_id} />
-              <Field label="Organization" value={project.organization} />
-              <ProjectLead project={project} />
-              <ProjectMfid project={project} />
-              <Field
-                label="Created"
-                value={formatLocalDateTime(project.creation_time)}
-              />
-              <Field
-                label="Updated"
-                value={formatLocalDateTime(project.modification_time)}
-              />
-            </dl>
-          </CardContent>
-        </Card>
+        {editing ? (
+          <ProjectSettingsForm
+            mode={mode}
+            onCancel={() => setEditing(false)}
+            onSaved={() => setEditing(false)}
+            project={project}
+            scope={scope}
+          />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Project details</CardTitle>
+              {project.capabilities?.can_edit === true ? (
+                <CardAction>
+                  <Button onClick={() => setEditing(true)} variant="outline">
+                    <EditResourceIcon data-icon="inline-start" />
+                    Edit project
+                  </Button>
+                </CardAction>
+              ) : null}
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <Field label="Project ID" value={project.project_id} />
+                <Field label="Organization" value={project.organization} />
+                <ProjectLead project={project} />
+                <ProjectMfid project={project} />
+                <Field
+                  label="Created"
+                  value={formatLocalDateTime(project.creation_time)}
+                />
+                <Field
+                  label="Updated"
+                  value={formatLocalDateTime(project.modification_time)}
+                />
+              </dl>
+            </CardContent>
+          </Card>
+        )}
       </ContentGridItem>
 
       <ContentGridItem span="narrow">

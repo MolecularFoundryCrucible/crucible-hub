@@ -33,20 +33,9 @@ function ProjectSettingsLayout() {
   return (
     <div className="flex min-w-0 flex-col gap-page-section">
       <nav
-        aria-label="Project settings sections"
+        aria-label="Project management sections"
         className="flex flex-wrap gap-x-4 gap-y-2"
       >
-        {canEditDescription ? (
-          <Link
-            activeOptions={{ exact: true, includeSearch: false }}
-            activeProps={{ className: "text-label text-foreground underline" }}
-            className="text-body text-muted-foreground hover:text-foreground"
-            params={{ projectMfid }}
-            to="/projects/$projectMfid/settings"
-          >
-            General
-          </Link>
-        ) : null}
         {canUseMembership ? (
           <Link
             activeOptions={{ includeSearch: false }}

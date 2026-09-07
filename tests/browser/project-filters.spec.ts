@@ -180,3 +180,29 @@ test("blocks malformed filter URLs without loading a collection", async ({
     )
     .toBe(true)
 })
+
+for (const theme of ["light", "dark"] as const) {
+  test(`keeps outlined card actions distinct from the ${theme} surface`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: theme })
+    await page.addInitScript((selectedTheme) => {
+      localStorage.setItem("crucible-hub-theme", selectedTheme)
+    }, theme)
+    await page.goto("/hub/projects?scenario=populated")
+    await page.waitForLoadState("networkidle")
+
+    const action = page.getByRole("link", { name: /Open project/ }).first()
+    await expect(action).toBeVisible()
+    const colors = await action.evaluate((element) => {
+      const card = element.closest('[data-slot="card"]')
+      return {
+        actionBackground: getComputedStyle(element).backgroundColor,
+        actionBorder: getComputedStyle(element).borderTopColor,
+        cardBackground: card ? getComputedStyle(card).backgroundColor : null,
+      }
+    })
+    expect(colors.actionBackground).toBe("rgba(0, 0, 0, 0)")
+    expect(colors.actionBorder).not.toBe(colors.cardBackground)
+  })
+}

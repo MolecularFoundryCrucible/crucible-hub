@@ -63,11 +63,9 @@ function ProjectWorkspace() {
 
   const complete = "status" in project
   const membership = projectMembershipActions(project, scope[2])
-  const hasSettings =
+  const hasManagement =
     complete &&
-    (project.capabilities?.can_edit === true ||
-      membership.canUseMembership ||
-      project.capabilities?.can_transfer === true)
+    (membership.canUseMembership || project.capabilities?.can_transfer === true)
 
   return (
     <PageLayout>
@@ -134,7 +132,7 @@ function ProjectWorkspace() {
         >
           Overview
         </Link>
-        {hasSettings ? (
+        {hasManagement ? (
           <Link
             activeOptions={{ includeSearch: false }}
             activeProps={{
@@ -146,7 +144,7 @@ function ProjectWorkspace() {
             state={{}}
             to="/projects/$projectMfid/settings"
           >
-            Settings
+            Manage
           </Link>
         ) : null}
       </nav>

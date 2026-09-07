@@ -6,6 +6,7 @@ import {
   accessRoleRank,
 } from "@/components/crucible/access-role-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -51,7 +52,7 @@ export function ProjectMembers({
         {manageMembers && projectMfid ? (
           <CardAction>
             <Link
-              className="text-label text-muted-foreground hover:text-foreground hover:underline"
+              className={buttonVariants({ size: "sm", variant: "outline" })}
               params={{ projectMfid }}
               to="/projects/$projectMfid/settings/members"
             >

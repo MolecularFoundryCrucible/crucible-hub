@@ -1,14 +1,27 @@
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { EditResourceIcon } from "@/components/crucible/icons"
+import {
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import {
   ContentGrid,
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { InstrumentSettingsForm } from "@/features/management-settings/settings-forms"
 import type {
   WorkspaceResourceDetail,
   WorkspaceScientificMetadata,
@@ -23,7 +36,9 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
 
 function InstrumentOverviewPage() {
   const { instrumentMfid } = Route.useParams()
+  const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
+  const [editing, setEditing] = useState(false)
   const { data: resource } = useSuspenseQuery(
     resourceQueryOptions(scope, instrumentMfid)
   )
@@ -33,7 +48,24 @@ function InstrumentOverviewPage() {
   return (
     <ContentGrid variant="detail">
       <ContentGridItem span="wide">
-        <InstrumentSummary instrument={resource} />
+        {editing ? (
+          <InstrumentSettingsForm
+            instrument={resource}
+            mode={mode}
+            onCancel={() => setEditing(false)}
+            onSaved={() => setEditing(false)}
+            scope={scope}
+          />
+        ) : (
+          <InstrumentSummary
+            instrument={resource}
+            onEdit={
+              resource.capabilities?.can_edit === true
+                ? () => setEditing(true)
+                : undefined
+            }
+          />
+        )}
       </ContentGridItem>
       <ContentGridItem span="narrow">
         <InstrumentIdentity instrument={resource} />
@@ -45,7 +77,13 @@ function InstrumentOverviewPage() {
   )
 }
 
-function InstrumentSummary({ instrument }: { instrument: InstrumentDetail }) {
+function InstrumentSummary({
+  instrument,
+  onEdit,
+}: {
+  instrument: InstrumentDetail
+  onEdit?: () => void
+}) {
   const fields = [
     ["Type", instrument.instrument_type],
     ["Location", instrument.location],
@@ -57,6 +95,14 @@ function InstrumentSummary({ instrument }: { instrument: InstrumentDetail }) {
     <Card>
       <CardHeader>
         <CardTitle>Summary</CardTitle>
+        {onEdit ? (
+          <CardAction>
+            <Button onClick={onEdit} variant="outline">
+              <EditResourceIcon data-icon="inline-start" />
+              Edit instrument
+            </Button>
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent>
         <dl className="grid gap-4 sm:grid-cols-2">

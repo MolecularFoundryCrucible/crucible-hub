@@ -9,7 +9,6 @@ import {
   SaveChangesIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
-import { ContentBoundary } from "@/components/crucible/content-layout"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -222,10 +221,14 @@ export function mergeInstrumentSettingsUpdate(
 
 export function ProjectSettingsForm({
   mode,
+  onCancel,
+  onSaved,
   project,
   scope,
 }: {
   mode: "api" | "fixture"
+  onCancel?: () => void
+  onSaved?: () => void
   project: ProjectDetail
   scope: IdentityScope
 }) {
@@ -275,6 +278,7 @@ export function ProjectSettingsForm({
           })
         }
         form.reset(projectValues(update))
+        onSaved?.()
       } catch (error) {
         setSaveError(saveErrorMessage(error, "project"))
       }
@@ -283,7 +287,10 @@ export function ProjectSettingsForm({
 
   const isDirty = useStore(form.store, (state) => state.isDirty)
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
-  const discard = useDiscardProtection(isDirty, () => form.reset())
+  const discard = useDiscardProtection(isDirty, () => {
+    form.reset()
+    onCancel?.()
+  })
   const formId = `project-settings-${project.unique_id}`
 
   return (
@@ -316,7 +323,7 @@ export function ProjectSettingsForm({
             )}
           </form.Subscribe>
         }
-        title="General"
+        title="Edit project"
       >
         <form.Field name="title">
           {(field) => (
@@ -352,10 +359,14 @@ export function ProjectSettingsForm({
 export function InstrumentSettingsForm({
   instrument,
   mode,
+  onCancel,
+  onSaved,
   scope,
 }: {
   instrument: InstrumentDetail
   mode: "api" | "fixture"
+  onCancel?: () => void
+  onSaved?: () => void
   scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
@@ -404,6 +415,7 @@ export function InstrumentSettingsForm({
         }
         const next = mergeInstrumentSettingsUpdate(instrument, update)
         if (next?.kind === "instrument") form.reset(instrumentValues(next))
+        onSaved?.()
       } catch (error) {
         setSaveError(saveErrorMessage(error, "instrument"))
       }
@@ -412,7 +424,10 @@ export function InstrumentSettingsForm({
 
   const isDirty = useStore(form.store, (state) => state.isDirty)
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
-  const discard = useDiscardProtection(isDirty, () => form.reset())
+  const discard = useDiscardProtection(isDirty, () => {
+    form.reset()
+    onCancel?.()
+  })
   const formId = `instrument-settings-${instrument.unique_id}`
 
   return (
@@ -445,7 +460,7 @@ export function InstrumentSettingsForm({
             )}
           </form.Subscribe>
         }
-        title="Instrument settings"
+        title="Edit instrument"
       >
         <form.Field name="instrument_name">
           {(field) => (
@@ -548,33 +563,31 @@ function SettingsFormCard({
   title: string
 }) {
   return (
-    <ContentBoundary width="reading">
-      <Card aria-busy={isSubmitting}>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form id={formId} noValidate onSubmit={onSubmit}>
-            <fieldset disabled={isSubmitting}>
-              <FieldGroup>{children}</FieldGroup>
-            </fieldset>
-            <SaveError message={saveError} />
-          </form>
-        </CardContent>
-        <CardFooter className="justify-end gap-2">
-          <Button
-            disabled={isSubmitting}
-            onClick={onCancel}
-            type="button"
-            variant="outline"
-          >
-            <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
-            Cancel
-          </Button>
-          {saveAction}
-        </CardFooter>
-      </Card>
-    </ContentBoundary>
+    <Card aria-busy={isSubmitting}>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form id={formId} noValidate onSubmit={onSubmit}>
+          <fieldset disabled={isSubmitting}>
+            <FieldGroup>{children}</FieldGroup>
+          </fieldset>
+          <SaveError message={saveError} />
+        </form>
+      </CardContent>
+      <CardFooter className="justify-end gap-2">
+        <Button
+          disabled={isSubmitting}
+          onClick={onCancel}
+          type="button"
+          variant="outline"
+        >
+          <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
+          Cancel
+        </Button>
+        {saveAction}
+      </CardFooter>
+    </Card>
   )
 }
 
