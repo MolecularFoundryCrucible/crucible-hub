@@ -339,7 +339,7 @@ export interface paths {
          *     Pass include_links=true to include parent, child, and associated resources for each dataset.
          *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
          *     Pass instrument_mfid to filter by the instrument's canonical stable identity.
-         *     Pass project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
          *     Pass sample_mfid to filter by a readable sample's canonical stable identity.
          *     Access selectors use AND semantics and only narrow resources readable by the caller.
          */
@@ -386,8 +386,8 @@ export interface paths {
         };
         /**
          * Search Datasets
-         * @description Search datasets by name. Returns results ordered by match quality (exact → prefix → substring).
-         *     Optionally scope to a project with ?project_id=. Maximum 50 results.
+         * @description Search readable datasets by name and return results ordered by match quality.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
          */
         get: operations["search_datasets_datasets_search_get"];
         put?: never;
@@ -1109,6 +1109,10 @@ export interface paths {
          * @description Creates an ingestion request for a file, scoped to the specified dataset.
          *     Returns error if the dataset associated with the file is not found, or the user does not have access.
          *     Requires write access to the dataset.
+         *
+         *     Only 'requested' (dispatch to the ingestion queue) and 'not_requested' (record
+         *     the file without dispatching) may be set here. Terminal states are written
+         *     afterwards via PATCH /ingestion_requests/{reqid}.
          */
         post: operations["create_file_ingestion_request_files__file_id__ingest_post"];
         delete?: never;
@@ -1217,7 +1221,7 @@ export interface paths {
         head?: never;
         /**
          * Patch Ingestion Request
-         * @description Updates an ingestion request. Admin/group access only.
+         * @description Updates an ingestion request. Requires edit access to the parent dataset.
          */
         patch: operations["patch_ingestion_request_ingestion_requests__reqid__patch"];
         trace?: never;
@@ -1581,12 +1585,12 @@ export interface paths {
         /**
          * Search Projects
          * @description Search projects by title or project_id across all projects, not just ones the
-         *     caller is a member of — this is how a user discovers a project to request to
+         *     caller is a member of. This is how a user discovers a project to request to
          *     join via POST /access_groups/{group_name}/join. Returns results ordered by
          *     match quality. Maximum 50 results.
          *
          *     Note: ProjectRead has no lead/scientific_metadata fields, so this is safe to
-         *     open regardless of membership — see GET /projects/{proj_id} for the fields
+         *     open regardless of membership. See GET /projects/{proj_id} for the fields
          *     that stay member-only.
          */
         get: operations["search_projects_projects_search_get"];
@@ -2067,7 +2071,7 @@ export interface paths {
          *     Pass include_links=true to include parent, child, and associated resources for each sample.
          *     include_datasets is deprecated; use include_links instead.
          *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
-         *     Pass project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
          *     Pass dataset_mfid to filter by a readable dataset's canonical stable identity.
          *     Access selectors use AND semantics and only narrow resources readable by the caller.
          */
@@ -2094,8 +2098,8 @@ export interface paths {
         };
         /**
          * Search Samples
-         * @description Search samples by name. Returns results ordered by match quality (exact → prefix → substring).
-         *     Optionally scope to a project with ?project_id=. Maximum 50 results.
+         * @description Search readable samples by name and return results ordered by match quality.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
          */
         get: operations["search_samples_samples_search_get"];
         put?: never;
@@ -2860,8 +2864,16 @@ export interface components {
             data_type?: string | null;
             /** Dataset Name */
             dataset_name?: string | null;
-            /** Instrument Id */
+            /**
+             * Instrument Id
+             * @description Registered instrument slug. May be combined with a matching instrument_mfid.
+             */
             instrument_id?: string | null;
+            /**
+             * Instrument Mfid
+             * @description Canonical registered instrument MFID. May be combined with a matching instrument_id.
+             */
+            instrument_mfid?: string | null;
             /** Instrument Name */
             instrument_name?: string | null;
             /** Measurement */
@@ -2877,8 +2889,16 @@ export interface components {
              * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
              */
             owner_orcid?: string | null;
-            /** Project Id */
+            /**
+             * Project Id
+             * @description Project slug. May be combined with a matching project_mfid.
+             */
             project_id?: string | null;
+            /**
+             * Project Mfid
+             * @description Canonical project MFID. May be combined with a matching project_id.
+             */
+            project_mfid?: string | null;
             /**
              * Public
              * @default false
@@ -3787,8 +3807,16 @@ export interface components {
              * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
              */
             owner_orcid?: string | null;
-            /** Project Id */
+            /**
+             * Project Id
+             * @description Project slug. May be combined with a matching project_mfid.
+             */
             project_id?: string | null;
+            /**
+             * Project Mfid
+             * @description Canonical project MFID. May be combined with a matching project_id.
+             */
+            project_mfid?: string | null;
             /**
              * Public
              * @default false
@@ -4607,9 +4635,11 @@ export interface operations {
                 visibility?: "all" | "public" | "private";
                 /** @description Filter datasets assigned to this canonical instrument MFID. */
                 instrument_mfid?: string | null;
+                /** @description Filter datasets related to this project slug. May be combined with a matching project_mfid. */
+                project_id?: string | null;
                 /** @description Filter datasets related to this canonical project MFID. */
                 project_mfid?: string | null;
-                /** @description Project relationship to include. Requires project_mfid; defaults to assigned. */
+                /** @description Project relationship to include. Requires project_id or project_mfid; defaults to assigned. */
                 project_scope?: ("assigned" | "shared" | "all") | null;
                 /** @description Filter datasets linked to this canonical sample MFID. */
                 sample_mfid?: string | null;
@@ -4711,9 +4741,14 @@ export interface operations {
     search_datasets_datasets_search_get: {
         parameters: {
             query: {
-                /** @description Search term matched against dataset_name. */
+                /** @description Search term matched against dataset_name. Queries may contain at most 200 characters and 10 terms. */
                 q: string;
+                /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
+                /** @description Restrict results related to this canonical project MFID. */
+                project_mfid?: string | null;
+                /** @description Project relationship to include. Requires project_id or project_mfid; defaults to assigned. */
+                project_scope?: ("assigned" | "shared" | "all") | null;
                 limit?: number;
             };
             header?: never;
@@ -5040,6 +5075,7 @@ export interface operations {
         parameters: {
             query?: {
                 ingestion_class?: string | null;
+                status?: "requested" | "not_requested";
             };
             header?: never;
             path: {
@@ -6121,6 +6157,7 @@ export interface operations {
         parameters: {
             query?: {
                 ingestion_class?: string | null;
+                status?: "requested" | "not_requested";
             };
             header?: never;
             path: {
@@ -6420,7 +6457,7 @@ export interface operations {
     search_instruments_instruments_search_get: {
         parameters: {
             query: {
-                /** @description Search term matched against instrument_name, instrument_type, and manufacturer. */
+                /** @description Search term matched against instrument_name, instrument_type, and manufacturer. Queries may contain at most 200 characters and 10 terms. */
                 q: string;
                 /** @description Restrict results to one lifecycle status. */
                 status?: components["schemas"]["InstrumentStatus"] | null;
@@ -6952,7 +6989,7 @@ export interface operations {
     search_projects_projects_search_get: {
         parameters: {
             query: {
-                /** @description Search term matched against project title and project_id. */
+                /** @description Search term matched against project title and project_id. Queries may contain at most 200 characters and 10 terms. */
                 q: string;
                 limit?: number;
             };
@@ -7900,9 +7937,11 @@ export interface operations {
                 modification_time_gte?: string | null;
                 modification_time_lte?: string | null;
                 visibility?: "all" | "public" | "private";
+                /** @description Filter samples related to this project slug. May be combined with a matching project_mfid. */
+                project_id?: string | null;
                 /** @description Filter samples related to this canonical project MFID. */
                 project_mfid?: string | null;
-                /** @description Project relationship to include. Requires project_mfid; defaults to assigned. */
+                /** @description Project relationship to include. Requires project_id or project_mfid; defaults to assigned. */
                 project_scope?: ("assigned" | "shared" | "all") | null;
                 /** @description Filter samples linked to this canonical dataset MFID. */
                 dataset_mfid?: string | null;
@@ -7969,9 +8008,14 @@ export interface operations {
     search_samples_samples_search_get: {
         parameters: {
             query: {
-                /** @description Search term matched against sample_name. */
+                /** @description Search term matched against sample_name. Queries may contain at most 200 characters and 10 terms. */
                 q: string;
+                /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
+                /** @description Restrict results related to this canonical project MFID. */
+                project_mfid?: string | null;
+                /** @description Project relationship to include. Requires project_id or project_mfid; defaults to assigned. */
+                project_scope?: ("assigned" | "shared" | "all") | null;
                 limit?: number;
             };
             header?: never;
@@ -8579,7 +8623,7 @@ export interface operations {
     search_users_users_search_get: {
         parameters: {
             query: {
-                /** @description Search term matched against username, first name, and last name. */
+                /** @description Search term matched against username, first name, and last name. Queries may contain at most 200 characters and 10 terms. */
                 q: string;
                 limit?: number;
             };

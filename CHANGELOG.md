@@ -61,6 +61,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Updated the pinned staging API contract and sample and dataset creation requests to use canonical project and instrument MFIDs directly, removing identity lookup requests before creation.
 - Preserved project context when opening sample and dataset pages from Project Data, with a validated contextual return link that targets the matching project collection.
 - Refined sample and dataset Overview cards, resource navigation, Manage layout, and compact confirmation behavior with clearer field order, consistent action hierarchy, linked identity names with shared person previews, project-aware breadcrumbs, a combined access card, and a unified resource management card.
 - Gave Identity cards slightly more space and kept full MFIDs on one line when the available viewport permits.

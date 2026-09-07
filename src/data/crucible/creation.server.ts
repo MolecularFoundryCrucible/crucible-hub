@@ -43,52 +43,6 @@ function projectReference(
   }
 }
 
-async function readApiProjectReference(
-  projectMfid: string,
-  requestSignal?: AbortSignal
-) {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode !== "api") throw new Error("The API is unavailable.")
-  const client = createCrucibleClient(configuration)
-  const result = await client.GET("/projects/{project_ref}", {
-    params: {
-      path: { project_ref: projectMfid },
-      query: { include_members: false, include_metadata: false },
-    },
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
-  if (result.data.unique_id !== projectMfid) {
-    throw new Error("The selected project response is invalid.")
-  }
-  return {
-    project_id: result.data.project_id,
-    title: result.data.title,
-    unique_id: result.data.unique_id,
-  } satisfies Schema<"ProjectReferenceRead">
-}
-
-async function readApiInstrumentReference(
-  instrumentMfid: string,
-  requestSignal?: AbortSignal
-) {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode !== "api") throw new Error("The API is unavailable.")
-  const client = createCrucibleClient(configuration)
-  const result = await client.GET("/instruments/{instrument_mfid}", {
-    params: {
-      path: { instrument_mfid: instrumentMfid },
-      query: { include_metadata: false, include_owner: false },
-    },
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
-  if (result.data.unique_id !== instrumentMfid) {
-    throw new Error("The selected instrument response is invalid.")
-  }
-  return result.data
-}
-
 export async function createWorkspaceProjectResource(
   project: WorkspaceProjectCreate,
   scenario?: FixtureScenario,
@@ -165,15 +119,11 @@ export async function createWorkspaceSampleResource(
     })
   }
 
-  const project = await readApiProjectReference(
-    sample.projectMfid,
-    requestSignal
-  )
   const client = createCrucibleClient(configuration)
   const result = await client.POST("/samples", {
     body: {
       description: sample.description,
-      project_id: project.project_id,
+      project_mfid: sample.projectMfid,
       public: sample.public,
       sample_name: sample.sample_name,
       sample_type: sample.sample_type,
@@ -181,13 +131,7 @@ export async function createWorkspaceSampleResource(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (result.data) {
-    return toWorkspaceResourceDetail({
-      ...result.data,
-      project: result.data.project ?? project,
-      project_id: project.project_id,
-    })
-  }
+  if (result.data) return toWorkspaceResourceDetail(result.data)
   throw new CrucibleResponseError(result.response.status)
 }
 
@@ -237,46 +181,23 @@ export async function createWorkspaceDatasetResource(
     })
   }
 
-  const [project, instrument] = await Promise.all([
-    readApiProjectReference(dataset.projectMfid, requestSignal),
-    dataset.instrumentMfid
-      ? readApiInstrumentReference(dataset.instrumentMfid, requestSignal)
-      : null,
-  ])
   const client = createCrucibleClient(configuration)
   const result = await client.POST("/datasets", {
     body: {
       data_format: dataset.data_format,
       data_type: dataset.data_type,
       dataset_name: dataset.dataset_name,
-      ...(instrument?.instrument_id
-        ? { instrument_id: instrument.instrument_id }
-        : instrument
-          ? { instrument_name: instrument.instrument_name }
-          : {}),
+      ...(dataset.instrumentMfid
+        ? { instrument_mfid: dataset.instrumentMfid }
+        : {}),
       measurement: dataset.measurement,
-      project_id: project.project_id,
+      project_mfid: dataset.projectMfid,
       public: dataset.public,
       session_name: dataset.session_name,
       timestamp: dataset.timestamp,
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (result.data) {
-    return toWorkspaceResourceDetail({
-      ...result.data,
-      instrument:
-        result.data.instrument ??
-        (instrument
-          ? {
-              instrument_id: instrument.instrument_id,
-              instrument_name: instrument.instrument_name,
-              unique_id: instrument.unique_id,
-            }
-          : null),
-      project: result.data.project ?? project,
-      project_id: project.project_id,
-    })
-  }
+  if (result.data) return toWorkspaceResourceDetail(result.data)
   throw new CrucibleResponseError(result.response.status)
 }

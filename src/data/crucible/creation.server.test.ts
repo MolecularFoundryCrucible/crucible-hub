@@ -77,21 +77,13 @@ describe("workspace creation source", () => {
     })
   })
 
-  it("resolves the selected project before creating a sample", async () => {
+  it("creates a sample with its selected project MFID", async () => {
     useApi()
     const requests: Request[] = []
     vi.stubGlobal(
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        const path = new URL(request.url).pathname
-        if (path === "/projects/project-mfid") {
-          return Response.json({
-            organization: "Molecular Foundry",
-            project_id: "perovskite-1",
-            unique_id: "project-mfid",
-          })
-        }
         return Response.json({
           description: null,
           project: {
@@ -119,12 +111,11 @@ describe("workspace creation source", () => {
 
     expect(resource).toMatchObject({ kind: "sample", unique_id: resourceMfid })
     expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
-      "/projects/project-mfid",
       "/samples",
     ])
-    await expect(requests[1].json()).resolves.toEqual({
+    await expect(requests[0].json()).resolves.toEqual({
       description: null,
-      project_id: "perovskite-1",
+      project_mfid: "project-mfid",
       public: false,
       sample_name: "Sample A",
       sample_type: null,
@@ -132,29 +123,13 @@ describe("workspace creation source", () => {
     })
   })
 
-  it("resolves project and instrument identities before creating a dataset", async () => {
+  it("creates a dataset with its selected project and instrument MFIDs", async () => {
     useApi()
     const requests: Request[] = []
     vi.stubGlobal(
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        const path = new URL(request.url).pathname
-        if (path === "/projects/project-mfid") {
-          return Response.json({
-            organization: "Molecular Foundry",
-            project_id: "perovskite-1",
-            unique_id: "project-mfid",
-          })
-        }
-        if (path === "/instruments/instrument-mfid") {
-          return Response.json({
-            instrument_id: "beamline-1",
-            instrument_name: "Beamline 1",
-            location: "Building 1",
-            unique_id: "instrument-mfid",
-          })
-        }
         return Response.json({
           dataset_name: "Dataset A",
           data_format: null,
@@ -191,15 +166,9 @@ describe("workspace creation source", () => {
     })
 
     expect(resource).toMatchObject({ kind: "dataset", unique_id: resourceMfid })
-    expect(
-      requests.map((request) => new URL(request.url).pathname).sort()
-    ).toEqual(
-      [
-        "/datasets",
-        "/instruments/instrument-mfid",
-        "/projects/project-mfid",
-      ].sort()
-    )
+    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
+      "/datasets",
+    ])
     const createRequest = requests.find(
       (request) => new URL(request.url).pathname === "/datasets"
     )
@@ -207,9 +176,9 @@ describe("workspace creation source", () => {
       data_format: null,
       data_type: null,
       dataset_name: "Dataset A",
-      instrument_id: "beamline-1",
+      instrument_mfid: "instrument-mfid",
       measurement: null,
-      project_id: "perovskite-1",
+      project_mfid: "project-mfid",
       public: false,
       session_name: null,
       timestamp: null,
