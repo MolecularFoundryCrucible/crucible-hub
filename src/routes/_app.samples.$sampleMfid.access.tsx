@@ -1,12 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router"
-
-import { ResourceAccessPage } from "@/features/resource-access/resource-access-page"
+import { Navigate, createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_app/samples/$sampleMfid/access")({
-  component: SampleAccessPage,
+  component: LegacySampleAccessPage,
 })
 
-function SampleAccessPage() {
+function LegacySampleAccessPage() {
   const { sampleMfid } = Route.useParams()
-  return <ResourceAccessPage resourceKind="sample" resourceMfid={sampleMfid} />
+  return (
+    <Navigate
+      params={{ sampleMfid }}
+      replace
+      search={true}
+      to="/samples/$sampleMfid/manage"
+    />
+  )
 }

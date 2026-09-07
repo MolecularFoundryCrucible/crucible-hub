@@ -26,7 +26,7 @@ The local fixture workspace has the Phase 0 scaffold, server boundary, generated
 | Read workspace                             | Implemented and fixture/browser verified.                                                                       |
 | Controlled resource and settings mutations | Implemented and fixture/browser verified; not production-exposed.                                               |
 | Direct project membership                  | Add, role change, removal, and self-leave are implemented and fixture/browser verified; not production-exposed. |
-| Resource access management                 | Route-backed Access pages and local fixture/browser mutation coverage are implemented; not production-exposed.  |
+| Resource management                        | Route-backed Manage pages and local fixture/browser mutation coverage are implemented; not production-exposed.  |
 | Join requests                              | Deferred pending the API-owned identity, status, capability, and efficient project-state contract.              |
 | Instrument management                      | Lifecycle, operators, ownership transfer, and registration are implemented for local development.               |
 | Resource assignment and ownership          | Sample and dataset project moves and resource ownership transfer are implemented for local development.         |
@@ -78,9 +78,9 @@ Direct membership uses the accepted contract: add an existing user, change an al
 
 Implemented and fixture/browser verified for local development. Canonical sample and dataset pages provide capability-guided parent, child, and cross-type link management with bounded target search, confirmed unlink, retained failure state, exact source and target rereads, and no resource deletion. Production exposure remains gated on the API relationship contract described in [Crucible API handoff](crucible-api-handoff.md) and the Hub session boundary.
 
-#### Resource access management
+#### Resource management
 
-Implemented and fixture/browser verified for local development. Route-backed sample and dataset Access pages reuse the canonical parent shell, load ACLs only on Access entry with preload disabled, gate manager controls on exact `can_manage_access`, cap user and project grants with `max_grant_role`, keep non-manageable principals read-only, confirm publish, unpublish, and revoke, and apply server-confirmed non-optimistic mutations. The API shape and production session gate remain the authoritative deployment constraints.
+Implemented and fixture/browser verified for local development. Route-backed sample and dataset Manage pages reuse the canonical parent shell, load ACLs only on Manage entry with preload disabled, gate access controls on exact `can_manage_access`, cap user and project grants with `max_grant_role`, keep non-manageable principals read-only, contain ownership and reviewed deletion actions, confirm consequential mutations, and apply server-confirmed non-optimistic state. The API shape and production session gate remain the authoritative deployment constraints.
 
 #### Deferred: join requests
 
@@ -92,7 +92,7 @@ Implemented for local development. Instrument Manage has a capability-gated Life
 
 #### Instrument operators, registration, ownership, and project moves
 
-Implemented and fixture/browser verified for local development. Instrument Manage has separate Operators and Ownership subsections. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Access offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
+Implemented and fixture/browser verified for local development. Instrument Manage has separate Operators and Ownership subsections. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Manage offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
 
 Dataset instrument reassignment is omitted because the API intentionally freezes the legacy PATCH fields and exposes no dedicated atomic operation. Browser upload orchestration remains blocked by proposed decision 0005 and the API requirements in [Crucible API handoff](crucible-api-handoff.md); Hub does not expose a misleading or insecure upload control.
 

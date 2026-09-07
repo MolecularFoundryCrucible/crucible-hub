@@ -14,7 +14,7 @@ Hub uses the API preview before presenting final confirmation for ownership tran
 
 Exact `can_transfer` guides ownership presentation. Exact `can_manage_access` guides project-move presentation because the API has no operation-specific move capability. The API independently authorizes the source and target on every request.
 
-Ownership is available as a separate Settings subsection for projects and instruments and as a separate card in sample and dataset Access. Project assignment is a separate card in sample and dataset Access, while project and instrument values in Overview Summary remain descriptive. Instruments are never assigned to projects. Dataset instrument reassignment remains absent until the API publishes a dedicated atomic operation.
+Ownership is available as a separate Settings subsection for projects and instruments and as a separate card in sample and dataset Manage. Project assignment is a separate card in sample and dataset Manage, while project and instrument values in Overview Summary remain descriptive. Instruments are never assigned to projects. Dataset instrument reassignment remains absent until the API publishes a dedicated atomic operation. [Decision 0028](0028-consolidate-resource-management.md) supersedes the original Access route name and placement.
 
 Confirmed responses update only fields they authoritatively contain. Dependent exact detail, collection, project, and search Queries are then invalidated as needed. Neither operation is optimistic.
 

@@ -99,6 +99,7 @@ import {
 } from "@/components/crucible/workspace-provider"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 import { ProjectAssignmentCard } from "@/features/resource-project-assignment/project-assignment-card"
+import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
 
 type AccessResource = Extract<
   WorkspaceResourceDetail,
@@ -116,7 +117,7 @@ const principalChoices: readonly {
   { kind: "projects", label: "Project", searchKind: "project" },
 ]
 
-export function ResourceAccessPage({
+export function ResourceManagePage({
   resourceKind,
   resourceMfid,
 }: {
@@ -132,30 +133,45 @@ export function ResourceAccessPage({
   if (!resource || resource.kind !== resourceKind) return null
   const canManageAccess = resource.capabilities?.can_manage_access === true
   const canTransfer = resource.capabilities?.can_transfer === true
-  if (!canManageAccess && !canTransfer) {
-    return (
-      <Empty className="border">
-        <EmptyHeader>
-          <EmptyTitle>Access management is unavailable</EmptyTitle>
-          <EmptyDescription>
-            You do not have permission to manage access to this resource.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    )
-  }
-
   return (
     <div className="flex min-w-0 flex-col gap-6">
       {canManageAccess ? (
         <ContentBoundary width="reading">
           <ManagedResourceAccess resource={resource} scope={scope} />
         </ContentBoundary>
+      ) : (
+        <ContentBoundary width="reading">
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyTitle>Access management is unavailable</EmptyTitle>
+              <EmptyDescription>
+                You do not have permission to manage access to this resource.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </ContentBoundary>
+      )}
+      {canManageAccess || canTransfer ? (
+        <ContentGrid variant="actions">
+          <ProjectAssignmentCard
+            mode={mode}
+            resource={resource}
+            scope={scope}
+          />
+          <OwnershipTransferCard
+            mode={mode}
+            resource={resource}
+            scope={scope}
+          />
+        </ContentGrid>
       ) : null}
-      <ContentGrid variant="actions">
-        <ProjectAssignmentCard mode={mode} resource={resource} scope={scope} />
-        <OwnershipTransferCard mode={mode} resource={resource} scope={scope} />
-      </ContentGrid>
+      <ContentBoundary width="reading">
+        <ResourceDeletionRequestCard
+          mode={mode}
+          resource={resource}
+          scope={scope}
+        />
+      </ContentBoundary>
     </div>
   )
 }

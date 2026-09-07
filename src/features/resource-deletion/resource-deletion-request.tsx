@@ -9,6 +9,13 @@ import {
 import { ResourceName } from "@/components/crucible/resource-name"
 import { Button } from "@/components/ui/button"
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -52,7 +59,7 @@ export function mergeResourceDeletionRequest(
   return { ...resource, deletion_request: deletionRequest }
 }
 
-export function ResourceDeletionRequestAction({
+export function ResourceDeletionRequestCard({
   mode,
   resource,
   scope,
@@ -119,27 +126,35 @@ export function ResourceDeletionRequestAction({
     }
   }
 
-  if (activeRequest) {
-    const label = deletionRequestStatusLabel(activeRequest.status)
-    return (
-      <Button disabled size="sm" variant="outline">
-        <DeletionRequestedIcon aria-hidden="true" data-icon="inline-start" />
-        {label}
-      </Button>
-    )
-  }
+  const action = activeRequest ? (
+    <Button disabled size="sm" variant="outline">
+      <DeletionRequestedIcon aria-hidden="true" data-icon="inline-start" />
+      {deletionRequestStatusLabel(activeRequest.status)}
+    </Button>
+  ) : (
+    <Button
+      aria-label={`Request deletion of ${resource.name}`}
+      onClick={() => setOpen(true)}
+      size="sm"
+      variant="destructive"
+    >
+      <RequestDeletionIcon aria-hidden="true" data-icon="inline-start" />
+      Request deletion
+    </Button>
+  )
 
   return (
     <>
-      <Button
-        aria-label={`Request deletion of ${resource.name}`}
-        onClick={() => setOpen(true)}
-        size="sm"
-        variant="outline"
-      >
-        <RequestDeletionIcon aria-hidden="true" data-icon="inline-start" />
-        Request deletion
-      </Button>
+      <Card variant="destructive">
+        <CardHeader>
+          <CardTitle>Danger zone</CardTitle>
+          <CardDescription>
+            Submit this {resource.kind} for deletion review. This does not
+            immediately delete the resource or its files.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>{action}</CardContent>
+      </Card>
       <Dialog
         onOpenChange={(nextOpen) => {
           if (mutation.isPending) return

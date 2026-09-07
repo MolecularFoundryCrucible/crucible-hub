@@ -14,7 +14,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Added instrument registration for human accounts, service-account operator management, and separate ownership transfer settings with server-resolved confirmation and authoritative cache refresh.
 - Added preview-confirm ownership transfer for projects, instruments, samples, and datasets, plus atomic sample and dataset project moves from resource Context.
 - Added capability-gated instrument lifecycle management with URL-backed status-filtered directories, active, maintenance, and decommissioned states, explicit decommission confirmation, retained failure state, and authoritative non-optimistic updates.
-- Added route-backed resource Access pages for samples and datasets with lazy ACL loading, capability-gated management, bounded user and project grants, read-only ownership and system principals, confirmed public and revoke actions, and server-confirmed non-optimistic updates.
+- Added route-backed resource Manage pages for samples and datasets with lazy ACL loading, capability-gated access controls, bounded user and project grants, read-only ownership and system principals, confirmed public and revoke actions, and server-confirmed non-optimistic updates.
 - Added capability-guided relationship management to canonical sample and dataset pages, with compact add and manage actions, navigation-only normal rows, explicit unlink mode, bounded target search, confirmed unlink without resource deletion, retained failure state, and authoritative source and target refresh.
 - Added capability-guided project member management with direct member addition, bounded role changes, confirmed removal, and voluntary project leave.
 - Added reviewed deletion requests to canonical sample and dataset pages with an optional reason, retained failure state, active-request status, and no direct permanent-deletion path.
@@ -60,10 +60,11 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Consolidated sample and dataset access, assignment, ownership, and reviewed deletion under canonical Manage routes with compatibility redirects and a destructive Danger zone treatment.
 - Distinguished outlined actions from their containing surfaces in both themes and standardized displayed MFIDs on a readable semantic identifier type role.
 - Moved project and instrument descriptive editing into explicit read-first Overview actions, retained distinct administrative workflows under Manage, and standardized outlined actions with surface-independent visible borders.
 - Coalesced sample and dataset project and instrument context into Summary and standardized semantic card widths and DOM order so compact actions can share rows, forms and management lists stay readable, and single-column resource layouts end with Scientific metadata.
-- Moved sample and dataset project assignment from Overview context into the capability-gated Access workflow.
+- Moved sample and dataset project assignment from Overview context into the capability-gated Manage workflow.
 - Pinned and self-hosted the interface font so typography and visual validation remain consistent across developer and CI environments.
 - Made TanStack skill commands invoke the pinned Intent CLI unambiguously when dependencies expose competing `intent` executables.
 - Clarified project navigation and page responsibilities: Overview owns project details, scientific metadata, and read-only people; capability-gated Settings owns General and direct member management; project status remains in the persistent header.

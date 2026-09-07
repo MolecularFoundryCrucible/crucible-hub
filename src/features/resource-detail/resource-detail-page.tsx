@@ -86,7 +86,6 @@ import { cn } from "@/lib/utils"
 import { ResourceSummaryCard } from "@/features/resource-edit/resource-summary-card"
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
-import { ResourceDeletionRequestAction } from "@/features/resource-deletion/resource-deletion-request"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
 
 export async function preloadResourceDetail(
@@ -124,7 +123,6 @@ export function ResourceWorkspace({
     section: graphMatch ? "graph" : undefined,
     preview,
   })
-  const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
   const { data: resource } = useSuspenseQuery(
     resourceQueryOptions(scope, resourceMfid)
@@ -176,20 +174,10 @@ export function ResourceWorkspace({
           title={resource.name}
           description={resourceDescription(resource)}
           actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">
-                <ResourceTypeIcon
-                  type={resource.kind}
-                  data-icon="inline-start"
-                />
-                {resourceTypeLabel(resource.kind)}
-              </Badge>
-              <ResourceDeletionRequestAction
-                mode={mode}
-                resource={resource}
-                scope={scope}
-              />
-            </div>
+            <Badge variant="outline">
+              <ResourceTypeIcon type={resource.kind} data-icon="inline-start" />
+              {resourceTypeLabel(resource.kind)}
+            </Badge>
           }
         />
         <ResourceNavigation resource={resource} />
@@ -274,20 +262,17 @@ function ResourceNavigation({
         >
           Graph
         </Link>
-        {resource.capabilities?.can_manage_access === true ||
-        resource.capabilities?.can_transfer === true ? (
-          <Link
-            activeOptions={{ includeSearch: false }}
-            activeProps={activeProps}
-            className={linkClassName}
-            params={{ sampleMfid: resource.unique_id }}
-            preload={false}
-            search={{}}
-            to="/samples/$sampleMfid/access"
-          >
-            Access
-          </Link>
-        ) : null}
+        <Link
+          activeOptions={{ includeSearch: false }}
+          activeProps={activeProps}
+          className={linkClassName}
+          params={{ sampleMfid: resource.unique_id }}
+          preload={false}
+          search={{}}
+          to="/samples/$sampleMfid/manage"
+        >
+          Manage
+        </Link>
       </nav>
     )
   }
@@ -314,20 +299,17 @@ function ResourceNavigation({
       >
         Graph
       </Link>
-      {resource.capabilities?.can_manage_access === true ||
-      resource.capabilities?.can_transfer === true ? (
-        <Link
-          activeOptions={{ includeSearch: false }}
-          activeProps={activeProps}
-          className={linkClassName}
-          params={{ datasetMfid: resource.unique_id }}
-          preload={false}
-          search={{}}
-          to="/datasets/$datasetMfid/access"
-        >
-          Access
-        </Link>
-      ) : null}
+      <Link
+        activeOptions={{ includeSearch: false }}
+        activeProps={activeProps}
+        className={linkClassName}
+        params={{ datasetMfid: resource.unique_id }}
+        preload={false}
+        search={{}}
+        to="/datasets/$datasetMfid/manage"
+      >
+        Manage
+      </Link>
     </nav>
   )
 }

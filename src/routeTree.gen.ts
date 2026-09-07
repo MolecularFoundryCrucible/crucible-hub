@@ -32,6 +32,7 @@ import { Route as AppSamplesNewRouteImport } from './routes/_app.samples.new'
 import { Route as AppDatasetsDatasetMfidIndexRouteImport } from './routes/_app.datasets.$datasetMfid.index'
 import { Route as AppDatasetsDatasetMfidAccessRouteImport } from './routes/_app.datasets.$datasetMfid.access'
 import { Route as AppDatasetsDatasetMfidGraphRouteImport } from './routes/_app.datasets.$datasetMfid.graph'
+import { Route as AppDatasetsDatasetMfidManageRouteImport } from './routes/_app.datasets.$datasetMfid.manage'
 import { Route as AppInstrumentsInstrumentMfidIndexRouteImport } from './routes/_app.instruments.$instrumentMfid.index'
 import { Route as AppInstrumentsInstrumentMfidDatasetsRouteImport } from './routes/_app.instruments.$instrumentMfid.datasets'
 import { Route as AppInstrumentsInstrumentMfidSettingsRouteImport } from './routes/_app.instruments.$instrumentMfid.settings'
@@ -42,6 +43,7 @@ import { Route as AppProjectsProjectMfidSettingsRouteImport } from './routes/_ap
 import { Route as AppSamplesSampleMfidIndexRouteImport } from './routes/_app.samples.$sampleMfid.index'
 import { Route as AppSamplesSampleMfidAccessRouteImport } from './routes/_app.samples.$sampleMfid.access'
 import { Route as AppSamplesSampleMfidGraphRouteImport } from './routes/_app.samples.$sampleMfid.graph'
+import { Route as AppSamplesSampleMfidManageRouteImport } from './routes/_app.samples.$sampleMfid.manage'
 import { Route as AppInstrumentsInstrumentMfidSettingsIndexRouteImport } from './routes/_app.instruments.$instrumentMfid.settings.index'
 import { Route as AppInstrumentsInstrumentMfidSettingsLifecycleRouteImport } from './routes/_app.instruments.$instrumentMfid.settings.lifecycle'
 import { Route as AppInstrumentsInstrumentMfidSettingsOperatorsRouteImport } from './routes/_app.instruments.$instrumentMfid.settings.operators'
@@ -169,6 +171,12 @@ const AppDatasetsDatasetMfidGraphRoute =
     path: '/graph',
     getParentRoute: () => AppDatasetsDatasetMfidRoute,
   } as any)
+const AppDatasetsDatasetMfidManageRoute =
+  AppDatasetsDatasetMfidManageRouteImport.update({
+    id: '/manage',
+    path: '/manage',
+    getParentRoute: () => AppDatasetsDatasetMfidRoute,
+  } as any)
 const AppInstrumentsInstrumentMfidIndexRoute =
   AppInstrumentsInstrumentMfidIndexRouteImport.update({
     id: '/',
@@ -227,6 +235,12 @@ const AppSamplesSampleMfidGraphRoute =
   AppSamplesSampleMfidGraphRouteImport.update({
     id: '/graph',
     path: '/graph',
+    getParentRoute: () => AppSamplesSampleMfidRoute,
+  } as any)
+const AppSamplesSampleMfidManageRoute =
+  AppSamplesSampleMfidManageRouteImport.update({
+    id: '/manage',
+    path: '/manage',
     getParentRoute: () => AppSamplesSampleMfidRoute,
   } as any)
 const AppInstrumentsInstrumentMfidSettingsIndexRoute =
@@ -294,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/projects/': typeof AppProjectsIndexRoute
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
+  '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
   '/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
   '/instruments/$instrumentMfid/settings': typeof AppInstrumentsInstrumentMfidSettingsRouteWithChildren
   '/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
@@ -301,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectMfid/settings': typeof AppProjectsProjectMfidSettingsRouteWithChildren
   '/samples/$sampleMfid/access': typeof AppSamplesSampleMfidAccessRoute
   '/samples/$sampleMfid/graph': typeof AppSamplesSampleMfidGraphRoute
+  '/samples/$sampleMfid/manage': typeof AppSamplesSampleMfidManageRoute
   '/datasets/$datasetMfid/': typeof AppDatasetsDatasetMfidIndexRoute
   '/instruments/$instrumentMfid/': typeof AppInstrumentsInstrumentMfidIndexRoute
   '/projects/$projectMfid/': typeof AppProjectsProjectMfidIndexRoute
@@ -331,11 +347,13 @@ export interface FileRoutesByTo {
   '/projects': typeof AppProjectsIndexRoute
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
+  '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
   '/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
   '/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
   '/projects/$projectMfid/overview': typeof AppProjectsProjectMfidOverviewRoute
   '/samples/$sampleMfid/access': typeof AppSamplesSampleMfidAccessRoute
   '/samples/$sampleMfid/graph': typeof AppSamplesSampleMfidGraphRoute
+  '/samples/$sampleMfid/manage': typeof AppSamplesSampleMfidManageRoute
   '/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidIndexRoute
   '/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidIndexRoute
   '/projects/$projectMfid': typeof AppProjectsProjectMfidIndexRoute
@@ -372,6 +390,7 @@ export interface FileRoutesById {
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/_app/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
+  '/_app/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
   '/_app/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
   '/_app/instruments/$instrumentMfid/settings': typeof AppInstrumentsInstrumentMfidSettingsRouteWithChildren
   '/_app/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
@@ -379,6 +398,7 @@ export interface FileRoutesById {
   '/_app/projects/$projectMfid/settings': typeof AppProjectsProjectMfidSettingsRouteWithChildren
   '/_app/samples/$sampleMfid/access': typeof AppSamplesSampleMfidAccessRoute
   '/_app/samples/$sampleMfid/graph': typeof AppSamplesSampleMfidGraphRoute
+  '/_app/samples/$sampleMfid/manage': typeof AppSamplesSampleMfidManageRoute
   '/_app/datasets/$datasetMfid/': typeof AppDatasetsDatasetMfidIndexRoute
   '/_app/instruments/$instrumentMfid/': typeof AppInstrumentsInstrumentMfidIndexRoute
   '/_app/projects/$projectMfid/': typeof AppProjectsProjectMfidIndexRoute
@@ -415,6 +435,7 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
+    | '/datasets/$datasetMfid/manage'
     | '/instruments/$instrumentMfid/datasets'
     | '/instruments/$instrumentMfid/settings'
     | '/projects/$projectMfid/members'
@@ -422,6 +443,7 @@ export interface FileRouteTypes {
     | '/projects/$projectMfid/settings'
     | '/samples/$sampleMfid/access'
     | '/samples/$sampleMfid/graph'
+    | '/samples/$sampleMfid/manage'
     | '/datasets/$datasetMfid/'
     | '/instruments/$instrumentMfid/'
     | '/projects/$projectMfid/'
@@ -452,11 +474,13 @@ export interface FileRouteTypes {
     | '/projects'
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
+    | '/datasets/$datasetMfid/manage'
     | '/instruments/$instrumentMfid/datasets'
     | '/projects/$projectMfid/members'
     | '/projects/$projectMfid/overview'
     | '/samples/$sampleMfid/access'
     | '/samples/$sampleMfid/graph'
+    | '/samples/$sampleMfid/manage'
     | '/datasets/$datasetMfid'
     | '/instruments/$instrumentMfid'
     | '/projects/$projectMfid'
@@ -492,6 +516,7 @@ export interface FileRouteTypes {
     | '/_app/projects/'
     | '/_app/datasets/$datasetMfid/access'
     | '/_app/datasets/$datasetMfid/graph'
+    | '/_app/datasets/$datasetMfid/manage'
     | '/_app/instruments/$instrumentMfid/datasets'
     | '/_app/instruments/$instrumentMfid/settings'
     | '/_app/projects/$projectMfid/members'
@@ -499,6 +524,7 @@ export interface FileRouteTypes {
     | '/_app/projects/$projectMfid/settings'
     | '/_app/samples/$sampleMfid/access'
     | '/_app/samples/$sampleMfid/graph'
+    | '/_app/samples/$sampleMfid/manage'
     | '/_app/datasets/$datasetMfid/'
     | '/_app/instruments/$instrumentMfid/'
     | '/_app/projects/$projectMfid/'
@@ -682,6 +708,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDatasetsDatasetMfidGraphRouteImport
       parentRoute: typeof AppDatasetsDatasetMfidRoute
     }
+    '/_app/datasets/$datasetMfid/manage': {
+      id: '/_app/datasets/$datasetMfid/manage'
+      path: '/manage'
+      fullPath: '/datasets/$datasetMfid/manage'
+      preLoaderRoute: typeof AppDatasetsDatasetMfidManageRouteImport
+      parentRoute: typeof AppDatasetsDatasetMfidRoute
+    }
     '/_app/instruments/$instrumentMfid/': {
       id: '/_app/instruments/$instrumentMfid/'
       path: '/'
@@ -752,6 +785,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSamplesSampleMfidGraphRouteImport
       parentRoute: typeof AppSamplesSampleMfidRoute
     }
+    '/_app/samples/$sampleMfid/manage': {
+      id: '/_app/samples/$sampleMfid/manage'
+      path: '/manage'
+      fullPath: '/samples/$sampleMfid/manage'
+      preLoaderRoute: typeof AppSamplesSampleMfidManageRouteImport
+      parentRoute: typeof AppSamplesSampleMfidRoute
+    }
     '/_app/instruments/$instrumentMfid/settings/': {
       id: '/_app/instruments/$instrumentMfid/settings/'
       path: '/'
@@ -807,6 +847,7 @@ declare module '@tanstack/react-router' {
 interface AppDatasetsDatasetMfidRouteChildren {
   AppDatasetsDatasetMfidAccessRoute: typeof AppDatasetsDatasetMfidAccessRoute
   AppDatasetsDatasetMfidGraphRoute: typeof AppDatasetsDatasetMfidGraphRoute
+  AppDatasetsDatasetMfidManageRoute: typeof AppDatasetsDatasetMfidManageRoute
   AppDatasetsDatasetMfidIndexRoute: typeof AppDatasetsDatasetMfidIndexRoute
 }
 
@@ -814,6 +855,7 @@ const AppDatasetsDatasetMfidRouteChildren: AppDatasetsDatasetMfidRouteChildren =
   {
     AppDatasetsDatasetMfidAccessRoute: AppDatasetsDatasetMfidAccessRoute,
     AppDatasetsDatasetMfidGraphRoute: AppDatasetsDatasetMfidGraphRoute,
+    AppDatasetsDatasetMfidManageRoute: AppDatasetsDatasetMfidManageRoute,
     AppDatasetsDatasetMfidIndexRoute: AppDatasetsDatasetMfidIndexRoute,
   }
 
@@ -912,12 +954,14 @@ const AppProjectsProjectMfidRouteWithChildren =
 interface AppSamplesSampleMfidRouteChildren {
   AppSamplesSampleMfidAccessRoute: typeof AppSamplesSampleMfidAccessRoute
   AppSamplesSampleMfidGraphRoute: typeof AppSamplesSampleMfidGraphRoute
+  AppSamplesSampleMfidManageRoute: typeof AppSamplesSampleMfidManageRoute
   AppSamplesSampleMfidIndexRoute: typeof AppSamplesSampleMfidIndexRoute
 }
 
 const AppSamplesSampleMfidRouteChildren: AppSamplesSampleMfidRouteChildren = {
   AppSamplesSampleMfidAccessRoute: AppSamplesSampleMfidAccessRoute,
   AppSamplesSampleMfidGraphRoute: AppSamplesSampleMfidGraphRoute,
+  AppSamplesSampleMfidManageRoute: AppSamplesSampleMfidManageRoute,
   AppSamplesSampleMfidIndexRoute: AppSamplesSampleMfidIndexRoute,
 }
 

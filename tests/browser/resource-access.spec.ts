@@ -6,7 +6,7 @@ const sampleMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z5"
 const restrictedSampleMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z6"
 const datasetMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
 
-test("sample Access retains the resource header and manages public and direct access", async ({
+test("sample Manage retains the resource header and manages public and direct access", async ({
   page,
 }) => {
   await page.goto(`/hub/samples/${sampleMfid}?scenario=populated`)
@@ -19,14 +19,14 @@ test("sample Access retains the resource header and manages public and direct ac
   await expect(
     page.getByRole("button", { name: "Choose project" })
   ).toHaveCount(0)
-  await page.getByRole("link", { name: "Access", exact: true }).click()
-  await expect(page).toHaveURL(new RegExp(`/samples/${sampleMfid}/access`))
+  await page.getByRole("link", { name: "Manage", exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`/samples/${sampleMfid}/manage`))
   await expect(title).toBeVisible()
   await expect(
     page
       .getByRole("navigation", { name: "Sample sections" })
       .getByRole("link", {
-        name: "Access",
+        name: "Manage",
       })
   ).toHaveAttribute("aria-current", "page")
   await expect(
@@ -118,8 +118,8 @@ test("sample Access retains the resource header and manages public and direct ac
   await expect(grants.getByText("Jamie Patel", { exact: true })).toHaveCount(0)
 })
 
-test("dataset uses the shared Access workflow", async ({ page }) => {
-  await page.goto(`/hub/datasets/${datasetMfid}/access?scenario=populated`)
+test("dataset uses the shared Manage workflow", async ({ page }) => {
+  await page.goto(`/hub/datasets/${datasetMfid}/manage?scenario=populated`)
   await page.waitForLoadState("networkidle")
   await expect(
     page.getByRole("heading", { level: 1, name: "NiFe K-edge operando series" })
@@ -128,7 +128,7 @@ test("dataset uses the shared Access workflow", async ({ page }) => {
     page
       .getByRole("navigation", { name: "Dataset sections" })
       .getByRole("link", {
-        name: "Access",
+        name: "Manage",
       })
   ).toHaveAttribute("aria-current", "page")
   await expect(
@@ -137,10 +137,10 @@ test("dataset uses the shared Access workflow", async ({ page }) => {
   await expect(page.getByText("Direct access", { exact: true })).toBeVisible()
 })
 
-test("sample Access previews and confirms project assignment", async ({
+test("sample Manage previews and confirms project assignment", async ({
   page,
 }) => {
-  await page.goto(`/hub/samples/${sampleMfid}/access?scenario=populated`)
+  await page.goto(`/hub/samples/${sampleMfid}/manage?scenario=populated`)
   await page.waitForLoadState("networkidle")
 
   await page.getByRole("button", { name: "Choose project" }).click()
@@ -161,11 +161,11 @@ test("sample Access previews and confirms project assignment", async ({
   ).toBeVisible()
 })
 
-test("direct unauthorized Access shows unavailable without controls", async ({
+test("direct unauthorized Manage shows unavailable access without controls", async ({
   page,
 }) => {
   await page.goto(
-    `/hub/samples/${restrictedSampleMfid}/access?scenario=populated`
+    `/hub/samples/${restrictedSampleMfid}/manage?scenario=populated`
   )
   await page.waitForLoadState("networkidle")
   await expect(page.getByText("Access management is unavailable")).toBeVisible()
@@ -174,11 +174,14 @@ test("direct unauthorized Access shows unavailable without controls", async ({
   )
   await expect(page.getByRole("button", { name: "Add access" })).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Publish" })).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "Request deletion", exact: false })
+  ).toBeVisible()
 })
 
-test("compact Access is contained and accessible", async ({ page }) => {
+test("compact Manage is contained and accessible", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`/hub/datasets/${datasetMfid}/access?scenario=populated`)
+  await page.goto(`/hub/datasets/${datasetMfid}/manage?scenario=populated`)
   await page.waitForLoadState("networkidle")
   const cards = page
     .locator('[data-slot="content-grid"]')
@@ -198,4 +201,11 @@ test("compact Access is contained and accessible", async ({ page }) => {
       () => document.documentElement.scrollWidth <= window.innerWidth
     )
   ).toBe(true)
+})
+
+test("legacy Access routes redirect to Manage", async ({ page }) => {
+  await page.goto(`/hub/samples/${sampleMfid}/access?scenario=populated`)
+  await expect(page).toHaveURL(
+    new RegExp(`/samples/${sampleMfid}/manage\\?scenario=populated`)
+  )
 })

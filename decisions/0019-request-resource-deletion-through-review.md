@@ -12,7 +12,7 @@ The current resource capability model does not identify whether the caller may r
 
 ## Decision
 
-Canonical sample and dataset pages expose an icon action that opens a confirmation dialog with an optional bounded reason. The dialog states that submission starts review and does not immediately delete the resource or its files. Submission uses a strict POST TanStack Start server function and the API's reviewed deletion-request operation. Hub never invokes direct permanent deletion from this workflow.
+Canonical sample and dataset Manage pages expose a destructive Danger zone action that opens a confirmation dialog with an optional bounded reason. The dialog states that submission starts review and does not immediately delete the resource or its files. Submission uses a strict POST TanStack Start server function and the API's reviewed deletion-request operation. Hub never invokes direct permanent deletion from this workflow. [Decision 0028](0028-consolidate-resource-management.md) supersedes the original header-action placement.
 
 Until the API publishes explicit `can_request_deletion` guidance, Hub presents the action to authenticated users when detail contains no active request. The API remains authoritative and a denied request produces local feedback without changing the page. Hub does not substitute `can_edit` or `can_manage_access` for the missing capability.
 

@@ -1,14 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router"
-
-import { ResourceAccessPage } from "@/features/resource-access/resource-access-page"
+import { Navigate, createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_app/datasets/$datasetMfid/access")({
-  component: DatasetAccessPage,
+  component: LegacyDatasetAccessPage,
 })
 
-function DatasetAccessPage() {
+function LegacyDatasetAccessPage() {
   const { datasetMfid } = Route.useParams()
   return (
-    <ResourceAccessPage resourceKind="dataset" resourceMfid={datasetMfid} />
+    <Navigate
+      params={{ datasetMfid }}
+      replace
+      search={true}
+      to="/datasets/$datasetMfid/manage"
+    />
   )
 }

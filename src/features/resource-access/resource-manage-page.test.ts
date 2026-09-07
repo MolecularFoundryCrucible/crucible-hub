@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import type { WorkspaceResourceAccessGrant } from "@/data/crucible/workspace-source"
 
-import { sortAccessGrants } from "./resource-access-page"
+import { sortAccessGrants } from "./resource-manage-page"
 
 const grants: readonly WorkspaceResourceAccessGrant[] = [
   {

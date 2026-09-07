@@ -26,7 +26,7 @@ test("submits a reviewed sample deletion request without calling a live API", as
     }
   })
 
-  await page.goto(`/hub/samples/${sampleMfid}?scenario=populated`)
+  await page.goto(`/hub/samples/${sampleMfid}/manage?scenario=populated`)
   await page.waitForLoadState("networkidle")
   await page
     .getByRole("button", {
@@ -59,7 +59,7 @@ test("submits a reviewed sample deletion request without calling a live API", as
 test("submits a dataset deletion request without requiring a reason", async ({
   page,
 }) => {
-  await page.goto(`/hub/datasets/${datasetMfid}?scenario=populated`)
+  await page.goto(`/hub/datasets/${datasetMfid}/manage?scenario=populated`)
   await page.waitForLoadState("networkidle")
   await page
     .getByRole("button", {
@@ -81,7 +81,7 @@ test("submits a dataset deletion request without requiring a reason", async ({
 })
 
 test("retains the deletion reason when submission fails", async ({ page }) => {
-  await page.goto(`/hub/samples/${sampleMfid}?scenario=populated`)
+  await page.goto(`/hub/samples/${sampleMfid}/manage?scenario=populated`)
   await page.waitForLoadState("networkidle")
   await page
     .getByRole("button", {
@@ -117,7 +117,7 @@ test("keeps the compact dark deletion dialog accessible and contained", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ colorScheme: "dark" })
-  await page.goto(`/hub/samples/${sampleMfid}?scenario=populated`)
+  await page.goto(`/hub/samples/${sampleMfid}/manage?scenario=populated`)
   await page.waitForLoadState("networkidle")
   await page
     .getByRole("button", {

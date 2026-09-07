@@ -42,3 +42,4 @@ A decision record does not override a contract owned by another Crucible reposit
 | [0025](0025-let-api-assign-creation-mfids.md)                | Accepted   | API-assigned creation MFIDs and explicit uncertain-outcome handling               |
 | [0026](0026-explore-bounded-resource-graphs.md)              | Accepted   | Bounded route-backed resource graph traversal                                     |
 | [0027](0027-edit-projects-and-instruments-from-overview.md)  | Accepted   | Read-first project and instrument Overview editing                                |
+| [0028](0028-consolidate-resource-management.md)              | Accepted   | Consolidated sample and dataset management                                        |
