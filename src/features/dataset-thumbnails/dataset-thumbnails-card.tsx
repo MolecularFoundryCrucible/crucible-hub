@@ -13,10 +13,14 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,18 +80,27 @@ export function DatasetThumbnailsCard({
     <Card aria-busy={query.isFetching}>
       <CardHeader>
         <CardTitle>Thumbnails</CardTitle>
-        <CardDescription>
-          Preview images associated with this dataset.
-        </CardDescription>
         {canEdit && query.data ? (
           <CardAction>
-            <Button
-              onClick={() => setEditing((current) => !current)}
-              variant="outline"
-            >
-              <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
-              {editing ? "Done" : "Edit thumbnails"}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    aria-label={
+                      editing ? "Finish editing thumbnails" : "Edit thumbnails"
+                    }
+                    onClick={() => setEditing((current) => !current)}
+                    size="icon-sm"
+                    variant="outline"
+                  />
+                }
+              >
+                <EditResourceIcon aria-hidden="true" />
+              </TooltipTrigger>
+              <TooltipContent>
+                {editing ? "Finish editing thumbnails" : "Edit thumbnails"}
+              </TooltipContent>
+            </Tooltip>
           </CardAction>
         ) : null}
       </CardHeader>

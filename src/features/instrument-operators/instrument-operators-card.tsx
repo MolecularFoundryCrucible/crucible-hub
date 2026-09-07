@@ -214,7 +214,6 @@ export function InstrumentOperatorsCard({
                   setError(undefined)
                   openAddDialog(true)
                 }}
-                size="sm"
                 type="button"
               >
                 <AddMemberIcon data-icon="inline-start" />

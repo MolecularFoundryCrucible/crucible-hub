@@ -49,11 +49,13 @@ import type {
 } from "@/data/crucible/workspace-source"
 
 export function OwnershipTransferCard({
+  className,
   mode,
   onSuccess,
   resource,
   scope,
 }: {
+  className?: string
   mode: "api" | "fixture"
   onSuccess?: (result: WorkspaceOwnershipTransfer) => void
   resource: WorkspaceResourceDetail
@@ -178,7 +180,7 @@ export function OwnershipTransferCard({
   if (resource.capabilities?.can_transfer !== true) return null
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>Transfer ownership</CardTitle>
         <CardDescription>

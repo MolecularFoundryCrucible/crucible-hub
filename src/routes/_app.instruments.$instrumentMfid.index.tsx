@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 
 import { EditResourceIcon } from "@/components/crucible/icons"
+import { PersonLink } from "@/components/crucible/person-link"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -146,13 +147,13 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
             <dt className="text-supporting text-muted-foreground">Owner</dt>
             <dd className="mt-1 text-body">
               {instrument.owner ? (
-                <Link
-                  className="text-label hover:underline"
-                  params={{ personId: instrument.owner.unique_id }}
-                  to="/people/$personId"
+                <PersonLink
+                  name={`${instrument.owner.first_name} ${instrument.owner.last_name}`}
+                  personId={instrument.owner.unique_id}
+                  username={instrument.owner.username}
                 >
                   {instrument.owner.first_name} {instrument.owner.last_name}
-                </Link>
+                </PersonLink>
               ) : (
                 "Unknown owner"
               )}

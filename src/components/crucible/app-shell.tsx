@@ -93,8 +93,12 @@ export function AppShell({
                   const isActive =
                     item.to === "/"
                       ? pathname === "/"
-                      : pathname === item.to ||
-                        pathname.startsWith(`${item.to}/`)
+                      : item.to === "/data" &&
+                          (pathname.startsWith("/datasets/") ||
+                            pathname.startsWith("/samples/"))
+                        ? true
+                        : pathname === item.to ||
+                          pathname.startsWith(`${item.to}/`)
                   return (
                     <SidebarMenuItem key={item.to}>
                       <SidebarMenuButton

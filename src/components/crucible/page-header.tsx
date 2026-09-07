@@ -6,16 +6,16 @@ export function PageHeader({
 }: {
   actions?: React.ReactNode
   description?: string
-  eyebrow: string
+  eyebrow: React.ReactNode
   title: string
 }) {
   return (
     <header className="flex flex-col gap-4 border-b pb-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="max-w-reading">
-        <p className="text-overline text-muted-foreground uppercase">
+      <div className="max-w-reading min-w-0">
+        <div className="flex items-center gap-2 text-overline text-muted-foreground uppercase">
           {eyebrow}
-        </p>
-        <h1 className="mt-2 text-title-page">{title}</h1>
+        </div>
+        <h1 className="mt-2 text-title-page break-words">{title}</h1>
         {description ? (
           <p className="mt-2 text-body-prominent text-muted-foreground">
             {description}

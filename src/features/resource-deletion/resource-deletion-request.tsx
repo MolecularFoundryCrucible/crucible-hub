@@ -10,7 +10,7 @@ import { ResourceName } from "@/components/crucible/resource-name"
 import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardContent,
+  CardAction,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -60,10 +60,12 @@ export function mergeResourceDeletionRequest(
 }
 
 export function ResourceDeletionRequestCard({
+  className,
   mode,
   resource,
   scope,
 }: {
+  className?: string
   mode: "api" | "fixture"
   resource: DeletableResource
   scope: IdentityScope
@@ -127,7 +129,7 @@ export function ResourceDeletionRequestCard({
   }
 
   const action = activeRequest ? (
-    <Button disabled size="sm" variant="outline">
+    <Button disabled variant="outline">
       <DeletionRequestedIcon aria-hidden="true" data-icon="inline-start" />
       {deletionRequestStatusLabel(activeRequest.status)}
     </Button>
@@ -135,7 +137,6 @@ export function ResourceDeletionRequestCard({
     <Button
       aria-label={`Request deletion of ${resource.name}`}
       onClick={() => setOpen(true)}
-      size="sm"
       variant="destructive"
     >
       <RequestDeletionIcon aria-hidden="true" data-icon="inline-start" />
@@ -145,15 +146,15 @@ export function ResourceDeletionRequestCard({
 
   return (
     <>
-      <Card variant="destructive">
+      <Card className={className}>
         <CardHeader>
-          <CardTitle>Danger zone</CardTitle>
+          <CardTitle>Request deletion</CardTitle>
           <CardDescription>
             Submit this {resource.kind} for deletion review. This does not
             immediately delete the resource or its files.
           </CardDescription>
+          <CardAction>{action}</CardAction>
         </CardHeader>
-        <CardContent>{action}</CardContent>
       </Card>
       <Dialog
         onOpenChange={(nextOpen) => {

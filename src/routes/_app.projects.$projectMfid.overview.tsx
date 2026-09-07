@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 
 import {
   CopyIcon,
@@ -17,6 +17,7 @@ import {
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { ProjectMembers } from "@/components/crucible/project-members"
+import { PersonLink } from "@/components/crucible/person-link"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -144,21 +145,18 @@ function ProjectLead({ project }: { project: WorkspaceProject }) {
       <dt className="text-supporting text-muted-foreground">Project lead</dt>
       <dd className="mt-1 text-body break-words">
         {"status" in project && project.lead ? (
-          <Link
-            className="text-label hover:underline"
-            params={{ personId: project.lead.unique_id }}
-            to="/people/$personId"
+          <PersonLink
+            name={`${project.lead.first_name} ${project.lead.last_name}`}
+            personId={project.lead.unique_id}
+            username={project.lead.username}
           >
             {project.lead.first_name} {project.lead.last_name}
-          </Link>
+          </PersonLink>
         ) : "status" in project && project.project_lead_orcid ? (
-          <Link
-            className="text-label hover:underline"
-            params={{ personId: project.project_lead_orcid }}
-            to="/people/$personId"
-          >
-            {project.project_lead_orcid}
-          </Link>
+          <PersonLink
+            name={project.project_lead_orcid}
+            personId={project.project_lead_orcid}
+          />
         ) : (
           "-"
         )}

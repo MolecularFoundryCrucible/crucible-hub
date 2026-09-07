@@ -5,6 +5,7 @@ import {
   ProjectRoleBadge,
   sortProjectMembers,
 } from "@/components/crucible/project-members"
+import { PersonLink } from "@/components/crucible/person-link"
 import {
   AddMemberIcon,
   EditMembersIcon,
@@ -284,9 +285,7 @@ export function ProjectMembershipCard({
                 data-project-membership-add=""
                 disabled={mutationPending}
                 onClick={() => setAddOpen(true)}
-                size="sm"
                 type="button"
-                variant="outline"
               >
                 <AddMemberIcon data-icon="inline-start" />
                 Add member
@@ -616,7 +615,13 @@ function MemberIdentity({ member }: { member: ProjectMember }) {
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <p className="truncate text-label">{memberName(member)}</p>
+        <p className="truncate text-label">
+          <PersonLink
+            name={memberName(member)}
+            personId={member.unique_id}
+            username={member.username}
+          />
+        </p>
         <p className="truncate text-body text-muted-foreground">
           {member.username ?? member.unique_id}
           {member.is_service_account ? " (Service account)" : ""}

@@ -18,6 +18,7 @@ import {
 } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { PersonLink } from "@/components/crucible/person-link"
 import {
   ResourcePreviewContext,
   useResourcePreviewNavigation,
@@ -55,11 +56,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
 import {
   Table,
   TableBody,
@@ -156,35 +152,59 @@ export function ResourceWorkspace({
               <BreadcrumbLink
                 render={
                   <Link
-                    search={{
-                      datasetCursor: undefined,
-                      kind: undefined,
-                      sampleCursor: undefined,
-                    }}
-                    to="/data"
+                    search={
+                      resource.project
+                        ? { preview: undefined }
+                        : {
+                            datasetCursor: undefined,
+                            kind: undefined,
+                            sampleCursor: undefined,
+                          }
+                    }
+                    to={resource.project ? "/projects" : "/data"}
                   />
                 }
               >
-                Data
+                {resource.project ? "Projects" : "Data"}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{resource.name}</BreadcrumbPage>
+            {resource.project ? (
+              <>
+                <BreadcrumbItem className="min-w-0">
+                  <BreadcrumbLink
+                    className="break-words"
+                    render={
+                      <Link
+                        params={{ projectMfid: resource.project.unique_id }}
+                        search={{ preview: undefined }}
+                        to="/projects/$projectMfid"
+                      />
+                    }
+                  >
+                    {resource.project.title ?? resource.project.project_id}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            ) : null}
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="break-words">
+                {resource.name}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         <PageHeader
-          eyebrow={resourceTypeLabel(resource.kind)}
+          eyebrow={
+            <>
+              <ResourceTypeIcon type={resource.kind} />
+              {resourceTypeLabel(resource.kind)}
+            </>
+          }
           title={resource.name}
           description={resourceDescription(resource)}
-          actions={
-            <Badge variant="outline">
-              <ResourceTypeIcon type={resource.kind} data-icon="inline-start" />
-              {resourceTypeLabel(resource.kind)}
-            </Badge>
-          }
         />
         <ResourceNavigation resource={resource} />
         <Outlet />
@@ -357,7 +377,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="min-w-0 sm:col-span-2">
             <dt className="text-supporting text-muted-foreground">MFID</dt>
-            <dd className="mt-1 flex min-w-0 items-start gap-2 text-body">
+            <dd className="mt-1 flex min-w-0 items-center gap-2 text-body">
               <IdentityFieldIcon type="mfid" />
               <span className="min-w-0 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
                 {resource.unique_id}
@@ -368,7 +388,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
                     aria-label={copyLabel}
                     className="shrink-0"
                     onClick={() => void copyMfid()}
-                    size="icon-sm"
+                    size="icon-xs"
                     variant="outline"
                   >
                     {copyState === "success" ? (
@@ -387,12 +407,29 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               </span>
             )}
           </div>
+          <div>
+            <dt className="text-supporting text-muted-foreground">Owner</dt>
+            <dd className="mt-1 flex items-start gap-2 text-body">
+              <IdentityFieldIcon type="owner" />
+              {owner ? (
+                <PersonLink
+                  name={`${owner.first_name} ${owner.last_name}`}
+                  personId={owner.unique_id}
+                  username={owner.username}
+                >
+                  {owner.first_name.charAt(0)}. {owner.last_name}
+                </PersonLink>
+              ) : (
+                "Unknown owner"
+              )}
+            </dd>
+          </div>
           {"public" in resource && (
             <div>
               <dt className="text-supporting text-muted-foreground">
                 Visibility
               </dt>
-              <dd className="mt-1 flex items-start gap-2 text-body">
+              <dd className="mt-1 flex items-center gap-2 text-body">
                 <IdentityFieldIcon
                   type={
                     resource.public ? "visibility-public" : "visibility-private"
@@ -404,40 +441,6 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               </dd>
             </div>
           )}
-          <div className="sm:col-span-2">
-            <dt className="text-supporting text-muted-foreground">Owner</dt>
-            <dd className="mt-1 flex items-start gap-2 text-body">
-              <IdentityFieldIcon type="owner" />
-              {owner ? (
-                <HoverCard>
-                  <HoverCardTrigger
-                    render={
-                      <Link
-                        className="text-label hover:underline"
-                        params={{ personId: owner.unique_id }}
-                        to="/people/$personId"
-                      />
-                    }
-                  >
-                    {owner.first_name.charAt(0)}. {owner.last_name}
-                  </HoverCardTrigger>
-                  <HoverCardContent>
-                    <p className="text-label">
-                      {owner.first_name} {owner.last_name}
-                    </p>
-                    <p className="text-supporting text-muted-foreground">
-                      {owner.username ? `@${owner.username}` : "No username"}
-                    </p>
-                    <p className="mt-2 font-mono text-identifier break-all text-muted-foreground">
-                      {owner.unique_id}
-                    </p>
-                  </HoverCardContent>
-                </HoverCard>
-              ) : (
-                "Unknown owner"
-              )}
-            </dd>
-          </div>
           <div>
             <dt className="text-supporting text-muted-foreground">Created</dt>
             <dd className="mt-1 flex items-start gap-2 text-body">
@@ -549,9 +552,9 @@ export function FilesTable({
       <TableHeader>
         <TableRow>
           <TableHead>Filename</TableHead>
-          <TableHead>Storage</TableHead>
-          <TableHead className="text-right">Size</TableHead>
-          <TableHead className="text-center">
+          <TableHead className="text-center">Storage</TableHead>
+          <TableHead className="text-center">Size</TableHead>
+          <TableHead className="text-right">
             <span className="sr-only">File action</span>
           </TableHead>
         </TableRow>
@@ -564,11 +567,13 @@ export function FilesTable({
                 {file.filename}
               </span>
             </TableCell>
-            <TableCell>{file.storage_backend}</TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="text-center">
+              {file.storage_backend}
+            </TableCell>
+            <TableCell className="text-center tabular-nums">
               {formatBytes(file.size)}
             </TableCell>
-            <TableCell className="text-center">
+            <TableCell className="text-right">
               <FileDownloadAction
                 file={file}
                 identity={identity}

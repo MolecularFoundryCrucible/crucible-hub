@@ -165,21 +165,18 @@ export function ResourceRelationshipManager({
         </CardTitle>
         <CardAction>
           <div className="flex items-center gap-1">
-            <ResourceGraphLink resource={resource} />
             {canManage ? (
               <>
                 <Button
                   aria-label={`Add relationship to ${resource.name}`}
                   onClick={() => setAddOpen(true)}
-                  size="sm"
                   type="button"
-                  variant="outline"
                 >
                   <AddRelationshipIcon
                     aria-hidden="true"
                     data-icon="inline-start"
                   />
-                  Add relationship
+                  Add
                 </Button>
                 <Tooltip>
                   <TooltipTrigger render={<span className="inline-flex" />}>
@@ -220,6 +217,9 @@ export function ResourceRelationshipManager({
         </CardAction>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex justify-center">
+          <ResourceGraphLink resource={resource} />
+        </div>
         <ResourceRelationships
           kind={resource.kind}
           links={resource.links}
@@ -328,7 +328,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
     resource.kind === "sample" ? (
       <Link
         aria-label={`Explore graph for ${resource.name}`}
-        className={buttonVariants({ size: "icon-sm", variant: "outline" })}
+        className={buttonVariants({ variant: "outline" })}
         params={{ sampleMfid: resource.unique_id }}
         preload={false}
         search={{ preview: undefined }}
@@ -337,7 +337,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
     ) : (
       <Link
         aria-label={`Explore graph for ${resource.name}`}
-        className={buttonVariants({ size: "icon-sm", variant: "outline" })}
+        className={buttonVariants({ variant: "outline" })}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{ preview: undefined }}
@@ -348,6 +348,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
     <Tooltip>
       <TooltipTrigger render={link}>
         <ResourceGraphIcon aria-hidden="true" />
+        View graph
       </TooltipTrigger>
       <TooltipContent>
         Explore graph for <ResourceName>{resource.name}</ResourceName>

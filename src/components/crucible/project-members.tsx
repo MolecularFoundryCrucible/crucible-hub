@@ -5,6 +5,7 @@ import {
   AccessRoleBadge,
   accessRoleRank,
 } from "@/components/crucible/access-role-badge"
+import { PersonLink } from "@/components/crucible/person-link"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -75,13 +76,13 @@ export function ProjectMembers({
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <Link
-                    className="block truncate text-label hover:underline"
-                    params={{ personId: member.unique_id }}
-                    to="/people/$personId"
+                  <PersonLink
+                    name={`${member.first_name} ${member.last_name}`}
+                    personId={member.unique_id}
+                    username={member.username}
                   >
                     {member.first_name} {member.last_name}
-                  </Link>
+                  </PersonLink>
                   <p className="truncate text-body text-muted-foreground">
                     {member.username ?? member.unique_id}
                     {member.is_service_account ? " (Service account)" : ""}

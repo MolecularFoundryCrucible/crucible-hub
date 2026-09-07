@@ -61,9 +61,10 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Refined sample and dataset Overview cards, resource navigation, Manage layout, and compact confirmation behavior with clearer field order, consistent action hierarchy, linked identity names with shared person previews, project-aware breadcrumbs, a combined access card, and a unified resource management card.
 - Gave Identity cards slightly more space and kept full MFIDs on one line when the available viewport permits.
 - Branded the application sidebar with the Crucible mark and blue surfaces, moved the desktop collapse control into the sidebar, applied orange current-location boundaries, and standardized resource section navigation typography and target sizing.
-- Consolidated sample and dataset access, assignment, ownership, and reviewed deletion under canonical Manage routes with compatibility redirects and a destructive Danger zone treatment.
+- Consolidated sample and dataset access, assignment, ownership, and reviewed deletion under canonical Manage routes with compatibility redirects.
 - Distinguished outlined actions from their containing surfaces in both themes and standardized displayed MFIDs on a readable semantic identifier type role.
 - Moved project and instrument descriptive editing into explicit read-first Overview actions, retained distinct administrative workflows under Manage, and standardized outlined actions with surface-independent visible borders.
 - Coalesced sample and dataset project and instrument context into Summary and standardized semantic card widths and DOM order so compact actions can share rows, forms and management lists stay readable, and single-column resource layouts end with Scientific metadata.

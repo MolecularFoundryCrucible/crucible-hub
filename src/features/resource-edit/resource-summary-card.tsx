@@ -965,16 +965,16 @@ function summaryFields(
       ["Data format", resource.data_format, "data-format"],
       ["Data type", resource.data_type, "data-type"],
       ["Session", resource.session_name, "session"],
-      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
       ...contextFields(resource),
+      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
     ]
   }
   if (resource.kind === "sample") {
     return [
       ["Description", resource.description, "description"],
       ["Sample type", resource.sample_type, "type"],
-      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
       ...contextFields(resource),
+      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
     ]
   }
   if (resource.kind === "instrument") {

@@ -13,10 +13,7 @@ import {
   isAccessGrantRole,
   permittedAccessGrantRoles,
 } from "@/components/crucible/access-role-badge"
-import {
-  ContentBoundary,
-  ContentGrid,
-} from "@/components/crucible/content-layout"
+import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   AccessPendingIcon,
   AddAccessGrantIcon,
@@ -24,8 +21,8 @@ import {
   PrivateAccessIcon,
   PublicAccessIcon,
   RevokeAccessGrantIcon,
-  OpenFullPageIcon,
 } from "@/components/crucible/icons"
+import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
@@ -39,7 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -151,26 +148,36 @@ export function ResourceManagePage({
           </Empty>
         </ContentBoundary>
       )}
-      {canManageAccess || canTransfer ? (
-        <ContentGrid variant="actions">
-          <ProjectAssignmentCard
-            mode={mode}
-            resource={resource}
-            scope={scope}
-          />
-          <OwnershipTransferCard
-            mode={mode}
-            resource={resource}
-            scope={scope}
-          />
-        </ContentGrid>
-      ) : null}
       <ContentBoundary width="reading">
-        <ResourceDeletionRequestCard
-          mode={mode}
-          resource={resource}
-          scope={scope}
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>Resource management</CardTitle>
+          </CardHeader>
+          <CardContent className="divide-y px-0">
+            {canManageAccess ? (
+              <ProjectAssignmentCard
+                className="rounded-none bg-transparent ring-0"
+                mode={mode}
+                resource={resource}
+                scope={scope}
+              />
+            ) : null}
+            {canTransfer ? (
+              <OwnershipTransferCard
+                className="rounded-none bg-transparent ring-0"
+                mode={mode}
+                resource={resource}
+                scope={scope}
+              />
+            ) : null}
+            <ResourceDeletionRequestCard
+              className="rounded-none bg-transparent ring-0"
+              mode={mode}
+              resource={resource}
+              scope={scope}
+            />
+          </CardContent>
+        </Card>
       </ContentBoundary>
     </div>
   )
@@ -343,66 +350,12 @@ function ManagedResourceAccess({
   )
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <Card>
         <CardHeader>
-          <CardTitle>Public access</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3">
-          <Badge variant={resource.public ? "default" : "outline"}>
-            {resource.public ? (
-              <PublicAccessIcon data-icon="inline-start" />
-            ) : (
-              <PrivateAccessIcon data-icon="inline-start" />
-            )}
-            {resource.public ? "Public" : "Private"}
-          </Badge>
-          <Button
-            disabled={mutationPending}
-            onClick={() => {
-              setError(undefined)
-              setPendingPublic(!resource.public)
-            }}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {resource.public ? "Make private" : "Publish"}
-          </Button>
-          {error?.surface === "public" ? (
-            <p className="basis-full text-body text-destructive" role="alert">
-              {error.message}
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Direct access</CardTitle>
+          <CardTitle>Access management</CardTitle>
           <CardAction>
             <div className="flex flex-wrap justify-end gap-2">
-              {managing && canGrant ? (
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        aria-label="Add access"
-                        disabled={mutationPending}
-                        onClick={() => {
-                          setError(undefined)
-                          setAddOpen(true)
-                        }}
-                        size="icon-sm"
-                        type="button"
-                      />
-                    }
-                  >
-                    <AddAccessGrantIcon aria-hidden="true" />
-                  </TooltipTrigger>
-                  <TooltipContent>Add access</TooltipContent>
-                </Tooltip>
-              ) : null}
               <Tooltip>
                 <TooltipTrigger
                   render={
@@ -429,6 +382,7 @@ function ManagedResourceAccess({
           </CardAction>
         </CardHeader>
         <CardContent>
+          <h3 className="mb-3 font-heading text-label">Direct access</h3>
           {directGrants.length ? (
             <ul
               aria-label="Direct access grants"
@@ -452,7 +406,9 @@ function ManagedResourceAccess({
                     key={grantKey(grant)}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-label">{grantName(grant)}</p>
+                      <p className="truncate text-label">
+                        <PrincipalName grant={grant} />
+                      </p>
                       <p className="flex min-w-0 items-center gap-1.5 text-body text-muted-foreground">
                         <PrincipalTypeIcon
                           label={principalLabel(grant)}
@@ -464,6 +420,14 @@ function ManagedResourceAccess({
                       </p>
                     </div>
                     <div className="flex min-h-8 shrink-0 items-center gap-2">
+                      <span className="inline-flex size-4 items-center justify-center">
+                        {pending ? (
+                          <AccessPendingIcon
+                            aria-label={`Saving access for ${grantName(grant)}`}
+                            className="motion-safe:animate-spin"
+                          />
+                        ) : null}
+                      </span>
                       <span className="flex w-access-role-control justify-end">
                         {editable ? (
                           <NativeSelect
@@ -491,14 +455,6 @@ function ManagedResourceAccess({
                           <AccessRoleBadge role={grant.permission} />
                         )}
                       </span>
-                      <span className="inline-flex size-4 items-center justify-center">
-                        {pending ? (
-                          <AccessPendingIcon
-                            aria-label={`Saving access for ${grantName(grant)}`}
-                            className="motion-safe:animate-spin"
-                          />
-                        ) : null}
-                      </span>
                       {revocable ? (
                         <Tooltip>
                           <TooltipTrigger
@@ -512,7 +468,7 @@ function ManagedResourceAccess({
                                 }}
                                 size="icon-sm"
                                 type="button"
-                                variant="ghost"
+                                variant="destructive"
                               />
                             }
                           >
@@ -520,11 +476,7 @@ function ManagedResourceAccess({
                           </TooltipTrigger>
                           <TooltipContent>Revoke access</TooltipContent>
                         </Tooltip>
-                      ) : kind ? (
-                        <PrincipalNavigation grant={grant} />
-                      ) : (
-                        <span className="size-7" />
-                      )}
+                      ) : null}
                     </div>
                   </li>
                 )
@@ -540,6 +492,56 @@ function ManagedResourceAccess({
               {error.message}
             </p>
           ) : null}
+          {canGrant ? (
+            <div className="mt-4 flex justify-end">
+              <Button
+                disabled={mutationPending}
+                onClick={() => {
+                  setError(undefined)
+                  setAddOpen(true)
+                }}
+                type="button"
+              >
+                <AddAccessGrantIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
+                Add access
+              </Button>
+            </div>
+          ) : null}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+            <div className="flex min-w-0 flex-col gap-1">
+              <h3 className="font-heading text-label">Public access</h3>
+              <Badge
+                className="w-fit"
+                variant={resource.public ? "default" : "outline"}
+              >
+                {resource.public ? (
+                  <PublicAccessIcon data-icon="inline-start" />
+                ) : (
+                  <PrivateAccessIcon data-icon="inline-start" />
+                )}
+                {resource.public ? "Public" : "Private"}
+              </Badge>
+            </div>
+            <Button
+              disabled={mutationPending}
+              onClick={() => {
+                setError(undefined)
+                setPendingPublic(!resource.public)
+              }}
+              type="button"
+              variant={resource.public ? "outline" : "default"}
+            >
+              {resource.public ? "Make private" : "Publish"}
+            </Button>
+            {error?.surface === "public" ? (
+              <p className="basis-full text-body text-destructive" role="alert">
+                {error.message}
+              </p>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
 
@@ -664,7 +666,7 @@ function ManagedResourceAccess({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }
 
@@ -988,40 +990,41 @@ function principalLabel(grant: WorkspaceResourceAccessGrant) {
   return labels[grant.principal_type]
 }
 
-function PrincipalNavigation({
-  grant,
-}: {
-  grant: WorkspaceResourceAccessGrant
-}) {
-  const common = {
-    "aria-label": `Open ${grantName(grant)}`,
-    className: buttonVariants({ size: "icon-sm", variant: "ghost" }),
-    children: <OpenFullPageIcon aria-hidden="true" />,
-    preload: false as const,
-  }
-  const link =
-    grant.principal_type === "user" ? (
-      <Link
-        {...common}
-        params={{ personId: grant.principal_id }}
-        to="/people/$personId"
+function PrincipalName({ grant }: { grant: WorkspaceResourceAccessGrant }) {
+  const name = grantName(grant)
+  if (grant.principal_type === "user") {
+    return (
+      <PersonLink
+        name={name}
+        personId={grant.principal_id}
+        username={grant.slug}
       />
-    ) : (
+    )
+  }
+  if (grant.principal_type === "project") {
+    return (
       <Link
-        {...common}
+        className="hover:underline"
         params={{ projectMfid: grant.principal_id }}
         search={{ preview: undefined }}
         to="/projects/$projectMfid"
-      />
+      >
+        {name}
+      </Link>
     )
-  return (
-    <Tooltip>
-      <TooltipTrigger render={link} />
-      <TooltipContent>
-        Open <ResourceName>{grantName(grant)}</ResourceName>
-      </TooltipContent>
-    </Tooltip>
-  )
+  }
+  if (grant.principal_type === "instrument") {
+    return (
+      <Link
+        className="hover:underline"
+        params={{ instrumentMfid: grant.principal_id }}
+        to="/instruments/$instrumentMfid"
+      >
+        {name}
+      </Link>
+    )
+  }
+  return name
 }
 
 function accessError(error: unknown, action: string) {

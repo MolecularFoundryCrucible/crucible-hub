@@ -55,11 +55,13 @@ type AssignableResource = Extract<
 >
 
 export function ProjectAssignmentCard({
+  className,
   mode,
   onSuccess,
   resource,
   scope,
 }: {
+  className?: string
   mode: "api" | "fixture"
   onSuccess?: (result: WorkspaceProjectReassignment) => void
   resource: AssignableResource
@@ -210,9 +212,9 @@ export function ProjectAssignmentCard({
   if (resource.capabilities?.can_manage_access !== true) return null
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
-        <CardTitle>Assign to project</CardTitle>
+        <CardTitle>Transfer project</CardTitle>
         <CardDescription>
           Move this resource and its project access grant together.
         </CardDescription>
