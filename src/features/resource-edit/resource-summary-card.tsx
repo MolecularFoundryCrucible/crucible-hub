@@ -11,6 +11,8 @@ import {
   SaveChangesIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
+import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
+import type { SummaryFieldType } from "@/components/crucible/summary-field-icon"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -73,7 +75,7 @@ import {
 
 type DatasetDetail = Extract<WorkspaceResourceDetail, { kind: "dataset" }>
 type SampleDetail = Extract<WorkspaceResourceDetail, { kind: "sample" }>
-type SummaryField = readonly [string, ReactNode]
+type SummaryField = readonly [string, ReactNode, SummaryFieldType]
 
 const sampleSummaryFormSchema = z.object({
   description: z
@@ -431,10 +433,13 @@ function SummaryCard({
 function SummaryFields({ fields }: { fields: readonly SummaryField[] }) {
   return (
     <dl className="grid gap-4 sm:grid-cols-2">
-      {fields.map(([label, value]) => (
+      {fields.map(([label, value, type]) => (
         <div className="min-w-0" key={label}>
           <dt className="text-supporting text-muted-foreground">{label}</dt>
-          <dd className="mt-1 text-body break-words">{value ?? "-"}</dd>
+          <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
+            <SummaryFieldIcon type={type} />
+            <span className="min-w-0">{value ?? "-"}</span>
+          </dd>
         </div>
       ))}
     </dl>
@@ -956,35 +961,35 @@ function summaryFields(
 ): readonly SummaryField[] {
   if (resource.kind === "dataset") {
     return [
-      ["Measurement", resource.measurement],
-      ["Data format", resource.data_format],
-      ["Data type", resource.data_type],
-      ["Session", resource.session_name],
-      ["Timestamp", formatLocalDateTime(resource.timestamp)],
+      ["Measurement", resource.measurement, "measurement"],
+      ["Data format", resource.data_format, "data-format"],
+      ["Data type", resource.data_type, "data-type"],
+      ["Session", resource.session_name, "session"],
+      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
       ...contextFields(resource),
     ]
   }
   if (resource.kind === "sample") {
     return [
-      ["Description", resource.description],
-      ["Sample type", resource.sample_type],
-      ["Timestamp", formatLocalDateTime(resource.timestamp)],
+      ["Description", resource.description, "description"],
+      ["Sample type", resource.sample_type, "type"],
+      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
       ...contextFields(resource),
     ]
   }
   if (resource.kind === "instrument") {
     return [
-      ["Instrument type", resource.instrument_type],
-      ["Location", resource.location],
-      ["Manufacturer", resource.manufacturer],
-      ["Model", resource.model],
-      ["Status", resource.status],
+      ["Instrument type", resource.instrument_type, "type"],
+      ["Location", resource.location, "location"],
+      ["Manufacturer", resource.manufacturer, "manufacturer"],
+      ["Model", resource.model, "model"],
+      ["Status", resource.status, "status"],
     ]
   }
   return [
-    ["Project ID", resource.project_id],
-    ["Organization", resource.organization],
-    ["Status", resource.status],
+    ["Project ID", resource.project_id, "project"],
+    ["Organization", resource.organization, "organization"],
+    ["Status", resource.status, "status"],
   ]
 }
 
@@ -1002,7 +1007,7 @@ function contextFields(
   ) : (
     resource.project_id
   )
-  if (resource.kind === "sample") return [["Project", project]]
+  if (resource.kind === "sample") return [["Project", project, "project"]]
   const instrument = resource.instrument ? (
     <Link
       className="text-label hover:underline"
@@ -1015,7 +1020,7 @@ function contextFields(
     resource.instrument_id
   )
   return [
-    ["Project", project],
-    ["Instrument", instrument],
+    ["Project", project, "project"],
+    ["Instrument", instrument, "instrument"],
   ]
 }

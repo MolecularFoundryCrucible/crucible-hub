@@ -60,6 +60,8 @@ test("sample Summary edits stay on the canonical resource page", async ({
       exact: true,
     })
   ).toBeVisible()
+  await expect(card.locator('[data-resource-type="project"]')).toBeVisible()
+  await expect(card.locator("[data-summary-field-icon]")).toHaveCount(3)
   await expect(card.getByText("Instrument", { exact: true })).toHaveCount(0)
   await expect(titledCard(page, "Context")).toHaveCount(0)
   await expect(page.locator('main [data-slot="card-title"]')).toHaveText([

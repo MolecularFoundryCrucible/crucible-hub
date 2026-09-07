@@ -483,6 +483,22 @@ test("renders exact dataset detail and file metadata from a canonical link", asy
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "NiFe K-edge operando series"
   )
+  const summary = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("Summary", { exact: true }) })
+  const projectField = summary.locator("dl > div").filter({
+    has: page.getByText("Project", { exact: true }),
+  })
+  const instrumentField = summary.locator("dl > div").filter({
+    has: page.getByText("Instrument", { exact: true }),
+  })
+  await expect(
+    projectField.locator('[data-resource-type="project"]')
+  ).toBeVisible()
+  await expect(
+    instrumentField.locator('[data-resource-type="instrument"]')
+  ).toBeVisible()
+  await expect(summary.locator("[data-summary-field-icon]")).toHaveCount(5)
   await expect(page.getByText("operando-cycle-04.h5")).toBeVisible()
   await page.locator('summary[aria-label^="acquisition:"]').click()
   await expect(page.getByText("potential_v_rhe")).toBeVisible()
