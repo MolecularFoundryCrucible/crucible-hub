@@ -15,12 +15,14 @@ type ResourceFullPageKind = "dataset" | "instrument" | "project" | "sample"
 type ResourceFullPagePresentation = "inspector-footer" | "table"
 
 export function ResourceFullPageLink({
+  fromProject,
   kind,
   mfid,
   name,
   onClick,
   presentation,
 }: {
+  fromProject?: string
   kind?: ResourceFullPageKind
   mfid: string
   name: string
@@ -78,7 +80,7 @@ export function ResourceFullPageLink({
       <Link
         {...common}
         params={{ sampleMfid: mfid }}
-        search={{ preview: undefined }}
+        search={{ fromProject, preview: undefined }}
         to="/samples/$sampleMfid"
       />
     )
@@ -87,7 +89,7 @@ export function ResourceFullPageLink({
       <Link
         {...common}
         params={{ datasetMfid: mfid }}
-        search={{ preview: undefined }}
+        search={{ fromProject, preview: undefined }}
         to="/datasets/$datasetMfid"
       />
     )

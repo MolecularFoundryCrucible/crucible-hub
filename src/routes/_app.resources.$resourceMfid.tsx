@@ -1,10 +1,10 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
-import { resourcePreviewSearchSchema } from "@/components/crucible/resource-preview-navigation"
+import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { preloadResourceDetail } from "@/features/resource-detail/resource-detail-page"
 
 export const Route = createFileRoute("/_app/resources/$resourceMfid")({
-  validateSearch: resourcePreviewSearchSchema,
+  validateSearch: resourceDetailSearchSchema,
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return

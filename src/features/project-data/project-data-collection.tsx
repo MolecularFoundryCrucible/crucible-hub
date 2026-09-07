@@ -243,9 +243,9 @@ function ProjectDataResult({
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             {kind === "samples" ? (
-              <ProjectSampleTable items={items} />
+              <ProjectSampleTable items={items} projectMfid={projectMfid} />
             ) : (
-              <ProjectDatasetTable items={items} />
+              <ProjectDatasetTable items={items} projectMfid={projectMfid} />
             )}
           </CardContent>
         </Card>
@@ -287,7 +287,13 @@ function ProjectDataResult({
   )
 }
 
-function ProjectSampleTable({ items }: { items: readonly WorkspaceSample[] }) {
+function ProjectSampleTable({
+  items,
+  projectMfid,
+}: {
+  items: readonly WorkspaceSample[]
+  projectMfid: string
+}) {
   return (
     <ProjectTable>
       {items.map((sample) => (
@@ -310,6 +316,7 @@ function ProjectSampleTable({ items }: { items: readonly WorkspaceSample[] }) {
           </TableCell>
           <TableCell className="text-center">
             <ResourceFullPageLink
+              fromProject={projectMfid}
               kind="sample"
               mfid={sample.unique_id}
               name={sample.sample_name}
@@ -324,8 +331,10 @@ function ProjectSampleTable({ items }: { items: readonly WorkspaceSample[] }) {
 
 function ProjectDatasetTable({
   items,
+  projectMfid,
 }: {
   items: readonly WorkspaceDataset[]
+  projectMfid: string
 }) {
   return (
     <ProjectTable>
@@ -349,6 +358,7 @@ function ProjectDatasetTable({
           </TableCell>
           <TableCell className="text-center">
             <ResourceFullPageLink
+              fromProject={projectMfid}
               kind="dataset"
               mfid={dataset.unique_id}
               name={dataset.dataset_name ?? "Untitled dataset"}

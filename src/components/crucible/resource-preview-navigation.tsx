@@ -21,6 +21,9 @@ export const globalDataPreviewOrigin = "global-data"
 export const resourcePreviewSearchSchema = z.object({
   preview: previewMfidSchema.optional().catch(invalidPreviewSearchValue),
 })
+export const resourceDetailSearchSchema = resourcePreviewSearchSchema.extend({
+  fromProject: previewMfidSchema.optional().catch(undefined),
+})
 const trailSchema = z.object({
   hostKind: z.enum(["data", "project-data", "resource"]).default("resource"),
   owner: z.string(),
@@ -34,6 +37,7 @@ export type ResourcePreviewHost =
   | { kind: "project-data"; preview: unknown; projectMfid: string }
   | {
       kind: "resource"
+      fromProject?: string
       preview: unknown
       resourceKind: "dataset" | "sample"
       resourceMfid: string

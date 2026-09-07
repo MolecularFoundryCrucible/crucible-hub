@@ -4,11 +4,11 @@ import {
   ResourceWorkspace,
   preloadResourceDetail,
 } from "@/features/resource-detail/resource-detail-page"
-import { resourcePreviewSearchSchema } from "@/components/crucible/resource-preview-navigation"
+import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 
 export const Route = createFileRoute("/_app/samples/$sampleMfid")({
-  validateSearch: resourcePreviewSearchSchema,
+  validateSearch: resourceDetailSearchSchema,
   staleTime: Infinity,
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
@@ -36,9 +36,10 @@ export const Route = createFileRoute("/_app/samples/$sampleMfid")({
 
 function SamplePage() {
   const { sampleMfid } = Route.useParams()
-  const { preview } = Route.useSearch()
+  const { fromProject, preview } = Route.useSearch()
   return (
     <ResourceWorkspace
+      fromProject={fromProject}
       preview={preview}
       resourceKind="sample"
       resourceMfid={sampleMfid}

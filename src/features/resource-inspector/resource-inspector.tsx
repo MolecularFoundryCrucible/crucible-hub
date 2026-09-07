@@ -143,6 +143,13 @@ export function ResourceInspector({
               />
             ) : null}
             <ResourceFullPageLink
+              fromProject={
+                navigation.host.kind === "project-data"
+                  ? navigation.host.projectMfid
+                  : navigation.host.kind === "resource"
+                    ? navigation.host.fromProject
+                    : undefined
+              }
               kind={resource?.kind}
               mfid={resource?.unique_id ?? navigation.preview}
               name={resource?.name ?? navigation.preview}

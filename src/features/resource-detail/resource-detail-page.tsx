@@ -4,6 +4,7 @@ import type { QueryClient } from "@tanstack/react-query"
 import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
 
 import {
+  BackToProjectIcon,
   CopyIcon,
   CopySuccessIcon,
   DownloadFileIcon,
@@ -76,6 +77,7 @@ import {
 } from "@/data/crucible/resources.queries"
 import { requestWorkspaceFileDownload } from "@/data/crucible/resources.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type {
@@ -99,10 +101,12 @@ export async function preloadResourceDetail(
 }
 
 export function ResourceWorkspace({
+  fromProject,
   resourceKind,
   resourceMfid,
   preview,
 }: {
+  fromProject?: string
   resourceKind: "dataset" | "sample"
   resourceMfid: string
   preview: unknown
@@ -119,6 +123,7 @@ export function ResourceWorkspace({
           to: "/datasets/$datasetMfid/graph",
         })
   const navigation = useResourcePreviewNavigation({
+    fromProject,
     kind: "resource",
     resourceKind,
     resourceMfid,
@@ -129,6 +134,14 @@ export function ResourceWorkspace({
   const { data: resource } = useSuspenseQuery(
     resourceQueryOptions(scope, resourceMfid)
   )
+  const resourceProjectMfid =
+    resource?.kind === "sample" || resource?.kind === "dataset"
+      ? resource.project?.unique_id
+      : undefined
+  const originProject = useQuery({
+    ...projectQueryOptions(scope, fromProject ?? ""),
+    enabled: Boolean(fromProject) && resourceProjectMfid !== fromProject,
+  })
 
   if (!resource || resource.kind !== resourceKind) {
     return (
@@ -195,6 +208,24 @@ export function ResourceWorkspace({
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        {fromProject ? (
+          <Link
+            className="inline-flex w-fit items-center gap-1.5 text-label text-primary hover:underline"
+            params={{ projectMfid: fromProject }}
+            search={{
+              kind: resource.kind === "dataset" ? "datasets" : undefined,
+              preview: undefined,
+            }}
+            to="/projects/$projectMfid"
+          >
+            <BackToProjectIcon aria-hidden="true" className="size-4" />
+            Back to{" "}
+            {resource.project?.unique_id === fromProject
+              ? (resource.project.title ?? resource.project.project_id)
+              : (originProject.data?.title ?? "project")}{" "}
+            data
+          </Link>
+        ) : null}
 
         <PageHeader
           eyebrow={
@@ -206,7 +237,7 @@ export function ResourceWorkspace({
           title={resource.name}
           description={resourceDescription(resource)}
         />
-        <ResourceNavigation resource={resource} />
+        <ResourceNavigation fromProject={fromProject} resource={resource} />
         <Outlet />
       </PageLayout>
       <ResourceInspector navigation={navigation} />
@@ -266,8 +297,10 @@ export function ResourceOverview({
 }
 
 function ResourceNavigation({
+  fromProject,
   resource,
 }: {
+  fromProject?: string
   resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
 }) {
   if (resource.kind === "sample") {
@@ -278,7 +311,7 @@ function ResourceNavigation({
           activeProps={resourceSectionActiveProps}
           className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
-          search={{ preview: undefined }}
+          search={{ fromProject, preview: undefined }}
           to="/samples/$sampleMfid"
         >
           Overview
@@ -289,7 +322,7 @@ function ResourceNavigation({
           className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
-          search={{ preview: undefined }}
+          search={{ fromProject, preview: undefined }}
           to="/samples/$sampleMfid/graph"
         >
           Graph
@@ -300,7 +333,7 @@ function ResourceNavigation({
           className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
-          search={{}}
+          search={{ fromProject, preview: undefined }}
           to="/samples/$sampleMfid/manage"
         >
           Manage
@@ -315,7 +348,7 @@ function ResourceNavigation({
         activeProps={resourceSectionActiveProps}
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
-        search={{ preview: undefined }}
+        search={{ fromProject, preview: undefined }}
         to="/datasets/$datasetMfid"
       >
         Overview
@@ -326,7 +359,7 @@ function ResourceNavigation({
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
-        search={{ preview: undefined }}
+        search={{ fromProject, preview: undefined }}
         to="/datasets/$datasetMfid/graph"
       >
         Graph
@@ -337,7 +370,7 @@ function ResourceNavigation({
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
-        search={{}}
+        search={{ fromProject, preview: undefined }}
         to="/datasets/$datasetMfid/manage"
       >
         Manage

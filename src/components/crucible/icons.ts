@@ -7,6 +7,7 @@ export {
   FolderKanban as ProjectIcon,
   House as WorkspaceIcon,
   Microscope as InstrumentIcon,
+  ArrowLeft as BackToProjectIcon,
   ArrowRight as OpenFullPageIcon,
   UserRound as PersonIcon,
   Bot as ServiceAccountIcon,

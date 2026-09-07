@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
-import { resourcePreviewSearchSchema } from "@/components/crucible/resource-preview-navigation"
+import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import {
   ResourceWorkspace,
@@ -8,7 +8,7 @@ import {
 } from "@/features/resource-detail/resource-detail-page"
 
 export const Route = createFileRoute("/_app/datasets/$datasetMfid")({
-  validateSearch: resourcePreviewSearchSchema,
+  validateSearch: resourceDetailSearchSchema,
   staleTime: Infinity,
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
@@ -36,9 +36,10 @@ export const Route = createFileRoute("/_app/datasets/$datasetMfid")({
 
 function DatasetPage() {
   const { datasetMfid } = Route.useParams()
-  const { preview } = Route.useSearch()
+  const { fromProject, preview } = Route.useSearch()
   return (
     <ResourceWorkspace
+      fromProject={fromProject}
       preview={preview}
       resourceKind="dataset"
       resourceMfid={datasetMfid}
