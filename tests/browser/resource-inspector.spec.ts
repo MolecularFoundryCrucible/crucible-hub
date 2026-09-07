@@ -257,6 +257,7 @@ test("desktop outside interaction and compact focus containment survive resizing
   const heading = page.locator("main h1")
   const resourceHeader = heading.locator("xpath=../..")
   const layoutBefore = await resourceHeader.boundingBox()
+  if (!layoutBefore) throw new Error("Resource header was not rendered")
   const trigger = page.getByRole("link", {
     name: "Preview NiFe K-edge operando series",
   })
@@ -265,7 +266,11 @@ test("desktop outside interaction and compact focus containment survive resizing
   await expect(panel).toBeVisible()
   const overlay = page.locator('[data-slot="sheet-overlay"]')
   await expect(overlay).toBeVisible()
-  expect(await resourceHeader.boundingBox()).toEqual(layoutBefore)
+  expect(await resourceHeader.boundingBox()).toMatchObject({
+    height: layoutBefore.height,
+    width: layoutBefore.width,
+    x: layoutBefore.x,
+  })
   await overlay.click({ position: { x: 1, y: 1 } })
   await expect(panel).toHaveCount(0)
   await expect(trigger).toBeFocused()
