@@ -3,6 +3,7 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import {
   ResourceSectionNavigation,
   resourceSectionActiveProps,
@@ -10,7 +11,6 @@ import {
 } from "@/components/crucible/resource-section-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -93,15 +93,9 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
+        actions={<ResourceCreationActions projectMfid={project.unique_id} />}
         eyebrow={project.project_id}
         title={project.title ?? project.project_id}
-        actions={
-          <Badge variant={complete ? "secondary" : "outline"}>
-            {complete
-              ? (project.status ?? "Status unavailable")
-              : "Limited details"}
-          </Badge>
-        }
       />
 
       <ResourceSectionNavigation label="Project sections">

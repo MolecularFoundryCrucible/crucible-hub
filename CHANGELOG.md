@@ -63,7 +63,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Updated the pinned staging API contract and sample and dataset creation requests to use canonical project and instrument MFIDs directly, removing identity lookup requests before creation.
 - Preserved project context when opening sample and dataset pages from Project Data, with a validated contextual return link that targets the matching project collection.
-- Refined sample and dataset Overview cards, resource navigation, Manage layout, and compact confirmation behavior with clearer field order, consistent action hierarchy, linked identity names with shared person previews, project-aware breadcrumbs, a combined access card, and a unified resource management card.
+- Refined sample and dataset Overview cards, resource navigation, Manage layout, project creation actions, and compact confirmation behavior with clearer field order, consistent action hierarchy, linked identity names with shared person previews, project-aware breadcrumbs, a combined access card, and a unified resource management card.
 - Gave Identity cards slightly more space and kept full MFIDs on one line when the available viewport permits.
 - Branded the application sidebar with the Crucible mark and blue surfaces, moved the desktop collapse control into the sidebar, applied orange current-location boundaries, and standardized resource section navigation typography and target sizing.
 - Consolidated sample and dataset access, assignment, ownership, and reviewed deletion under canonical Manage routes with compatibility redirects.

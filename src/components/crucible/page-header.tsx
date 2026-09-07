@@ -11,7 +11,7 @@ export function PageHeader({
 }) {
   return (
     <header className="flex flex-col gap-4 border-b pb-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="max-w-reading min-w-0">
+      <div className="max-w-reading min-w-0 flex-1">
         <div className="flex items-center gap-2 text-overline text-muted-foreground uppercase">
           {eyebrow}
         </div>
@@ -22,7 +22,9 @@ export function PageHeader({
           </p>
         ) : null}
       </div>
-      {actions}
+      {actions ? (
+        <div className="shrink-0 self-start lg:self-end">{actions}</div>
+      ) : null}
     </header>
   )
 }
