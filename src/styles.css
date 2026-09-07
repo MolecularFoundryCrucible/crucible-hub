@@ -448,10 +448,6 @@ body {
   }
 }
 
-[data-collapsible="icon"] .sidebar-theme {
-  display: none;
-}
-
 .route-progress {
   position: fixed;
   z-index: var(--layer-route-progress);

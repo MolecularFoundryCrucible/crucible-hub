@@ -13,7 +13,8 @@ export const searchGroupLimit = 8
 export function searchQueryOptions(
   scope: IdentityScope,
   query: string,
-  kinds: readonly WorkspaceSearchKind[]
+  kinds: readonly WorkspaceSearchKind[],
+  projectMfid?: string
 ) {
   const normalizedKinds = [...kinds].sort()
   const scenario = fixtureScenarioFromScope(scope)
@@ -21,6 +22,7 @@ export function searchQueryOptions(
     queryKey: crucibleKeys.search(scope, {
       kinds: normalizedKinds,
       limit: searchGroupLimit,
+      projectMfid: projectMfid ?? null,
       query,
     }),
     queryFn: async ({ signal }) =>
@@ -29,6 +31,7 @@ export function searchQueryOptions(
           data: {
             kinds: [...kinds],
             limit: searchGroupLimit,
+            projectMfid,
             query,
             scenario,
           },

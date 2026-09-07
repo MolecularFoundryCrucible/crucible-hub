@@ -46,7 +46,8 @@ test("explores immediate resource relationships without replacing the Hub shell"
   ).toBeVisible()
   await expect(page.getByText("2 resources", { exact: true })).toBeVisible()
   await expect(page.getByText("1 relationship", { exact: true })).toBeVisible()
-  await page.getByLabel("Theme").selectOption("dark")
+  await page.getByRole("button", { name: "Theme" }).click()
+  await page.getByRole("menuitemradio", { name: "Dark" }).click()
   await expect(page.locator("html")).toHaveClass(/dark/)
 
   await page

@@ -374,7 +374,8 @@ test("has no detectable accessibility violations in light and dark themes", asyn
   const lightResults = await new AxeBuilder({ page }).analyze()
   expect(lightResults.violations).toEqual([])
 
-  await page.getByLabel("Theme").selectOption("dark")
+  await page.getByRole("button", { name: "Theme" }).click()
+  await page.getByRole("menuitemradio", { name: "Dark" }).click()
   await expect(page.locator("html")).toHaveClass(/dark/)
   await page.waitForTimeout(300)
   const darkResults = await new AxeBuilder({ page }).analyze()
@@ -393,8 +394,8 @@ test("persists an explicit dark theme without a hydration mismatch", async ({
   await page.goto("/hub/")
   await page.waitForLoadState("networkidle")
   expect(browserErrors).toEqual([])
-  await page.getByLabel("Theme").selectOption("dark")
-  await expect(page.getByLabel("Theme")).toHaveValue("dark")
+  await page.getByRole("button", { name: "Theme" }).click()
+  await page.getByRole("menuitemradio", { name: "Dark" }).click()
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("crucible-hub-theme")))
     .toBe("dark")
@@ -402,8 +403,56 @@ test("persists an explicit dark theme without a hydration mismatch", async ({
 
   await page.reload()
   await expect(page.locator("html")).toHaveClass(/dark/)
-  await expect(page.getByLabel("Theme")).toHaveValue("dark")
+  await page.getByRole("button", { name: "Theme" }).click()
+  await expect(
+    page.getByRole("menuitemradio", { name: "Dark" })
+  ).toHaveAttribute("aria-checked", "true")
   expect(browserErrors).toEqual([])
+})
+
+test("opens shortcut help and navigates with key sequences", async ({
+  page,
+}) => {
+  await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
+
+  await page.keyboard.press("?")
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText("Ctrl K", { exact: true })).toBeVisible()
+  await page.keyboard.press("Escape")
+
+  await page.keyboard.press("g")
+  await page.keyboard.press("p")
+  await expect(page).toHaveURL(/\/hub\/projects$/)
+})
+
+test("searches data within the active project and retains return context", async ({
+  page,
+}) => {
+  const projectMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z3"
+  await page.goto(`/hub/projects/${projectMfid}`)
+  await page.waitForLoadState("networkidle")
+  await page.keyboard.press("Control+Shift+k")
+
+  const dialog = page.getByRole("dialog", { name: "Search project data" })
+  await dialog.getByRole("searchbox", { name: "Search query" }).fill("NiFe")
+  await dialog.getByRole("button", { name: "Search" }).click()
+
+  await expect(page).toHaveURL(
+    new RegExp(`/hub/search\\?.*projectMfid=${projectMfid}`)
+  )
+  await expect(
+    page.getByRole("link", { name: "Back to project" })
+  ).toBeVisible()
+  const sample = page.getByRole("link", {
+    name: "NiFe oxide catalyst A",
+    exact: true,
+  })
+  await expect(sample).toHaveAttribute(
+    "href",
+    new RegExp(`fromProject=${projectMfid}`)
+  )
 })
 
 test("adapts navigation for a compact browser viewport", async ({ page }) => {

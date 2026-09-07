@@ -12,6 +12,25 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 const storageKey = "crucible-hub-theme"
 
+function readStoredTheme(): Theme | undefined {
+  try {
+    const stored = window.localStorage.getItem(storageKey)
+    return stored === "light" || stored === "dark" || stored === "system"
+      ? stored
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function storeTheme(theme: Theme) {
+  try {
+    window.localStorage.setItem(storageKey, theme)
+  } catch {
+    return
+  }
+}
+
 function themeScript() {
   const key = JSON.stringify(storageKey)
   return `(function(){try{var t=localStorage.getItem(${key});var v=t==='light'||t==='dark'||t==='system'?t:'system';var d=v==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):v;document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(d);document.documentElement.style.colorScheme=d}catch(e){}})()`
@@ -35,10 +54,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system")
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(storageKey)
-    if (stored === "light" || stored === "dark" || stored === "system") {
-      setThemeState(stored)
-    }
+    const stored = readStoredTheme()
+    if (stored) setThemeState(stored)
   }, [])
 
   useEffect(() => {
@@ -54,7 +71,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     () => ({
       theme,
       setTheme: (nextTheme: Theme) => {
-        window.localStorage.setItem(storageKey, nextTheme)
+        storeTheme(nextTheme)
         applyTheme(nextTheme)
         setThemeState(nextTheme)
       },

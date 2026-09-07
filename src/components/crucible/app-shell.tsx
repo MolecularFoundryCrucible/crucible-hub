@@ -3,10 +3,17 @@ import { Link, useRouterState } from "@tanstack/react-router"
 import { BrandMark } from "@/components/crucible/brand-mark"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
-import { AccountIcon, WorkspaceIcon } from "@/components/crucible/icons"
+import { KeyboardShortcuts } from "@/components/crucible/keyboard-shortcuts"
+import {
+  AccountIcon,
+  CollapseSidebarIcon,
+  ExpandSidebarIcon,
+  ThemeIcon,
+  WorkspaceIcon,
+} from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
-import { ThemeSelect } from "@/components/theme-select"
+import { useTheme } from "@/components/theme-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +22,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -27,6 +36,7 @@ import {
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
+  sidebarMenuButtonVariants,
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
@@ -35,7 +45,6 @@ import {
 } from "@/components/ui/sidebar"
 import type { Workspace } from "@/data/crucible/workspace-source"
 import { initials } from "@/lib/format"
-import { cn } from "@/lib/utils"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
 
@@ -76,6 +85,7 @@ export function AppShell({
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
+  const projectMfid = pathname.match(/^\/projects\/([^/]+)/)?.[1]
 
   return (
     <SidebarProvider>
@@ -125,17 +135,13 @@ export function AppShell({
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-          <div className="sidebar-theme px-2">
-            <ThemeSelect />
-          </div>
-        </SidebarFooter>
+        <SidebarUtilities projectActive={Boolean(projectMfid)} />
         <SidebarRail />
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
           <SidebarTrigger className="md:hidden" />
-          <GlobalSearch />
+          <GlobalSearch projectMfid={projectMfid} />
           {account ? (
             <CreateMenu
               isServiceAccount={Boolean(account.is_service_account)}
@@ -197,8 +203,8 @@ function SidebarBrand() {
   const collapsed = !isMobile && state === "collapsed"
 
   return (
-    <SidebarHeader className="relative h-14 justify-center">
-      <SidebarMenu className={collapsed ? "pr-0" : "pr-8"}>
+    <SidebarHeader className="h-14 justify-center">
+      <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
             size="lg"
@@ -210,9 +216,80 @@ function SidebarBrand() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-      <SidebarTrigger
-        className={cn("absolute top-3.5 right-2 z-20", collapsed && "-right-3")}
-      />
     </SidebarHeader>
+  )
+}
+
+function SidebarUtilities({ projectActive }: { projectActive: boolean }) {
+  const { isMobile, state, toggleSidebar } = useSidebar()
+  const { setTheme, theme } = useTheme()
+  const expanded = isMobile || state === "expanded"
+
+  return (
+    <SidebarFooter>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <KeyboardShortcuts projectActive={projectActive} />
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label="Theme"
+                  className={sidebarMenuButtonVariants({
+                    className: "justify-start",
+                  })}
+                  data-sidebar="menu-button"
+                  title="Theme"
+                  variant="ghost"
+                />
+              }
+            >
+              <ThemeIcon aria-hidden="true" />
+              <span>Theme</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="right">
+              <DropdownMenuRadioGroup
+                onValueChange={(value) => {
+                  if (
+                    value === "system" ||
+                    value === "light" ||
+                    value === "dark"
+                  ) {
+                    setTheme(value)
+                  }
+                }}
+                value={theme}
+              >
+                <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                <DropdownMenuRadioItem value="system">
+                  System
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="light">
+                  Light
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            onClick={toggleSidebar}
+            tooltip={expanded ? "Collapse navigation" : "Expand navigation"}
+          >
+            {expanded ? (
+              <CollapseSidebarIcon aria-hidden="true" />
+            ) : (
+              <ExpandSidebarIcon aria-hidden="true" />
+            )}
+            <span>
+              {expanded ? "Collapse navigation" : "Expand navigation"}
+            </span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarFooter>
   )
 }

@@ -31,7 +31,7 @@ This document owns Hub routes, navigation, shell behavior, page archetypes, and 
 | Account     | Profile, preferences, and session controls.                                 |
 | Admin       | Separate platform-administrator workflows.                                  |
 
-Wide layouts use a persistent sidebar and top utility bar. The top utility bar provides one global Create menu linking to dedicated project, sample, dataset, and eligible instrument creation routes without inferred context. Contextual creation actions remain on project and instrument surfaces because they carry explicit project or instrument preselection. A collapsed sidebar retains accessible names through tooltips. Narrow layouts use a drawer or bottom navigation with the same destinations and route structure. Global navigation never duplicates entity-local sections.
+Wide layouts use a persistent sidebar and top utility bar. The top utility bar provides one global Create menu linking to dedicated project, sample, dataset, and eligible instrument creation routes without inferred context. Contextual creation actions remain on project and instrument surfaces because they carry explicit project or instrument preselection. Shortcuts, Theme, and the expand or collapse action form a utility group at the bottom of the sidebar. Expanded navigation shows their labels; collapsed navigation keeps vertically stacked icons with named tooltips. Narrow layouts use a drawer or bottom navigation with the same destinations and route structure. Global navigation never duplicates entity-local sections.
 
 ## Route hierarchy
 
@@ -39,7 +39,7 @@ Wide layouts use a persistent sidebar and top utility bar. The top utility bar p
 | ------------------------------------------------- | ----------------------------------------------------------- |
 | `/`                                               | Home dashboard.                                             |
 | `/data`                                           | Global sample and dataset collection.                       |
-| `/search`                                         | Cross-resource search.                                      |
+| `/search`                                         | Global or project-scoped resource search.                   |
 | `/projects`                                       | Project collection.                                         |
 | `/projects/new`                                   | Project creation.                                           |
 | `/projects/:projectMfid`                          | Project Data index.                                         |
@@ -86,6 +86,8 @@ Project navigation has Data and Overview plus capability-gated Manage when membe
 The exact project endpoint returns `ProjectWithLead`: `unique_id`, `project_id`, `title`, `organization`, `project_lead_orcid`, resolved `lead`, `status`, `creation_time`, `modification_time`, `members`, `scientific_metadata`, and nullable `capabilities`. Hub renders the resolved public-safe lead in preference to its identifier, uses capabilities only to expose valid actions, and omits the project status badge from the project header. Optional values remain absent or use the standard empty presentation rather than being fabricated.
 
 Project creation is a dedicated route linked from the project collection. It requires a project title, validated project ID, organization, and an existing lead. The current account is the initial lead and bounded people search can replace it. New projects start active and open by returned canonical MFID.
+
+Project-scoped search uses the canonical project MFID to find related samples and datasets across assigned and shared relationships. Its breadcrumb and Back to project action return directly to Project Data, and canonical resource links retain the project for contextual return navigation. Global search remains available without losing its cross-resource scope.
 
 ### Instrument
 

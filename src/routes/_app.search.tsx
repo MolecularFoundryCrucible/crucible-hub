@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
-import { SearchIcon } from "lucide-react"
 import { z } from "zod"
 
 import {
@@ -10,12 +9,22 @@ import {
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
 import { ContentBoundary } from "@/components/crucible/content-layout"
+import { BackToProjectIcon, SearchIcon } from "@/components/crucible/icons"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -28,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { searchQueryOptions } from "@/data/crucible/search.queries"
+import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type {
   WorkspaceSearchKind,
   WorkspaceSearchResult,
@@ -43,6 +53,7 @@ const kinds = [
 
 const searchSchema = z.object({
   kind: z.enum(kinds).optional().catch(undefined),
+  projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
   q: z.string().trim().max(200).optional().catch(undefined),
 })
 
@@ -56,8 +67,25 @@ export const Route = createFileRoute("/_app/search")({
 function SearchPage() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: "/search" })
+  const scope = useWorkspaceScope()
   const [query, setQuery] = useState(search.q ?? "")
-  const selectedKinds = search.kind ? [search.kind] : kinds
+  const projectResult = useQuery({
+    ...projectQueryOptions(scope, search.projectMfid ?? ""),
+    enabled: Boolean(search.projectMfid),
+  })
+  const project = projectResult.data
+  const projectKinds = ["sample", "dataset"] as const
+  const selectedProjectKind =
+    search.kind === "sample" || search.kind === "dataset"
+      ? search.kind
+      : undefined
+  const selectedKinds = search.projectMfid
+    ? selectedProjectKind
+      ? [selectedProjectKind]
+      : projectKinds
+    : search.kind
+      ? [search.kind]
+      : kinds
   const validQuery = search.q && search.q.length >= 3 ? search.q : null
 
   useEffect(() => {
@@ -76,7 +104,62 @@ function SearchPage() {
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Search" title="Find anything in Crucible" />
+      <SearchBreadcrumb
+        projectMfid={search.projectMfid}
+        projectName={
+          project ? (project.title ?? project.project_id) : search.projectMfid
+        }
+      />
+      <PageHeader
+        actions={
+          search.projectMfid ? (
+            <div className="flex flex-wrap gap-2">
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                search={{
+                  kind: undefined,
+                  projectMfid: undefined,
+                  q: search.q,
+                }}
+                to="/search"
+              >
+                <SearchIcon aria-hidden="true" data-icon="inline-start" />
+                Search all Crucible
+              </Link>
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                params={{ projectMfid: search.projectMfid }}
+                search={{
+                  datasetCursor: undefined,
+                  kind: undefined,
+                  preview: undefined,
+                  sampleCursor: undefined,
+                  scope: undefined,
+                }}
+                state={{}}
+                to="/projects/$projectMfid"
+              >
+                <BackToProjectIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
+                Back to project
+              </Link>
+            </div>
+          ) : null
+        }
+        description={
+          search.projectMfid
+            ? `Samples and datasets related to ${project ? (project.title ?? project.project_id) : search.projectMfid}.`
+            : undefined
+        }
+        eyebrow={search.projectMfid ? "Project search" : "Search"}
+        title={
+          search.projectMfid
+            ? "Find data in this project"
+            : "Find anything in Crucible"
+        }
+      />
       <ContentBoundary width="reading">
         <form className="flex gap-2" onSubmit={submit} role="search">
           {search.kind ? (
@@ -92,7 +175,11 @@ function SearchPage() {
             minLength={3}
             name="q"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search names, identifiers, and scientific data"
+            placeholder={
+              search.projectMfid
+                ? "Search sample and dataset names"
+                : "Search names, identifiers, and scientific data"
+            }
             required
             type="search"
             value={query}
@@ -104,8 +191,12 @@ function SearchPage() {
         </form>
       </ContentBoundary>
       <nav className="flex flex-wrap gap-2" aria-label="Resource type filter">
-        <KindLink active={!search.kind} kind={undefined} label="All" />
-        {kinds.map((kind) => (
+        <KindLink
+          active={search.projectMfid ? !selectedProjectKind : !search.kind}
+          kind={undefined}
+          label="All"
+        />
+        {(search.projectMfid ? projectKinds : kinds).map((kind) => (
           <KindLink
             active={search.kind === kind}
             key={kind}
@@ -115,14 +206,22 @@ function SearchPage() {
         ))}
       </nav>
       {validQuery ? (
-        <SearchResults kinds={selectedKinds} query={validQuery} />
+        <SearchResults
+          kinds={selectedKinds}
+          projectMfid={search.projectMfid}
+          query={validQuery}
+        />
       ) : (
         <Empty className="min-h-state border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <SearchIcon />
             </EmptyMedia>
-            <EmptyTitle>Start with a name or MFID</EmptyTitle>
+            <EmptyTitle>
+              {search.projectMfid
+                ? "Start with a resource name"
+                : "Start with a name or MFID"}
+            </EmptyTitle>
             <EmptyDescription>
               Enter at least three characters. Search results are grouped by
               resource type.
@@ -131,6 +230,59 @@ function SearchPage() {
         </Empty>
       )}
     </PageLayout>
+  )
+}
+
+function SearchBreadcrumb({
+  projectMfid,
+  projectName,
+}: {
+  projectMfid?: string
+  projectName?: string
+}) {
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        {projectMfid ? (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link to="/projects" />}>
+                Projects
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                render={
+                  <Link
+                    params={{ projectMfid }}
+                    search={{
+                      datasetCursor: undefined,
+                      kind: undefined,
+                      preview: undefined,
+                      sampleCursor: undefined,
+                      scope: undefined,
+                    }}
+                    state={{}}
+                    to="/projects/$projectMfid"
+                  />
+                }
+              >
+                {projectName ?? projectMfid}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
+        ) : (
+          <BreadcrumbItem>
+            <BreadcrumbLink render={<Link to="/" />}>Home</BreadcrumbLink>
+          </BreadcrumbItem>
+        )}
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>Search</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
   )
 }
 
@@ -158,13 +310,17 @@ function SearchResultsPending() {
 
 function SearchResults({
   kinds: selectedKinds,
+  projectMfid,
   query,
 }: {
   kinds: readonly WorkspaceSearchKind[]
+  projectMfid?: string
   query: string
 }) {
   const scope = useWorkspaceScope()
-  const result = useQuery(searchQueryOptions(scope, query, selectedKinds))
+  const result = useQuery(
+    searchQueryOptions(scope, query, selectedKinds, projectMfid)
+  )
 
   if (result.isPending) return <SearchResultsPending />
   if (result.isError && !result.data) {
@@ -222,7 +378,11 @@ function SearchResults({
                   <CardContent className="px-0">
                     <ul className="divide-y">
                       {group.items.map((item) => (
-                        <SearchResult item={item} key={item.unique_id} />
+                        <SearchResult
+                          item={item}
+                          key={item.unique_id}
+                          projectMfid={projectMfid}
+                        />
                       ))}
                     </ul>
                   </CardContent>
@@ -255,7 +415,13 @@ function SearchResults({
   )
 }
 
-function SearchResult({ item }: { item: WorkspaceSearchResult }) {
+function SearchResult({
+  item,
+  projectMfid,
+}: {
+  item: WorkspaceSearchResult
+  projectMfid?: string
+}) {
   const link =
     item.kind === "person" ? (
       <Link
@@ -285,6 +451,7 @@ function SearchResult({ item }: { item: WorkspaceSearchResult }) {
       <Link
         className="text-label hover:underline"
         params={{ sampleMfid: item.unique_id }}
+        search={{ fromProject: projectMfid }}
         to="/samples/$sampleMfid"
       >
         {item.name}
@@ -293,6 +460,7 @@ function SearchResult({ item }: { item: WorkspaceSearchResult }) {
       <Link
         className="text-label hover:underline"
         params={{ datasetMfid: item.unique_id }}
+        search={{ fromProject: projectMfid }}
         to="/datasets/$datasetMfid"
       >
         {item.name}
@@ -310,9 +478,7 @@ function SearchResult({ item }: { item: WorkspaceSearchResult }) {
           </p>
         ) : null}
       </div>
-      <span className="hidden font-mono text-identifier text-muted-foreground lg:block">
-        {item.unique_id}
-      </span>
+      <MfidValue className="hidden max-w-64 lg:flex" value={item.unique_id} />
     </li>
   )
 }

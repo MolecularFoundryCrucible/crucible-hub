@@ -38,6 +38,24 @@ describe("workspace search source", () => {
     })
   })
 
+  it("restricts fixture data search to the selected project", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    const result = await searchWorkspace({
+      kinds: ["sample"],
+      limit: 8,
+      projectMfid: "fixture-project-1",
+      query: "Catalyst sample 2",
+      scenario: "dense",
+    })
+
+    expect(result.groups[0].items.map((item) => item.unique_id)).toEqual([
+      "fixture-sample-2",
+      "fixture-sample-25",
+    ])
+  })
+
   it("reports one fixture search failure without hiding other groups", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "")

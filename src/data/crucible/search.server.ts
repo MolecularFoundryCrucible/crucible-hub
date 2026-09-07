@@ -9,6 +9,7 @@ import { readWorkspaceResource } from "./resources.server"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import {
   assertFixtureScenarioAvailable,
+  isFixtureResourceSharedWithProject,
   readWorkspaceFixture,
 } from "./workspace-fixture.server"
 import type {
@@ -26,6 +27,7 @@ type Schema<TSchemaName extends keyof components["schemas"]> =
 type SearchInput = {
   kinds: readonly WorkspaceSearchKind[]
   limit: number
+  projectMfid?: string
   query: string
   scenario?: FixtureScenario
 }
@@ -120,11 +122,44 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
       if (kind === "dataset" || kind === "instrument") {
         assertFixtureScenarioAvailable(input.scenario, `${kind}s`)
       }
-      const matches = fixtureItems(source.workspace, kind)
-        .filter((item) =>
-          [item.name, item.context, item.unique_id].some((value) =>
-            value?.toLocaleLowerCase().includes(query)
+      const project = input.projectMfid
+        ? source.workspace.projects.find(
+            (item) => item.unique_id === input.projectMfid
           )
+        : undefined
+      const matches = fixtureItems(source.workspace, kind)
+        .filter((item) => {
+          if (!input.projectMfid) return true
+          if (!project || (kind !== "sample" && kind !== "dataset")) {
+            return false
+          }
+          const resource =
+            kind === "sample"
+              ? source.workspace.samples.find(
+                  (candidate) => candidate.unique_id === item.unique_id
+                )
+              : source.workspace.datasets.find(
+                  (candidate) => candidate.unique_id === item.unique_id
+                )
+          return Boolean(
+            resource &&
+            (resource.project?.unique_id === project.unique_id ||
+              (!resource.project &&
+                resource.project_id === project.project_id) ||
+              isFixtureResourceSharedWithProject(
+                input.scenario,
+                project.unique_id,
+                kind === "sample" ? "samples" : "datasets",
+                resource.unique_id
+              ))
+          )
+        })
+        .filter((item) =>
+          [
+            item.name,
+            item.context,
+            input.projectMfid ? undefined : item.unique_id,
+          ].some((value) => value?.toLocaleLowerCase().includes(query))
         )
         .sort((left, right) => relevance(left, query) - relevance(right, query))
       return group(kind, matches.slice(0, input.limit), matches.length)
@@ -194,7 +229,7 @@ export async function searchWorkspace(
   }
   if (configuration.mode === "fixture") return fixtureSearch(input)
 
-  if (mfidPattern.test(input.query)) {
+  if (!input.projectMfid && mfidPattern.test(input.query)) {
     const resource = await readWorkspaceResource(
       input.query,
       input.scenario,
@@ -248,7 +283,14 @@ export async function searchWorkspace(
     }
     if (kind === "sample") {
       const result = await client.GET("/samples/search", {
-        params: { query: { limit: input.limit, q: input.query } },
+        params: {
+          query: {
+            limit: input.limit,
+            project_mfid: input.projectMfid,
+            project_scope: input.projectMfid ? "all" : undefined,
+            q: input.query,
+          },
+        },
         signal,
       })
       if (!result.data) throw new Error("sample search failed")
@@ -259,7 +301,14 @@ export async function searchWorkspace(
       )
     }
     const result = await client.GET("/datasets/search", {
-      params: { query: { limit: input.limit, q: input.query } },
+      params: {
+        query: {
+          limit: input.limit,
+          project_mfid: input.projectMfid,
+          project_scope: input.projectMfid ? "all" : undefined,
+          q: input.query,
+        },
+      },
       signal,
     })
     if (!result.data) throw new Error("dataset search failed")

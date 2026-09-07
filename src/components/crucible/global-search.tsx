@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import { SearchIcon } from "lucide-react"
 
+import { SearchIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
-export function GlobalSearch() {
+export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [searchScope, setSearchScope] = useState<"global" | "project">("global")
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -24,13 +25,15 @@ export function GlobalSearch() {
         event.key.toLocaleLowerCase() === "k" &&
         (event.metaKey || event.ctrlKey)
       ) {
+        if (event.shiftKey && !projectMfid) return
         event.preventDefault()
+        setSearchScope(event.shiftKey ? "project" : "global")
         setOpen(true)
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  }, [projectMfid])
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -39,13 +42,18 @@ export function GlobalSearch() {
     setOpen(false)
     void navigate({
       to: "/search",
-      search: { kind: undefined, q: normalizedQuery },
+      search: {
+        kind: undefined,
+        projectMfid: searchScope === "project" ? projectMfid : undefined,
+        q: normalizedQuery,
+      },
     })
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
+        onClick={() => setSearchScope("global")}
         render={
           <Button
             className="min-w-0 flex-1 justify-start text-muted-foreground sm:max-w-sm"
@@ -64,10 +72,15 @@ export function GlobalSearch() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Search Crucible</DialogTitle>
+          <DialogTitle>
+            {searchScope === "project"
+              ? "Search project data"
+              : "Search Crucible"}
+          </DialogTitle>
           <DialogDescription>
-            Find projects, instruments, samples, and datasets by name or enter a
-            complete MFID.
+            {searchScope === "project"
+              ? "Find samples and datasets related to this project by name."
+              : "Find projects, instruments, samples, and datasets by name or enter a complete MFID."}
           </DialogDescription>
         </DialogHeader>
         <form className="flex gap-2" onSubmit={submit}>
