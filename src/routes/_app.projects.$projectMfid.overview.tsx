@@ -140,7 +140,7 @@ function ProjectOverviewPage() {
 
 function ProjectLead({ project }: { project: WorkspaceProject }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 sm:col-span-2">
       <dt className="text-supporting text-muted-foreground">Project lead</dt>
       <dd className="mt-1 text-body break-words">
         {"status" in project && project.lead ? (
@@ -192,7 +192,7 @@ function ProjectMfid({ project }: { project: WorkspaceProject }) {
     <div className="min-w-0">
       <dt className="text-supporting text-muted-foreground">MFID</dt>
       <dd className="mt-1 flex min-w-0 items-start gap-2 text-body">
-        <span className="min-w-0 font-mono text-identifier break-all">
+        <span className="min-w-0 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
           {project.unique_id}
         </span>
         <Tooltip>

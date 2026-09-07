@@ -343,12 +343,12 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
         <CardTitle>Identity</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 min-w-0 md:col-span-1">
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <div className="min-w-0 sm:col-span-2">
             <dt className="text-supporting text-muted-foreground">MFID</dt>
             <dd className="mt-1 flex min-w-0 items-start gap-2 text-body">
               <IdentityFieldIcon type="mfid" />
-              <span className="min-w-0 font-mono text-identifier break-all">
+              <span className="min-w-0 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
                 {resource.unique_id}
               </span>
               <Tooltip>
@@ -377,7 +377,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
             )}
           </div>
           {"public" in resource && (
-            <div className="col-span-2 md:col-span-1 md:col-start-2">
+            <div>
               <dt className="text-supporting text-muted-foreground">
                 Visibility
               </dt>
@@ -393,7 +393,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               </dd>
             </div>
           )}
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <dt className="text-supporting text-muted-foreground">Owner</dt>
             <dd className="mt-1 flex items-start gap-2 text-body">
               <IdentityFieldIcon type="owner" />

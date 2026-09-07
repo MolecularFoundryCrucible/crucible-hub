@@ -52,13 +52,13 @@ describe("ContentGrid", () => {
       "Metadata",
     ])
     expect(
-      screen.getByText("Summary").classList.contains("xl:col-span-3")
+      screen.getByText("Summary").classList.contains("xl:col-span-4")
     ).toBe(true)
     expect(
-      screen.getByText("Identity").classList.contains("xl:col-span-2")
+      screen.getByText("Identity").classList.contains("xl:col-span-3")
     ).toBe(true)
     expect(
-      screen.getByText("Metadata").classList.contains("xl:col-span-5")
+      screen.getByText("Metadata").classList.contains("xl:col-span-7")
     ).toBe(true)
   })
 })

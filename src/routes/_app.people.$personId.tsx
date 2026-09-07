@@ -98,9 +98,9 @@ function PersonPage() {
                 {person.username ?? "Not provided"}
               </dd>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 sm:col-span-2">
               <dt className="text-label">Crucible ID</dt>
-              <dd className="font-mono text-identifier break-all text-muted-foreground">
+              <dd className="font-mono text-identifier break-all text-muted-foreground sm:break-normal sm:whitespace-nowrap">
                 {person.unique_id}
               </dd>
             </div>
