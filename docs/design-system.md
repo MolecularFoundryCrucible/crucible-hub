@@ -21,7 +21,7 @@ Hub is a desktop-first scientific workspace that shares Lens's semantic hierarch
 
 Generated primitives enter `components/ui`, are reviewed, and become Hub-owned source. Feature code must not introduce colors, arbitrary utility values, shadows, type sizes, spacing, radii, breakpoints, z-index values, or motion durations. A missing role is a design-system change, not a local exception.
 
-Primitive scales use a 4 px base and named spacing roles, a system sans stack plus system monospace for MFIDs, shared radius and elevation roles, named layers, and named responsive breakpoints. Semantic utilities own each typography role completely: feature code does not recreate roles with primitive Tailwind size, weight, line-height, or tracking utilities. Use tabular numerals for changing data, selectable monospace MFIDs, and no interface text below 12 px.
+Primitive scales use a 4 px base and named spacing roles, repository-pinned self-hosted Noto Sans plus system monospace for MFIDs, shared radius and elevation roles, named layers, and named responsive breakpoints. Semantic utilities own each typography role completely: feature code does not recreate roles with primitive Tailwind size, weight, line-height, or tracking utilities. Use tabular numerals for changing data, selectable monospace MFIDs, and no interface text below 12 px.
 
 | Role                                      | Size / line height / weight | Use                        |
 | ----------------------------------------- | --------------------------- | -------------------------- |

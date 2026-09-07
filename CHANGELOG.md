@@ -54,6 +54,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Pinned and self-hosted the interface font so typography and visual validation remain consistent across developer and CI environments.
 - Made TanStack skill commands invoke the pinned Intent CLI unambiguously when dependencies expose competing `intent` executables.
 - Clarified project navigation and page responsibilities: Overview owns project details, scientific metadata, and read-only people; capability-gated Settings owns General and direct member management; project status remains in the persistent header.
 - Added typed canonical sample and dataset paths while retaining the generic resource path as a compatibility redirect.

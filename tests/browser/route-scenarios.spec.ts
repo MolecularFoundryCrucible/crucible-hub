@@ -116,7 +116,9 @@ for (const scenario of scenarioCases) {
       scenario.heading
     )
     await expect(page.getByText(scenario.evidence).first()).toBeVisible()
-    await expect(page.locator("select")).toHaveValue("light")
+    await expect(page.getByRole("combobox", { name: "Theme" })).toHaveValue(
+      "light"
+    )
 
     await expect(page).toHaveScreenshot(`${scenario.name}.png`, {
       animations: "disabled",

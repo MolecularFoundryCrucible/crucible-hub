@@ -27,7 +27,9 @@ for (const visualCase of visualCases) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Design system fixtures"
     )
-    await expect(page.locator("select")).toHaveValue(visualCase.theme)
+    await expect(page.getByRole("combobox", { name: "Theme" })).toHaveValue(
+      visualCase.theme
+    )
 
     await expect(page.getByTestId("design-system-fixture")).toHaveScreenshot(
       `${visualCase.name}.png`,
@@ -40,7 +42,7 @@ test("keeps the fixture keyboard operable", async ({ page }) => {
   await page.goto("/hub/fixtures/design-system")
 
   await page.keyboard.press("Tab")
-  await expect(page.locator("select")).toBeFocused()
+  await expect(page.getByRole("combobox", { name: "Theme" })).toBeFocused()
   await page.keyboard.press("Tab")
   await expect(
     page.getByRole("button", { name: "Primary action" })
