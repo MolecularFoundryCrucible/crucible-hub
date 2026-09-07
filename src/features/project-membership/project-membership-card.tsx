@@ -281,10 +281,12 @@ export function ProjectMembershipCard({
             ) : null}
             {canManage ? (
               <Button
+                data-project-membership-add=""
                 disabled={mutationPending}
                 onClick={() => setAddOpen(true)}
                 size="sm"
                 type="button"
+                variant="outline"
               >
                 <AddMemberIcon data-icon="inline-start" />
                 Add member

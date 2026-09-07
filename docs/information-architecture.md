@@ -73,7 +73,7 @@ Wide layouts use a persistent sidebar and top utility bar. The top utility bar p
 
 ### Account
 
-The application-bar avatar opens the account menu and links to My profile. The profile route shows the authenticated account identity and edits first name, last name, email, and username through the self-service account operation. Email remains private to the authenticated account view and profile mutation.
+The application-bar avatar opens the account menu and links to My profile. The profile route presents the authenticated account identity in a read-first view. Edit profile opens first name, last name, email, and username controls backed by the self-service account operation. Email remains private to the authenticated account view and profile mutation.
 
 ### Project
 

@@ -24,6 +24,9 @@ test("opens profile management from the account avatar and saves changes", async
   await expect(
     page.getByRole("heading", { level: 1, name: "My profile" })
   ).toBeVisible()
+  await expect(page.getByLabel("First name")).toHaveCount(0)
+  await expect(page.getByText("avery.chen@example.invalid")).toBeVisible()
+  await page.getByRole("button", { name: "Edit profile" }).click()
   await expect(page.getByLabel("First name")).toHaveValue("Avery")
   await expect(page.getByLabel("Email")).toHaveValue(
     "avery.chen@example.invalid"
@@ -48,6 +51,7 @@ test("validates profile fields and protects unsaved changes", async ({
   await page.goto("/hub/account?scenario=populated")
   await page.waitForLoadState("networkidle")
 
+  await page.getByRole("button", { name: "Edit profile" }).click()
   await page.getByLabel("Username").fill("Invalid username")
   await expect(
     page.getByText(

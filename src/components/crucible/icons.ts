@@ -59,4 +59,7 @@ export {
   Activity as StatusFieldIcon,
   Tag as TypeFieldIcon,
   CalendarClock as TimestampFieldIcon,
+  CalendarPlus2 as CreatedFieldIcon,
+  Fingerprint as MfidFieldIcon,
+  CalendarClock as UpdatedFieldIcon,
 } from "lucide-react"

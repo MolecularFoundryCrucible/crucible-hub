@@ -499,6 +499,11 @@ test("renders exact dataset detail and file metadata from a canonical link", asy
     instrumentField.locator('[data-resource-type="instrument"]')
   ).toBeVisible()
   await expect(summary.locator("[data-summary-field-icon]")).toHaveCount(5)
+  const identity = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("Identity", { exact: true }) })
+  await expect(identity.locator("[data-identity-field-icon]")).toHaveCount(4)
+  await expect(identity.locator('[data-resource-type="person"]')).toBeVisible()
   await expect(page.getByText("operando-cycle-04.h5")).toBeVisible()
   await page.locator('summary[aria-label^="acquisition:"]').click()
   await expect(page.getByText("potential_v_rhe")).toBeVisible()

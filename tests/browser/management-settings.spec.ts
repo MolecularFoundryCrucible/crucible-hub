@@ -117,7 +117,10 @@ test("project Settings manages direct membership through confirmed API-shaped op
   let membersCard = page
     .locator('[data-slot="card"]')
     .filter({ has: page.getByText("Members", { exact: true }) })
-  await membersCard.getByRole("button", { name: "Add member" }).click()
+  const addMemberButton = membersCard.getByRole("button", {
+    name: "Add member",
+  })
+  await addMemberButton.click()
   const addDialog = page.getByRole("dialog", { name: "Add member" })
   await addDialog
     .getByRole("searchbox", { name: "Search people" })
@@ -162,6 +165,28 @@ test("project Settings manages direct membership through confirmed API-shaped op
   ).toHaveCount(0)
   expect(liveApiRequests).toEqual([])
 })
+
+for (const theme of ["light", "dark"] as const) {
+  test(`keeps the ${theme} Add member action readable`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme })
+    await page.addInitScript((selectedTheme) => {
+      localStorage.setItem("crucible-hub-theme", selectedTheme)
+    }, theme)
+    await page.goto(
+      `/hub/projects/${projectMfid}/settings/members?scenario=populated`
+    )
+    await page.waitForLoadState("networkidle")
+    await expect(page.locator("html")).toHaveClass(new RegExp(theme))
+
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .include("[data-project-membership-add]")
+          .analyze()
+      ).violations
+    ).toEqual([])
+  })
+}
 
 test("instrument Settings preserves descriptive fields and updates the exact detail", async ({
   page,

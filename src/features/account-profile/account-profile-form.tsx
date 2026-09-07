@@ -5,6 +5,7 @@ import { z } from "zod"
 
 import {
   CancelChangesIcon,
+  EditResourceIcon,
   SaveChangesIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
@@ -13,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -115,6 +117,7 @@ export function AccountProfileForm({
   scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
   const [saveError, setSaveError] = useState<string>()
   const [saved, setSaved] = useState(false)
   const mutation = useMutation({
@@ -141,6 +144,7 @@ export function AccountProfileForm({
         queryClient.setQueryData(crucibleKeys.accountProfile(scope), update)
         form.reset(profileValues(update))
         setSaved(true)
+        setEditing(false)
       } catch (error) {
         setSaveError(
           error instanceof HubApiClientError
@@ -155,34 +159,84 @@ export function AccountProfileForm({
   const discard = useDiscardProtection(isDirty, () => {
     form.reset()
     setSaveError(undefined)
+    setEditing(false)
   })
   const name = `${account.first_name} ${account.last_name}`
   const formId = `account-profile-${account.unique_id}`
 
+  if (!editing) {
+    return (
+      <ContentBoundary width="reading">
+        <Card>
+          <CardHeader>
+            <div className="flex min-w-0 items-center gap-4">
+              <Avatar className="size-14">
+                <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
+                  {initials(account.first_name, account.last_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <CardTitle>{name}</CardTitle>
+                <CardDescription>
+                  {account.username
+                    ? `@${account.username}`
+                    : "No username provided"}
+                </CardDescription>
+              </div>
+            </div>
+            <CardAction>
+              <Button
+                onClick={() => {
+                  setSaved(false)
+                  setEditing(true)
+                }}
+                variant="outline"
+              >
+                <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
+                Edit profile
+              </Button>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-supporting text-muted-foreground">Email</dt>
+                <dd className="mt-1 text-body break-words">
+                  {account.email ?? "Not provided"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-supporting text-muted-foreground">
+                  Username
+                </dt>
+                <dd className="mt-1 text-body break-words">
+                  {account.username ?? "Not provided"}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-supporting text-muted-foreground">
+                  Crucible ID
+                </dt>
+                <dd className="mt-1 font-mono text-supporting break-all">
+                  {account.unique_id}
+                </dd>
+              </div>
+            </dl>
+            <p aria-live="polite" className="mt-4 text-body text-success">
+              {saved ? "Profile saved." : null}
+            </p>
+          </CardContent>
+        </Card>
+      </ContentBoundary>
+    )
+  }
+
   return (
     <>
       <ContentBoundary width="reading">
-        <Card>
-          <CardHeader className="flex-row items-center gap-4">
-            <Avatar className="size-14">
-              <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
-                {initials(account.first_name, account.last_name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <CardTitle>{name}</CardTitle>
-              <CardDescription>
-                {account.username ? `@${account.username}` : account.unique_id}
-              </CardDescription>
-            </div>
-          </CardHeader>
-        </Card>
-      </ContentBoundary>
-
-      <ContentBoundary width="reading">
         <Card aria-busy={isSubmitting}>
           <CardHeader>
-            <CardTitle>Profile details</CardTitle>
+            <CardTitle>Edit profile</CardTitle>
             <CardDescription>
               Manage the name and contact details associated with your Crucible
               account.

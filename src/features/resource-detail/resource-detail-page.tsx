@@ -11,6 +11,7 @@ import {
   PreparingDownloadIcon,
   RetryDownloadIcon,
 } from "@/components/crucible/icons"
+import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import {
   ContentGrid,
   ContentGridItem,
@@ -363,6 +364,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
           <div className="col-span-2 min-w-0 md:col-span-1">
             <dt className="text-supporting text-muted-foreground">MFID</dt>
             <dd className="mt-1 flex min-w-0 items-start gap-2 text-body">
+              <IdentityFieldIcon type="mfid" />
               <span className="min-w-0 font-mono text-supporting break-all">
                 {resource.unique_id}
               </span>
@@ -396,7 +398,12 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               <dt className="text-supporting text-muted-foreground">
                 Visibility
               </dt>
-              <dd className="mt-1 text-body">
+              <dd className="mt-1 flex items-start gap-2 text-body">
+                <IdentityFieldIcon
+                  type={
+                    resource.public ? "visibility-public" : "visibility-private"
+                  }
+                />
                 <Badge variant={resource.public ? "secondary" : "outline"}>
                   {resource.public ? "Public" : "Private"}
                 </Badge>
@@ -405,7 +412,8 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
           )}
           <div className="col-span-2">
             <dt className="text-supporting text-muted-foreground">Owner</dt>
-            <dd className="mt-1 text-body">
+            <dd className="mt-1 flex items-start gap-2 text-body">
+              <IdentityFieldIcon type="owner" />
               {owner ? (
                 <HoverCard>
                   <HoverCardTrigger
@@ -438,13 +446,15 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
           </div>
           <div>
             <dt className="text-supporting text-muted-foreground">Created</dt>
-            <dd className="mt-1 text-body">
+            <dd className="mt-1 flex items-start gap-2 text-body">
+              <IdentityFieldIcon type="created" />
               {formatDate(resource.creation_time)}
             </dd>
           </div>
           <div>
             <dt className="text-supporting text-muted-foreground">Updated</dt>
-            <dd className="mt-1 text-body">
+            <dd className="mt-1 flex items-start gap-2 text-body">
+              <IdentityFieldIcon type="updated" />
               {formatDate(resource.modification_time)}
             </dd>
           </div>
