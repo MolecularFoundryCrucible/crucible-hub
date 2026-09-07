@@ -1,9 +1,9 @@
 export const resourceSectionLinkClassName =
-  "flex min-h-10 items-center border-b-2 border-transparent px-3 text-body text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+  "relative flex min-h-10 items-center px-3 text-body text-muted-foreground transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-transparent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 export const resourceSectionActiveProps = {
   className:
-    "border-brand-crucible-orange text-label text-brand-crucible-orange",
+    "text-label text-brand-crucible-orange after:bg-brand-crucible-orange",
 }
 
 export function ResourceSectionNavigation({
