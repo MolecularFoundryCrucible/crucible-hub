@@ -2,16 +2,13 @@ import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import {
-  CopyIcon,
-  CopySuccessIcon,
-  EditResourceIcon,
-} from "@/components/crucible/icons"
+import { EditResourceIcon } from "@/components/crucible/icons"
 import {
   ContentGrid,
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -27,11 +24,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 import { ProjectSettingsForm } from "@/features/management-settings/settings-forms"
@@ -166,57 +158,12 @@ function ProjectLead({ project }: { project: WorkspaceProject }) {
 }
 
 function ProjectMfid({ project }: { project: WorkspaceProject }) {
-  const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
-    "idle"
-  )
-
-  async function copyMfid() {
-    try {
-      await navigator.clipboard.writeText(project.unique_id)
-      setCopyState("success")
-    } catch {
-      setCopyState("error")
-    }
-  }
-
-  const copyLabel =
-    copyState === "success"
-      ? "MFID copied"
-      : copyState === "error"
-        ? "Copy MFID failed"
-        : "Copy MFID"
-
   return (
     <div className="min-w-0">
       <dt className="text-supporting text-muted-foreground">MFID</dt>
-      <dd className="mt-1 flex min-w-0 items-start gap-2 text-body">
-        <span className="min-w-0 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
-          {project.unique_id}
-        </span>
-        <Tooltip>
-          <TooltipTrigger render={<span className="inline-flex" />}>
-            <Button
-              aria-label={copyLabel}
-              className="shrink-0"
-              onClick={() => void copyMfid()}
-              size="icon-sm"
-              variant="outline"
-            >
-              {copyState === "success" ? (
-                <CopySuccessIcon aria-hidden="true" />
-              ) : (
-                <CopyIcon aria-hidden="true" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{copyLabel}</TooltipContent>
-        </Tooltip>
+      <dd className="mt-1">
+        <MfidValue value={project.unique_id} />
       </dd>
-      {copyState === "error" ? (
-        <span className="sr-only" role="alert">
-          Could not copy MFID. Try again.
-        </span>
-      ) : null}
     </div>
   )
 }

@@ -105,9 +105,7 @@ test("project preview preserves the collection and restores trigger focus", asyn
   await expect(trigger).toBeFocused()
   await trigger.click()
   await expect(panel).toBeVisible()
-  await page
-    .locator('[data-slot="sheet-overlay"]')
-    .click({ position: { x: 1, y: 1 } })
+  await panel.getByRole("button", { name: "Close", exact: true }).click()
   await expect(panel).toHaveCount(0)
   await expect(trigger).toBeFocused()
 })
@@ -163,7 +161,7 @@ test("project preview follows links, history, and full-page promotion", async ({
       name: "Nickel iron oxide catalyst with a deliberately long preparation identifier",
     })
   ).toBeVisible()
-  await panel.getByRole("link", { name: "Back in preview" }).click()
+  await panel.getByRole("link", { name: "Previous preview" }).click()
   await expect(page).toHaveURL(new RegExp(`preview=${sampleTwo}`))
   await expect(
     panel.getByRole("heading", { name: "Catalyst sample 2" })
@@ -207,7 +205,7 @@ test("direct, malformed, and failed previews preserve project state", async ({
     panel.getByRole("heading", { name: "Measurement dataset 2" })
   ).toBeVisible()
   await expect(
-    panel.getByRole("link", { name: "Back in preview" })
+    panel.getByRole("link", { name: "Previous preview" })
   ).toHaveCount(0)
   await page.evaluate(() => {
     history.replaceState(
@@ -225,7 +223,7 @@ test("direct, malformed, and failed previews preserve project state", async ({
   await page.reload()
   await expect(panel).toBeVisible()
   await expect(
-    panel.getByRole("link", { name: "Back in preview" })
+    panel.getByRole("link", { name: "Previous preview" })
   ).toHaveCount(0)
   await panel.getByRole("button", { name: "Close", exact: true }).click()
   await expect(page).toHaveURL(filteredUrl)

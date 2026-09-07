@@ -3,7 +3,12 @@ import type { MouseEventHandler, ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
-import { ExploreGraphFocusIcon } from "@/components/crucible/icons"
+import {
+  BackPreviewIcon,
+  CloseInspectorIcon,
+  ExploreGraphFocusIcon,
+} from "@/components/crucible/icons"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
@@ -15,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -28,7 +34,7 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceScientificMetadata,
 } from "@/data/crucible/workspace-source"
-import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export function ResourceInspector({
   navigation,
@@ -39,6 +45,7 @@ export function ResourceInspector({
   const body = useRef<HTMLDivElement>(null)
   const restoreFocus = useRef(true)
   const open = Boolean(navigation.preview) || navigation.invalidPreview
+  const isMobile = useIsMobile()
   const scope = useWorkspaceScope()
   const query = useQuery({
     ...resourceQueryOptions(scope, navigation.preview ?? ""),
@@ -70,13 +77,19 @@ export function ResourceInspector({
 
   return (
     <Sheet
+      modal={isMobile}
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) navigation.close()
+      onOpenChange={(nextOpen, eventDetails) => {
+        if (!nextOpen) {
+          if (eventDetails.reason === "outside-press") {
+            restoreFocus.current = false
+          }
+          navigation.close()
+        }
       }}
     >
       <SheetContent
-        className="resource-inspector"
+        className="resource-inspector gap-0"
         initialFocus={title}
         finalFocus={() => {
           if (!restoreFocus.current) return false
@@ -87,18 +100,39 @@ export function ResourceInspector({
           if (target?.tagName === "H1") target.tabIndex = -1
           return target
         }}
+        showCloseButton={false}
+        showOverlay={isMobile}
       >
-        <SheetHeader className="pr-12">
-          <div className="flex min-w-0 flex-col gap-2">
-            {resource && (
-              <Badge className="self-start" variant="outline">
-                <ResourceTypeIcon
-                  data-icon="inline-start"
-                  type={resource.kind}
-                />
-                {resourceTypeLabel(resource.kind)}
-              </Badge>
-            )}
+        <div className="flex min-h-8 items-center gap-2 px-4 pt-4">
+          {navigation.previous ? (
+            <ResourcePreviewLink
+              aria-label="Previous preview"
+              back
+              className={buttonVariants({ size: "sm", variant: "outline" })}
+              mfid={navigation.previous}
+            >
+              <BackPreviewIcon aria-hidden="true" data-icon="inline-start" />
+              Previous preview
+            </ResourcePreviewLink>
+          ) : (
+            <SheetClose
+              render={<Button size="sm" type="button" variant="outline" />}
+            >
+              <BackPreviewIcon aria-hidden="true" data-icon="inline-start" />
+              Previous preview
+            </SheetClose>
+          )}
+          <SheetClose
+            className="ml-auto"
+            render={
+              <Button aria-label="Close" size="icon-sm" variant="ghost" />
+            }
+          >
+            <CloseInspectorIcon aria-hidden="true" />
+          </SheetClose>
+        </div>
+        <SheetHeader>
+          <div className="flex min-w-0 flex-col gap-3">
             <SheetTitle
               ref={title}
               aria-atomic="true"
@@ -110,21 +144,47 @@ export function ResourceInspector({
                 ? "Invalid resource preview"
                 : (resource?.name ?? "Resource preview")}
             </SheetTitle>
-            <SheetDescription className="break-all">
-              {navigation.preview
-                ? `${resource ? `${resourceTypeLabel(resource.kind)}. ` : ""}MFID ${navigation.preview}`
-                : "Explore linked resources without leaving this page."}
-            </SheetDescription>
+            {navigation.preview ? (
+              <div className="flex min-w-0 items-center justify-between gap-3">
+                {resource ? (
+                  <Badge className="shrink-0" variant="outline">
+                    <ResourceTypeIcon
+                      data-icon="inline-start"
+                      type={resource.kind}
+                    />
+                    {resourceTypeLabel(resource.kind)}
+                  </Badge>
+                ) : null}
+                <SheetDescription className="sr-only">
+                  MFID {navigation.preview}
+                </SheetDescription>
+                <MfidValue
+                  className="justify-end text-right"
+                  value={navigation.preview}
+                />
+              </div>
+            ) : (
+              <SheetDescription>
+                Explore linked resources without leaving this page.
+              </SheetDescription>
+            )}
+            {navigation.preview ? (
+              <ResourceFullPageLink
+                fromProject={
+                  navigation.host.kind === "project-data"
+                    ? navigation.host.projectMfid
+                    : navigation.host.kind === "resource"
+                      ? navigation.host.fromProject
+                      : undefined
+                }
+                kind={resource?.kind}
+                mfid={resource?.unique_id ?? navigation.preview}
+                name={resource?.name ?? navigation.preview}
+                onClick={suppressFocusRestore}
+                presentation="inspector-footer"
+              />
+            ) : null}
           </div>
-          {navigation.previous && (
-            <ResourcePreviewLink
-              back
-              className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-              mfid={navigation.previous}
-            >
-              Back in preview
-            </ResourcePreviewLink>
-          )}
         </SheetHeader>
         <div ref={body} className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
           {navigation.invalidPreview ? (
@@ -133,31 +193,16 @@ export function ResourceInspector({
             <InspectorBody query={query} resource={resource} />
           ) : null}
         </div>
-        {navigation.preview && (
+        {navigation.preview &&
+        navigation.host.kind === "resource" &&
+        navigation.host.section === "graph" ? (
           <SheetFooter>
-            {navigation.host.kind === "resource" &&
-            navigation.host.section === "graph" ? (
-              <ResourceGraphFocusLink
-                onClick={suppressFocusRestore}
-                resource={resource}
-              />
-            ) : null}
-            <ResourceFullPageLink
-              fromProject={
-                navigation.host.kind === "project-data"
-                  ? navigation.host.projectMfid
-                  : navigation.host.kind === "resource"
-                    ? navigation.host.fromProject
-                    : undefined
-              }
-              kind={resource?.kind}
-              mfid={resource?.unique_id ?? navigation.preview}
-              name={resource?.name ?? navigation.preview}
+            <ResourceGraphFocusLink
               onClick={suppressFocusRestore}
-              presentation="inspector-footer"
+              resource={resource}
             />
           </SheetFooter>
-        )}
+        ) : null}
       </SheetContent>
     </Sheet>
   )

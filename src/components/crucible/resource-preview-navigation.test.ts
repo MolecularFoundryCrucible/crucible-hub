@@ -74,6 +74,7 @@ describe("resource preview trail", () => {
     origin,
     previous: ["first", "second"],
     returnIndex: 4,
+    returnKey: "host-scroll-key",
   }
 
   it("accepts only the current runtime owner and route origin", () => {

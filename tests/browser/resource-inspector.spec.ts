@@ -62,7 +62,7 @@ test("preview follows native history without replacing the main page", async ({
     .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
     .click()
   await expect(page).toHaveURL(`${origin}?preview=${sample}`)
-  await panel.getByRole("link", { name: "Back in preview" }).click()
+  await panel.getByRole("link", { name: "Previous preview" }).click()
   await expect(page).toHaveURL(`${origin}?preview=${dataset}`)
   expect(await handle.evaluate((element) => element.isConnected)).toBe(true)
   await page.goBack()
@@ -144,12 +144,10 @@ test("previews dataset project and instrument context without collection reads",
     panel.getByRole("heading", { name: "Relationships" })
   ).toHaveCount(0)
   await expect(panel.getByText(/^Scientific metadata/)).toHaveCount(0)
-  const projectOpen = panel
-    .locator('[data-slot="sheet-footer"]')
-    .getByRole("link", {
-      name: "Open full page: Operando Catalyst Mapping",
-      exact: true,
-    })
+  const projectOpen = panel.getByRole("link", {
+    name: "Open full page: Operando Catalyst Mapping",
+    exact: true,
+  })
   await expect(projectOpen).toHaveText("Open")
   expect(
     new URL((await projectOpen.getAttribute("href")) ?? "", page.url()).pathname
@@ -161,7 +159,7 @@ test("previews dataset project and instrument context without collection reads",
     )
     .toBe(1)
 
-  await panel.getByRole("link", { name: "Back in preview" }).click()
+  await panel.getByRole("link", { name: "Previous preview" }).click()
   await expect(
     panel.getByRole("heading", { name: "NiFe K-edge operando series" })
   ).toBeVisible()
@@ -196,12 +194,10 @@ test("previews dataset project and instrument context without collection reads",
     "XRM-5000",
     "Avery Chen",
   ])
-  const instrumentOpen = panel
-    .locator('[data-slot="sheet-footer"]')
-    .getByRole("link", {
-      name: "Open full page: Hard X-ray Microprobe",
-      exact: true,
-    })
+  const instrumentOpen = panel.getByRole("link", {
+    name: "Open full page: Hard X-ray Microprobe",
+    exact: true,
+  })
   await expect(instrumentOpen).toHaveText("Open")
   expect(
     new URL((await instrumentOpen.getAttribute("href")) ?? "", page.url())
@@ -230,25 +226,25 @@ test("direct entry and reload close safely without trusting restored trails", as
   const panel = page.getByRole("dialog")
   await expect(panel).toBeVisible()
   await expect(
-    panel.getByRole("link", { name: "Back in preview" })
+    panel.getByRole("link", { name: "Previous preview" })
   ).toHaveCount(0)
   await panel
     .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
     .click()
   await expect(
-    panel.getByRole("link", { name: "Back in preview" })
+    panel.getByRole("link", { name: "Previous preview" })
   ).toBeVisible()
   await page.reload()
   await expect(panel).toBeVisible()
   await expect(
-    panel.getByRole("link", { name: "Back in preview" })
+    panel.getByRole("link", { name: "Previous preview" })
   ).toHaveCount(0)
   await panel.getByRole("button", { name: "Close", exact: true }).click()
   await expect(page).toHaveURL(origin)
   await expect(panel).toHaveCount(0)
 })
 
-test("desktop outside interaction and compact focus containment survive resizing", async ({
+test("desktop interaction and compact focus containment survive resizing", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -265,15 +261,14 @@ test("desktop outside interaction and compact focus containment survive resizing
   const panel = page.getByRole("dialog")
   await expect(panel).toBeVisible()
   const overlay = page.locator('[data-slot="sheet-overlay"]')
-  await expect(overlay).toBeVisible()
+  await expect(overlay).toHaveCount(0)
   expect(await resourceHeader.boundingBox()).toMatchObject({
     height: layoutBefore.height,
     width: layoutBefore.width,
     x: layoutBefore.x,
   })
-  await overlay.click({ position: { x: 1, y: 1 } })
+  await heading.click()
   await expect(panel).toHaveCount(0)
-  await expect(trigger).toBeFocused()
 
   await trigger.click()
   await panel
@@ -527,11 +522,6 @@ test("clears preview state during primary navigation", async ({ page }) => {
     .click()
   const panel = page.getByRole("dialog")
   await expect(panel).toBeVisible()
-  await page
-    .locator('[data-slot="sheet-overlay"]')
-    .click({ position: { x: 1, y: 1 } })
-  await expect(panel).toHaveCount(0)
-
   await page
     .getByRole("navigation", { name: "Primary navigation" })
     .getByRole("link", { name: "Data" })

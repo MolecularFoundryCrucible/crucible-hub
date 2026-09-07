@@ -61,6 +61,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Made resource inspectors non-modal at wider widths, added a stable preview-navigation and close top bar, preserved the host page's current scroll position on close, and refined the identity hierarchy with an icon-labeled, quick-copy MFID and the full-page action directly below the resource name.
 - Standardized displayed timestamps in browser-local 24-hour time and labeled project owners as Lead in project membership surfaces.
 - Updated the pinned staging API contract and sample and dataset creation requests to use canonical project and instrument MFIDs directly, removing identity lookup requests before creation.
 - Preserved project context when opening sample and dataset pages from Project Data, with a validated contextual return link that targets the matching project collection.

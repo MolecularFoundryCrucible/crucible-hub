@@ -142,11 +142,17 @@ test("filtered paginated Data preview preserves the collection and restores focu
   expect(collectionResponses).toHaveLength(0)
   expect(fileResponses).toHaveLength(0)
 
-  await page
-    .locator('[data-slot="sheet-overlay"]')
-    .click({ position: { x: 1, y: 1 } })
+  await page.evaluate(() => scrollBy(0, 400))
+  const scrollBeforeClose = await page.evaluate(() => ({
+    x: scrollX,
+    y: scrollY,
+  }))
+  await panel.getByRole("button", { name: "Close", exact: true }).click()
   await expect(panel).toHaveCount(0)
   await expect(trigger).toBeFocused()
+  expect(await page.evaluate(() => ({ x: scrollX, y: scrollY }))).toEqual(
+    scrollBeforeClose
+  )
   expect(currentSearch(page)).toEqual({
     kind: "samples",
     sampleCursor: "fixture:50",
@@ -194,7 +200,7 @@ test("Data preview follows relationships and promotes to a canonical page", asyn
     scenario: "dense",
   })
 
-  await panel.getByRole("link", { name: "Back in preview" }).click()
+  await panel.getByRole("link", { name: "Previous preview" }).click()
   await expect(
     panel.getByRole("heading", { name: sampleOneName })
   ).toBeVisible()
@@ -204,9 +210,7 @@ test("Data preview follows relationships and promotes to a canonical page", asyn
       exact: true,
     })
     .click()
-  const open = panel
-    .locator('[data-slot="sheet-footer"]')
-    .getByRole("link", { name: /^Open full page:/ })
+  const open = panel.getByRole("link", { name: /^Open full page:/ })
   await expect(open).toHaveText("Open")
   await expect(open.locator('[data-icon="inline-end"]')).toBeVisible()
   const destination = new URL(
@@ -248,14 +252,14 @@ test("direct and malformed Data previews close safely on compact screens", async
     panel.getByRole("heading", { name: "Measurement dataset 51" })
   ).toBeVisible()
   await expect(
-    panel.getByRole("link", { name: "Back in preview" })
+    panel.getByRole("link", { name: "Previous preview" })
   ).toHaveCount(0)
   await page.reload()
   await expect(
     panel.getByRole("heading", { name: "Measurement dataset 51" })
   ).toBeVisible()
   await expect(
-    panel.getByRole("link", { name: "Back in preview" })
+    panel.getByRole("link", { name: "Previous preview" })
   ).toHaveCount(0)
   await expect(new AxeBuilder({ page }).analyze()).resolves.toMatchObject({
     violations: [],

@@ -30,6 +30,7 @@ const trailSchema = z.object({
   origin: previewMfidSchema,
   previous: z.array(previewMfidSchema).max(20),
   returnIndex: z.number().int().nonnegative().optional(),
+  returnKey: z.string().min(1).optional(),
 })
 type PreviewTrail = z.infer<typeof trailSchema>
 export type ResourcePreviewHost =
@@ -161,6 +162,9 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       returnIndex: hasPreview
         ? ownedTrail?.returnIndex
         : router.history.location.state.__TSR_index,
+      returnKey: hasPreview
+        ? ownedTrail?.returnKey
+        : router.history.location.state.__TSR_key,
     },
   })
   const targetPreview = (target: string) =>

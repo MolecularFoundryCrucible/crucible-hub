@@ -10,6 +10,10 @@ export function getRouter() {
     context: { queryClient },
     basepath: "/hub",
     scrollRestoration: true,
+    getScrollRestorationKey: (location) =>
+      location.state.resourcePreview?.returnKey ??
+      location.state.__TSR_key ??
+      location.href,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   })

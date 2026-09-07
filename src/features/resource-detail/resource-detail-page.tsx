@@ -5,8 +5,6 @@ import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
 
 import {
   BackToProjectIcon,
-  CopyIcon,
-  CopySuccessIcon,
   DownloadFileIcon,
   DownloadUnavailableIcon,
   PreparingDownloadIcon,
@@ -19,6 +17,7 @@ import {
 } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
   ResourcePreviewContext,
@@ -380,26 +379,7 @@ function ResourceNavigation({
 }
 
 function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
-  const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
-    "idle"
-  )
   const owner = resource.owner
-
-  async function copyMfid() {
-    try {
-      await navigator.clipboard.writeText(resource.unique_id)
-      setCopyState("success")
-    } catch {
-      setCopyState("error")
-    }
-  }
-
-  const copyLabel =
-    copyState === "success"
-      ? "MFID copied"
-      : copyState === "error"
-        ? "Copy MFID failed"
-        : "Copy MFID"
 
   return (
     <Card>
@@ -410,35 +390,9 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="min-w-0 sm:col-span-2">
             <dt className="text-supporting text-muted-foreground">MFID</dt>
-            <dd className="mt-1 flex min-w-0 items-center gap-2 text-body">
-              <IdentityFieldIcon type="mfid" />
-              <span className="min-w-0 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
-                {resource.unique_id}
-              </span>
-              <Tooltip>
-                <TooltipTrigger render={<span className="inline-flex" />}>
-                  <Button
-                    aria-label={copyLabel}
-                    className="shrink-0"
-                    onClick={() => void copyMfid()}
-                    size="icon-xs"
-                    variant="outline"
-                  >
-                    {copyState === "success" ? (
-                      <CopySuccessIcon aria-hidden="true" />
-                    ) : (
-                      <CopyIcon aria-hidden="true" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{copyLabel}</TooltipContent>
-              </Tooltip>
+            <dd className="mt-1">
+              <MfidValue value={resource.unique_id} />
             </dd>
-            {copyState === "error" && (
-              <span className="sr-only" role="alert">
-                Could not copy MFID. Try again.
-              </span>
-            )}
           </div>
           <div>
             <dt className="text-supporting text-muted-foreground">Owner</dt>
