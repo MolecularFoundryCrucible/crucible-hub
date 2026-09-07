@@ -54,13 +54,13 @@ const themeRoles = [
   { name: "Information", className: "bg-info text-info-foreground" },
 ] as const
 
-const resourceTypes = ["project", "sample", "dataset", "instrument"] as const
-const resourceClasses = {
-  dataset: "text-(--resource-dataset)",
-  instrument: "text-(--resource-instrument)",
-  project: "text-(--resource-project)",
-  sample: "text-(--resource-sample)",
-} satisfies Record<(typeof resourceTypes)[number], string>
+const resourceTypes = [
+  "project",
+  "sample",
+  "dataset",
+  "instrument",
+  "person",
+] as const
 
 function DesignSystemFixtures() {
   return (
@@ -170,10 +170,7 @@ function DesignSystemFixtures() {
             <CardContent className="grid gap-3">
               {resourceTypes.map((type, index) => (
                 <div className="flex items-center gap-3" key={type}>
-                  <ResourceTypeIcon
-                    className={resourceClasses[type]}
-                    type={type}
-                  />
+                  <ResourceTypeIcon type={type} />
                   <div className="min-w-0 flex-1">
                     <p className="text-label capitalize">{type}</p>
                     <p className="text-supporting text-muted-foreground">
@@ -307,10 +304,7 @@ function RestrictedFixture() {
       </CardHeader>
       <CardContent className="grid gap-3">
         <div className="flex items-start gap-3">
-          <ResourceTypeIcon
-            className="text-(--resource-project)"
-            type="project"
-          />
+          <ResourceTypeIcon type="project" />
           <div className="min-w-0 flex-1">
             <p className="text-label">Catalysis reference study</p>
             <p className="mt-1 text-body text-muted-foreground">

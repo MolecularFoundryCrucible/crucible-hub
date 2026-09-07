@@ -5,6 +5,7 @@ import { crucibleKeys } from "./query-keys"
 import {
   getWorkspaceDatasetFiles,
   getWorkspaceResource,
+  getWorkspaceResourceGraph,
 } from "./resources.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { unwrapHubResult } from "./result"
@@ -37,6 +38,22 @@ export function datasetFilesQueryOptions(
       unwrapHubResult(
         await getWorkspaceDatasetFiles({
           data: { datasetMfid, scenario: fixtureScenarioFromScope(scope) },
+          signal,
+        })
+      ),
+  })
+}
+
+export function resourceGraphQueryOptions(
+  scope: IdentityScope,
+  resourceMfid: string
+) {
+  return queryOptions({
+    queryKey: crucibleKeys.resourceGraph(scope, resourceMfid),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceResourceGraph({
+          data: { resourceMfid, scenario: fixtureScenarioFromScope(scope) },
           signal,
         })
       ),

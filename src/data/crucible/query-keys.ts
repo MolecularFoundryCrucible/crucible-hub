@@ -35,6 +35,8 @@ export const crucibleKeys = {
     [...scope, "projects", "detail", projectMfid] as const,
   person: (scope: IdentityScope, personId: string) =>
     [...scope, "people", "detail", personId] as const,
+  serviceAccount: (scope: IdentityScope, reference: string) =>
+    [...scope, "people", "service-account", reference] as const,
   samples: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "samples", "list", normalizeFilters(filters)] as const,
   sampleLists: (scope: IdentityScope) => [...scope, "samples", "list"] as const,
@@ -46,8 +48,12 @@ export const crucibleKeys = {
     [...scope, "instruments", "list", normalizeFilters(filters)] as const,
   instrumentLists: (scope: IdentityScope) =>
     [...scope, "instruments", "list"] as const,
+  instrumentOperators: (scope: IdentityScope, instrumentMfid: string) =>
+    [...scope, "instruments", "operators", instrumentMfid] as const,
   resource: (scope: IdentityScope, resourceMfid: string, detailShape: string) =>
     [...scope, "resources", "detail", resourceMfid, detailShape] as const,
+  resourceGraph: (scope: IdentityScope, resourceMfid: string) =>
+    [...scope, "resources", "graph", resourceMfid, "one-hop"] as const,
   resourceAccess: (scope: IdentityScope, resourceMfid: string) =>
     [...scope, "resources", "access", resourceMfid] as const,
   datasetFiles: (scope: IdentityScope, datasetMfid: string) =>

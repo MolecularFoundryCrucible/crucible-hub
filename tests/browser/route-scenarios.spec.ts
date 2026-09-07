@@ -12,7 +12,7 @@ const scenarioCases = [
   {
     name: "restricted-projects",
     path: "/hub/projects?scenario=restricted",
-    heading: "Your projects",
+    heading: "Projects you can access",
     evidence: "Limited details",
   },
   {
@@ -67,7 +67,7 @@ const zoomEquivalentCases = [
   {
     name: "restricted-projects",
     path: "/hub/projects?scenario=restricted",
-    heading: "Your projects",
+    heading: "Projects you can access",
   },
   {
     name: "instruments",
@@ -175,6 +175,31 @@ test("retains the selected scenario during workspace navigation", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Samples and datasets"
   )
+})
+
+test("keeps compact data records readable and fully actionable", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 844 })
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+
+  const resourceName = page.getByRole("link", {
+    name: "Preview NiFe oxide catalyst A",
+  })
+  await expect(resourceName).toBeVisible()
+  await expect(resourceName).toContainText("NiFe oxide catalyst A")
+  await expect(
+    page.getByRole("link", {
+      name: "Open full page: NiFe oxide catalyst A",
+    })
+  ).toContainText("Open")
+  expect((await resourceName.boundingBox())?.width).toBeGreaterThan(150)
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth
+    )
+  ).toBe(true)
 })
 
 test("supports text spacing without horizontal page overflow", async ({

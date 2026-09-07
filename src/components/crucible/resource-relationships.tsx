@@ -103,10 +103,7 @@ function RelationshipRow({
   const identity = (
     <>
       {isKnownResourceType(link.resource_type) && (
-        <ResourceTypeIcon
-          className="shrink-0 text-muted-foreground"
-          type={link.resource_type}
-        />
+        <ResourceTypeIcon className="shrink-0" type={link.resource_type} />
       )}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-label">{label}</span>

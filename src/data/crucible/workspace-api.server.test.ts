@@ -45,6 +45,7 @@ describe("API workspace adapter", () => {
       unique_id: "0000-0000-0000-0001",
       username: "researcher",
       first_name: "Ada",
+      is_service_account: false,
       last_name: "Lovelace",
     })
     expect(source.workspace.projects).toEqual([])

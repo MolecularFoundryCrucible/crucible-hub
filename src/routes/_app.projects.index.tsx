@@ -12,6 +12,7 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { CreateResourceIcon } from "@/components/crucible/icons"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import {
   useWorkspace,
@@ -39,6 +40,7 @@ const projectSearchSchema = z.object({
 })
 
 export const Route = createFileRoute("/_app/projects/")({
+  head: () => ({ meta: [{ title: "Projects | Crucible Hub" }] }),
   validateSearch: projectSearchSchema,
   loaderDeps: ({ search }) => ({ offset: search.offset ?? 0 }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
@@ -73,7 +75,19 @@ function ProjectsPage() {
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Projects" title="Your projects" />
+      <PageHeader
+        actions={
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            to="/projects/new"
+          >
+            <CreateResourceIcon data-icon="inline-start" />
+            Create project
+          </Link>
+        }
+        eyebrow="Projects"
+        title="Projects you can access"
+      />
       {projectResult.isPending ? (
         <CollectionCardGridPending label="projects" />
       ) : projectResult.isError && !projectResult.data ? (
@@ -159,10 +173,7 @@ function ProjectCollection({
             <Card key={project.unique_id}>
               <CardHeader>
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <ResourceTypeIcon
-                    className="text-(--resource-project)"
-                    type="project"
-                  />
+                  <ResourceTypeIcon type="project" />
                   <Badge variant={complete ? "secondary" : "outline"}>
                     {complete ? project.status : "Limited details"}
                   </Badge>

@@ -9,6 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
+import type { ResourceChooserKind } from "@/components/crucible/resource-chooser"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
 import { identityScope } from "@/data/crucible/query-keys"
@@ -28,6 +29,12 @@ const instrument = {
   kind: "instrument",
   name: "Beamline 5.3.2",
   unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z1",
+} satisfies WorkspaceSearchResult
+const person = {
+  context: "@ada",
+  kind: "person",
+  name: "Ada Lovelace",
+  unique_id: "ada",
 } satisfies WorkspaceSearchResult
 
 function response(
@@ -70,8 +77,6 @@ async function openChooser(kind: ResourceChooserKind = "instrument") {
   fireEvent.click(screen.getByRole("button", { name: `Choose ${kind}` }))
   await screen.findByRole("dialog", { name: `Choose ${kind}` })
 }
-
-type ResourceChooserKind = "instrument" | "project"
 
 describe("ResourceChooser", () => {
   afterEach(cleanup)
@@ -186,5 +191,28 @@ describe("ResourceChooser", () => {
 
     expect(onChange).toHaveBeenCalledWith(undefined)
     expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
+  it("supports people and custom empty labels", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      response("person", [person])
+    )
+    const onChange = renderChooser({
+      emptyLabel: "Not selected",
+      kind: "person",
+    })
+
+    expect(screen.getByText("Not selected")).toBeTruthy()
+    await openChooser("person")
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search people" }), {
+      target: { value: "ada" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Search" }))
+
+    expect(await screen.findByText("Ada Lovelace")).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Select person: Ada Lovelace" })
+    )
+    expect(onChange).toHaveBeenCalledWith(person)
   })
 })

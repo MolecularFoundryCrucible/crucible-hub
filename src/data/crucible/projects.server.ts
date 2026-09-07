@@ -20,8 +20,11 @@ export type WorkspaceProjectMembershipRole = Exclude<
   "owner"
 >
 
-function toWorkspaceProject(
-  project: Schema<"ProjectWithLead"> | Schema<"ProjectMinimalRead">
+export function toWorkspaceProject(
+  project:
+    | Schema<"ProjectRead">
+    | Schema<"ProjectWithLead">
+    | Schema<"ProjectMinimalRead">
 ): WorkspaceProject {
   if (!("organization" in project)) {
     return {
@@ -37,16 +40,21 @@ function toWorkspaceProject(
     project_id: project.project_id,
     title: project.title,
     organization: project.organization,
-    lead: project.lead ?? null,
+    lead: "lead" in project ? (project.lead ?? null) : null,
     project_lead_orcid: project.project_lead_orcid,
-    scientific_metadata: normalizeScientificMetadata(
-      project.scientific_metadata
-    ),
+    scientific_metadata:
+      "scientific_metadata" in project
+        ? normalizeScientificMetadata(project.scientific_metadata)
+        : null,
     capabilities: project.capabilities ?? null,
     status: project.status ?? null,
-    ...(project.members === undefined ? {} : { members: project.members }),
-    creation_time: project.creation_time,
-    modification_time: project.modification_time,
+    ...("members" in project && project.members !== undefined
+      ? { members: project.members }
+      : {}),
+    creation_time:
+      "creation_time" in project ? project.creation_time : undefined,
+    modification_time:
+      "modification_time" in project ? project.modification_time : undefined,
   }
 }
 

@@ -18,11 +18,38 @@ test("renders the desktop workspace without development chrome", async ({
     page.getByRole("heading", { name: "Recently added data" })
   ).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Your projects" })
+    page.getByRole("heading", { name: "Projects you can access" })
   ).toBeVisible()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
   await expect(page.getByText("Activated catalyst morphology")).toBeVisible()
   await expect(page.getByText(/^Updated Sep 1, 2026$/)).toHaveCount(0)
+})
+
+test("opens dedicated creation routes from the global Create menu", async ({
+  page,
+}) => {
+  await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
+
+  const trigger = page.getByRole("button", { name: "Create" })
+  await trigger.focus()
+  await page.keyboard.press("Enter")
+
+  const menu = page.getByRole("menu")
+  await expect(menu.getByRole("menuitem", { name: "Project" })).toBeVisible()
+  await expect(menu.getByRole("menuitem", { name: "Sample" })).toBeVisible()
+  await expect(menu.getByRole("menuitem", { name: "Dataset" })).toBeVisible()
+  await expect(menu.getByRole("menuitem", { name: "Instrument" })).toBeVisible()
+
+  const sample = menu.getByRole("menuitem", { name: "Sample" })
+  await sample.focus()
+  await page.keyboard.press("Enter")
+
+  await expect(page).toHaveURL(/\/hub\/samples\/new$/)
+  await expect(page).toHaveTitle("Create sample | Crucible Hub")
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Create sample"
+  )
 })
 
 test("keeps Home useful when one recent data source fails", async ({
@@ -35,7 +62,7 @@ test("keeps Home useful when one recent data source fails", async ({
   ).toBeVisible()
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Your projects" })
+    page.getByRole("heading", { name: "Projects you can access" })
   ).toBeVisible()
   await expect(
     page.getByText("Projects and navigation remain available.")
@@ -139,6 +166,15 @@ test("renders the independently queried instrument directory", async ({
     page.getByText("Hard X-ray Microprobe", { exact: true })
   ).toBeVisible()
   await expect(page.getByText("Beamline 5.3.2")).toBeVisible()
+
+  await page
+    .getByRole("navigation", { name: "Instrument lifecycle status" })
+    .getByRole("link", { name: "Maintenance" })
+    .click()
+  await expect(page).toHaveURL(/status=maintenance/)
+  await expect(
+    page.getByText("No maintenance instruments are available to this account.")
+  ).toBeVisible()
 })
 
 test("opens canonical instrument detail from directory and search", async ({
@@ -154,6 +190,11 @@ test("opens canonical instrument detail from directory and search", async ({
   await expect(page.getByText("hard-xray-microprobe")).toBeVisible()
   await expect(page.getByText("spatial_resolution_nm")).toBeVisible()
   await expect(page.getByRole("link", { name: "Avery Chen" })).toBeVisible()
+  await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
+    "Summary",
+    "Identity",
+    "Scientific metadata",
+  ])
 
   await page.goto("/hub/search?q=Hard&kind=instrument")
   await page.getByRole("link", { name: "Hard X-ray Microprobe" }).click()

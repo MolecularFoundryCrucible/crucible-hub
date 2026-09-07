@@ -2,6 +2,7 @@ import { useState } from "react"
 import type { ReactNode } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { z } from "zod"
 
 import {
@@ -72,7 +73,7 @@ import {
 
 type DatasetDetail = Extract<WorkspaceResourceDetail, { kind: "dataset" }>
 type SampleDetail = Extract<WorkspaceResourceDetail, { kind: "sample" }>
-type SummaryField = readonly [string, string | null]
+type SummaryField = readonly [string, ReactNode]
 
 const sampleSummaryFormSchema = z.object({
   description: z
@@ -524,7 +525,7 @@ function SampleSummaryForm({
             <Badge variant="secondary">Editing</Badge>
           </CardAction>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-6">
           <form
             id={formId}
             noValidate
@@ -630,6 +631,7 @@ function SampleSummaryForm({
               <SaveError message={saveError} />
             </FieldGroup>
           </form>
+          <SummaryFields fields={contextFields(resource)} />
         </CardContent>
         <CardFooter className="justify-end gap-2">
           <Button
@@ -750,7 +752,7 @@ function DatasetSummaryForm({
             <Badge variant="secondary">Editing</Badge>
           </CardAction>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-6">
           <form
             id={formId}
             noValidate
@@ -817,6 +819,7 @@ function DatasetSummaryForm({
               <SaveError message={saveError} />
             </FieldGroup>
           </form>
+          <SummaryFields fields={contextFields(resource)} />
         </CardContent>
         <CardFooter className="justify-end gap-2">
           <Button
@@ -958,6 +961,7 @@ function summaryFields(
       ["Data type", resource.data_type],
       ["Session", resource.session_name],
       ["Timestamp", formatLocalDateTime(resource.timestamp)],
+      ...contextFields(resource),
     ]
   }
   if (resource.kind === "sample") {
@@ -965,6 +969,7 @@ function summaryFields(
       ["Description", resource.description],
       ["Sample type", resource.sample_type],
       ["Timestamp", formatLocalDateTime(resource.timestamp)],
+      ...contextFields(resource),
     ]
   }
   if (resource.kind === "instrument") {
@@ -980,5 +985,37 @@ function summaryFields(
     ["Project ID", resource.project_id],
     ["Organization", resource.organization],
     ["Status", resource.status],
+  ]
+}
+
+function contextFields(
+  resource: DatasetDetail | SampleDetail
+): readonly SummaryField[] {
+  const project = resource.project ? (
+    <Link
+      className="text-label hover:underline"
+      params={{ projectMfid: resource.project.unique_id }}
+      to="/projects/$projectMfid"
+    >
+      {resource.project.title ?? resource.project.project_id}
+    </Link>
+  ) : (
+    resource.project_id
+  )
+  if (resource.kind === "sample") return [["Project", project]]
+  const instrument = resource.instrument ? (
+    <Link
+      className="text-label hover:underline"
+      params={{ instrumentMfid: resource.instrument.unique_id }}
+      to="/instruments/$instrumentMfid"
+    >
+      {resource.instrument.instrument_name}
+    </Link>
+  ) : (
+    resource.instrument_id
+  )
+  return [
+    ["Project", project],
+    ["Instrument", instrument],
   ]
 }

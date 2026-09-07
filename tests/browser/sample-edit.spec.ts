@@ -52,17 +52,22 @@ test("sample Summary edits stay on the canonical resource page", async ({
   await page.waitForLoadState("networkidle")
   const card = summaryCard(page)
   const identity = titledCard(page, "Identity")
-  await expect(card.getByText("Project", { exact: true })).toHaveCount(0)
+  await expect(card.getByText("Project", { exact: true })).toBeVisible()
   await expect(card.getByText("Visibility", { exact: true })).toHaveCount(0)
   await expect(card.getByText("Timestamp", { exact: true })).toBeVisible()
   await expect(
-    titledCard(page, "Context").getByText("Operando Catalyst Mapping", {
+    card.getByText("Operando Catalyst Mapping", {
       exact: true,
     })
   ).toBeVisible()
-  await expect(
-    titledCard(page, "Context").getByText("Instrument", { exact: true })
-  ).toHaveCount(0)
+  await expect(card.getByText("Instrument", { exact: true })).toHaveCount(0)
+  await expect(titledCard(page, "Context")).toHaveCount(0)
+  await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
+    "Summary",
+    "Identity",
+    "Relationships",
+    "Scientific metadata",
+  ])
   await expect(identity.getByText("Visibility", { exact: true })).toBeVisible()
   await expect(identity.getByText("Private", { exact: true })).toBeVisible()
   await expect(
@@ -268,13 +273,12 @@ test("dataset Summary edits only expose descriptive fields", async ({
   await page.waitForLoadState("networkidle")
   const card = summaryCard(page)
   await expect(
-    titledCard(page, "Context").getByText("Operando Catalyst Mapping", {
+    card.getByText("Operando Catalyst Mapping", {
       exact: true,
     })
   ).toBeVisible()
-  await expect(
-    titledCard(page, "Context").getByText("Instrument", { exact: true })
-  ).toBeVisible()
+  await expect(card.getByText("Instrument", { exact: true })).toBeVisible()
+  await expect(titledCard(page, "Context")).toHaveCount(0)
   await expect(
     titledCard(page, "Identity").getByText("Visibility", { exact: true })
   ).toBeVisible()
@@ -284,8 +288,15 @@ test("dataset Summary edits only expose descriptive fields", async ({
   await expect(
     page.locator("main > header").getByText("Private", { exact: true })
   ).toHaveCount(0)
-  await expect(card.getByText("Project", { exact: true })).toHaveCount(0)
+  await expect(card.getByText("Project", { exact: true })).toBeVisible()
   await expect(card.getByText("Visibility", { exact: true })).toHaveCount(0)
+  await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
+    "Summary",
+    "Identity",
+    "Files",
+    "Relationships",
+    "Scientific metadata",
+  ])
   await card.getByRole("button", { name: "Edit summary", exact: true }).click()
 
   for (const label of [
@@ -298,13 +309,7 @@ test("dataset Summary edits only expose descriptive fields", async ({
   ]) {
     await expect(card.getByLabel(label, { exact: true })).toBeVisible()
   }
-  for (const excluded of [
-    "Visibility",
-    "Project",
-    "Instrument",
-    "Scientific metadata",
-    "Access",
-  ]) {
+  for (const excluded of ["Visibility", "Scientific metadata", "Access"]) {
     await expect(card.getByText(excluded, { exact: true })).toHaveCount(0)
   }
   await expect(card.locator("textarea")).toHaveCount(0)

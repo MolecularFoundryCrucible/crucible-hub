@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Partially superseded by [decision 0009](0009-overlay-resource-inspection.md) for modality and desktop layout only.
+Partially superseded by [decision 0009](0009-overlay-resource-inspection.md) for modality and desktop layout and by [decision 0026](0026-explore-bounded-resource-graphs.md) for graph loading and rerooting.
 
 Date: 2026-09-04
 

@@ -12,12 +12,123 @@ import {
   patchWorkspaceSampleDescription,
   readWorkspaceDatasetFiles,
   readWorkspaceResource,
+  readWorkspaceResourceGraph,
+  reassignWorkspaceResourceProject,
+  transferWorkspaceResourceOwnership,
 } from "./resources.server"
 
 describe("workspace resource sources", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
+  })
+
+  it("builds a bounded fixture graph from immediate resource links", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(
+      readWorkspaceResourceGraph("01J6Y8N4Q2R7M9K3T5V0W1X2Z5")
+    ).resolves.toMatchObject({
+      rootMfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
+      nodes: expect.arrayContaining([
+        expect.objectContaining({
+          kind: "sample",
+          unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
+        }),
+        expect.objectContaining({
+          kind: "dataset",
+          unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z7",
+        }),
+      ]),
+      edges: [
+        {
+          relationship: "associated",
+          source: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
+          target: "01J6Y8N4Q2R7M9K3T5V0W1X2Z7",
+        },
+      ],
+    })
+  })
+
+  it("uses the one-hop CTE graph endpoint and validates its opaque response", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return Response.json({
+          directed: true,
+          multigraph: false,
+          graph: {},
+          nodes: [
+            { id: "sample-1", entity_type: "sample", name: "Sample one" },
+            {
+              id: "dataset-1",
+              entity_type: "dataset",
+              name: "Dataset one",
+            },
+          ],
+          edges: [{ source: "sample-1", target: "dataset-1" }],
+        })
+      })
+    )
+
+    await expect(readWorkspaceResourceGraph("sample-1")).resolves.toEqual({
+      rootMfid: "sample-1",
+      nodes: [
+        { unique_id: "sample-1", kind: "sample", name: "Sample one" },
+        { unique_id: "dataset-1", kind: "dataset", name: "Dataset one" },
+      ],
+      edges: [
+        {
+          relationship: "associated",
+          source: "sample-1",
+          target: "dataset-1",
+        },
+      ],
+    })
+    expect(new URL(requests[0].url).pathname).toBe("/entity_graph_cte/sample-1")
+    expect(new URL(requests[0].url).searchParams.get("recursive")).toBe("false")
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ nodes: [] }))
+    )
+    await expect(readWorkspaceResourceGraph("sample-1")).rejects.toThrow(
+      "resource graph response is invalid"
+    )
+  })
+
+  it("rejects duplicate edges in an opaque graph response", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          directed: true,
+          nodes: [
+            { id: "sample-1", entity_type: "sample" },
+            { id: "dataset-1", entity_type: "dataset" },
+          ],
+          edges: [
+            { source: "sample-1", target: "dataset-1" },
+            { source: "sample-1", target: "dataset-1" },
+          ],
+        })
+      )
+    )
+
+    await expect(readWorkspaceResourceGraph("sample-1")).rejects.toThrow(
+      "resource graph response has duplicate edges"
+    )
   })
 
   it("creates a fixture deletion request without using edit capabilities", async () => {
@@ -1153,5 +1264,91 @@ describe("workspace resource sources", () => {
     await expect(
       readWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z7")
     ).rejects.toThrow("The Crucible API login exchange is not connected yet.")
+  })
+
+  it("previews and confirms ownership through the same resource operation", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return Response.json({
+          new_owner: {
+            first_name: "Morgan",
+            last_name: "Lee",
+            unique_id: "person-mfid",
+          },
+          resource_id: "resource-mfid",
+        })
+      })
+    )
+
+    await transferWorkspaceResourceOwnership(
+      "resource-mfid",
+      "person-mfid",
+      false
+    )
+    await transferWorkspaceResourceOwnership(
+      "resource-mfid",
+      "person-mfid",
+      true
+    )
+
+    expect(
+      requests.map((request) =>
+        Object.fromEntries(new URL(request.url).searchParams)
+      )
+    ).toEqual([{ confirm: "false" }, { confirm: "true" }])
+    await expect(requests[0].json()).resolves.toEqual({
+      new_owner: "person-mfid",
+    })
+  })
+
+  it("resolves a project MFID before previewing a project move by slug", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        const path = new URL(request.url).pathname
+        if (path === "/projects/project-mfid") {
+          return Response.json({
+            organization: "Example Laboratory",
+            project_id: "project-slug",
+            project_lead_orcid: "person-mfid",
+            unique_id: "project-mfid",
+          })
+        }
+        return Response.json({
+          new_project_id: "project-slug",
+          resource_id: "resource-mfid",
+        })
+      })
+    )
+
+    await reassignWorkspaceResourceProject(
+      "resource-mfid",
+      "project-mfid",
+      false
+    )
+
+    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
+      "/projects/project-mfid",
+      "/resources/resource-mfid/project",
+    ])
+    expect(Object.fromEntries(new URL(requests[1].url).searchParams)).toEqual({
+      confirm: "false",
+    })
+    await expect(requests[1].json()).resolves.toEqual({
+      project_id: "project-slug",
+    })
   })
 })

@@ -11,6 +11,7 @@ import { ProjectDataCollection } from "@/features/project-data/project-data-coll
 import type { ProjectDataKind } from "@/features/project-data/project-data-collection"
 import { resolveProjectDataFilters } from "@/features/project-data/project-data-filter-state"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
+import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import {
   dataPageLimit,
   datasetsQueryOptions,
@@ -117,6 +118,9 @@ function ProjectDataPage() {
   const filterResolution = resolveProjectDataFilters(filterValues, kind)
   return (
     <ResourcePreviewContext.Provider value={navigation}>
+      <div className="flex justify-end">
+        <ResourceCreationActions projectMfid={project.projectMfid} />
+      </div>
       <ProjectDataCollection
         cursor={kind === "samples" ? search.sampleCursor : search.datasetCursor}
         filterResolution={filterResolution}

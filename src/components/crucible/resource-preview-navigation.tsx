@@ -37,6 +37,7 @@ export type ResourcePreviewHost =
       preview: unknown
       resourceKind: "dataset" | "sample"
       resourceMfid: string
+      section?: "graph"
     }
 
 export function resolveResourcePreview(value: unknown) {
@@ -163,6 +164,67 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       ? target
       : invalidPreviewSearchValue
 
+  const open = (target: string, source?: HTMLElement | null) => {
+    if (preview === target) return
+    if (!hasPreview && source) trigger.current = source
+    const common = {
+      hash: true as const,
+      replace: hasPreview,
+      resetScroll: false,
+      state: state(target),
+    }
+    if (host.kind === "resource") {
+      const search = (currentSearch: ResourceSearch) => ({
+        ...currentSearch,
+        preview: targetPreview(target),
+      })
+      if (host.resourceKind === "sample") {
+        void router.navigate({
+          ...common,
+          params: { sampleMfid: host.resourceMfid },
+          search,
+          to:
+            host.section === "graph"
+              ? "/samples/$sampleMfid/graph"
+              : "/samples/$sampleMfid",
+        })
+      } else {
+        void router.navigate({
+          ...common,
+          params: { datasetMfid: host.resourceMfid },
+          search,
+          to:
+            host.section === "graph"
+              ? "/datasets/$datasetMfid/graph"
+              : "/datasets/$datasetMfid",
+        })
+      }
+      return
+    }
+    if (host.kind === "data") {
+      void router.navigate({
+        ...common,
+        from: "/data",
+        search: (currentSearch: DataSearch) => ({
+          ...currentSearch,
+          preview: targetPreview(target),
+        }),
+        to: "/data",
+      })
+      return
+    }
+    void router.navigate({
+      ...common,
+      from: "/projects/$projectMfid",
+      params: { projectMfid: host.projectMfid },
+      search: (currentSearch: ProjectDataSearch) => ({
+        ...currentSearch,
+        preview: targetPreview(target),
+      }),
+      to: "/projects/$projectMfid",
+    })
+  }
+
   const close = () => {
     if (
       ownedTrail?.returnIndex !== undefined &&
@@ -185,16 +247,22 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       if (host.resourceKind === "sample") {
         void router.navigate({
           ...common,
-          to: "/samples/$sampleMfid",
           params: { sampleMfid: host.resourceMfid },
           search,
+          to:
+            host.section === "graph"
+              ? "/samples/$sampleMfid/graph"
+              : "/samples/$sampleMfid",
         })
       } else {
         void router.navigate({
           ...common,
-          to: "/datasets/$datasetMfid",
           params: { datasetMfid: host.resourceMfid },
           search,
+          to:
+            host.section === "graph"
+              ? "/datasets/$datasetMfid/graph"
+              : "/datasets/$datasetMfid",
         })
       }
       return
@@ -227,6 +295,7 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
     preview,
     invalidPreview,
     previous,
+    open,
     state,
     targetPreview,
     close,
@@ -241,6 +310,14 @@ export type ResourcePreviewNavigation = ReturnType<
 
 export const ResourcePreviewContext =
   createContext<ResourcePreviewNavigation | null>(null)
+
+export function useResourcePreviewContext() {
+  const navigation = useContext(ResourcePreviewContext)
+  if (!navigation) {
+    throw new Error("Resource preview navigation is unavailable.")
+  }
+  return navigation
+}
 
 export function ResourcePreviewLink({
   mfid,
@@ -358,9 +435,13 @@ export function ResourcePreviewLink({
       return (
         <Link
           {...common}
-          to="/samples/$sampleMfid"
           params={{ sampleMfid: navigation.host.resourceMfid }}
           search={search}
+          to={
+            navigation.host.section === "graph"
+              ? "/samples/$sampleMfid/graph"
+              : "/samples/$sampleMfid"
+          }
         >
           {children}
         </Link>
@@ -369,9 +450,13 @@ export function ResourcePreviewLink({
     return (
       <Link
         {...common}
-        to="/datasets/$datasetMfid"
         params={{ datasetMfid: navigation.host.resourceMfid }}
         search={search}
+        to={
+          navigation.host.section === "graph"
+            ? "/datasets/$datasetMfid/graph"
+            : "/datasets/$datasetMfid"
+        }
       >
         {children}
       </Link>

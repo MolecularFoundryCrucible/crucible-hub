@@ -7,12 +7,14 @@ type CollectionResourceKind = "dataset" | "sample"
 type SubtypeVisibility = "always" | "compact"
 
 export function ResourceCollectionNameCell({
+  className,
   kind,
   mfid,
   name,
   subtype,
   subtypeVisibility,
 }: {
+  className?: string
   kind: CollectionResourceKind
   mfid: string
   name: string
@@ -20,22 +22,14 @@ export function ResourceCollectionNameCell({
   subtypeVisibility: SubtypeVisibility
 }) {
   return (
-    <TableCell>
+    <TableCell className={className}>
       <ResourcePreviewLink
         aria-label={`Preview ${name}`}
         className="group flex min-w-0 items-center gap-2"
         mfid={mfid}
         resourceKind={kind}
       >
-        <ResourceTypeIcon
-          className={cn(
-            "shrink-0",
-            kind === "sample"
-              ? "text-(--resource-sample)"
-              : "text-(--resource-dataset)"
-          )}
-          type={kind}
-        />
+        <ResourceTypeIcon className="shrink-0" type={kind} />
         <div className="min-w-0 flex-1">
           <span
             className="block truncate text-label group-hover:underline"

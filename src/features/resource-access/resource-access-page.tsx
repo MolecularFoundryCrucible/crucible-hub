@@ -14,6 +14,10 @@ import {
   permittedAccessGrantRoles,
 } from "@/components/crucible/access-role-badge"
 import {
+  ContentBoundary,
+  ContentGrid,
+} from "@/components/crucible/content-layout"
+import {
   AccessPendingIcon,
   AddAccessGrantIcon,
   ManageAccessIcon,
@@ -23,6 +27,7 @@ import {
   OpenFullPageIcon,
 } from "@/components/crucible/icons"
 import { ResourceName } from "@/components/crucible/resource-name"
+import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,7 +93,12 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
+import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
+import { ProjectAssignmentCard } from "@/features/resource-project-assignment/project-assignment-card"
 
 type AccessResource = Extract<
   WorkspaceResourceDetail,
@@ -114,12 +124,15 @@ export function ResourceAccessPage({
   resourceMfid: string
 }) {
   const scope = useWorkspaceScope()
+  const mode = useWorkspaceMode()
   const { data: resource } = useSuspenseQuery(
     resourceQueryOptions(scope, resourceMfid)
   )
 
   if (!resource || resource.kind !== resourceKind) return null
-  if (resource.capabilities?.can_manage_access !== true) {
+  const canManageAccess = resource.capabilities?.can_manage_access === true
+  const canTransfer = resource.capabilities?.can_transfer === true
+  if (!canManageAccess && !canTransfer) {
     return (
       <Empty className="border">
         <EmptyHeader>
@@ -132,7 +145,19 @@ export function ResourceAccessPage({
     )
   }
 
-  return <ManagedResourceAccess resource={resource} scope={scope} />
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      {canManageAccess ? (
+        <ContentBoundary width="reading">
+          <ManagedResourceAccess resource={resource} scope={scope} />
+        </ContentBoundary>
+      ) : null}
+      <ContentGrid variant="actions">
+        <ProjectAssignmentCard mode={mode} resource={resource} scope={scope} />
+        <OwnershipTransferCard mode={mode} resource={resource} scope={scope} />
+      </ContentGrid>
+    </div>
+  )
 }
 
 function ManagedResourceAccess({
@@ -302,7 +327,7 @@ function ManagedResourceAccess({
   )
 
   return (
-    <div className="flex max-w-reading flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Public access</CardTitle>
@@ -412,9 +437,14 @@ function ManagedResourceAccess({
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-label">{grantName(grant)}</p>
-                      <p className="truncate text-body text-muted-foreground">
-                        {principalLabel(grant)}{" "}
-                        {grant.slug ?? grant.principal_id}
+                      <p className="flex min-w-0 items-center gap-1.5 text-body text-muted-foreground">
+                        <PrincipalTypeIcon
+                          label={principalLabel(grant)}
+                          type={grant.principal_type}
+                        />
+                        <span className="truncate">
+                          {grant.slug ?? grant.principal_id}
+                        </span>
                       </p>
                     </div>
                     <div className="flex min-h-8 shrink-0 items-center gap-2">

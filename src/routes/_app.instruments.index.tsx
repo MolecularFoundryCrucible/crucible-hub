@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { ArrowRightIcon, MapPinIcon } from "lucide-react"
 import { z } from "zod"
@@ -11,10 +11,11 @@ import {
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -33,16 +34,28 @@ import {
   instrumentPageLimit,
   instrumentsQueryOptions,
 } from "@/data/crucible/instruments.queries"
-import type { WorkspaceInstrumentPage } from "@/data/crucible/workspace-source"
+import {
+  instrumentStatusLabel,
+  instrumentStatuses,
+} from "@/data/crucible/instrument-status"
+import type {
+  WorkspaceInstrumentPage,
+  WorkspaceInstrumentStatus,
+} from "@/data/crucible/workspace-source"
 import { formatDate } from "@/lib/format"
 
 const instrumentSearchSchema = z.object({
   offset: z.coerce.number().int().min(0).catch(0).optional(),
+  status: z.enum(instrumentStatuses).optional().catch(undefined),
 })
 
 export const Route = createFileRoute("/_app/instruments/")({
+  head: () => ({ meta: [{ title: "Instruments | Crucible Hub" }] }),
   validateSearch: instrumentSearchSchema,
-  loaderDeps: ({ search }) => ({ offset: search.offset ?? 0 }),
+  loaderDeps: ({ search }) => ({
+    offset: search.offset ?? 0,
+    status: search.status ?? "active",
+  }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
@@ -50,6 +63,7 @@ export const Route = createFileRoute("/_app/instruments/")({
     const options = instrumentsQueryOptions(source.scope, {
       limit: instrumentPageLimit,
       offset: deps.offset,
+      status: deps.status,
     })
     const hasData =
       context.queryClient.getQueryData(options.queryKey) !== undefined
@@ -67,15 +81,32 @@ export const Route = createFileRoute("/_app/instruments/")({
 
 function InstrumentsPage() {
   const scope = useWorkspaceScope()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const offset = search.offset ?? 0
+  const status = search.status ?? "active"
   const instrumentResult = useQuery(
-    instrumentsQueryOptions(scope, { limit: instrumentPageLimit, offset })
+    instrumentsQueryOptions(scope, {
+      limit: instrumentPageLimit,
+      offset,
+      status,
+    })
   )
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Instruments" title="Instrument directory" />
+      <PageHeader
+        actions={
+          account.is_service_account ? null : (
+            <Link className={buttonVariants()} to="/instruments/new">
+              Register instrument
+            </Link>
+          )
+        }
+        eyebrow="Instruments"
+        title="Instrument directory"
+      />
+      <InstrumentStatusNavigation status={status} />
       {instrumentResult.isPending ? (
         <CollectionCardGridPending label="instruments" />
       ) : instrumentResult.isError && !instrumentResult.data ? (
@@ -91,6 +122,7 @@ function InstrumentsPage() {
                 search={{
                   offset:
                     Math.max(0, offset - instrumentPageLimit) || undefined,
+                  status: status === "active" ? undefined : status,
                 }}
                 to="/instruments"
               >
@@ -111,6 +143,7 @@ function InstrumentsPage() {
           <InstrumentCollection
             instrumentPage={instrumentResult.data}
             offset={offset}
+            status={status}
             updating={instrumentResult.isFetching}
           />
         </>
@@ -119,13 +152,46 @@ function InstrumentsPage() {
   )
 }
 
+function InstrumentStatusNavigation({
+  status,
+}: {
+  status: WorkspaceInstrumentStatus
+}) {
+  return (
+    <nav
+      aria-label="Instrument lifecycle status"
+      className="flex flex-wrap gap-2"
+    >
+      {instrumentStatuses.map((candidate) => (
+        <Link
+          activeOptions={{ exact: true, explicitUndefined: true }}
+          aria-current={candidate === status ? "page" : undefined}
+          className={buttonVariants({
+            variant: candidate === status ? "secondary" : "outline",
+          })}
+          key={candidate}
+          search={{
+            offset: undefined,
+            status: candidate === "active" ? undefined : candidate,
+          }}
+          to="/instruments"
+        >
+          {instrumentStatusLabel(candidate)}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
 function InstrumentCollection({
   instrumentPage,
   offset,
+  status,
   updating,
 }: {
   instrumentPage: WorkspaceInstrumentPage
   offset: number
+  status: WorkspaceInstrumentStatus
   updating: boolean
 }) {
   const previousOffset = Math.max(0, offset - instrumentPageLimit)
@@ -146,11 +212,10 @@ function InstrumentCollection({
           <Card key={instrument.unique_id}>
             <CardHeader>
               <div className="mb-2 flex items-center justify-between gap-3">
-                <ResourceTypeIcon
-                  className="text-(--resource-instrument)"
-                  type="instrument"
-                />
-                <Badge variant="secondary">{instrument.status}</Badge>
+                <ResourceTypeIcon type="instrument" />
+                {instrument.status ? (
+                  <InstrumentStatusBadge status={instrument.status} />
+                ) : null}
               </div>
               <CardTitle>{instrument.instrument_name}</CardTitle>
               <CardDescription>{instrument.instrument_type}</CardDescription>
@@ -202,7 +267,8 @@ function InstrumentCollection({
             <EmptyHeader>
               <EmptyTitle>No instruments found</EmptyTitle>
               <EmptyDescription>
-                No active instruments are available to this account.
+                No {instrumentStatusLabel(status).toLowerCase()} instruments are
+                available to this account.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -218,6 +284,7 @@ function InstrumentCollection({
               className={buttonVariants({ variant: "outline" })}
               search={{
                 offset: previousOffset === 0 ? undefined : previousOffset,
+                status: status === "active" ? undefined : status,
               }}
               to="/instruments"
             >
@@ -227,7 +294,10 @@ function InstrumentCollection({
           {hasNext && (
             <Link
               className={buttonVariants({ variant: "outline" })}
-              search={{ offset: nextOffset }}
+              search={{
+                offset: nextOffset,
+                status: status === "active" ? undefined : status,
+              }}
               to="/instruments"
             >
               Next

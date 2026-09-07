@@ -6,6 +6,7 @@ import {
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { ProjectSettingsForm } from "@/features/management-settings/settings-forms"
+import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/settings/")({
@@ -23,11 +24,16 @@ function ProjectGeneralSettingsPage() {
   if (!project || !("organization" in project)) return null
 
   if (project.capabilities?.can_edit !== true) {
+    const { canUseMembership } = projectMembershipActions(project, scope[2])
     return (
       <Navigate
         params={{ projectMfid }}
         replace
-        to="/projects/$projectMfid/settings/members"
+        to={
+          canUseMembership
+            ? "/projects/$projectMfid/settings/members"
+            : "/projects/$projectMfid/settings/ownership"
+        }
       />
     )
   }

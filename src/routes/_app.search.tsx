@@ -9,6 +9,7 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import { ContentBoundary } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -31,7 +32,6 @@ import type {
   WorkspaceSearchKind,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
-import { cn } from "@/lib/utils"
 
 const kinds = [
   "person",
@@ -41,20 +41,13 @@ const kinds = [
   "dataset",
 ] as const satisfies readonly WorkspaceSearchKind[]
 
-const kindIconClasses = {
-  dataset: "text-(--resource-dataset)",
-  instrument: "text-(--resource-instrument)",
-  person: "text-muted-foreground",
-  project: "text-(--resource-project)",
-  sample: "text-(--resource-sample)",
-} satisfies Record<WorkspaceSearchKind, string>
-
 const searchSchema = z.object({
   kind: z.enum(kinds).optional().catch(undefined),
   q: z.string().trim().max(200).optional().catch(undefined),
 })
 
 export const Route = createFileRoute("/_app/search")({
+  head: () => ({ meta: [{ title: "Search | Crucible Hub" }] }),
   validateSearch: searchSchema,
   pendingComponent: RouteContentPending,
   component: SearchPage,
@@ -84,30 +77,32 @@ function SearchPage() {
   return (
     <PageLayout>
       <PageHeader eyebrow="Search" title="Find anything in Crucible" />
-      <form className="flex max-w-2xl gap-2" onSubmit={submit} role="search">
-        {search.kind ? (
-          <input name="kind" type="hidden" value={search.kind} />
-        ) : null}
-        <label className="sr-only" htmlFor="search-query">
-          Search query
-        </label>
-        <Input
-          autoComplete="off"
-          id="search-query"
-          maxLength={200}
-          minLength={3}
-          name="q"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search names, identifiers, and scientific data"
-          required
-          type="search"
-          value={query}
-        />
-        <Button type="submit">
-          <SearchIcon data-icon="inline-start" />
-          Search
-        </Button>
-      </form>
+      <ContentBoundary width="reading">
+        <form className="flex gap-2" onSubmit={submit} role="search">
+          {search.kind ? (
+            <input name="kind" type="hidden" value={search.kind} />
+          ) : null}
+          <label className="sr-only" htmlFor="search-query">
+            Search query
+          </label>
+          <Input
+            autoComplete="off"
+            id="search-query"
+            maxLength={200}
+            minLength={3}
+            name="q"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search names, identifiers, and scientific data"
+            required
+            type="search"
+            value={query}
+          />
+          <Button type="submit">
+            <SearchIcon data-icon="inline-start" />
+            Search
+          </Button>
+        </form>
+      </ContentBoundary>
       <nav className="flex flex-wrap gap-2" aria-label="Resource type filter">
         <KindLink active={!search.kind} kind={undefined} label="All" />
         {kinds.map((kind) => (
@@ -211,10 +206,7 @@ function SearchResults({
           .map((group) => (
             <section className="flex flex-col gap-2" key={group.kind}>
               <div className="flex items-center gap-2">
-                <ResourceTypeIcon
-                  className={kindIconClasses[group.kind]}
-                  type={group.kind}
-                />
+                <ResourceTypeIcon type={group.kind} />
                 <h2 className="text-section-title">{kindLabel(group.kind)}</h2>
                 {!group.error && group.total !== null ? (
                   <Badge variant="secondary">{group.total}</Badge>
@@ -309,10 +301,7 @@ function SearchResult({ item }: { item: WorkspaceSearchResult }) {
 
   return (
     <li className="flex min-w-0 items-start gap-3 px-4 py-3 sm:px-5">
-      <ResourceTypeIcon
-        className={cn("mt-0.5 shrink-0", kindIconClasses[item.kind])}
-        type={item.kind}
-      />
+      <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
       <div className="min-w-0 flex-1">
         {link}
         {item.context ? (

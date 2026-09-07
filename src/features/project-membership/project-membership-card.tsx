@@ -9,10 +9,10 @@ import {
   AddMemberIcon,
   EditMembersIcon,
   LeaveProjectIcon,
-  PersonIcon,
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
+import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   AlertDialog,
@@ -296,7 +296,7 @@ export function ProjectMembershipCard({
       <CardContent>
         {members === null ? (
           <div className="flex items-center gap-2 text-body text-muted-foreground">
-            <PersonIcon aria-hidden="true" />
+            <ResourceTypeIcon type="person" />
             Detailed membership is not available.
           </div>
         ) : members.length === 0 ? (
@@ -465,7 +465,10 @@ export function ProjectMembershipCard({
                           data-icon="inline-start"
                         />
                       ) : (
-                        <PersonIcon data-icon="inline-start" />
+                        <ResourceTypeIcon
+                          data-icon="inline-start"
+                          type="person"
+                        />
                       )}
                       <span className="min-w-0 text-left">
                         <span className="block text-label">{person.name}</span>

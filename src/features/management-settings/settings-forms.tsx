@@ -9,6 +9,7 @@ import {
   SaveChangesIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
+import { ContentBoundary } from "@/components/crucible/content-layout"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -26,11 +27,6 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
   DiscardChangesDialog,
@@ -552,31 +548,33 @@ function SettingsFormCard({
   title: string
 }) {
   return (
-    <Card aria-busy={isSubmitting}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form id={formId} noValidate onSubmit={onSubmit}>
-          <fieldset disabled={isSubmitting}>
-            <FieldGroup>{children}</FieldGroup>
-          </fieldset>
-          <SaveError message={saveError} />
-        </form>
-      </CardContent>
-      <CardFooter className="justify-end gap-2">
-        <Button
-          disabled={isSubmitting}
-          onClick={onCancel}
-          type="button"
-          variant="outline"
-        >
-          <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
-          Cancel
-        </Button>
-        {saveAction}
-      </CardFooter>
-    </Card>
+    <ContentBoundary width="reading">
+      <Card aria-busy={isSubmitting}>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form id={formId} noValidate onSubmit={onSubmit}>
+            <fieldset disabled={isSubmitting}>
+              <FieldGroup>{children}</FieldGroup>
+            </fieldset>
+            <SaveError message={saveError} />
+          </form>
+        </CardContent>
+        <CardFooter className="justify-end gap-2">
+          <Button
+            disabled={isSubmitting}
+            onClick={onCancel}
+            type="button"
+            variant="outline"
+          >
+            <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
+            Cancel
+          </Button>
+          {saveAction}
+        </CardFooter>
+      </Card>
+    </ContentBoundary>
   )
 }
 
@@ -675,28 +673,23 @@ function SaveButton({
 }) {
   const label = submitting ? "Saving changes" : "Save changes"
   return (
-    <Tooltip>
-      <TooltipTrigger render={<span className="inline-flex" />}>
-        <Button
-          aria-disabled={!canSubmit || !dirty || submitting}
-          aria-label={label}
-          disabled={!canSubmit || !dirty || submitting}
-          form={formId}
-          size="icon-sm"
-          type="submit"
-        >
-          {submitting ? (
-            <SavingChangesIcon
-              aria-hidden="true"
-              className="motion-safe:animate-spin"
-            />
-          ) : (
-            <SaveChangesIcon aria-hidden="true" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
+    <Button
+      aria-disabled={!canSubmit || !dirty || submitting}
+      disabled={!canSubmit || !dirty || submitting}
+      form={formId}
+      type="submit"
+    >
+      {submitting ? (
+        <SavingChangesIcon
+          aria-hidden="true"
+          className="motion-safe:animate-spin"
+          data-icon="inline-start"
+        />
+      ) : (
+        <SaveChangesIcon aria-hidden="true" data-icon="inline-start" />
+      )}
+      {label}
+    </Button>
   )
 }
 

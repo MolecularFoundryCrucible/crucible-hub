@@ -18,6 +18,8 @@
     "Segoe UI Emoji";
   --container-content: 90rem;
   --container-reading: 48rem;
+  --container-action: 32rem;
+  --container-action-min: 22rem;
   --container-state: 36rem;
   --spacing-page-gutter: 1rem;
   --spacing-page-gutter-medium: 1.5rem;
@@ -25,6 +27,7 @@
   --spacing-page-section: 2rem;
   --spacing-inspector-width: 26rem;
   --spacing-metadata-editor-height: 20rem;
+  --spacing-graph-canvas: 30rem;
   --spacing-pill-height: 1.5rem;
   --spacing-pill-inline: 0.625rem;
   --spacing-pill-icon-inline: 0.5rem;
@@ -208,9 +211,17 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --resource-project: oklch(0.58 0.17 251);
+  --resource-person: oklch(0.55 0.14 210);
   --resource-dataset: oklch(0.6 0.15 160);
   --resource-instrument: oklch(0.62 0.16 65);
   --resource-sample: oklch(0.58 0.15 315);
+  --graph-card: #ffffff;
+  --graph-foreground: #0a0a0a;
+  --graph-muted-foreground: #696969;
+  --graph-accent: #f5f5f5;
+  --graph-ring: #a1a1a1;
+  --graph-resource-dataset: #009a60;
+  --graph-resource-sample: #9b5bb6;
   --sidebar-width: 17rem;
   --sidebar-width-icon: 3rem;
   --sidebar-width-mobile: 18rem;
@@ -219,6 +230,19 @@
   --focus-offset: 0.125rem;
   --layer-route-progress: 50;
   --route-progress-height: 0.1875rem;
+  --graph-node-width: 168;
+  --graph-node-height: 60;
+  --graph-node-border: 2;
+  --graph-root-border: 4;
+  --graph-root-overlay-opacity: 0.12;
+  --graph-root-overlay-padding: 7;
+  --graph-edge-width: 2;
+  --graph-font-size: 13;
+  --graph-label-width: 144;
+  --graph-layout-spacing: 1.75;
+  --graph-fit-padding: 32;
+  --graph-min-zoom: 0.35;
+  --graph-max-zoom: 2.5;
 }
 
 .dark {
@@ -271,9 +295,17 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   --resource-project: oklch(0.72 0.14 251);
+  --resource-person: oklch(0.76 0.12 210);
   --resource-dataset: oklch(0.72 0.14 160);
   --resource-instrument: oklch(0.76 0.14 65);
   --resource-sample: oklch(0.73 0.13 315);
+  --graph-card: #171717;
+  --graph-foreground: #fafafa;
+  --graph-muted-foreground: #a1a1a1;
+  --graph-accent: #262626;
+  --graph-ring: #737373;
+  --graph-resource-dataset: #3fbf86;
+  --graph-resource-sample: #c68ee0;
 }
 
 @layer base {
@@ -297,6 +329,93 @@
 
 body {
   min-width: 20rem;
+}
+
+.content-grid-actions {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--container-action-min)), 1fr)
+  );
+  max-width: calc(var(--container-action) * 2 + var(--spacing-page-section));
+  justify-content: start;
+  justify-items: start;
+  align-items: start;
+}
+
+.content-grid-actions > * {
+  width: 100%;
+  max-width: var(--container-action);
+}
+
+.resource-graph-canvas {
+  height: var(--spacing-graph-canvas);
+}
+
+.resource-graph-canvas[data-node-hover] {
+  cursor: pointer;
+}
+
+@media (max-width: 47.999rem) {
+  .resource-collection-table,
+  .resource-collection-table tbody {
+    display: block;
+  }
+
+  .resource-collection-table thead,
+  .resource-collection-table colgroup {
+    display: none;
+  }
+
+  .resource-collection-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 3);
+  }
+
+  .resource-collection-table td {
+    display: block;
+    padding: 0;
+    white-space: normal;
+  }
+
+  .resource-collection-table .resource-collection-name {
+    grid-column: 1 / -1;
+  }
+
+  .resource-collection-table .resource-collection-type {
+    display: none;
+  }
+
+  .resource-collection-table .resource-collection-project,
+  .resource-collection-table .resource-collection-owner,
+  .resource-collection-table .resource-collection-date {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .resource-collection-table .resource-collection-project::before,
+  .resource-collection-table .resource-collection-owner::before,
+  .resource-collection-table .resource-collection-date::before {
+    color: var(--muted-foreground);
+    content: attr(data-label) ": ";
+  }
+
+  .resource-collection-table .resource-collection-action {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 2 / 5;
+  }
+
+  .resource-collection-table .resource-full-page-link {
+    width: auto;
+    padding-inline: calc(var(--spacing) * 3);
+  }
+
+  .resource-collection-table .resource-full-page-link-label {
+    display: inline;
+  }
 }
 
 [data-collapsible="icon"] .sidebar-theme {

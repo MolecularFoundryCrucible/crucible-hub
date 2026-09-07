@@ -3,6 +3,7 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -93,7 +94,7 @@ function InstrumentPage() {
               {resource.instrument_type ?? "Instrument"}
             </Badge>
             {resource.status ? (
-              <Badge variant="secondary">{resource.status}</Badge>
+              <InstrumentStatusBadge status={resource.status} />
             ) : null}
           </div>
         }
@@ -124,7 +125,10 @@ function InstrumentPage() {
         >
           Datasets
         </Link>
-        {resource.capabilities?.can_edit === true ? (
+        {resource.capabilities?.can_edit === true ||
+        resource.capabilities?.can_change_status === true ||
+        resource.capabilities?.can_manage_access === true ||
+        resource.capabilities?.can_transfer === true ? (
           <Link
             activeOptions={{ includeSearch: false }}
             activeProps={{

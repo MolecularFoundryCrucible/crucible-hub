@@ -1,17 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router"
-import {
-  ActivityIcon,
-  DatabaseIcon,
-  FolderKanbanIcon,
-  HouseIcon,
-  MicroscopeIcon,
-  PlusIcon,
-} from "lucide-react"
 
+import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
+import { WorkspaceIcon } from "@/components/crucible/icons"
+import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { ThemeSelect } from "@/components/theme-select"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
   Sidebar,
@@ -35,14 +30,30 @@ import { initials } from "@/lib/format"
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
 
 const primaryItems = [
-  { label: "Home", to: "/", icon: HouseIcon },
-  { label: "Projects", to: "/projects", icon: FolderKanbanIcon },
-  { label: "Data", to: "/data", icon: DatabaseIcon },
-  { label: "Instruments", to: "/instruments", icon: MicroscopeIcon },
+  { label: "Home", to: "/", kind: "home" },
+  {
+    label: "Projects",
+    to: "/projects",
+    kind: "resource",
+    resourceType: "project",
+  },
+  {
+    label: "Data",
+    to: "/data",
+    kind: "resource",
+    resourceType: "dataset",
+  },
+  {
+    label: "Instruments",
+    to: "/instruments",
+    kind: "resource",
+    resourceType: "instrument",
+  },
 ] satisfies ReadonlyArray<{
+  kind: "home" | "resource"
   label: string
+  resourceType?: ResourceType
   to: NavPath
-  icon: typeof HouseIcon
 }>
 
 export function AppShell({
@@ -102,21 +113,16 @@ export function AppShell({
                         tooltip={item.label}
                         render={<Link to={item.to} />}
                       >
-                        <item.icon aria-hidden="true" />
+                        {item.kind === "resource" ? (
+                          <ResourceTypeIcon type={item.resourceType} />
+                        ) : (
+                          <WorkspaceIcon aria-hidden="true" />
+                        )}
                         <span>{item.label}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )
                 })}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    disabled
-                    tooltip="Activity is coming later"
-                  >
-                    <ActivityIcon aria-hidden="true" />
-                    <span>Activity</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -133,10 +139,11 @@ export function AppShell({
           <SidebarTrigger aria-label="Toggle primary navigation" />
           <Separator className="h-5" orientation="vertical" />
           <GlobalSearch />
-          <Button disabled className="hidden sm:inline-flex">
-            <PlusIcon aria-hidden="true" />
-            Create
-          </Button>
+          {account ? (
+            <CreateMenu
+              isServiceAccount={Boolean(account.is_service_account)}
+            />
+          ) : null}
           <div className="ml-auto flex items-center gap-2 border-l pl-3">
             <Avatar size="sm">
               <AvatarFallback className="text-foreground">

@@ -17,6 +17,7 @@ import {
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,6 +57,7 @@ import type { ProjectScope } from "@/data/crucible/data.queries"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 
 export const Route = createFileRoute("/_app/data")({
+  head: () => ({ meta: [{ title: "Data | Crucible Hub" }] }),
   validateSearch: dataSearchSchema.merge(resourcePreviewSearchSchema),
   loaderDeps: ({ search }) => ({
     createdFrom: search.createdFrom,
@@ -116,7 +118,11 @@ function DataPage() {
   return (
     <ResourcePreviewContext.Provider value={navigation}>
       <PageLayout>
-        <PageHeader eyebrow="Data" title="Samples and datasets" />
+        <PageHeader
+          actions={<ResourceCreationActions />}
+          eyebrow="Data"
+          title="Samples and datasets"
+        />
         <DataCollection />
       </PageLayout>
       <ResourceInspector navigation={navigation} />
@@ -238,7 +244,7 @@ function DataResults({
           {hasRows ? (
             <Card aria-busy={updating}>
               <CardContent className="px-0">
-                <Table className="table-fixed">
+                <Table className="resource-collection-table table-fixed">
                   <colgroup>
                     <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
                     <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
@@ -266,6 +272,7 @@ function DataResults({
                       samplePage?.items.map((sample) => (
                         <TableRow key={sample.unique_id}>
                           <ResourceCollectionNameCell
+                            className="resource-collection-name"
                             kind="sample"
                             mfid={sample.unique_id}
                             name={sample.sample_name}
@@ -274,7 +281,7 @@ function DataResults({
                             }
                             subtypeVisibility="compact"
                           />
-                          <TableCell className="hidden xl:table-cell">
+                          <TableCell className="resource-collection-type hidden xl:table-cell">
                             <span
                               className="block truncate"
                               title={sample.sample_type ?? undefined}
@@ -282,7 +289,10 @@ function DataResults({
                               {sample.sample_type ?? "Unspecified"}
                             </span>
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            className="resource-collection-project"
+                            data-label="Project"
+                          >
                             <span
                               className="block truncate"
                               title={sample.project_id ?? undefined}
@@ -290,7 +300,10 @@ function DataResults({
                               {sample.project_id ?? "Unassigned"}
                             </span>
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            className="resource-collection-owner"
+                            data-label="Owner"
+                          >
                             <span
                               className="block truncate"
                               title={sample.owner?.username ?? undefined}
@@ -298,12 +311,15 @@ function DataResults({
                               {sample.owner?.username ?? "Unknown owner"}
                             </span>
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            className="resource-collection-date"
+                            data-label="Updated"
+                          >
                             {formatDate(
                               sample.modification_time ?? sample.creation_time
                             )}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="resource-collection-action text-center">
                             <ResourceFullPageLink
                               kind="sample"
                               mfid={sample.unique_id}
@@ -317,6 +333,7 @@ function DataResults({
                       datasetPage?.items.map((dataset) => (
                         <TableRow key={dataset.unique_id}>
                           <ResourceCollectionNameCell
+                            className="resource-collection-name"
                             kind="dataset"
                             mfid={dataset.unique_id}
                             name={dataset.dataset_name ?? "Untitled dataset"}
@@ -325,7 +342,7 @@ function DataResults({
                             }
                             subtypeVisibility="compact"
                           />
-                          <TableCell className="hidden xl:table-cell">
+                          <TableCell className="resource-collection-type hidden xl:table-cell">
                             <span
                               className="block truncate"
                               title={dataset.measurement ?? undefined}
@@ -333,7 +350,10 @@ function DataResults({
                               {dataset.measurement ?? "Unspecified"}
                             </span>
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            className="resource-collection-project"
+                            data-label="Project"
+                          >
                             {dataset.project ? (
                               <Link
                                 className="block truncate text-label hover:underline"
@@ -358,7 +378,10 @@ function DataResults({
                               </span>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            className="resource-collection-owner"
+                            data-label="Owner"
+                          >
                             <span
                               className="block truncate"
                               title={dataset.owner?.username ?? undefined}
@@ -366,12 +389,15 @@ function DataResults({
                               {dataset.owner?.username ?? "Unknown owner"}
                             </span>
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            className="resource-collection-date"
+                            data-label="Updated"
+                          >
                             {formatDate(
                               dataset.modification_time ?? dataset.creation_time
                             )}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="resource-collection-action text-center">
                             <ResourceFullPageLink
                               kind="dataset"
                               mfid={dataset.unique_id}

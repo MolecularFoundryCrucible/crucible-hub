@@ -18,7 +18,7 @@ This document owns delivery order, entry and completion gates, current status, a
 
 ## Current position
 
-The local fixture workspace has the Phase 0 scaffold, server boundary, generated contract consumption, Query foundation, responsive shell, read workspace, controlled descriptive and scientific metadata editing, reviewed deletion requests, and direct project membership controls. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
+The local fixture workspace has the Phase 0 scaffold, server boundary, generated contract consumption, Query foundation, responsive shell, read workspace, dedicated project, sample, and dataset creation, controlled descriptive and scientific metadata editing, reviewed deletion requests, and direct project membership controls. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
 
 | Area                                       | Status                                                                                                          |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
@@ -28,7 +28,10 @@ The local fixture workspace has the Phase 0 scaffold, server boundary, generated
 | Direct project membership                  | Add, role change, removal, and self-leave are implemented and fixture/browser verified; not production-exposed. |
 | Resource access management                 | Route-backed Access pages and local fixture/browser mutation coverage are implemented; not production-exposed.  |
 | Join requests                              | Deferred pending the API-owned identity, status, capability, and efficient project-state contract.              |
-| Uploads, ownership, lifecycle, and graphs  | Future work.                                                                                                    |
+| Instrument management                      | Lifecycle, operators, ownership transfer, and registration are implemented for local development.               |
+| Resource assignment and ownership          | Sample and dataset project moves and resource ownership transfer are implemented for local development.         |
+| Project, sample, and dataset creation      | Dedicated API-backed creation routes are implemented for local development; file upload remains separate.       |
+| Uploads and graphs                         | Uploads remain blocked; bounded one-hop resource graph tabs are implemented for local development.              |
 
 ## Ordered work packages
 
@@ -61,6 +64,10 @@ Implemented and fixture/browser verified. It preserves applied global Data filte
 
 Implemented and fixture/browser verified. Links are generated only after activation and remain outside client caches, route state, and logs. The typed response and attachment behavior remain API follow-ups.
 
+#### Resource graph traversal
+
+Implemented for local development. Canonical sample and dataset Graph tabs load an identity-scoped one-hop graph only on entry, provide Cytoscape traversal with the existing overlay inspector, support canonical rerooting through Explore from here, and retain an equivalent relationship table. The prototype uses the untyped CTE endpoint behind strict Hub validation; a typed, bounded API graph contract remains an external dependency. See decision 0026 and [Crucible API handoff](crucible-api-handoff.md).
+
 ### P2: controlled self-service management
 
 Completed local slices are descriptive project and instrument Settings, sample and dataset summary editing, scientific metadata editing, reviewed resource deletion requests, a consolidated Project Overview, direct project membership, and resource relationship management. Project navigation is limited to Data, Overview, and capability-gated Settings; Settings is split into route-backed General and Members subsections.
@@ -79,13 +86,27 @@ Implemented and fixture/browser verified for local development. Route-backed sam
 
 Join submission and review remain deferred pending the API-owned workflow described in [Crucible API handoff](crucible-api-handoff.md). Hub must not scan an account-wide request history or issue N+1 identity lookups to construct project-level state and review queues.
 
-#### Next action: instrument lifecycle
+#### Instrument lifecycle
 
-The next independent Hub package is capability-gated instrument lifecycle management using the dedicated status operation and authoritative instrument response. The implementation must keep lifecycle separate from descriptive Settings, confirm decommissioning, preserve local failure state, and document the API's currently untyped status values. Service-account operators, ownership transfer, project moves, and upload orchestration remain later packages.
+Implemented for local development. Instrument Settings now has a capability-gated Lifecycle subsection using the dedicated status operation and authoritative instrument response. Hub offers active, maintenance, and decommissioned, confirms decommissioning, preserves local failure state, keeps lifecycle separate from descriptive General Settings, and provides API-filtered directory views for every state. The API's untyped status parameter and response, transition rules, and error outcomes remain documented in [Crucible API handoff](crucible-api-handoff.md).
+
+#### Instrument operators, registration, ownership, and project moves
+
+Implemented and fixture/browser verified for local development. Instrument Settings has separate Operators and Ownership subsections. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Access offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
+
+Dataset instrument reassignment is omitted because the API intentionally freezes the legacy PATCH fields and exposes no dedicated atomic operation. Browser upload orchestration remains blocked by proposed decision 0005 and the API requirements in [Crucible API handoff](crucible-api-handoff.md); Hub does not expose a misleading or insecure upload control.
+
+#### Project, sample, and dataset creation
+
+Implemented and fixture/browser verified for local development without file upload. Dedicated routes validate contract fields, use bounded project, instrument, sample, and lead selectors, omit caller-assigned MFIDs, and navigate from API-assigned canonical identities. Confirmed rejections retain correctable drafts. Uncertain sample and dataset creates do not retry without API idempotency and direct the user to check Data before resubmitting. Dataset sample associations begin only after confirmed creation and retry only incomplete links. File attachment remains a later stage until the upload contract is safe for browsers.
+
+#### Next action: resource graph usability verification
+
+Complete the user-led local usability pass for sample and dataset graph traversal, then record interaction and contract corrections before adding depth, graph filters, or editing. Production exposure remains blocked by P0.
 
 ### P3: Explorer convergence
 
-Move generic graph and advanced data workflows only after Hub demonstrates feature, performance, accessibility, and usage parity. Migrate specialized viewers individually behind stable contracts and accountable ownership. Do not add new runtime handoffs to Explorer.
+Move advanced graph and data workflows only after the bounded graph prototype demonstrates feature, performance, accessibility, and usage parity. Migrate specialized viewers individually behind stable contracts and accountable ownership. Do not add new runtime handoffs to Explorer.
 
 ### P4: high-scale management
 
@@ -99,6 +120,7 @@ Add API-backed bulk operations, saved views, exports, richer activity and audit 
 | Session infrastructure          | Shared storage, encryption and rotation approach, revocation behavior, and multi-replica verification.                         |
 | Upload contract                 | Authorized direct upload lifecycle, CORS, retry, resume, expiry, cleanup, and non-production feasibility evidence.             |
 | Collection and search contracts | Owned-resource filtering, stable sorting and grouping, scalable facets, and bounded summaries where requested.                 |
+| Resource graph contract         | Typed nodes and edges, relationship semantics, bounded depth, truncation, permission behavior, and stable error outcomes.      |
 | Mutation contracts              | Operation-specific capability guidance, conditional-write safety, complete authoritative responses, and clear-field semantics. |
 
 ## Completion gates

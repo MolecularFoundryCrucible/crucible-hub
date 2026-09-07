@@ -3,10 +3,23 @@ import {
   InstrumentIcon,
   PersonIcon,
   ProjectIcon,
+  PublicAccessIcon,
   SampleIcon,
+  ServiceAccountIcon,
+  SystemPrincipalIcon,
+  UnknownPrincipalIcon,
 } from "@/components/crucible/icons"
+import { cn } from "@/lib/utils"
 
 type ResourceType = "dataset" | "instrument" | "person" | "project" | "sample"
+type PrincipalType =
+  | "instrument"
+  | "project"
+  | "public"
+  | "service_account"
+  | "system"
+  | "unknown"
+  | "user"
 
 const icons = {
   dataset: DatasetIcon,
@@ -15,6 +28,34 @@ const icons = {
   project: ProjectIcon,
   sample: SampleIcon,
 } satisfies Record<ResourceType, typeof DatasetIcon>
+
+const iconClasses = {
+  dataset: "text-(--resource-dataset)",
+  instrument: "text-(--resource-instrument)",
+  person: "text-(--resource-person)",
+  project: "text-(--resource-project)",
+  sample: "text-(--resource-sample)",
+} satisfies Record<ResourceType, string>
+
+const principalIcons = {
+  instrument: InstrumentIcon,
+  project: ProjectIcon,
+  public: PublicAccessIcon,
+  service_account: ServiceAccountIcon,
+  system: SystemPrincipalIcon,
+  unknown: UnknownPrincipalIcon,
+  user: PersonIcon,
+} satisfies Record<PrincipalType, typeof DatasetIcon>
+
+const principalIconClasses = {
+  instrument: iconClasses.instrument,
+  project: iconClasses.project,
+  public: "text-muted-foreground",
+  service_account: iconClasses.person,
+  system: "text-muted-foreground",
+  unknown: "text-muted-foreground",
+  user: iconClasses.person,
+} satisfies Record<PrincipalType, string>
 
 export function ResourceTypeIcon({
   className,
@@ -28,10 +69,33 @@ export function ResourceTypeIcon({
   const Icon = icons[type]
   return (
     <Icon
-      className={className}
+      className={cn(iconClasses[type], className)}
       data-icon={dataIcon}
       data-resource-type={type}
       aria-hidden="true"
     />
   )
 }
+
+export function PrincipalTypeIcon({
+  className,
+  label,
+  type,
+}: {
+  className?: string
+  label?: string
+  type: PrincipalType
+}) {
+  const Icon = principalIcons[type]
+  return (
+    <Icon
+      aria-hidden={label ? undefined : true}
+      aria-label={label}
+      className={cn("size-4 shrink-0", principalIconClasses[type], className)}
+      data-principal-type={type}
+      role={label ? "img" : undefined}
+    />
+  )
+}
+
+export type { PrincipalType, ResourceType }

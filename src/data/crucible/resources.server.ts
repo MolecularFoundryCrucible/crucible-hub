@@ -22,9 +22,13 @@ import type {
   WorkspaceDeletionRequest,
   WorkspaceFileDownload,
   WorkspacePerson,
+  WorkspaceOwnershipTransfer,
+  WorkspaceProjectReassignment,
   WorkspaceRelationshipMutationResult,
   WorkspaceRelationshipOperation,
   WorkspaceResourceDetail,
+  WorkspaceResourceGraph,
+  WorkspaceResourceGraphEdge,
   WorkspaceSampleDescriptiveUpdate,
   WorkspaceScientificMetadataUpdate,
   WorkspaceScientificMetadataWrite,
@@ -50,6 +54,33 @@ const apiFileDownloadSchema = z
     url: z.string().nullable(),
   })
   .strict()
+
+const apiResourceGraphSchema = z
+  .object({
+    directed: z.literal(true),
+    edges: z
+      .array(
+        z
+          .object({
+            source: z.string().min(1).max(255),
+            target: z.string().min(1).max(255),
+          })
+          .passthrough()
+      )
+      .max(5_000),
+    nodes: z
+      .array(
+        z
+          .object({
+            entity_type: z.enum(["dataset", "sample"]),
+            id: z.string().min(1).max(255),
+            name: z.string().nullable().optional(),
+          })
+          .passthrough()
+      )
+      .max(1_000),
+  })
+  .passthrough()
 
 const workspaceDeletionRequestSchema = z
   .object({
@@ -144,7 +175,9 @@ function commonResource(
   }
 }
 
-function toWorkspaceResource(resource: ApiResource): WorkspaceResourceDetail {
+export function toWorkspaceResourceDetail(
+  resource: ApiResource
+): WorkspaceResourceDetail {
   if (isDataset(resource)) {
     return {
       ...commonResource(
@@ -248,7 +281,7 @@ export async function readWorkspaceResource(
         demoWorkspace.datasets.find(
           (candidate) => candidate.unique_id === resourceMfid
         ) ?? demoWorkspace.datasets[0]
-      return toWorkspaceResource({ ...template, ...dataset })
+      return toWorkspaceResourceDetail({ ...template, ...dataset })
     }
     const sample = workspace.samples.find(
       (candidate) => candidate.unique_id === resourceMfid
@@ -258,7 +291,7 @@ export async function readWorkspaceResource(
         demoWorkspace.samples.find(
           (candidate) => candidate.unique_id === resourceMfid
         ) ?? demoWorkspace.samples[0]
-      return toWorkspaceResource({ ...template, ...sample })
+      return toWorkspaceResourceDetail({ ...template, ...sample })
     }
     const instrument = workspace.instruments.find(
       (candidate) => candidate.unique_id === resourceMfid
@@ -268,7 +301,7 @@ export async function readWorkspaceResource(
         demoWorkspace.instruments.find(
           (candidate) => candidate.unique_id === resourceMfid
         ) ?? demoWorkspace.instruments[0]
-      return toWorkspaceResource({ ...template, ...instrument })
+      return toWorkspaceResourceDetail({ ...template, ...instrument })
     }
     const project = workspace.projects.find(
       (candidate) => candidate.unique_id === resourceMfid
@@ -280,7 +313,7 @@ export async function readWorkspaceResource(
       ) ?? demoWorkspace.projects[0]
     if (!("organization" in template)) return null
     const { members, ...projectFields } = project
-    return toWorkspaceResource({
+    return toWorkspaceResourceDetail({
       ...template,
       ...projectFields,
       members:
@@ -305,7 +338,7 @@ export async function readWorkspaceResource(
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
   }
-  return toWorkspaceResource(result.data)
+  return toWorkspaceResourceDetail(result.data)
 }
 
 export async function readWorkspaceDatasetFiles(
@@ -330,6 +363,280 @@ export async function readWorkspaceDatasetFiles(
   })
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
+  }
+  return result.data
+}
+
+function fixtureResourceGraph(
+  resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
+): WorkspaceResourceGraph {
+  const nodes = new Map([
+    [
+      resource.unique_id,
+      {
+        kind: resource.kind,
+        name: resource.name,
+        unique_id: resource.unique_id,
+      },
+    ],
+  ])
+  const edges = (resource.links ?? []).flatMap(
+    (link): WorkspaceResourceGraphEdge[] => {
+      if (link.resource_type !== "dataset" && link.resource_type !== "sample") {
+        return []
+      }
+      nodes.set(link.unique_id, {
+        kind: link.resource_type,
+        name: link.name || link.unique_id,
+        unique_id: link.unique_id,
+      })
+      if (link.relationship === "parent") {
+        return [
+          {
+            relationship: "parent" as const,
+            source: link.unique_id,
+            target: resource.unique_id,
+          },
+        ]
+      }
+      if (link.relationship === "child") {
+        return [
+          {
+            relationship: "parent" as const,
+            source: resource.unique_id,
+            target: link.unique_id,
+          },
+        ]
+      }
+      return [
+        {
+          relationship: "associated" as const,
+          source:
+            resource.kind === "sample" ? resource.unique_id : link.unique_id,
+          target:
+            resource.kind === "sample" ? link.unique_id : resource.unique_id,
+        },
+      ]
+    }
+  )
+  return { edges, nodes: [...nodes.values()], rootMfid: resource.unique_id }
+}
+
+function normalizeApiResourceGraph(
+  value: unknown,
+  rootMfid: string
+): WorkspaceResourceGraph {
+  const result = apiResourceGraphSchema.safeParse(value)
+  if (!result.success) {
+    throw new Error("The resource graph response is invalid.")
+  }
+  const nodes = new Map(
+    result.data.nodes.map((node) => [
+      node.id,
+      {
+        kind: node.entity_type,
+        name: node.name || node.id,
+        unique_id: node.id,
+      },
+    ])
+  )
+  if (nodes.size !== result.data.nodes.length || !nodes.has(rootMfid)) {
+    throw new Error("The resource graph response has invalid nodes.")
+  }
+  const edgeKeys = new Set<string>()
+  const edges = result.data.edges.map((edge) => {
+    const source = nodes.get(edge.source)
+    const target = nodes.get(edge.target)
+    if (!source || !target) {
+      throw new Error("The resource graph response has an invalid edge.")
+    }
+    const edgeKey = `${edge.source}\u0000${edge.target}`
+    if (edgeKeys.has(edgeKey)) {
+      throw new Error("The resource graph response has duplicate edges.")
+    }
+    edgeKeys.add(edgeKey)
+    return {
+      relationship:
+        source.kind === target.kind
+          ? ("parent" as const)
+          : ("associated" as const),
+      source: edge.source,
+      target: edge.target,
+    }
+  })
+  const orderedNodes = [...nodes.values()].sort((left, right) => {
+    if (left.unique_id === rootMfid) return -1
+    if (right.unique_id === rootMfid) return 1
+    return left.name.localeCompare(right.name)
+  })
+  edges.sort(
+    (left, right) =>
+      left.source.localeCompare(right.source) ||
+      left.target.localeCompare(right.target)
+  )
+  return { edges, nodes: orderedNodes, rootMfid }
+}
+
+export async function readWorkspaceResourceGraph(
+  resourceMfid: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceResourceGraph> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const resource = await readWorkspaceResource(
+      resourceMfid,
+      scenario,
+      requestSignal
+    )
+    if (
+      !resource ||
+      (resource.kind !== "dataset" && resource.kind !== "sample")
+    ) {
+      throw new CrucibleResponseError(404)
+    }
+    return fixtureResourceGraph(resource)
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/entity_graph_cte/{entity_id}", {
+    params: {
+      path: { entity_id: resourceMfid },
+      query: { recursive: false },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return normalizeApiResourceGraph(result.data, resourceMfid)
+}
+
+function fixtureOwner(
+  ownerReference: string,
+  scenario?: FixtureScenario
+): WorkspacePerson {
+  const workspace = fixtureWorkspace(scenario)
+  const person = workspace.people.find(
+    (candidate) =>
+      candidate.unique_id === ownerReference ||
+      candidate.username === ownerReference
+  )
+  if (person) return person
+  const serviceAccount = workspace.projects
+    .flatMap((project) =>
+      "members" in project && project.members ? project.members : []
+    )
+    .find(
+      (candidate) =>
+        candidate.is_service_account === true &&
+        (candidate.unique_id === ownerReference ||
+          candidate.username === ownerReference)
+    )
+  if (!serviceAccount) throw new CrucibleResponseError(404)
+  return safeOwner(serviceAccount) ?? serviceAccount
+}
+
+export async function transferWorkspaceResourceOwnership(
+  resourceMfid: string,
+  newOwner: string,
+  confirm: boolean,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceOwnershipTransfer> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const resource = await readWorkspaceResource(
+      resourceMfid,
+      scenario,
+      requestSignal
+    )
+    if (!resource) throw new CrucibleResponseError(404)
+    return {
+      resource_id: resourceMfid,
+      previous_owner: resource.owner,
+      new_owner: fixtureOwner(newOwner, scenario),
+    }
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.POST("/resources/{mfid}/transfer_ownership", {
+    body: { new_owner: newOwner },
+    params: { path: { mfid: resourceMfid }, query: { confirm } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (result.data.resource_id !== resourceMfid) {
+    throw new Error("The ownership response identifies another resource.")
+  }
+  return result.data
+}
+
+export async function reassignWorkspaceResourceProject(
+  resourceMfid: string,
+  projectMfid: string,
+  confirm: boolean,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceProjectReassignment> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  let projectId: string
+  if (configuration.mode === "fixture") {
+    const resource = await readWorkspaceResource(
+      resourceMfid,
+      scenario,
+      requestSignal
+    )
+    if (
+      !resource ||
+      (resource.kind !== "sample" && resource.kind !== "dataset")
+    ) {
+      throw new CrucibleResponseError(404)
+    }
+    const project = fixtureWorkspace(scenario).projects.find(
+      (candidate) => candidate.unique_id === projectMfid
+    )
+    if (!project) throw new CrucibleResponseError(404)
+    projectId = project.project_id
+    return {
+      resource_id: resourceMfid,
+      previous_project_id: resource.project_id,
+      new_project_id: projectId,
+    }
+  }
+
+  const client = createCrucibleClient(configuration)
+  const projectResult = await client.GET("/projects/{project_ref}", {
+    params: {
+      path: { project_ref: projectMfid },
+      query: {
+        include_members: false,
+        include_metadata: false,
+      },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!projectResult.data) {
+    throw new CrucibleResponseError(projectResult.response.status)
+  }
+  projectId = projectResult.data.project_id
+  const result = await client.POST("/resources/{mfid}/project", {
+    body: { project_id: projectId },
+    params: { path: { mfid: resourceMfid }, query: { confirm } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (result.data.resource_id !== resourceMfid) {
+    throw new Error(
+      "The project assignment response identifies another resource."
+    )
   }
   return result.data
 }

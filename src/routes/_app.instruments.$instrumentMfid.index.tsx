@@ -2,6 +2,10 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  ContentGrid,
+  ContentGridItem,
+} from "@/components/crucible/content-layout"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
@@ -27,15 +31,17 @@ function InstrumentOverviewPage() {
   if (!resource || resource.kind !== "instrument") return null
 
   return (
-    <div className="grid gap-6 xl:grid-cols-5">
-      <div className="flex flex-col gap-6 xl:col-span-3">
+    <ContentGrid variant="detail">
+      <ContentGridItem span="wide">
         <InstrumentSummary instrument={resource} />
-        <InstrumentMetadata metadata={resource.scientific_metadata} />
-      </div>
-      <div className="xl:col-span-2">
+      </ContentGridItem>
+      <ContentGridItem span="narrow">
         <InstrumentIdentity instrument={resource} />
-      </div>
-    </div>
+      </ContentGridItem>
+      <ContentGridItem span="wide">
+        <InstrumentMetadata metadata={resource.scientific_metadata} />
+      </ContentGridItem>
+    </ContentGrid>
   )
 }
 

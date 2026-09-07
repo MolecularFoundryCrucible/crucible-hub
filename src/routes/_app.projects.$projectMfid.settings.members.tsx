@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 
+import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -28,21 +29,23 @@ function ProjectMemberSettingsPage() {
   if (!project || !("organization" in project)) return null
 
   return (
-    <ProjectMembershipCard
-      accountId={scope[2]}
-      mode={mode}
-      onLeaveSuccess={() =>
-        void navigate({
-          replace: true,
-          search: { offset: undefined },
-          to: "/projects",
-        })
-      }
-      project={{
-        ...project,
-        members: project.members ?? null,
-      }}
-      scope={scope}
-    />
+    <ContentBoundary width="reading">
+      <ProjectMembershipCard
+        accountId={scope[2]}
+        mode={mode}
+        onLeaveSuccess={() =>
+          void navigate({
+            replace: true,
+            search: { offset: undefined },
+            to: "/projects",
+          })
+        }
+        project={{
+          ...project,
+          members: project.members ?? null,
+        }}
+        scope={scope}
+      />
+    </ContentBoundary>
   )
 }

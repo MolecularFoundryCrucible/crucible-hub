@@ -23,11 +23,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -127,43 +122,24 @@ export function ResourceDeletionRequestAction({
   if (activeRequest) {
     const label = deletionRequestStatusLabel(activeRequest.status)
     return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              aria-label={label}
-              disabled
-              size="icon-sm"
-              variant="outline"
-            />
-          }
-        >
-          <DeletionRequestedIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>{label}</TooltipContent>
-      </Tooltip>
+      <Button disabled size="sm" variant="outline">
+        <DeletionRequestedIcon aria-hidden="true" data-icon="inline-start" />
+        {label}
+      </Button>
     )
   }
 
   return (
     <>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              aria-label={`Request deletion of ${resource.name}`}
-              onClick={() => setOpen(true)}
-              size="icon-sm"
-              variant="outline"
-            />
-          }
-        >
-          <RequestDeletionIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>
-          Request deletion: <ResourceName>{resource.name}</ResourceName>
-        </TooltipContent>
-      </Tooltip>
+      <Button
+        aria-label={`Request deletion of ${resource.name}`}
+        onClick={() => setOpen(true)}
+        size="sm"
+        variant="outline"
+      >
+        <RequestDeletionIcon aria-hidden="true" data-icon="inline-start" />
+        Request deletion
+      </Button>
       <Dialog
         onOpenChange={(nextOpen) => {
           if (mutation.isPending) return

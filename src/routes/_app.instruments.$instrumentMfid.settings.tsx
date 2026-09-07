@@ -1,12 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
-import {
-  useWorkspaceMode,
-  useWorkspaceScope,
-} from "@/components/crucible/workspace-provider"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { InstrumentSettingsForm } from "@/features/management-settings/settings-forms"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 
 export const Route = createFileRoute(
@@ -17,19 +13,79 @@ export const Route = createFileRoute(
 
 function InstrumentSettingsPage() {
   const { instrumentMfid } = Route.useParams()
-  const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
   const { data: resource } = useSuspenseQuery(
     resourceQueryOptions(scope, instrumentMfid)
   )
 
   if (!resource || resource.kind !== "instrument") return null
-  if (resource.capabilities?.can_edit !== true) {
+  const canEditDescription = resource.capabilities?.can_edit === true
+  const canChangeStatus = resource.capabilities?.can_change_status === true
+  const canManageOperators = resource.capabilities?.can_manage_access === true
+  const canTransferOwnership = resource.capabilities?.can_transfer === true
+
+  if (
+    !canEditDescription &&
+    !canChangeStatus &&
+    !canManageOperators &&
+    !canTransferOwnership
+  ) {
     return <SettingsUnavailable />
   }
 
   return (
-    <InstrumentSettingsForm instrument={resource} mode={mode} scope={scope} />
+    <div className="flex min-w-0 flex-col gap-page-section">
+      <nav
+        aria-label="Instrument settings sections"
+        className="flex flex-wrap gap-x-4 gap-y-2"
+      >
+        {canEditDescription ? (
+          <Link
+            activeOptions={{ exact: true, includeSearch: false }}
+            activeProps={{ className: "text-label text-foreground underline" }}
+            className="text-body text-muted-foreground hover:text-foreground"
+            params={{ instrumentMfid }}
+            to="/instruments/$instrumentMfid/settings"
+          >
+            General
+          </Link>
+        ) : null}
+        {canChangeStatus ? (
+          <Link
+            activeOptions={{ includeSearch: false }}
+            activeProps={{ className: "text-label text-foreground underline" }}
+            className="text-body text-muted-foreground hover:text-foreground"
+            params={{ instrumentMfid }}
+            to="/instruments/$instrumentMfid/settings/lifecycle"
+          >
+            Lifecycle
+          </Link>
+        ) : null}
+        {canManageOperators ? (
+          <Link
+            activeOptions={{ includeSearch: false }}
+            activeProps={{ className: "text-label text-foreground underline" }}
+            className="text-body text-muted-foreground hover:text-foreground"
+            params={{ instrumentMfid }}
+            to="/instruments/$instrumentMfid/settings/operators"
+          >
+            Operators
+          </Link>
+        ) : null}
+        {canTransferOwnership ? (
+          <Link
+            activeOptions={{ includeSearch: false }}
+            activeProps={{ className: "text-label text-foreground underline" }}
+            className="text-body text-muted-foreground hover:text-foreground"
+            params={{ instrumentMfid }}
+            to="/instruments/$instrumentMfid/settings/ownership"
+          >
+            Ownership
+          </Link>
+        ) : null}
+      </nav>
+      <Outlet />
+    </div>
   )
 }
 
@@ -42,7 +98,7 @@ function SettingsUnavailable() {
         </CardTitle>
       </CardHeader>
       <CardContent className="text-body text-muted-foreground">
-        You do not have permission to edit this instrument.
+        You do not have an available instrument management action.
       </CardContent>
     </Card>
   )

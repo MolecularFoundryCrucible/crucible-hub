@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
-import { Link, Outlet } from "@tanstack/react-router"
+import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
 
 import {
   CopyIcon,
@@ -11,6 +11,10 @@ import {
   PreparingDownloadIcon,
   RetryDownloadIcon,
 } from "@/components/crucible/icons"
+import {
+  ContentGrid,
+  ContentGridItem,
+} from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import {
@@ -101,10 +105,22 @@ export function ResourceWorkspace({
   resourceMfid: string
   preview: unknown
 }) {
+  const matchRoute = useMatchRoute()
+  const graphMatch =
+    resourceKind === "sample"
+      ? matchRoute({
+          params: { sampleMfid: resourceMfid },
+          to: "/samples/$sampleMfid/graph",
+        })
+      : matchRoute({
+          params: { datasetMfid: resourceMfid },
+          to: "/datasets/$datasetMfid/graph",
+        })
   const navigation = useResourcePreviewNavigation({
     kind: "resource",
     resourceKind,
     resourceMfid,
+    section: graphMatch ? "graph" : undefined,
     preview,
   })
   const mode = useWorkspaceMode()
@@ -198,25 +214,29 @@ export function ResourceOverview({
   if (!resource || resource.kind !== resourceKind) return null
 
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-5">
-      <div className="flex min-w-0 flex-col gap-6 xl:col-span-3">
+    <ContentGrid variant="detail">
+      <ContentGridItem span="wide">
         <ResourceSummaryCard mode={mode} resource={resource} scope={scope} />
+      </ContentGridItem>
+      <ContentGridItem span="narrow">
+        <IdentityCard resource={resource} />
+      </ContentGridItem>
+      {resource.kind === "dataset" ? (
+        <ContentGridItem span="wide">
+          <DatasetFiles datasetMfid={resource.unique_id} />
+        </ContentGridItem>
+      ) : null}
+      <ContentGridItem span="narrow">
+        <ResourceRelationshipManager resource={resource} scope={scope} />
+      </ContentGridItem>
+      <ContentGridItem span="wide">
         <ScientificMetadataEditor
           mode={mode}
           resource={resource}
           scope={scope}
         />
-        {resource.kind === "dataset" ? (
-          <DatasetFiles datasetMfid={resource.unique_id} />
-        ) : null}
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
-        <ResourceContextCard resource={resource} />
-        <IdentityCard resource={resource} />
-        <ResourceRelationshipManager resource={resource} scope={scope} />
-      </div>
-    </div>
+      </ContentGridItem>
+    </ContentGrid>
   )
 }
 
@@ -242,7 +262,19 @@ function ResourceNavigation({
         >
           Overview
         </Link>
-        {resource.capabilities?.can_manage_access === true ? (
+        <Link
+          activeOptions={{ includeSearch: false }}
+          activeProps={activeProps}
+          className={linkClassName}
+          params={{ sampleMfid: resource.unique_id }}
+          preload={false}
+          search={{ preview: undefined }}
+          to="/samples/$sampleMfid/graph"
+        >
+          Graph
+        </Link>
+        {resource.capabilities?.can_manage_access === true ||
+        resource.capabilities?.can_transfer === true ? (
           <Link
             activeOptions={{ includeSearch: false }}
             activeProps={activeProps}
@@ -270,7 +302,19 @@ function ResourceNavigation({
       >
         Overview
       </Link>
-      {resource.capabilities?.can_manage_access === true ? (
+      <Link
+        activeOptions={{ includeSearch: false }}
+        activeProps={activeProps}
+        className={linkClassName}
+        params={{ datasetMfid: resource.unique_id }}
+        preload={false}
+        search={{ preview: undefined }}
+        to="/datasets/$datasetMfid/graph"
+      >
+        Graph
+      </Link>
+      {resource.capabilities?.can_manage_access === true ||
+      resource.capabilities?.can_transfer === true ? (
         <Link
           activeOptions={{ includeSearch: false }}
           activeProps={activeProps}
@@ -284,60 +328,6 @@ function ResourceNavigation({
         </Link>
       ) : null}
     </nav>
-  )
-}
-
-function ResourceContextCard({
-  resource,
-}: {
-  resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Context</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <dl className="flex flex-col gap-4">
-          <div className="min-w-0">
-            <dt className="text-supporting text-muted-foreground">Project</dt>
-            <dd className="mt-1 text-body break-words">
-              {resource.project ? (
-                <Link
-                  className="text-label hover:underline"
-                  params={{ projectMfid: resource.project.unique_id }}
-                  to="/projects/$projectMfid"
-                >
-                  {resource.project.title ?? resource.project.project_id}
-                </Link>
-              ) : (
-                (resource.project_id ?? "Not assigned")
-              )}
-            </dd>
-          </div>
-          {resource.kind === "dataset" && (
-            <div className="min-w-0">
-              <dt className="text-supporting text-muted-foreground">
-                Instrument
-              </dt>
-              <dd className="mt-1 text-body break-words">
-                {resource.instrument ? (
-                  <Link
-                    className="text-label hover:underline"
-                    params={{ instrumentMfid: resource.instrument.unique_id }}
-                    to="/instruments/$instrumentMfid"
-                  >
-                    {resource.instrument.instrument_name}
-                  </Link>
-                ) : (
-                  (resource.instrument_id ?? "Not recorded")
-                )}
-              </dd>
-            </div>
-          )}
-        </dl>
-      </CardContent>
-    </Card>
   )
 }
 

@@ -32,7 +32,6 @@ import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 import { selectRecentResources } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { formatDate } from "@/lib/format"
-import { cn } from "@/lib/utils"
 
 const homeProjectLimit = 5
 const homeRecentResourceLimit = 5
@@ -176,7 +175,7 @@ function HomePage() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <h2 id="home-projects-title">Your projects</h2>
+                  <h2 id="home-projects-title">Projects you can access</h2>
                 </CardTitle>
                 <CardAction>
                   <Link
@@ -245,15 +244,7 @@ function RecentResourceLink({ item }: { item: HomeRecentResource }) {
             : "/datasets/$datasetMfid"
         }
       >
-        <ResourceTypeIcon
-          className={cn(
-            "mt-0.5 shrink-0",
-            item.kind === "dataset"
-              ? "text-(--resource-dataset)"
-              : "text-(--resource-sample)"
-          )}
-          type={item.kind}
-        />
+        <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-label">{recentResourceName(item)}</p>
           {context && (
@@ -285,10 +276,7 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
         params={{ projectMfid: project.unique_id }}
         to="/projects/$projectMfid"
       >
-        <ResourceTypeIcon
-          className="mt-0.5 shrink-0 text-(--resource-project)"
-          type="project"
-        />
+        <ResourceTypeIcon className="mt-0.5 shrink-0" type="project" />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <p className="min-w-0 truncate text-label">

@@ -2,7 +2,7 @@
 
 Status: Phase 0 implementation contract
 
-Date: 2026-09-02
+Date: 2026-09-06
 
 ## Scope and authority
 
@@ -10,14 +10,15 @@ This document owns Hub runtime boundaries, execution model, security posture, an
 
 Hub owns browser presentation, interaction, sessions, client state, and bounded web-specific aggregation. `crucible-api` owns authorization, persistence, ingestion, resource semantics, and the OpenAPI contract. Hub capabilities guide presentation only. The API authorizes every operation.
 
-| Concern                                              | Authority                                             |
-| ---------------------------------------------------- | ----------------------------------------------------- |
-| HTTP contract, authorization, and pagination         | `crucible-api` and its deterministic OpenAPI artifact |
-| Python and CLI                                       | `nano-crucible`                                       |
-| Mobile-local behavior                                | `crucible-lens`                                       |
-| Generic graph and specialized viewers until migrated | `crucible_graph_explorer`                             |
-| Cross-repository ownership and compatibility         | `crucible-ecosystem`                                  |
-| Hub web behavior, sessions, and design system        | `crucible-hub`                                        |
+| Concern                                               | Authority                                             |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| HTTP contract, authorization, and pagination          | `crucible-api` and its deterministic OpenAPI artifact |
+| Python and CLI                                        | `nano-crucible`                                       |
+| Mobile-local behavior                                 | `crucible-lens`                                       |
+| Bounded sample and dataset resource graph behavior    | `crucible-hub`                                        |
+| Advanced graph and specialized viewers until migrated | `crucible_graph_explorer`                             |
+| Cross-repository ownership and compatibility          | `crucible-ecosystem`                                  |
+| Hub web behavior, sessions, and design system         | `crucible-hub`                                        |
 
 ## Runtime and trust boundaries
 
@@ -71,13 +72,15 @@ Use nested routes for persistent entity identity. Parent identity, breadcrumbs, 
 
 Server functions validate intent, authenticate, call the API, return the minimum confirmed representation, update exact cache data, and invalidate only dependent views. Failed fields, rows, panels, files, and workflow steps retain their drafts and readable context. Optimism is allowed only with deterministic rollback that cannot misrepresent authority or scientific provenance. ACL changes, ownership transfer, project moves, relationships, deletion, uploads, and metadata default to server-confirmed state.
 
-Multi-stage create, upload, thumbnail, and ingestion workflows record only safe completed-stage identifiers. A retry starts at the first incomplete stage and never recreates a durable resource. Secrets and signed URLs are reacquired, not checkpointed.
+Multi-stage create, relationship, upload, thumbnail, and ingestion workflows record only safe completed-stage identifiers returned by the API. Hub omits canonical MFIDs from creation input and locks structural creation after a confirmed response. It does not automatically retry an uncertain create because the API has no idempotency contract; it retains the draft and directs the user to check Data before resubmitting. After confirmation, a retry starts at the first incomplete relationship or file stage and never recreates a durable resource. Secrets and signed URLs are reacquired, not checkpointed.
 
-Canonical sample and dataset routes share one generic detail representation but retain type-specific paths. Descriptive edits, scientific metadata, deletion requests, project and instrument Settings, direct membership, access, lifecycle, ownership, and assignments are independent workflows. Use the decisions for their UI and mutation constraints. Direct project membership is implemented for fixture and local-development work: add existing users immediately, change roles, remove members, or self-leave through the API contract. It has no invitation workflow and must not be exposed in production until session authentication is accepted and deployed.
+Canonical sample and dataset routes share one generic detail representation but retain type-specific paths. Descriptive edits, scientific metadata, deletion requests, project and instrument Settings, direct membership, access, lifecycle, operators, ownership, registration, and assignments are independent workflows. Use the decisions for their UI and mutation constraints. Instrument lifecycle is a route-backed Settings subsection gated by `can_change_status`; it uses the dedicated status operation, confirms decommissioning, and applies no optimistic state. Instrument operators use the dedicated list, add, and remove operations, resolve service accounts through exact filtered lookup, replace the complete returned operator list, and confirm removal. Instrument registration is a dedicated human-only presentation route that omits owner and trusts the returned canonical MFID. Direct project membership is implemented for fixture and local-development work: add existing users immediately, change roles, remove members, or self-leave through the API contract. It has no invitation workflow and must not be exposed in production until session authentication is accepted and deployed.
+
+Ownership transfers and sample or dataset project moves use API preview before explicit confirmation as defined by decision 0024. Project moves resolve a selected project MFID to its current project ID at the server boundary. Confirmed responses update only represented fields before dependent Query invalidation. Dataset instrument assignment remains read-only because no dedicated operation exists.
 
 Resource relationship management is a canonical-page workflow for supported sample and dataset parent-child and cross-type associations. Direction is explicit, add uses a bounded type search in an accessible dialog, and unlink is confirmed without deleting either resource. The source's exact `can_edit` capability guides presentation, but the API authorizes both source and target. After mutation the current adapter rereads authoritative exact source and target relationship representations; Hub applies no optimistic update and replaces only those exact detail caches because lightweight collections do not contain relationships. The inspector remains read-only. Self-links, invalid pairs, duplicates, cycles, and target validation are API-defined errors, not client-invented authorization. Production exposure waits for the relationship-specific capability, error, validation, and typed response contract; local API-key development does not waive the production authentication gate.
 
-Resource access management uses route-backed `/samples/:sampleMfid/access` and `/datasets/:datasetMfid/access` children under a shared canonical resource shell. The parent keeps the persistent header and Overview or Access navigation mounted. Access ACL data is requested only on Access entry, with preload disabled. Exact `can_manage_access` controls the manager-only surface; public controls are separate, and user or project grants cannot exceed `max_grant_role`. Owner, service-account, instrument, system, and unknown principals are read-only. Publish, unpublish, and revoke require confirmation. Server-confirmed mutations replace the authoritative ACL representation with no optimistic update.
+Resource access management uses route-backed `/samples/:sampleMfid/access` and `/datasets/:datasetMfid/access` children under a shared canonical resource shell. The parent keeps the persistent header and Overview, Graph, and Access navigation mounted. Access ACL data is requested only on Access entry, with preload disabled. Exact `can_manage_access` controls the manager-only surface, including project assignment; Overview Summary presents the current project and acquisition instrument as read-only context. Public controls are separate, and user or project grants cannot exceed `max_grant_role`. Owner, service-account, instrument, system, and unknown principals are read-only. Publish, unpublish, revoke, and assignment require confirmation. Server-confirmed mutations replace authoritative state with no optimistic update.
 
 ## Errors, privacy, and deployment
 

@@ -35,6 +35,7 @@ export async function readWorkspaceAccount(
     unique_id: result.data.unique_id,
     username: result.data.username,
     first_name: result.data.first_name,
+    is_service_account: result.data.is_service_account ?? false,
     last_name: result.data.last_name,
   }
 }

@@ -65,7 +65,9 @@ function ProjectWorkspace() {
   const membership = projectMembershipActions(project, scope[2])
   const hasSettings =
     complete &&
-    (project.capabilities?.can_edit === true || membership.canUseMembership)
+    (project.capabilities?.can_edit === true ||
+      membership.canUseMembership ||
+      project.capabilities?.can_transfer === true)
 
   return (
     <PageLayout>

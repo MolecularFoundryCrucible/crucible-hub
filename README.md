@@ -4,7 +4,7 @@ Crucible Hub is the browser workspace for finding, organizing, understanding, sh
 
 ## Status
 
-The TanStack Start foundation, desktop design system, identity-scoped read workspace, resource inspection, controlled resource and project settings edits, deterministic fixtures, browser coverage, production runtime checks, and CI are implemented. Production authentication is blocked by the API-owned one-time login exchange and Hub session boundary. No deployment or release process exists.
+The TanStack Start foundation, desktop design system, identity-scoped read workspace, resource inspection and bounded graph traversal, dedicated project, sample, and dataset creation, controlled resource and project settings edits, resource access and membership, instrument lifecycle and operator management, ownership and project transfers, instrument registration, deterministic fixtures, browser coverage, production runtime checks, and CI are implemented for local development. Production authentication is blocked by the API-owned one-time login exchange and Hub session boundary. Browser upload remains blocked on a secure exact-object capability and verified CORS behavior. No deployment or release process exists.
 
 Hub follows the API contract owned by `crucible-api`, cross-repository policy from `crucible-ecosystem`, interaction lessons from `crucible-lens`, and incremental convergence with `crucible_graph_explorer`. `nano-crucible` remains the Python and CLI interface.
 

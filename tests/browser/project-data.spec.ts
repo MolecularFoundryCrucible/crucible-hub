@@ -23,6 +23,11 @@ test("consolidates read-only people and access into Overview", async ({
   await expect(
     page.getByText("Scientific metadata", { exact: true })
   ).toBeVisible()
+  await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
+    "Project details",
+    "Scientific metadata",
+    "People",
+  ])
   await expect(
     page.getByText("electrocatalysis", { exact: true })
   ).toBeVisible()

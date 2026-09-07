@@ -8,6 +8,11 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
+- Added route-backed one-hop relationship graphs for samples and datasets, with lazy loading, resource inspection, canonical rerooting, and an equivalent accessible relationship table.
+- Added global and contextual entry points for dedicated project, sample, dataset, and eligible instrument creation, with bounded identity selectors, local-time timestamps, API-assigned canonical navigation, retained failure state, explicit uncertain-outcome handling, and separately recoverable dataset relationships without file upload.
+- Added instrument registration for human accounts, service-account operator management, and separate ownership transfer settings with server-resolved confirmation and authoritative cache refresh.
+- Added preview-confirm ownership transfer for projects, instruments, samples, and datasets, plus atomic sample and dataset project moves from resource Context.
+- Added capability-gated instrument lifecycle management with URL-backed status-filtered directories, active, maintenance, and decommissioned states, explicit decommission confirmation, retained failure state, and authoritative non-optimistic updates.
 - Added route-backed resource Access pages for samples and datasets with lazy ACL loading, capability-gated management, bounded user and project grants, read-only ownership and system principals, confirmed public and revoke actions, and server-confirmed non-optimistic updates.
 - Added capability-guided relationship management to canonical sample and dataset pages, with compact add and manage actions, navigation-only normal rows, explicit unlink mode, bounded target search, confirmed unlink without resource deletion, retained failure state, and authoritative source and target refresh.
 - Added capability-guided project member management with direct member addition, bounded role changes, confirmed removal, and voluntary project leave.
@@ -54,6 +59,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Coalesced sample and dataset project and instrument context into Summary and standardized semantic card widths and DOM order so compact actions can share rows, forms and management lists stay readable, and single-column resource layouts end with Scientific metadata.
+- Moved sample and dataset project assignment from Overview context into the capability-gated Access workflow.
 - Pinned and self-hosted the interface font so typography and visual validation remain consistent across developer and CI environments.
 - Made TanStack skill commands invoke the pinned Intent CLI unambiguously when dependencies expose competing `intent` executables.
 - Clarified project navigation and page responsibilities: Overview owns project details, scientific metadata, and read-only people; capability-gated Settings owns General and direct member management; project status remains in the persistent header.
@@ -74,6 +81,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Fixed
 
+- Standardized resource and access-principal icons with shared semantic colors, including cyan-teal person identity in Direct access and throughout the workspace.
+- Improved compact Data readability, creation validation and discard behavior, graph rendering and controls, visible management actions, field error associations, compact creation access, route titles, and fixture browser coverage for creation and consequential mutations.
 - Restored the visible forward arrow inside Data table full-page actions while preserving their accessible labels, tooltips, and fixed geometry.
 - Kept readable collections and dataset detail available during refresh or file-panel failures, limited Data requests to the selected resource types, and added focused retries.
 - Distinguished unavailable project membership from an empty member list, linked Home's recent datasets to detail in creation order, and included public-safe person detail in SSR hydration.

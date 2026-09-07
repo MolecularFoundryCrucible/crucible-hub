@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 
-import { personDetailInputSchema } from "./people.functions"
+import {
+  personDetailInputSchema,
+  serviceAccountLookupInputSchema,
+} from "./people.functions"
 
 describe("person server-function inputs", () => {
   it("accepts a stable person identifier", () => {
@@ -14,5 +17,13 @@ describe("person server-function inputs", () => {
     expect(personDetailInputSchema.safeParse({ personId: " " }).success).toBe(
       false
     )
+  })
+
+  it("normalizes an exact service-account reference", () => {
+    expect(
+      serviceAccountLookupInputSchema.parse({
+        reference: " beamline-collector ",
+      })
+    ).toEqual({ reference: "beamline-collector" })
   })
 })

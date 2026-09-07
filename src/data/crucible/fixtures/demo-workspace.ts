@@ -59,7 +59,7 @@ const capabilities = {
   can_change_status: true,
   can_edit: true,
   can_manage_access: true,
-  can_transfer: false,
+  can_transfer: true,
   max_grant_role: "admin",
 } satisfies Schema<"ResourceCapabilities">
 
@@ -107,7 +107,7 @@ export const demoWorkspace = {
       organization: "Example National Laboratory",
       project_lead_orcid: account.unique_id,
       status: "active",
-      capabilities: { ...capabilities, can_transfer: true },
+      capabilities,
       lead: account,
       scientific_metadata: {
         research_area: "electrocatalysis",

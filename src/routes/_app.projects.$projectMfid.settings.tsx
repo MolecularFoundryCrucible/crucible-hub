@@ -23,9 +23,10 @@ function ProjectSettingsLayout() {
   }
 
   const canEditDescription = project.capabilities?.can_edit === true
+  const canTransferOwnership = project.capabilities?.can_transfer === true
   const { canUseMembership } = projectMembershipActions(project, scope[2])
 
-  if (!canEditDescription && !canUseMembership) {
+  if (!canEditDescription && !canUseMembership && !canTransferOwnership) {
     return <SettingsUnavailable />
   }
 
@@ -55,6 +56,17 @@ function ProjectSettingsLayout() {
             to="/projects/$projectMfid/settings/members"
           >
             Members
+          </Link>
+        ) : null}
+        {canTransferOwnership ? (
+          <Link
+            activeOptions={{ includeSearch: false }}
+            activeProps={{ className: "text-label text-foreground underline" }}
+            className="text-body text-muted-foreground hover:text-foreground"
+            params={{ projectMfid }}
+            to="/projects/$projectMfid/settings/ownership"
+          >
+            Ownership
           </Link>
         ) : null}
       </nav>

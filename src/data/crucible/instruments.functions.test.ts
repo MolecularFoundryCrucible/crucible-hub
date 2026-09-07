@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import {
   instrumentDescriptiveUpdateInputSchema,
+  instrumentCreateInputSchema,
+  instrumentLifecycleUpdateInputSchema,
+  instrumentListInputSchema,
   INSTRUMENT_DESCRIPTION_MAX_LENGTH,
   INSTRUMENT_NAME_MAX_LENGTH,
 } from "./instruments.functions"
@@ -73,4 +76,91 @@ describe("instrument update server function input", () => {
   ])("rejects invalid or no-op changes %#", (input) => {
     expect(() => instrumentDescriptiveUpdateInputSchema.parse(input)).toThrow()
   })
+})
+
+describe("instrument lifecycle server function input", () => {
+  it.each(["active", "maintenance", "decommissioned"] as const)(
+    "accepts the %s lifecycle status",
+    (status) => {
+      expect(
+        instrumentLifecycleUpdateInputSchema.parse({
+          instrumentMfid: " instrument-mfid ",
+          scenario: "dense",
+          status,
+        })
+      ).toEqual({
+        instrumentMfid: "instrument-mfid",
+        scenario: "dense",
+        status,
+      })
+    }
+  )
+
+  it.each([
+    { instrumentMfid: "instrument-mfid", status: "retired" },
+    { instrumentMfid: "instrument/mfid", status: "active" },
+    { instrumentMfid: "instrument-mfid" },
+    { instrumentMfid: "instrument-mfid", status: "active", extra: true },
+  ])("rejects an invalid lifecycle request %#", (input) => {
+    expect(() => instrumentLifecycleUpdateInputSchema.parse(input)).toThrow()
+  })
+})
+
+describe("instrument list server function input", () => {
+  it("accepts a lifecycle status filter", () => {
+    expect(
+      instrumentListInputSchema.parse({
+        limit: 20,
+        offset: 0,
+        status: "decommissioned",
+      })
+    ).toEqual({ limit: 20, offset: 0, status: "decommissioned" })
+  })
+
+  it("rejects an unknown lifecycle status filter", () => {
+    expect(() =>
+      instrumentListInputSchema.parse({
+        limit: 20,
+        offset: 0,
+        status: "retired",
+      })
+    ).toThrow()
+  })
+})
+
+describe("instrument registration server function input", () => {
+  it("normalizes the supported registration fields", () => {
+    expect(
+      instrumentCreateInputSchema.parse({
+        instrument: {
+          description: null,
+          instrument_id: " beamline-1 ",
+          instrument_name: " New instrument ",
+          location: " Beamline 1 ",
+        },
+      })
+    ).toEqual({
+      instrument: {
+        description: null,
+        instrument_id: "beamline-1",
+        instrument_name: "New instrument",
+        location: "Beamline 1",
+      },
+    })
+  })
+
+  it.each(["ab", "starts with spaces", "instrument/one", "x".repeat(26)])(
+    "rejects invalid instrument ID %s",
+    (instrumentId) => {
+      expect(() =>
+        instrumentCreateInputSchema.parse({
+          instrument: {
+            instrument_id: instrumentId,
+            instrument_name: "New instrument",
+            location: "Beamline 1",
+          },
+        })
+      ).toThrow()
+    }
+  )
 })

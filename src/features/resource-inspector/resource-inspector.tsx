@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react"
 import type { MouseEventHandler, ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 
+import { ExploreGraphFocusIcon } from "@/components/crucible/icons"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
@@ -133,6 +135,13 @@ export function ResourceInspector({
         </div>
         {navigation.preview && (
           <SheetFooter>
+            {navigation.host.kind === "resource" &&
+            navigation.host.section === "graph" ? (
+              <ResourceGraphFocusLink
+                onClick={suppressFocusRestore}
+                resource={resource}
+              />
+            ) : null}
             <ResourceFullPageLink
               kind={resource?.kind}
               mfid={resource?.unique_id ?? navigation.preview}
@@ -144,6 +153,56 @@ export function ResourceInspector({
         )}
       </SheetContent>
     </Sheet>
+  )
+}
+
+function ResourceGraphFocusLink({
+  onClick,
+  resource,
+}: {
+  onClick: MouseEventHandler<HTMLAnchorElement>
+  resource: WorkspaceResourceDetail | null | undefined
+}) {
+  const children = (
+    <>
+      <ExploreGraphFocusIcon aria-hidden="true" data-icon="inline-start" />
+      Explore from here
+    </>
+  )
+  if (resource?.kind === "sample") {
+    return (
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        onClick={onClick}
+        params={{ sampleMfid: resource.unique_id }}
+        preload={false}
+        search={{ preview: undefined }}
+        state={{}}
+        to="/samples/$sampleMfid/graph"
+      >
+        {children}
+      </Link>
+    )
+  }
+  if (resource?.kind === "dataset") {
+    return (
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        onClick={onClick}
+        params={{ datasetMfid: resource.unique_id }}
+        preload={false}
+        search={{ preview: undefined }}
+        state={{}}
+        to="/datasets/$datasetMfid/graph"
+      >
+        {children}
+      </Link>
+    )
+  }
+  return (
+    <Button disabled type="button" variant="outline">
+      {children}
+    </Button>
   )
 }
 

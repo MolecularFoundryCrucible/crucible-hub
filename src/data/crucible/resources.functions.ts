@@ -10,8 +10,11 @@ import {
   requestWorkspaceResourceDeletion,
   patchWorkspaceDatasetDescription,
   patchWorkspaceSampleDescription,
+  reassignWorkspaceResourceProject,
   readWorkspaceDatasetFiles,
   readWorkspaceResource,
+  readWorkspaceResourceGraph,
+  transferWorkspaceResourceOwnership,
   writeWorkspaceResourceMetadata,
 } from "./resources.server"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
@@ -287,6 +290,22 @@ export const resourceDeletionRequestInputSchema = z
   })
   .strict()
 
+const ownershipTransferInputSchema = z
+  .object({
+    newOwner: z.string().trim().min(1).max(255),
+    resourceMfid: canonicalResourceMfidSchema,
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
+
+const projectReassignmentInputSchema = z
+  .object({
+    projectMfid: canonicalResourceMfidSchema,
+    resourceMfid: canonicalResourceMfidSchema,
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
+
 const relationshipOperationFields = {
   action: z.enum(["link", "unlink"]),
   scenario: fixtureScenarioSchema.optional(),
@@ -361,6 +380,20 @@ export const getWorkspaceDatasetFiles = createServerFn({ method: "GET" })
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceDatasetFiles(
         data.datasetMfid,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const getWorkspaceResourceGraph = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(resourceMfidInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceResourceGraph(
+        data.resourceMfid,
         data.scenario,
         context.requestSignal
       )
@@ -444,6 +477,78 @@ export const createWorkspaceResourceDeletionRequest = createServerFn({
       requestWorkspaceResourceDeletion(
         data.resourceMfid,
         data.reason,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const previewWorkspaceResourceOwnership = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(ownershipTransferInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      transferWorkspaceResourceOwnership(
+        data.resourceMfid,
+        data.newOwner,
+        false,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const confirmWorkspaceResourceOwnership = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(ownershipTransferInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      transferWorkspaceResourceOwnership(
+        data.resourceMfid,
+        data.newOwner,
+        true,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const previewWorkspaceResourceProjectAssignment = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(projectReassignmentInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      reassignWorkspaceResourceProject(
+        data.resourceMfid,
+        data.projectMfid,
+        false,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const confirmWorkspaceResourceProjectAssignment = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(projectReassignmentInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      reassignWorkspaceResourceProject(
+        data.resourceMfid,
+        data.projectMfid,
+        true,
         data.scenario,
         context.requestSignal
       )

@@ -67,10 +67,7 @@ export function InstrumentDatasetCollection({
                   <TableRow key={dataset.unique_id}>
                     <TableCell>
                       <div className="flex min-w-0 items-center gap-2">
-                        <ResourceTypeIcon
-                          className="shrink-0 text-(--resource-dataset)"
-                          type="dataset"
-                        />
+                        <ResourceTypeIcon className="shrink-0" type="dataset" />
                         <div className="min-w-0">
                           <Link
                             className="block truncate text-label hover:underline"

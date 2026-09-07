@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { readWorkspacePerson } from "./people.server"
+import {
+  lookupWorkspaceServiceAccount,
+  readWorkspacePerson,
+} from "./people.server"
 
 describe("workspace person source", () => {
   afterEach(() => {
@@ -51,5 +54,43 @@ describe("workspace person source", () => {
       "Bearer local-test-key"
     )
     expect(JSON.stringify(person)).not.toContain("private@example.invalid")
+  })
+
+  it("uses exact filtered lookup for a service account", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return Response.json({
+          items: [
+            {
+              first_name: "Beamline",
+              is_service_account: true,
+              last_name: "Collector",
+              unique_id: "service-account-mfid",
+              username: "beamline-collector",
+            },
+          ],
+          limit: 1,
+          offset: 0,
+          total: 1,
+        })
+      })
+    )
+
+    await expect(
+      lookupWorkspaceServiceAccount("beamline-collector")
+    ).resolves.toMatchObject({ unique_id: "service-account-mfid" })
+    expect(Object.fromEntries(new URL(requests[0].url).searchParams)).toEqual({
+      is_service_account: "true",
+      limit: "1",
+      permissive: "false",
+      username: "beamline-collector",
+    })
   })
 })

@@ -1,11 +1,13 @@
 import { useId, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 
 import {
   AddRelationshipIcon,
   FinishManagingRelationshipsIcon,
   ManageRelationshipsIcon,
   RelationshipPendingIcon,
+  ResourceGraphIcon,
   UnlinkRelationshipIcon,
 } from "@/components/crucible/icons"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
@@ -21,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -53,6 +55,7 @@ import {
 } from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
+import { crucibleKeys } from "@/data/crucible/query-keys"
 import { mutateWorkspaceResourceRelationship } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
@@ -121,6 +124,9 @@ export function ResourceRelationshipManager({
         resourceQueryOptions(scope, detail.unique_id).queryKey,
         detail
       )
+      void queryClient.invalidateQueries({
+        queryKey: crucibleKeys.resourceGraph(scope, detail.unique_id),
+      })
     }
     if (
       result.source.unique_id === resource.unique_id &&
@@ -157,62 +163,61 @@ export function ResourceRelationshipManager({
         <CardTitle aria-level={2} role="heading">
           Relationships
         </CardTitle>
-        {canManage ? (
-          <CardAction>
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger render={<span className="inline-flex" />}>
-                  <Button
-                    aria-label={`Add relationship to ${resource.name}`}
-                    onClick={() => setAddOpen(true)}
-                    size="icon-sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    <AddRelationshipIcon aria-hidden="true" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Add relationship to{" "}
-                  <ResourceName>{resource.name}</ResourceName>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger render={<span className="inline-flex" />}>
-                  <Button
-                    aria-label={
-                      managementMode
-                        ? `Finish managing relationships for ${resource.name}`
-                        : !hasRelationships
-                          ? `No relationships to manage for ${resource.name}`
-                          : `Manage relationships for ${resource.name}`
-                    }
-                    aria-pressed={managementMode}
-                    disabled={!hasRelationships}
-                    onClick={() => setManaging((current) => !current)}
-                    size="icon-sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    {managementMode ? (
-                      <FinishManagingRelationshipsIcon aria-hidden="true" />
-                    ) : (
-                      <ManageRelationshipsIcon aria-hidden="true" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {managementMode
-                    ? "Done managing relationships for "
-                    : !hasRelationships
-                      ? "No relationships to manage for "
-                      : "Manage relationships for "}
-                  <ResourceName>{resource.name}</ResourceName>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </CardAction>
-        ) : null}
+        <CardAction>
+          <div className="flex items-center gap-1">
+            <ResourceGraphLink resource={resource} />
+            {canManage ? (
+              <>
+                <Button
+                  aria-label={`Add relationship to ${resource.name}`}
+                  onClick={() => setAddOpen(true)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <AddRelationshipIcon
+                    aria-hidden="true"
+                    data-icon="inline-start"
+                  />
+                  Add relationship
+                </Button>
+                <Tooltip>
+                  <TooltipTrigger render={<span className="inline-flex" />}>
+                    <Button
+                      aria-label={
+                        managementMode
+                          ? `Finish managing relationships for ${resource.name}`
+                          : !hasRelationships
+                            ? `No relationships to manage for ${resource.name}`
+                            : `Manage relationships for ${resource.name}`
+                      }
+                      aria-pressed={managementMode}
+                      disabled={!hasRelationships}
+                      onClick={() => setManaging((current) => !current)}
+                      size="icon-sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      {managementMode ? (
+                        <FinishManagingRelationshipsIcon aria-hidden="true" />
+                      ) : (
+                        <ManageRelationshipsIcon aria-hidden="true" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {managementMode
+                      ? "Done managing relationships for "
+                      : !hasRelationships
+                        ? "No relationships to manage for "
+                        : "Manage relationships for "}
+                    <ResourceName>{resource.name}</ResourceName>
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            ) : null}
+          </div>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <ResourceRelationships
@@ -315,6 +320,39 @@ export function ResourceRelationshipManager({
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+  )
+}
+
+function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
+  const link =
+    resource.kind === "sample" ? (
+      <Link
+        aria-label={`Explore graph for ${resource.name}`}
+        className={buttonVariants({ size: "icon-sm", variant: "outline" })}
+        params={{ sampleMfid: resource.unique_id }}
+        preload={false}
+        search={{ preview: undefined }}
+        to="/samples/$sampleMfid/graph"
+      />
+    ) : (
+      <Link
+        aria-label={`Explore graph for ${resource.name}`}
+        className={buttonVariants({ size: "icon-sm", variant: "outline" })}
+        params={{ datasetMfid: resource.unique_id }}
+        preload={false}
+        search={{ preview: undefined }}
+        to="/datasets/$datasetMfid/graph"
+      />
+    )
+  return (
+    <Tooltip>
+      <TooltipTrigger render={link}>
+        <ResourceGraphIcon aria-hidden="true" />
+      </TooltipTrigger>
+      <TooltipContent>
+        Explore graph for <ResourceName>{resource.name}</ResourceName>
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

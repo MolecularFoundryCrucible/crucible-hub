@@ -11,7 +11,7 @@ export type WorkspacePerson = Pick<
 
 export type WorkspaceAccount = Pick<
   Schema<"UserRead">,
-  "first_name" | "last_name" | "unique_id" | "username"
+  "first_name" | "is_service_account" | "last_name" | "unique_id" | "username"
 >
 
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
@@ -46,6 +46,13 @@ export type WorkspaceProjectReference = Pick<
   Schema<"ProjectReferenceRead">,
   "project_id" | "title" | "unique_id"
 >
+
+export type WorkspaceProjectCreate = {
+  organization: string
+  project_id: string
+  project_lead: string
+  title: string
+}
 
 export type WorkspaceProjectRelation = "assigned" | "shared"
 
@@ -120,7 +127,73 @@ export type WorkspaceInstrumentDescriptiveUpdate = {
   unique_id: string
 }
 
+export type WorkspaceInstrumentLifecycleUpdate = {
+  modification_time: string | null
+  status: WorkspaceInstrumentStatus
+  unique_id: string
+}
+
+export type WorkspaceInstrumentStatus = Schema<"InstrumentStatus">
+
+export type WorkspaceInstrumentOperator = Schema<"AccessGroupMemberRead">
+
+export type WorkspaceInstrumentCreate = Pick<
+  Schema<"InstrumentCreate">,
+  | "description"
+  | "instrument_id"
+  | "instrument_name"
+  | "instrument_type"
+  | "location"
+  | "manufacturer"
+  | "model"
+  | "other_id"
+  | "other_id_source"
+>
+
+export type WorkspaceSampleCreate = {
+  description: string | null
+  projectMfid: string
+  public: boolean
+  sample_name: string
+  sample_type: string | null
+  timestamp: string | null
+}
+
+export type WorkspaceDatasetCreate = {
+  data_format: string | null
+  data_type: string | null
+  dataset_name: string
+  instrumentMfid: string | null
+  measurement: string | null
+  projectMfid: string
+  public: boolean
+  session_name: string | null
+  timestamp: string | null
+}
+
+export type WorkspaceOwnershipTransfer = Schema<"TransferOwnershipRead">
+
+export type WorkspaceProjectReassignment = Schema<"ReassignProjectRead">
+
 export type WorkspaceLinkedResource = Schema<"LinkedResource">
+
+export type WorkspaceResourceGraphNode = {
+  kind: "dataset" | "sample"
+  name: string
+  unique_id: string
+}
+
+export type WorkspaceResourceGraphEdge = {
+  relationship: "associated" | "parent"
+  source: string
+  target: string
+}
+
+export type WorkspaceResourceGraph = {
+  edges: readonly WorkspaceResourceGraphEdge[]
+  nodes: readonly WorkspaceResourceGraphNode[]
+  rootMfid: string
+}
 
 export type WorkspaceResourceAccessGrant = Schema<"AccessGrantRead">
 

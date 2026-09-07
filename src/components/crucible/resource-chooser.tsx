@@ -23,15 +23,18 @@ import { Input } from "@/components/ui/input"
 import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 
-type ResourceChooserKind = "instrument" | "project"
+export type ResourceChooserKind = "instrument" | "person" | "project" | "sample"
 
 const resourceLabels = {
   instrument: { plural: "instruments", singular: "Instrument" },
+  person: { plural: "people", singular: "Person" },
   project: { plural: "projects", singular: "Project" },
+  sample: { plural: "samples", singular: "Sample" },
 } satisfies Record<ResourceChooserKind, { plural: string; singular: string }>
 
 export function ResourceChooser({
   describedBy,
+  emptyLabel,
   invalid = false,
   kind,
   onChange,
@@ -39,6 +42,7 @@ export function ResourceChooser({
   value,
 }: {
   describedBy?: string
+  emptyLabel?: string
   invalid?: boolean
   kind: ResourceChooserKind
   onChange: (value: WorkspaceSearchResult | undefined) => void
@@ -110,7 +114,9 @@ export function ResourceChooser({
           </p>
         </div>
       ) : (
-        <p className="text-body text-muted-foreground">All {labels.plural}</p>
+        <p className="text-body text-muted-foreground">
+          {emptyLabel ?? `All ${labels.plural}`}
+        </p>
       )}
       <div className="flex flex-wrap gap-2">
         <Dialog onOpenChange={changeOpen} open={open}>

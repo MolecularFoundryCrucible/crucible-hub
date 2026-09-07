@@ -13,7 +13,8 @@ import {
 
 export function useDiscardProtection(
   isDirty: boolean | (() => boolean),
-  onDiscard: () => void
+  onDiscard: () => void,
+  cancelNavigates = false
 ) {
   const dirty = useRef(isDirty)
   dirty.current = isDirty
@@ -46,6 +47,10 @@ export function useDiscardProtection(
       open: cancelRequested || blocker.status === "blocked",
     },
     requestCancel: () => {
+      if (cancelNavigates) {
+        onDiscard()
+        return
+      }
       if (shouldBlock()) {
         setCancelRequested(true)
         return

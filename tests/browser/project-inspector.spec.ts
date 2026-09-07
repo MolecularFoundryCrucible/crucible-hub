@@ -125,7 +125,7 @@ test("project preview follows links, history, and full-page promotion", async ({
     name: "Open full page: Catalyst sample 2",
     exact: true,
   })
-  await expect(direct).toHaveText("")
+  await expect(direct.locator(".resource-full-page-link-label")).toBeHidden()
   await direct.click()
   await expect(page).toHaveURL(
     new RegExp(`/hub/samples/${sampleTwo}\\?scenario=dense`)

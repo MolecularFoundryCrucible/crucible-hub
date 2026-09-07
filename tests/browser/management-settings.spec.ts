@@ -187,6 +187,107 @@ test("instrument Settings preserves descriptive fields and updates the exact det
   )
 })
 
+test("instrument Lifecycle applies confirmed status changes and retains failed selections", async ({
+  page,
+}) => {
+  await page.goto(
+    `/hub/instruments/${instrumentMfid}/settings/lifecycle?scenario=populated`
+  )
+  await page.waitForLoadState("networkidle")
+
+  const settingsSections = page.getByRole("navigation", {
+    name: "Instrument settings sections",
+  })
+  await expect(
+    settingsSections.getByRole("link", { name: "Lifecycle", exact: true })
+  ).toHaveAttribute("aria-current", "page")
+
+  const card = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("Lifecycle", { exact: true }) })
+  const status = card.getByLabel("Status", { exact: true })
+  await expect(status).toHaveValue("active")
+
+  await status.selectOption("maintenance")
+  await card.getByRole("button", { name: "Update status" }).click()
+  await expect(
+    card.locator('[data-slot="badge"]').filter({ hasText: "Maintenance" })
+  ).toBeVisible()
+
+  let failDecommission = true
+  await page.route("**/hub/_serverFn/**", async (route) => {
+    if (failDecommission && serverFunctionPost(route.request())) {
+      failDecommission = false
+      await route.abort("failed")
+      return
+    }
+    await route.continue()
+  })
+
+  await status.selectOption("decommissioned")
+  await card.getByRole("button", { name: "Update status" }).click()
+  const dialog = page.getByRole("alertdialog", {
+    name: "Decommission instrument?",
+  })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole("button", { name: "Decommission" }).click()
+  await expect(dialog.getByRole("alert")).toContainText(
+    /instrument status could not be changed/i
+  )
+  await expect(status).toHaveValue("decommissioned")
+
+  await dialog.getByRole("button", { name: "Decommission" }).click()
+  await expect(dialog).toBeHidden()
+  await expect(
+    card.locator('[data-slot="badge"]').filter({ hasText: "Decommissioned" })
+  ).toBeVisible()
+})
+
+test("instrument Operators removes a service account after confirmation", async ({
+  page,
+}) => {
+  await page.goto(
+    `/hub/instruments/${instrumentMfid}/settings/operators?scenario=populated`
+  )
+  await page.waitForLoadState("networkidle")
+
+  const operators = page.getByRole("list", { name: "Instrument operators" })
+  await expect(operators.getByText("@beamline-collector")).toBeVisible()
+  await operators
+    .getByRole("button", { name: "Remove @beamline-collector" })
+    .click()
+
+  const dialog = page.getByRole("alertdialog", { name: "Remove operator?" })
+  await expect(dialog).toContainText("@beamline-collector")
+  await dialog.getByRole("button", { name: "Remove operator" }).click()
+  await expect(dialog).toBeHidden()
+  await expect(operators.getByText("@beamline-collector")).toHaveCount(0)
+})
+
+test("project Ownership previews and confirms the selected person", async ({
+  page,
+}) => {
+  await page.goto(
+    `/hub/projects/${projectMfid}/settings/ownership?scenario=populated`
+  )
+  await page.waitForLoadState("networkidle")
+
+  await page.getByRole("button", { name: "Choose person" }).click()
+  const chooser = page.getByRole("dialog", { name: "Choose a new owner" })
+  await chooser.getByLabel("Search people").fill("Jamie")
+  await chooser.getByRole("button", { name: /Jamie Patel/ }).click()
+
+  const confirmation = page.getByRole("alertdialog", {
+    name: "Transfer ownership?",
+  })
+  await expect(confirmation).toContainText("Jamie Patel")
+  await confirmation.getByRole("button", { name: "Confirm transfer" }).click()
+  await expect(confirmation).toBeHidden()
+  await expect(
+    page.getByText("Transfer ownership", { exact: true })
+  ).toHaveCount(0)
+})
+
 test("dirty instrument Settings edits block section navigation", async ({
   page,
 }) => {

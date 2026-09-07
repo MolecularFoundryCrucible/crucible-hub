@@ -3,6 +3,10 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
+import {
+  ContentGrid,
+  ContentGridItem,
+} from "@/components/crucible/content-layout"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { ProjectMembers } from "@/components/crucible/project-members"
@@ -58,46 +62,50 @@ function ProjectOverviewPage() {
   const { canUseMembership } = projectMembershipActions(project, scope[2])
 
   return (
-    <div className="grid min-w-0 gap-page-section xl:grid-cols-5">
-      <Card className="xl:col-span-3">
-        <CardHeader>
-          <CardTitle>Project details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label="Project ID" value={project.project_id} />
-            <Field label="Organization" value={project.organization} />
-            <ProjectLead project={project} />
-            <ProjectMfid project={project} />
-            <Field
-              label="Created"
-              value={formatLocalDateTime(project.creation_time)}
-            />
-            <Field
-              label="Updated"
-              value={formatLocalDateTime(project.modification_time)}
-            />
-          </dl>
-        </CardContent>
-      </Card>
+    <ContentGrid variant="detail">
+      <ContentGridItem span="wide">
+        <Card>
+          <CardHeader>
+            <CardTitle>Project details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <Field label="Project ID" value={project.project_id} />
+              <Field label="Organization" value={project.organization} />
+              <ProjectLead project={project} />
+              <ProjectMfid project={project} />
+              <Field
+                label="Created"
+                value={formatLocalDateTime(project.creation_time)}
+              />
+              <Field
+                label="Updated"
+                value={formatLocalDateTime(project.modification_time)}
+              />
+            </dl>
+          </CardContent>
+        </Card>
+      </ContentGridItem>
 
-      <Card className="xl:col-span-2">
-        <CardHeader>
-          <CardTitle>Scientific metadata</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScientificMetadata metadata={project.scientific_metadata} />
-        </CardContent>
-      </Card>
+      <ContentGridItem span="narrow">
+        <Card>
+          <CardHeader>
+            <CardTitle>Scientific metadata</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScientificMetadata metadata={project.scientific_metadata} />
+          </CardContent>
+        </Card>
+      </ContentGridItem>
 
-      <div className="xl:col-span-5">
+      <ContentGridItem span="wide">
         <ProjectMembers
           manageMembers={canUseMembership}
           members={project.members}
           projectMfid={project.unique_id}
         />
-      </div>
-    </div>
+      </ContentGridItem>
+    </ContentGrid>
   )
 }
 

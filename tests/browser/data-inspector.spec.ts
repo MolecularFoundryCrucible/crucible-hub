@@ -78,7 +78,7 @@ test("filtered paginated Data preview preserves the collection and restores focu
     name: "Open full page: Catalyst sample 51",
     exact: true,
   })
-  await expect(direct).toHaveText("")
+  await expect(direct.locator(".resource-full-page-link-label")).toBeHidden()
   await expect(direct.locator("svg")).toBeVisible()
   const collectionResponses: string[] = []
   const resourceResponses: string[] = []
@@ -164,7 +164,7 @@ test("Data preview follows relationships and promotes to a canonical page", asyn
     name: `Open full page: ${sampleOneName}`,
     exact: true,
   })
-  await expect(direct).toHaveText("")
+  await expect(direct.locator(".resource-full-page-link-label")).toBeHidden()
   await direct.click()
   await expect(page).toHaveURL(`/hub/samples/${sampleOne}?scenario=dense`)
   await page.goBack()

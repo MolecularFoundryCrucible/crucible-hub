@@ -37,3 +37,7 @@ A decision record does not override a contract owned by another Crucible reposit
 | [0020](0020-consolidate-project-overview-and-people.md)      | Accepted | Combined project Overview and people                                              |
 | [0021](0021-adopt-direct-project-membership-contract.md)     | Accepted | Direct project membership contract and cache coordination                         |
 | [0022](0022-manage-resource-relationships.md)                | Accepted | Canonical-page relationship management with bounded, confirmed mutations          |
+| [0023](0023-manage-instrument-lifecycle-separately.md)       | Accepted | Dedicated capability-gated instrument lifecycle management                        |
+| [0024](0024-preview-ownership-and-project-moves.md)          | Accepted | Preview-confirm ownership transfers and sample or dataset project moves           |
+| [0025](0025-let-api-assign-creation-mfids.md)                | Accepted | API-assigned creation MFIDs and explicit uncertain-outcome handling               |
+| [0026](0026-explore-bounded-resource-graphs.md)              | Accepted | Bounded route-backed resource graph traversal                                     |

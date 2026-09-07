@@ -54,11 +54,11 @@ Accessible and owned resources are distinct sets. Hub must not invent a personal
 
 ### Find and understand
 
-Scientists navigate from Home, Projects, Data, Instruments, Search, or an MFID link to canonical resource detail. Collections retain their context while an optional in-place inspector follows immediate relationships. Graphs are an alternate representation, never the only way to understand provenance.
+Scientists navigate from Home, Projects, Data, Instruments, Search, or an MFID link to canonical resource detail. Collections retain their context while an optional in-place inspector follows immediate relationships. Sample and dataset Graph tabs provide a bounded visual traversal from one resource to its readable neighbours, with the same information available as a relationship table. Graphs are an alternate representation, never the only way to understand provenance.
 
 ### Create and upload
 
-Creation selects a resource type and project, resolves referenced records, records descriptive and scientific metadata, creates the resource, and attaches files. Each completed stage remains visible after a later failure so retry never duplicates successful work.
+Creation uses dedicated project, sample, and dataset routes. Sample and dataset creation selects a project, dataset creation may select a registered instrument and associated samples, and all selectors retain canonical MFIDs while the server resolves mutable API slugs. Hub omits canonical identity from creation input and navigates by the API-assigned MFID. Structural creation is confirmed before scientific metadata, relationships, or files become later stages. Each completed stage remains visible after a later failure so retry never duplicates successful work.
 
 ### Manage resources and access
 
@@ -68,7 +68,7 @@ Project membership is separate from resource ACLs. Directly adding an existing p
 
 Relationship management is a separate resource workflow. Canonical sample and dataset pages may manage supported parent-child and cross-type associations with explicit direction, bounded type search, confirmed unlink, and no deletion of either resource. The API authorizes both resources; Hub capability guidance controls presentation only. Relationship controls do not appear in the inspector, and production exposure waits for the API relationship contract and Hub session gate.
 
-Resource access management is a separate canonical workflow at `/samples/:sampleMfid/access` and `/datasets/:datasetMfid/access`. It provides a persistent resource header with Overview and Access navigation, loads ACL data only on Access entry, and presents manager-only controls when the exact `can_manage_access` capability allows them. Public controls and bounded user or project grants are capability-aware, capped by `max_grant_role`, and confirmed before publish, unpublish, or revoke. Owner, service-account, instrument, system, and unknown grants remain read-only. Access mutations are server-confirmed and never optimistic.
+Resource access management is a separate canonical workflow at `/samples/:sampleMfid/access` and `/datasets/:datasetMfid/access`. It provides a persistent resource header with Overview, Graph, and Access navigation, loads ACL data only on Access entry, and presents manager-only controls when the exact `can_manage_access` capability allows them. Public controls, bounded user or project grants, and atomic primary-project assignment are capability-aware and explicitly confirmed where consequential. Owner, service-account, instrument, system, and unknown grants remain read-only. Access mutations are server-confirmed and never optimistic.
 
 ## Delivery direction
 

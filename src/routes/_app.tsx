@@ -67,6 +67,7 @@ export const Route = createFileRoute("/_app")({
           crucibleKeys.instruments(scope, {
             limit: instrumentPageLimit,
             offset: 0,
+            status: "active",
           }),
           {
             items: instruments.slice(0, instrumentPageLimit),

@@ -116,7 +116,9 @@ describe("ResourceFullPageLink", () => {
     })
     expect(link.className).toContain("size-7")
     expect(link.querySelector("svg")).toBeTruthy()
-    expect(screen.queryByText("Open")).toBeNull()
+    expect(screen.getByText("Open").className).toContain(
+      "resource-full-page-link-label hidden"
+    )
     expect(screen.getByRole("tooltip").textContent).toBe(
       "Open full page: Named dataset"
     )
