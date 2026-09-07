@@ -202,7 +202,7 @@ for (const theme of ["light", "dark"] as const) {
         cardBackground: card ? getComputedStyle(card).backgroundColor : null,
       }
     })
-    expect(colors.actionBackground).toBe("rgba(0, 0, 0, 0)")
+    expect(colors.actionBackground).not.toBe(colors.cardBackground)
     expect(colors.actionBorder).not.toBe(colors.cardBackground)
   })
 }

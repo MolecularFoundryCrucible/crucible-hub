@@ -365,7 +365,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
             <dt className="text-supporting text-muted-foreground">MFID</dt>
             <dd className="mt-1 flex min-w-0 items-start gap-2 text-body">
               <IdentityFieldIcon type="mfid" />
-              <span className="min-w-0 font-mono text-supporting break-all">
+              <span className="min-w-0 font-mono text-identifier break-all">
                 {resource.unique_id}
               </span>
               <Tooltip>
@@ -434,7 +434,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
                     <p className="text-supporting text-muted-foreground">
                       {owner.username ? `@${owner.username}` : "No username"}
                     </p>
-                    <p className="mt-2 font-mono text-supporting break-all text-muted-foreground">
+                    <p className="mt-2 font-mono text-identifier break-all text-muted-foreground">
                       {owner.unique_id}
                     </p>
                   </HoverCardContent>

@@ -109,7 +109,7 @@ export function ResourceChooser({
           <p className="truncate text-body" title={value.name}>
             {value.name}
           </p>
-          <p className="truncate font-mono text-supporting text-muted-foreground">
+          <p className="truncate font-mono text-identifier text-muted-foreground">
             {value.unique_id}
           </p>
         </div>
@@ -213,7 +213,7 @@ export function ResourceChooser({
                             {item.context}
                           </span>
                         ) : null}
-                        <span className="block font-mono text-supporting break-all text-muted-foreground">
+                        <span className="block font-mono text-identifier break-all text-muted-foreground">
                           {item.unique_id}
                         </span>
                       </span>

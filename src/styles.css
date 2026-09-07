@@ -85,6 +85,9 @@
   --text-body: 0.875rem;
   --text-body--line-height: 1.25rem;
   --text-body--font-weight: 400;
+  --text-identifier: 0.875rem;
+  --text-identifier--line-height: 1.25rem;
+  --text-identifier--font-weight: 400;
   --text-label: 0.875rem;
   --text-label--line-height: 1.25rem;
   --text-label--font-weight: 600;
@@ -118,6 +121,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-action-border: var(--action-border);
+  --color-action-surface: var(--action-surface);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -197,6 +201,7 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --action-border: oklch(0.65 0 0);
+  --action-surface: oklch(0.94 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -283,6 +288,7 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --action-border: oklch(1 0 0 / 35%);
+  --action-surface: oklch(0.32 0 0);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);

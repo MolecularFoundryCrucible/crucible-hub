@@ -23,15 +23,15 @@ Generated primitives enter `components/ui`, are reviewed, and become Hub-owned s
 
 Primitive scales use a 4 px base and named spacing roles, repository-pinned self-hosted Noto Sans plus system monospace for MFIDs, shared radius and elevation roles, named layers, and named responsive breakpoints. Semantic utilities own each typography role completely: feature code does not recreate roles with primitive Tailwind size, weight, line-height, or tracking utilities. Use tabular numerals for changing data, selectable monospace MFIDs, and no interface text below 12 px.
 
-| Role                                      | Size / line height / weight | Use                        |
-| ----------------------------------------- | --------------------------- | -------------------------- |
-| `title-page`                              | 28 / 36 px / 600            | Route title                |
-| `title-entity`                            | 24 / 32 px / 600            | Entity title               |
-| `title-section`                           | 18 / 28 px / 600            | Section, dialog, group     |
-| `body-prominent`                          | 16 / 24 px / 400            | Spacious body and inputs   |
-| `body`, `label`                           | 14 / 20 px / 400 or 600     | Rows, paragraphs, controls |
-| `supporting`, `label-compact`, `overline` | 12 / 16 px                  | Secondary content          |
-| `metric`                                  | 24 / 32 px / 600            | Bounded summary            |
+| Role                                      | Size / line height / weight | Use                      |
+| ----------------------------------------- | --------------------------- | ------------------------ |
+| `title-page`                              | 28 / 36 px / 600            | Route title              |
+| `title-entity`                            | 24 / 32 px / 600            | Entity title             |
+| `title-section`                           | 18 / 28 px / 600            | Section, dialog, group   |
+| `body-prominent`                          | 16 / 24 px / 400            | Spacious body and inputs |
+| `body`, `identifier`, `label`             | 14 / 20 px / 400 or 600     | Rows, MFIDs, controls    |
+| `supporting`, `label-compact`, `overline` | 12 / 16 px                  | Secondary content        |
+| `metric`                                  | 24 / 32 px / 600            | Bounded summary          |
 
 Use 44 px minimum primary touch controls. Dense pointer-oriented rows may be 36 px only when each target is at least 24 by 24 px, separated, and keyboard reachable. Semantic layout roles include page gutter, content and reading widths, section gaps, dense pill roles, and a 320 px initially resizable metadata editor. Use restrained 4, 8, 12, and 16 px radius roles only after fixture calibration. Resting elevation is `level-0` flat, `level-1` sticky or raised, `level-2` menu or popover, and `level-3` modal. Prefer surfaces and borders to decorative shadow.
 
@@ -67,7 +67,7 @@ Domain components accept semantic data and actions, never authorize or infer per
 
 Use a semantic icon catalog, not arbitrary feature imports. The shared resource and principal type icon component owns icon selection and semantic color, and call sites supply only layout classes. Summary values use a shared field-icon mapping, with colored semantic icons for linked projects and instruments and neutral icons for descriptive fields. Identity values use a shared field-icon mapping for MFID, visibility, owner, and timestamps. Decorative icons are hidden from assistive technology. Icon-only controls have persistent resource-specific accessible names and visible tooltips, and are reserved for obvious low-risk actions. Text remains for unfamiliar, destructive, ambiguous, or qualified actions. Resource and critical-state assignments are stable. No emoji, logo, or brand mark is a normal UI icon. Lucide is the configured icon library; local SVG additions require review through the same catalog.
 
-Action variants preserve the surface hierarchy. Primary actions use the filled primary pair. Secondary actions use the filled neutral pair for selected or moderate emphasis. Outline actions inherit their parent surface through a transparent background and use the stronger semantic action border, so they remain visibly bounded on the canvas, cards, and raised surfaces in both themes. Ghost actions have no resting container and are reserved for low-emphasis actions whose placement and label make their affordance clear. Hover states may change the action surface but must retain its paired foreground. Cards use the card surface with a restrained boundary; popovers and dialogs use the raised popover surface with stronger elevation.
+Action variants preserve the surface hierarchy. Primary actions use the filled primary pair. Secondary actions use the filled neutral pair for selected or moderate emphasis. Outline actions use the neutral action surface and stronger semantic action border, so they remain distinct from the canvas, cards, and raised surfaces in both themes. Ghost actions have no resting container and are reserved for low-emphasis actions whose placement and label make their affordance clear. Hover states may change the action surface but must retain its paired foreground. Cards use the card surface with a restrained boundary; popovers and dialogs use the raised popover surface with stronger elevation.
 
 Instructional copy, confirmations, and tooltips emphasize a referenced resource's displayed name with semantic strong text so it remains distinguishable from the surrounding action or relationship wording. Accessible names remain complete plain-language actions.
 

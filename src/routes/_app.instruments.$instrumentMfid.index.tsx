@@ -138,7 +138,7 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
           </div>
           <div className="col-span-2">
             <dt className="text-supporting text-muted-foreground">MFID</dt>
-            <dd className="mt-1 font-mono text-supporting break-all">
+            <dd className="mt-1 font-mono text-identifier break-all">
               {instrument.unique_id}
             </dd>
           </div>

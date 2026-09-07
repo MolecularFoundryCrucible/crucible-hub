@@ -100,7 +100,7 @@ function PersonPage() {
             </div>
             <div className="flex flex-col gap-1">
               <dt className="text-label">Crucible ID</dt>
-              <dd className="font-mono text-supporting break-all text-muted-foreground">
+              <dd className="font-mono text-identifier break-all text-muted-foreground">
                 {person.unique_id}
               </dd>
             </div>

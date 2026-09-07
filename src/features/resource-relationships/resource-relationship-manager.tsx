@@ -591,7 +591,7 @@ function AddRelationshipDialog({
                           {item.context}
                         </span>
                       ) : null}
-                      <span className="block font-mono text-supporting break-all text-muted-foreground">
+                      <span className="block font-mono text-identifier break-all text-muted-foreground">
                         {item.unique_id}
                       </span>
                     </span>

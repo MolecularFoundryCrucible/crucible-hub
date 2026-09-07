@@ -119,6 +119,10 @@ function DesignSystemFixtures() {
               label="Prominent body"
             />
             <TypeSpecimen className="text-body" label="Body" />
+            <TypeSpecimen
+              className="font-mono text-identifier"
+              label="Identifier"
+            />
             <TypeSpecimen className="text-label" label="Label" />
             <TypeSpecimen className="text-supporting" label="Supporting" />
             <TypeSpecimen
@@ -173,7 +177,7 @@ function DesignSystemFixtures() {
                   <ResourceTypeIcon type={type} />
                   <div className="min-w-0 flex-1">
                     <p className="text-label capitalize">{type}</p>
-                    <p className="text-supporting text-muted-foreground">
+                    <p className="font-mono text-identifier text-muted-foreground">
                       01J6Y8N4Q2R7M9K3T5V0W1X2Z{index}
                     </p>
                   </div>
@@ -383,7 +387,7 @@ function DenseFixture() {
           Spatially resolved operando hard X-ray absorption spectroscopy during
           accelerated electrochemical cycling
         </p>
-        <p className="font-mono text-supporting break-all text-muted-foreground">
+        <p className="font-mono text-identifier break-all text-muted-foreground">
           01J6Y8N4Q2R7M9K3T5V0W1X2Z3-CANONICAL-RESOURCE-IDENTIFIER
         </p>
         <dl className="grid grid-cols-2 gap-3 text-body">

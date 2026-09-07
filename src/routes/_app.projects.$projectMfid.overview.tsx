@@ -192,7 +192,7 @@ function ProjectMfid({ project }: { project: WorkspaceProject }) {
     <div className="min-w-0">
       <dt className="text-supporting text-muted-foreground">MFID</dt>
       <dd className="mt-1 flex min-w-0 items-start gap-2 text-body">
-        <span className="min-w-0 font-mono text-supporting break-all">
+        <span className="min-w-0 font-mono text-identifier break-all">
           {project.unique_id}
         </span>
         <Tooltip>
@@ -238,7 +238,7 @@ function Field({
       <dd
         className={
           mono
-            ? "mt-1 font-mono text-supporting break-all"
+            ? "mt-1 font-mono text-identifier break-all"
             : "mt-1 text-body break-words"
         }
       >

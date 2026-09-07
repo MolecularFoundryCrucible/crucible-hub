@@ -310,7 +310,7 @@ function SearchResult({ item }: { item: WorkspaceSearchResult }) {
           </p>
         ) : null}
       </div>
-      <span className="hidden font-mono text-supporting text-muted-foreground lg:block">
+      <span className="hidden font-mono text-identifier text-muted-foreground lg:block">
         {item.unique_id}
       </span>
     </li>

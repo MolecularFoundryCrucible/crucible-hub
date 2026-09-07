@@ -217,7 +217,7 @@ export function AccountProfileForm({
                 <dt className="text-supporting text-muted-foreground">
                   Crucible ID
                 </dt>
-                <dd className="mt-1 font-mono text-supporting break-all">
+                <dd className="mt-1 font-mono text-identifier break-all">
                   {account.unique_id}
                 </dd>
               </div>
