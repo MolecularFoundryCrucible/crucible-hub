@@ -442,7 +442,6 @@ function ManagedResourceAccess({
                                 )
                               }
                             }}
-                            size="sm"
                             value={grant.permission}
                           >
                             {roles.map((role) => (
@@ -466,7 +465,7 @@ function ManagedResourceAccess({
                                   setError(undefined)
                                   setPendingRevoke(grant)
                                 }}
-                                size="icon-sm"
+                                size="icon"
                                 type="button"
                                 variant="destructive"
                               />
