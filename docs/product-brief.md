@@ -45,7 +45,7 @@ The core product surfaces are:
 - Home for immediate research continuation and attention that has an accepted data and privacy basis.
 - Data for cross-project sample and dataset discovery, filtering, collection preview, and canonical detail navigation.
 - Project and instrument workspaces for scoped data browsing, context, and capability-gated management.
-- Resource detail for identity, descriptive and scientific metadata, files, relationships, access, activity, and lifecycle-aware actions.
+- Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, access, activity, and lifecycle-aware actions.
 - Search and direct MFID lookup for bounded cross-resource discovery.
 - Account for reviewing and updating the authenticated person's own name, email, and username from the application-bar profile menu.
 
@@ -56,6 +56,8 @@ Accessible and owned resources are distinct sets. Hub must not invent a personal
 ### Find and understand
 
 Scientists navigate from Home, Projects, Data, Instruments, Search, or an MFID link to canonical resource detail. Collections retain their context while an optional in-place inspector follows immediate relationships. Sample and dataset Graph tabs provide a bounded visual traversal from one resource to its readable neighbours, with the same information available as a relationship table. Graphs are an alternate representation, never the only way to understand provenance.
+
+Dataset Overview loads thumbnail previews independently after the browser hydrates, preserving Summary and Identity while image data is pending or unavailable. Readable graph datasets may include a bounded first-thumbnail preview in the equivalent relationship list. People with edit capability can explicitly enter thumbnail editing to add, rename, or delete images; Overview remains read-first.
 
 ### Create and upload
 

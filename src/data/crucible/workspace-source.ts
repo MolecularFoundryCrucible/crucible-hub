@@ -358,6 +358,33 @@ export type WorkspaceResourceDetail =
 
 export type WorkspaceDatasetFile = Schema<"AssociatedFileRead">
 
+export type WorkspaceDatasetThumbnail = Pick<
+  Schema<"ThumbnailRead">,
+  "id" | "mime_type" | "thumbnail_b64str" | "thumbnail_name"
+>
+
+export type WorkspaceDatasetThumbnailOperation =
+  | {
+      action: "add"
+      datasetMfid: string
+      scenario?: FixtureScenario
+      thumbnail_b64str: string
+      thumbnail_name: string
+    }
+  | {
+      action: "rename"
+      datasetMfid: string
+      scenario?: FixtureScenario
+      thumbnailId: number
+      thumbnail_name: string
+    }
+  | {
+      action: "delete"
+      datasetMfid: string
+      scenario?: FixtureScenario
+      thumbnailId: number
+    }
+
 export type WorkspaceFileDownload =
   | { status: "ready"; url: string; expiresInSeconds: number }
   | { status: "unavailable" }

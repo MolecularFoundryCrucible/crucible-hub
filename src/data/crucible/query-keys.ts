@@ -58,6 +58,20 @@ export const crucibleKeys = {
     [...scope, "resources", "access", resourceMfid] as const,
   datasetFiles: (scope: IdentityScope, datasetMfid: string) =>
     [...scope, "datasets", "files", datasetMfid] as const,
+  datasetThumbnails: (scope: IdentityScope, datasetMfid: string) =>
+    [...scope, "datasets", "thumbnails", datasetMfid] as const,
+  datasetThumbnailPreviews: (
+    scope: IdentityScope,
+    datasetMfids: readonly string[]
+  ) =>
+    [
+      ...scope,
+      "datasets",
+      "thumbnail-previews",
+      [...datasetMfids].sort(),
+    ] as const,
+  datasetThumbnailPreviewLists: (scope: IdentityScope) =>
+    [...scope, "datasets", "thumbnail-previews"] as const,
   search: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "search", normalizeFilters(filters)] as const,
   searches: (scope: IdentityScope) => [...scope, "search"] as const,

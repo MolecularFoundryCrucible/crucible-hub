@@ -6,12 +6,15 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import {
   createWorkspaceFileDownload,
+  mutateWorkspaceDatasetThumbnails,
   mutateWorkspaceRelationship,
   requestWorkspaceResourceDeletion,
   patchWorkspaceDatasetDescription,
   patchWorkspaceSampleDescription,
   reassignWorkspaceResourceProject,
   readWorkspaceDatasetFiles,
+  readWorkspaceDatasetThumbnailPreviews,
+  readWorkspaceDatasetThumbnails,
   readWorkspaceResource,
   readWorkspaceResourceGraph,
   transferWorkspaceResourceOwnership,
@@ -20,6 +23,7 @@ import {
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import type {
+  WorkspaceDatasetThumbnailOperation,
   WorkspaceRelationshipOperation,
   WorkspaceScientificMetadata,
 } from "./workspace-source"
@@ -33,6 +37,64 @@ export const datasetFilesInputSchema = z.object({
   datasetMfid: z.string().trim().min(1).max(255),
   scenario: fixtureScenarioSchema.optional(),
 })
+
+export const THUMBNAIL_NAME_MAX_LENGTH = 255
+export const THUMBNAIL_SOURCE_MAX_BYTES = 50 * 1024 * 1024
+export const THUMBNAIL_SOURCE_MAX_ENCODED_CHARACTERS =
+  4 * Math.ceil(THUMBNAIL_SOURCE_MAX_BYTES / 3)
+export const THUMBNAIL_PREVIEW_BATCH_MAX = 100
+
+const thumbnailNameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(THUMBNAIL_NAME_MAX_LENGTH)
+
+const thumbnailBase64Schema = z
+  .string()
+  .min(1)
+  .max(THUMBNAIL_SOURCE_MAX_ENCODED_CHARACTERS)
+
+export const datasetThumbnailPreviewsInputSchema = z
+  .object({
+    datasetMfids: z
+      .array(z.string().trim().min(1).max(255))
+      .max(THUMBNAIL_PREVIEW_BATCH_MAX),
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
+
+export const datasetThumbnailOperationInputSchema = z.discriminatedUnion(
+  "action",
+  [
+    z
+      .object({
+        action: z.literal("add"),
+        datasetMfid: z.string().trim().min(1).max(255),
+        scenario: fixtureScenarioSchema.optional(),
+        thumbnail_b64str: thumbnailBase64Schema,
+        thumbnail_name: thumbnailNameSchema,
+      })
+      .strict(),
+    z
+      .object({
+        action: z.literal("rename"),
+        datasetMfid: z.string().trim().min(1).max(255),
+        scenario: fixtureScenarioSchema.optional(),
+        thumbnailId: z.number().int().positive(),
+        thumbnail_name: thumbnailNameSchema,
+      })
+      .strict(),
+    z
+      .object({
+        action: z.literal("delete"),
+        datasetMfid: z.string().trim().min(1).max(255),
+        scenario: fixtureScenarioSchema.optional(),
+        thumbnailId: z.number().int().positive(),
+      })
+      .strict(),
+  ]
+)
 
 export const fileDownloadInputSchema = z
   .object({
@@ -381,6 +443,51 @@ export const getWorkspaceDatasetFiles = createServerFn({ method: "GET" })
       readWorkspaceDatasetFiles(
         data.datasetMfid,
         data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const getWorkspaceDatasetThumbnails = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(datasetFilesInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceDatasetThumbnails(
+        data.datasetMfid,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const getWorkspaceDatasetThumbnailPreviews = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(datasetThumbnailPreviewsInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceDatasetThumbnailPreviews(
+        data.datasetMfids,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const mutateWorkspaceDatasetThumbnail = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(datasetThumbnailOperationInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      mutateWorkspaceDatasetThumbnails(
+        data satisfies WorkspaceDatasetThumbnailOperation,
         context.requestSignal
       )
     )

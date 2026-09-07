@@ -89,6 +89,7 @@ import type {
 import { formatBytes, formatDate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { ResourceSummaryCard } from "@/features/resource-edit/resource-summary-card"
+import { DatasetThumbnailsCard } from "@/features/dataset-thumbnails/dataset-thumbnails-card"
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
@@ -215,6 +216,16 @@ export function ResourceOverview({
       <ContentGridItem span="narrow">
         <IdentityCard resource={resource} />
       </ContentGridItem>
+      {resource.kind === "dataset" ? (
+        <ContentGridItem span="full">
+          <DatasetThumbnailsCard
+            canEdit={resource.capabilities?.can_edit === true}
+            datasetMfid={resource.unique_id}
+            mode={mode}
+            scope={scope}
+          />
+        </ContentGridItem>
+      ) : null}
       {resource.kind === "dataset" ? (
         <ContentGridItem span="wide">
           <DatasetFiles datasetMfid={resource.unique_id} />

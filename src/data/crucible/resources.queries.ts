@@ -4,6 +4,8 @@ import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import {
   getWorkspaceDatasetFiles,
+  getWorkspaceDatasetThumbnailPreviews,
+  getWorkspaceDatasetThumbnails,
   getWorkspaceResource,
   getWorkspaceResourceGraph,
 } from "./resources.functions"
@@ -38,6 +40,41 @@ export function datasetFilesQueryOptions(
       unwrapHubResult(
         await getWorkspaceDatasetFiles({
           data: { datasetMfid, scenario: fixtureScenarioFromScope(scope) },
+          signal,
+        })
+      ),
+  })
+}
+
+export function datasetThumbnailsQueryOptions(
+  scope: IdentityScope,
+  datasetMfid: string
+) {
+  return queryOptions({
+    queryKey: crucibleKeys.datasetThumbnails(scope, datasetMfid),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceDatasetThumbnails({
+          data: { datasetMfid, scenario: fixtureScenarioFromScope(scope) },
+          signal,
+        })
+      ),
+  })
+}
+
+export function datasetThumbnailPreviewsQueryOptions(
+  scope: IdentityScope,
+  datasetMfids: readonly string[]
+) {
+  return queryOptions({
+    queryKey: crucibleKeys.datasetThumbnailPreviews(scope, datasetMfids),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceDatasetThumbnailPreviews({
+          data: {
+            datasetMfids: [...datasetMfids],
+            scenario: fixtureScenarioFromScope(scope),
+          },
           signal,
         })
       ),

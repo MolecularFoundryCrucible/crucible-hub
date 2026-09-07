@@ -42,6 +42,8 @@ export {
   RefreshCw as UpdateInstrumentStatusIcon,
   LoaderCircle as InstrumentStatusPendingIcon,
   Plus as CreateResourceIcon,
+  ImagePlus as AddThumbnailIcon,
+  Trash2 as RemoveThumbnailIcon,
   GitFork as ResourceGraphIcon,
   LocateFixed as ExploreGraphFocusIcon,
   Scan as FitGraphIcon,

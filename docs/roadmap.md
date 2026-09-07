@@ -20,18 +20,18 @@ This document owns delivery order, entry and completion gates, current status, a
 
 The local fixture workspace has the Phase 0 scaffold, server boundary, generated contract consumption, Query foundation, responsive shell, read workspace, dedicated project, sample, and dataset creation, controlled descriptive and scientific metadata editing, reviewed deletion requests, and direct project membership controls. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
 
-| Area                                       | Status                                                                                                          |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| Runtime and server-only boundary           | Locally verified; production session gate remains open.                                                         |
-| Read workspace                             | Implemented and fixture/browser verified.                                                                       |
-| Controlled resource and settings mutations | Implemented and fixture/browser verified; not production-exposed.                                               |
-| Direct project membership                  | Add, role change, removal, and self-leave are implemented and fixture/browser verified; not production-exposed. |
-| Resource management                        | Route-backed Manage pages and local fixture/browser mutation coverage are implemented; not production-exposed.  |
-| Join requests                              | Deferred pending the API-owned identity, status, capability, and efficient project-state contract.              |
-| Instrument management                      | Lifecycle, operators, ownership transfer, and registration are implemented for local development.               |
-| Resource assignment and ownership          | Sample and dataset project moves and resource ownership transfer are implemented for local development.         |
-| Project, sample, and dataset creation      | Dedicated API-backed creation routes are implemented for local development; file upload remains separate.       |
-| Uploads and graphs                         | Uploads remain blocked; bounded one-hop resource graph tabs are implemented for local development.              |
+| Area                                       | Status                                                                                                                                  |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime and server-only boundary           | Locally verified; production session gate remains open.                                                                                 |
+| Read workspace                             | Implemented and fixture/browser verified.                                                                                               |
+| Controlled resource and settings mutations | Implemented and fixture/browser verified; not production-exposed.                                                                       |
+| Direct project membership                  | Add, role change, removal, and self-leave are implemented and fixture/browser verified; not production-exposed.                         |
+| Resource management                        | Route-backed Manage pages and local fixture/browser mutation coverage are implemented; not production-exposed.                          |
+| Join requests                              | Deferred pending the API-owned identity, status, capability, and efficient project-state contract.                                      |
+| Instrument management                      | Lifecycle, operators, ownership transfer, and registration are implemented for local development.                                       |
+| Resource assignment and ownership          | Sample and dataset project moves and resource ownership transfer are implemented for local development.                                 |
+| Project, sample, and dataset creation      | Dedicated API-backed creation routes are implemented for local development; file upload remains separate.                               |
+| Uploads, thumbnails, and graphs            | Uploads remain blocked; lazy dataset thumbnail workflows and bounded one-hop resource graph tabs are implemented for local development. |
 
 ## Ordered work packages
 
@@ -66,7 +66,11 @@ Implemented and fixture/browser verified. Links are generated only after activat
 
 #### Resource graph traversal
 
-Implemented for local development. Canonical sample and dataset Graph tabs load an identity-scoped one-hop graph only on entry, provide Cytoscape traversal with the existing overlay inspector, support canonical rerooting through Explore from here, and retain an equivalent relationship table. The prototype uses the untyped CTE endpoint behind strict Hub validation; a typed, bounded API graph contract remains an external dependency. See decision 0026 and [Crucible API handoff](crucible-api-handoff.md).
+Implemented for local development. Canonical sample and dataset Graph tabs load an identity-scoped one-hop graph only on entry, provide Cytoscape traversal with the existing overlay inspector, support canonical rerooting through Explore from here, and retain an equivalent relationship table with bounded first-thumbnail previews for dataset nodes. The prototype uses the untyped CTE endpoint behind strict Hub validation; a typed, bounded API graph contract remains an external dependency. See decision 0026 and [Crucible API handoff](crucible-api-handoff.md).
+
+#### Dataset thumbnails
+
+Implemented for local development. Dataset Overview loads an independent, browser-initiated thumbnail gallery after hydration. Exact `can_edit` guidance exposes an explicit edit state for add, rename, and confirmed delete operations. Graph relationship lists request first previews in a separate bounded batch. Image payloads remain outside detail, collection, loader, URL, and persistent state. Production mutation exposure remains gated on P0, while the OpenAPI documentation gaps are recorded in [Crucible API handoff](crucible-api-handoff.md).
 
 ### P2: controlled self-service management
 

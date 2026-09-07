@@ -9,6 +9,7 @@ import {
   ZoomInGraphIcon,
   ZoomOutGraphIcon,
 } from "@/components/crucible/icons"
+import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import {
   ResourcePreviewLink,
@@ -39,9 +40,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { resourceGraphQueryOptions } from "@/data/crucible/resources.queries"
+import { THUMBNAIL_PREVIEW_BATCH_MAX } from "@/data/crucible/resources.functions"
+import {
+  datasetThumbnailPreviewsQueryOptions,
+  resourceGraphQueryOptions,
+} from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
 import type {
+  WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
@@ -57,6 +63,19 @@ export function ResourceGraphPage({
   const navigation = useResourcePreviewContext()
   const graph = useRef<Core | null>(null)
   const query = useQuery(resourceGraphQueryOptions(scope, resourceMfid))
+  const datasetMfids = query.data
+    ? query.data.nodes
+        .filter(
+          (node) =>
+            node.kind === "dataset" && node.unique_id !== query.data.rootMfid
+        )
+        .slice(0, THUMBNAIL_PREVIEW_BATCH_MAX)
+        .map((node) => node.unique_id)
+    : []
+  const thumbnailQuery = useQuery({
+    ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
+    enabled: query.isSuccess && datasetMfids.length > 0,
+  })
 
   if (query.isPending) return <ResourceGraphPending />
   if (!query.data) {
@@ -209,7 +228,17 @@ export function ResourceGraphPage({
         dataset associations.
       </p>
 
-      <ResourceGraphTable graph={query.data} nodes={relatedNodes} />
+      {thumbnailQuery.isError ? (
+        <p className="text-body text-muted-foreground" role="alert">
+          Thumbnail previews could not be loaded. The graph remains available.
+        </p>
+      ) : null}
+
+      <ResourceGraphTable
+        graph={query.data}
+        nodes={relatedNodes}
+        thumbnails={thumbnailQuery.data ?? {}}
+      />
     </section>
   )
 }
@@ -417,9 +446,11 @@ function graphNumberToken(element: HTMLElement, name: string) {
 function ResourceGraphTable({
   graph,
   nodes,
+  thumbnails,
 }: {
   graph: WorkspaceResourceGraph
   nodes: readonly WorkspaceResourceGraphNode[]
+  thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
   return (
     <details className="rounded-xl border bg-card" open>
@@ -444,34 +475,46 @@ function ResourceGraphTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nodes.map((node) => (
-                <TableRow key={node.unique_id}>
-                  <TableCell>{relationshipLabel(graph, node)}</TableCell>
-                  <TableCell>
-                    <ResourcePreviewLink
-                      className="text-label hover:underline"
-                      mfid={node.unique_id}
-                      resourceKind={node.kind}
-                    >
-                      {node.name}
-                    </ResourcePreviewLink>
-                  </TableCell>
-                  <TableCell>
-                    <span className="flex items-center gap-2">
-                      <ResourceTypeIcon type={node.kind} />
-                      {node.kind === "sample" ? "Sample" : "Dataset"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <ResourceFullPageLink
-                      kind={node.kind}
-                      mfid={node.unique_id}
-                      name={node.name}
-                      presentation="table"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {nodes.map((node) => {
+                const thumbnail = thumbnails[node.unique_id]
+                return (
+                  <TableRow key={node.unique_id}>
+                    <TableCell>{relationshipLabel(graph, node)}</TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-3">
+                        {thumbnail ? (
+                          <DatasetThumbnailImage
+                            alt=""
+                            className="size-10 shrink-0 rounded-md border bg-card object-contain"
+                            thumbnail={thumbnail}
+                          />
+                        ) : null}
+                        <ResourcePreviewLink
+                          className="text-label hover:underline"
+                          mfid={node.unique_id}
+                          resourceKind={node.kind}
+                        >
+                          {node.name}
+                        </ResourcePreviewLink>
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-2">
+                        <ResourceTypeIcon type={node.kind} />
+                        {node.kind === "sample" ? "Sample" : "Dataset"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <ResourceFullPageLink
+                        kind={node.kind}
+                        mfid={node.unique_id}
+                        name={node.name}
+                        presentation="table"
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>

@@ -12,10 +12,12 @@ type ErrorInput = {
 }
 
 const statusKinds: Partial<Record<number, HubApiErrorKind>> = {
+  400: "validation",
   401: "unauthenticated",
   403: "forbidden",
   404: "not-found",
   409: "conflict",
+  413: "validation",
   422: "validation",
   429: "rate-limited",
 }
