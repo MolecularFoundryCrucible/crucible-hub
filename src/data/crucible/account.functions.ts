@@ -5,8 +5,36 @@ import { z } from "zod"
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import { fixtureScenarioSchema } from "./fixture-scenarios"
-import { readWorkspaceAccount } from "./account.server"
+import { patchWorkspaceAccount, readWorkspaceAccount } from "./account.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
+
+const profileNameSchema = z.string().trim().min(1).max(255)
+const profileEmailSchema = z.string().trim().email().max(320).nullable()
+const profileUsernameSchema = z
+  .string()
+  .trim()
+  .min(3)
+  .max(24)
+  .regex(/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/)
+  .nullable()
+
+export const accountProfileUpdateInputSchema = z
+  .object({
+    changes: z
+      .object({
+        email: profileEmailSchema.optional(),
+        first_name: profileNameSchema.optional(),
+        last_name: profileNameSchema.optional(),
+        username: profileUsernameSchema.optional(),
+      })
+      .strict()
+      .refine(
+        (changes) => Object.keys(changes).length > 0,
+        "At least one profile change is required."
+      ),
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
 
 export const getWorkspaceAccount = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])
@@ -15,5 +43,15 @@ export const getWorkspaceAccount = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceAccount(data.scenario, context.requestSignal)
+    )
+  })
+
+export const updateWorkspaceAccount = createServerFn({ method: "POST" })
+  .middleware([queryCancellationMiddleware])
+  .validator(accountProfileUpdateInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      patchWorkspaceAccount(data.changes, data.scenario, context.requestSignal)
     )
   })

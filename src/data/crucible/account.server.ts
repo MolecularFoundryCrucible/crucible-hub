@@ -6,7 +6,10 @@ import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
-import type { WorkspaceAccount } from "./workspace-source"
+import type {
+  WorkspaceAccount,
+  WorkspaceAccountProfileUpdate,
+} from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
 
 export async function readWorkspaceAccount(
@@ -31,11 +34,49 @@ export async function readWorkspaceAccount(
     throw new CrucibleResponseError(result.response.status)
   }
 
+  return toWorkspaceAccount(result.data)
+}
+
+export async function patchWorkspaceAccount(
+  changes: WorkspaceAccountProfileUpdate,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceAccount> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario)
+    if (source.status === "unavailable") throw new Error(source.reason)
+    return { ...source.workspace.account, ...changes }
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.PATCH("/account/profile", {
+    body: changes,
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response.status)
+  }
+  return toWorkspaceAccount(result.data)
+}
+
+function toWorkspaceAccount(account: {
+  email?: string | null
+  first_name: string
+  is_service_account?: boolean | null
+  last_name: string
+  unique_id: string
+  username?: string | null
+}): WorkspaceAccount {
   return {
-    unique_id: result.data.unique_id,
-    username: result.data.username,
-    first_name: result.data.first_name,
-    is_service_account: result.data.is_service_account ?? false,
-    last_name: result.data.last_name,
+    email: account.email ?? null,
+    first_name: account.first_name,
+    is_service_account: account.is_service_account ?? false,
+    last_name: account.last_name,
+    unique_id: account.unique_id,
+    username: account.username ?? null,
   }
 }

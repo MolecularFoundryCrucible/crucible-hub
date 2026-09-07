@@ -2,11 +2,20 @@ import { Link, useRouterState } from "@tanstack/react-router"
 
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
-import { WorkspaceIcon } from "@/components/crucible/icons"
+import { AccountIcon, WorkspaceIcon } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { ThemeSelect } from "@/components/theme-select"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import {
   Sidebar,
@@ -144,24 +153,47 @@ export function AppShell({
               isServiceAccount={Boolean(account.is_service_account)}
             />
           ) : null}
-          <div className="ml-auto flex items-center gap-2 border-l pl-3">
-            <Avatar size="sm">
-              <AvatarFallback className="text-foreground">
-                {account
-                  ? initials(account.first_name, account.last_name)
-                  : "?"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="hidden lg:grid">
-              <span className="text-label">
-                {account
-                  ? `${account.first_name} ${account.last_name}`
-                  : "Account unavailable"}
-              </span>
-              <span className="text-supporting text-muted-foreground">
-                {account?.username ?? "Login exchange pending"}
-              </span>
-            </div>
+          <div className="ml-auto border-l pl-3">
+            {account ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      aria-label="Open account menu"
+                      className="h-auto gap-2 px-1 py-0.5"
+                      variant="ghost"
+                    />
+                  }
+                >
+                  <Avatar size="sm">
+                    <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
+                      {initials(account.first_name, account.last_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden text-left lg:grid">
+                    <span className="text-label">
+                      {account.first_name} {account.last_name}
+                    </span>
+                    <span className="text-supporting text-muted-foreground">
+                      {account.username ?? "No username"}
+                    </span>
+                  </span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-48">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Account</DropdownMenuLabel>
+                    <DropdownMenuItem render={<Link to="/account" />}>
+                      <AccountIcon />
+                      My profile
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Avatar size="sm">
+                <AvatarFallback className="text-foreground">?</AvatarFallback>
+              </Avatar>
+            )}
           </div>
         </header>
         <div className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">

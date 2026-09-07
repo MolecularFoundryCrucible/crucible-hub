@@ -11,8 +11,20 @@ export type WorkspacePerson = Pick<
 
 export type WorkspaceAccount = Pick<
   Schema<"UserRead">,
-  "first_name" | "is_service_account" | "last_name" | "unique_id" | "username"
+  | "email"
+  | "first_name"
+  | "is_service_account"
+  | "last_name"
+  | "unique_id"
+  | "username"
 >
+
+export type WorkspaceAccountProfileUpdate = {
+  email?: string | null
+  first_name?: string
+  last_name?: string
+  username?: string | null
+}
 
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 

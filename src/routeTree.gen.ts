@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppAccountRouteImport } from './routes/_app.account'
 import { Route as AppDataRouteImport } from './routes/_app.data'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.design-system'
@@ -61,6 +62,11 @@ const HealthRoute = HealthRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAccountRoute = AppAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDataRoute = AppDataRouteImport.update({
@@ -269,6 +275,7 @@ const AppProjectsProjectMfidSettingsOwnershipRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/health': typeof HealthRoute
+  '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
   '/search': typeof AppSearchRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
@@ -308,6 +315,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/health': typeof HealthRoute
+  '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
   '/search': typeof AppSearchRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/health': typeof HealthRoute
+  '/_app/account': typeof AppAccountRoute
   '/_app/data': typeof AppDataRoute
   '/_app/search': typeof AppSearchRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/health'
+    | '/account'
     | '/data'
     | '/search'
     | '/fixtures/design-system'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/health'
+    | '/account'
     | '/data'
     | '/search'
     | '/fixtures/design-system'
@@ -461,6 +472,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/health'
+    | '/_app/account'
     | '/_app/data'
     | '/_app/search'
     | '/fixtures/design-system'
@@ -528,6 +540,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/account': {
+      id: '/_app/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AppAccountRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/data': {
@@ -906,6 +925,7 @@ const AppSamplesSampleMfidRouteWithChildren =
   AppSamplesSampleMfidRoute._addFileChildren(AppSamplesSampleMfidRouteChildren)
 
 interface AppRouteChildren {
+  AppAccountRoute: typeof AppAccountRoute
   AppDataRoute: typeof AppDataRoute
   AppSearchRoute: typeof AppSearchRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -924,6 +944,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAccountRoute: AppAccountRoute,
   AppDataRoute: AppDataRoute,
   AppSearchRoute: AppSearchRoute,
   AppIndexRoute: AppIndexRoute,

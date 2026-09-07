@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
+- Added self-service profile management for name, email, and username through the top-right account menu and identity-scoped account API operations.
 - Added route-backed one-hop relationship graphs for samples and datasets, with lazy loading, resource inspection, canonical rerooting, and an equivalent accessible relationship table.
 - Added global and contextual entry points for dedicated project, sample, dataset, and eligible instrument creation, with bounded identity selectors, local-time timestamps, API-assigned canonical navigation, retained failure state, explicit uncertain-outcome handling, and separately recoverable dataset relationships without file upload.
 - Added instrument registration for human accounts, service-account operator management, and separate ownership transfer settings with server-resolved confirmation and authoritative cache refresh.

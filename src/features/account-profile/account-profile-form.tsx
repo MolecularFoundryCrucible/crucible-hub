@@ -1,0 +1,335 @@
+import { useState } from "react"
+import { useForm, useStore } from "@tanstack/react-form"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { z } from "zod"
+
+import {
+  CancelChangesIcon,
+  SaveChangesIcon,
+  SavingChangesIcon,
+} from "@/components/crucible/icons"
+import { ContentBoundary } from "@/components/crucible/content-layout"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { updateWorkspaceAccount } from "@/data/crucible/account.functions"
+import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import { crucibleKeys } from "@/data/crucible/query-keys"
+import type { IdentityScope } from "@/data/crucible/query-keys"
+import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import type {
+  WorkspaceAccount,
+  WorkspaceAccountProfileUpdate,
+} from "@/data/crucible/workspace-source"
+import {
+  DiscardChangesDialog,
+  useDiscardProtection,
+} from "@/features/forms/discard-changes"
+import { initials } from "@/lib/format"
+
+const accountProfileSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .max(320, "Use 320 characters or fewer for email.")
+    .refine(
+      (value) =>
+        value.length === 0 || z.string().email().safeParse(value).success,
+      "Enter a valid email address."
+    ),
+  first_name: z
+    .string()
+    .trim()
+    .min(1, "Enter a first name.")
+    .max(255, "Use 255 characters or fewer for first name."),
+  last_name: z
+    .string()
+    .trim()
+    .min(1, "Enter a last name.")
+    .max(255, "Use 255 characters or fewer for last name."),
+  username: z
+    .string()
+    .trim()
+    .max(24, "Use 24 characters or fewer for username.")
+    .refine(
+      (value) =>
+        value.length === 0 || /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/.test(value),
+      "Start with a lowercase letter and use lowercase letters, numbers, dots, hyphens, or underscores."
+    )
+    .refine(
+      (value) => value.length === 0 || value.length >= 3,
+      "Use at least 3 characters for username."
+    ),
+})
+
+type AccountProfileValues = z.infer<typeof accountProfileSchema>
+
+function profileValues(account: WorkspaceAccount): AccountProfileValues {
+  return {
+    email: account.email ?? "",
+    first_name: account.first_name,
+    last_name: account.last_name,
+    username: account.username ?? "",
+  }
+}
+
+export function accountProfileChanges(
+  account: WorkspaceAccount,
+  values: AccountProfileValues
+): WorkspaceAccountProfileUpdate {
+  const normalized = accountProfileSchema.parse(values)
+  const initial = profileValues(account)
+  const changes: WorkspaceAccountProfileUpdate = {}
+
+  for (const field of ["first_name", "last_name"] as const) {
+    if (normalized[field] !== initial[field]) changes[field] = normalized[field]
+  }
+  for (const field of ["email", "username"] as const) {
+    if (normalized[field] !== initial[field]) {
+      changes[field] = normalized[field] || null
+    }
+  }
+  return changes
+}
+
+export function AccountProfileForm({
+  account,
+  scope,
+}: {
+  account: WorkspaceAccount
+  scope: IdentityScope
+}) {
+  const queryClient = useQueryClient()
+  const [saveError, setSaveError] = useState<string>()
+  const [saved, setSaved] = useState(false)
+  const mutation = useMutation({
+    mutationFn: async (changes: WorkspaceAccountProfileUpdate) =>
+      unwrapHubResult(
+        await updateWorkspaceAccount({
+          data: {
+            changes,
+            scenario: fixtureScenarioFromScope(scope),
+          },
+        })
+      ),
+  })
+  const form = useForm({
+    defaultValues: profileValues(account),
+    validators: { onChange: accountProfileSchema },
+    onSubmit: async ({ value }) => {
+      setSaveError(undefined)
+      setSaved(false)
+      const changes = accountProfileChanges(account, value)
+      if (Object.keys(changes).length === 0) return
+      try {
+        const update = await mutation.mutateAsync(changes)
+        queryClient.setQueryData(crucibleKeys.accountProfile(scope), update)
+        form.reset(profileValues(update))
+        setSaved(true)
+      } catch (error) {
+        setSaveError(
+          error instanceof HubApiClientError
+            ? error.message
+            : "Your profile could not be saved. Your changes are still here."
+        )
+      }
+    },
+  })
+  const isDirty = useStore(form.store, (state) => state.isDirty)
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+  const discard = useDiscardProtection(isDirty, () => {
+    form.reset()
+    setSaveError(undefined)
+  })
+  const name = `${account.first_name} ${account.last_name}`
+  const formId = `account-profile-${account.unique_id}`
+
+  return (
+    <>
+      <ContentBoundary width="reading">
+        <Card>
+          <CardHeader className="flex-row items-center gap-4">
+            <Avatar className="size-14">
+              <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
+                {initials(account.first_name, account.last_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <CardTitle>{name}</CardTitle>
+              <CardDescription>
+                {account.username ? `@${account.username}` : account.unique_id}
+              </CardDescription>
+            </div>
+          </CardHeader>
+        </Card>
+      </ContentBoundary>
+
+      <ContentBoundary width="reading">
+        <Card aria-busy={isSubmitting}>
+          <CardHeader>
+            <CardTitle>Profile details</CardTitle>
+            <CardDescription>
+              Manage the name and contact details associated with your Crucible
+              account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              id={formId}
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                void form.handleSubmit()
+              }}
+            >
+              <fieldset disabled={isSubmitting}>
+                <FieldGroup>
+                  <form.Field name="first_name">
+                    {(field) => (
+                      <ProfileField field={field} label="First name" required />
+                    )}
+                  </form.Field>
+                  <form.Field name="last_name">
+                    {(field) => (
+                      <ProfileField field={field} label="Last name" required />
+                    )}
+                  </form.Field>
+                  <form.Field name="email">
+                    {(field) => (
+                      <ProfileField field={field} label="Email" type="email" />
+                    )}
+                  </form.Field>
+                  <form.Field name="username">
+                    {(field) => (
+                      <ProfileField
+                        description="3 to 24 lowercase characters. Dots, hyphens, and underscores may separate letters or numbers."
+                        field={field}
+                        label="Username"
+                        maxLength={24}
+                      />
+                    )}
+                  </form.Field>
+                </FieldGroup>
+              </fieldset>
+              {saveError ? (
+                <p className="mt-4 text-body text-destructive" role="alert">
+                  {saveError}
+                </p>
+              ) : null}
+              <p aria-live="polite" className="mt-4 text-body text-success">
+                {saved ? "Profile saved." : null}
+              </p>
+            </form>
+          </CardContent>
+          <CardFooter className="justify-end gap-2">
+            <Button
+              disabled={isSubmitting}
+              onClick={discard.requestCancel}
+              type="button"
+              variant="outline"
+            >
+              <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
+              Cancel
+            </Button>
+            <form.Subscribe
+              selector={(state) => [
+                state.canSubmit,
+                state.isDirty,
+                state.isSubmitting,
+              ]}
+            >
+              {([canSubmit, dirty, submitting]) => (
+                <Button
+                  disabled={!canSubmit || !dirty || submitting}
+                  form={formId}
+                  type="submit"
+                >
+                  {submitting ? (
+                    <SavingChangesIcon
+                      aria-hidden="true"
+                      className="motion-safe:animate-spin"
+                      data-icon="inline-start"
+                    />
+                  ) : (
+                    <SaveChangesIcon
+                      aria-hidden="true"
+                      data-icon="inline-start"
+                    />
+                  )}
+                  {submitting ? "Saving changes" : "Save changes"}
+                </Button>
+              )}
+            </form.Subscribe>
+          </CardFooter>
+        </Card>
+      </ContentBoundary>
+      <DiscardChangesDialog {...discard.dialog} />
+    </>
+  )
+}
+
+function ProfileField({
+  description,
+  field,
+  label,
+  maxLength = 255,
+  required = false,
+  type = "text",
+}: {
+  description?: string
+  field: {
+    handleBlur: () => void
+    handleChange: (value: string) => void
+    name: string
+    state: {
+      meta: {
+        errors: Array<{ message?: string } | undefined>
+        isValid: boolean
+      }
+      value: string
+    }
+  }
+  label: string
+  maxLength?: number
+  required?: boolean
+  type?: "email" | "text"
+}) {
+  return (
+    <Field data-invalid={!field.state.meta.isValid}>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <Input
+        aria-invalid={!field.state.meta.isValid || undefined}
+        id={field.name}
+        maxLength={maxLength}
+        name={field.name}
+        onBlur={field.handleBlur}
+        onChange={(event) => field.handleChange(event.target.value)}
+        required={required}
+        type={type}
+        value={field.state.value}
+      />
+      {description ? (
+        <FieldDescription>{description}</FieldDescription>
+      ) : required ? null : (
+        <FieldDescription>Optional</FieldDescription>
+      )}
+      <FieldError errors={field.state.meta.errors} />
+    </Field>
+  )
+}

@@ -66,9 +66,14 @@ Wide layouts use a persistent sidebar and top utility bar. The top utility bar p
 | `/datasets/:datasetMfid/access`                   | Canonical dataset access management.                        |
 | `/resources/:resourceMfid`                        | Legacy type-resolving redirect to a canonical entity.       |
 | `/people/:userId`                                 | Public-safe person profile.                                 |
-| `/activity`, `/account`, `/admin/*`               | Activity, account, and separate administrative workflows.   |
+| `/account`                                        | Authenticated self-service profile management.              |
+| `/activity`, `/admin/*`                           | Activity and separate administrative workflows.             |
 
 ## Entity scopes
+
+### Account
+
+The application-bar avatar opens the account menu and links to My profile. The profile route shows the authenticated account identity and edits first name, last name, email, and username through the self-service account operation. Email remains private to the authenticated account view and profile mutation.
 
 ### Project
 

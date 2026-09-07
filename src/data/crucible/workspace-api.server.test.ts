@@ -42,6 +42,7 @@ describe("API workspace adapter", () => {
 
     expect(source.mode).toBe("api")
     expect(source.workspace.account).toEqual({
+      email: "private@example.invalid",
       unique_id: "0000-0000-0000-0001",
       username: "researcher",
       first_name: "Ada",
@@ -59,7 +60,6 @@ describe("API workspace adapter", () => {
       )
     ).toBe(true)
     expect(JSON.stringify(source)).not.toContain("test-token")
-    expect(JSON.stringify(source)).not.toContain("private@example.invalid")
   })
 
   it("returns a browser-safe unavailable state for an API rejection", async () => {
