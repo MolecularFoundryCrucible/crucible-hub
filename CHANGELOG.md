@@ -60,7 +60,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Branded the application sidebar with the Crucible mark and palette, moved the desktop collapse control into the sidebar, clarified selected destinations, and standardized resource section navigation typography and target sizing.
+- Branded the application sidebar with the Crucible mark and blue surfaces, moved the desktop collapse control into the sidebar, applied orange current-location boundaries, and standardized resource section navigation typography and target sizing.
 - Consolidated sample and dataset access, assignment, ownership, and reviewed deletion under canonical Manage routes with compatibility redirects and a destructive Danger zone treatment.
 - Distinguished outlined actions from their containing surfaces in both themes and standardized displayed MFIDs on a readable semantic identifier type role.
 - Moved project and instrument descriptive editing into explicit read-first Overview actions, retained distinct administrative workflows under Manage, and standardized outlined actions with surface-independent visible borders.

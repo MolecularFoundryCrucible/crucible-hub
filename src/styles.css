@@ -220,7 +220,7 @@
   --radius: 0.625rem;
   --sidebar: color-mix(
     in oklch,
-    var(--background) 94%,
+    var(--background) 70%,
     var(--brand-crucible-light-blue)
   );
   --sidebar-foreground: var(--brand-crucible-dark-blue);
@@ -228,7 +228,7 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: color-mix(
     in oklch,
-    var(--background) 76%,
+    var(--background) 54%,
     var(--brand-crucible-light-blue)
   );
   --sidebar-accent-foreground: var(--brand-crucible-dark-blue);
