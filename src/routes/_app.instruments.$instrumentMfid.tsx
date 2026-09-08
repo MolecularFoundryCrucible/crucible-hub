@@ -4,6 +4,7 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
+import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   ResourceSectionNavigation,
@@ -110,7 +111,15 @@ function InstrumentPage() {
         }
       />
 
-      <ResourceSectionNavigation label="Instrument sections">
+      <ResourceSectionNavigation
+        actions={
+          <ResourceCreationActions
+            instrumentMfid={resource.unique_id}
+            kinds={["dataset"]}
+          />
+        }
+        label="Instrument sections"
+      >
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={resourceSectionActiveProps}

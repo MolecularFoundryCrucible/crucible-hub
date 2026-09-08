@@ -94,7 +94,6 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
-        actions={<ResourceCreationActions projectMfid={project.unique_id} />}
         eyebrow={project.project_id}
         icon={
           <ResourceTypeIcon className="mt-1 size-6 shrink-0" type="project" />
@@ -102,7 +101,10 @@ function ProjectWorkspace() {
         title={project.title ?? project.project_id}
       />
 
-      <ResourceSectionNavigation label="Project sections">
+      <ResourceSectionNavigation
+        actions={<ResourceCreationActions projectMfid={project.unique_id} />}
+        label="Project sections"
+      >
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={resourceSectionActiveProps}

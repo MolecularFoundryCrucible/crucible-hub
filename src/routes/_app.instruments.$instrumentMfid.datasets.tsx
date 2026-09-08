@@ -10,7 +10,6 @@ import {
 } from "@/components/crucible/collection-state"
 import { InstrumentDatasetCollection } from "@/components/crucible/instrument-dataset-collection"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { buttonVariants } from "@/components/ui/button"
 import {
   dataPageLimit,
@@ -102,12 +101,6 @@ function InstrumentDatasetsPage() {
 
   return (
     <>
-      <div className="flex justify-end">
-        <ResourceCreationActions
-          instrumentMfid={instrumentMfid}
-          kinds={["dataset"]}
-        />
-      </div>
       <CollectionUpdateStatus label="datasets" updating={result.isFetching} />
       {result.isError ? (
         <CollectionUpdateError

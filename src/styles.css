@@ -25,6 +25,7 @@
   --spacing-page-gutter-medium: 1.5rem;
   --spacing-page-gutter-wide: 2rem;
   --spacing-page-section: 2rem;
+  --spacing-resource-navigation-offset: 1rem;
   --spacing-inspector-width: 26rem;
   --spacing-dialog-viewport: calc(100dvh - 1rem);
   --spacing-metadata-editor-height: 20rem;
