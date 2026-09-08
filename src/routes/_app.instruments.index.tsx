@@ -1,34 +1,36 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import { ArrowRightIcon, MapPinIcon } from "lucide-react"
 import { z } from "zod"
 
 import {
-  CollectionCardGridPending,
   CollectionLoadError,
+  CollectionTablePending,
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { buttonVariants } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
   instrumentPageLimit,
   instrumentsQueryOptions,
@@ -97,7 +99,7 @@ function InstrumentsPage() {
       <InstrumentsPageHeader canRegister={!account.is_service_account} />
       <InstrumentStatusNavigation status={status} />
       {instrumentResult.isPending ? (
-        <CollectionCardGridPending label="instruments" />
+        <CollectionTablePending label="instruments" />
       ) : instrumentResult.isError && !instrumentResult.data ? (
         <>
           <CollectionLoadError
@@ -151,7 +153,7 @@ function InstrumentsRoutePending() {
         canRegister={account?.is_service_account === false}
       />
       <InstrumentStatusNavigation status={search.status ?? "active"} />
-      <CollectionCardGridPending label="instruments" />
+      <CollectionTablePending label="instruments" />
     </PageLayout>
   )
 }
@@ -223,67 +225,92 @@ function InstrumentCollection({
   return (
     <>
       <CollectionUpdateStatus label="instruments" updating={updating} />
-      <section
-        aria-busy={updating}
-        className="grid gap-4 lg:grid-cols-2"
-        aria-label="Instrument directory"
-      >
-        {instrumentPage.items.map((instrument) => (
-          <Card key={instrument.unique_id}>
-            <CardHeader>
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <ResourceTypeIcon type="instrument" />
-                {instrument.status ? (
-                  <InstrumentStatusBadge status={instrument.status} />
-                ) : null}
-              </div>
-              <CardTitle>{instrument.instrument_name}</CardTitle>
-              <CardDescription>{instrument.instrument_type}</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <p className="text-body text-muted-foreground">
-                {instrument.description}
-              </p>
-              <dl className="grid gap-3 text-body sm:grid-cols-2">
-                <div>
-                  <dt className="text-muted-foreground">Location</dt>
-                  <dd className="mt-1 flex items-center gap-1.5 text-label">
-                    <MapPinIcon aria-hidden="true" />
-                    {instrument.location}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Model</dt>
-                  <dd className="mt-1 text-label">
-                    {instrument.manufacturer} {instrument.model}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Owner</dt>
-                  <dd className="mt-1 text-label">
-                    {instrument.owner?.username ?? "Unknown owner"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Updated</dt>
-                  <dd className="mt-1 text-label">
-                    {formatDate(instrument.modification_time)}
-                  </dd>
-                </div>
-              </dl>
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                params={{ instrumentMfid: instrument.unique_id }}
-                to="/instruments/$instrumentMfid"
-              >
-                Open instrument
-                <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
-        {instrumentPage.items.length === 0 && (
-          <Empty className="lg:col-span-2">
+      {instrumentPage.items.length > 0 ? (
+        <Card aria-busy={updating}>
+          <CardContent className="px-0">
+            <Table
+              aria-label="Instrument directory"
+              className="resource-directory-table resource-directory-instrument-table table-fixed"
+            >
+              <colgroup>
+                <col className="resource-directory-name-column" />
+                <col className="resource-directory-location-column" />
+                <col className="resource-directory-person-column" />
+                <col className="resource-directory-date-column" />
+                <col className="resource-directory-action-column" />
+              </colgroup>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Instrument</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead className="text-center">
+                    <span className="sr-only">Open</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {instrumentPage.items.map((instrument) => {
+                  const instrumentId = instrument.instrument_id?.trim()
+                  const name =
+                    instrument.instrument_name.trim() ||
+                    instrumentId ||
+                    instrument.unique_id
+                  return (
+                    <TableRow key={instrument.unique_id}>
+                      <ResourceDirectoryNameCell
+                        identifier={instrumentId}
+                        kind="instrument"
+                        mfid={instrument.unique_id}
+                        name={name}
+                      />
+                      <TableCell
+                        className="resource-directory-location"
+                        data-label="Location"
+                      >
+                        {instrument.location || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="resource-directory-person"
+                        data-label="Owner"
+                      >
+                        {instrument.owner ? (
+                          <PersonLink
+                            name={`${instrument.owner.first_name} ${instrument.owner.last_name}`.trim()}
+                            personId={instrument.owner.unique_id}
+                            username={instrument.owner.username}
+                          />
+                        ) : (
+                          <span aria-label="Not available">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className="resource-directory-date"
+                        data-label="Updated"
+                      >
+                        {instrument.modification_time
+                          ? formatDate(instrument.modification_time)
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="resource-directory-action text-center">
+                        <ResourceFullPageLink
+                          kind="instrument"
+                          mfid={instrument.unique_id}
+                          name={name}
+                          presentation="table"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : (
+        <section aria-label="Instrument directory">
+          <Empty className="min-h-state border">
             <EmptyHeader>
               <EmptyTitle>No instruments found</EmptyTitle>
               <EmptyDescription>
@@ -292,8 +319,8 @@ function InstrumentCollection({
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
-        )}
-      </section>
+        </section>
+      )}
       {!updating && (offset > 0 || hasNext) && (
         <nav
           className="flex items-center justify-end gap-2"

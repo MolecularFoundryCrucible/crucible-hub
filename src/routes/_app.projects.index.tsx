@@ -1,32 +1,36 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import { ArrowRightIcon } from "lucide-react"
 import { z } from "zod"
 
 import {
-  CollectionCardGridPending,
   CollectionLoadError,
+  CollectionTablePending,
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { CreateResourceIcon } from "@/components/crucible/icons"
-import {
-  useWorkspace,
-  useWorkspaceMode,
-  useWorkspaceScope,
-} from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
+import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { formatDate } from "@/lib/format"
 import {
   projectPageLimit,
@@ -76,7 +80,7 @@ function ProjectsPage() {
     <PageLayout>
       <ProjectsPageHeader />
       {projectResult.isPending ? (
-        <CollectionCardGridPending label="projects" />
+        <CollectionTablePending label="projects" />
       ) : projectResult.isError && !projectResult.data ? (
         <>
           <CollectionLoadError
@@ -121,7 +125,7 @@ function ProjectsRoutePending() {
   return (
     <PageLayout>
       <ProjectsPageHeader />
-      <CollectionCardGridPending label="projects" />
+      <CollectionTablePending label="projects" />
     </PageLayout>
   )
 }
@@ -153,8 +157,6 @@ function ProjectCollection({
   projectPage: WorkspaceProjectPage
   updating: boolean
 }) {
-  const workspace = useWorkspace()
-  const mode = useWorkspaceMode()
   const previousOffset = Math.max(0, offset - projectPageLimit)
   const nextOffset = offset + projectPage.items.length
   const hasNext =
@@ -164,73 +166,89 @@ function ProjectCollection({
   return (
     <>
       <CollectionUpdateStatus label="projects" updating={updating} />
-      <section
-        aria-busy={updating}
-        className="grid gap-4 lg:grid-cols-2"
-        aria-label="Project collection"
-      >
-        {projectPage.items.map((project) => {
-          const complete = "status" in project
-          const datasetCount =
-            mode === "fixture"
-              ? workspace.datasets.filter(
-                  (dataset) => dataset.project_id === project.project_id
-                ).length
-              : null
-          const sampleCount =
-            mode === "fixture"
-              ? workspace.samples.filter(
-                  (sample) => sample.project_id === project.project_id
-                ).length
-              : null
-          return (
-            <Card key={project.unique_id}>
-              <CardHeader>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <ResourceTypeIcon type="project" />
-                  <Badge variant={complete ? "secondary" : "outline"}>
-                    {complete ? project.status : "Limited details"}
-                  </Badge>
-                </div>
-                <CardTitle>{project.title}</CardTitle>
-                <CardDescription>{project.project_id}</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <dl className="grid grid-cols-3 gap-3 text-body">
-                  <div>
-                    <dt className="text-muted-foreground">Samples</dt>
-                    <dd className="mt-1 text-label tabular-nums">
-                      {sampleCount ?? "N/A"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Datasets</dt>
-                    <dd className="mt-1 text-label tabular-nums">
-                      {datasetCount ?? "N/A"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Updated</dt>
-                    <dd className="mt-1 text-label">
-                      {complete
-                        ? formatDate(project.modification_time)
-                        : "Unknown"}
-                    </dd>
-                  </div>
-                </dl>
-                <Link
-                  className={buttonVariants({ variant: "outline" })}
-                  to="/projects/$projectMfid"
-                  params={{ projectMfid: project.unique_id }}
-                >
-                  Open project
-                  <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
-                </Link>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </section>
+      {projectPage.items.length > 0 ? (
+        <Card aria-busy={updating}>
+          <CardContent className="px-0">
+            <Table
+              aria-label="Project collection"
+              className="resource-directory-table resource-directory-project-table table-fixed"
+            >
+              <colgroup>
+                <col className="resource-directory-name-column" />
+                <col className="resource-directory-person-column" />
+                <col className="resource-directory-date-column" />
+                <col className="resource-directory-action-column" />
+              </colgroup>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Lead</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead className="text-center">
+                    <span className="sr-only">Open</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projectPage.items.map((project) => {
+                  const complete = "status" in project
+                  const title = project.title?.trim()
+                  const name = title || project.project_id
+                  return (
+                    <TableRow key={project.unique_id}>
+                      <ResourceDirectoryNameCell
+                        identifier={title ? project.project_id : null}
+                        kind="project"
+                        mfid={project.unique_id}
+                        name={name}
+                      />
+                      <TableCell
+                        className="resource-directory-person"
+                        data-label="Lead"
+                      >
+                        {complete && project.lead ? (
+                          <PersonLink
+                            name={`${project.lead.first_name} ${project.lead.last_name}`.trim()}
+                            personId={project.lead.unique_id}
+                            username={project.lead.username}
+                          />
+                        ) : (
+                          <span aria-label="Not available">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className="resource-directory-date"
+                        data-label="Updated"
+                      >
+                        {complete && project.modification_time
+                          ? formatDate(project.modification_time)
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="resource-directory-action text-center">
+                        <ResourceFullPageLink
+                          kind="project"
+                          mfid={project.unique_id}
+                          name={name}
+                          presentation="table"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : (
+        <Empty className="min-h-state border">
+          <EmptyHeader>
+            <EmptyTitle>No projects found</EmptyTitle>
+            <EmptyDescription>
+              No projects are available to this account.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
       {!updating && (offset > 0 || hasNext) && (
         <nav
           className="flex items-center justify-end gap-2"

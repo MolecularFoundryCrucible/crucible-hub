@@ -15,31 +15,7 @@ import {
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 
-const cardPlaceholders = ["first", "second"] as const
 const rowPlaceholders = ["first", "second", "third", "fourth"] as const
-
-export function CollectionCardGridPending({ label }: { label: string }) {
-  return (
-    <div
-      aria-label={`Loading ${label}`}
-      className="grid gap-4 lg:grid-cols-2"
-      role="status"
-    >
-      {cardPlaceholders.map((placeholder) => (
-        <Card key={placeholder}>
-          <CardHeader>
-            <Skeleton className="h-5 w-2/3" />
-            <Skeleton className="h-4 w-1/3" />
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
 
 export function CollectionTablePending({ label }: { label: string }) {
   return (

@@ -43,6 +43,25 @@
   --spacing-data-owner-column-wide: 15%;
   --spacing-data-date-column-wide: 15%;
   --spacing-data-action-column: 3rem;
+  --spacing-directory-action-column: 3rem;
+  --spacing-directory-date-column: calc(
+    (100% - var(--spacing-directory-action-column)) * 0.18
+  );
+  --spacing-directory-instrument-location-column: calc(
+    (100% - var(--spacing-directory-action-column)) * 0.2
+  );
+  --spacing-directory-instrument-name-column: calc(
+    (100% - var(--spacing-directory-action-column)) * 0.34
+  );
+  --spacing-directory-instrument-person-column: calc(
+    (100% - var(--spacing-directory-action-column)) * 0.28
+  );
+  --spacing-directory-project-name-column: calc(
+    (100% - var(--spacing-directory-action-column)) * 0.52
+  );
+  --spacing-directory-project-person-column: calc(
+    (100% - var(--spacing-directory-action-column)) * 0.3
+  );
   --spacing-access-role-control: 6rem;
   --spacing-data-name-column-with-action: calc(
     (100% - var(--spacing-data-action-column)) * 0.38
@@ -389,6 +408,60 @@ body {
 }
 
 @media (max-width: 47.999rem) {
+  .resource-directory-table,
+  .resource-directory-table tbody {
+    display: block;
+  }
+
+  .resource-directory-table thead,
+  .resource-directory-table colgroup {
+    display: none;
+  }
+
+  .resource-directory-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 3);
+  }
+
+  .resource-directory-table td {
+    display: block;
+    padding: 0;
+    white-space: normal;
+  }
+
+  .resource-directory-table .resource-directory-name {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .resource-directory-table .resource-directory-name [data-directory-name] {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .resource-directory-table .resource-directory-location,
+  .resource-directory-table .resource-directory-person,
+  .resource-directory-table .resource-directory-date {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .resource-directory-table .resource-directory-location::before,
+  .resource-directory-table .resource-directory-person::before,
+  .resource-directory-table .resource-directory-date::before {
+    color: var(--muted-foreground);
+    content: attr(data-label) ": ";
+  }
+
+  .resource-directory-table .resource-directory-action {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
   .resource-collection-table,
   .resource-collection-table tbody {
     display: block;
@@ -439,6 +512,34 @@ body {
     grid-column: 2;
     grid-row: 2 / 5;
   }
+}
+
+.resource-directory-table .resource-directory-action-column {
+  width: var(--spacing-directory-action-column);
+}
+
+.resource-directory-table .resource-directory-date-column {
+  width: var(--spacing-directory-date-column);
+}
+
+.resource-directory-project-table .resource-directory-name-column {
+  width: var(--spacing-directory-project-name-column);
+}
+
+.resource-directory-project-table .resource-directory-person-column {
+  width: var(--spacing-directory-project-person-column);
+}
+
+.resource-directory-instrument-table .resource-directory-name-column {
+  width: var(--spacing-directory-instrument-name-column);
+}
+
+.resource-directory-instrument-table .resource-directory-location-column {
+  width: var(--spacing-directory-instrument-location-column);
+}
+
+.resource-directory-instrument-table .resource-directory-person-column {
+  width: var(--spacing-directory-instrument-person-column);
 }
 
 .route-progress {
