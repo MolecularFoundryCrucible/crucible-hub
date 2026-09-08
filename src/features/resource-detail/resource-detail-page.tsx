@@ -238,13 +238,6 @@ export function ResourceWorkspace({
         ) : null}
 
         <PageHeader
-          actions={
-            <EntityRefreshAction
-              label={`Refresh ${resource.name}`}
-              queryKey={resourceOptions.queryKey}
-              refreshedAt={dataUpdatedAt}
-            />
-          }
           icon={
             <ResourceTypeIcon
               className="mt-1 size-6 shrink-0"
@@ -253,7 +246,17 @@ export function ResourceWorkspace({
           }
           title={resource.name}
         />
-        <ResourceNavigation fromProject={fromProject} resource={resource} />
+        <ResourceNavigation
+          actions={
+            <EntityRefreshAction
+              label={`Refresh ${resource.name}`}
+              queryKey={resourceOptions.queryKey}
+              refreshedAt={dataUpdatedAt}
+            />
+          }
+          fromProject={fromProject}
+          resource={resource}
+        />
         <Outlet />
       </PageLayout>
       <ResourceInspector navigation={navigation} />
@@ -321,15 +324,17 @@ export function ResourceOverview({
 }
 
 function ResourceNavigation({
+  actions,
   fromProject,
   resource,
 }: {
+  actions?: React.ReactNode
   fromProject?: string
   resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
 }) {
   if (resource.kind === "sample") {
     return (
-      <ResourceSectionNavigation label="Sample sections">
+      <ResourceSectionNavigation actions={actions} label="Sample sections">
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={resourceSectionActiveProps}
@@ -366,7 +371,7 @@ function ResourceNavigation({
     )
   }
   return (
-    <ResourceSectionNavigation label="Dataset sections">
+    <ResourceSectionNavigation actions={actions} label="Dataset sections">
       <Link
         activeOptions={{ exact: true, includeSearch: false }}
         activeProps={resourceSectionActiveProps}

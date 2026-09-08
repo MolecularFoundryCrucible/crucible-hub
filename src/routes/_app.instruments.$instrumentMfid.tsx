@@ -114,31 +114,31 @@ function InstrumentPage() {
         title={resource.name}
         description={resource.description ?? undefined}
         actions={
-          <div className="flex flex-col items-start gap-2 lg:items-end">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">
-                <ResourceTypeIcon type="instrument" data-icon="inline-start" />
-                {resource.instrument_type ?? "Instrument"}
-              </Badge>
-              {resource.status ? (
-                <InstrumentStatusBadge status={resource.status} />
-              ) : null}
-            </div>
-            <EntityRefreshAction
-              label={`Refresh ${resource.name}`}
-              queryKey={resourceOptions.queryKey}
-              refreshedAt={dataUpdatedAt}
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline">
+              <ResourceTypeIcon type="instrument" data-icon="inline-start" />
+              {resource.instrument_type ?? "Instrument"}
+            </Badge>
+            {resource.status ? (
+              <InstrumentStatusBadge status={resource.status} />
+            ) : null}
           </div>
         }
       />
 
       <ResourceSectionNavigation
         actions={
-          <ResourceCreationActions
-            instrumentMfid={resource.unique_id}
-            kinds={["dataset"]}
-          />
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <ResourceCreationActions
+              instrumentMfid={resource.unique_id}
+              kinds={["dataset"]}
+            />
+            <EntityRefreshAction
+              label={`Refresh ${resource.name}`}
+              queryKey={resourceOptions.queryKey}
+              refreshedAt={dataUpdatedAt}
+            />
+          </div>
         }
         label="Instrument sections"
       >

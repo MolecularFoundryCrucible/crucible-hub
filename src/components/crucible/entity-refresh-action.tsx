@@ -36,7 +36,15 @@ export function EntityRefreshAction({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1 lg:items-end">
+    <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
+      {timestamp ? (
+        <time
+          className="text-supporting text-muted-foreground"
+          dateTime={new Date(refreshedAt).toISOString()}
+        >
+          Last refreshed {timestamp}
+        </time>
+      ) : null}
       <Button
         aria-label={label}
         disabled={refreshing}
@@ -51,16 +59,11 @@ export function EntityRefreshAction({
         />
         {refreshing ? "Refreshing" : "Refresh"}
       </Button>
-      {timestamp ? (
-        <time
-          className="text-supporting text-muted-foreground"
-          dateTime={new Date(refreshedAt).toISOString()}
-        >
-          Last refreshed {timestamp}
-        </time>
-      ) : null}
       {failed ? (
-        <p className="text-supporting text-destructive" role="alert">
+        <p
+          className="basis-full text-right text-supporting text-destructive"
+          role="alert"
+        >
           Refresh failed. Existing details are still shown.
         </p>
       ) : null}
