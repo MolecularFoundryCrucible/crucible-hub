@@ -1,4 +1,4 @@
-import crucibleMarkUrl from "@/assets/crucible-mark.svg"
+import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg"
 import { cn } from "@/lib/utils"
 
 export function BrandMark({ className }: { className?: string }) {
@@ -6,11 +6,15 @@ export function BrandMark({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cn(
-        "flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-crucible-light-blue p-1",
+        "flex size-8 shrink-0 items-center justify-center",
         className
       )}
     >
-      <img alt="" className="size-full" src={crucibleMarkUrl} />
+      <img
+        alt=""
+        className="size-full object-contain"
+        src={crucibleLogoHubUrl}
+      />
     </span>
   )
 }

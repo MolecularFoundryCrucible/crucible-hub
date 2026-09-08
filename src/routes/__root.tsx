@@ -6,6 +6,7 @@ import {
   useRouter,
 } from "@tanstack/react-router"
 
+import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg"
 import { RouteProgress } from "@/components/route-progress"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -35,9 +36,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         rel: "icon",
-        href: "/hub/crucible-favicon-16x16.png",
-        sizes: "16x16",
-        type: "image/png",
+        href: crucibleLogoHubUrl,
+        type: "image/svg+xml",
       },
     ],
   }),
