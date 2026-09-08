@@ -136,36 +136,27 @@ export function ResourceInspector({
               ref={title}
               aria-atomic="true"
               aria-live="polite"
-              className="break-words"
+              className="flex min-w-0 items-start gap-2"
               tabIndex={-1}
             >
-              {navigation.invalidPreview
-                ? "Invalid resource preview"
-                : (resource?.name ?? "Resource preview")}
+              {resource ? (
+                <ResourceTypeIcon
+                  className="mt-1 shrink-0"
+                  type={resource.kind}
+                />
+              ) : null}
+              <span className="min-w-0 wrap-break-word">
+                {navigation.invalidPreview
+                  ? "Invalid resource preview"
+                  : (resource?.name ?? "Resource preview")}
+              </span>
             </SheetTitle>
             {navigation.preview ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                {resource ? (
-                  <span className="flex min-w-0 flex-1 items-center gap-2 text-body">
-                    <ResourceTypeIcon
-                      className="shrink-0"
-                      type={resource.kind}
-                    />
-                    <span className="sr-only">
-                      {resourceTypeLabel(resource.kind)} context:
-                    </span>
-                    <span className="min-w-0 wrap-break-word">
-                      {resourceContextLabel(resource)}
-                    </span>
-                  </span>
-                ) : null}
+              <div className="flex min-w-0">
                 <SheetDescription className="sr-only">
                   MFID {navigation.preview}
                 </SheetDescription>
-                <MfidValue
-                  className="ml-auto justify-end text-right"
-                  value={navigation.preview}
-                />
+                <MfidValue value={navigation.preview} />
               </div>
             ) : (
               <SheetDescription>
@@ -489,23 +480,6 @@ function MetadataDisclosure({
       </div>
     </details>
   )
-}
-
-function resourceTypeLabel(kind: string) {
-  return `${kind.charAt(0).toUpperCase()}${kind.slice(1)}`
-}
-
-function resourceContextLabel(resource: WorkspaceResourceDetail) {
-  switch (resource.kind) {
-    case "sample":
-      return resource.sample_type || "Sample type not recorded"
-    case "dataset":
-      return resource.measurement || "Measurement not recorded"
-    case "project":
-      return resource.organization || "Organization not recorded"
-    case "instrument":
-      return resource.instrument_type || "Instrument type not recorded"
-  }
 }
 
 function resourceErrorMessage(error: Error | null) {
