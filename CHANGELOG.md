@@ -62,6 +62,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Moved Recently viewed below recent data on Home and clarified each session-only entry with its resource type, MFID, and navigation affordance.
 - Updated the pinned Crucible API contract for typed resource relationships, restored parent, child, and associated relationship lists by normalizing API direction fields at the Hub boundary, displayed available relationship types with direction-aware wording, and added optional type selection when creating parent-child links.
 - Standardized native buttons, button-styled links, chooser rows, and sidebar utilities on shared action variants, promoted contextual resource creation to the primary action style, and added static enforcement against feature-level visual overrides.
 - Adopted the Hub-specific Crucible logo for the sidebar and browser favicon, with the standalone Hub icon available as managed brand artwork.

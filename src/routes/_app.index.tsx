@@ -93,98 +93,18 @@ function HomePage() {
       />
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-5">
-        <section
-          aria-labelledby="recent-research-title"
-          className="min-w-0 xl:col-span-3"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <h2 id="recent-research-title">Recently added data</h2>
-              </CardTitle>
-              <CardAction>
-                <Link
-                  className={buttonVariants({ variant: "ghost" })}
-                  search={{ kind: undefined }}
-                  to="/data"
-                >
-                  View all
-                  <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
-                </Link>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {recentDataPending && (
-                <CollectionRowsPending label="recent research data" />
-              )}
-              {recentDataUnavailable && (
-                <HomePanelState
-                  description="Projects and navigation remain available."
-                  retry={() => {
-                    void sampleResult.refetch()
-                    void datasetResult.refetch()
-                  }}
-                  title={
-                    sampleResult.isError && datasetResult.isError
-                      ? "Recent data could not be loaded"
-                      : "Recent data could not be fully loaded"
-                  }
-                />
-              )}
-              {!recentDataPending &&
-                !recentDataUnavailable &&
-                recentResources.length === 0 && (
-                  <HomePanelState
-                    description="New samples and datasets will appear here."
-                    title="No data is available yet"
-                  />
-                )}
-              {recentDataPartial && (
-                <div
-                  className="mb-3 flex flex-wrap items-center justify-between gap-3"
-                  role="alert"
-                >
-                  <p className="text-body text-muted-foreground">
-                    Some recent data could not be loaded.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      if (sampleResult.isError) void sampleResult.refetch()
-                      if (datasetResult.isError) void datasetResult.refetch()
-                    }}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Try again
-                  </Button>
-                </div>
-              )}
-              {recentResources.length > 0 && (
-                <ul className="flex min-w-0 flex-col" role="list">
-                  {recentResources.map((item) => (
-                    <RecentResourceLink
-                      item={item}
-                      key={`${item.kind}:${item.resource.unique_id}`}
-                    />
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-
-        <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
-          <section aria-labelledby="home-projects-title">
+        <div className="flex min-w-0 flex-col gap-6 xl:col-span-3">
+          <section aria-labelledby="recent-research-title" className="min-w-0">
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <h2 id="home-projects-title">Projects you can access</h2>
+                  <h2 id="recent-research-title">Recently added data</h2>
                 </CardTitle>
                 <CardAction>
                   <Link
                     className={buttonVariants({ variant: "ghost" })}
-                    search={{ offset: undefined }}
-                    to="/projects"
+                    search={{ kind: undefined }}
+                    to="/data"
                   >
                     View all
                     <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
@@ -192,30 +112,58 @@ function HomePage() {
                 </CardAction>
               </CardHeader>
               <CardContent>
-                {projectResult.isPending && (
-                  <CollectionRowsPending label="your projects" />
+                {recentDataPending && (
+                  <CollectionRowsPending label="recent research data" />
                 )}
-                {!projectResult.isPending &&
-                  projectResult.isError &&
-                  !projectResult.data && (
+                {recentDataUnavailable && (
+                  <HomePanelState
+                    description="Projects and navigation remain available."
+                    retry={() => {
+                      void sampleResult.refetch()
+                      void datasetResult.refetch()
+                    }}
+                    title={
+                      sampleResult.isError && datasetResult.isError
+                        ? "Recent data could not be loaded"
+                        : "Recent data could not be fully loaded"
+                    }
+                  />
+                )}
+                {!recentDataPending &&
+                  !recentDataUnavailable &&
+                  recentResources.length === 0 && (
                     <HomePanelState
-                      description="Recent data and navigation remain available."
-                      retry={() => void projectResult.refetch()}
-                      title="Projects could not be loaded"
+                      description="New samples and datasets will appear here."
+                      title="No data is available yet"
                     />
                   )}
-                {!projectResult.isPending &&
-                  !projectResult.isError &&
-                  projects.length === 0 && (
-                    <HomePanelState
-                      description="Projects shared with your account will appear here."
-                      title="No projects are available yet"
-                    />
-                  )}
-                {projects.length > 0 && (
-                  <ul className="flex min-w-0 flex-col gap-2" role="list">
-                    {projects.map((project) => (
-                      <ProjectLink key={project.unique_id} project={project} />
+                {recentDataPartial && (
+                  <div
+                    className="mb-3 flex flex-wrap items-center justify-between gap-3"
+                    role="alert"
+                  >
+                    <p className="text-body text-muted-foreground">
+                      Some recent data could not be loaded.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        if (sampleResult.isError) void sampleResult.refetch()
+                        if (datasetResult.isError) void datasetResult.refetch()
+                      }}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Try again
+                    </Button>
+                  </div>
+                )}
+                {recentResources.length > 0 && (
+                  <ul className="flex min-w-0 flex-col" role="list">
+                    {recentResources.map((item) => (
+                      <RecentResourceLink
+                        item={item}
+                        key={`${item.kind}:${item.resource.unique_id}`}
+                      />
                     ))}
                   </ul>
                 )}
@@ -235,7 +183,7 @@ function HomePage() {
                     Resources opened during this session will appear here.
                   </p>
                 ) : (
-                  <ul className="flex min-w-0 flex-col" role="list">
+                  <ul className="flex min-w-0 flex-col gap-2" role="list">
                     {recentlyViewed.map((item) => (
                       <RecentlyViewedLink
                         item={item}
@@ -248,6 +196,58 @@ function HomePage() {
             </Card>
           </section>
         </div>
+
+        <section
+          aria-labelledby="home-projects-title"
+          className="min-w-0 xl:col-span-2"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <h2 id="home-projects-title">Projects you can access</h2>
+              </CardTitle>
+              <CardAction>
+                <Link
+                  className={buttonVariants({ variant: "ghost" })}
+                  search={{ offset: undefined }}
+                  to="/projects"
+                >
+                  View all
+                  <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
+                </Link>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              {projectResult.isPending && (
+                <CollectionRowsPending label="your projects" />
+              )}
+              {!projectResult.isPending &&
+                projectResult.isError &&
+                !projectResult.data && (
+                  <HomePanelState
+                    description="Recent data and navigation remain available."
+                    retry={() => void projectResult.refetch()}
+                    title="Projects could not be loaded"
+                  />
+                )}
+              {!projectResult.isPending &&
+                !projectResult.isError &&
+                projects.length === 0 && (
+                  <HomePanelState
+                    description="Projects shared with your account will appear here."
+                    title="No projects are available yet"
+                  />
+                )}
+              {projects.length > 0 && (
+                <ul className="flex min-w-0 flex-col gap-2" role="list">
+                  {projects.map((project) => (
+                    <ProjectLink key={project.unique_id} project={project} />
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </PageLayout>
   )
@@ -256,12 +256,29 @@ function HomePage() {
 function RecentlyViewedLink({ item }: { item: RecentlyViewedResource }) {
   const content = (
     <>
-      <ResourceTypeIcon className="shrink-0" type={item.kind} />
-      <span className="min-w-0 truncate text-label">{item.name}</span>
+      <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-label wrap-break-word">{item.name}</span>
+        <span className="mt-1 flex min-w-0 items-center gap-2 text-muted-foreground">
+          <span className="shrink-0 text-supporting capitalize">
+            {item.kind}
+          </span>
+          <span aria-hidden="true" className="text-supporting">
+            ·
+          </span>
+          <span className="min-w-0 truncate font-mono text-identifier">
+            {item.uniqueId}
+          </span>
+        </span>
+      </span>
+      <ArrowRightIcon
+        aria-hidden="true"
+        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+      />
     </>
   )
   const className =
-    "flex min-w-0 items-center gap-3 border-b py-3 first:pt-0 last:border-b-0 last:pb-0 hover:underline"
+    "flex min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
 
   if (item.kind === "project") {
     return (
