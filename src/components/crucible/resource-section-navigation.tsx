@@ -1,5 +1,5 @@
 export const resourceSectionLinkClassName =
-  "flex min-h-10 items-center rounded-t-md border-b-2 border-transparent px-3 text-label text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+  "flex min-h-10 items-center rounded-md border-b-2 border-transparent px-3 text-label text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 export const resourceSectionActiveProps = {
   className: "border-brand-crucible-orange! text-foreground!",
