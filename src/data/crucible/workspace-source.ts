@@ -234,14 +234,18 @@ type WorkspaceRelationshipOperationBase = {
   targetMfid: string
 }
 
+export type WorkspaceRelationshipType = "is_derived_from" | "is_part_of"
+
 export type WorkspaceRelationshipOperation =
   | (WorkspaceRelationshipOperationBase & {
       relationship: "parent" | "child"
+      relationshipType?: WorkspaceRelationshipType | null
       sourceKind: "sample"
       targetKind: "sample"
     })
   | (WorkspaceRelationshipOperationBase & {
       relationship: "parent" | "child"
+      relationshipType?: WorkspaceRelationshipType | null
       sourceKind: "dataset"
       targetKind: "dataset"
     })

@@ -43,12 +43,14 @@ const links = [
   {
     name: "Parent sample",
     relationship: "parent",
+    relationship_type: "is_derived_from",
     resource_type: "sample",
     unique_id: "parent",
   },
   {
     name: "Child sample",
     relationship: "child",
+    relationship_type: "is_part_of",
     resource_type: "sample",
     unique_id: "child",
   },
@@ -96,6 +98,8 @@ describe("ResourceRelationships", () => {
     expect(screen.getByText("Parents (1)")).toBeTruthy()
     expect(screen.getByText("Children (1)")).toBeTruthy()
     expect(screen.getByText("Linked datasets (1)")).toBeTruthy()
+    expect(screen.getByText("Derived from")).toBeTruthy()
+    expect(screen.getByText("Part of this")).toBeTruthy()
     expect(
       screen
         .getByRole("link", { name: "Preview Parent sample" })

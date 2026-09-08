@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
 import type { WorkspaceLinkedResource } from "@/data/crucible/workspace-source"
 import { cn } from "@/lib/utils"
 
@@ -100,6 +101,7 @@ function RelationshipRow({
   renderManagementAction?: (link: WorkspaceLinkedResource) => ReactNode
 }) {
   const label = link.name || link.unique_id
+  const relationshipTypeLabel = workspaceRelationshipTypeLabel(link)
   const identity = (
     <>
       {isKnownResourceType(link.resource_type) && (
@@ -107,6 +109,11 @@ function RelationshipRow({
       )}
       <span className="min-w-0 flex-1">
         <span className="block text-label wrap-break-word">{label}</span>
+        {relationshipTypeLabel ? (
+          <span className="block text-supporting text-muted-foreground">
+            {relationshipTypeLabel}
+          </span>
+        ) : null}
       </span>
     </>
   )

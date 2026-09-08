@@ -375,6 +375,10 @@ const relationshipOperationFields = {
   sourceMfid: canonicalResourceMfidSchema,
   targetMfid: canonicalResourceMfidSchema,
 }
+const relationshipTypeSchema = z
+  .enum(["is_derived_from", "is_part_of"])
+  .nullable()
+  .optional()
 
 export const workspaceRelationshipOperationInputSchema = z
   .union([
@@ -382,6 +386,7 @@ export const workspaceRelationshipOperationInputSchema = z
       .object({
         ...relationshipOperationFields,
         relationship: z.enum(["parent", "child"]),
+        relationshipType: relationshipTypeSchema,
         sourceKind: z.literal("sample"),
         targetKind: z.literal("sample"),
       })
@@ -390,6 +395,7 @@ export const workspaceRelationshipOperationInputSchema = z
       .object({
         ...relationshipOperationFields,
         relationship: z.enum(["parent", "child"]),
+        relationshipType: relationshipTypeSchema,
         sourceKind: z.literal("dataset"),
         targetKind: z.literal("dataset"),
       })

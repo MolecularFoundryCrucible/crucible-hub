@@ -1311,12 +1311,13 @@ function relationshipDetail(
 
 function relationshipLink(
   target: WorkspaceRelationshipResourceDetail,
-  relationship: WorkspaceRelationshipOperation["relationship"]
+  relationship: WorkspaceRelationshipOperation["relationship"],
+  relationshipType: WorkspaceLinkedResource["relationship_type"]
 ) {
   return {
     name: target.name,
     relationship,
-    relationship_type: null,
+    relationship_type: relationshipType ?? null,
     resource_type: target.kind,
     unique_id: target.unique_id,
   } satisfies WorkspaceLinkedResource
@@ -1339,6 +1340,7 @@ function applyRelationshipLink(
   resource: WorkspaceRelationshipResourceDetail,
   target: WorkspaceRelationshipResourceDetail,
   relationship: WorkspaceRelationshipOperation["relationship"],
+  relationshipType: WorkspaceLinkedResource["relationship_type"],
   action: WorkspaceRelationshipOperation["action"]
 ) {
   const links = resource.links ?? []
@@ -1350,7 +1352,7 @@ function applyRelationshipLink(
       action === "link"
         ? exists
           ? [...links]
-          : [...links, relationshipLink(target, relationship)]
+          : [...links, relationshipLink(target, relationship, relationshipType)]
         : links.filter(
             (link) =>
               link.unique_id !== target.unique_id ||
@@ -1385,6 +1387,7 @@ async function fixtureWorkspaceRelationshipMutation(
     source,
     target,
     operation.relationship,
+    operation.relationship === "associated" ? null : operation.relationshipType,
     operation.action
   )
   if (!updatedSource) throw new CrucibleResponseError(404)
@@ -1392,6 +1395,7 @@ async function fixtureWorkspaceRelationshipMutation(
     target,
     source,
     inverseWorkspaceRelationship(operation.relationship),
+    operation.relationship === "associated" ? null : operation.relationshipType,
     operation.action
   )
   if (!updatedTarget) throw new CrucibleResponseError(404)
@@ -1423,6 +1427,13 @@ export async function mutateWorkspaceRelationship(
                   parent_sample_id: normalized.parentMfid,
                   child_sample_id: normalized.childMfid,
                 },
+                ...(normalized.relationshipType
+                  ? {
+                      query: {
+                        relationship_type: normalized.relationshipType,
+                      },
+                    }
+                  : {}),
               },
               signal: crucibleRequestSignal(requestSignal),
             }
@@ -1449,6 +1460,13 @@ export async function mutateWorkspaceRelationship(
                     parent_dataset_id: normalized.parentMfid,
                     child_dataset_id: normalized.childMfid,
                   },
+                  ...(normalized.relationshipType
+                    ? {
+                        query: {
+                          relationship_type: normalized.relationshipType,
+                        },
+                      }
+                    : {}),
                 },
                 signal: crucibleRequestSignal(requestSignal),
               }

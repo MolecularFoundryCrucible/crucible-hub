@@ -155,6 +155,7 @@ describe("workspace resource sources", () => {
     const result = await mutateWorkspaceRelationship({
       action: "link",
       relationship: "parent",
+      relationshipType: "is_part_of",
       sourceKind: "sample",
       sourceMfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
       targetKind: "sample",
@@ -166,6 +167,7 @@ describe("workspace resource sources", () => {
     expect(result.source.links).toContainEqual(
       expect.objectContaining({
         relationship: "parent",
+        relationship_type: "is_part_of",
         unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z6",
       })
     )
@@ -174,6 +176,7 @@ describe("workspace resource sources", () => {
       links: [
         {
           relationship: "child",
+          relationship_type: "is_part_of",
           unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
         },
       ],
@@ -226,6 +229,7 @@ describe("workspace resource sources", () => {
       operation: {
         action: "link",
         relationship: "parent",
+        relationshipType: "is_derived_from",
         sourceKind: "sample",
         sourceMfid: "sample-child",
         targetKind: "sample",
@@ -233,6 +237,7 @@ describe("workspace resource sources", () => {
       } as const,
       method: "POST",
       path: "/samples/sample-parent/children/sample-child",
+      relationshipType: "is_derived_from",
     },
     {
       operation: {
@@ -245,6 +250,7 @@ describe("workspace resource sources", () => {
       } as const,
       method: "DELETE",
       path: "/datasets/dataset-parent/children/dataset-child",
+      relationshipType: null,
     },
     {
       operation: {
@@ -257,10 +263,11 @@ describe("workspace resource sources", () => {
       } as const,
       method: "POST",
       path: "/datasets/dataset-1/samples/sample-1",
+      relationshipType: null,
     },
   ])(
     "uses the generated $method $path relationship operation",
-    async ({ operation, method, path }) => {
+    async ({ operation, method, path, relationshipType }) => {
       vi.stubEnv("NODE_ENV", "development")
       vi.stubEnv("HUB_DATA_SOURCE", "api")
       vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -316,7 +323,11 @@ describe("workspace resource sources", () => {
         unique_id: operation.targetMfid,
       })
       expect(requests[0].method).toBe(method)
-      expect(new URL(requests[0].url).pathname).toBe(path)
+      const mutationUrl = new URL(requests[0].url)
+      expect(mutationUrl.pathname).toBe(path)
+      expect(mutationUrl.searchParams.get("relationship_type")).toBe(
+        relationshipType
+      )
       expect(requests).toHaveLength(3)
     }
   )

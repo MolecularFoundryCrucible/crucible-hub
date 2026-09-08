@@ -62,7 +62,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Updated the pinned Crucible API contract for typed resource relationships and restored parent, child, and associated relationship lists by normalizing the API direction fields at the Hub boundary.
+- Updated the pinned Crucible API contract for typed resource relationships, restored parent, child, and associated relationship lists by normalizing API direction fields at the Hub boundary, displayed available relationship types with direction-aware wording, and added optional type selection when creating parent-child links.
 - Standardized native buttons, button-styled links, chooser rows, and sidebar utilities on shared action variants, promoted contextual resource creation to the primary action style, and added static enforcement against feature-level visual overrides.
 - Adopted the Hub-specific Crucible logo for the sidebar and browser favicon, with the standalone Hub icon available as managed brand artwork.
 - Centered the Crucible mark on the collapsed sidebar icon column and matched its background to the hover target.

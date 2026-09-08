@@ -8,6 +8,7 @@ describe("workspace relationship API operation", () => {
       operation: {
         action: "link",
         relationship: "parent",
+        relationshipType: "is_derived_from",
         sourceKind: "sample",
         sourceMfid: "sample-child",
         targetKind: "sample",
@@ -17,6 +18,7 @@ describe("workspace relationship API operation", () => {
         kind: "sample-lineage",
         parentMfid: "sample-parent",
         childMfid: "sample-child",
+        relationshipType: "is_derived_from",
       },
     },
     {
@@ -32,6 +34,7 @@ describe("workspace relationship API operation", () => {
         kind: "dataset-lineage",
         parentMfid: "dataset-parent",
         childMfid: "dataset-child",
+        relationshipType: null,
       },
     },
     {

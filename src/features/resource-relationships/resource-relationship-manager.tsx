@@ -56,6 +56,10 @@ import {
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
+import {
+  isWorkspaceRelationshipType,
+  workspaceRelationshipTypeOptions,
+} from "@/data/crucible/resource-relationships"
 import { mutateWorkspaceResourceRelationship } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
@@ -64,6 +68,7 @@ import type {
   WorkspaceLinkedResource,
   WorkspaceRelationshipMutationResult,
   WorkspaceRelationshipOperation,
+  WorkspaceRelationshipType,
   WorkspaceResourceDetail,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
@@ -372,8 +377,11 @@ function AddRelationshipDialog({
 }) {
   const inputId = useId()
   const typeId = useId()
+  const relationshipTypeId = useId()
   const choices = relationshipChoices[resource.kind]
   const [choiceIndex, setChoiceIndex] = useState(0)
+  const [relationshipType, setRelationshipType] =
+    useState<WorkspaceRelationshipType | null>(null)
   const [query, setQuery] = useState("")
   const [submitted, setSubmitted] = useState("")
   const [selected, setSelected] = useState<WorkspaceSearchResult>()
@@ -412,6 +420,7 @@ function AddRelationshipDialog({
             {
               name: target.name,
               relationship: choice.relationship,
+              relationship_type: relationshipType,
               resource_type: target.kind,
               unique_id: target.unique_id,
             },
@@ -424,6 +433,7 @@ function AddRelationshipDialog({
 
   function reset() {
     setChoiceIndex(0)
+    setRelationshipType(null)
     setQuery("")
     setSubmitted("")
     setSelected(undefined)
@@ -489,6 +499,7 @@ function AddRelationshipDialog({
               id={typeId}
               onChange={(event) => {
                 setChoiceIndex(Number(event.target.value))
+                setRelationshipType(null)
                 setSubmitted("")
                 setSelected(undefined)
                 setValidationError(undefined)
@@ -506,6 +517,35 @@ function AddRelationshipDialog({
               {choiceDescription(resource, choice)}
             </FieldDescription>
           </Field>
+          {choice.relationship === "associated" ? null : (
+            <Field>
+              <FieldLabel htmlFor={relationshipTypeId}>
+                Relationship type
+              </FieldLabel>
+              <NativeSelect
+                disabled={mutation.isPending}
+                id={relationshipTypeId}
+                onChange={(event) => {
+                  const value = event.target.value
+                  setRelationshipType(
+                    isWorkspaceRelationshipType(value) ? value : null
+                  )
+                  setMutationError(undefined)
+                }}
+                value={relationshipType ?? ""}
+              >
+                <NativeSelectOption value="">Unspecified</NativeSelectOption>
+                {workspaceRelationshipTypeOptions.map((option) => (
+                  <NativeSelectOption key={option.value} value={option.value}>
+                    {option.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <FieldDescription>
+                Describes the child relative to the parent.
+              </FieldDescription>
+            </Field>
+          )}
           <form onSubmit={runSearch}>
             <FieldGroup className="sm:flex-row sm:items-end">
               <Field
@@ -605,6 +645,7 @@ function AddRelationshipDialog({
             <p className="text-body">
               <LinkConfirmation
                 choice={choice}
+                relationshipType={relationshipType}
                 resource={resource}
                 target={selected}
               />
@@ -695,12 +736,18 @@ function operationFor(
     ? {
         ...base,
         relationship: link.relationship,
+        relationshipType: isWorkspaceRelationshipType(link.relationship_type)
+          ? link.relationship_type
+          : null,
         sourceKind: "sample",
         targetKind: "sample",
       }
     : {
         ...base,
         relationship: link.relationship,
+        relationshipType: isWorkspaceRelationshipType(link.relationship_type)
+          ? link.relationship_type
+          : null,
         sourceKind: "dataset",
         targetKind: "dataset",
       }
@@ -720,10 +767,12 @@ function choiceDescription(
 
 function LinkConfirmation({
   choice,
+  relationshipType,
   resource,
   target,
 }: {
   choice: RelationshipChoice
+  relationshipType: WorkspaceRelationshipType | null
   resource: RelationshipResource
   target: WorkspaceSearchResult
 }) {
@@ -732,6 +781,19 @@ function LinkConfirmation({
       <>
         <ResourceName>{target.name}</ResourceName> will be linked with{" "}
         <ResourceName>{resource.name}</ResourceName>.
+      </>
+    )
+  }
+  if (relationshipType) {
+    const child = choice.relationship === "parent" ? resource : target
+    const parent = choice.relationship === "parent" ? target : resource
+    return (
+      <>
+        <ResourceName>{child.name}</ResourceName>{" "}
+        {relationshipType === "is_derived_from"
+          ? "is derived from"
+          : "is part of"}{" "}
+        <ResourceName>{parent.name}</ResourceName>.
       </>
     )
   }

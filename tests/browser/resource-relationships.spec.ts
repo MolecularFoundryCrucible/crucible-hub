@@ -36,11 +36,14 @@ test("adds a directed dataset relationship from the canonical page", async ({
   await dialog
     .getByLabel("Relationship")
     .selectOption({ label: "Parent dataset" })
+  await dialog
+    .getByLabel("Relationship type")
+    .selectOption({ label: "Derived from" })
   await dialog.getByLabel("Search datasets").fill("phase")
   await dialog.getByRole("button", { name: "Search", exact: true }).click()
   await dialog.getByRole("button", { name: /NiFe phase evolution/ }).click()
   await expect(dialog).toContainText(
-    "NiFe phase evolution will be a parent of Activated catalyst morphology."
+    "Activated catalyst morphology is derived from NiFe phase evolution."
   )
   await dialog.getByRole("button", { name: "Add relationship" }).click()
 
@@ -49,6 +52,7 @@ test("adds a directed dataset relationship from the canonical page", async ({
   await expect(
     card.getByText("NiFe phase evolution", { exact: true })
   ).toBeVisible()
+  await expect(card.getByText("Derived from", { exact: true })).toBeVisible()
   await expect(
     card.getByRole("link", {
       name: "Open full page: NiFe phase evolution",
