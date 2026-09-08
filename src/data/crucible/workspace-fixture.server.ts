@@ -1,11 +1,13 @@
+import type { components } from "@/generated/crucible-api"
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
 import { defaultFixtureScenario } from "@/data/crucible/fixture-scenarios"
 import type { FixtureScenario } from "@/data/crucible/fixture-scenarios"
 import type {
   Workspace,
-  WorkspaceLinkedResource,
   WorkspaceSource,
 } from "@/data/crucible/workspace-source"
+
+type ApiLinkedResource = components["schemas"]["LinkedResource"]
 
 const densePrimaryInstrument = {
   instrument_id: "dense-instrument-1",
@@ -22,41 +24,46 @@ const denseSecondaryInstrument = {
 const denseSampleOneLinks = [
   {
     name: "Catalyst sample 2",
-    relationship: "parent",
+    direction: "source",
+    relationship_type: null,
     resource_type: "sample",
     unique_id: "fixture-sample-2",
   },
   {
     name: null,
-    relationship: "child",
+    direction: "target",
+    relationship_type: null,
     resource_type: "sample",
     unique_id: "fixture-sample-3",
   },
   {
     name: "Operando spectroscopy acquisition",
-    relationship: "associated",
+    direction: "undirected",
+    relationship_type: null,
     resource_type: "dataset",
     unique_id: "fixture-dataset-1",
   },
-] satisfies readonly WorkspaceLinkedResource[]
+] satisfies readonly ApiLinkedResource[]
 
 const denseSampleTwoLinks = [
   {
     name: "Nickel iron oxide catalyst",
-    relationship: "child",
+    direction: "target",
+    relationship_type: null,
     resource_type: "sample",
     unique_id: "fixture-sample-1",
   },
-] satisfies readonly WorkspaceLinkedResource[]
+] satisfies readonly ApiLinkedResource[]
 
 const denseDatasetOneLinks = [
   {
     name: "Nickel iron oxide catalyst",
-    relationship: "associated",
+    direction: "undirected",
+    relationship_type: null,
     resource_type: "sample",
     unique_id: "fixture-sample-1",
   },
-] satisfies readonly WorkspaceLinkedResource[]
+] satisfies readonly ApiLinkedResource[]
 
 const denseProjects = Array.from({ length: 24 }, (_, index) => ({
   ...demoWorkspace.projects[index % demoWorkspace.projects.length],

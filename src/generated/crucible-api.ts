@@ -408,6 +408,9 @@ export interface paths {
         /**
          * List Parent Datasets
          * @description Returns a paginated list of parent datasets for a given dataset.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
          */
         get: operations["list_parent_datasets_datasets__child_dataset_id__parents_get"];
         put?: never;
@@ -833,6 +836,9 @@ export interface paths {
         /**
          * List Child Datasets
          * @description Returns a paginated list of child datasets for a given parent dataset.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
          */
         get: operations["list_child_datasets_datasets__parent_dataset_id__children_get"];
         put?: never;
@@ -852,7 +858,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Link Dataset Parent Child */
+        /**
+         * Link Dataset Parent Child
+         * @description Link two datasets as parent and child.
+         *
+         *     relationship_type describes the child relative to the parent, so
+         *     is_part_of means "child is_part_of parent". Omit it to leave the kind
+         *     unspecified; on a link that already exists, omitting it preserves the
+         *     type already stored rather than clearing it.
+         */
         post: operations["link_dataset_parent_child_datasets__parent_dataset_id__children__child_dataset_id__post"];
         /** Unlink Dataset Parent Child */
         delete: operations["unlink_dataset_parent_child_datasets__parent_dataset_id__children__child_dataset_id__delete"];
@@ -2120,6 +2134,9 @@ export interface paths {
         /**
          * List Parent Samples
          * @description Returns a paginated list of parent samples for a given child sample.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
          */
         get: operations["list_parent_samples_samples__child_sample_id__parents_get"];
         put?: never;
@@ -2140,6 +2157,9 @@ export interface paths {
         /**
          * List Child Samples
          * @description Returns a paginated list of child samples for a given parent sample.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
          */
         get: operations["list_child_samples_samples__parent_sample_id__children_get"];
         put?: never;
@@ -2159,7 +2179,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Link Sample Parent Child */
+        /**
+         * Link Sample Parent Child
+         * @description Link two samples as parent and child.
+         *
+         *     relationship_type describes the child relative to the parent, so
+         *     is_part_of means "child is_part_of parent". Omit it to leave the kind
+         *     unspecified; on a link that already exists, omitting it preserves the
+         *     type already stored rather than clearing it.
+         */
         post: operations["link_sample_parent_child_samples__parent_sample_id__children__child_sample_id__post"];
         /** Unlink Sample Parent Child */
         delete: operations["unlink_sample_parent_child_samples__parent_sample_id__children__child_sample_id__delete"];
@@ -2917,6 +2945,8 @@ export interface components {
             child_dataset_id?: number | null;
             /** Parent Dataset Id */
             parent_dataset_id?: number | null;
+            /** Relationship Type */
+            relationship_type?: string | null;
         };
         /**
          * DatasetRead
@@ -3351,13 +3381,15 @@ export interface components {
         };
         /** LinkedResource */
         LinkedResource: {
-            /** Name */
-            name?: string | null;
             /**
-             * Relationship
+             * Direction
              * @enum {string}
              */
-            relationship: "parent" | "child" | "associated";
+            direction: "source" | "target" | "undirected";
+            /** Name */
+            name?: string | null;
+            /** Relationship Type */
+            relationship_type?: string | null;
             /** Resource Type */
             resource_type: string;
             /** Unique Id */
@@ -3835,6 +3867,8 @@ export interface components {
         SampleLink: {
             /** Parent Sample Id */
             parent_sample_id?: number | null;
+            /** Relationship Type */
+            relationship_type?: string | null;
             /** Sample Id */
             sample_id?: number | null;
         };
@@ -4782,6 +4816,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: never;
             path: {
@@ -5607,6 +5642,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: never;
             path: {
@@ -5638,7 +5674,9 @@ export interface operations {
     };
     link_dataset_parent_child_datasets__parent_dataset_id__children__child_dataset_id__post: {
         parameters: {
-            query?: never;
+            query?: {
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
+            };
             header?: never;
             path: {
                 parent_dataset_id: unknown;
@@ -8049,6 +8087,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: never;
             path: {
@@ -8083,6 +8122,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: never;
             path: {
@@ -8114,7 +8154,9 @@ export interface operations {
     };
     link_sample_parent_child_samples__parent_sample_id__children__child_sample_id__post: {
         parameters: {
-            query?: never;
+            query?: {
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
+            };
             header?: never;
             path: {
                 parent_sample_id: unknown;

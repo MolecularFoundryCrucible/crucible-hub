@@ -24,6 +24,7 @@ import type {
   WorkspaceDatasetDescriptiveUpdate,
   WorkspaceDeletionRequest,
   WorkspaceFileDownload,
+  WorkspaceLinkedResource,
   WorkspacePerson,
   WorkspaceOwnershipTransfer,
   WorkspaceProjectReassignment,
@@ -196,6 +197,34 @@ function commonResource(
   }
 }
 
+function workspaceLinks(
+  links: readonly Schema<"LinkedResource">[] | null | undefined
+): readonly WorkspaceLinkedResource[] | null {
+  if (links == null) return null
+  return links.map((link) => ({
+    name: link.name ?? null,
+    relationship: workspaceRelationship(link.direction),
+    relationship_type: link.relationship_type ?? null,
+    resource_type: link.resource_type,
+    unique_id: link.unique_id,
+  }))
+}
+
+function workspaceRelationship(
+  direction: Schema<"LinkedResource">["direction"]
+): WorkspaceLinkedResource["relationship"] {
+  switch (direction) {
+    case "source":
+      return "parent"
+    case "target":
+      return "child"
+    case "undirected":
+      return "associated"
+    default:
+      throw new Error("The resource relationship direction is invalid.")
+  }
+}
+
 export function toWorkspaceResourceDetail(
   resource: ApiResource
 ): WorkspaceResourceDetail {
@@ -221,7 +250,7 @@ export function toWorkspaceResourceDetail(
       session_name: resource.session_name ?? null,
       size: resource.size ?? null,
       timestamp: resource.timestamp ?? null,
-      links: resource.links ?? null,
+      links: workspaceLinks(resource.links),
     }
   }
   if (isSample(resource)) {
@@ -240,7 +269,7 @@ export function toWorkspaceResourceDetail(
       description: resource.description ?? null,
       sample_type: resource.sample_type ?? null,
       timestamp: resource.timestamp ?? null,
-      links: resource.links ?? null,
+      links: workspaceLinks(resource.links),
     }
   }
   if (isInstrument(resource)) {
@@ -1287,9 +1316,10 @@ function relationshipLink(
   return {
     name: target.name,
     relationship,
+    relationship_type: null,
     resource_type: target.kind,
     unique_id: target.unique_id,
-  } satisfies Schema<"LinkedResource">
+  } satisfies WorkspaceLinkedResource
 }
 
 function hasRelationshipLink(

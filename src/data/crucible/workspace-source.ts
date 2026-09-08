@@ -187,7 +187,13 @@ export type WorkspaceOwnershipTransfer = Schema<"TransferOwnershipRead">
 
 export type WorkspaceProjectReassignment = Schema<"ReassignProjectRead">
 
-export type WorkspaceLinkedResource = Schema<"LinkedResource">
+export type WorkspaceLinkedResource = {
+  name: string | null
+  relationship: "associated" | "child" | "parent"
+  relationship_type?: string | null
+  resource_type: string
+  unique_id: string
+}
 
 export type WorkspaceResourceGraphNode = {
   kind: "dataset" | "sample"

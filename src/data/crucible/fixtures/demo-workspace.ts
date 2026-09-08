@@ -192,7 +192,8 @@ export const demoWorkspace = {
       links: [
         {
           name: "NiFe K-edge operando series",
-          relationship: "associated",
+          direction: "undirected",
+          relationship_type: null,
           resource_type: "dataset",
           unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z7",
         },
@@ -258,7 +259,8 @@ export const demoWorkspace = {
       links: [
         {
           name: "NiFe oxide catalyst A",
-          relationship: "associated",
+          direction: "undirected",
+          relationship_type: null,
           resource_type: "sample",
           unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
         },

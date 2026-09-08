@@ -940,7 +940,22 @@ describe("workspace resource sources", () => {
       links: [
         {
           name: null,
-          relationship: "associated",
+          direction: "source",
+          relationship_type: "is_derived_from",
+          resource_type: "sample",
+          unique_id: "parent-sample",
+        },
+        {
+          name: "Child sample",
+          direction: "target",
+          relationship_type: "is_part_of",
+          resource_type: "sample",
+          unique_id: "child-sample",
+        },
+        {
+          name: "Linked sample",
+          direction: "undirected",
+          relationship_type: null,
           resource_type: "sample",
           unique_id: "linked-sample",
         },
@@ -948,7 +963,22 @@ describe("workspace resource sources", () => {
       expected: [
         {
           name: null,
+          relationship: "parent",
+          relationship_type: "is_derived_from",
+          resource_type: "sample",
+          unique_id: "parent-sample",
+        },
+        {
+          name: "Child sample",
+          relationship: "child",
+          relationship_type: "is_part_of",
+          resource_type: "sample",
+          unique_id: "child-sample",
+        },
+        {
+          name: "Linked sample",
           relationship: "associated",
+          relationship_type: null,
           resource_type: "sample",
           unique_id: "linked-sample",
         },
@@ -1009,7 +1039,8 @@ describe("workspace resource sources", () => {
           links: [
             {
               name: "Authoritative linked dataset",
-              relationship: "associated",
+              direction: "undirected",
+              relationship_type: null,
               resource_type: "dataset",
               unique_id: "linked-dataset",
             },
