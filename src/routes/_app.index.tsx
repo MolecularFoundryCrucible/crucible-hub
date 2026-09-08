@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { ArrowRightIcon } from "lucide-react"
 
 import { CollectionRowsPending } from "@/components/crucible/collection-state"
+import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -292,16 +293,18 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
         <span className="min-w-0 flex-1">
           <span className="block text-label wrap-break-word">{item.name}</span>
           {item.projectId ? (
-            <span className="mt-1 block min-w-0 truncate text-supporting text-muted-foreground">
-              Project ID:{" "}
-              <span className="font-mono text-identifier">
-                {item.projectId}
-              </span>
+            <span className="mt-1 flex min-w-0 items-center gap-2 text-supporting text-muted-foreground">
+              <ResourceTypeIcon className="size-4 shrink-0" type="project" />
+              <span className="sr-only">Project ID:</span>
+              <span className="min-w-0 truncate">{item.projectId}</span>
             </span>
           ) : null}
-          <span className="mt-1 block min-w-0 truncate text-supporting text-muted-foreground">
-            MFID:{" "}
-            <span className="font-mono text-identifier">{item.uniqueId}</span>
+          <span className="mt-1 flex min-w-0 items-center gap-2 text-muted-foreground">
+            <IdentityFieldIcon className="mt-0" type="mfid" />
+            <span className="sr-only">MFID:</span>
+            <span className="min-w-0 truncate font-mono text-identifier">
+              {item.uniqueId}
+            </span>
           </span>
         </span>
       </span>
