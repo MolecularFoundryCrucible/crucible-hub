@@ -212,7 +212,9 @@ function SidebarBrand() {
             tooltip="Crucible Hub"
             render={<Link aria-label="Crucible Hub" to="/" />}
           >
-            <BrandMark />
+            <BrandMark
+              className={collapsed ? undefined : "overflow-hidden rounded-md"}
+            />
             {collapsed ? null : (
               <span className="truncate text-brand">Crucible Hub</span>
             )}
