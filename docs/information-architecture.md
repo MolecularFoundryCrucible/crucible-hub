@@ -89,7 +89,7 @@ The exact project endpoint returns `ProjectWithLead`: `unique_id`, `project_id`,
 
 Project creation is a dedicated route linked from the project collection. It requires a project title, validated project ID, organization, and an existing lead. The current account is the initial lead and bounded people search can replace it. New projects start active and open by returned canonical MFID.
 
-Project-scoped search uses the canonical project MFID to find related samples and datasets across assigned and shared relationships. Its breadcrumb and Back to project action return directly to Project Data, and canonical resource links retain the project for contextual return navigation. Global search remains available without losing its cross-resource scope. Global search also offers a URL-backed Scientific metadata mode that searches API-provided full-text metadata results and groups supported resource types without presenting loaded-page filtering as complete search.
+Project-scoped search uses the canonical project MFID to find related samples and datasets across assigned and shared relationships. Its breadcrumb links directly to the project, browser history provides chronological return navigation, and canonical resource links retain the project for contextual return navigation. Global search remains available without losing its cross-resource scope. Global search also offers a URL-backed Scientific metadata mode that searches API-provided full-text metadata results and groups supported resource types without presenting loaded-page filtering as complete search.
 
 ### Instrument
 

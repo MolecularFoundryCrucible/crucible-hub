@@ -73,7 +73,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Increased top-level read-only field labels to the shared 14 px semibold label role while retaining the smaller supporting role for secondary content.
 - Made compact dialogs viewport-bounded with persistent action footers, moved card actions below headings on narrow screens, reflowed member and access controls, and made member addition an explicit selection and confirmation workflow.
 - Improved compact resource inspection with resource icons beside wrapping titles, dedicated MFID rows, wrapping relationship identities, fixed trailing navigation actions, and less redundant labels.
-- Added project-scoped data search with contextual return navigation, keyboard navigation shortcuts with in-app help, and consistent Shortcuts, Theme, and navigation controls in the sidebar footer.
+- Added project-scoped data search with project breadcrumb navigation, keyboard navigation shortcuts with in-app help, and consistent Shortcuts, Theme, and navigation controls in the sidebar footer.
 - Made resource inspectors non-modal at wider widths, added a stable preview-navigation and close top bar, preserved the host page's current scroll position on close, and refined the identity hierarchy with an icon-labeled, quick-copy MFID and the full-page action directly below the resource name.
 - Standardized displayed timestamps in browser-local 24-hour time and labeled project owners as Lead in project membership surfaces.
 - Updated the pinned staging API contract and sample and dataset creation requests to use canonical project and instrument MFIDs directly, removing identity lookup requests before creation.
