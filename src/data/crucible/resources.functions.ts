@@ -13,6 +13,7 @@ import {
   patchWorkspaceSampleDescription,
   reassignWorkspaceResourceProject,
   readWorkspaceDatasetFiles,
+  readWorkspaceDatasetIngestionRequests,
   readWorkspaceDatasetThumbnailPreviews,
   readWorkspaceDatasetThumbnails,
   readWorkspaceResource,
@@ -441,6 +442,22 @@ export const getWorkspaceDatasetFiles = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceDatasetFiles(
+        data.datasetMfid,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const getWorkspaceDatasetIngestionRequests = createServerFn({
+  method: "GET",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(datasetFilesInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceDatasetIngestionRequests(
         data.datasetMfid,
         data.scenario,
         context.requestSignal

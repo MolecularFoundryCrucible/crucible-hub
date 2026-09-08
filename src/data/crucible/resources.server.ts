@@ -18,6 +18,7 @@ import {
 import type { FixtureScenario } from "./fixture-scenarios"
 import type {
   WorkspaceDatasetFile,
+  WorkspaceIngestionRequest,
   WorkspaceDatasetThumbnail,
   WorkspaceDatasetThumbnailOperation,
   WorkspaceDatasetDescriptiveUpdate,
@@ -385,6 +386,58 @@ export async function readWorkspaceDatasetFiles(
     throw new CrucibleResponseError(result.response.status)
   }
   return result.data
+}
+
+export async function readWorkspaceDatasetIngestionRequests(
+  datasetMfid: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<readonly WorkspaceIngestionRequest[]> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const dataset = fixtureWorkspace(scenario).datasets.find(
+      (candidate) => candidate.unique_id === datasetMfid
+    )
+    if (!dataset) throw new CrucibleResponseError(404)
+    if (datasetMfid !== demoWorkspace.datasets[0].unique_id) return []
+    const fileMfid = demoWorkspace.files.find(
+      (file) => file.dataset_mfid === datasetMfid
+    )?.mfid
+    return [
+      {
+        datasetMfid,
+        fileMfid: fileMfid ?? null,
+        id: 101,
+        ingestionClass: "metadata extraction",
+        status: "completed",
+        timeCompleted: "2026-08-28T18:06:00Z",
+        timeCreated: "2026-08-28T17:58:00Z",
+      },
+    ]
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/ingestion_requests", {
+    params: {
+      query: { dataset_id: datasetMfid, limit: 20, offset: 0 },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response.status)
+  }
+  return result.data.items.map((request) => ({
+    datasetMfid: request.dataset_mfid ?? null,
+    fileMfid: request.file_mfid ?? null,
+    id: request.id ?? null,
+    ingestionClass: request.ingestion_class ?? null,
+    status: request.status ?? null,
+    timeCompleted: request.time_completed ?? null,
+    timeCreated: request.time_created ?? null,
+  }))
 }
 
 function workspaceDatasetThumbnail(value: unknown): WorkspaceDatasetThumbnail {

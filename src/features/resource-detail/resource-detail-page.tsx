@@ -88,6 +88,7 @@ import { formatBytes, formatDate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { ResourceSummaryCard } from "@/features/resource-edit/resource-summary-card"
 import { DatasetThumbnailsCard } from "@/features/dataset-thumbnails/dataset-thumbnails-card"
+import { DatasetProcessingActivity } from "@/features/dataset-activity/dataset-processing-activity"
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
@@ -285,6 +286,14 @@ export function ResourceOverview({
       {resource.kind === "dataset" ? (
         <ContentGridItem span="wide">
           <DatasetFiles datasetMfid={resource.unique_id} />
+        </ContentGridItem>
+      ) : null}
+      {resource.kind === "dataset" ? (
+        <ContentGridItem span="narrow">
+          <DatasetProcessingActivity
+            datasetMfid={resource.unique_id}
+            scope={scope}
+          />
         </ContentGridItem>
       ) : null}
       <ContentGridItem span="narrow">

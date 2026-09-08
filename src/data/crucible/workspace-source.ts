@@ -358,6 +358,16 @@ export type WorkspaceResourceDetail =
 
 export type WorkspaceDatasetFile = Schema<"AssociatedFileRead">
 
+export type WorkspaceIngestionRequest = {
+  datasetMfid: string | null
+  fileMfid: string | null
+  id: number | null
+  ingestionClass: string | null
+  status: string | null
+  timeCompleted: string | null
+  timeCreated: string | null
+}
+
 export type WorkspaceDatasetThumbnail = Pick<
   Schema<"ThumbnailRead">,
   "id" | "mime_type" | "thumbnail_b64str" | "thumbnail_name"

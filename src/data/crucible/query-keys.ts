@@ -58,6 +58,8 @@ export const crucibleKeys = {
     [...scope, "resources", "access", resourceMfid] as const,
   datasetFiles: (scope: IdentityScope, datasetMfid: string) =>
     [...scope, "datasets", "files", datasetMfid] as const,
+  datasetIngestionRequests: (scope: IdentityScope, datasetMfid: string) =>
+    [...scope, "datasets", "ingestion-requests", datasetMfid] as const,
   datasetThumbnails: (scope: IdentityScope, datasetMfid: string) =>
     [...scope, "datasets", "thumbnails", datasetMfid] as const,
   datasetThumbnailPreviews: (
