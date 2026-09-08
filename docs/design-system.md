@@ -33,6 +33,8 @@ Primitive scales use a 4 px base and named spacing roles, repository-pinned self
 | `supporting`, `label-compact`, `overline` | 12 / 16 px                  | Secondary content        |
 | `metric`                                  | 24 / 32 px / 600            | Bounded summary          |
 
+Top-level read-only field labels in Summary, Identity, Context, profile, and management cards use the 14 px semibold `label` role with muted foreground. Their values use the 14 px regular `body` or `identifier` role with normal foreground. Reserve the 12 px `supporting` role for hints, secondary identifiers, dense scientific metadata keys, and supplementary status text.
+
 Use 44 px minimum primary touch controls. Dense pointer-oriented rows may be 36 px only when each target is at least 24 by 24 px, separated, and keyboard reachable. Semantic layout roles include page gutter, content and reading widths, section gaps, dense pill roles, and a 320 px initially resizable metadata editor. Use restrained 4, 8, 12, and 16 px radius roles only after fixture calibration. Resting elevation is `level-0` flat, `level-1` sticky or raised, `level-2` menu or popover, and `level-3` modal. Prefer surfaces and borders to decorative shadow.
 
 Use quick, standard, and deliberate motion roles with initial 120, 180, and 240 ms targets. No continuous decoration. Reduced motion removes non-essential transforms, parallax, auto-scroll, and continuous effects. Shell breakpoints are compact below 48 rem, medium at 48 rem, wide at 64 rem, and expanded at 80 rem; components prefer container queries. Named layers cover base, sticky, navigation, popover, modal, notification, and emergency messages.

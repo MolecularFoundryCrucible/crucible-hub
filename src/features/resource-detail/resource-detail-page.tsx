@@ -389,13 +389,13 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
       <CardContent>
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="min-w-0 sm:col-span-2">
-            <dt className="text-supporting text-muted-foreground">MFID</dt>
+            <dt className="text-label text-muted-foreground">MFID</dt>
             <dd className="mt-1">
               <MfidValue value={resource.unique_id} />
             </dd>
           </div>
           <div>
-            <dt className="text-supporting text-muted-foreground">Owner</dt>
+            <dt className="text-label text-muted-foreground">Owner</dt>
             <dd className="mt-1 flex items-start gap-2 text-body">
               <IdentityFieldIcon type="owner" />
               {owner ? (
@@ -413,9 +413,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
           </div>
           {"public" in resource && (
             <div>
-              <dt className="text-supporting text-muted-foreground">
-                Visibility
-              </dt>
+              <dt className="text-label text-muted-foreground">Visibility</dt>
               <dd className="mt-1 flex items-center gap-2 text-body">
                 <IdentityFieldIcon
                   type={
@@ -429,14 +427,14 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
             </div>
           )}
           <div>
-            <dt className="text-supporting text-muted-foreground">Created</dt>
+            <dt className="text-label text-muted-foreground">Created</dt>
             <dd className="mt-1 flex items-start gap-2 text-body">
               <IdentityFieldIcon type="created" />
               {formatDate(resource.creation_time)}
             </dd>
           </div>
           <div>
-            <dt className="text-supporting text-muted-foreground">Updated</dt>
+            <dt className="text-label text-muted-foreground">Updated</dt>
             <dd className="mt-1 flex items-start gap-2 text-body">
               <IdentityFieldIcon type="updated" />
               {formatDate(resource.modification_time)}

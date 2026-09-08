@@ -363,9 +363,7 @@ function InspectorContext({ resource }: { resource: WorkspaceResourceDetail }) {
       <dl className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
         {fields.map((field) => (
           <div className="min-w-0" key={field.label}>
-            <dt className="text-supporting text-muted-foreground">
-              {field.label}
-            </dt>
+            <dt className="text-label text-muted-foreground">{field.label}</dt>
             <dd className="mt-1 text-body break-words">
               {field.value || "Not recorded"}
             </dd>

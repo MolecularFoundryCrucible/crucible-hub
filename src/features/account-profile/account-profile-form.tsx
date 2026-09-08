@@ -200,21 +200,19 @@ export function AccountProfileForm({
           <CardContent>
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-supporting text-muted-foreground">Email</dt>
+                <dt className="text-label text-muted-foreground">Email</dt>
                 <dd className="mt-1 text-body break-words">
                   {account.email ?? "Not provided"}
                 </dd>
               </div>
               <div>
-                <dt className="text-supporting text-muted-foreground">
-                  Username
-                </dt>
+                <dt className="text-label text-muted-foreground">Username</dt>
                 <dd className="mt-1 text-body break-words">
                   {account.username ?? "Not provided"}
                 </dd>
               </div>
               <div className="sm:col-span-2">
-                <dt className="text-supporting text-muted-foreground">
+                <dt className="text-label text-muted-foreground">
                   Crucible ID
                 </dt>
                 <dd className="mt-1 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">

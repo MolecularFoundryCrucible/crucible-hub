@@ -189,7 +189,7 @@ export function InstrumentLifecycleCard({
           <CardContent className="flex flex-col gap-6">
             <dl>
               <div>
-                <dt className="text-supporting text-muted-foreground">
+                <dt className="text-label text-muted-foreground">
                   Current status
                 </dt>
                 <dd className="mt-1">
