@@ -23,15 +23,24 @@ import {
 } from "@/components/ui/card"
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import { initials } from "@/lib/format"
+import { hubPageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/_app/people/$personId")({
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
-    await context.queryClient.ensureQueryData(
+    const person = await context.queryClient.ensureQueryData(
       personQueryOptions(source.scope, params.personId)
     )
+    return {
+      personName: person
+        ? `${person.first_name} ${person.last_name}`
+        : undefined,
+    }
   },
+  head: ({ loaderData }) => ({
+    meta: [{ title: hubPageTitle(loaderData?.personName) }],
+  }),
   pendingComponent: RouteContentPending,
   component: PersonPage,
 })

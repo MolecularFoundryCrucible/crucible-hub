@@ -135,7 +135,10 @@ export function AppShell({
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarUtilities projectActive={Boolean(projectMfid)} />
+        <SidebarUtilities
+          pathname={pathname}
+          projectActive={Boolean(projectMfid)}
+        />
         <SidebarRail />
       </Sidebar>
       <SidebarInset>
@@ -225,7 +228,13 @@ function SidebarBrand() {
   )
 }
 
-function SidebarUtilities({ projectActive }: { projectActive: boolean }) {
+function SidebarUtilities({
+  pathname,
+  projectActive,
+}: {
+  pathname: string
+  projectActive: boolean
+}) {
   const { isMobile, state, toggleSidebar } = useSidebar()
   const { setTheme, theme } = useTheme()
   const expanded = isMobile || state === "expanded"
@@ -234,7 +243,10 @@ function SidebarUtilities({ projectActive }: { projectActive: boolean }) {
     <SidebarFooter>
       <SidebarMenu>
         <SidebarMenuItem>
-          <KeyboardShortcuts projectActive={projectActive} />
+          <KeyboardShortcuts
+            pathname={pathname}
+            projectActive={projectActive}
+          />
         </SidebarMenuItem>
         <SidebarMenuItem>
           <DropdownMenu>

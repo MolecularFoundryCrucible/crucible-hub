@@ -32,9 +32,16 @@ const shortcuts = [
   ["Esc", "Close the active dialog or panel"],
 ] as const
 
+type ResourceContext = {
+  kind: "dataset" | "instrument" | "project" | "sample"
+  mfid: string
+}
+
 export function KeyboardShortcuts({
+  pathname,
   projectActive,
 }: {
+  pathname: string
   projectActive: boolean
 }) {
   const navigate = useNavigate()
@@ -74,6 +81,10 @@ export function KeyboardShortcuts({
       const key = event.key.toLocaleLowerCase()
       if (sequenceStarted.current) {
         resetSequence()
+        if (navigateWithinResource(navigate, pathname, key)) {
+          event.preventDefault()
+          return
+        }
         if (!Object.hasOwn(navigationShortcuts, key)) return
         const destination =
           navigationShortcuts[key as keyof typeof navigationShortcuts]
@@ -94,7 +105,21 @@ export function KeyboardShortcuts({
       resetSequence()
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [navigate])
+  }, [navigate, pathname])
+
+  const resourceContext = getResourceContext(pathname)
+  const contextualShortcuts = resourceContext
+    ? [
+        ["G then O", "Go to this resource's Overview"],
+        ...(resourceContext.kind === "sample" ||
+        resourceContext.kind === "dataset"
+          ? [
+              ["G then G", "Go to this resource's Graph"],
+              ["G then M", "Go to this resource's Manage page"],
+            ]
+          : []),
+      ]
+    : []
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -144,10 +169,102 @@ export function KeyboardShortcuts({
               </div>
             )
           })}
+          {contextualShortcuts.map(([keys, description]) => (
+            <div className="grid grid-cols-3 items-center gap-4" key={keys}>
+              <dt>
+                <kbd className="rounded border bg-muted px-2 py-1 text-label-compact">
+                  {keys}
+                </kbd>
+              </dt>
+              <dd className="col-span-2">{description}</dd>
+            </div>
+          ))}
         </dl>
       </DialogContent>
     </Dialog>
   )
+}
+
+function getResourceContext(pathname: string): ResourceContext | null {
+  const match = pathname.match(
+    /^\/(datasets|instruments|projects|samples)\/([^/]+)/
+  )
+  if (!match) return null
+
+  const kind = match[1].slice(0, -1)
+  const mfid = match[2]
+  if (
+    !mfid ||
+    (kind !== "dataset" &&
+      kind !== "instrument" &&
+      kind !== "project" &&
+      kind !== "sample")
+  ) {
+    return null
+  }
+  return { kind, mfid }
+}
+
+function navigateWithinResource(
+  navigate: ReturnType<typeof useNavigate>,
+  pathname: string,
+  key: string
+) {
+  const context = getResourceContext(pathname)
+  if (!context) return false
+
+  if (key === "o") {
+    if (context.kind === "project") {
+      void navigate({
+        params: { projectMfid: context.mfid },
+        search: {},
+        to: "/projects/$projectMfid/overview",
+      })
+    } else if (context.kind === "instrument") {
+      void navigate({
+        params: { instrumentMfid: context.mfid },
+        search: {},
+        to: "/instruments/$instrumentMfid",
+      })
+    } else if (context.kind === "sample") {
+      void navigate({
+        params: { sampleMfid: context.mfid },
+        search: {},
+        to: "/samples/$sampleMfid",
+      })
+    } else {
+      void navigate({
+        params: { datasetMfid: context.mfid },
+        search: {},
+        to: "/datasets/$datasetMfid",
+      })
+    }
+    return true
+  }
+
+  if (context.kind !== "sample" && context.kind !== "dataset") return false
+  if (key !== "g" && key !== "m") return false
+
+  if (context.kind === "sample") {
+    void navigate({
+      params: { sampleMfid: context.mfid },
+      search: {},
+      to:
+        key === "g"
+          ? "/samples/$sampleMfid/graph"
+          : "/samples/$sampleMfid/manage",
+    })
+  } else {
+    void navigate({
+      params: { datasetMfid: context.mfid },
+      search: {},
+      to:
+        key === "g"
+          ? "/datasets/$datasetMfid/graph"
+          : "/datasets/$datasetMfid/manage",
+    })
+  }
+  return true
 }
 
 function isEditableTarget(target: EventTarget | null) {

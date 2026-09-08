@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/card"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
+import { hubPageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid")({
   loader: async ({ context, params, parentMatchPromise }) => {
@@ -40,9 +41,13 @@ export const Route = createFileRoute("/_app/projects/$projectMfid")({
     return {
       isProject: Boolean(project),
       projectMfid: project?.unique_id ?? params.projectMfid,
+      projectName: project?.title ?? project?.project_id,
       scope: source.scope,
     }
   },
+  head: ({ loaderData }) => ({
+    meta: [{ title: hubPageTitle(loaderData?.projectName) }],
+  }),
   pendingComponent: RouteContentPending,
   component: ProjectWorkspace,
 })

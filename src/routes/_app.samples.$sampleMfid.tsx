@@ -6,6 +6,7 @@ import {
 } from "@/features/resource-detail/resource-detail-page"
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { hubPageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/_app/samples/$sampleMfid")({
   validateSearch: resourceDetailSearchSchema,
@@ -28,8 +29,15 @@ export const Route = createFileRoute("/_app/samples/$sampleMfid")({
       })
     }
     if (resource.kind !== "sample") throw notFound()
-    return { resourceMfid: resource.unique_id, scope: source.scope }
+    return {
+      resourceMfid: resource.unique_id,
+      resourceName: resource.name,
+      scope: source.scope,
+    }
   },
+  head: ({ loaderData }) => ({
+    meta: [{ title: hubPageTitle(loaderData?.resourceName) }],
+  }),
   pendingComponent: RouteContentPending,
   component: SamplePage,
 })

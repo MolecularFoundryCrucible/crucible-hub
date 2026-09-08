@@ -29,6 +29,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { hubPageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
   loader: async ({ context, params, parentMatchPromise }) => {
@@ -43,10 +44,14 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
     }
     return {
       instrumentMfid: resource.unique_id,
+      instrumentName: resource.name,
       isInstrument: true,
       scope: source.scope,
     }
   },
+  head: ({ loaderData }) => ({
+    meta: [{ title: hubPageTitle(loaderData?.instrumentName) }],
+  }),
   pendingComponent: RouteContentPending,
   component: InstrumentPage,
 })
