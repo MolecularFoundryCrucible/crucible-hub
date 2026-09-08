@@ -6,7 +6,7 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { queryCancellationMiddleware } from "./query-cancellation"
-import { searchWorkspace } from "./search.server"
+import { searchWorkspace, searchWorkspaceMetadata } from "./search.server"
 
 export const searchKindSchema = z.enum([
   "dataset",
@@ -31,5 +31,21 @@ export const getWorkspaceSearch = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       searchWorkspace(data, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceMetadataSearch = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(
+    z.object({
+      limit: z.number().int().min(1).max(50),
+      query: z.string().trim().min(3).max(200),
+      scenario: fixtureScenarioSchema.optional(),
+    })
+  )
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      searchWorkspaceMetadata(data, context.requestSignal)
     )
   })

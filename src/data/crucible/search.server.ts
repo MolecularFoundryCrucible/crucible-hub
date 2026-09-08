@@ -1,6 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import type { components } from "@/generated/crucible-api"
+import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -20,6 +21,7 @@ import type {
   WorkspaceSearchResponse,
   WorkspaceSearchResult,
 } from "./workspace-source"
+import { normalizeScientificMetadata } from "./scientific-metadata"
 
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
@@ -28,6 +30,12 @@ type SearchInput = {
   kinds: readonly WorkspaceSearchKind[]
   limit: number
   projectMfid?: string
+  query: string
+  scenario?: FixtureScenario
+}
+
+type MetadataSearchInput = {
+  limit: number
   query: string
   scenario?: FixtureScenario
 }
@@ -168,6 +176,94 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
     }
   })
   return { groups, query: input.query }
+}
+
+function metadataContext(metadata: unknown, query: string) {
+  const normalized = normalizeScientificMetadata(metadata)
+  if (!normalized) return "Scientific metadata match"
+  const match = Object.entries(normalized).find(([, value]) =>
+    JSON.stringify(value)
+      .toLocaleLowerCase()
+      .includes(query.toLocaleLowerCase())
+  )
+  if (!match) return "Scientific metadata match"
+  const [key, value] = match
+  const formatted = typeof value === "string" ? value : JSON.stringify(value)
+  return `${key}: ${formatted}`
+}
+
+function metadataKind(value: string | null | undefined) {
+  return value === "dataset" ||
+    value === "instrument" ||
+    value === "project" ||
+    value === "sample"
+    ? value
+    : null
+}
+
+function fixtureMetadataSearch(
+  input: MetadataSearchInput
+): WorkspaceSearchResponse {
+  const source = readWorkspaceFixture(input.scenario)
+  if (source.status === "unavailable") throw new Error(source.reason)
+  const query = input.query.toLocaleLowerCase()
+  const resources = [
+    ...source.workspace.projects.map((resource) => ({
+      kind: "project" as const,
+      metadata:
+        "scientific_metadata" in resource ? resource.scientific_metadata : null,
+      name: resource.title ?? resource.project_id,
+      unique_id: resource.unique_id,
+    })),
+    ...source.workspace.instruments.map((resource) => ({
+      kind: "instrument" as const,
+      metadata:
+        demoWorkspace.instruments.find(
+          (candidate) => candidate.unique_id === resource.unique_id
+        )?.scientific_metadata ?? null,
+      name: resource.instrument_name,
+      unique_id: resource.unique_id,
+    })),
+    ...source.workspace.samples.map((resource) => ({
+      kind: "sample" as const,
+      metadata:
+        demoWorkspace.samples.find(
+          (candidate) => candidate.unique_id === resource.unique_id
+        )?.scientific_metadata ?? null,
+      name: resource.sample_name,
+      unique_id: resource.unique_id,
+    })),
+    ...source.workspace.datasets.map((resource) => ({
+      kind: "dataset" as const,
+      metadata:
+        demoWorkspace.datasets.find(
+          (candidate) => candidate.unique_id === resource.unique_id
+        )?.scientific_metadata ?? null,
+      name: resource.dataset_name ?? "Untitled dataset",
+      unique_id: resource.unique_id,
+    })),
+  ]
+  const results = resources
+    .filter((resource) =>
+      JSON.stringify(resource.metadata).toLocaleLowerCase().includes(query)
+    )
+    .slice(0, input.limit)
+    .map((resource): WorkspaceSearchResult => ({
+      context: metadataContext(resource.metadata, input.query),
+      kind: resource.kind,
+      name: resource.name,
+      unique_id: resource.unique_id,
+    }))
+
+  return {
+    groups: (["project", "instrument", "sample", "dataset"] as const).map(
+      (kind) => {
+        const items = results.filter((result) => result.kind === kind)
+        return group(kind, items)
+      }
+    ),
+    query: input.query,
+  }
 }
 
 function projectResult(project: Schema<"ProjectRead">): WorkspaceSearchResult {
@@ -326,5 +422,48 @@ export async function searchWorkspace(
         ? result.value
         : group(input.kinds[index], [], null, true)
     ),
+  }
+}
+
+export async function searchWorkspaceMetadata(
+  input: MetadataSearchInput,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceSearchResponse> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") return fixtureMetadataSearch(input)
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/resources/metadata/search", {
+    params: { query: { limit: input.limit, q: input.query } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new Error("scientific metadata search failed")
+  }
+
+  const items = result.data.items
+    .map((resource): WorkspaceSearchResult | null => {
+      const kind = metadataKind(resource.resource_type)
+      if (!kind) return null
+      return {
+        context: metadataContext(resource.scientific_metadata, input.query),
+        kind,
+        name: resource.name ?? resource.unique_id,
+        unique_id: resource.unique_id,
+      }
+    })
+    .filter((item): item is WorkspaceSearchResult => item !== null)
+
+  return {
+    groups: (["project", "instrument", "sample", "dataset"] as const).map(
+      (kind) => {
+        const groupItems = items.filter((item) => item.kind === kind)
+        return group(kind, groupItems)
+      }
+    ),
+    query: input.query,
   }
 }

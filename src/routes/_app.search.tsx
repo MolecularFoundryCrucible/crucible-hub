@@ -36,7 +36,10 @@ import {
 } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { searchQueryOptions } from "@/data/crucible/search.queries"
+import {
+  metadataSearchQueryOptions,
+  searchQueryOptions,
+} from "@/data/crucible/search.queries"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type {
   WorkspaceSearchKind,
@@ -53,6 +56,7 @@ const kinds = [
 
 const searchSchema = z.object({
   kind: z.enum(kinds).optional().catch(undefined),
+  mode: z.enum(["metadata"]).optional().catch(undefined),
   projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
   q: z.string().trim().max(200).optional().catch(undefined),
 })
@@ -86,6 +90,7 @@ function SearchPage() {
     : search.kind
       ? [search.kind]
       : kinds
+  const metadataMode = !search.projectMfid && search.mode === "metadata"
   const validQuery = search.q && search.q.length >= 3 ? search.q : null
 
   useEffect(() => {
@@ -176,9 +181,11 @@ function SearchPage() {
             name="q"
             onChange={(event) => setQuery(event.target.value)}
             placeholder={
-              search.projectMfid
-                ? "Search sample and dataset names"
-                : "Search names, identifiers, and scientific data"
+              metadataMode
+                ? "Search scientific metadata"
+                : search.projectMfid
+                  ? "Search sample and dataset names"
+                  : "Search names, identifiers, and scientific data"
             }
             required
             type="search"
@@ -192,22 +199,29 @@ function SearchPage() {
       </ContentBoundary>
       <nav className="flex flex-wrap gap-2" aria-label="Resource type filter">
         <KindLink
-          active={search.projectMfid ? !selectedProjectKind : !search.kind}
+          active={
+            !metadataMode &&
+            (search.projectMfid ? !selectedProjectKind : !search.kind)
+          }
           kind={undefined}
           label="All"
         />
         {(search.projectMfid ? projectKinds : kinds).map((kind) => (
           <KindLink
-            active={search.kind === kind}
+            active={!metadataMode && search.kind === kind}
             key={kind}
             kind={kind}
             label={kindLabel(kind)}
           />
         ))}
+        {!search.projectMfid ? (
+          <ModeLink active={metadataMode} label="Scientific metadata" />
+        ) : null}
       </nav>
       {validQuery ? (
         <SearchResults
           kinds={selectedKinds}
+          metadataMode={metadataMode}
           projectMfid={search.projectMfid}
           query={validQuery}
         />
@@ -310,16 +324,20 @@ function SearchResultsPending() {
 
 function SearchResults({
   kinds: selectedKinds,
+  metadataMode,
   projectMfid,
   query,
 }: {
   kinds: readonly WorkspaceSearchKind[]
+  metadataMode: boolean
   projectMfid?: string
   query: string
 }) {
   const scope = useWorkspaceScope()
   const result = useQuery(
-    searchQueryOptions(scope, query, selectedKinds, projectMfid)
+    metadataMode
+      ? metadataSearchQueryOptions(scope, query)
+      : searchQueryOptions(scope, query, selectedKinds, projectMfid)
   )
 
   if (result.isPending) return <SearchResultsPending />
@@ -496,7 +514,24 @@ function KindLink({
     <Link
       className={buttonVariants({ variant: active ? "secondary" : "ghost" })}
       from="/search"
-      search={(previous) => ({ ...previous, kind })}
+      search={(previous) => ({ ...previous, kind, mode: undefined })}
+      to="/search"
+    >
+      {label}
+    </Link>
+  )
+}
+
+function ModeLink({ active, label }: { active: boolean; label: string }) {
+  return (
+    <Link
+      className={buttonVariants({ variant: active ? "secondary" : "ghost" })}
+      from="/search"
+      search={(previous) => ({
+        ...previous,
+        kind: undefined,
+        mode: active ? undefined : "metadata",
+      })}
       to="/search"
     >
       {label}
