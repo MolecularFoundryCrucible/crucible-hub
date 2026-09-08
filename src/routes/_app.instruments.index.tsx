@@ -10,6 +10,7 @@ import {
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
@@ -164,6 +165,7 @@ function InstrumentsPageHeader({ canRegister }: { canRegister: boolean }) {
       actions={
         canRegister ? (
           <Link className={buttonVariants()} to="/instruments/new">
+            <CreateResourceIcon data-icon="inline-start" />
             Register instrument
           </Link>
         ) : null

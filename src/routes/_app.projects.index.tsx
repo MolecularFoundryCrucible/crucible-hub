@@ -134,10 +134,7 @@ function ProjectsPageHeader() {
   return (
     <PageHeader
       actions={
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          to="/projects/new"
-        >
+        <Link className={buttonVariants()} to="/projects/new">
           <CreateResourceIcon data-icon="inline-start" />
           Create project
         </Link>
