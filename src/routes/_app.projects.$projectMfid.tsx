@@ -4,6 +4,7 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
+import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   ResourceSectionNavigation,
   resourceSectionActiveProps,
@@ -95,6 +96,9 @@ function ProjectWorkspace() {
       <PageHeader
         actions={<ResourceCreationActions projectMfid={project.unique_id} />}
         eyebrow={project.project_id}
+        icon={
+          <ResourceTypeIcon className="mt-1 size-6 shrink-0" type="project" />
+        }
         title={project.title ?? project.project_id}
       />
 

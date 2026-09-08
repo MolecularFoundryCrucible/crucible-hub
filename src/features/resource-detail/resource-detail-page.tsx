@@ -227,14 +227,13 @@ export function ResourceWorkspace({
         ) : null}
 
         <PageHeader
-          eyebrow={
-            <>
-              <ResourceTypeIcon type={resource.kind} />
-              {resourceTypeLabel(resource.kind)}
-            </>
+          icon={
+            <ResourceTypeIcon
+              className="mt-1 size-6 shrink-0"
+              type={resource.kind}
+            />
           }
           title={resource.name}
-          description={resourceDescription(resource)}
         />
         <ResourceNavigation fromProject={fromProject} resource={resource} />
         <Outlet />
@@ -710,21 +709,4 @@ export function initiateFileDownload(url: string) {
   anchor.rel = "noopener noreferrer"
   anchor.target = "_self"
   anchor.click()
-}
-
-function resourceTypeLabel(kind: string) {
-  return `${kind.charAt(0).toUpperCase()}${kind.slice(1)}`
-}
-
-function resourceDescription(resource: WorkspaceResourceDetail) {
-  if (resource.kind === "dataset") {
-    return resource.measurement ?? undefined
-  }
-  if (resource.kind === "sample") {
-    return resource.sample_type ?? undefined
-  }
-  if (resource.kind === "instrument") {
-    return resource.description ?? undefined
-  }
-  return undefined
 }

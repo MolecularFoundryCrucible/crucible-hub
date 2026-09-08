@@ -89,7 +89,12 @@ function InstrumentPage() {
       </Breadcrumb>
 
       <PageHeader
-        eyebrow="Instrument"
+        icon={
+          <ResourceTypeIcon
+            className="mt-1 size-6 shrink-0"
+            type="instrument"
+          />
+        }
         title={resource.name}
         description={resource.description ?? undefined}
         actions={
