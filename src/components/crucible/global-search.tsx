@@ -56,13 +56,13 @@ export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
         onClick={() => setSearchScope("global")}
         render={
           <Button
-            className="min-w-0 flex-1 justify-start text-muted-foreground sm:max-w-sm"
+            className="min-w-0 flex-1 justify-start sm:max-w-sm"
             variant="outline"
           />
         }
       >
-        <SearchIcon aria-hidden="true" />
-        <span className="truncate">Search Crucible</span>
+        <SearchIcon aria-hidden="true" className="text-muted-foreground" />
+        <span className="truncate text-muted-foreground">Search Crucible</span>
         <kbd
           className="ml-auto hidden rounded border bg-muted px-1.5 py-0.5 text-label-compact sm:inline"
           aria-hidden="true"

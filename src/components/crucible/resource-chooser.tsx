@@ -178,7 +178,9 @@ export function ResourceChooser({
                     <FieldError id={errorId}>{validationError}</FieldError>
                   ) : null}
                 </Field>
-                <Button type="submit">Search</Button>
+                <Button type="submit" variant="outline">
+                  Search
+                </Button>
               </FieldGroup>
             </form>
             {!submitted ? null : result.isPending ||
@@ -200,8 +202,8 @@ export function ResourceChooser({
                   <li className="border-b last:border-0" key={item.unique_id}>
                     <Button
                       aria-label={`Select ${labels.singular.toLocaleLowerCase()}: ${item.name}`}
-                      className="h-auto w-full justify-start py-2 whitespace-normal"
                       onClick={() => select(item)}
+                      size="selection"
                       type="button"
                       variant="ghost"
                     >

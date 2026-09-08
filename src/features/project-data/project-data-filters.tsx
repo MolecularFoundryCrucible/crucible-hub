@@ -407,7 +407,9 @@ function InstrumentChooser({
                   value={query}
                 />
               </Field>
-              <Button type="submit">Search</Button>
+              <Button type="submit" variant="outline">
+                Search
+              </Button>
             </form>
             {!submitted ? null : result.isPending ||
               result.isPlaceholderData ? (
@@ -420,11 +422,10 @@ function InstrumentChooser({
               <ul className="flex flex-col">
                 {instruments.map((instrument) => (
                   <li
-                    className="border-b py-2 last:border-0"
+                    className="border-b last:border-0"
                     key={instrument.unique_id}
                   >
                     <Button
-                      className="h-auto w-full justify-start whitespace-normal"
                       onClick={() => {
                         onChange({
                           mfid: instrument.unique_id,
@@ -432,6 +433,7 @@ function InstrumentChooser({
                         })
                         setOpen(false)
                       }}
+                      size="selection"
                       type="button"
                       variant="ghost"
                     >

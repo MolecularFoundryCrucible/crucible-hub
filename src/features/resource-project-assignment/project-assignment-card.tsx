@@ -274,9 +274,9 @@ export function ProjectAssignmentCard({
                 return (
                   <li key={project.unique_id}>
                     <Button
-                      className="h-auto w-full justify-start py-2 whitespace-normal"
                       disabled={previewMutation.isPending || isCurrentProject}
                       onClick={() => void chooseProject(project)}
+                      size="selection"
                       type="button"
                       variant="ghost"
                     >

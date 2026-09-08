@@ -464,31 +464,23 @@ function ManagedResourceAccess({
                         )}
                       </span>
                       {revocable ? (
-                        <Tooltip>
-                          <TooltipTrigger
-                            render={
-                              <Button
-                                aria-label={`Revoke access for ${grantName(grant)}`}
-                                disabled={mutationPending}
-                                onClick={() => {
-                                  setError(undefined)
-                                  setPendingRevoke(grant)
-                                }}
-                                className="sm:size-8 sm:p-0"
-                                size="sm"
-                                type="button"
-                                variant="destructive"
-                              />
-                            }
-                          >
-                            <RevokeAccessGrantIcon
-                              aria-hidden="true"
-                              data-icon="inline-start"
-                            />
-                            <span className="sm:sr-only">Revoke</span>
-                          </TooltipTrigger>
-                          <TooltipContent>Revoke access</TooltipContent>
-                        </Tooltip>
+                        <Button
+                          aria-label={`Revoke access for ${grantName(grant)}`}
+                          disabled={mutationPending}
+                          onClick={() => {
+                            setError(undefined)
+                            setPendingRevoke(grant)
+                          }}
+                          size="sm"
+                          type="button"
+                          variant="destructive"
+                        >
+                          <RevokeAccessGrantIcon
+                            aria-hidden="true"
+                            data-icon="inline-start"
+                          />
+                          Revoke
+                        </Button>
                       ) : null}
                     </div>
                   </li>
@@ -891,12 +883,12 @@ function AddAccessDialog({
                 <li className="border-b last:border-0" key={item.unique_id}>
                   <Button
                     aria-pressed={selected?.unique_id === item.unique_id}
-                    className="h-auto w-full justify-start py-2 whitespace-normal"
                     disabled={pending}
                     onClick={() => {
                       setSelected(item)
                       setValidationError(undefined)
                     }}
+                    size="selection"
                     type="button"
                     variant={
                       selected?.unique_id === item.unique_id

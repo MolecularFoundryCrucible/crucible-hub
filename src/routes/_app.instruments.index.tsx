@@ -167,7 +167,7 @@ function InstrumentStatusNavigation({
           activeOptions={{ exact: true, explicitUndefined: true }}
           aria-current={candidate === status ? "page" : undefined}
           className={buttonVariants({
-            variant: candidate === status ? "secondary" : "outline",
+            variant: candidate === status ? "secondary" : "ghost",
           })}
           key={candidate}
           search={{
@@ -257,7 +257,7 @@ function InstrumentCollection({
                 to="/instruments/$instrumentMfid"
               >
                 Open instrument
-                <ArrowRightIcon aria-hidden="true" />
+                <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
               </Link>
             </CardContent>
           </Card>

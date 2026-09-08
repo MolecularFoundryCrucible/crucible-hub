@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { extname, join, relative } from "node:path"
+import ts from "typescript"
 
 const sourceRoot = "src"
 const allowedPrefixes = ["components/ui/", "generated/"]
@@ -36,6 +37,84 @@ const patterns = [
   },
 ]
 
+const buttonStyleUtility =
+  /^(?:bg|border(?:-[trblxy])?|font|gap(?:-[xy])?|h|max-h|min-h|p[trblxy]?|ring|rounded|shadow|size|tracking|whitespace)(?:-|$)/
+
+function classNames(node) {
+  const values = []
+  function visit(current) {
+    if (
+      ts.isStringLiteral(current) ||
+      ts.isNoSubstitutionTemplateLiteral(current)
+    )
+      values.push(current.text)
+    ts.forEachChild(current, visit)
+  }
+  visit(node)
+  return values.flatMap((value) => value.split(/\s+/).filter(Boolean))
+}
+
+function unmodifiedUtility(className) {
+  const utility = className.slice(className.lastIndexOf(":") + 1)
+  if (buttonStyleUtility.test(utility)) return utility
+  if (
+    utility.startsWith("text-") &&
+    !/^text-(?:center|end|left|right|start)$/.test(utility)
+  )
+    return utility
+  return undefined
+}
+
+function scanButtonUsage(path, localPath, content) {
+  if (localPath.endsWith(".test.tsx")) return
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  )
+
+  function inspectClasses(node, label) {
+    const utility = classNames(node).map(unmodifiedUtility).find(Boolean)
+    if (utility) violations.push(`${localPath}: ${label} overrides ${utility}`)
+  }
+
+  function visit(node) {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+      const tag = node.tagName.getText(source)
+      if (tag === "button")
+        violations.push(`${localPath}: raw button outside shared UI primitives`)
+      if (tag === "Button") {
+        const className = node.attributes.properties.find(
+          (property) =>
+            ts.isJsxAttribute(property) && property.name.text === "className"
+        )
+        if (className?.initializer)
+          inspectClasses(className.initializer, "Button className")
+      }
+    }
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.getText(source) === "buttonVariants"
+    ) {
+      for (const argument of node.arguments) {
+        if (!ts.isObjectLiteralExpression(argument)) continue
+        const className = argument.properties.find(
+          (property) =>
+            ts.isPropertyAssignment(property) &&
+            property.name.getText(source) === "className"
+        )
+        if (className && ts.isPropertyAssignment(className))
+          inspectClasses(className.initializer, "buttonVariants className")
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+
+  visit(source)
+}
+
 function scan(directory) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name)
@@ -47,6 +126,7 @@ function scan(directory) {
     const localPath = relative(sourceRoot, path)
     if (allowedPrefixes.some((prefix) => localPath.startsWith(prefix))) continue
     const content = readFileSync(path, "utf8")
+    if (extname(path) === ".tsx") scanButtonUsage(path, localPath, content)
     for (const pattern of patterns) {
       if (pattern.expression.test(content))
         violations.push(`${localPath}: ${pattern.label}`)

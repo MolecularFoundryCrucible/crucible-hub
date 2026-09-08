@@ -377,7 +377,6 @@ function ThumbnailEditor({
                     onClick={() => void renameThumbnail(thumbnail)}
                     size="sm"
                     type="button"
-                    variant="outline"
                   >
                     <SaveChangesIcon
                       aria-hidden="true"

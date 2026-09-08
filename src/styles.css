@@ -439,15 +439,6 @@ body {
     grid-column: 2;
     grid-row: 2 / 5;
   }
-
-  .resource-collection-table .resource-full-page-link {
-    width: auto;
-    padding-inline: calc(var(--spacing) * 3);
-  }
-
-  .resource-collection-table .resource-full-page-link-label {
-    display: inline;
-  }
 }
 
 .route-progress {

@@ -243,9 +243,9 @@ export function OwnershipTransferCard({
                 return (
                   <li key={person.unique_id}>
                     <Button
-                      className="h-auto w-full justify-start py-2 whitespace-normal"
                       disabled={previewMutation.isPending || isCurrentOwner}
                       onClick={() => void choosePerson(person)}
+                      size="selection"
                       type="button"
                       variant="ghost"
                     >

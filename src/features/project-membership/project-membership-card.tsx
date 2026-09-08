@@ -468,9 +468,9 @@ export function ProjectMembershipCard({
                       aria-pressed={
                         selectedPerson?.unique_id === person.unique_id
                       }
-                      className="h-auto w-full justify-start py-2 whitespace-normal"
                       disabled={existingMember || mutationPending}
                       onClick={() => setSelectedPerson(person)}
+                      size="selection"
                       type="button"
                       variant={
                         selectedPerson?.unique_id === person.unique_id

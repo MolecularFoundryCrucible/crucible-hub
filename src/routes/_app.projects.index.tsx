@@ -210,7 +210,7 @@ function ProjectCollection({
                   params={{ projectMfid: project.unique_id }}
                 >
                   Open project
-                  <ArrowRightIcon aria-hidden="true" />
+                  <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
                 </Link>
               </CardContent>
             </Card>

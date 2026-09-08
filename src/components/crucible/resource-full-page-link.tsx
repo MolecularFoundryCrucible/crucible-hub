@@ -9,7 +9,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
 
 type ResourceFullPageKind = "dataset" | "instrument" | "project" | "sample"
 type ResourceFullPagePresentation = "inspector-footer" | "table"
@@ -32,7 +31,7 @@ export function ResourceFullPageLink({
   const actionLabel = `Open full page: ${name}`
   const className = buttonVariants(
     presentation === "table"
-      ? { size: "icon-sm", variant: "outline" }
+      ? { size: "table-action", variant: "outline" }
       : { variant: "outline" }
   )
   const children =
@@ -43,13 +42,13 @@ export function ResourceFullPageLink({
       </>
     ) : (
       <>
-        <OpenFullPageIcon aria-hidden="true" />
-        <span className="resource-full-page-link-label hidden">Open</span>
+        <OpenFullPageIcon aria-hidden="true" data-icon="inline-start" />
+        <span className="hidden max-md:inline">Open</span>
       </>
     )
   const common = {
     "aria-label": actionLabel,
-    className: cn(className, "resource-full-page-link"),
+    className,
     children,
     onClick,
     preload: false as const,

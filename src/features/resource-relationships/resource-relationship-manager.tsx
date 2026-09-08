@@ -567,13 +567,13 @@ function AddRelationshipDialog({
                 <li className="border-b last:border-0" key={item.unique_id}>
                   <Button
                     aria-pressed={selected?.unique_id === item.unique_id}
-                    className="h-auto w-full justify-start py-2 whitespace-normal"
                     disabled={mutation.isPending}
                     onClick={() => {
                       setSelected(item)
                       setValidationError(undefined)
                       setMutationError(undefined)
                     }}
+                    size="selection"
                     type="button"
                     variant={
                       selected?.unique_id === item.unique_id

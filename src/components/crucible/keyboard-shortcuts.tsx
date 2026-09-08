@@ -10,8 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { sidebarMenuButtonVariants } from "@/components/ui/sidebar"
+import { SidebarMenuButton } from "@/components/ui/sidebar"
 
 const navigationShortcuts = {
   d: "/data",
@@ -125,14 +124,10 @@ export function KeyboardShortcuts({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button
+          <SidebarMenuButton
             aria-label="Keyboard shortcuts"
-            className={sidebarMenuButtonVariants({
-              className: "justify-start",
-            })}
-            data-sidebar="menu-button"
+            tooltip="Keyboard shortcuts"
             title="Keyboard shortcuts"
-            variant="ghost"
           />
         }
       >

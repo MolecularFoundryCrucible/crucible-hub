@@ -36,7 +36,6 @@ import {
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
-  sidebarMenuButtonVariants,
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
@@ -159,7 +158,7 @@ export function AppShell({
                     render={
                       <Button
                         aria-label="Open account menu"
-                        className="h-auto gap-2 px-1 py-0.5"
+                        size="lg"
                         variant="ghost"
                       />
                     }
@@ -255,14 +254,10 @@ function SidebarUtilities({
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button
+                <SidebarMenuButton
                   aria-label="Theme"
-                  className={sidebarMenuButtonVariants({
-                    className: "justify-start",
-                  })}
-                  data-sidebar="menu-button"
+                  tooltip="Theme"
                   title="Theme"
-                  variant="ghost"
                 />
               }
             >

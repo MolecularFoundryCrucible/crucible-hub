@@ -101,7 +101,7 @@ describe("ResourceFullPageLink", () => {
     ).toBeTruthy()
   })
 
-  it("uses an icon-only fixed table control with a tooltip", () => {
+  it("uses a responsive table control with a tooltip", () => {
     render(
       <ResourceFullPageLink
         kind="dataset"
@@ -116,9 +116,7 @@ describe("ResourceFullPageLink", () => {
     })
     expect(link.className).toContain("size-7")
     expect(link.querySelector("svg")).toBeTruthy()
-    expect(screen.getByText("Open").className).toContain(
-      "resource-full-page-link-label hidden"
-    )
+    expect(screen.getByText("Open").className).toContain("hidden max-md:inline")
     expect(screen.getByRole("tooltip").textContent).toBe(
       "Open full page: Named dataset"
     )
