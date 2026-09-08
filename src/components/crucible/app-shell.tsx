@@ -4,6 +4,7 @@ import { BrandMark } from "@/components/crucible/brand-mark"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
 import { KeyboardShortcuts } from "@/components/crucible/keyboard-shortcuts"
+import { PersonIdentity } from "@/components/crucible/person-identity"
 import {
   AccountIcon,
   CollapseSidebarIcon,
@@ -43,7 +44,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import type { Workspace } from "@/data/crucible/workspace-source"
-import { initials } from "@/lib/format"
 import { RecentlyViewedProvider } from "@/features/recently-viewed/recently-viewed"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
@@ -163,19 +163,12 @@ export function AppShell({
                       />
                     }
                   >
-                    <Avatar size="sm">
-                      <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
-                        {initials(account.first_name, account.last_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden text-left lg:grid">
-                      <span className="text-label">
-                        {account.first_name} {account.last_name}
-                      </span>
-                      <span className="text-supporting text-muted-foreground">
-                        {account.username ?? "No username"}
-                      </span>
-                    </span>
+                    <PersonIdentity
+                      detailsClassName="hidden lg:grid"
+                      person={account}
+                      presentation="avatar"
+                      size="sm"
+                    />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="min-w-48">
                     <DropdownMenuGroup>

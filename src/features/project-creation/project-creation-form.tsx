@@ -12,6 +12,7 @@ import { z } from "zod"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { personDisplayName } from "@/components/crucible/person-identity"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
 import { Button } from "@/components/ui/button"
 import {
@@ -79,15 +80,10 @@ type ProjectCreationForm = ReturnType<typeof useProjectCreationForm>
 function accountAsSearchResult(
   account: WorkspaceAccount
 ): WorkspaceSearchResult {
-  const name = [account.first_name, account.last_name]
-    .filter(Boolean)
-    .join(" ")
-    .trim()
-
   return {
     context: account.username ?? null,
     kind: "person",
-    name: name || account.username || account.unique_id,
+    name: personDisplayName(account),
     unique_id: account.unique_id,
   }
 }

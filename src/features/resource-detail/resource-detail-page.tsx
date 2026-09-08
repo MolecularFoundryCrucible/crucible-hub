@@ -401,13 +401,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
             <dd className="mt-1 flex items-start gap-2 text-body">
               <IdentityFieldIcon type="owner" />
               {owner ? (
-                <PersonLink
-                  name={`${owner.first_name} ${owner.last_name}`}
-                  personId={owner.unique_id}
-                  username={owner.username}
-                >
-                  {owner.first_name.charAt(0)}. {owner.last_name}
-                </PersonLink>
+                <PersonLink nameStyle="abbreviated" person={owner} />
               ) : (
                 "Unknown owner"
               )}

@@ -1,6 +1,7 @@
 import { useId, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 
+import { PersonIdentity } from "@/components/crucible/person-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
@@ -106,9 +107,13 @@ export function ResourceChooser({
     <div className="flex min-w-0 flex-col items-start gap-2">
       {value ? (
         <div className="max-w-full min-w-0">
-          <p className="truncate text-body" title={value.name}>
-            {value.name}
-          </p>
+          {value.kind === "person" ? (
+            <PersonIdentity person={value} presentation="stacked" />
+          ) : (
+            <p className="truncate text-body" title={value.name}>
+              {value.name}
+            </p>
+          )}
           <p className="truncate font-mono text-identifier text-muted-foreground">
             {value.unique_id}
           </p>
@@ -209,12 +214,23 @@ export function ResourceChooser({
                     >
                       <ResourceTypeIcon data-icon="inline-start" type={kind} />
                       <span className="min-w-0 text-left">
-                        <span className="block text-label">{item.name}</span>
-                        {item.context ? (
-                          <span className="block text-supporting text-muted-foreground">
-                            {item.context}
-                          </span>
-                        ) : null}
+                        {item.kind === "person" ? (
+                          <PersonIdentity
+                            person={item}
+                            presentation="stacked"
+                          />
+                        ) : (
+                          <>
+                            <span className="block text-label">
+                              {item.name}
+                            </span>
+                            {item.context ? (
+                              <span className="block text-supporting text-muted-foreground">
+                                {item.context}
+                              </span>
+                            ) : null}
+                          </>
+                        )}
                         <span className="block font-mono text-identifier break-all text-muted-foreground">
                           {item.unique_id}
                         </span>

@@ -10,7 +10,7 @@ import {
   SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { ContentBoundary } from "@/components/crucible/content-layout"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { PersonIdentity } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -42,7 +42,6 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
-import { initials } from "@/lib/format"
 
 const accountProfileSchema = z.object({
   email: z
@@ -161,7 +160,6 @@ export function AccountProfileForm({
     setSaveError(undefined)
     setEditing(false)
   })
-  const name = `${account.first_name} ${account.last_name}`
   const formId = `account-profile-${account.unique_id}`
 
   if (!editing) {
@@ -169,21 +167,7 @@ export function AccountProfileForm({
       <ContentBoundary width="reading">
         <Card>
           <CardHeader>
-            <div className="flex min-w-0 items-center gap-4">
-              <Avatar className="size-14">
-                <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
-                  {initials(account.first_name, account.last_name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <CardTitle>{name}</CardTitle>
-                <CardDescription>
-                  {account.username
-                    ? `@${account.username}`
-                    : "No username provided"}
-                </CardDescription>
-              </div>
-            </div>
+            <PersonIdentity person={account} presentation="avatar" size="lg" />
             <CardAction>
               <Button
                 onClick={() => {

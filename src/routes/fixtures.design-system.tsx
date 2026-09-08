@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
 
+import { PersonIdentity } from "@/components/crucible/person-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ThemeSelect } from "@/components/theme-select"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -61,6 +61,13 @@ const resourceTypes = [
   "instrument",
   "person",
 ] as const
+
+const fixturePerson = {
+  first_name: "Avery",
+  last_name: "Raman",
+  unique_id: "01PERSONIDENTITY000000000001",
+  username: "araman",
+}
 
 function DesignSystemFixtures() {
   return (
@@ -185,16 +192,13 @@ function DesignSystemFixtures() {
                 </div>
               ))}
               <Separator />
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarFallback>AR</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-label">Avery Raman</p>
-                  <p className="text-body text-muted-foreground">
-                    Project member
-                  </p>
-                </div>
+              <div className="grid gap-3">
+                <PersonIdentity person={fixturePerson} presentation="avatar" />
+                <PersonIdentity person={fixturePerson} presentation="stacked" />
+                <PersonIdentity
+                  nameStyle="abbreviated"
+                  person={fixturePerson}
+                />
               </div>
             </CardContent>
           </Card>

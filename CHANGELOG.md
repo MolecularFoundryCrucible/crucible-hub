@@ -62,6 +62,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Standardized person identity across account, profile, directory, membership, ownership, access, operator, inspector, and search surfaces with shared inline, stacked, and avatar presentations plus consistent profile hover and click behavior.
 - Replaced oversized project and instrument collection cards with compact responsive directories using linked identity, relevant ownership and location context, normalized unavailable values, and stable trailing navigation.
 - Kept stable graph and access-management headings visible during initial loading, limited collection update messages to readable refresh states, and prevented incompatible instrument and search results from appearing as pagination placeholders.
 - Moved Recently viewed below recent data on Home and standardized both lists on resource rows with name, icon-labelled project ID and monospaced MFID, and browser-local creation or last-viewed time.

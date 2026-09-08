@@ -13,6 +13,7 @@ import { BackToProjectIcon, SearchIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -442,13 +443,7 @@ function SearchResult({
 }) {
   const link =
     item.kind === "person" ? (
-      <Link
-        className="text-label hover:underline"
-        params={{ personId: item.unique_id }}
-        to="/people/$personId"
-      >
-        {item.name}
-      </Link>
+      <PersonLink person={item} presentation="stacked" />
     ) : item.kind === "project" ? (
       <Link
         className="text-label hover:underline"
@@ -490,7 +485,7 @@ function SearchResult({
       <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
       <div className="min-w-0 flex-1">
         {link}
-        {item.context ? (
+        {item.kind !== "person" && item.context ? (
           <p className="truncate text-supporting text-muted-foreground">
             {item.context}
           </p>

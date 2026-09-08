@@ -7,6 +7,11 @@ import {
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
+import { PersonLink } from "@/components/crucible/person-link"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   AlertDialog,
@@ -67,14 +72,7 @@ type OperatorProfile = Pick<
 >
 
 function operatorName(operator: OperatorProfile) {
-  if (operator.username) return `@${operator.username}`
-  const name = `${operator.first_name} ${operator.last_name}`.trim()
-  return name || operator.unique_id
-}
-
-function operatorDescription(operator: OperatorProfile) {
-  const name = `${operator.first_name} ${operator.last_name}`.trim()
-  return name && name !== operatorName(operator) ? name : operator.unique_id
+  return personDisplayName(operator)
 }
 
 function actionErrorMessage(action: "add" | "remove") {
@@ -274,14 +272,11 @@ export function InstrumentOperatorsCard({
                     key={operator.unique_id}
                   >
                     <PrincipalTypeIcon type="service_account" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-label break-words">
-                        {operatorName(operator)}
-                      </p>
-                      <p className="text-supporting break-all text-muted-foreground">
-                        {operatorDescription(operator)}
-                      </p>
-                    </div>
+                    <PersonLink
+                      className="flex-1"
+                      person={{ ...operator, is_service_account: true }}
+                      presentation="stacked"
+                    />
                     <span className="inline-flex size-4 shrink-0 items-center justify-center">
                       {pending ? (
                         <SavingChangesIcon
@@ -388,10 +383,10 @@ export function InstrumentOperatorsCard({
               </p>
             ) : candidate ? (
               <div className="mt-4 rounded-md border p-3">
-                <p className="text-label">{operatorName(candidate)}</p>
-                <p className="text-supporting break-all text-muted-foreground">
-                  {operatorDescription(candidate)}
-                </p>
+                <PersonIdentity
+                  person={{ ...candidate, is_service_account: true }}
+                  presentation="stacked"
+                />
                 {candidateIsOperator ? (
                   <p className="mt-2 text-supporting text-muted-foreground">
                     Already an operator.

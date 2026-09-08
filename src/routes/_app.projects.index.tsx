@@ -143,7 +143,7 @@ function ProjectsPageHeader() {
         </Link>
       }
       eyebrow="Projects"
-      title="Projects you can access"
+      title="Your projects"
     />
   )
 }
@@ -207,11 +207,7 @@ function ProjectCollection({
                         data-label="Lead"
                       >
                         {complete && project.lead ? (
-                          <PersonLink
-                            name={`${project.lead.first_name} ${project.lead.last_name}`.trim()}
-                            personId={project.lead.unique_id}
-                            username={project.lead.username}
-                          />
+                          <PersonLink person={project.lead} />
                         ) : (
                           <span aria-label="Not available">-</span>
                         )}

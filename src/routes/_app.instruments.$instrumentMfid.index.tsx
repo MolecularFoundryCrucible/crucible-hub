@@ -147,13 +147,7 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
             <dt className="text-supporting text-muted-foreground">Owner</dt>
             <dd className="mt-1 text-body">
               {instrument.owner ? (
-                <PersonLink
-                  name={`${instrument.owner.first_name} ${instrument.owner.last_name}`}
-                  personId={instrument.owner.unique_id}
-                  username={instrument.owner.username}
-                >
-                  {instrument.owner.first_name} {instrument.owner.last_name}
-                </PersonLink>
+                <PersonLink person={instrument.owner} />
               ) : (
                 "Unknown owner"
               )}

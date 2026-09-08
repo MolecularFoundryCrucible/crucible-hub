@@ -137,17 +137,13 @@ function ProjectLead({ project }: { project: WorkspaceProject }) {
       <dt className="text-supporting text-muted-foreground">Project lead</dt>
       <dd className="mt-1 text-body break-words">
         {"status" in project && project.lead ? (
-          <PersonLink
-            name={`${project.lead.first_name} ${project.lead.last_name}`}
-            personId={project.lead.unique_id}
-            username={project.lead.username}
-          >
-            {project.lead.first_name} {project.lead.last_name}
-          </PersonLink>
+          <PersonLink person={project.lead} />
         ) : "status" in project && project.project_lead_orcid ? (
           <PersonLink
-            name={project.project_lead_orcid}
-            personId={project.project_lead_orcid}
+            person={{
+              name: project.project_lead_orcid,
+              unique_id: project.project_lead_orcid,
+            }}
           />
         ) : (
           "-"

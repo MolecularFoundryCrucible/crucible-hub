@@ -7,13 +7,16 @@ import {
 } from "@/components/crucible/project-members"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
+import {
   AddMemberIcon,
   EditMembersIcon,
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,7 +68,6 @@ import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type { components } from "@/generated/crucible-api"
-import { initials } from "@/lib/format"
 import type {
   WorkspaceProject,
   WorkspaceSearchResult,
@@ -491,12 +493,10 @@ export function ProjectMembershipCard({
                         />
                       )}
                       <span className="min-w-0 text-left">
-                        <span className="block text-label">{person.name}</span>
-                        {person.context ? (
-                          <span className="block text-supporting text-muted-foreground">
-                            {person.context}
-                          </span>
-                        ) : null}
+                        <PersonIdentity
+                          person={person}
+                          presentation="stacked"
+                        />
                         {existingMember ? (
                           <span className="block text-supporting text-muted-foreground">
                             Already a member
@@ -609,28 +609,7 @@ export function ProjectMembershipCard({
 }
 
 function MemberIdentity({ member }: { member: ProjectMember }) {
-  return (
-    <div className="flex min-w-0 flex-1 items-center gap-3">
-      <Avatar>
-        <AvatarFallback>
-          {initials(member.first_name, member.last_name)}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0">
-        <p className="truncate text-label">
-          <PersonLink
-            name={memberName(member)}
-            personId={member.unique_id}
-            username={member.username}
-          />
-        </p>
-        <p className="truncate text-body text-muted-foreground">
-          {member.username ?? member.unique_id}
-          {member.is_service_account ? " (Service account)" : ""}
-        </p>
-      </div>
-    </div>
-  )
+  return <PersonLink className="flex-1" person={member} presentation="avatar" />
 }
 
 function permittedRoles(maxRole: GrantRole | null | undefined): GrantRole[] {
@@ -647,7 +626,7 @@ function roleLabel(role: GrantRole) {
 }
 
 function memberName(member: ProjectMember) {
-  return `${member.first_name} ${member.last_name}`
+  return personDisplayName(member)
 }
 
 function withoutMemberError(errors: Record<string, string>, memberId: string) {

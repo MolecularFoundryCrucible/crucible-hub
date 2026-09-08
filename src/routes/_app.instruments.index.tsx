@@ -276,11 +276,7 @@ function InstrumentCollection({
                         data-label="Owner"
                       >
                         {instrument.owner ? (
-                          <PersonLink
-                            name={`${instrument.owner.first_name} ${instrument.owner.last_name}`.trim()}
-                            personId={instrument.owner.unique_id}
-                            username={instrument.owner.username}
-                          />
+                          <PersonLink person={instrument.owner} />
                         ) : (
                           <span aria-label="Not available">-</span>
                         )}

@@ -6,7 +6,6 @@ import {
   accessRoleRank,
 } from "@/components/crucible/access-role-badge"
 import { PersonLink } from "@/components/crucible/person-link"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -16,7 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { components } from "@/generated/crucible-api"
-import { initials } from "@/lib/format"
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
 
@@ -75,24 +73,11 @@ export function ProjectMembers({
                 className="flex min-w-0 items-center gap-3"
                 key={member.unique_id}
               >
-                <Avatar>
-                  <AvatarFallback>
-                    {initials(member.first_name, member.last_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <PersonLink
-                    name={`${member.first_name} ${member.last_name}`}
-                    personId={member.unique_id}
-                    username={member.username}
-                  >
-                    {member.first_name} {member.last_name}
-                  </PersonLink>
-                  <p className="truncate text-body text-muted-foreground">
-                    {member.username ?? member.unique_id}
-                    {member.is_service_account ? " (Service account)" : ""}
-                  </p>
-                </div>
+                <PersonLink
+                  className="flex-1"
+                  person={member}
+                  presentation="avatar"
+                />
                 <ProjectRoleBadge role={member.role} />
               </div>
             ))

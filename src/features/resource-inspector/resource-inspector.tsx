@@ -9,6 +9,7 @@ import {
   ExploreGraphFocusIcon,
 } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
+import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
@@ -382,9 +383,7 @@ type InspectorContextField = {
 function inspectorContextFields(
   resource: WorkspaceResourceDetail
 ): readonly InspectorContextField[] {
-  const owner = resource.owner
-    ? `${resource.owner.first_name} ${resource.owner.last_name}`
-    : null
+  const owner = resource.owner ? <PersonLink person={resource.owner} /> : null
 
   switch (resource.kind) {
     case "dataset":

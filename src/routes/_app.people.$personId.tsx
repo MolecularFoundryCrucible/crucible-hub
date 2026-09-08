@@ -3,9 +3,12 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -22,7 +25,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { personQueryOptions } from "@/data/crucible/people.queries"
-import { initials } from "@/lib/format"
 import { hubPageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/_app/people/$personId")({
@@ -33,9 +35,7 @@ export const Route = createFileRoute("/_app/people/$personId")({
       personQueryOptions(source.scope, params.personId)
     )
     return {
-      personName: person
-        ? `${person.first_name} ${person.last_name}`
-        : undefined,
+      personName: person ? personDisplayName(person) : undefined,
     }
   },
   head: ({ loaderData }) => ({
@@ -63,7 +63,7 @@ function PersonPage() {
     )
   }
 
-  const name = `${person.first_name} ${person.last_name}`
+  const name = personDisplayName(person)
 
   return (
     <PageLayout>
@@ -86,18 +86,8 @@ function PersonPage() {
       <PageHeader eyebrow="Person" title={name} />
 
       <Card className="max-w-2xl">
-        <CardHeader className="flex-row items-center gap-4">
-          <Avatar className="size-14">
-            <AvatarFallback>
-              {initials(person.first_name, person.last_name)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <CardTitle>{name}</CardTitle>
-            <CardDescription>
-              {person.username ? `@${person.username}` : "No username provided"}
-            </CardDescription>
-          </div>
+        <CardHeader>
+          <PersonIdentity person={person} presentation="avatar" size="lg" />
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">

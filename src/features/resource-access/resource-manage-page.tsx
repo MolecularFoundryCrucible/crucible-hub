@@ -23,6 +23,7 @@ import {
   RevokeAccessGrantIcon,
 } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
+import { PersonIdentity } from "@/components/crucible/person-identity"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
@@ -915,12 +916,18 @@ function AddAccessDialog({
                     }
                   >
                     <span className="min-w-0 text-left">
-                      <span className="block text-label">{item.name}</span>
-                      {item.context ? (
-                        <span className="block text-supporting text-muted-foreground">
-                          {item.context}
-                        </span>
-                      ) : null}
+                      {item.kind === "person" ? (
+                        <PersonIdentity person={item} presentation="stacked" />
+                      ) : (
+                        <>
+                          <span className="block text-label">{item.name}</span>
+                          {item.context ? (
+                            <span className="block text-supporting text-muted-foreground">
+                              {item.context}
+                            </span>
+                          ) : null}
+                        </>
+                      )}
                       <span className="block font-mono text-identifier break-all text-muted-foreground">
                         {item.unique_id}
                       </span>
@@ -1022,12 +1029,18 @@ function principalLabel(grant: WorkspaceResourceAccessGrant) {
 
 function PrincipalName({ grant }: { grant: WorkspaceResourceAccessGrant }) {
   const name = grantName(grant)
-  if (grant.principal_type === "user") {
+  if (
+    grant.principal_type === "user" ||
+    grant.principal_type === "service_account"
+  ) {
     return (
       <PersonLink
-        name={name}
-        personId={grant.principal_id}
-        username={grant.slug}
+        person={{
+          name,
+          is_service_account: grant.principal_type === "service_account",
+          unique_id: grant.principal_id,
+          username: grant.slug,
+        }}
       />
     )
   }

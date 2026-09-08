@@ -2,6 +2,10 @@ import { useId, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { SavingChangesIcon } from "@/components/crucible/icons"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
 
 import {
   AlertDialog,
@@ -249,14 +253,14 @@ export function OwnershipTransferCard({
                       type="button"
                       variant="ghost"
                     >
-                      <span className="text-left">
-                        <span className="block text-label">
-                          {person.name}
-                          {isCurrentOwner ? " (current owner)" : ""}
-                        </span>
-                        {person.context ? (
+                      <span className="min-w-0 text-left">
+                        <PersonIdentity
+                          person={person}
+                          presentation="stacked"
+                        />
+                        {isCurrentOwner ? (
                           <span className="block text-supporting text-muted-foreground">
-                            {person.context}
+                            Current owner
                           </span>
                         ) : null}
                       </span>
@@ -326,11 +330,7 @@ export function OwnershipTransferCard({
 }
 
 function personName(person: WorkspaceOwnershipTransfer["new_owner"]) {
-  return (
-    [person.first_name, person.last_name].filter(Boolean).join(" ") ||
-    person.username ||
-    person.unique_id
-  )
+  return personDisplayName(person)
 }
 
 function resourceListKey(
