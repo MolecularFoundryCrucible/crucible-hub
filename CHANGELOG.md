@@ -73,11 +73,11 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Increased top-level read-only field labels to the shared 14 px semibold label role while retaining the smaller supporting role for secondary content.
 - Made compact dialogs viewport-bounded with persistent action footers, moved card actions below headings on narrow screens, reflowed member and access controls, and made member addition an explicit selection and confirmation workflow.
 - Improved compact resource inspection with resource icons beside wrapping titles, dedicated MFID rows, wrapping relationship identities, fixed trailing navigation actions, and less redundant labels.
-- Added project-scoped data search with project breadcrumb navigation, keyboard navigation shortcuts with in-app help, and consistent Shortcuts, Theme, and navigation controls in the sidebar footer.
+- Added project-scoped data search with contextual return navigation, keyboard navigation shortcuts with in-app help, and consistent Shortcuts, Theme, and navigation controls in the sidebar footer.
 - Made resource inspectors non-modal at wider widths, added a stable preview-navigation and close top bar, preserved the host page's current scroll position on close, and refined the identity hierarchy with an icon-labeled, quick-copy MFID and the full-page action directly below the resource name.
 - Standardized displayed timestamps in browser-local 24-hour time and labeled project owners as Lead in project membership surfaces.
 - Updated the pinned staging API contract and sample and dataset creation requests to use canonical project and instrument MFIDs directly, removing identity lookup requests before creation.
-- Preserved project context when opening sample and dataset pages from Project Data, with a validated contextual return link that targets the matching project collection.
+- Preserved project context across sample and dataset sections opened from Project Data while relying on browser history for chronological return navigation.
 - Refined sample and dataset Overview cards, resource navigation, Manage layout, project creation actions, and compact confirmation behavior with clearer field order, consistent action hierarchy, linked identity names with shared person previews, project-aware breadcrumbs, a combined access card, and a unified resource management card.
 - Gave Identity cards slightly more space and kept full MFIDs on one line when the available viewport permits.
 - Branded the application sidebar with the Crucible mark and blue surfaces, moved the desktop collapse control into the sidebar, applied orange current-location boundaries, and standardized resource section navigation typography and target sizing.

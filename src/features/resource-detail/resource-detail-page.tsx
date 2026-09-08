@@ -4,7 +4,6 @@ import type { QueryClient } from "@tanstack/react-query"
 import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
 
 import {
-  BackToProjectIcon,
   DownloadFileIcon,
   DownloadUnavailableIcon,
   PreparingDownloadIcon,
@@ -77,7 +76,6 @@ import {
 } from "@/data/crucible/resources.queries"
 import { requestWorkspaceFileDownload } from "@/data/crucible/resources.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type {
@@ -135,10 +133,6 @@ export function ResourceWorkspace({
   const scope = useWorkspaceScope()
   const resourceOptions = resourceQueryOptions(scope, resourceMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
-  const resourceProjectMfid =
-    resource?.kind === "sample" || resource?.kind === "dataset"
-      ? resource.project?.unique_id
-      : undefined
   useRememberRecentlyViewed(
     resource && (resource.kind === "sample" || resource.kind === "dataset")
       ? {
@@ -150,11 +144,6 @@ export function ResourceWorkspace({
         }
       : null
   )
-  const originProject = useQuery({
-    ...projectQueryOptions(scope, fromProject ?? ""),
-    enabled: Boolean(fromProject) && resourceProjectMfid !== fromProject,
-  })
-
   if (!resource || resource.kind !== resourceKind) {
     return (
       <Card className="mx-auto mt-16 max-w-state">
@@ -220,25 +209,6 @@ export function ResourceWorkspace({
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        {fromProject ? (
-          <Link
-            className="inline-flex w-fit items-center gap-1.5 text-label text-primary hover:underline"
-            params={{ projectMfid: fromProject }}
-            search={{
-              kind: resource.kind === "dataset" ? "datasets" : undefined,
-              preview: undefined,
-            }}
-            to="/projects/$projectMfid"
-          >
-            <BackToProjectIcon aria-hidden="true" className="size-4" />
-            Back to{" "}
-            {resource.project?.unique_id === fromProject
-              ? (resource.project.title ?? resource.project.project_id)
-              : (originProject.data?.title ?? "project")}{" "}
-            data
-          </Link>
-        ) : null}
-
         <PageHeader
           icon={
             <ResourceTypeIcon

@@ -9,7 +9,7 @@ import {
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
 import { ContentBoundary } from "@/components/crucible/content-layout"
-import { SearchIcon } from "@/components/crucible/icons"
+import { BackToProjectIcon, SearchIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -118,18 +118,39 @@ function SearchPage() {
       <PageHeader
         actions={
           search.projectMfid ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                kind: undefined,
-                projectMfid: undefined,
-                q: search.q,
-              }}
-              to="/search"
-            >
-              <SearchIcon aria-hidden="true" data-icon="inline-start" />
-              Search all Crucible
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                search={{
+                  kind: undefined,
+                  projectMfid: undefined,
+                  q: search.q,
+                }}
+                to="/search"
+              >
+                <SearchIcon aria-hidden="true" data-icon="inline-start" />
+                Search all Crucible
+              </Link>
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                params={{ projectMfid: search.projectMfid }}
+                search={{
+                  datasetCursor: undefined,
+                  kind: undefined,
+                  preview: undefined,
+                  sampleCursor: undefined,
+                  scope: undefined,
+                }}
+                state={{}}
+                to="/projects/$projectMfid"
+              >
+                <BackToProjectIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
+                Back to project
+              </Link>
+            </div>
           ) : null
         }
         description={
