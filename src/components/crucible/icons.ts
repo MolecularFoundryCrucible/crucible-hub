@@ -47,6 +47,7 @@ export {
   LockKeyhole as PrivateAccessIcon,
   LoaderCircle as AccessPendingIcon,
   RefreshCw as UpdateInstrumentStatusIcon,
+  RefreshCw as RefreshResourceIcon,
   LoaderCircle as InstrumentStatusPendingIcon,
   Plus as CreateResourceIcon,
   ImagePlus as AddThumbnailIcon,

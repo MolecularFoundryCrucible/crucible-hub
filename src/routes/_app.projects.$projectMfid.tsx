@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
+import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -55,9 +56,8 @@ export const Route = createFileRoute("/_app/projects/$projectMfid")({
 function ProjectWorkspace() {
   const { projectMfid } = Route.useParams()
   const scope = useWorkspaceScope()
-  const { data: project } = useSuspenseQuery(
-    projectQueryOptions(scope, projectMfid)
-  )
+  const projectOptions = projectQueryOptions(scope, projectMfid)
+  const { data: project, dataUpdatedAt } = useSuspenseQuery(projectOptions)
 
   if (!project) {
     return (
@@ -99,6 +99,13 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
+        actions={
+          <EntityRefreshAction
+            label={`Refresh ${project.title ?? project.project_id}`}
+            queryKey={projectOptions.queryKey}
+            refreshedAt={dataUpdatedAt}
+          />
+        }
         eyebrow={project.project_id}
         icon={
           <ResourceTypeIcon className="mt-1 size-6 shrink-0" type="project" />

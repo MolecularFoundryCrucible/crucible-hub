@@ -4,6 +4,7 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
+import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
@@ -59,9 +60,8 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
 function InstrumentPage() {
   const { instrumentMfid } = Route.useParams()
   const scope = useWorkspaceScope()
-  const { data: resource } = useSuspenseQuery(
-    resourceQueryOptions(scope, instrumentMfid)
-  )
+  const resourceOptions = resourceQueryOptions(scope, instrumentMfid)
+  const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
 
   if (!resource || resource.kind !== "instrument") {
     return (
@@ -104,14 +104,21 @@ function InstrumentPage() {
         title={resource.name}
         description={resource.description ?? undefined}
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline">
-              <ResourceTypeIcon type="instrument" data-icon="inline-start" />
-              {resource.instrument_type ?? "Instrument"}
-            </Badge>
-            {resource.status ? (
-              <InstrumentStatusBadge status={resource.status} />
-            ) : null}
+          <div className="flex flex-col items-start gap-2 lg:items-end">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">
+                <ResourceTypeIcon type="instrument" data-icon="inline-start" />
+                {resource.instrument_type ?? "Instrument"}
+              </Badge>
+              {resource.status ? (
+                <InstrumentStatusBadge status={resource.status} />
+              ) : null}
+            </div>
+            <EntityRefreshAction
+              label={`Refresh ${resource.name}`}
+              queryKey={resourceOptions.queryKey}
+              refreshedAt={dataUpdatedAt}
+            />
           </div>
         }
       />

@@ -16,6 +16,7 @@ import {
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
+import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -130,9 +131,8 @@ export function ResourceWorkspace({
     preview,
   })
   const scope = useWorkspaceScope()
-  const { data: resource } = useSuspenseQuery(
-    resourceQueryOptions(scope, resourceMfid)
-  )
+  const resourceOptions = resourceQueryOptions(scope, resourceMfid)
+  const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
   const resourceProjectMfid =
     resource?.kind === "sample" || resource?.kind === "dataset"
       ? resource.project?.unique_id
@@ -227,6 +227,13 @@ export function ResourceWorkspace({
         ) : null}
 
         <PageHeader
+          actions={
+            <EntityRefreshAction
+              label={`Refresh ${resource.name}`}
+              queryKey={resourceOptions.queryKey}
+              refreshedAt={dataUpdatedAt}
+            />
+          }
           icon={
             <ResourceTypeIcon
               className="mt-1 size-6 shrink-0"
