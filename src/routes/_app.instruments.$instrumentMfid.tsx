@@ -68,6 +68,7 @@ function InstrumentPage() {
       ? {
           kind: "instrument",
           name: resource.name,
+          projectId: null,
           uniqueId: resource.unique_id,
         }
       : null

@@ -10,12 +10,16 @@ import {
 export type RecentlyViewedResource = {
   kind: "dataset" | "instrument" | "project" | "sample"
   name: string
+  projectId: string | null
   uniqueId: string
+  viewedAt: string
 }
+
+type RecentlyViewedResourceInput = Omit<RecentlyViewedResource, "viewedAt">
 
 type RecentlyViewedContextValue = {
   items: readonly RecentlyViewedResource[]
-  remember: (item: RecentlyViewedResource) => void
+  remember: (item: RecentlyViewedResourceInput) => void
 }
 
 const RecentlyViewedContext = createContext<RecentlyViewedContextValue | null>(
@@ -28,10 +32,10 @@ export function RecentlyViewedProvider({
   children: React.ReactNode
 }) {
   const [items, setItems] = useState<readonly RecentlyViewedResource[]>([])
-  const remember = useCallback((item: RecentlyViewedResource) => {
+  const remember = useCallback((item: RecentlyViewedResourceInput) => {
     setItems((current) =>
       [
-        item,
+        { ...item, viewedAt: new Date().toISOString() },
         ...current.filter(
           (candidate) =>
             candidate.kind !== item.kind || candidate.uniqueId !== item.uniqueId
@@ -62,7 +66,9 @@ export function useRecentlyViewed() {
   return context.items
 }
 
-export function useRememberRecentlyViewed(item: RecentlyViewedResource | null) {
+export function useRememberRecentlyViewed(
+  item: RecentlyViewedResourceInput | null
+) {
   const context = useContext(RecentlyViewedContext)
   if (!context) {
     throw new Error("Recently viewed resources require the app shell.")
@@ -71,5 +77,5 @@ export function useRememberRecentlyViewed(item: RecentlyViewedResource | null) {
 
   useEffect(() => {
     if (item) remember(item)
-  }, [item?.kind, item?.name, item?.uniqueId, remember])
+  }, [item?.kind, item?.name, item?.projectId, item?.uniqueId, remember])
 }

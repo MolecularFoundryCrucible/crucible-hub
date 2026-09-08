@@ -64,6 +64,7 @@ function ProjectWorkspace() {
       ? {
           kind: "project",
           name: project.title ?? project.project_id,
+          projectId: project.project_id,
           uniqueId: project.unique_id,
         }
       : null

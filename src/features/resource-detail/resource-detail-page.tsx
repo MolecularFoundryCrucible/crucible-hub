@@ -144,6 +144,8 @@ export function ResourceWorkspace({
       ? {
           kind: resource.kind,
           name: resource.name,
+          projectId:
+            resource.project?.project_id ?? resource.project_id ?? null,
           uniqueId: resource.unique_id,
         }
       : null

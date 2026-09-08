@@ -158,10 +158,21 @@ function HomePage() {
                   </div>
                 )}
                 {recentResources.length > 0 && (
-                  <ul className="flex min-w-0 flex-col" role="list">
+                  <ul className="flex min-w-0 flex-col gap-2" role="list">
                     {recentResources.map((item) => (
-                      <RecentResourceLink
-                        item={item}
+                      <HomeResourceLink
+                        item={{
+                          kind: item.kind,
+                          name: recentResourceName(item),
+                          projectId: recentResourceProjectId(item),
+                          timestamp: item.resource.creation_time
+                            ? {
+                                label: "Created",
+                                value: item.resource.creation_time,
+                              }
+                            : null,
+                          uniqueId: item.resource.unique_id,
+                        }}
                         key={`${item.kind}:${item.resource.unique_id}`}
                       />
                     ))}
@@ -185,8 +196,17 @@ function HomePage() {
                 ) : (
                   <ul className="flex min-w-0 flex-col gap-2" role="list">
                     {recentlyViewed.map((item) => (
-                      <RecentlyViewedLink
-                        item={item}
+                      <HomeResourceLink
+                        item={{
+                          kind: item.kind,
+                          name: item.name,
+                          projectId: item.projectId,
+                          timestamp: {
+                            label: "Viewed",
+                            value: item.viewedAt,
+                          },
+                          uniqueId: item.uniqueId,
+                        }}
                         key={`${item.kind}:${item.uniqueId}`}
                       />
                     ))}
@@ -253,37 +273,57 @@ function HomePage() {
   )
 }
 
-function RecentlyViewedLink({ item }: { item: RecentlyViewedResource }) {
+type HomeResourceLinkItem = {
+  kind: RecentlyViewedResource["kind"]
+  name: string
+  projectId: string | null
+  timestamp: {
+    label: "Created" | "Viewed"
+    value: string
+  } | null
+  uniqueId: string
+}
+
+function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
   const content = (
     <>
-      <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
-      <span className="min-w-0 flex-1">
-        <span className="block text-label wrap-break-word">{item.name}</span>
-        <span className="mt-1 flex min-w-0 items-center gap-2 text-muted-foreground">
-          <span className="shrink-0 text-supporting capitalize">
-            {item.kind}
-          </span>
-          <span aria-hidden="true" className="text-supporting">
-            ·
-          </span>
-          <span className="min-w-0 truncate font-mono text-identifier">
-            {item.uniqueId}
+      <span className="flex min-w-0 flex-1 items-start gap-3">
+        <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-label wrap-break-word">{item.name}</span>
+          {item.projectId ? (
+            <span className="mt-1 block min-w-0 truncate text-supporting text-muted-foreground">
+              Project ID:{" "}
+              <span className="font-mono text-identifier">
+                {item.projectId}
+              </span>
+            </span>
+          ) : null}
+          <span className="mt-1 block min-w-0 truncate text-supporting text-muted-foreground">
+            MFID:{" "}
+            <span className="font-mono text-identifier">{item.uniqueId}</span>
           </span>
         </span>
       </span>
-      <ArrowRightIcon
-        aria-hidden="true"
-        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-      />
+      {item.timestamp ? (
+        <time
+          className="shrink-0 text-supporting text-muted-foreground sm:text-right"
+          dateTime={item.timestamp.value}
+        >
+          <span className="block">{item.timestamp.label}</span>
+          <span className="block">{formatDate(item.timestamp.value)}</span>
+        </time>
+      ) : null}
     </>
   )
   const className =
-    "flex min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+    "flex min-w-0 flex-col gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-start"
 
   if (item.kind === "project") {
     return (
       <li>
         <Link
+          aria-label={"Open " + item.kind + ": " + item.name}
           className={className}
           params={{ projectMfid: item.uniqueId }}
           to="/projects/$projectMfid"
@@ -297,6 +337,7 @@ function RecentlyViewedLink({ item }: { item: RecentlyViewedResource }) {
     return (
       <li>
         <Link
+          aria-label={"Open " + item.kind + ": " + item.name}
           className={className}
           params={{ instrumentMfid: item.uniqueId }}
           to="/instruments/$instrumentMfid"
@@ -310,6 +351,7 @@ function RecentlyViewedLink({ item }: { item: RecentlyViewedResource }) {
     return (
       <li>
         <Link
+          aria-label={"Open " + item.kind + ": " + item.name}
           className={className}
           params={{ sampleMfid: item.uniqueId }}
           to="/samples/$sampleMfid"
@@ -322,52 +364,12 @@ function RecentlyViewedLink({ item }: { item: RecentlyViewedResource }) {
   return (
     <li>
       <Link
+        aria-label={"Open " + item.kind + ": " + item.name}
         className={className}
         params={{ datasetMfid: item.uniqueId }}
         to="/datasets/$datasetMfid"
       >
         {content}
-      </Link>
-    </li>
-  )
-}
-
-function RecentResourceLink({ item }: { item: HomeRecentResource }) {
-  const resource = item.resource
-  const context = recentResourceContext(item)
-
-  return (
-    <li className="min-w-0 border-b last:border-b-0">
-      <Link
-        className="flex min-w-0 items-start gap-3 rounded-lg p-3 hover:bg-muted/50"
-        params={
-          item.kind === "sample"
-            ? { sampleMfid: resource.unique_id }
-            : { datasetMfid: resource.unique_id }
-        }
-        to={
-          item.kind === "sample"
-            ? "/samples/$sampleMfid"
-            : "/datasets/$datasetMfid"
-        }
-      >
-        <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-label">{recentResourceName(item)}</p>
-          {context && (
-            <p className="mt-1 truncate text-body text-muted-foreground">
-              {context}
-            </p>
-          )}
-        </div>
-        {resource.creation_time && (
-          <time
-            className="hidden shrink-0 text-supporting text-muted-foreground sm:block"
-            dateTime={resource.creation_time}
-          >
-            {formatDate(resource.creation_time)}
-          </time>
-        )}
       </Link>
     </li>
   )
@@ -436,16 +438,10 @@ function HomePanelState({
 
 function recentResourceName(item: HomeRecentResource) {
   return item.kind === "dataset"
-    ? item.resource.dataset_name
+    ? (item.resource.dataset_name ?? "Untitled dataset")
     : item.resource.sample_name
 }
 
-function recentResourceContext(item: HomeRecentResource) {
-  const project = item.resource.project
-  const projectName = project?.title ?? project?.project_id
-  const scientificType =
-    item.kind === "dataset"
-      ? item.resource.measurement
-      : item.resource.sample_type
-  return [scientificType, projectName].filter(Boolean).join(" · ")
+function recentResourceProjectId(item: HomeRecentResource) {
+  return item.resource.project?.project_id ?? item.resource.project_id ?? null
 }
