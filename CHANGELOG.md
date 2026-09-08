@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
+- Added resource-aware browser titles and keyboard navigation, explicit entity refresh timestamps, read-only dataset processing activity, full-text scientific metadata search, and account-isolated session-only recent resources.
 - Added lazy dataset thumbnail galleries, capability-guided add and rename controls, confirmed deletion, and bounded first-thumbnail previews in graph relationship lists.
 - Added self-service profile management for name, email, and username through the top-right account menu and identity-scoped account API operations.
 - Added route-backed one-hop relationship graphs for samples and datasets, with lazy loading, resource inspection, canonical rerooting, and an equivalent accessible relationship table.

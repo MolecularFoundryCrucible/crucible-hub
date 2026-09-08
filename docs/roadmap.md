@@ -46,7 +46,7 @@ Entry: accepted API login and session contract. Completion: production-shaped au
 
 ### P1: useful read workspace
 
-The local read workspace is complete enough for continued feature work: Home continuation, global and project Data collections and filters, projects, instruments and scoped datasets, resource and contextual inspection, bounded search, public-safe people, and on-demand single-file downloads are implemented. Production release remains subject to P0.
+The local read workspace is complete enough for continued feature work: Home continuation with session-only recently viewed resources, global and project Data collections and filters, projects, instruments and scoped datasets, resource and contextual inspection, bounded name and scientific metadata search, dataset processing activity, explicit entity refresh, public-safe people, and on-demand single-file downloads are implemented. Production release remains subject to P0.
 
 #### Resource inspector slice
 
