@@ -1,30 +1,93 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Navigate, createFileRoute } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { ContentBoundary } from "@/components/crucible/content-layout"
+import {
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { InstrumentLifecycleCard } from "@/features/instrument-lifecycle/instrument-lifecycle-card"
+import { InstrumentOperatorsCard } from "@/features/instrument-operators/instrument-operators-card"
+import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 
 export const Route = createFileRoute(
   "/_app/instruments/$instrumentMfid/settings/"
 )({
-  component: InstrumentGeneralSettingsPage,
+  component: InstrumentManagePage,
 })
 
-function InstrumentGeneralSettingsPage() {
+function InstrumentManagePage() {
   const { instrumentMfid } = Route.useParams()
+  const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
   const { data: resource } = useSuspenseQuery(
     resourceQueryOptions(scope, instrumentMfid)
   )
 
   if (!resource || resource.kind !== "instrument") return null
-  const to =
-    resource.capabilities?.can_change_status === true
-      ? "/instruments/$instrumentMfid/settings/lifecycle"
-      : resource.capabilities?.can_manage_access === true
-        ? "/instruments/$instrumentMfid/settings/operators"
-        : resource.capabilities?.can_transfer === true
-          ? "/instruments/$instrumentMfid/settings/ownership"
-          : "/instruments/$instrumentMfid"
-  return <Navigate params={{ instrumentMfid }} replace to={to} />
+
+  const canChangeStatus = resource.capabilities?.can_change_status === true
+  const canManageAccess = resource.capabilities?.can_manage_access === true
+  const canTransfer = resource.capabilities?.can_transfer === true
+  const hasResourceManagement = canChangeStatus || canTransfer
+
+  if (!canManageAccess && !hasResourceManagement) {
+    return <ManagementUnavailable />
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      {canManageAccess ? (
+        <ContentBoundary width="reading">
+          <InstrumentOperatorsCard instrument={resource} scope={scope} />
+        </ContentBoundary>
+      ) : null}
+      {hasResourceManagement ? (
+        <ContentBoundary width="reading">
+          <Card>
+            <CardHeader>
+              <CardTitle>Resource management</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y px-0">
+              {canChangeStatus ? (
+                <InstrumentLifecycleCard
+                  className="rounded-none bg-transparent ring-0"
+                  instrument={resource}
+                  mode={mode}
+                  scope={scope}
+                />
+              ) : null}
+              {canTransfer ? (
+                <OwnershipTransferCard
+                  className="rounded-none bg-transparent ring-0"
+                  mode={mode}
+                  resource={resource}
+                  scope={scope}
+                />
+              ) : null}
+            </CardContent>
+          </Card>
+        </ContentBoundary>
+      ) : null}
+    </div>
+  )
+}
+
+function ManagementUnavailable() {
+  return (
+    <ContentBoundary width="reading">
+      <Card>
+        <CardHeader>
+          <CardTitle aria-level={2} role="heading">
+            Management unavailable
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-body text-muted-foreground">
+          You do not have an available instrument management action.
+        </CardContent>
+      </Card>
+    </ContentBoundary>
+  )
 }

@@ -34,7 +34,7 @@ test("consolidates read-only people and access into Overview", async ({
   await expect(page.getByText("Project ID", { exact: true })).toBeVisible()
   await expect(
     page.getByRole("link", { name: "Manage members", exact: true })
-  ).toHaveAttribute("href", new RegExp(`${projectPath}/settings/members`))
+  ).toHaveAttribute("href", new RegExp(`${projectPath}/settings`))
   await expect(page.getByRole("link", { name: "Avery Chen" })).toHaveCount(2)
   await expect(page.getByText("Owner", { exact: true })).toBeVisible()
   await expect(

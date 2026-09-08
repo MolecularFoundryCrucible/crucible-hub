@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
   AddMemberIcon,
+  ManageAccessIcon,
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
@@ -22,7 +23,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -41,6 +41,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   addWorkspaceInstrumentOperator,
   removeWorkspaceInstrumentOperator,
@@ -87,6 +92,7 @@ export function InstrumentOperatorsCard({
 }) {
   const queryClient = useQueryClient()
   const canManage = instrument.capabilities?.can_manage_access === true
+  const [managing, setManaging] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   const [reference, setReference] = useState("")
   const [submittedReference, setSubmittedReference] = useState<string>()
@@ -202,27 +208,41 @@ export function InstrumentOperatorsCard({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Operators</CardTitle>
-          <CardDescription>
-            Service accounts collect data on behalf of this instrument.
-          </CardDescription>
+          <CardTitle>Access management</CardTitle>
           {canManage ? (
             <CardAction>
-              <Button
-                disabled={mutationPending}
-                onClick={() => {
-                  setError(undefined)
-                  openAddDialog(true)
-                }}
-                type="button"
-              >
-                <AddMemberIcon data-icon="inline-start" />
-                Add operator
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      aria-label={
+                        managing
+                          ? "Finish managing operators"
+                          : "Manage operators"
+                      }
+                      aria-pressed={managing}
+                      disabled={mutationPending}
+                      onClick={() => setManaging((current) => !current)}
+                      size="icon-sm"
+                      type="button"
+                      variant="outline"
+                    />
+                  }
+                >
+                  <ManageAccessIcon aria-hidden="true" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  {managing ? "Finish managing operators" : "Manage operators"}
+                </TooltipContent>
+              </Tooltip>
             </CardAction>
           ) : null}
         </CardHeader>
         <CardContent>
+          <h3 className="font-heading text-label">Operators</h3>
+          <p className="mb-3 text-body text-muted-foreground">
+            Service accounts collect data on behalf of this instrument.
+          </p>
           {!canManage ? (
             <p className="text-body text-muted-foreground">
               Operator management is not available for this instrument.
@@ -270,19 +290,28 @@ export function InstrumentOperatorsCard({
                         />
                       ) : null}
                     </span>
-                    <Button
-                      aria-label={`Remove ${operatorName(operator)}`}
-                      disabled={mutationPending}
-                      onClick={() => {
-                        setError(undefined)
-                        setRemovingOperator(operator)
-                      }}
-                      size="icon-sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <RemoveMemberIcon aria-hidden="true" />
-                    </Button>
+                    {managing ? (
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              aria-label={`Remove ${operatorName(operator)}`}
+                              disabled={mutationPending}
+                              onClick={() => {
+                                setError(undefined)
+                                setRemovingOperator(operator)
+                              }}
+                              size="icon-sm"
+                              type="button"
+                              variant="destructive"
+                            />
+                          }
+                        >
+                          <RemoveMemberIcon aria-hidden="true" />
+                        </TooltipTrigger>
+                        <TooltipContent>Remove operator</TooltipContent>
+                      </Tooltip>
+                    ) : null}
                   </li>
                 )
               })}
@@ -292,6 +321,22 @@ export function InstrumentOperatorsCard({
             <p className="mt-4 text-body text-destructive" role="alert">
               {error}
             </p>
+          ) : null}
+          {canManage ? (
+            <div className="mt-4 flex justify-end">
+              <Button
+                className="max-sm:w-full"
+                disabled={mutationPending}
+                onClick={() => {
+                  setError(undefined)
+                  openAddDialog(true)
+                }}
+                type="button"
+              >
+                <AddMemberIcon data-icon="inline-start" />
+                Add operator
+              </Button>
+            </div>
           ) : null}
         </CardContent>
       </Card>

@@ -6,7 +6,6 @@ import {
   UpdateInstrumentStatusIcon,
 } from "@/components/crucible/icons"
 import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
-import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,10 +105,12 @@ function initialStatus(instrument: InstrumentDetail) {
 }
 
 export function InstrumentLifecycleCard({
+  className,
   instrument,
   mode,
   scope,
 }: {
+  className?: string
   instrument: InstrumentDetail
   mode: "api" | "fixture"
   scope: IdentityScope
@@ -181,102 +182,98 @@ export function InstrumentLifecycleCard({
 
   return (
     <>
-      <ContentBoundary width="reading">
-        <Card aria-busy={pending}>
-          <CardHeader>
-            <CardTitle>Lifecycle</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-            <dl>
-              <div>
-                <dt className="text-label text-muted-foreground">
-                  Current status
-                </dt>
-                <dd className="mt-1">
-                  {instrument.status ? (
-                    <InstrumentStatusBadge status={instrument.status} />
-                  ) : (
-                    currentLabel
-                  )}
-                </dd>
-              </div>
-            </dl>
-            <form
-              id={`instrument-lifecycle-${instrument.unique_id}`}
-              onSubmit={(event) => {
-                event.preventDefault()
-                submit()
-              }}
-            >
-              <fieldset disabled={pending}>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="instrument-status">Status</FieldLabel>
-                    <NativeSelect
-                      className="w-full"
-                      id="instrument-status"
-                      onChange={(event) => {
-                        const status = event.target.value
-                        if (isWorkspaceInstrumentStatus(status)) {
-                          setSelectedStatus(status)
-                          setError(undefined)
-                        }
-                      }}
-                      value={selectedStatus ?? ""}
-                    >
-                      {!selectedStatus ? (
-                        <NativeSelectOption disabled value="">
-                          Choose a status
-                        </NativeSelectOption>
-                      ) : null}
-                      {instrumentStatuses.map((status) => (
-                        <NativeSelectOption key={status} value={status}>
-                          {instrumentStatusLabel(status)}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                    {selectedStatus ? (
-                      <FieldDescription>
-                        {statusDescription(selectedStatus)}
-                      </FieldDescription>
+      <Card aria-busy={pending} className={className}>
+        <CardHeader>
+          <CardTitle>Lifecycle</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          <dl>
+            <div>
+              <dt className="text-label text-muted-foreground">
+                Current status
+              </dt>
+              <dd className="mt-1">
+                {instrument.status ? (
+                  <InstrumentStatusBadge status={instrument.status} />
+                ) : (
+                  currentLabel
+                )}
+              </dd>
+            </div>
+          </dl>
+          <form
+            id={`instrument-lifecycle-${instrument.unique_id}`}
+            onSubmit={(event) => {
+              event.preventDefault()
+              submit()
+            }}
+          >
+            <fieldset disabled={pending}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="instrument-status">Status</FieldLabel>
+                  <NativeSelect
+                    className="w-full"
+                    id="instrument-status"
+                    onChange={(event) => {
+                      const status = event.target.value
+                      if (isWorkspaceInstrumentStatus(status)) {
+                        setSelectedStatus(status)
+                        setError(undefined)
+                      }
+                    }}
+                    value={selectedStatus ?? ""}
+                  >
+                    {!selectedStatus ? (
+                      <NativeSelectOption disabled value="">
+                        Choose a status
+                      </NativeSelectOption>
                     ) : null}
-                  </Field>
-                </FieldGroup>
-              </fieldset>
-              {error ? (
-                <p className="mt-4 text-body text-destructive" role="alert">
-                  {error}
-                </p>
-              ) : null}
-            </form>
-          </CardContent>
-          <CardFooter className="justify-end">
-            <Button
-              disabled={
-                pending ||
-                !selectedStatus ||
-                selectedStatus === instrument.status
-              }
-              form={`instrument-lifecycle-${instrument.unique_id}`}
-              type="submit"
-            >
-              {pending ? (
-                <InstrumentStatusPendingIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : (
-                <UpdateInstrumentStatusIcon
-                  aria-hidden="true"
-                  data-icon="inline-start"
-                />
-              )}
-              Update status
-            </Button>
-          </CardFooter>
-        </Card>
-      </ContentBoundary>
+                    {instrumentStatuses.map((status) => (
+                      <NativeSelectOption key={status} value={status}>
+                        {instrumentStatusLabel(status)}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                  {selectedStatus ? (
+                    <FieldDescription>
+                      {statusDescription(selectedStatus)}
+                    </FieldDescription>
+                  ) : null}
+                </Field>
+              </FieldGroup>
+            </fieldset>
+            {error ? (
+              <p className="mt-4 text-body text-destructive" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </form>
+        </CardContent>
+        <CardFooter className="justify-end">
+          <Button
+            disabled={
+              pending || !selectedStatus || selectedStatus === instrument.status
+            }
+            form={`instrument-lifecycle-${instrument.unique_id}`}
+            type="submit"
+          >
+            {pending ? (
+              <InstrumentStatusPendingIcon
+                aria-hidden="true"
+                className="motion-safe:animate-spin"
+                data-icon="inline-start"
+              />
+            ) : (
+              <UpdateInstrumentStatusIcon
+                aria-hidden="true"
+                data-icon="inline-start"
+              />
+            )}
+            Update status
+          </Button>
+        </CardFooter>
+      </Card>
 
       <AlertDialog
         onOpenChange={(open) => {

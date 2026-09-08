@@ -73,6 +73,8 @@ Relationship management is a separate resource workflow. Canonical sample and da
 
 Resource management is a separate canonical workflow at `/samples/:sampleMfid/manage` and `/datasets/:datasetMfid/manage`. It provides a persistent resource header with Overview, Graph, and Manage navigation, loads ACL data only on Manage entry, and presents access controls when the exact `can_manage_access` capability allows them. Public controls, bounded user or project grants, atomic primary-project assignment, ownership transfer, and reviewed deletion requests remain distinct actions within Manage and are explicitly confirmed where consequential. Owner, service-account, instrument, system, and unknown grants remain read-only. Management mutations are server-confirmed and never optimistic.
 
+Project and instrument Manage pages use the same unified card structure without nested navigation. Access management contains project members or instrument operators. Resource management contains project ownership and leaving, or instrument lifecycle and ownership. Each section and action remains gated by its exact API capability.
+
 ## Delivery direction
 
 Phase 0 establishes the contract, security, design, and runtime foundation. Phase 1 delivers the useful read workspace. Phase 2 adds controlled self-service management, beginning with safe, independently recoverable operations. Phase 3 migrates generic Explorer workflows only after measured parity. Phase 4 adds high-scale capabilities such as bulk actions, saved views, richer audit history, and administration.

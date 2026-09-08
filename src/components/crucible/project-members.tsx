@@ -60,7 +60,7 @@ export function ProjectMembers({
             <Link
               className={buttonVariants({ size: "sm", variant: "outline" })}
               params={{ projectMfid }}
-              to="/projects/$projectMfid/settings/members"
+              to="/projects/$projectMfid/settings"
             >
               Manage members
             </Link>

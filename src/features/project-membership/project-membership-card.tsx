@@ -9,7 +9,6 @@ import { PersonLink } from "@/components/crucible/person-link"
 import {
   AddMemberIcon,
   EditMembersIcon,
-  LeaveProjectIcon,
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
@@ -71,7 +70,6 @@ import type {
   WorkspaceProject,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
-import { projectMembershipActions } from "./project-membership-access"
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
 type GrantRole = "viewer" | "contributor" | "editor" | "admin"
@@ -86,13 +84,11 @@ export type MembershipProject = WorkspaceProject & {
 export function ProjectMembershipCard({
   accountId,
   mode,
-  onLeaveSuccess,
   project,
   scope,
 }: {
   accountId: string
   mode: "api" | "fixture"
-  onLeaveSuccess?: () => void
   project: MembershipProject
   scope: IdentityScope
 }) {
@@ -108,11 +104,13 @@ export function ProjectMembershipCard({
   const [pendingMember, setPendingMember] = useState<string>()
   const [memberErrors, setMemberErrors] = useState<Record<string, string>>({})
   const [removingMember, setRemovingMember] = useState<ProjectMember>()
-  const [leaving, setLeaving] = useState(false)
   const capabilities = project.capabilities
   const roles = permittedRoles(capabilities?.max_grant_role)
   const canManage = Boolean(
     members !== null && capabilities?.can_manage_access && roles.length
+  )
+  const canManageMembers = Boolean(
+    members !== null && (canManage || capabilities?.can_transfer)
   )
   const normalizedQuery = personQuery.trim()
   const search = useQuery({
@@ -220,7 +218,7 @@ export function ProjectMembershipCard({
     }
   }
 
-  async function removeMember(member: ProjectMember, isLeaving: boolean) {
+  async function removeMember(member: ProjectMember) {
     setPendingMember(member.unique_id)
     setMemberErrors((current) => withoutMemberError(current, member.unique_id))
     try {
@@ -235,15 +233,11 @@ export function ProjectMembershipCard({
           })
         )
       )
-      if (isLeaving) onLeaveSuccess?.()
       return true
     } catch (error) {
       setMemberErrors((current) => ({
         ...current,
-        [member.unique_id]: membershipErrorMessage(
-          error,
-          isLeaving ? "leave this project" : "remove this member"
-        ),
+        [member.unique_id]: membershipErrorMessage(error, "remove this member"),
       }))
       return false
     } finally {
@@ -251,60 +245,42 @@ export function ProjectMembershipCard({
     }
   }
 
-  const { canLeave, currentMember } = projectMembershipActions(
-    { capabilities, members },
-    accountId
-  )
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Members</CardTitle>
-        <CardAction>
-          <div className="flex w-full flex-wrap justify-end gap-2">
-            {canLeave ? (
-              <Button
-                disabled={mutationPending}
-                onClick={() => setLeaving(true)}
-                size="sm"
-                type="button"
-                variant="outline"
-                className="max-sm:flex-1"
+        <CardTitle>Access management</CardTitle>
+        {canManageMembers ? (
+          <CardAction>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    aria-label={
+                      editingRoles
+                        ? "Finish managing members"
+                        : "Manage members"
+                    }
+                    aria-pressed={editingRoles}
+                    disabled={mutationPending}
+                    onClick={() => setEditingRoles((current) => !current)}
+                    size="icon-sm"
+                    type="button"
+                    variant="outline"
+                  />
+                }
               >
-                <LeaveProjectIcon data-icon="inline-start" />
-                Leave project
-              </Button>
-            ) : null}
-            {canManage ? (
-              <Button
-                disabled={mutationPending}
-                onClick={() => setEditingRoles((current) => !current)}
-                size="sm"
-                type="button"
-                variant="outline"
-                className="max-sm:flex-1"
-              >
-                <EditMembersIcon data-icon="inline-start" />
-                {editingRoles ? "Done editing" : "Edit roles"}
-              </Button>
-            ) : null}
-            {canManage ? (
-              <Button
-                data-project-membership-add=""
-                disabled={mutationPending}
-                className="max-sm:w-full"
-                onClick={() => setAddOpen(true)}
-                type="button"
-              >
-                <AddMemberIcon data-icon="inline-start" />
-                Add member
-              </Button>
-            ) : null}
-          </div>
-        </CardAction>
+                <EditMembersIcon aria-hidden="true" />
+              </TooltipTrigger>
+              <TooltipContent>
+                {editingRoles ? "Finish managing members" : "Manage members"}
+              </TooltipContent>
+            </Tooltip>
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent>
-        {editingRoles ? (
+        <h3 className="mb-3 font-heading text-label">Direct members</h3>
+        {editingRoles && canManage ? (
           <p
             className="mb-3 text-supporting text-muted-foreground"
             role="status"
@@ -331,6 +307,7 @@ export function ProjectMembershipCard({
                 isGrantRole(member.role) &&
                 roles.includes(member.role)
               const canRemove =
+                editingRoles &&
                 Boolean(capabilities?.can_transfer) &&
                 member.role !== "owner" &&
                 member.unique_id !== accountId
@@ -380,7 +357,7 @@ export function ProjectMembershipCard({
                                 onClick={() => setRemovingMember(member)}
                                 size="icon-sm"
                                 type="button"
-                                variant="ghost"
+                                variant="destructive"
                               />
                             }
                           >
@@ -401,6 +378,20 @@ export function ProjectMembershipCard({
             })}
           </ul>
         )}
+        {canManage ? (
+          <div className="mt-4 flex justify-end">
+            <Button
+              data-project-membership-add=""
+              disabled={mutationPending}
+              className="max-sm:w-full"
+              onClick={() => setAddOpen(true)}
+              type="button"
+            >
+              <AddMemberIcon data-icon="inline-start" />
+              Add member
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
       <Dialog onOpenChange={closeAddDialog} open={addOpen}>
         <DialogContent>
@@ -595,7 +586,7 @@ export function ProjectMembershipCard({
               onClick={() => {
                 if (!removingMember) return
                 const member = removingMember
-                void removeMember(member, false).then((success) => {
+                void removeMember(member).then((success) => {
                   if (success) setRemovingMember(undefined)
                 })
               }}
@@ -609,57 +600,6 @@ export function ProjectMembershipCard({
                 />
               ) : null}
               Remove member
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog
-        onOpenChange={(open) => {
-          if (!open && pendingMember === currentMember?.unique_id) return
-          setLeaving(open)
-        }}
-        open={leaving}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Leave project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You will lose access to this project and its shared resources.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {currentMember && memberErrors[currentMember.unique_id] ? (
-            <p className="text-body text-destructive" role="alert">
-              {memberErrors[currentMember.unique_id]}
-            </p>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={Boolean(
-                currentMember && pendingMember === currentMember.unique_id
-              )}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={Boolean(
-                currentMember && pendingMember === currentMember.unique_id
-              )}
-              onClick={() => {
-                if (!currentMember) return
-                void removeMember(currentMember, true).then((success) => {
-                  if (success) setLeaving(false)
-                })
-              }}
-              variant="destructive"
-            >
-              {currentMember && pendingMember === currentMember.unique_id ? (
-                <SavingChangesIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              Leave project
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

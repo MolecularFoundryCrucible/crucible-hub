@@ -94,12 +94,12 @@ test("failed project Overview edits retain the inline draft", async ({
   )
 })
 
-test("legacy General Settings indexes redirect to available management", async ({
+test("project and instrument Manage indexes render unified management", async ({
   page,
 }) => {
   await page.goto(`/hub/projects/${projectMfid}/settings?scenario=populated`)
   await expect(page).toHaveURL(
-    new RegExp(`/hub/projects/${projectMfid}/settings/members`)
+    new RegExp(`/hub/projects/${projectMfid}/settings`)
   )
   await expect(
     page.getByRole("link", { name: "Manage", exact: true })
@@ -110,7 +110,7 @@ test("legacy General Settings indexes redirect to available management", async (
     `/hub/instruments/${instrumentMfid}/settings?scenario=populated`
   )
   await expect(page).toHaveURL(
-    new RegExp(`/hub/instruments/${instrumentMfid}/settings/lifecycle`)
+    new RegExp(`/hub/instruments/${instrumentMfid}/settings`)
   )
   await expect(
     page.getByRole("link", { name: "Manage", exact: true })
@@ -128,13 +128,13 @@ test("project Settings manages direct membership through confirmed API-shaped op
     }
   })
 
-  const settingsUrl = `/hub/projects/${projectMfid}/settings/members?scenario=populated`
+  const settingsUrl = `/hub/projects/${projectMfid}/settings?scenario=populated`
   await page.goto(settingsUrl)
   await page.waitForLoadState("networkidle")
 
   let membersCard = page
     .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("Members", { exact: true }) })
+    .filter({ has: page.getByText("Access management", { exact: true }) })
   const addMemberButton = membersCard.getByRole("button", {
     name: "Add member",
   })
@@ -159,8 +159,8 @@ test("project Settings manages direct membership through confirmed API-shaped op
   await page.waitForLoadState("networkidle")
   membersCard = page
     .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("Members", { exact: true }) })
-  await membersCard.getByRole("button", { name: "Edit roles" }).click()
+    .filter({ has: page.getByText("Access management", { exact: true }) })
+  await membersCard.getByRole("button", { name: "Manage members" }).click()
   const collaboratorRole = membersCard.getByLabel("Role for Morgan Lee")
   await collaboratorRole.selectOption("contributor")
   await expect(collaboratorRole).toHaveValue("contributor")
@@ -169,7 +169,8 @@ test("project Settings manages direct membership through confirmed API-shaped op
   await page.waitForLoadState("networkidle")
   membersCard = page
     .locator('[data-slot="card"]')
-    .filter({ has: page.getByText("Members", { exact: true }) })
+    .filter({ has: page.getByText("Access management", { exact: true }) })
+  await membersCard.getByRole("button", { name: "Manage members" }).click()
   await membersCard.getByRole("button", { name: "Remove Morgan Lee" }).click()
   const removeDialog = page.getByRole("alertdialog", {
     name: "Remove member?",
@@ -191,9 +192,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.addInitScript((selectedTheme) => {
       localStorage.setItem("crucible-hub-theme", selectedTheme)
     }, theme)
-    await page.goto(
-      `/hub/projects/${projectMfid}/settings/members?scenario=populated`
-    )
+    await page.goto(`/hub/projects/${projectMfid}/settings?scenario=populated`)
     await page.waitForLoadState("networkidle")
     await expect(page.locator("html")).toHaveClass(new RegExp(theme))
 
@@ -238,16 +237,9 @@ test("instrument Lifecycle applies confirmed status changes and retains failed s
   page,
 }) => {
   await page.goto(
-    `/hub/instruments/${instrumentMfid}/settings/lifecycle?scenario=populated`
+    `/hub/instruments/${instrumentMfid}/settings?scenario=populated`
   )
   await page.waitForLoadState("networkidle")
-
-  const settingsSections = page.getByRole("navigation", {
-    name: "Instrument management sections",
-  })
-  await expect(
-    settingsSections.getByRole("link", { name: "Lifecycle", exact: true })
-  ).toHaveAttribute("aria-current", "page")
 
   const card = page
     .locator('[data-slot="card"]')
@@ -294,12 +286,13 @@ test("instrument Operators removes a service account after confirmation", async 
   page,
 }) => {
   await page.goto(
-    `/hub/instruments/${instrumentMfid}/settings/operators?scenario=populated`
+    `/hub/instruments/${instrumentMfid}/settings?scenario=populated`
   )
   await page.waitForLoadState("networkidle")
 
   const operators = page.getByRole("list", { name: "Instrument operators" })
   await expect(operators.getByText("@beamline-collector")).toBeVisible()
+  await page.getByRole("button", { name: "Manage operators" }).click()
   await operators
     .getByRole("button", { name: "Remove @beamline-collector" })
     .click()
@@ -314,9 +307,7 @@ test("instrument Operators removes a service account after confirmation", async 
 test("project Ownership previews and confirms the selected person", async ({
   page,
 }) => {
-  await page.goto(
-    `/hub/projects/${projectMfid}/settings/ownership?scenario=populated`
-  )
+  await page.goto(`/hub/projects/${projectMfid}/settings?scenario=populated`)
   await page.waitForLoadState("networkidle")
 
   await page.getByRole("button", { name: "Choose person" }).click()

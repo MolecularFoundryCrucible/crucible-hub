@@ -21,6 +21,7 @@ import type { components } from "@/generated/crucible-api"
 import type { HubResult } from "@/data/crucible/result"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 
+import { ProjectLeaveCard } from "./project-leave-card"
 import { ProjectMembershipCard } from "./project-membership-card"
 import type { MembershipProject } from "./project-membership-card"
 
@@ -256,7 +257,7 @@ describe("ProjectMembershipCard", () => {
     )
     renderCard()
 
-    fireEvent.click(screen.getByRole("button", { name: "Edit roles" }))
+    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
     const roleSelect = screen.getByLabelText<HTMLSelectElement>(
       "Role for Morgan Lee"
     )
@@ -277,7 +278,7 @@ describe("ProjectMembershipCard", () => {
     })
   })
 
-  it("limits removal to transferable other members and confirms leaving", async () => {
+  it("hides removal controls until role management is enabled", () => {
     renderCard({
       project: {
         ...project,
@@ -291,23 +292,25 @@ describe("ProjectMembershipCard", () => {
     expect(
       screen.queryByRole("button", { name: "Remove Morgan Lee" })
     ).toBeNull()
-
-    fireEvent.click(screen.getByRole("button", { name: "Leave project" }))
-    expect(
-      screen.getByRole("alertdialog", { name: "Leave project?" })
-    ).toBeTruthy()
   })
 
   it("uses direct removal for confirmed voluntary leave", async () => {
-    const onLeaveSuccess = vi.fn()
+    const onSuccess = vi.fn()
     vi.mocked(removeWorkspaceProjectMember).mockResolvedValue(ok([owner]))
-    renderCard({
-      onLeaveSuccess,
-      project: {
-        ...project,
-        capabilities: { ...project.capabilities, can_transfer: false },
-      },
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
     })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProjectLeaveCard
+          accountId="account"
+          mode="fixture"
+          onSuccess={onSuccess}
+          project={project}
+          scope={scope}
+        />
+      </QueryClientProvider>
+    )
 
     fireEvent.click(screen.getByRole("button", { name: "Leave project" }))
     fireEvent.click(
@@ -325,6 +328,6 @@ describe("ProjectMembershipCard", () => {
         },
       })
     )
-    await waitFor(() => expect(onLeaveSuccess).toHaveBeenCalledOnce())
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce())
   })
 })

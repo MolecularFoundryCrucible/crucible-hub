@@ -1,35 +1,134 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Navigate, createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
+import { ContentBoundary } from "@/components/crucible/content-layout"
+import {
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
+import type { IdentityScope } from "@/data/crucible/query-keys"
+import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { ProjectLeaveCard } from "@/features/project-membership/project-leave-card"
+import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
+import { ProjectMembershipCard } from "@/features/project-membership/project-membership-card"
+import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/settings/")({
-  component: ProjectGeneralSettingsPage,
+  component: ProjectManagePage,
 })
 
-function ProjectGeneralSettingsPage() {
+function ProjectManagePage() {
   const { projectMfid } = Route.useParams()
+  const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
+  const navigate = useNavigate({
+    from: "/projects/$projectMfid/settings/",
+  })
   const { data: project } = useSuspenseQuery(
     projectQueryOptions(scope, projectMfid)
   )
-
   if (!project || !("organization" in project)) return null
 
-  const { canUseMembership } = projectMembershipActions(project, scope[2])
+  const canTransfer = project.capabilities?.can_transfer === true
+  const { canLeave, canManageAccess } = projectMembershipActions(
+    project,
+    scope[2]
+  )
+  const canManageMembers = canManageAccess || canTransfer
+  const hasResourceManagement = canLeave || canTransfer
+
+  if (!canManageMembers && !hasResourceManagement) {
+    return <ManagementUnavailable />
+  }
+
   return (
-    <Navigate
-      params={{ projectMfid }}
-      replace
-      to={
-        canUseMembership
-          ? "/projects/$projectMfid/settings/members"
-          : project.capabilities?.can_transfer === true
-            ? "/projects/$projectMfid/settings/ownership"
-            : "/projects/$projectMfid/overview"
-      }
+    <div className="flex min-w-0 flex-col gap-6">
+      {canManageMembers ? (
+        <ContentBoundary width="reading">
+          <ProjectMembershipCard
+            accountId={scope[2]}
+            mode={mode}
+            project={{ ...project, members: project.members ?? null }}
+            scope={scope}
+          />
+        </ContentBoundary>
+      ) : null}
+      {hasResourceManagement ? (
+        <ContentBoundary width="reading">
+          <Card>
+            <CardHeader>
+              <CardTitle>Resource management</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y px-0">
+              {canTransfer ? (
+                <ProjectOwnershipRow
+                  mode={mode}
+                  projectMfid={projectMfid}
+                  scope={scope}
+                />
+              ) : null}
+              {canLeave ? (
+                <ProjectLeaveCard
+                  accountId={scope[2]}
+                  className="rounded-none bg-transparent ring-0"
+                  mode={mode}
+                  onSuccess={() =>
+                    void navigate({
+                      replace: true,
+                      search: { offset: undefined },
+                      to: "/projects",
+                    })
+                  }
+                  project={{ ...project, members: project.members ?? null }}
+                  scope={scope}
+                />
+              ) : null}
+            </CardContent>
+          </Card>
+        </ContentBoundary>
+      ) : null}
+    </div>
+  )
+}
+
+function ProjectOwnershipRow({
+  mode,
+  projectMfid,
+  scope,
+}: {
+  mode: "api" | "fixture"
+  projectMfid: string
+  scope: IdentityScope
+}) {
+  const { data: resource } = useSuspenseQuery(
+    resourceQueryOptions(scope, projectMfid)
+  )
+  if (!resource || resource.kind !== "project") return null
+  return (
+    <OwnershipTransferCard
+      className="rounded-none bg-transparent ring-0"
+      mode={mode}
+      resource={resource}
+      scope={scope}
     />
+  )
+}
+
+function ManagementUnavailable() {
+  return (
+    <ContentBoundary width="reading">
+      <Card>
+        <CardHeader>
+          <CardTitle aria-level={2} role="heading">
+            Management unavailable
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-body text-muted-foreground">
+          You do not have an available project management action.
+        </CardContent>
+      </Card>
+    </ContentBoundary>
   )
 }

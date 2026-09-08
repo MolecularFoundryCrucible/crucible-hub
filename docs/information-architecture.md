@@ -44,18 +44,18 @@ Wide layouts use a persistent sidebar and top utility bar. The top utility bar p
 | `/projects/new`                                   | Project creation.                                           |
 | `/projects/:projectMfid`                          | Project Data index.                                         |
 | `/projects/:projectMfid/overview`                 | Project details, scientific metadata, and readable members. |
-| `/projects/:projectMfid/settings`                 | Redirect to available project management or Overview.       |
-| `/projects/:projectMfid/settings/members`         | Capability-gated direct member management.                  |
-| `/projects/:projectMfid/settings/ownership`       | Capability-gated ownership transfer.                        |
+| `/projects/:projectMfid/settings`                 | Unified project access and resource management.             |
+| `/projects/:projectMfid/settings/members`         | Compatibility redirect to project Manage.                   |
+| `/projects/:projectMfid/settings/ownership`       | Compatibility redirect to project Manage.                   |
 | `/projects/:projectMfid/members`                  | Replacement redirect to project Overview.                   |
 | `/instruments`                                    | Instrument collection.                                      |
 | `/instruments/new`                                | Instrument registration.                                    |
 | `/instruments/:instrumentMfid`                    | Instrument Overview.                                        |
 | `/instruments/:instrumentMfid/datasets`           | Instrument-scoped dataset collection.                       |
-| `/instruments/:instrumentMfid/settings`           | Redirect to available instrument management or Overview.    |
-| `/instruments/:instrumentMfid/settings/lifecycle` | Capability-gated instrument lifecycle management.           |
-| `/instruments/:instrumentMfid/settings/operators` | Capability-gated service-account operator management.       |
-| `/instruments/:instrumentMfid/settings/ownership` | Capability-gated ownership transfer.                        |
+| `/instruments/:instrumentMfid/settings`           | Unified instrument access and resource management.          |
+| `/instruments/:instrumentMfid/settings/lifecycle` | Compatibility redirect to instrument Manage.                |
+| `/instruments/:instrumentMfid/settings/operators` | Compatibility redirect to instrument Manage.                |
+| `/instruments/:instrumentMfid/settings/ownership` | Compatibility redirect to instrument Manage.                |
 | `/samples/:sampleMfid`                            | Canonical sample detail.                                    |
 | `/datasets/:datasetMfid`                          | Canonical dataset detail.                                   |
 | `/samples/:sampleMfid/graph`                      | Immediate sample relationship graph.                        |
@@ -81,7 +81,7 @@ The application-bar avatar opens the account menu and links to My profile. The p
 
 Project routes retain project identity, breadcrumbs, and local navigation while a child section loads. Data is the index and has Samples, Datasets, and All type views; All, Assigned, and Shared are collection filters rather than separate project identities. Rows show their actual primary project and resource detail remains canonical.
 
-Project navigation has Data and Overview plus capability-gated Manage when membership or ownership operations are available. The persistent project header owns the title and project-prefilled sample and dataset creation actions. Overview contains one read-first Project details section with project ID, organization, lead, MFID, Created, and Updated; authorized people can explicitly replace that card with descriptive editing for title, organization, and project ID. A separate scientific metadata section and read-only People section follow. The People section links authorized users directly to member management and presents the authorization owner as Lead. Manage has route-backed Members and Ownership subsections. Members owns direct member addition, allowed role changes, removal, and self-leave. Ownership uses the API preview and a separate explicit confirmation. These actions remain distinct from resource ACLs and future join requests. No invitation workflow or top-level Members destination exists. A non-member can receive a public-safe project representation without membership-only fields.
+Project navigation has Data and Overview plus capability-gated Manage when membership or ownership operations are available. The persistent project header owns the title and project-prefilled sample and dataset creation actions. Overview contains one read-first Project details section with project ID, organization, lead, MFID, Created, and Updated; authorized people can explicitly replace that card with descriptive editing for title, organization, and project ID. A separate scientific metadata section and read-only People section follow. The People section links authorized users directly to Manage and presents the authorization owner as Lead. Manage is one page with direct member addition, allowed role changes, and confirmed removal in Access management. Resource management contains preview-confirm ownership transfer followed by destructive confirmed self-leave. These actions remain distinct from resource ACLs and future join requests. Former Members and Ownership URLs redirect to Manage. No invitation workflow or top-level Members destination exists. A non-member can receive a public-safe project representation without membership-only fields.
 
 The exact project endpoint returns `ProjectWithLead`: `unique_id`, `project_id`, `title`, `organization`, `project_lead_orcid`, resolved `lead`, `status`, `creation_time`, `modification_time`, `members`, `scientific_metadata`, and nullable `capabilities`. Hub renders the resolved public-safe lead in preference to its identifier, uses capabilities only to expose valid actions, and omits the project status badge from the project header. Optional values remain absent or use the standard empty presentation rather than being fabricated.
 
