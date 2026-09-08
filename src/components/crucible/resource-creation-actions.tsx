@@ -16,7 +16,7 @@ export function ResourceCreationActions({
     <div className="flex flex-wrap gap-2">
       {kinds.includes("sample") ? (
         <Link
-          className={buttonVariants({ variant: "outline" })}
+          className={buttonVariants()}
           search={{ projectMfid }}
           to="/samples/new"
         >
@@ -26,7 +26,7 @@ export function ResourceCreationActions({
       ) : null}
       {kinds.includes("dataset") ? (
         <Link
-          className={buttonVariants({ variant: "outline" })}
+          className={buttonVariants()}
           search={{ instrumentMfid, projectMfid }}
           to="/datasets/new"
         >
