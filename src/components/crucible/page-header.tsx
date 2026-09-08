@@ -13,7 +13,7 @@ export function PageHeader({
 }) {
   return (
     <header className="flex flex-col gap-4 border-b pb-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="max-w-reading min-w-0 flex-1">
+      <div className="min-w-0 flex-1">
         {eyebrow ? (
           <div className="flex items-center gap-2 text-overline text-muted-foreground uppercase">
             {eyebrow}
@@ -30,7 +30,7 @@ export function PageHeader({
           <h1 className="min-w-0 text-title-page break-words">{title}</h1>
         </div>
         {description ? (
-          <p className="mt-2 text-body-prominent text-muted-foreground">
+          <p className="mt-2 max-w-reading text-body-prominent text-muted-foreground">
             {description}
           </p>
         ) : null}

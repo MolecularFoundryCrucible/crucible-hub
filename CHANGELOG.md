@@ -61,7 +61,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Simplified canonical resource headers to pair each wrapping name with its semantic resource icon and removed duplicate type and Summary labels.
+- Simplified canonical resource headers to pair each name with its semantic resource icon, use the available header width before wrapping, and remove duplicate type and Summary labels.
 - Increased top-level read-only field labels to the shared 14 px semibold label role while retaining the smaller supporting role for secondary content.
 - Made compact dialogs viewport-bounded with persistent action footers, moved card actions below headings on narrow screens, reflowed member and access controls, and made member addition an explicit selection and confirmation workflow.
 - Improved compact resource inspection with resource icons beside wrapping titles, dedicated MFID rows, wrapping relationship identities, fixed trailing navigation actions, and less redundant labels.
