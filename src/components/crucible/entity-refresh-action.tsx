@@ -4,6 +4,11 @@ import type { QueryKey } from "@tanstack/react-query"
 
 import { RefreshResourceIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { formatLocalDateTime } from "@/lib/format"
 
 export function EntityRefreshAction({
@@ -37,28 +42,27 @@ export function EntityRefreshAction({
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
-      {timestamp ? (
-        <time
-          className="text-supporting text-muted-foreground"
-          dateTime={new Date(refreshedAt).toISOString()}
-        >
-          Last refreshed {timestamp}
-        </time>
-      ) : null}
-      <Button
-        aria-label={label}
-        disabled={refreshing}
-        onClick={() => void refresh()}
-        size="sm"
-        variant="outline"
-      >
-        <RefreshResourceIcon
-          aria-hidden="true"
-          className={refreshing ? "animate-spin" : undefined}
-          data-icon="inline-start"
-        />
-        {refreshing ? "Refreshing" : "Refresh"}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger render={<span className="inline-flex" />}>
+          <Button
+            aria-label={label}
+            disabled={refreshing}
+            onClick={() => void refresh()}
+            size="default"
+            variant="outline"
+          >
+            <RefreshResourceIcon
+              aria-hidden="true"
+              className={refreshing ? "animate-spin" : undefined}
+              data-icon="inline-start"
+            />
+            {refreshing ? "Refreshing" : "Refresh"}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {timestamp ? `Last refreshed ${timestamp}` : label}
+        </TooltipContent>
+      </Tooltip>
       {failed ? (
         <p
           className="basis-full text-right text-supporting text-destructive"
