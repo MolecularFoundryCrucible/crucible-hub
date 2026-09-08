@@ -276,7 +276,10 @@ function InstrumentCollection({
                         data-label="Owner"
                       >
                         {instrument.owner ? (
-                          <PersonLink person={instrument.owner} />
+                          <PersonLink
+                            nameStyle="abbreviated"
+                            person={instrument.owner}
+                          />
                         ) : (
                           <span aria-label="Not available">-</span>
                         )}

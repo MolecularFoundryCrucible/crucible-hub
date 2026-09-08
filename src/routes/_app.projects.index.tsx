@@ -207,7 +207,10 @@ function ProjectCollection({
                         data-label="Lead"
                       >
                         {complete && project.lead ? (
-                          <PersonLink person={project.lead} />
+                          <PersonLink
+                            nameStyle="abbreviated"
+                            person={project.lead}
+                          />
                         ) : (
                           <span aria-label="Not available">-</span>
                         )}
