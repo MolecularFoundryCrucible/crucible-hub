@@ -213,7 +213,9 @@ function SidebarBrand() {
             render={<Link aria-label="Crucible Hub" to="/" />}
           >
             <BrandMark />
-            <span className="truncate text-brand">Crucible Hub</span>
+            {collapsed ? null : (
+              <span className="truncate text-brand">Crucible Hub</span>
+            )}
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
