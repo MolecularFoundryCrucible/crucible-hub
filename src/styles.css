@@ -26,6 +26,7 @@
   --spacing-page-gutter-wide: 2rem;
   --spacing-page-section: 2rem;
   --spacing-inspector-width: 26rem;
+  --spacing-dialog-viewport: calc(100dvh - 1rem);
   --spacing-metadata-editor-height: 20rem;
   --spacing-graph-canvas: 30rem;
   --spacing-pill-height: 1.5rem;

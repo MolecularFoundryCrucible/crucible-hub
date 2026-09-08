@@ -148,7 +148,8 @@ test("project Settings manages direct membership through confirmed API-shaped op
     (await new AxeBuilder({ page }).include('[role="dialog"]').analyze())
       .violations
   ).toEqual([])
-  await addDialog.getByRole("button", { name: "Add Jamie Patel" }).click()
+  await addDialog.getByRole("button", { name: "Select Jamie Patel" }).click()
+  await addDialog.getByRole("button", { name: "Add member" }).click()
   await expect(addDialog).toBeHidden()
   await expect(
     membersCard.getByText("Jamie Patel", { exact: true })

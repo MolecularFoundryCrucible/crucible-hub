@@ -189,7 +189,11 @@ describe("ProjectMembershipCard", () => {
     fireEvent.change(screen.getByLabelText("Project role"), {
       target: { value: "editor" },
     })
-    fireEvent.click(screen.getByRole("button", { name: "Add Jamie Patel" }))
+    const dialog = screen.getByRole("dialog", { name: "Add member" })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Select Jamie Patel" })
+    )
+    fireEvent.click(within(dialog).getByRole("button", { name: "Add member" }))
 
     await waitFor(() =>
       expect(addWorkspaceProjectMember).toHaveBeenCalledWith({
@@ -225,9 +229,15 @@ describe("ProjectMembershipCard", () => {
       target: { value: "jam" },
     })
     const addResult = await screen.findByRole("button", {
-      name: "Add Jamie Patel",
+      name: "Select Jamie Patel",
     })
     fireEvent.click(addResult)
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: "Add member" })).getByRole(
+        "button",
+        { name: "Add member" }
+      )
+    )
 
     expect(
       await screen.findByText("Could not add this member. Try again.")

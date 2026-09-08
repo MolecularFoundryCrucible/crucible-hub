@@ -383,6 +383,14 @@ function ManagedResourceAccess({
         </CardHeader>
         <CardContent>
           <h3 className="mb-3 font-heading text-label">Direct access</h3>
+          {managing ? (
+            <p
+              className="mb-3 text-supporting text-muted-foreground"
+              role="status"
+            >
+              Role changes save automatically.
+            </p>
+          ) : null}
           {directGrants.length ? (
             <ul
               aria-label="Direct access grants"
@@ -402,7 +410,7 @@ function ManagedResourceAccess({
                   pendingAction === `set:${kind ?? ""}:${grant.principal_id}`
                 return (
                   <li
-                    className="flex min-w-0 items-center gap-3"
+                    className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
                     key={grantKey(grant)}
                   >
                     <div className="min-w-0 flex-1">
@@ -419,7 +427,7 @@ function ManagedResourceAccess({
                         </span>
                       </p>
                     </div>
-                    <div className="flex min-h-8 shrink-0 items-center gap-2">
+                    <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
                       <span className="inline-flex size-4 items-center justify-center">
                         {pending ? (
                           <AccessPendingIcon
@@ -428,10 +436,11 @@ function ManagedResourceAccess({
                           />
                         ) : null}
                       </span>
-                      <span className="flex w-access-role-control justify-end">
+                      <span className="flex min-w-0 flex-1 justify-end sm:w-access-role-control sm:flex-none">
                         {editable ? (
                           <NativeSelect
                             aria-label={`Role for ${grantName(grant)}`}
+                            className="w-full sm:w-fit"
                             disabled={mutationPending}
                             onChange={(event) => {
                               if (isAccessGrantRole(event.target.value)) {
@@ -465,13 +474,18 @@ function ManagedResourceAccess({
                                   setError(undefined)
                                   setPendingRevoke(grant)
                                 }}
-                                size="icon"
+                                className="sm:size-8 sm:p-0"
+                                size="sm"
                                 type="button"
                                 variant="destructive"
                               />
                             }
                           >
-                            <RevokeAccessGrantIcon aria-hidden="true" />
+                            <RevokeAccessGrantIcon
+                              aria-hidden="true"
+                              data-icon="inline-start"
+                            />
+                            <span className="sm:sr-only">Revoke</span>
                           </TooltipTrigger>
                           <TooltipContent>Revoke access</TooltipContent>
                         </Tooltip>
@@ -494,6 +508,7 @@ function ManagedResourceAccess({
           {canGrant ? (
             <div className="mt-4 flex justify-end">
               <Button
+                className="max-sm:w-full"
                 disabled={mutationPending}
                 onClick={() => {
                   setError(undefined)
@@ -525,6 +540,7 @@ function ManagedResourceAccess({
               </Badge>
             </div>
             <Button
+              className="max-sm:w-full"
               disabled={mutationPending}
               onClick={() => {
                 setError(undefined)
@@ -828,7 +844,12 @@ function AddAccessDialog({
                   <FieldError>{validationError}</FieldError>
                 ) : null}
               </Field>
-              <Button disabled={pending} type="submit" variant="outline">
+              <Button
+                className="max-sm:w-full"
+                disabled={pending}
+                type="submit"
+                variant="outline"
+              >
                 Search
               </Button>
             </FieldGroup>

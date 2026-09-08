@@ -37,6 +37,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -66,7 +67,10 @@ import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type { components } from "@/generated/crucible-api"
 import { initials } from "@/lib/format"
-import type { WorkspaceProject } from "@/data/crucible/workspace-source"
+import type {
+  WorkspaceProject,
+  WorkspaceSearchResult,
+} from "@/data/crucible/workspace-source"
 import { projectMembershipActions } from "./project-membership-access"
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
@@ -99,6 +103,7 @@ export function ProjectMembershipCard({
   const [editingRoles, setEditingRoles] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   const [personQuery, setPersonQuery] = useState("")
+  const [selectedPerson, setSelectedPerson] = useState<WorkspaceSearchResult>()
   const [selectedRole, setSelectedRole] = useState<GrantRole>("viewer")
   const [pendingMember, setPendingMember] = useState<string>()
   const [memberErrors, setMemberErrors] = useState<Record<string, string>>({})
@@ -132,6 +137,7 @@ export function ProjectMembershipCard({
     setAddOpen(nextOpen)
     if (!nextOpen) {
       setPersonQuery("")
+      setSelectedPerson(undefined)
       setSelectedRole(roles[0] ?? "viewer")
     }
   }
@@ -255,7 +261,7 @@ export function ProjectMembershipCard({
       <CardHeader>
         <CardTitle>Members</CardTitle>
         <CardAction>
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex w-full flex-wrap justify-end gap-2">
             {canLeave ? (
               <Button
                 disabled={mutationPending}
@@ -263,6 +269,7 @@ export function ProjectMembershipCard({
                 size="sm"
                 type="button"
                 variant="outline"
+                className="max-sm:flex-1"
               >
                 <LeaveProjectIcon data-icon="inline-start" />
                 Leave project
@@ -275,6 +282,7 @@ export function ProjectMembershipCard({
                 size="sm"
                 type="button"
                 variant="outline"
+                className="max-sm:flex-1"
               >
                 <EditMembersIcon data-icon="inline-start" />
                 {editingRoles ? "Done editing" : "Edit roles"}
@@ -284,6 +292,7 @@ export function ProjectMembershipCard({
               <Button
                 data-project-membership-add=""
                 disabled={mutationPending}
+                className="max-sm:w-full"
                 onClick={() => setAddOpen(true)}
                 type="button"
               >
@@ -295,6 +304,14 @@ export function ProjectMembershipCard({
         </CardAction>
       </CardHeader>
       <CardContent>
+        {editingRoles ? (
+          <p
+            className="mb-3 text-supporting text-muted-foreground"
+            role="status"
+          >
+            Role changes save automatically.
+          </p>
+        ) : null}
         {members === null ? (
           <div className="flex items-center gap-2 text-body text-muted-foreground">
             <ResourceTypeIcon type="person" />
@@ -320,12 +337,13 @@ export function ProjectMembershipCard({
               const pending = pendingMember === member.unique_id
               return (
                 <li className="flex flex-col gap-1" key={member.unique_id}>
-                  <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <MemberIdentity member={member} />
-                    <div className="flex min-h-8 shrink-0 items-center justify-end gap-2">
+                    <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
                       {canChangeRole ? (
                         <NativeSelect
                           aria-label={`Role for ${memberName(member)}`}
+                          className="w-full sm:w-fit"
                           disabled={mutationPending}
                           onChange={(event) => {
                             if (isGrantRole(event.target.value)) {
@@ -399,7 +417,10 @@ export function ProjectMembershipCard({
               <Input
                 autoComplete="off"
                 id={searchInputId}
-                onChange={(event) => setPersonQuery(event.target.value)}
+                onChange={(event) => {
+                  setPersonQuery(event.target.value)
+                  setSelectedPerson(undefined)
+                }}
                 placeholder="Name or identifier"
                 type="search"
                 value={personQuery}
@@ -452,12 +473,19 @@ export function ProjectMembershipCard({
                 return (
                   <li key={person.unique_id}>
                     <Button
-                      aria-label={`Add ${person.name}`}
+                      aria-label={`Select ${person.name}`}
+                      aria-pressed={
+                        selectedPerson?.unique_id === person.unique_id
+                      }
                       className="h-auto w-full justify-start py-2 whitespace-normal"
                       disabled={existingMember || mutationPending}
-                      onClick={() => void addMember(person.unique_id)}
+                      onClick={() => setSelectedPerson(person)}
                       type="button"
-                      variant="ghost"
+                      variant={
+                        selectedPerson?.unique_id === person.unique_id
+                          ? "secondary"
+                          : "ghost"
+                      }
                     >
                       {pendingMember === person.unique_id ? (
                         <SavingChangesIcon
@@ -495,6 +523,40 @@ export function ProjectMembershipCard({
               })}
             </ul>
           )}
+          {selectedPerson ? (
+            <p className="text-body">
+              {selectedPerson.name} will be added as{" "}
+              {roleLabel(selectedRole).toLowerCase()}.
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button
+              disabled={mutationPending}
+              onClick={() => closeAddDialog(false)}
+              type="button"
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!selectedPerson || mutationPending}
+              onClick={() => {
+                if (selectedPerson) void addMember(selectedPerson.unique_id)
+              }}
+              type="button"
+            >
+              {mutationPending ? (
+                <SavingChangesIcon
+                  aria-hidden="true"
+                  className="motion-safe:animate-spin"
+                  data-icon="inline-start"
+                />
+              ) : (
+                <AddMemberIcon aria-hidden="true" data-icon="inline-start" />
+              )}
+              Add member
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <AlertDialog
