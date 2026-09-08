@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/card"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { hubPageTitle } from "@/lib/page-title"
+import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 
 export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
   loader: async ({ context, params, parentMatchPromise }) => {
@@ -62,6 +63,15 @@ function InstrumentPage() {
   const scope = useWorkspaceScope()
   const resourceOptions = resourceQueryOptions(scope, instrumentMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
+  useRememberRecentlyViewed(
+    resource?.kind === "instrument"
+      ? {
+          kind: "instrument",
+          name: resource.name,
+          uniqueId: resource.unique_id,
+        }
+      : null
+  )
 
   if (!resource || resource.kind !== "instrument") {
     return (

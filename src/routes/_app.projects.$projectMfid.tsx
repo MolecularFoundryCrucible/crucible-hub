@@ -30,6 +30,7 @@ import {
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 import { hubPageTitle } from "@/lib/page-title"
+import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid")({
   loader: async ({ context, params, parentMatchPromise }) => {
@@ -58,6 +59,15 @@ function ProjectWorkspace() {
   const scope = useWorkspaceScope()
   const projectOptions = projectQueryOptions(scope, projectMfid)
   const { data: project, dataUpdatedAt } = useSuspenseQuery(projectOptions)
+  useRememberRecentlyViewed(
+    project
+      ? {
+          kind: "project",
+          name: project.title ?? project.project_id,
+          uniqueId: project.unique_id,
+        }
+      : null
+  )
 
   if (!project) {
     return (

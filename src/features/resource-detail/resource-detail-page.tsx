@@ -89,6 +89,7 @@ import { cn } from "@/lib/utils"
 import { ResourceSummaryCard } from "@/features/resource-edit/resource-summary-card"
 import { DatasetThumbnailsCard } from "@/features/dataset-thumbnails/dataset-thumbnails-card"
 import { DatasetProcessingActivity } from "@/features/dataset-activity/dataset-processing-activity"
+import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
@@ -138,6 +139,15 @@ export function ResourceWorkspace({
     resource?.kind === "sample" || resource?.kind === "dataset"
       ? resource.project?.unique_id
       : undefined
+  useRememberRecentlyViewed(
+    resource && (resource.kind === "sample" || resource.kind === "dataset")
+      ? {
+          kind: resource.kind,
+          name: resource.name,
+          uniqueId: resource.unique_id,
+        }
+      : null
+  )
   const originProject = useQuery({
     ...projectQueryOptions(scope, fromProject ?? ""),
     enabled: Boolean(fromProject) && resourceProjectMfid !== fromProject,

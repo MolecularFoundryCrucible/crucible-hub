@@ -32,6 +32,8 @@ import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 import { selectRecentResources } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { formatDate } from "@/lib/format"
+import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
+import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 
 const homeProjectLimit = 5
 const homeRecentResourceLimit = 5
@@ -81,6 +83,7 @@ function HomePage() {
   const recentDataPartial =
     recentResources.length > 0 &&
     (sampleResult.isError || datasetResult.isError)
+  const recentlyViewed = useRecentlyViewed().slice(0, 5)
 
   return (
     <PageLayout>
@@ -170,7 +173,7 @@ function HomePage() {
           </Card>
         </section>
 
-        <div className="min-w-0 xl:col-span-2">
+        <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
           <section aria-labelledby="home-projects-title">
             <Card>
               <CardHeader>
@@ -219,9 +222,96 @@ function HomePage() {
               </CardContent>
             </Card>
           </section>
+          <section aria-labelledby="recently-viewed-title">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <h2 id="recently-viewed-title">Recently viewed</h2>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {recentlyViewed.length === 0 ? (
+                  <p className="text-body text-muted-foreground">
+                    Resources opened during this session will appear here.
+                  </p>
+                ) : (
+                  <ul className="flex min-w-0 flex-col" role="list">
+                    {recentlyViewed.map((item) => (
+                      <RecentlyViewedLink
+                        item={item}
+                        key={`${item.kind}:${item.uniqueId}`}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </section>
         </div>
       </div>
     </PageLayout>
+  )
+}
+
+function RecentlyViewedLink({ item }: { item: RecentlyViewedResource }) {
+  const content = (
+    <>
+      <ResourceTypeIcon className="shrink-0" type={item.kind} />
+      <span className="min-w-0 truncate text-label">{item.name}</span>
+    </>
+  )
+  const className =
+    "flex min-w-0 items-center gap-3 border-b py-3 first:pt-0 last:border-b-0 last:pb-0 hover:underline"
+
+  if (item.kind === "project") {
+    return (
+      <li>
+        <Link
+          className={className}
+          params={{ projectMfid: item.uniqueId }}
+          to="/projects/$projectMfid"
+        >
+          {content}
+        </Link>
+      </li>
+    )
+  }
+  if (item.kind === "instrument") {
+    return (
+      <li>
+        <Link
+          className={className}
+          params={{ instrumentMfid: item.uniqueId }}
+          to="/instruments/$instrumentMfid"
+        >
+          {content}
+        </Link>
+      </li>
+    )
+  }
+  if (item.kind === "sample") {
+    return (
+      <li>
+        <Link
+          className={className}
+          params={{ sampleMfid: item.uniqueId }}
+          to="/samples/$sampleMfid"
+        >
+          {content}
+        </Link>
+      </li>
+    )
+  }
+  return (
+    <li>
+      <Link
+        className={className}
+        params={{ datasetMfid: item.uniqueId }}
+        to="/datasets/$datasetMfid"
+      >
+        {content}
+      </Link>
+    </li>
   )
 }
 

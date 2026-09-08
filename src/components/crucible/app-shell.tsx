@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/sidebar"
 import type { Workspace } from "@/data/crucible/workspace-source"
 import { initials } from "@/lib/format"
+import { RecentlyViewedProvider } from "@/features/recently-viewed/recently-viewed"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
 
@@ -88,116 +89,118 @@ export function AppShell({
   const projectMfid = pathname.match(/^\/projects\/([^/]+)/)?.[1]
 
   return (
-    <SidebarProvider>
-      <Sidebar
-        aria-label="Primary navigation"
-        role="navigation"
-        collapsible="icon"
-      >
-        <SidebarBrand />
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {primaryItems.map((item) => {
-                  const isActive =
-                    item.to === "/"
-                      ? pathname === "/"
-                      : item.to === "/data" &&
-                          (pathname.startsWith("/datasets/") ||
-                            pathname.startsWith("/samples/"))
-                        ? true
-                        : pathname === item.to ||
-                          pathname.startsWith(`${item.to}/`)
-                  return (
-                    <SidebarMenuItem key={item.to}>
-                      <SidebarMenuButton
-                        isActive={isActive}
-                        tooltip={item.label}
-                        render={
-                          <Link
-                            aria-current={isActive ? "page" : undefined}
-                            to={item.to}
-                          />
-                        }
-                      >
-                        {item.kind === "resource" ? (
-                          <ResourceTypeIcon type={item.resourceType} />
-                        ) : (
-                          <WorkspaceIcon aria-hidden="true" />
-                        )}
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarUtilities
-          pathname={pathname}
-          projectActive={Boolean(projectMfid)}
-        />
-        <SidebarRail />
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
-          <SidebarTrigger className="md:hidden" />
-          <GlobalSearch projectMfid={projectMfid} />
-          {account ? (
-            <CreateMenu
-              isServiceAccount={Boolean(account.is_service_account)}
-            />
-          ) : null}
-          <div className="ml-auto border-l pl-3">
+    <RecentlyViewedProvider key={account?.unique_id ?? "anonymous"}>
+      <SidebarProvider>
+        <Sidebar
+          aria-label="Primary navigation"
+          role="navigation"
+          collapsible="icon"
+        >
+          <SidebarBrand />
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {primaryItems.map((item) => {
+                    const isActive =
+                      item.to === "/"
+                        ? pathname === "/"
+                        : item.to === "/data" &&
+                            (pathname.startsWith("/datasets/") ||
+                              pathname.startsWith("/samples/"))
+                          ? true
+                          : pathname === item.to ||
+                            pathname.startsWith(`${item.to}/`)
+                    return (
+                      <SidebarMenuItem key={item.to}>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          tooltip={item.label}
+                          render={
+                            <Link
+                              aria-current={isActive ? "page" : undefined}
+                              to={item.to}
+                            />
+                          }
+                        >
+                          {item.kind === "resource" ? (
+                            <ResourceTypeIcon type={item.resourceType} />
+                          ) : (
+                            <WorkspaceIcon aria-hidden="true" />
+                          )}
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarUtilities
+            pathname={pathname}
+            projectActive={Boolean(projectMfid)}
+          />
+          <SidebarRail />
+        </Sidebar>
+        <SidebarInset>
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+            <SidebarTrigger className="md:hidden" />
+            <GlobalSearch projectMfid={projectMfid} />
             {account ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button
-                      aria-label="Open account menu"
-                      className="h-auto gap-2 px-1 py-0.5"
-                      variant="ghost"
-                    />
-                  }
-                >
-                  <Avatar size="sm">
-                    <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
-                      {initials(account.first_name, account.last_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden text-left lg:grid">
-                    <span className="text-label">
-                      {account.first_name} {account.last_name}
+              <CreateMenu
+                isServiceAccount={Boolean(account.is_service_account)}
+              />
+            ) : null}
+            <div className="ml-auto border-l pl-3">
+              {account ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        aria-label="Open account menu"
+                        className="h-auto gap-2 px-1 py-0.5"
+                        variant="ghost"
+                      />
+                    }
+                  >
+                    <Avatar size="sm">
+                      <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
+                        {initials(account.first_name, account.last_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden text-left lg:grid">
+                      <span className="text-label">
+                        {account.first_name} {account.last_name}
+                      </span>
+                      <span className="text-supporting text-muted-foreground">
+                        {account.username ?? "No username"}
+                      </span>
                     </span>
-                    <span className="text-supporting text-muted-foreground">
-                      {account.username ?? "No username"}
-                    </span>
-                  </span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-48">
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel>Account</DropdownMenuLabel>
-                    <DropdownMenuItem render={<Link to="/account" />}>
-                      <AccountIcon />
-                      My profile
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Avatar size="sm">
-                <AvatarFallback className="text-foreground">?</AvatarFallback>
-              </Avatar>
-            )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-48">
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Account</DropdownMenuLabel>
+                      <DropdownMenuItem render={<Link to="/account" />}>
+                        <AccountIcon />
+                        My profile
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Avatar size="sm">
+                  <AvatarFallback className="text-foreground">?</AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+          </header>
+          <div className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">
+            {children}
           </div>
-        </header>
-        <div className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">
-          {children}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+        </SidebarInset>
+      </SidebarProvider>
+    </RecentlyViewedProvider>
   )
 }
 
