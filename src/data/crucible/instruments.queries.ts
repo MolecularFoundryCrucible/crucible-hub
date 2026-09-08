@@ -13,6 +13,26 @@ import type { WorkspaceInstrumentStatus } from "./workspace-source"
 
 export const instrumentPageLimit = 20
 
+function instrumentStatusScopedPreviousData<TData>(
+  scope: IdentityScope,
+  status: WorkspaceInstrumentStatus,
+  previousData: TData | undefined,
+  previousQuery: { queryKey: readonly unknown[] } | undefined
+) {
+  if (
+    identityScopedPreviousData(scope, previousData, previousQuery) === undefined
+  ) {
+    return undefined
+  }
+  const previousFilters = previousQuery?.queryKey[5]
+  return typeof previousFilters === "object" &&
+    previousFilters !== null &&
+    "status" in previousFilters &&
+    previousFilters.status === status
+    ? previousData
+    : undefined
+}
+
 export function instrumentsQueryOptions(
   scope: IdentityScope,
   filters: {
@@ -32,7 +52,12 @@ export function instrumentsQueryOptions(
         })
       ),
     placeholderData: (previousData, previousQuery) =>
-      identityScopedPreviousData(scope, previousData, previousQuery),
+      instrumentStatusScopedPreviousData(
+        scope,
+        filters.status,
+        previousData,
+        previousQuery
+      ),
     retry: scenario ? false : undefined,
   })
 }

@@ -16,7 +16,6 @@ import {
   resourcePreviewSearchSchema,
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
@@ -103,7 +102,7 @@ export const Route = createFileRoute("/_app/data")({
     }
     if (cause !== "stay") await Promise.all(missing)
   },
-  pendingComponent: RouteContentPending,
+  pendingComponent: DataRoutePending,
   staleTime: Infinity,
   component: DataPage,
 })
@@ -118,15 +117,30 @@ function DataPage() {
   return (
     <ResourcePreviewContext.Provider value={navigation}>
       <PageLayout>
-        <PageHeader
-          actions={<ResourceCreationActions />}
-          eyebrow="Data"
-          title="Samples and datasets"
-        />
+        <DataPageHeader />
         <DataCollection />
       </PageLayout>
       <ResourceInspector navigation={navigation} />
     </ResourcePreviewContext.Provider>
+  )
+}
+
+function DataRoutePending() {
+  return (
+    <PageLayout>
+      <DataPageHeader />
+      <CollectionTablePending label="data" />
+    </PageLayout>
+  )
+}
+
+function DataPageHeader() {
+  return (
+    <PageHeader
+      actions={<ResourceCreationActions />}
+      eyebrow="Data"
+      title="Samples and datasets"
+    />
   )
 }
 
@@ -212,7 +226,10 @@ function DataResults({
 
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      <CollectionUpdateStatus label="data" updating={updating} />
+      <CollectionUpdateStatus
+        label="data"
+        updating={hasReadableData && updating}
+      />
       <DataTypeFilters
         datasetLabel={collectionLabel("Datasets", datasetPage)}
         kind={kind}

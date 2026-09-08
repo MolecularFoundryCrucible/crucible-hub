@@ -67,6 +67,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -320,9 +321,26 @@ function ManagedResourceAccess({
 
   if (isPending) {
     return (
-      <p className="text-body text-muted-foreground" role="status">
-        Loading access…
-      </p>
+      <Card aria-busy="true">
+        <CardHeader>
+          <CardTitle>Access management</CardTitle>
+        </CardHeader>
+        <CardContent
+          aria-label="Loading access management"
+          className="grid gap-6"
+          role="status"
+        >
+          <section className="grid gap-3">
+            <h3 className="font-heading text-label">Direct access</h3>
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-4/5" />
+          </section>
+          <section className="grid gap-3 border-t pt-4">
+            <h3 className="font-heading text-label">Public access</h3>
+            <Skeleton className="h-8 w-32" />
+          </section>
+        </CardContent>
+      </Card>
     )
   }
   if (isError) {

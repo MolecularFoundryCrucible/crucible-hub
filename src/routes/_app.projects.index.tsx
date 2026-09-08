@@ -13,7 +13,6 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { CreateResourceIcon } from "@/components/crucible/icons"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import {
   useWorkspace,
   useWorkspaceMode,
@@ -61,7 +60,7 @@ export const Route = createFileRoute("/_app/projects/")({
 
     await request
   },
-  pendingComponent: RouteContentPending,
+  pendingComponent: ProjectsRoutePending,
   component: ProjectsPage,
 })
 
@@ -75,19 +74,7 @@ function ProjectsPage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        actions={
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            to="/projects/new"
-          >
-            <CreateResourceIcon data-icon="inline-start" />
-            Create project
-          </Link>
-        }
-        eyebrow="Projects"
-        title="Projects you can access"
-      />
+      <ProjectsPageHeader />
       {projectResult.isPending ? (
         <CollectionCardGridPending label="projects" />
       ) : projectResult.isError && !projectResult.data ? (
@@ -127,6 +114,33 @@ function ProjectsPage() {
         </>
       )}
     </PageLayout>
+  )
+}
+
+function ProjectsRoutePending() {
+  return (
+    <PageLayout>
+      <ProjectsPageHeader />
+      <CollectionCardGridPending label="projects" />
+    </PageLayout>
+  )
+}
+
+function ProjectsPageHeader() {
+  return (
+    <PageHeader
+      actions={
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          to="/projects/new"
+        >
+          <CreateResourceIcon data-icon="inline-start" />
+          Create project
+        </Link>
+      }
+      eyebrow="Projects"
+      title="Projects you can access"
+    />
   )
 }
 

@@ -110,16 +110,7 @@ export function ResourceGraphPage({
       aria-labelledby="resource-graph-heading"
       className="flex min-w-0 flex-col gap-4"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-title-section" id="resource-graph-heading">
-            Resource graph
-          </h2>
-          <p className="text-body text-muted-foreground">
-            Select a resource to inspect it, then explore from there to traverse
-            its immediate relationships.
-          </p>
-        </div>
+      <ResourceGraphHeader>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{query.data.nodes.length} resources</Badge>
           <Badge variant="outline">
@@ -181,7 +172,7 @@ export function ResourceGraphPage({
             <TooltipContent>Fit graph to view</TooltipContent>
           </Tooltip>
         </div>
-      </div>
+      </ResourceGraphHeader>
 
       {query.isError ? (
         <div
@@ -250,14 +241,27 @@ function ResourceGraphPending() {
       className="flex flex-col gap-4"
       role="status"
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-5 w-80 max-w-full" />
-        </div>
+      <ResourceGraphHeader>
         <Skeleton className="h-7 w-32" />
-      </div>
+      </ResourceGraphHeader>
       <Skeleton className="min-h-graph-canvas w-full" />
+    </div>
+  )
+}
+
+function ResourceGraphHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="text-title-section" id="resource-graph-heading">
+          Resource graph
+        </h2>
+        <p className="text-body text-muted-foreground">
+          Select a resource to inspect it, then explore from there to traverse
+          its immediate relationships.
+        </p>
+      </div>
+      {children}
     </div>
   )
 }

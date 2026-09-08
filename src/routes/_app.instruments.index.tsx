@@ -13,7 +13,6 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { buttonVariants } from "@/components/ui/button"
@@ -75,7 +74,7 @@ export const Route = createFileRoute("/_app/instruments/")({
 
     await request
   },
-  pendingComponent: RouteContentPending,
+  pendingComponent: InstrumentsRoutePending,
   component: InstrumentsPage,
 })
 
@@ -95,17 +94,7 @@ function InstrumentsPage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        actions={
-          account.is_service_account ? null : (
-            <Link className={buttonVariants()} to="/instruments/new">
-              Register instrument
-            </Link>
-          )
-        }
-        eyebrow="Instruments"
-        title="Instrument directory"
-      />
+      <InstrumentsPageHeader canRegister={!account.is_service_account} />
       <InstrumentStatusNavigation status={status} />
       {instrumentResult.isPending ? (
         <CollectionCardGridPending label="instruments" />
@@ -149,6 +138,37 @@ function InstrumentsPage() {
         </>
       )}
     </PageLayout>
+  )
+}
+
+function InstrumentsRoutePending() {
+  const scope = useWorkspaceScope()
+  const { data: account } = useQuery(accountQueryOptions(scope))
+  const search = Route.useSearch()
+  return (
+    <PageLayout>
+      <InstrumentsPageHeader
+        canRegister={account?.is_service_account === false}
+      />
+      <InstrumentStatusNavigation status={search.status ?? "active"} />
+      <CollectionCardGridPending label="instruments" />
+    </PageLayout>
+  )
+}
+
+function InstrumentsPageHeader({ canRegister }: { canRegister: boolean }) {
+  return (
+    <PageHeader
+      actions={
+        canRegister ? (
+          <Link className={buttonVariants()} to="/instruments/new">
+            Register instrument
+          </Link>
+        ) : null
+      }
+      eyebrow="Instruments"
+      title="Instrument directory"
+    />
   )
 }
 
