@@ -61,6 +61,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Improved compact resource inspection with wrapping relationship identities, fixed trailing navigation actions, informative type-specific context, and less redundant labels.
 - Added project-scoped data search with contextual return navigation, keyboard navigation shortcuts with in-app help, and consistent Shortcuts, Theme, and navigation controls in the sidebar footer.
 - Made resource inspectors non-modal at wider widths, added a stable preview-navigation and close top bar, preserved the host page's current scroll position on close, and refined the identity hierarchy with an icon-labeled, quick-copy MFID and the full-page action directly below the resource name.
 - Standardized displayed timestamps in browser-local 24-hour time and labeled project owners as Lead in project membership surfaces.

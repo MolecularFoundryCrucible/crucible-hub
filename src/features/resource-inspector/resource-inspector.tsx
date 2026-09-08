@@ -16,7 +16,6 @@ import type { ResourcePreviewNavigation } from "@/components/crucible/resource-p
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Sheet,
@@ -145,21 +144,26 @@ export function ResourceInspector({
                 : (resource?.name ?? "Resource preview")}
             </SheetTitle>
             {navigation.preview ? (
-              <div className="flex min-w-0 items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-3">
                 {resource ? (
-                  <Badge className="shrink-0" variant="outline">
+                  <span className="flex min-w-0 flex-1 items-center gap-2 text-body">
                     <ResourceTypeIcon
-                      data-icon="inline-start"
+                      className="shrink-0"
                       type={resource.kind}
                     />
-                    {resourceTypeLabel(resource.kind)}
-                  </Badge>
+                    <span className="sr-only">
+                      {resourceTypeLabel(resource.kind)} context:
+                    </span>
+                    <span className="min-w-0 wrap-break-word">
+                      {resourceContextLabel(resource)}
+                    </span>
+                  </span>
                 ) : null}
                 <SheetDescription className="sr-only">
                   MFID {navigation.preview}
                 </SheetDescription>
                 <MfidValue
-                  className="justify-end text-right"
+                  className="ml-auto justify-end text-right"
                   value={navigation.preview}
                 />
               </div>
@@ -489,6 +493,19 @@ function MetadataDisclosure({
 
 function resourceTypeLabel(kind: string) {
   return `${kind.charAt(0).toUpperCase()}${kind.slice(1)}`
+}
+
+function resourceContextLabel(resource: WorkspaceResourceDetail) {
+  switch (resource.kind) {
+    case "sample":
+      return resource.sample_type || "Sample type not recorded"
+    case "dataset":
+      return resource.measurement || "Measurement not recorded"
+    case "project":
+      return resource.organization || "Organization not recorded"
+    case "instrument":
+      return resource.instrument_type || "Instrument type not recorded"
+  }
 }
 
 function resourceErrorMessage(error: Error | null) {

@@ -106,15 +106,12 @@ function RelationshipRow({
         <ResourceTypeIcon className="shrink-0" type={link.resource_type} />
       )}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-label">{label}</span>
-        <span className="block text-supporting text-muted-foreground">
-          {resourceTypeLabel(link.resource_type)}
-        </span>
+        <span className="block text-label wrap-break-word">{label}</span>
       </span>
     </>
   )
   return (
-    <li className="flex min-w-0 flex-col gap-2 border-b border-border py-3 last:border-0 sm:flex-row sm:items-center">
+    <li className="flex min-w-0 items-center gap-2 border-b border-border py-3 last:border-0">
       {link.resource_type === "sample" || link.resource_type === "dataset" ? (
         <ResourcePreviewLink
           className="flex min-w-0 flex-1 items-center gap-3 hover:underline"
@@ -129,7 +126,7 @@ function RelationshipRow({
       ) : (
         <div className="flex min-w-0 flex-1 items-center gap-3">{identity}</div>
       )}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex shrink-0 items-center">
         {managing ? (
           renderManagementAction?.(link)
         ) : (
@@ -244,8 +241,4 @@ function isKnownResourceType(
   value: string
 ): value is "dataset" | "instrument" | "project" | "sample" {
   return ["dataset", "instrument", "project", "sample"].includes(value)
-}
-
-function resourceTypeLabel(kind: string) {
-  return `${kind.charAt(0).toUpperCase()}${kind.slice(1)}`
 }
