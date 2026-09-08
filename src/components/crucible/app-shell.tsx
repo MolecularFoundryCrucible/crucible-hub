@@ -207,6 +207,7 @@ function SidebarBrand() {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
+            className={collapsed ? "justify-center" : undefined}
             size="lg"
             tooltip="Crucible Hub"
             render={<Link aria-label="Crucible Hub" to="/" />}

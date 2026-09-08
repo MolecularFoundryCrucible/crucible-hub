@@ -61,6 +61,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Centered the Crucible mark on the collapsed sidebar icon column.
 - Strengthened resource section tabs with stable semibold labels, foreground active text, a tighter header relationship, and right-aligned contextual creation actions for projects and instruments.
 - Unified project and instrument Manage pages into capability-gated Access management and Resource management cards, with explicit edit modes, list-level add actions, destructive leaving, and compatibility redirects from former subsections.
 - Simplified canonical resource headers to pair each name with its semantic resource icon, use the available header width before wrapping, and remove duplicate type and Summary labels.
