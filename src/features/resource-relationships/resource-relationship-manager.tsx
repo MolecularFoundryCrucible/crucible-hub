@@ -170,6 +170,7 @@ export function ResourceRelationshipManager({
         </CardTitle>
         <CardAction>
           <div className="flex items-center gap-1">
+            <ResourceGraphLink resource={resource} />
             {canManage ? (
               <>
                 <Button
@@ -222,9 +223,6 @@ export function ResourceRelationshipManager({
         </CardAction>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex justify-center">
-          <ResourceGraphLink resource={resource} />
-        </div>
         <ResourceRelationships
           kind={resource.kind}
           links={resource.links}
@@ -352,8 +350,8 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
   return (
     <Tooltip>
       <TooltipTrigger render={link}>
-        <ResourceGraphIcon aria-hidden="true" />
-        View graph
+        <ResourceGraphIcon aria-hidden="true" data-icon="inline-start" />
+        Graph
       </TooltipTrigger>
       <TooltipContent>
         Explore graph for <ResourceName>{resource.name}</ResourceName>
