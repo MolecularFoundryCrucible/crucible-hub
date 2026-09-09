@@ -140,6 +140,7 @@ export function ResourceSearchCombobox({
                       kind={item.kind}
                       mfid={item.unique_id}
                       name={item.name}
+                      projectId={item.projectId}
                     />
                   )}
                 </ComboboxItem>

@@ -66,6 +66,10 @@ function detailResult(
     context,
     kind: resource.kind,
     name: resource.name,
+    projectId:
+      resource.kind === "dataset" || resource.kind === "sample"
+        ? (resource.project?.project_id ?? resource.project_id ?? null)
+        : null,
     unique_id: resource.unique_id,
   }
 }
@@ -79,6 +83,7 @@ function fixtureItems(
       context: item.username ? `@${item.username}` : null,
       kind,
       name: `${item.first_name} ${item.last_name}`,
+      projectId: null,
       unique_id: item.unique_id,
     }))
   }
@@ -87,6 +92,7 @@ function fixtureItems(
       context: item.sample_type ?? null,
       kind,
       name: item.sample_name,
+      projectId: item.project?.project_id ?? item.project_id ?? null,
       unique_id: item.unique_id,
     }))
   }
@@ -95,6 +101,7 @@ function fixtureItems(
       context: item.measurement ?? null,
       kind,
       name: item.dataset_name ?? "Untitled dataset",
+      projectId: item.project?.project_id ?? item.project_id ?? null,
       unique_id: item.unique_id,
     }))
   }
@@ -103,6 +110,7 @@ function fixtureItems(
       context: item.instrument_type ?? item.location,
       kind,
       name: item.instrument_name,
+      projectId: null,
       unique_id: item.unique_id,
     }))
   }
@@ -110,6 +118,7 @@ function fixtureItems(
     context: "organization" in item ? item.organization : item.project_id,
     kind,
     name: item.title ?? item.project_id,
+    projectId: null,
     unique_id: item.unique_id,
   }))
 }
@@ -166,6 +175,7 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
           [
             item.name,
             item.context,
+            item.projectId,
             input.projectMfid ? undefined : item.unique_id,
           ].some((value) => value?.toLocaleLowerCase().includes(query))
         )
@@ -252,6 +262,7 @@ function fixtureMetadataSearch(
       context: metadataContext(resource.metadata, input.query),
       kind: resource.kind,
       name: resource.name,
+      projectId: null,
       unique_id: resource.unique_id,
     }))
 
@@ -271,6 +282,7 @@ function projectResult(project: Schema<"ProjectRead">): WorkspaceSearchResult {
     context: project.organization,
     kind: "project",
     name: project.title ?? project.project_id,
+    projectId: null,
     unique_id: project.unique_id,
   }
 }
@@ -280,6 +292,7 @@ function personResult(person: Schema<"UserPublicRead">): WorkspaceSearchResult {
     context: person.username ? `@${person.username}` : null,
     kind: "person",
     name: `${person.first_name} ${person.last_name}`,
+    projectId: null,
     unique_id: person.unique_id,
   }
 }
@@ -291,6 +304,7 @@ function instrumentResult(
     context: instrument.instrument_type ?? instrument.location,
     kind: "instrument",
     name: instrument.instrument_name,
+    projectId: null,
     unique_id: instrument.unique_id,
   }
 }
@@ -300,6 +314,7 @@ function sampleResult(sample: Schema<"SampleResponse">): WorkspaceSearchResult {
     context: sample.sample_type ?? null,
     kind: "sample",
     name: sample.sample_name,
+    projectId: sample.project?.project_id ?? sample.project_id ?? null,
     unique_id: sample.unique_id,
   }
 }
@@ -311,6 +326,7 @@ function datasetResult(
     context: dataset.measurement ?? null,
     kind: "dataset",
     name: dataset.dataset_name ?? "Untitled dataset",
+    projectId: dataset.project?.project_id ?? dataset.project_id ?? null,
     unique_id: dataset.unique_id,
   }
 }
@@ -452,6 +468,7 @@ export async function searchWorkspaceMetadata(
         context: metadataContext(resource.scientific_metadata, input.query),
         kind,
         name: resource.name ?? resource.unique_id,
+        projectId: null,
         unique_id: resource.unique_id,
       }
     })

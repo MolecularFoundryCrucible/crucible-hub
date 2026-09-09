@@ -35,6 +35,7 @@ describe("workspace search source", () => {
     expect(result.groups[0].items[0]).toMatchObject({
       kind: "sample",
       name: "NiFe oxide catalyst A",
+      projectId: "operando-catalyst-mapping",
     })
   })
 
@@ -93,6 +94,7 @@ describe("workspace search source", () => {
         context: "X-ray absorption spectroscopy",
         kind: "dataset",
         name: "NiFe K-edge operando series",
+        projectId: "operando-catalyst-mapping",
         unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z7",
       },
     ])

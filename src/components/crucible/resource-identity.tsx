@@ -9,21 +9,21 @@ type ResourceIdentityPresentation = "collection" | "stacked"
 export function ResourceIdentity({
   className,
   context,
-  contextKind,
   interactive = false,
   kind,
   mfid,
   name,
   presentation = "stacked",
+  projectId,
 }: {
   className?: string
   context?: string | null
-  contextKind?: ResourceType
   interactive?: boolean
   kind: ResourceType
   mfid?: string | null
   name: string
   presentation?: ResourceIdentityPresentation
+  projectId?: string | null
 }) {
   const truncate = presentation === "collection"
 
@@ -47,17 +47,23 @@ export function ResourceIdentity({
             className="flex min-w-0 items-center gap-2 text-supporting text-muted-foreground"
             data-resource-context
           >
-            {contextKind ? (
-              <ResourceTypeIcon
-                className="size-4 shrink-0"
-                type={contextKind}
-              />
-            ) : null}
             <span
               className={cn(truncate && "truncate")}
               title={truncate ? context : undefined}
             >
               {context}
+            </span>
+          </span>
+        ) : null}
+        {projectId ? (
+          <span className="flex min-w-0 items-center gap-2 text-supporting text-muted-foreground">
+            <ResourceTypeIcon className="size-4 shrink-0" type="project" />
+            <span className="sr-only">Project ID:</span>
+            <span
+              className={cn(truncate && "truncate")}
+              title={truncate ? projectId : undefined}
+            >
+              {projectId}
             </span>
           </span>
         ) : null}

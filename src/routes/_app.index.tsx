@@ -288,13 +288,12 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
     <>
       <ResourceIdentity
         className="flex-1"
-        context={item.projectId}
-        contextKind={item.projectId ? "project" : undefined}
         interactive
         kind={item.kind}
         mfid={item.uniqueId}
         name={item.name}
         presentation="collection"
+        projectId={item.projectId}
       />
       {item.timestamp ? (
         <time

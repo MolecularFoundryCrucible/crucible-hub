@@ -452,6 +452,7 @@ function SearchResult({
         kind={item.kind}
         name={item.name}
         presentation="collection"
+        projectId={item.projectId}
       />
     )
   const link =

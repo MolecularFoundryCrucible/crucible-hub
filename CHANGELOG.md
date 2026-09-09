@@ -63,6 +63,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Added project ID context to sample and dataset search results alongside sample type or measurement, including autocomplete pickers and direct MFID results when project context is available.
 - Standardized editable-card commit controls and bounded card and inspector loading, empty, initial-error, and refresh-error states through shared domain components.
 - Standardized resource identity, MFID typography, and repeated project, owner, Updated, and Open collection cells through shared domain components with static enforcement for future MFID presentation.
 - Standardized confirmation overlays and grouped resource-management entries through shared domain components with consistent pending, error, dismissal, action, and responsive layout behavior.

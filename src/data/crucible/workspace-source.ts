@@ -485,6 +485,7 @@ export type WorkspaceSearchResult = {
   context: string | null
   kind: WorkspaceSearchKind
   name: string
+  projectId?: string | null
   unique_id: string
 }
 
