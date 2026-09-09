@@ -42,29 +42,36 @@ export function ResourceIdentity({
         >
           {name}
         </span>
-        {context ? (
+        {context || projectId ? (
           <span
             className="flex min-w-0 items-center gap-2 text-supporting text-muted-foreground"
             data-resource-context
           >
-            <span
-              className={cn(truncate && "truncate")}
-              title={truncate ? context : undefined}
-            >
-              {context}
-            </span>
-          </span>
-        ) : null}
-        {projectId ? (
-          <span className="flex min-w-0 items-center gap-2 text-supporting text-muted-foreground">
-            <ResourceTypeIcon className="size-4 shrink-0" type="project" />
-            <span className="sr-only">Project ID:</span>
-            <span
-              className={cn(truncate && "truncate")}
-              title={truncate ? projectId : undefined}
-            >
-              {projectId}
-            </span>
+            {projectId ? (
+              <>
+                <ResourceTypeIcon className="size-4 shrink-0" type="project" />
+                <span className="sr-only">Project ID:</span>
+                <span
+                  className={cn("min-w-0", truncate && "truncate")}
+                  title={truncate ? projectId : undefined}
+                >
+                  {projectId}
+                </span>
+              </>
+            ) : null}
+            {projectId && context ? (
+              <span aria-hidden="true" className="shrink-0">
+                ·
+              </span>
+            ) : null}
+            {context ? (
+              <span
+                className={cn("min-w-0", truncate && "truncate")}
+                title={truncate ? context : undefined}
+              >
+                {context}
+              </span>
+            ) : null}
           </span>
         ) : null}
         {mfid ? (
