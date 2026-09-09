@@ -6,8 +6,13 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import {
+  ResourceOpenCell,
+  ResourceOwnerCell,
+  ResourceProjectCell,
+  ResourceUpdatedCell,
+} from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
-import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -20,7 +25,6 @@ import {
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -36,7 +40,6 @@ import type {
   WorkspaceDataset,
   WorkspaceSample,
 } from "@/data/crucible/workspace-source"
-import { formatDate } from "@/lib/format"
 
 import { ProjectDataFilters } from "./project-data-filters"
 import type {
@@ -306,24 +309,21 @@ function ProjectSampleTable({
             subtype={sample.sample_type ?? "Unspecified sample type"}
             subtypeVisibility="always"
           />
-          <ProjectCell
+          <ResourceProjectCell
             project={sample.project}
             projectId={sample.project_id}
             relation={sample.project_relation}
           />
-          <OwnerCell username={sample.owner?.username} />
-          <TableCell className="resource-collection-date" data-label="Updated">
-            {formatDate(sample.modification_time ?? sample.creation_time)}
-          </TableCell>
-          <TableCell className="resource-collection-action text-center">
-            <ResourceFullPageLink
-              fromProject={projectMfid}
-              kind="sample"
-              mfid={sample.unique_id}
-              name={sample.sample_name}
-              presentation="table"
-            />
-          </TableCell>
+          <ResourceOwnerCell username={sample.owner?.username} />
+          <ResourceUpdatedCell
+            value={sample.modification_time ?? sample.creation_time}
+          />
+          <ResourceOpenCell
+            fromProject={projectMfid}
+            kind="sample"
+            mfid={sample.unique_id}
+            name={sample.sample_name}
+          />
         </TableRow>
       ))}
     </ProjectTable>
@@ -349,24 +349,21 @@ function ProjectDatasetTable({
             subtype={dataset.measurement ?? "Unspecified measurement"}
             subtypeVisibility="always"
           />
-          <ProjectCell
+          <ResourceProjectCell
             project={dataset.project}
             projectId={dataset.project_id}
             relation={dataset.project_relation}
           />
-          <OwnerCell username={dataset.owner?.username} />
-          <TableCell className="resource-collection-date" data-label="Updated">
-            {formatDate(dataset.modification_time ?? dataset.creation_time)}
-          </TableCell>
-          <TableCell className="resource-collection-action text-center">
-            <ResourceFullPageLink
-              fromProject={projectMfid}
-              kind="dataset"
-              mfid={dataset.unique_id}
-              name={dataset.dataset_name ?? "Untitled dataset"}
-              presentation="table"
-            />
-          </TableCell>
+          <ResourceOwnerCell username={dataset.owner?.username} />
+          <ResourceUpdatedCell
+            value={dataset.modification_time ?? dataset.creation_time}
+          />
+          <ResourceOpenCell
+            fromProject={projectMfid}
+            kind="dataset"
+            mfid={dataset.unique_id}
+            name={dataset.dataset_name ?? "Untitled dataset"}
+          />
         </TableRow>
       ))}
     </ProjectTable>
@@ -396,51 +393,6 @@ function ProjectTable({ children }: { children: React.ReactNode }) {
       </TableHeader>
       <TableBody>{children}</TableBody>
     </Table>
-  )
-}
-
-function ProjectCell({
-  project,
-  projectId,
-  relation,
-}: {
-  project?: {
-    project_id: string
-    title?: string | null
-    unique_id: string
-  } | null
-  projectId: string | null | undefined
-  relation?: "assigned" | "shared" | null
-}) {
-  return (
-    <TableCell className="resource-collection-project" data-label="Project">
-      {project ? (
-        <Link
-          className="block truncate text-label hover:underline"
-          params={{ projectMfid: project.unique_id }}
-          title={project.title ?? project.project_id}
-          to="/projects/$projectMfid"
-        >
-          {project.title ?? project.project_id}
-        </Link>
-      ) : (
-        <span className="block truncate" title={projectId ?? undefined}>
-          {relation === "shared"
-            ? "Project unavailable"
-            : (projectId ?? "Not assigned")}
-        </span>
-      )}
-    </TableCell>
-  )
-}
-
-function OwnerCell({ username }: { username: string | null | undefined }) {
-  return (
-    <TableCell className="resource-collection-owner" data-label="Owner">
-      <span className="block truncate" title={username ?? undefined}>
-        {username ?? "Unknown owner"}
-      </span>
-    </TableCell>
   )
 }
 

@@ -1,7 +1,12 @@
 import { Link } from "@tanstack/react-router"
 
-import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  ResourceOpenCell,
+  ResourceOwnerCell,
+  ResourceProjectCell,
+  ResourceUpdatedCell,
+} from "@/components/crucible/resource-collection-cells"
+import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -22,7 +27,6 @@ import type {
   WorkspaceCursorPage,
   WorkspaceDataset,
 } from "@/data/crucible/workspace-source"
-import { formatDate } from "@/lib/format"
 
 export function InstrumentDatasetCollection({
   cursor,
@@ -69,25 +73,14 @@ export function InstrumentDatasetCollection({
               <TableBody>
                 {page.items.map((dataset) => (
                   <TableRow key={dataset.unique_id}>
-                    <TableCell className="resource-collection-name">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <ResourceTypeIcon className="shrink-0" type="dataset" />
-                        <div className="min-w-0">
-                          <Link
-                            className="block truncate text-label hover:underline"
-                            params={{ datasetMfid: dataset.unique_id }}
-                            title={dataset.dataset_name ?? undefined}
-                            to="/datasets/$datasetMfid"
-                          >
-                            <span className="sr-only">Dataset: </span>
-                            {dataset.dataset_name ?? "Untitled dataset"}
-                          </Link>
-                          <p className="truncate text-supporting text-muted-foreground xl:hidden">
-                            {dataset.measurement ?? "Unspecified measurement"}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
+                    <ResourceCollectionNameCell
+                      className="resource-collection-name"
+                      kind="dataset"
+                      mfid={dataset.unique_id}
+                      name={dataset.dataset_name ?? "Untitled dataset"}
+                      subtype={dataset.measurement ?? "Unspecified measurement"}
+                      subtypeVisibility="compact"
+                    />
                     <TableCell className="resource-collection-type hidden xl:table-cell">
                       <span
                         className="block truncate"
@@ -96,50 +89,20 @@ export function InstrumentDatasetCollection({
                         {dataset.measurement ?? "Unspecified"}
                       </span>
                     </TableCell>
-                    <TableCell
-                      className="resource-collection-project"
-                      data-label="Project"
-                    >
-                      <span
-                        className="block truncate"
-                        title={
-                          dataset.project?.title ??
-                          dataset.project_id ??
-                          undefined
-                        }
-                      >
-                        {dataset.project?.title ??
-                          dataset.project_id ??
-                          "Unassigned"}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className="resource-collection-owner"
-                      data-label="Owner"
-                    >
-                      <span
-                        className="block truncate"
-                        title={dataset.owner?.username ?? undefined}
-                      >
-                        {dataset.owner?.username ?? "Unknown owner"}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className="resource-collection-date"
-                      data-label="Updated"
-                    >
-                      {formatDate(
-                        dataset.modification_time ?? dataset.creation_time
-                      )}
-                    </TableCell>
-                    <TableCell className="resource-collection-action text-center">
-                      <ResourceFullPageLink
-                        kind="dataset"
-                        mfid={dataset.unique_id}
-                        name={dataset.dataset_name ?? "Untitled dataset"}
-                        presentation="table"
-                      />
-                    </TableCell>
+                    <ResourceProjectCell
+                      project={dataset.project}
+                      projectId={dataset.project_id}
+                      relation={dataset.project_relation}
+                    />
+                    <ResourceOwnerCell owner={dataset.owner} />
+                    <ResourceUpdatedCell
+                      value={dataset.modification_time ?? dataset.creation_time}
+                    />
+                    <ResourceOpenCell
+                      kind="dataset"
+                      mfid={dataset.unique_id}
+                      name={dataset.dataset_name ?? "Untitled dataset"}
+                    />
                   </TableRow>
                 ))}
               </TableBody>

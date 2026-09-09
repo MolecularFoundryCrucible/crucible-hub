@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import { PersonIdentity } from "@/components/crucible/person-identity"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { MfidText } from "@/components/crucible/mfid-text"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import {
   Combobox,
   ComboboxContent,
@@ -121,24 +122,26 @@ export function ResourceSearchCombobox({
             <ComboboxList aria-label={`${labels.singular} search results`}>
               {(item: WorkspaceSearchResult) => (
                 <ComboboxItem key={item.unique_id} value={item}>
-                  <ResourceTypeIcon aria-hidden="true" type={kind} />
-                  <span className="min-w-0 text-left">
-                    {item.kind === "person" ? (
-                      <PersonIdentity person={item} presentation="stacked" />
-                    ) : (
-                      <>
-                        <span className="block text-label">{item.name}</span>
-                        {item.context ? (
-                          <span className="block text-supporting text-muted-foreground">
-                            {item.context}
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                    <span className="block font-mono text-identifier break-all text-muted-foreground">
-                      {item.unique_id}
+                  {item.kind === "person" ? (
+                    <span className="min-w-0 text-left">
+                      <PersonIdentity
+                        person={item}
+                        presentation="avatar"
+                        size="sm"
+                      />
+                      <MfidText
+                        className="block break-all text-muted-foreground"
+                        value={item.unique_id}
+                      />
                     </span>
-                  </span>
+                  ) : (
+                    <ResourceIdentity
+                      context={item.context}
+                      kind={item.kind}
+                      mfid={item.unique_id}
+                      name={item.name}
+                    />
+                  )}
                 </ComboboxItem>
               )}
             </ComboboxList>

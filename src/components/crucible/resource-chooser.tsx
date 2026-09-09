@@ -1,6 +1,7 @@
 import { useId, useState } from "react"
 
 import { PersonIdentity } from "@/components/crucible/person-identity"
+import { MfidText } from "@/components/crucible/mfid-text"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import type { SearchableResourceKind } from "@/components/crucible/resource-search-combobox"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -76,9 +77,10 @@ export function ResourceChooser({
               {value.name}
             </p>
           )}
-          <p className="truncate font-mono text-identifier text-muted-foreground">
-            {value.unique_id}
-          </p>
+          <MfidText
+            className="block truncate text-muted-foreground"
+            value={value.unique_id}
+          />
         </div>
       ) : (
         <p className="text-body text-muted-foreground">

@@ -164,27 +164,11 @@ function ProjectMfid({ project }: { project: WorkspaceProject }) {
   )
 }
 
-function Field({
-  label,
-  mono = false,
-  value,
-}: {
-  label: string
-  mono?: boolean
-  value: string | null
-}) {
+function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="min-w-0">
       <dt className="text-supporting text-muted-foreground">{label}</dt>
-      <dd
-        className={
-          mono
-            ? "mt-1 font-mono text-identifier break-all"
-            : "mt-1 text-body break-words"
-        }
-      >
-        {value ?? "-"}
-      </dd>
+      <dd className="mt-1 text-body break-words">{value ?? "-"}</dd>
     </div>
   )
 }

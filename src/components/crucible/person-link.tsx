@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router"
 
 import { PersonIdentity } from "@/components/crucible/person-identity"
+import { MfidText } from "@/components/crucible/mfid-text"
 import type {
   PersonIdentityPresentation,
   PersonIdentityProfile,
@@ -54,9 +55,10 @@ export function PersonLink({
       <HoverCardTrigger render={link} />
       <HoverCardContent>
         <PersonIdentity person={person} presentation="avatar" />
-        <p className="mt-2 font-mono text-identifier break-all text-muted-foreground">
-          {person.unique_id}
-        </p>
+        <MfidText
+          className="mt-2 block break-all text-muted-foreground"
+          value={person.unique_id}
+        />
       </HoverCardContent>
     </HoverCard>
   )

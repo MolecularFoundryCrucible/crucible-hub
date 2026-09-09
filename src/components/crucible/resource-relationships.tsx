@@ -3,8 +3,8 @@ import { Link } from "@tanstack/react-router"
 
 import { OpenFullPageIcon } from "@/components/crucible/icons"
 import { ResourceName } from "@/components/crucible/resource-name"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Tooltip,
@@ -102,36 +102,38 @@ function RelationshipRow({
 }) {
   const label = link.name || link.unique_id
   const relationshipTypeLabel = workspaceRelationshipTypeLabel(link)
-  const identity = (
-    <>
-      {isKnownResourceType(link.resource_type) && (
-        <ResourceTypeIcon className="shrink-0" type={link.resource_type} />
-      )}
-      <span className="min-w-0 flex-1">
-        <span className="block text-label wrap-break-word">{label}</span>
-        {relationshipTypeLabel ? (
-          <span className="block text-supporting text-muted-foreground">
-            {relationshipTypeLabel}
-          </span>
-        ) : null}
-      </span>
-    </>
+  const identity = isKnownResourceType(link.resource_type) ? (
+    <ResourceIdentity
+      context={relationshipTypeLabel}
+      interactive
+      kind={link.resource_type}
+      name={label}
+    />
+  ) : (
+    <span className="min-w-0 flex-1">
+      <span className="block text-label wrap-break-word">{label}</span>
+      {relationshipTypeLabel ? (
+        <span className="block text-supporting text-muted-foreground">
+          {relationshipTypeLabel}
+        </span>
+      ) : null}
+    </span>
   )
   return (
     <li className="flex min-w-0 items-center gap-2 border-b border-border py-3 last:border-0">
       {link.resource_type === "sample" || link.resource_type === "dataset" ? (
         <ResourcePreviewLink
-          className="flex min-w-0 flex-1 items-center gap-3 hover:underline"
+          className="group/resource min-w-0 flex-1"
           mfid={link.unique_id}
           resourceKind={link.resource_type}
         >
           <span className="sr-only">Preview {label}</span>
-          <span aria-hidden="true" className="contents">
+          <span aria-hidden="true" className="block">
             {identity}
           </span>
         </ResourcePreviewLink>
       ) : (
-        <div className="flex min-w-0 flex-1 items-center gap-3">{identity}</div>
+        <div className="min-w-0 flex-1">{identity}</div>
       )}
       <div className="flex shrink-0 items-center">
         {managing ? (

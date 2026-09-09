@@ -12,8 +12,11 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
+import {
+  ResourceOpenCell,
+  ResourceUpdatedCell,
+} from "@/components/crucible/resource-collection-cells"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
-import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { buttonVariants } from "@/components/ui/button"
@@ -44,7 +47,6 @@ import type {
   WorkspaceInstrumentPage,
   WorkspaceInstrumentStatus,
 } from "@/data/crucible/workspace-source"
-import { formatDate } from "@/lib/format"
 
 const instrumentSearchSchema = z.object({
   offset: z.coerce.number().int().min(0).catch(0).optional(),
@@ -286,22 +288,14 @@ function InstrumentCollection({
                           <span aria-label="Not available">-</span>
                         )}
                       </TableCell>
-                      <TableCell
-                        className="resource-directory-date"
-                        data-label="Updated"
-                      >
-                        {instrument.modification_time
-                          ? formatDate(instrument.modification_time)
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="resource-directory-action text-center">
-                        <ResourceFullPageLink
-                          kind="instrument"
-                          mfid={instrument.unique_id}
-                          name={name}
-                          presentation="table"
-                        />
-                      </TableCell>
+                      <ResourceUpdatedCell
+                        value={instrument.modification_time}
+                      />
+                      <ResourceOpenCell
+                        kind="instrument"
+                        mfid={instrument.unique_id}
+                        name={name}
+                      />
                     </TableRow>
                   )
                 })}

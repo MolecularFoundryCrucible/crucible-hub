@@ -3,9 +3,9 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { ArrowRightIcon } from "lucide-react"
 
 import { CollectionRowsPending } from "@/components/crucible/collection-state"
-import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
@@ -288,26 +288,16 @@ type HomeResourceLinkItem = {
 function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
   const content = (
     <>
-      <span className="flex min-w-0 flex-1 items-start gap-3">
-        <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
-        <span className="min-w-0 flex-1">
-          <span className="block text-label wrap-break-word">{item.name}</span>
-          {item.projectId ? (
-            <span className="mt-1 flex min-w-0 items-center gap-2 text-supporting text-muted-foreground">
-              <ResourceTypeIcon className="size-4 shrink-0" type="project" />
-              <span className="sr-only">Project ID:</span>
-              <span className="min-w-0 truncate">{item.projectId}</span>
-            </span>
-          ) : null}
-          <span className="mt-1 flex min-w-0 items-center gap-2 text-muted-foreground">
-            <IdentityFieldIcon className="mt-0" type="mfid" />
-            <span className="sr-only">MFID:</span>
-            <span className="min-w-0 truncate font-mono text-identifier">
-              {item.uniqueId}
-            </span>
-          </span>
-        </span>
-      </span>
+      <ResourceIdentity
+        className="flex-1"
+        context={item.projectId}
+        contextKind={item.projectId ? "project" : undefined}
+        interactive
+        kind={item.kind}
+        mfid={item.uniqueId}
+        name={item.name}
+        presentation="collection"
+      />
       {item.timestamp ? (
         <time
           className="shrink-0 text-supporting text-muted-foreground sm:text-right"
@@ -320,7 +310,7 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
     </>
   )
   const className =
-    "flex min-w-0 flex-col gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-start"
+    "group/resource flex min-w-0 flex-col gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-start"
 
   if (item.kind === "project") {
     return (

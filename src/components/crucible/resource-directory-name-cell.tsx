@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { TableCell } from "@/components/ui/table"
 
 type DirectoryResourceKind = "instrument" | "project"
@@ -17,33 +17,20 @@ export function ResourceDirectoryNameCell({
   name: string
 }) {
   const identity = (
-    <>
-      <ResourceTypeIcon className="shrink-0" type={kind} />
-      <span className="min-w-0 flex-1">
-        <span
-          className="block truncate text-label group-hover:underline"
-          data-directory-name
-          title={name}
-        >
-          {name}
-        </span>
-        {identifier && identifier !== name ? (
-          <span
-            className="block truncate text-supporting text-muted-foreground"
-            title={identifier}
-          >
-            {identifier}
-          </span>
-        ) : null}
-      </span>
-    </>
+    <ResourceIdentity
+      context={identifier && identifier !== name ? identifier : null}
+      interactive
+      kind={kind}
+      name={name}
+      presentation="collection"
+    />
   )
 
   return (
     <TableCell className="resource-directory-name">
       {kind === "project" ? (
         <Link
-          className="group flex min-w-0 items-center gap-2"
+          className="group/resource block min-w-0"
           params={{ projectMfid: mfid }}
           to="/projects/$projectMfid"
         >
@@ -51,7 +38,7 @@ export function ResourceDirectoryNameCell({
         </Link>
       ) : (
         <Link
-          className="group flex min-w-0 items-center gap-2"
+          className="group/resource block min-w-0"
           params={{ instrumentMfid: mfid }}
           to="/instruments/$instrumentMfid"
         >

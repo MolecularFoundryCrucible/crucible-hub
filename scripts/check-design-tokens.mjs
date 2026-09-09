@@ -139,6 +139,15 @@ function scan(directory) {
         `${localPath}: strips shared component styling instead of using an explicit presentation`
       )
     }
+    if (
+      localPath !== "components/crucible/mfid-text.tsx" &&
+      !localPath.startsWith("routes/fixtures.") &&
+      content.includes("font-mono text-identifier")
+    ) {
+      violations.push(
+        `${localPath}: composes MFID typography instead of using MfidText`
+      )
+    }
     if (extname(path) === ".tsx") scanButtonUsage(path, localPath, content)
     for (const pattern of patterns) {
       if (pattern.expression.test(content))

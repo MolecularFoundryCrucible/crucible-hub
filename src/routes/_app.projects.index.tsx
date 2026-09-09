@@ -12,8 +12,11 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
+import {
+  ResourceOpenCell,
+  ResourceUpdatedCell,
+} from "@/components/crucible/resource-collection-cells"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
-import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -31,7 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatDate } from "@/lib/format"
 import {
   projectPageLimit,
   projectsQueryOptions,
@@ -212,22 +214,14 @@ function ProjectCollection({
                           <span aria-label="Not available">-</span>
                         )}
                       </TableCell>
-                      <TableCell
-                        className="resource-directory-date"
-                        data-label="Updated"
-                      >
-                        {complete && project.modification_time
-                          ? formatDate(project.modification_time)
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="resource-directory-action text-center">
-                        <ResourceFullPageLink
-                          kind="project"
-                          mfid={project.unique_id}
-                          name={name}
-                          presentation="table"
-                        />
-                      </TableCell>
+                      <ResourceUpdatedCell
+                        value={complete ? project.modification_time : undefined}
+                      />
+                      <ResourceOpenCell
+                        kind="project"
+                        mfid={project.unique_id}
+                        name={name}
+                      />
                     </TableRow>
                   )
                 })}

@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
 import { EditResourceIcon } from "@/components/crucible/icons"
+import { MfidText } from "@/components/crucible/mfid-text"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
   useWorkspaceMode,
@@ -139,8 +140,11 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
           </div>
           <div className="col-span-2">
             <dt className="text-supporting text-muted-foreground">MFID</dt>
-            <dd className="mt-1 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
-              {instrument.unique_id}
+            <dd className="mt-1">
+              <MfidText
+                className="break-all sm:break-normal sm:whitespace-nowrap"
+                value={instrument.unique_id}
+              />
             </dd>
           </div>
           <div className="col-span-2">

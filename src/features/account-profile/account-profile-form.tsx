@@ -10,6 +10,7 @@ import {
   SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { ContentBoundary } from "@/components/crucible/content-layout"
+import { MfidText } from "@/components/crucible/mfid-text"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
 import {
@@ -199,8 +200,11 @@ export function AccountProfileForm({
                 <dt className="text-label text-muted-foreground">
                   Crucible ID
                 </dt>
-                <dd className="mt-1 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
-                  {account.unique_id}
+                <dd className="mt-1">
+                  <MfidText
+                    className="break-all sm:break-normal sm:whitespace-nowrap"
+                    value={account.unique_id}
+                  />
                 </dd>
               </div>
             </dl>

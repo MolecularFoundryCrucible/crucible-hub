@@ -2,6 +2,7 @@ import { useState } from "react"
 
 import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
+import { MfidText } from "@/components/crucible/mfid-text"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -43,9 +44,10 @@ export function MfidValue({
         className={cn("flex min-w-0 items-center gap-2 text-body", className)}
       >
         <IdentityFieldIcon type="mfid" />
-        <span className="min-w-0 font-mono text-identifier break-all sm:break-normal sm:whitespace-nowrap">
-          {value}
-        </span>
+        <MfidText
+          className="min-w-0 break-all sm:break-normal sm:whitespace-nowrap"
+          value={value}
+        />
         <Tooltip>
           <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
             <Button
