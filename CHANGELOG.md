@@ -63,7 +63,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Tightened project Lead and Updated columns and standardized resource collections with Updated immediately before the trailing Open action.
+- Tightened the project Lead column and standardized every resource collection on a 12rem Updated column immediately before the trailing Open action.
 - Standardized person identity across account, profile, directory, membership, ownership, access, operator, inspector, and search surfaces with shared inline, stacked, and avatar presentations plus consistent profile hover and click behavior.
 - Replaced oversized project and instrument collection cards with compact responsive directories using linked identity, relevant ownership and location context, normalized unavailable values, and stable trailing navigation.
 - Kept stable graph and access-management headings visible during initial loading, limited collection update messages to readable refresh states, and prevented incompatible instrument and search results from appearing as pagination placeholders.

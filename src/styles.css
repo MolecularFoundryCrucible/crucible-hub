@@ -33,18 +33,33 @@
   --spacing-pill-height: 1.5rem;
   --spacing-pill-inline: 0.625rem;
   --spacing-pill-icon-inline: 0.5rem;
-  --spacing-data-name-column: 38%;
-  --spacing-data-project-column: 27%;
-  --spacing-data-owner-column: 20%;
-  --spacing-data-date-column: 15%;
-  --spacing-data-name-column-wide: 28%;
-  --spacing-data-type-column-wide: 20%;
-  --spacing-data-project-column-wide: 22%;
-  --spacing-data-owner-column-wide: 15%;
-  --spacing-data-date-column-wide: 15%;
+  --spacing-resource-updated-column: 12rem;
+  --spacing-data-name-column: calc(
+    (100% - var(--spacing-resource-updated-column)) * 0.447
+  );
+  --spacing-data-project-column: calc(
+    (100% - var(--spacing-resource-updated-column)) * 0.318
+  );
+  --spacing-data-owner-column: calc(
+    (100% - var(--spacing-resource-updated-column)) * 0.235
+  );
+  --spacing-data-date-column: var(--spacing-resource-updated-column);
+  --spacing-data-name-column-wide: calc(
+    (100% - var(--spacing-resource-updated-column)) * 0.329
+  );
+  --spacing-data-type-column-wide: calc(
+    (100% - var(--spacing-resource-updated-column)) * 0.235
+  );
+  --spacing-data-project-column-wide: calc(
+    (100% - var(--spacing-resource-updated-column)) * 0.259
+  );
+  --spacing-data-owner-column-wide: calc(
+    (100% - var(--spacing-resource-updated-column)) * 0.177
+  );
+  --spacing-data-date-column-wide: var(--spacing-resource-updated-column);
   --spacing-data-action-column: 3rem;
   --spacing-directory-action-column: 3rem;
-  --spacing-directory-date-column: 11rem;
+  --spacing-directory-date-column: var(--spacing-resource-updated-column);
   --spacing-directory-instrument-location-column: calc(
     (
         100% - var(--spacing-directory-action-column) -
@@ -74,31 +89,59 @@
   --spacing-directory-project-person-column: 14rem;
   --spacing-access-role-control: 6rem;
   --spacing-data-name-column-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.38
+    (
+        100% - var(--spacing-data-action-column) -
+          var(--spacing-resource-updated-column)
+      ) *
+      0.447
   );
   --spacing-data-project-column-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.27
+    (
+        100% - var(--spacing-data-action-column) -
+          var(--spacing-resource-updated-column)
+      ) *
+      0.318
   );
   --spacing-data-owner-column-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.2
+    (
+        100% - var(--spacing-data-action-column) -
+          var(--spacing-resource-updated-column)
+      ) *
+      0.235
   );
-  --spacing-data-date-column-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.15
+  --spacing-data-date-column-with-action: var(
+    --spacing-resource-updated-column
   );
   --spacing-data-name-column-wide-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.28
+    (
+        100% - var(--spacing-data-action-column) -
+          var(--spacing-resource-updated-column)
+      ) *
+      0.329
   );
   --spacing-data-type-column-wide-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.2
+    (
+        100% - var(--spacing-data-action-column) -
+          var(--spacing-resource-updated-column)
+      ) *
+      0.235
   );
   --spacing-data-project-column-wide-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.22
+    (
+        100% - var(--spacing-data-action-column) -
+          var(--spacing-resource-updated-column)
+      ) *
+      0.259
   );
   --spacing-data-owner-column-wide-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.15
+    (
+        100% - var(--spacing-data-action-column) -
+          var(--spacing-resource-updated-column)
+      ) *
+      0.177
   );
-  --spacing-data-date-column-wide-with-action: calc(
-    (100% - var(--spacing-data-action-column)) * 0.15
+  --spacing-data-date-column-wide-with-action: var(
+    --spacing-resource-updated-column
   );
   --text-title-page: 1.75rem;
   --text-title-page--line-height: 2.25rem;
