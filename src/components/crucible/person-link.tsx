@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 
+import { IdentityHoverCard } from "@/components/crucible/identity-hover-card"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { MfidText } from "@/components/crucible/mfid-text"
 import type {
@@ -8,11 +9,6 @@ import type {
   PersonIdentitySize,
   PersonNameStyle,
 } from "@/components/crucible/person-identity"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
 import { cn } from "@/lib/utils"
 
 export function PersonLink({
@@ -51,15 +47,12 @@ export function PersonLink({
   )
 
   return (
-    <HoverCard>
-      <HoverCardTrigger render={link} />
-      <HoverCardContent>
-        <PersonIdentity person={person} presentation="avatar" />
-        <MfidText
-          className="mt-2 block break-all text-muted-foreground"
-          value={person.unique_id}
-        />
-      </HoverCardContent>
-    </HoverCard>
+    <IdentityHoverCard trigger={link}>
+      <PersonIdentity person={person} presentation="avatar" />
+      <MfidText
+        className="mt-2 block break-all text-muted-foreground"
+        value={person.unique_id}
+      />
+    </IdentityHoverCard>
   )
 }

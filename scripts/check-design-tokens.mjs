@@ -134,6 +134,14 @@ function scan(directory) {
         `${localPath}: feature imports alert dialog instead of shared confirmation dialog`
       )
     }
+    if (
+      localPath !== "components/crucible/identity-hover-card.tsx" &&
+      content.includes('from "@/components/ui/hover-card"')
+    ) {
+      violations.push(
+        `${localPath}: imports hover-card primitives instead of using IdentityHoverCard`
+      )
+    }
     if (content.includes("rounded-none bg-transparent ring-0")) {
       violations.push(
         `${localPath}: strips shared component styling instead of using an explicit presentation`

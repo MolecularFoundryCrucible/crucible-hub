@@ -9,8 +9,13 @@ import {
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import {
+  ResourceOpenCell,
+  ResourceOwnerCell,
+  ResourceProjectCell,
+  ResourceUpdatedCell,
+} from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
-import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import {
   ResourcePreviewContext,
   resourcePreviewSearchSchema,
@@ -34,7 +39,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatDate } from "@/lib/format"
 import { DataFilters } from "@/features/data/data-filters"
 import {
   dataSearchSchema,
@@ -306,44 +310,22 @@ function DataResults({
                               {sample.sample_type ?? "Unspecified"}
                             </span>
                           </TableCell>
-                          <TableCell
-                            className="resource-collection-project"
-                            data-label="Project"
-                          >
-                            <span
-                              className="block truncate"
-                              title={sample.project_id ?? undefined}
-                            >
-                              {sample.project_id ?? "Unassigned"}
-                            </span>
-                          </TableCell>
-                          <TableCell
-                            className="resource-collection-owner"
-                            data-label="Owner"
-                          >
-                            <span
-                              className="block truncate"
-                              title={sample.owner?.username ?? undefined}
-                            >
-                              {sample.owner?.username ?? "Unknown owner"}
-                            </span>
-                          </TableCell>
-                          <TableCell
-                            className="resource-collection-date"
-                            data-label="Updated"
-                          >
-                            {formatDate(
+                          <ResourceProjectCell
+                            project={sample.project}
+                            projectId={sample.project_id}
+                            relation={sample.project_relation}
+                          />
+                          <ResourceOwnerCell owner={sample.owner} />
+                          <ResourceUpdatedCell
+                            value={
                               sample.modification_time ?? sample.creation_time
-                            )}
-                          </TableCell>
-                          <TableCell className="resource-collection-action text-center">
-                            <ResourceFullPageLink
-                              kind="sample"
-                              mfid={sample.unique_id}
-                              name={sample.sample_name}
-                              presentation="table"
-                            />
-                          </TableCell>
+                            }
+                          />
+                          <ResourceOpenCell
+                            kind="sample"
+                            mfid={sample.unique_id}
+                            name={sample.sample_name}
+                          />
                         </TableRow>
                       ))}
                     {showDatasets &&
@@ -367,61 +349,22 @@ function DataResults({
                               {dataset.measurement ?? "Unspecified"}
                             </span>
                           </TableCell>
-                          <TableCell
-                            className="resource-collection-project"
-                            data-label="Project"
-                          >
-                            {dataset.project ? (
-                              <Link
-                                className="block truncate text-label hover:underline"
-                                params={{
-                                  projectMfid: dataset.project.unique_id,
-                                }}
-                                title={
-                                  dataset.project.title ??
-                                  dataset.project.project_id
-                                }
-                                to="/projects/$projectMfid"
-                              >
-                                {dataset.project.title ??
-                                  dataset.project.project_id}
-                              </Link>
-                            ) : (
-                              <span
-                                className="block truncate"
-                                title={dataset.project_id ?? undefined}
-                              >
-                                {dataset.project_id ?? "Unassigned"}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell
-                            className="resource-collection-owner"
-                            data-label="Owner"
-                          >
-                            <span
-                              className="block truncate"
-                              title={dataset.owner?.username ?? undefined}
-                            >
-                              {dataset.owner?.username ?? "Unknown owner"}
-                            </span>
-                          </TableCell>
-                          <TableCell
-                            className="resource-collection-date"
-                            data-label="Updated"
-                          >
-                            {formatDate(
+                          <ResourceProjectCell
+                            project={dataset.project}
+                            projectId={dataset.project_id}
+                            relation={dataset.project_relation}
+                          />
+                          <ResourceOwnerCell owner={dataset.owner} />
+                          <ResourceUpdatedCell
+                            value={
                               dataset.modification_time ?? dataset.creation_time
-                            )}
-                          </TableCell>
-                          <TableCell className="resource-collection-action text-center">
-                            <ResourceFullPageLink
-                              kind="dataset"
-                              mfid={dataset.unique_id}
-                              name={dataset.dataset_name ?? "Untitled dataset"}
-                              presentation="table"
-                            />
-                          </TableCell>
+                            }
+                          />
+                          <ResourceOpenCell
+                            kind="dataset"
+                            mfid={dataset.unique_id}
+                            name={dataset.dataset_name ?? "Untitled dataset"}
+                          />
                         </TableRow>
                       ))}
                   </TableBody>

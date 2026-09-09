@@ -1,7 +1,6 @@
-import { Link } from "@tanstack/react-router"
-
 import type { PersonIdentityProfile } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { TableCell } from "@/components/ui/table"
@@ -61,14 +60,17 @@ export function ResourceProjectCell({
   return (
     <TableCell className="resource-collection-project" data-label="Project">
       {project ? (
-        <Link
-          className="block truncate text-label hover:underline"
-          params={{ projectMfid: project.unique_id }}
-          title={project.title ?? project.project_id}
-          to="/projects/$projectMfid"
-        >
-          {project.title ?? project.project_id}
-        </Link>
+        <ResourceIdentityLink
+          context={
+            project.title && project.title !== project.project_id
+              ? project.project_id
+              : null
+          }
+          kind="project"
+          mfid={project.unique_id}
+          name={project.title ?? project.project_id}
+          triggerContext={null}
+        />
       ) : (
         <span className="block truncate" title={projectId ?? undefined}>
           {relation === "shared"

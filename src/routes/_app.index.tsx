@@ -9,6 +9,7 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -312,28 +313,29 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
   if (item.kind === "project") {
     return (
       <li>
-        <Link
-          aria-label={"Open " + item.kind + ": " + item.name}
+        <ResourceIdentityLink
           className={className}
-          params={{ projectMfid: item.uniqueId }}
-          to="/projects/$projectMfid"
+          context={item.projectId}
+          kind="project"
+          mfid={item.uniqueId}
+          name={item.name}
         >
           {content}
-        </Link>
+        </ResourceIdentityLink>
       </li>
     )
   }
   if (item.kind === "instrument") {
     return (
       <li>
-        <Link
-          aria-label={"Open " + item.kind + ": " + item.name}
+        <ResourceIdentityLink
           className={className}
-          params={{ instrumentMfid: item.uniqueId }}
-          to="/instruments/$instrumentMfid"
+          kind="instrument"
+          mfid={item.uniqueId}
+          name={item.name}
         >
           {content}
-        </Link>
+        </ResourceIdentityLink>
       </li>
     )
   }
@@ -370,10 +372,20 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
 
   return (
     <li>
-      <Link
+      <ResourceIdentityLink
         className="group/resource flex min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-        params={{ projectMfid: project.unique_id }}
-        to="/projects/$projectMfid"
+        context={project.project_id}
+        details={[
+          ...(details?.organization
+            ? [{ label: "Organization", value: details.organization }]
+            : []),
+          ...(details?.status
+            ? [{ label: "Status", value: details.status }]
+            : []),
+        ]}
+        kind="project"
+        mfid={project.unique_id}
+        name={project.title ?? project.project_id}
       >
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start gap-2">
@@ -398,7 +410,7 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
             </time>
           )}
         </div>
-      </Link>
+      </ResourceIdentityLink>
     </li>
   )
 }

@@ -63,6 +63,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Standardized person, project, and instrument identity links on a shared keyboard-accessible hover preview, with canonical navigation and available organization, Lead, location, Owner, identifier, and MFID context.
 - Added project ID context to sample and dataset search results alongside sample type or measurement, including autocomplete pickers and direct MFID results when project context is available.
 - Standardized editable-card commit controls and bounded card and inspector loading, empty, initial-error, and refresh-error states through shared domain components.
 - Standardized resource identity, MFID typography, and repeated project, owner, Updated, and Open collection cells through shared domain components with static enforcement for future MFID presentation.

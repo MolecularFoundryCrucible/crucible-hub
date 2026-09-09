@@ -2,11 +2,11 @@ import { useState } from "react"
 import type { ReactNode } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import type { SummaryFieldType } from "@/components/crucible/summary-field-icon"
 import { Badge } from "@/components/ui/badge"
@@ -936,25 +936,31 @@ function contextFields(
   resource: DatasetDetail | SampleDetail
 ): readonly SummaryField[] {
   const project = resource.project ? (
-    <Link
-      className="text-label hover:underline"
-      params={{ projectMfid: resource.project.unique_id }}
-      to="/projects/$projectMfid"
+    <ResourceIdentityLink
+      context={resource.project.project_id}
+      kind="project"
+      mfid={resource.project.unique_id}
+      name={resource.project.title ?? resource.project.project_id}
     >
-      {resource.project.title ?? resource.project.project_id}
-    </Link>
+      <span className="text-label group-hover/resource:underline">
+        {resource.project.title ?? resource.project.project_id}
+      </span>
+    </ResourceIdentityLink>
   ) : (
     resource.project_id
   )
   if (resource.kind === "sample") return [["Project", project, "project"]]
   const instrument = resource.instrument ? (
-    <Link
-      className="text-label hover:underline"
-      params={{ instrumentMfid: resource.instrument.unique_id }}
-      to="/instruments/$instrumentMfid"
+    <ResourceIdentityLink
+      context={resource.instrument.instrument_id}
+      kind="instrument"
+      mfid={resource.instrument.unique_id}
+      name={resource.instrument.instrument_name}
     >
-      {resource.instrument.instrument_name}
-    </Link>
+      <span className="text-label group-hover/resource:underline">
+        {resource.instrument.instrument_name}
+      </span>
+    </ResourceIdentityLink>
   ) : (
     resource.instrument_id
   )
