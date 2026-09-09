@@ -63,7 +63,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Distinguished known service accounts from people across shared identity presentations with an orange avatar and service-account label while preserving name and stable-ID fallbacks.
+- Distinguished known service accounts from people across shared identity presentations with an orange avatar border and service-account label while preserving name and stable-ID fallbacks.
 - Resolved sample and dataset owners in project data tables through the shared person identity presentation, including name fallback when no username is set, profile navigation, and hover details.
 - Standardized person identity links and contextual project and instrument references within sample and dataset workflows on a shared keyboard-accessible hover preview, while keeping project and instrument directories and primary navigation as direct links.
 - Added project ID context to sample and dataset search results alongside sample type or measurement, including autocomplete pickers and direct MFID results when project context is available.

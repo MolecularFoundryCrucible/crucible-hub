@@ -115,7 +115,7 @@ export function PersonIdentity({
           className={cn(
             "ring-2",
             person.is_service_account
-              ? "bg-(--resource-service-account) text-(--resource-service-account-foreground) ring-(--resource-service-account)"
+              ? "bg-muted text-foreground ring-(--resource-service-account)"
               : "bg-muted text-foreground ring-(--resource-person)"
           )}
           data-account-type={
