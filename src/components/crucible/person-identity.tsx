@@ -1,3 +1,4 @@
+import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
@@ -63,12 +64,19 @@ export function PersonIdentity({
     return (
       <span
         className={cn(
-          "text-label break-words",
+          "inline-flex min-w-0 items-center gap-1 text-label",
           interactive && "group-hover/person:underline",
           className
         )}
       >
-        {name}
+        <span className="break-words">{name}</span>
+        {person.is_service_account ? (
+          <PrincipalTypeIcon
+            className="size-3.5"
+            label="Service account"
+            type="service_account"
+          />
+        ) : null}
       </span>
     )
   }
@@ -103,7 +111,17 @@ export function PersonIdentity({
       )}
     >
       <Avatar size={size}>
-        <AvatarFallback className="bg-muted text-foreground ring-2 ring-(--resource-person)">
+        <AvatarFallback
+          className={cn(
+            "ring-2",
+            person.is_service_account
+              ? "bg-(--resource-service-account) text-(--resource-service-account-foreground) ring-(--resource-service-account)"
+              : "bg-muted text-foreground ring-(--resource-person)"
+          )}
+          data-account-type={
+            person.is_service_account ? "service-account" : "person"
+          }
+        >
           {personInitials(person)}
         </AvatarFallback>
       </Avatar>

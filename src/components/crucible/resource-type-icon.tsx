@@ -51,7 +51,7 @@ const principalIconClasses = {
   instrument: iconClasses.instrument,
   project: iconClasses.project,
   public: "text-muted-foreground",
-  service_account: iconClasses.person,
+  service_account: "text-(--resource-service-account)",
   system: "text-muted-foreground",
   unknown: "text-muted-foreground",
   user: iconClasses.person,
