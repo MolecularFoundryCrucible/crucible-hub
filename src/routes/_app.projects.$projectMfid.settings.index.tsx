@@ -72,7 +72,6 @@ function ProjectManagePage() {
               {canLeave ? (
                 <ProjectLeaveCard
                   accountId={scope[2]}
-                  className="rounded-none bg-transparent ring-0"
                   mode={mode}
                   onSuccess={() =>
                     void navigate({
@@ -82,6 +81,7 @@ function ProjectManagePage() {
                     })
                   }
                   project={{ ...project, members: project.members ?? null }}
+                  presentation="row"
                   scope={scope}
                 />
               ) : null}
@@ -108,8 +108,8 @@ function ProjectOwnershipRow({
   if (!resource || resource.kind !== "project") return null
   return (
     <OwnershipTransferCard
-      className="rounded-none bg-transparent ring-0"
       mode={mode}
+      presentation="row"
       resource={resource}
       scope={scope}
     />

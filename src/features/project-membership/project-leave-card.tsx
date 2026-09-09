@@ -1,28 +1,10 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
-import {
-  LeaveProjectIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { LeaveProjectIcon } from "@/components/crucible/icons"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ManagementAction } from "@/components/crucible/management-action"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { removeWorkspaceProjectMember } from "@/data/crucible/projects.functions"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
@@ -35,16 +17,16 @@ import type { MembershipProject } from "./project-membership-card"
 
 export function ProjectLeaveCard({
   accountId,
-  className,
   mode,
   onSuccess,
+  presentation,
   project,
   scope,
 }: {
   accountId: string
-  className?: string
   mode: "api" | "fixture"
   onSuccess?: () => void
+  presentation?: "card" | "row"
   project: MembershipProject
   scope: IdentityScope
 }) {
@@ -104,71 +86,40 @@ export function ProjectLeaveCard({
 
   return (
     <>
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Leave project</CardTitle>
-          <CardDescription>
-            Remove your membership and access to this project and its shared
-            resources.
-          </CardDescription>
-          <CardAction>
-            <Button
-              disabled={pending}
-              onClick={() => {
-                setError(undefined)
-                setOpen(true)
-              }}
-              type="button"
-              variant="destructive"
-            >
-              <LeaveProjectIcon aria-hidden="true" data-icon="inline-start" />
-              Leave project
-            </Button>
-          </CardAction>
-        </CardHeader>
-      </Card>
-      <AlertDialog
+      <ManagementAction
+        action={
+          <Button
+            disabled={pending}
+            onClick={() => {
+              setError(undefined)
+              setOpen(true)
+            }}
+            type="button"
+            variant="destructive"
+          >
+            <LeaveProjectIcon aria-hidden="true" data-icon="inline-start" />
+            Leave project
+          </Button>
+        }
+        description="Remove your membership and access to this project and its shared resources."
+        presentation={presentation}
+        title="Leave project"
+      />
+      <ConfirmationAlertDialog
+        confirmLabel="Leave project"
+        description="You will lose access to this project and its shared resources."
+        error={error}
         onOpenChange={(nextOpen) => {
           if (pending) return
           setOpen(nextOpen)
           if (!nextOpen) setError(undefined)
         }}
+        onConfirm={() => void leaveProject()}
         open={open}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Leave project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You will lose access to this project and its shared resources.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {error ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={pending}
-              onClick={(event) => {
-                event.preventDefault()
-                void leaveProject()
-              }}
-              variant="destructive"
-            >
-              {pending ? (
-                <SavingChangesIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              Leave project
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pending={pending}
+        title="Leave project?"
+        variant="destructive"
+      />
     </>
   )
 }

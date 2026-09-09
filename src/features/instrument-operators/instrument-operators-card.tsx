@@ -7,22 +7,13 @@ import {
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -448,50 +439,23 @@ export function InstrumentOperatorsCard({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
+      <ConfirmationAlertDialog
+        confirmLabel="Remove operator"
+        description={
+          removingOperator
+            ? `${operatorName(removingOperator)} will no longer collect data for this instrument.`
+            : null
+        }
+        error={removingOperator ? error : undefined}
         onOpenChange={(open) => {
           if (!open && !removeMutation.isPending) setRemovingOperator(undefined)
         }}
+        onConfirm={() => void removeOperator()}
         open={Boolean(removingOperator)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove operator?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {removingOperator
-                ? `${operatorName(removingOperator)} will no longer collect data for this instrument.`
-                : null}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {error && removingOperator ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={removeMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={removeMutation.isPending}
-              onClick={(event) => {
-                event.preventDefault()
-                void removeOperator()
-              }}
-              variant="destructive"
-            >
-              {removeMutation.isPending ? (
-                <SavingChangesIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              Remove operator
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pending={removeMutation.isPending}
+        title="Remove operator?"
+        variant="destructive"
+      />
     </>
   )
 }

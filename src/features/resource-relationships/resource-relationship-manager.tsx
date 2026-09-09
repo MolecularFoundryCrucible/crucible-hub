@@ -10,19 +10,10 @@ import {
   ResourceGraphIcon,
   UnlinkRelationshipIcon,
 } from "@/components/crucible/icons"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -266,7 +257,17 @@ export function ResourceRelationshipManager({
           scope={scope}
         />
       ) : null}
-      <AlertDialog
+      <ConfirmationAlertDialog
+        confirmLabel="Unlink"
+        description={
+          <>
+            {pendingUnlink
+              ? unlinkDescription(resource, pendingUnlink)
+              : "This relationship will be removed."}{" "}
+            Neither resource will be deleted.
+          </>
+        }
+        error={unlinkError}
         onOpenChange={(open) => {
           if (unlinkMutation.isPending) return
           if (!open) {
@@ -274,46 +275,12 @@ export function ResourceRelationshipManager({
             setUnlinkError(undefined)
           }
         }}
+        onConfirm={() => void unlink()}
         open={pendingUnlink !== undefined}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unlink relationship?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingUnlink
-                ? unlinkDescription(resource, pendingUnlink)
-                : "This relationship will be removed."}{" "}
-              Neither resource will be deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {unlinkError ? (
-            <p className="text-body text-destructive" role="alert">
-              {unlinkError}
-            </p>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={unlinkMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={unlinkMutation.isPending}
-              onClick={(event) => {
-                event.preventDefault()
-                void unlink()
-              }}
-            >
-              {unlinkMutation.isPending ? (
-                <RelationshipPendingIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              {unlinkMutation.isPending ? "Unlinking" : "Unlink"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pending={unlinkMutation.isPending}
+        pendingLabel="Unlinking"
+        title="Unlink relationship?"
+      />
     </Card>
   )
 }

@@ -63,6 +63,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Standardized confirmation overlays and grouped resource-management entries through shared domain components with consistent pending, error, dismissal, action, and responsive layout behavior.
 - Standardized resource and person pickers on debounced autocomplete with anchored suggestion overlays, keyboard selection, and compact text-only confirmation actions that do not move as results change; reversible public-access confirmations now support Close, Escape, and outside-click dismissal.
 - Tightened the project Lead column and standardized every resource collection on a 12rem Updated column immediately before the trailing Open action.
 - Standardized person identity across account, profile, directory, membership, ownership, access, operator, inspector, and search surfaces with shared inline, stacked, and avatar presentations plus consistent profile hover and click behavior.

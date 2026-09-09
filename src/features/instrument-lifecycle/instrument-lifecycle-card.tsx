@@ -5,25 +5,10 @@ import {
   InstrumentStatusPendingIcon,
   UpdateInstrumentStatusIcon,
 } from "@/components/crucible/icons"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { ManagementAction } from "@/components/crucible/management-action"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Field,
   FieldDescription,
@@ -105,14 +90,14 @@ function initialStatus(instrument: InstrumentDetail) {
 }
 
 export function InstrumentLifecycleCard({
-  className,
   instrument,
   mode,
+  presentation,
   scope,
 }: {
-  className?: string
   instrument: InstrumentDetail
   mode: "api" | "fixture"
+  presentation?: "card" | "row"
   scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
@@ -182,11 +167,36 @@ export function InstrumentLifecycleCard({
 
   return (
     <>
-      <Card aria-busy={pending} className={className}>
-        <CardHeader>
-          <CardTitle>Lifecycle</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
+      <ManagementAction
+        action={
+          <Button
+            disabled={
+              pending || !selectedStatus || selectedStatus === instrument.status
+            }
+            form={`instrument-lifecycle-${instrument.unique_id}`}
+            type="submit"
+          >
+            {pending ? (
+              <InstrumentStatusPendingIcon
+                aria-hidden="true"
+                className="motion-safe:animate-spin"
+                data-icon="inline-start"
+              />
+            ) : (
+              <UpdateInstrumentStatusIcon
+                aria-hidden="true"
+                data-icon="inline-start"
+              />
+            )}
+            Update status
+          </Button>
+        }
+        busy={pending}
+        description="Review and update whether this instrument is active, under maintenance, or decommissioned."
+        presentation={presentation}
+        title="Lifecycle"
+      >
+        <div className="flex flex-col gap-6">
           <dl>
             <div>
               <dt className="text-label text-muted-foreground">
@@ -249,75 +259,28 @@ export function InstrumentLifecycleCard({
               </p>
             ) : null}
           </form>
-        </CardContent>
-        <CardFooter className="justify-end">
-          <Button
-            disabled={
-              pending || !selectedStatus || selectedStatus === instrument.status
-            }
-            form={`instrument-lifecycle-${instrument.unique_id}`}
-            type="submit"
-          >
-            {pending ? (
-              <InstrumentStatusPendingIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : (
-              <UpdateInstrumentStatusIcon
-                aria-hidden="true"
-                data-icon="inline-start"
-              />
-            )}
-            Update status
-          </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </ManagementAction>
 
-      <AlertDialog
+      <ConfirmationAlertDialog
+        confirmLabel="Decommission"
+        description={
+          <>
+            <strong>{instrument.name}</strong> will be retired from future use.
+            Existing datasets and instrument details will remain available.
+          </>
+        }
+        error={error}
         onOpenChange={(open) => {
           if (pending) return
           setConfirmingDecommission(open)
         }}
+        onConfirm={() => void applyStatus("decommissioned")}
         open={confirmingDecommission}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Decommission instrument?</AlertDialogTitle>
-            <AlertDialogDescription>
-              <strong>{instrument.name}</strong> will be retired from future
-              use. Existing datasets and instrument details will remain
-              available.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {error ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={pending}
-              onClick={(event) => {
-                event.preventDefault()
-                void applyStatus("decommissioned")
-              }}
-              variant="destructive"
-            >
-              {pending ? (
-                <InstrumentStatusPendingIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              Decommission
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pending={pending}
+        title="Decommission instrument?"
+        variant="destructive"
+      />
     </>
   )
 }

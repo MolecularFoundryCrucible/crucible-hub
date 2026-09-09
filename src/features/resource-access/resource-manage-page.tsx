@@ -15,6 +15,10 @@ import {
 } from "@/components/crucible/access-role-badge"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
+  ConfirmationAlertDialog,
+  DismissibleConfirmationDialog,
+} from "@/components/crucible/confirmation-dialog"
+import {
   AccessPendingIcon,
   AddAccessGrantIcon,
   ManageAccessIcon,
@@ -26,16 +30,6 @@ import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -150,23 +144,23 @@ export function ResourceManagePage({
           <CardContent className="divide-y px-0">
             {canManageAccess ? (
               <ProjectAssignmentCard
-                className="rounded-none bg-transparent ring-0"
                 mode={mode}
+                presentation="row"
                 resource={resource}
                 scope={scope}
               />
             ) : null}
             {canTransfer ? (
               <OwnershipTransferCard
-                className="rounded-none bg-transparent ring-0"
                 mode={mode}
+                presentation="row"
                 resource={resource}
                 scope={scope}
               />
             ) : null}
             <ResourceDeletionRequestCard
-              className="rounded-none bg-transparent ring-0"
               mode={mode}
+              presentation="row"
               resource={resource}
               scope={scope}
             />
@@ -574,116 +568,58 @@ function ManagedResourceAccess({
         roles={roles}
         scope={scope}
       />
-      <AlertDialog
+      <ConfirmationAlertDialog
+        confirmLabel="Revoke access"
+        description={
+          pendingRevoke ? (
+            <>
+              <ResourceName>{grantName(pendingRevoke)}</ResourceName> will no
+              longer have direct access to{" "}
+              <ResourceName>{resource.name}</ResourceName>.
+            </>
+          ) : null
+        }
+        error={error?.surface === "direct" ? error.message : undefined}
         onOpenChange={(open) => {
           if (mutationPending) return
           if (!open) setPendingRevoke(undefined)
         }}
+        onConfirm={() => {
+          if (pendingRevoke) void revokeGrant(pendingRevoke)
+        }}
         open={pendingRevoke !== undefined}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Revoke access?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingRevoke ? (
-                <>
-                  <ResourceName>{grantName(pendingRevoke)}</ResourceName> will
-                  no longer have direct access to{" "}
-                  <ResourceName>{resource.name}</ResourceName>.
-                </>
-              ) : null}
-            </AlertDialogDescription>
-            {error?.surface === "direct" ? (
-              <p className="text-body text-destructive" role="alert">
-                {error.message}
-              </p>
-            ) : null}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={mutationPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={mutationPending}
-              onClick={(event) => {
-                event.preventDefault()
-                if (pendingRevoke) void revokeGrant(pendingRevoke)
-              }}
-              variant="destructive"
-            >
-              {mutationPending ? (
-                <AccessPendingIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              Revoke access
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <Dialog
+        pending={mutationPending}
+        title="Revoke access?"
+        variant="destructive"
+      />
+      <DismissibleConfirmationDialog
+        confirmLabel={pendingPublic ? "Publish" : "Make private"}
+        description={
+          pendingPublic ? (
+            <>
+              <ResourceName>{resource.name}</ResourceName> will be available to
+              anyone who can access this Crucible server.
+            </>
+          ) : (
+            <>
+              <ResourceName>{resource.name}</ResourceName> will no longer be
+              publicly available.
+            </>
+          )
+        }
+        error={error?.surface === "public" ? error.message : undefined}
         onOpenChange={(open) => {
           if (mutationPending) return
           if (!open) setPendingPublic(undefined)
         }}
+        onConfirm={() => {
+          if (pendingPublic !== undefined)
+            void changePublicAccess(pendingPublic)
+        }}
         open={pendingPublic !== undefined}
-      >
-        <DialogContent showCloseButton={!mutationPending}>
-          <DialogHeader>
-            <DialogTitle>
-              {pendingPublic ? "Publish resource?" : "Make resource private?"}
-            </DialogTitle>
-            <DialogDescription>
-              {pendingPublic ? (
-                <>
-                  <ResourceName>{resource.name}</ResourceName> will be available
-                  to anyone who can access this Crucible server.
-                </>
-              ) : (
-                <>
-                  <ResourceName>{resource.name}</ResourceName> will no longer be
-                  publicly available.
-                </>
-              )}
-            </DialogDescription>
-            {error?.surface === "public" ? (
-              <p className="text-body text-destructive" role="alert">
-                {error.message}
-              </p>
-            ) : null}
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              disabled={mutationPending}
-              onClick={() => setPendingPublic(undefined)}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={mutationPending}
-              onClick={() => {
-                if (pendingPublic !== undefined) {
-                  void changePublicAccess(pendingPublic)
-                }
-              }}
-              type="button"
-            >
-              {mutationPending ? (
-                <AccessPendingIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              {pendingPublic ? "Publish" : "Make private"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        pending={mutationPending}
+        title={pendingPublic ? "Publish resource?" : "Make resource private?"}
+      />
     </>
   )
 }

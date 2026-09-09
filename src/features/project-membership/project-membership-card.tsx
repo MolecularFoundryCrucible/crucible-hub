@@ -5,6 +5,7 @@ import {
   ProjectRoleBadge,
   sortProjectMembers,
 } from "@/components/crucible/project-members"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import {
@@ -15,16 +16,6 @@ import {
 } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -447,60 +438,34 @@ export function ProjectMembershipCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <AlertDialog
+      <ConfirmationAlertDialog
+        confirmLabel="Remove member"
+        description={
+          removingMember
+            ? `${memberName(removingMember)} will no longer have access to this project.`
+            : null
+        }
+        error={
+          removingMember ? memberErrors[removingMember.unique_id] : undefined
+        }
         onOpenChange={(open) => {
           if (!open && pendingMember === removingMember?.unique_id) return
           if (!open) setRemovingMember(undefined)
         }}
+        onConfirm={() => {
+          if (!removingMember) return
+          const member = removingMember
+          void removeMember(member).then((success) => {
+            if (success) setRemovingMember(undefined)
+          })
+        }}
         open={Boolean(removingMember)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove member?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {removingMember
-                ? `${memberName(removingMember)} will no longer have access to this project.`
-                : null}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {removingMember && memberErrors[removingMember.unique_id] ? (
-            <p className="text-body text-destructive" role="alert">
-              {memberErrors[removingMember.unique_id]}
-            </p>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={Boolean(
-                removingMember && pendingMember === removingMember.unique_id
-              )}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={Boolean(
-                removingMember && pendingMember === removingMember.unique_id
-              )}
-              onClick={() => {
-                if (!removingMember) return
-                const member = removingMember
-                void removeMember(member).then((success) => {
-                  if (success) setRemovingMember(undefined)
-                })
-              }}
-              variant="destructive"
-            >
-              {removingMember && pendingMember === removingMember.unique_id ? (
-                <SavingChangesIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              Remove member
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pending={Boolean(
+          removingMember && pendingMember === removingMember.unique_id
+        )}
+        title="Remove member?"
+        variant="destructive"
+      />
     </Card>
   )
 }

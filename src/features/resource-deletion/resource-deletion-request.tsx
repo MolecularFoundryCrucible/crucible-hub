@@ -6,15 +6,9 @@ import {
   PreparingDownloadIcon,
   RequestDeletionIcon,
 } from "@/components/crucible/icons"
+import { ManagementAction } from "@/components/crucible/management-action"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -60,13 +54,13 @@ export function mergeResourceDeletionRequest(
 }
 
 export function ResourceDeletionRequestCard({
-  className,
   mode,
+  presentation,
   resource,
   scope,
 }: {
-  className?: string
   mode: "api" | "fixture"
+  presentation?: "card" | "row"
   resource: DeletableResource
   scope: IdentityScope
 }) {
@@ -146,16 +140,17 @@ export function ResourceDeletionRequestCard({
 
   return (
     <>
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Request deletion</CardTitle>
-          <CardDescription>
+      <ManagementAction
+        action={action}
+        description={
+          <>
             Submit this {resource.kind} for deletion review. This does not
             immediately delete the resource or its files.
-          </CardDescription>
-          <CardAction>{action}</CardAction>
-        </CardHeader>
-      </Card>
+          </>
+        }
+        presentation={presentation}
+        title="Request deletion"
+      />
       <Dialog
         onOpenChange={(nextOpen) => {
           if (mutation.isPending) return

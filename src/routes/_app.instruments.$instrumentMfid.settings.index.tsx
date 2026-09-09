@@ -53,16 +53,16 @@ function InstrumentManagePage() {
             <CardContent className="divide-y px-0">
               {canChangeStatus ? (
                 <InstrumentLifecycleCard
-                  className="rounded-none bg-transparent ring-0"
                   instrument={resource}
                   mode={mode}
+                  presentation="row"
                   scope={scope}
                 />
               ) : null}
               {canTransfer ? (
                 <OwnershipTransferCard
-                  className="rounded-none bg-transparent ring-0"
                   mode={mode}
+                  presentation="row"
                   resource={resource}
                   scope={scope}
                 />

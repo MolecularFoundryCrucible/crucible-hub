@@ -8,6 +8,7 @@ import {
   SaveChangesIcon,
 } from "@/components/crucible/icons"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -21,16 +22,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -410,33 +401,21 @@ function ThumbnailEditor({
         </p>
       ) : null}
 
-      <AlertDialog
+      <ConfirmationAlertDialog
+        confirmLabel="Delete thumbnail"
+        description={
+          <>
+            This permanently removes{" "}
+            {deleting?.thumbnail_name ?? "the thumbnail"} from the dataset.
+          </>
+        }
         onOpenChange={(open) => !open && setDeleting(undefined)}
+        onConfirm={() => void deleteThumbnail()}
         open={Boolean(deleting)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete thumbnail?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This permanently removes{" "}
-              {deleting?.thumbnail_name ?? "the thumbnail"}
-              from the dataset.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={mutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={mutation.isPending}
-              onClick={() => void deleteThumbnail()}
-              variant="destructive"
-            >
-              Delete thumbnail
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pending={mutation.isPending}
+        title="Delete thumbnail?"
+        variant="destructive"
+      />
     </div>
   )
 }

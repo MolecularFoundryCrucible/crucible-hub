@@ -1,28 +1,11 @@
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { SavingChangesIcon } from "@/components/crucible/icons"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ManagementAction } from "@/components/crucible/management-action"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -53,15 +36,15 @@ type AssignableResource = Extract<
 >
 
 export function ProjectAssignmentCard({
-  className,
   mode,
   onSuccess,
+  presentation,
   resource,
   scope,
 }: {
-  className?: string
   mode: "api" | "fixture"
   onSuccess?: (result: WorkspaceProjectReassignment) => void
+  presentation?: "card" | "row"
   resource: AssignableResource
   scope: IdentityScope
 }) {
@@ -203,25 +186,23 @@ export function ProjectAssignmentCard({
   if (resource.capabilities?.can_manage_access !== true) return null
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Transfer project</CardTitle>
-        <CardDescription>
-          Move this resource and its project access grant together.
-        </CardDescription>
-        <CardAction>
+    <>
+      <ManagementAction
+        action={
           <Button onClick={() => setChooserOpen(true)} type="button">
             Choose project
           </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        {error ? (
+        }
+        description="Move this resource and its project access grant together."
+        presentation={presentation}
+        title="Transfer project"
+      >
+        {error && !chooserOpen && !preview ? (
           <p className="text-body text-destructive" role="alert">
             {error}
           </p>
         ) : null}
-      </CardContent>
+      </ManagementAction>
       <Dialog onOpenChange={closeChooser} open={chooserOpen}>
         <DialogContent>
           <DialogHeader>
@@ -252,7 +233,19 @@ export function ProjectAssignmentCard({
           ) : null}
         </DialogContent>
       </Dialog>
-      <AlertDialog
+      <ConfirmationAlertDialog
+        confirmLabel="Confirm assignment"
+        description={
+          preview ? (
+            <>
+              <strong>{resource.name}</strong> will move from{" "}
+              {resource.project?.title ?? "no project"} to{" "}
+              <strong>{selectedProject?.name ?? preview.new_project_id}</strong>
+              .
+            </>
+          ) : null
+        }
+        error={error}
         onOpenChange={(open) => {
           if (!open && !confirmMutation.isPending) {
             setPreview(undefined)
@@ -260,52 +253,12 @@ export function ProjectAssignmentCard({
             setError(undefined)
           }
         }}
+        onConfirm={() => void confirm()}
         open={Boolean(preview)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Assign to this project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {preview ? (
-                <>
-                  <strong>{resource.name}</strong> will move from{" "}
-                  {resource.project?.title ?? "no project"} to{" "}
-                  <strong>
-                    {selectedProject?.name ?? preview.new_project_id}
-                  </strong>
-                  .
-                </>
-              ) : null}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {error ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={confirmMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={confirmMutation.isPending}
-              onClick={() => void confirm()}
-            >
-              <SavingChangesIcon
-                aria-hidden="true"
-                className={
-                  confirmMutation.isPending
-                    ? "motion-safe:animate-spin"
-                    : "invisible"
-                }
-                data-icon="inline-start"
-              />
-              Confirm assignment
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </Card>
+        pending={confirmMutation.isPending}
+        title="Assign to this project?"
+      />
+    </>
   )
 }
 
