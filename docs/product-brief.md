@@ -46,7 +46,7 @@ The core product surfaces are:
 - Data for cross-project sample and dataset discovery, filtering, collection preview, and canonical detail navigation.
 - Project and instrument workspaces for scoped data browsing, context, and capability-gated management.
 - Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, access, activity, and lifecycle-aware actions.
-- Search, scientific metadata search, and direct MFID lookup for bounded cross-resource discovery, with project-scoped sample and dataset search available from an active project.
+- Search, scientific metadata search, direct MFID lookup, and local QR scanning for bounded cross-resource discovery, with project-scoped sample and dataset search available from an active project.
 - Account for reviewing and updating the authenticated person's own name, email, and username from the application-bar profile menu.
 
 Accessible and owned resources are distinct sets. Hub must not invent a personal-project model or emulate unavailable server-side filtering with incomplete client-side scans.
@@ -55,7 +55,7 @@ Accessible and owned resources are distinct sets. Hub must not invent a personal
 
 ### Find and understand
 
-Scientists navigate from Home, Projects, Data, Instruments, Search, or an MFID link to canonical resource detail. Home keeps an account-isolated, memory-only list of resources viewed during the current application session and clears it on reload or account replacement. Global search groups readable resource types and offers a separate full-text scientific metadata scope, while project-scoped search limits results to related samples and datasets and preserves a direct return to Project Data. Collections retain their context while an optional in-place inspector follows immediate relationships. Sample and dataset Graph tabs provide a bounded visual traversal from one resource to its readable neighbours, with the same information available as a relationship table. Graphs are an alternate representation, never the only way to understand provenance.
+Scientists navigate from Home, Projects, Data, Instruments, Search, an MFID link, or an MFID QR code to canonical resource detail. QR scanning starts only after an explicit action in global search, decodes camera frames locally, and passes a validated MFID through canonical resource resolution. Home keeps an account-isolated, memory-only list of resources viewed during the current application session and clears it on reload or account replacement. Global search groups readable resource types and offers a separate full-text scientific metadata scope, while project-scoped search limits results to related samples and datasets and preserves a direct return to Project Data. Collections retain their context while an optional in-place inspector follows immediate relationships. Sample and dataset Graph tabs provide a bounded visual traversal from one resource to its readable neighbours, with the same information available as a relationship table. Graphs are an alternate representation, never the only way to understand provenance.
 
 Dataset Overview loads thumbnail previews and recent dataset-filtered ingestion activity independently after the browser hydrates, preserving other detail while either representation is pending or unavailable. Readable graph datasets may include a bounded first-thumbnail preview in the equivalent relationship list. People with edit capability can explicitly enter thumbnail editing to add, rename, or delete images; Overview remains read-first.
 
