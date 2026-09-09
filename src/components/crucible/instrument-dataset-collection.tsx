@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -39,33 +40,36 @@ export function InstrumentDatasetCollection({
       <Card aria-busy={updating}>
         <CardContent className="px-0">
           {page.items.length ? (
-            <Table className="table-fixed" aria-label="Instrument datasets">
+            <Table
+              className="resource-collection-table table-fixed"
+              aria-label="Instrument datasets"
+            >
               <colgroup>
-                <col className="w-data-name-column xl:w-data-name-column-wide" />
-                <col className="hidden lg:table-column lg:w-data-type-column-wide" />
-                <col className="hidden md:table-column md:w-data-project-column-wide" />
-                <col className="hidden xl:table-column xl:w-data-owner-column-wide" />
-                <col className="hidden xl:table-column xl:w-data-date-column-wide" />
+                <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
+                <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
+                <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
+                <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
+                <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
+                <col className="w-data-action-column" />
               </colgroup>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden lg:table-cell">
+                  <TableHead className="hidden xl:table-cell">
                     Measurement
                   </TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Project
-                  </TableHead>
-                  <TableHead className="hidden xl:table-cell">Owner</TableHead>
-                  <TableHead className="hidden xl:table-cell">
-                    Updated
+                  <TableHead>Project</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead className="text-center">
+                    <span className="sr-only">Open</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {page.items.map((dataset) => (
                   <TableRow key={dataset.unique_id}>
-                    <TableCell>
+                    <TableCell className="resource-collection-name">
                       <div className="flex min-w-0 items-center gap-2">
                         <ResourceTypeIcon className="shrink-0" type="dataset" />
                         <div className="min-w-0">
@@ -78,13 +82,13 @@ export function InstrumentDatasetCollection({
                             <span className="sr-only">Dataset: </span>
                             {dataset.dataset_name ?? "Untitled dataset"}
                           </Link>
-                          <p className="truncate text-supporting text-muted-foreground lg:hidden">
+                          <p className="truncate text-supporting text-muted-foreground xl:hidden">
                             {dataset.measurement ?? "Unspecified measurement"}
                           </p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
+                    <TableCell className="resource-collection-type hidden xl:table-cell">
                       <span
                         className="block truncate"
                         title={dataset.measurement ?? undefined}
@@ -92,7 +96,10 @@ export function InstrumentDatasetCollection({
                         {dataset.measurement ?? "Unspecified"}
                       </span>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell
+                      className="resource-collection-project"
+                      data-label="Project"
+                    >
                       <span
                         className="block truncate"
                         title={
@@ -106,7 +113,10 @@ export function InstrumentDatasetCollection({
                           "Unassigned"}
                       </span>
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell">
+                    <TableCell
+                      className="resource-collection-owner"
+                      data-label="Owner"
+                    >
                       <span
                         className="block truncate"
                         title={dataset.owner?.username ?? undefined}
@@ -114,10 +124,21 @@ export function InstrumentDatasetCollection({
                         {dataset.owner?.username ?? "Unknown owner"}
                       </span>
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell">
+                    <TableCell
+                      className="resource-collection-date"
+                      data-label="Updated"
+                    >
                       {formatDate(
                         dataset.modification_time ?? dataset.creation_time
                       )}
+                    </TableCell>
+                    <TableCell className="resource-collection-action text-center">
+                      <ResourceFullPageLink
+                        kind="dataset"
+                        mfid={dataset.unique_id}
+                        name={dataset.dataset_name ?? "Untitled dataset"}
+                        presentation="table"
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

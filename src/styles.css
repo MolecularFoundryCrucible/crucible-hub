@@ -44,24 +44,34 @@
   --spacing-data-date-column-wide: 15%;
   --spacing-data-action-column: 3rem;
   --spacing-directory-action-column: 3rem;
-  --spacing-directory-date-column: calc(
-    (100% - var(--spacing-directory-action-column)) * 0.18
-  );
+  --spacing-directory-date-column: 11rem;
   --spacing-directory-instrument-location-column: calc(
-    (100% - var(--spacing-directory-action-column)) * 0.2
+    (
+        100% - var(--spacing-directory-action-column) -
+          var(--spacing-directory-date-column)
+      ) *
+      0.24
   );
   --spacing-directory-instrument-name-column: calc(
-    (100% - var(--spacing-directory-action-column)) * 0.34
+    (
+        100% - var(--spacing-directory-action-column) -
+          var(--spacing-directory-date-column)
+      ) *
+      0.42
   );
   --spacing-directory-instrument-person-column: calc(
-    (100% - var(--spacing-directory-action-column)) * 0.28
+    (
+        100% - var(--spacing-directory-action-column) -
+          var(--spacing-directory-date-column)
+      ) *
+      0.34
   );
   --spacing-directory-project-name-column: calc(
-    (100% - var(--spacing-directory-action-column)) * 0.52
+    100% - var(--spacing-directory-action-column) -
+      var(--spacing-directory-date-column) -
+      var(--spacing-directory-project-person-column)
   );
-  --spacing-directory-project-person-column: calc(
-    (100% - var(--spacing-directory-action-column)) * 0.3
-  );
+  --spacing-directory-project-person-column: 14rem;
   --spacing-access-role-control: 6rem;
   --spacing-data-name-column-with-action: calc(
     (100% - var(--spacing-data-action-column)) * 0.38

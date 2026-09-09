@@ -299,6 +299,7 @@ function ProjectSampleTable({
       {items.map((sample) => (
         <TableRow key={sample.unique_id}>
           <ResourceCollectionNameCell
+            className="resource-collection-name"
             kind="sample"
             mfid={sample.unique_id}
             name={sample.sample_name}
@@ -311,10 +312,10 @@ function ProjectSampleTable({
             relation={sample.project_relation}
           />
           <OwnerCell username={sample.owner?.username} />
-          <TableCell className="hidden md:table-cell">
+          <TableCell className="resource-collection-date" data-label="Updated">
             {formatDate(sample.modification_time ?? sample.creation_time)}
           </TableCell>
-          <TableCell className="text-center">
+          <TableCell className="resource-collection-action text-center">
             <ResourceFullPageLink
               fromProject={projectMfid}
               kind="sample"
@@ -341,6 +342,7 @@ function ProjectDatasetTable({
       {items.map((dataset) => (
         <TableRow key={dataset.unique_id}>
           <ResourceCollectionNameCell
+            className="resource-collection-name"
             kind="dataset"
             mfid={dataset.unique_id}
             name={dataset.dataset_name ?? "Untitled dataset"}
@@ -353,10 +355,10 @@ function ProjectDatasetTable({
             relation={dataset.project_relation}
           />
           <OwnerCell username={dataset.owner?.username} />
-          <TableCell className="hidden md:table-cell">
+          <TableCell className="resource-collection-date" data-label="Updated">
             {formatDate(dataset.modification_time ?? dataset.creation_time)}
           </TableCell>
-          <TableCell className="text-center">
+          <TableCell className="resource-collection-action text-center">
             <ResourceFullPageLink
               fromProject={projectMfid}
               kind="dataset"
@@ -373,20 +375,20 @@ function ProjectDatasetTable({
 
 function ProjectTable({ children }: { children: React.ReactNode }) {
   return (
-    <Table className="table-fixed">
+    <Table className="resource-collection-table table-fixed">
       <colgroup>
         <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
         <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
-        <col className="hidden xl:table-column xl:w-data-owner-column-wide-with-action" />
-        <col className="hidden w-data-date-column-with-action md:table-column xl:w-data-date-column-wide-with-action" />
+        <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
+        <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
         <col className="w-data-action-column" />
       </colgroup>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
           <TableHead>Project</TableHead>
-          <TableHead className="hidden xl:table-cell">Owner</TableHead>
-          <TableHead className="hidden md:table-cell">Updated</TableHead>
+          <TableHead>Owner</TableHead>
+          <TableHead>Updated</TableHead>
           <TableHead className="text-center">
             <span className="sr-only">Open</span>
           </TableHead>
@@ -411,7 +413,7 @@ function ProjectCell({
   relation?: "assigned" | "shared" | null
 }) {
   return (
-    <TableCell>
+    <TableCell className="resource-collection-project" data-label="Project">
       {project ? (
         <Link
           className="block truncate text-label hover:underline"
@@ -434,7 +436,7 @@ function ProjectCell({
 
 function OwnerCell({ username }: { username: string | null | undefined }) {
   return (
-    <TableCell className="hidden xl:table-cell">
+    <TableCell className="resource-collection-owner" data-label="Owner">
       <span className="block truncate" title={username ?? undefined}>
         {username ?? "Unknown owner"}
       </span>
