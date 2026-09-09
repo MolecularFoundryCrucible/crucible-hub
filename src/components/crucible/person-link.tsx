@@ -50,7 +50,7 @@ export function PersonLink({
     <IdentityHoverCard trigger={link}>
       <PersonIdentity person={person} presentation="avatar" />
       <MfidText
-        className="mt-2 block break-all text-muted-foreground"
+        className="mt-2 block whitespace-nowrap text-muted-foreground"
         value={person.unique_id}
       />
     </IdentityHoverCard>

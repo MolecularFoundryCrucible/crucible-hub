@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 
 import { IdentityHoverCard } from "@/components/crucible/identity-hover-card"
+import { MfidText } from "@/components/crucible/mfid-text"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import type { ResourceIdentityPresentation } from "@/components/crucible/resource-identity"
 import { cn } from "@/lib/utils"
@@ -67,7 +68,11 @@ export function ResourceIdentityLink({
 
   return (
     <IdentityHoverCard trigger={link}>
-      <ResourceIdentity context={context} kind={kind} mfid={mfid} name={name} />
+      <ResourceIdentity context={context} kind={kind} name={name} />
+      <MfidText
+        className="mt-2 block whitespace-nowrap text-muted-foreground"
+        value={mfid}
+      />
       {details.length ? (
         <dl className="mt-3 grid gap-2">
           {details.map((detail) => (
