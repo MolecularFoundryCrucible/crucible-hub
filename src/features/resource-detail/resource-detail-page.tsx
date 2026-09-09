@@ -95,9 +95,19 @@ import { ResourceRelationshipManager } from "@/features/resource-relationships/r
 export async function preloadResourceDetail(
   queryClient: QueryClient,
   scope: IdentityScope,
-  resourceMfid: string
+  resourceMfid: string,
+  forceApiResolution = false
 ) {
-  return queryClient.ensureQueryData(resourceQueryOptions(scope, resourceMfid))
+  const options = resourceQueryOptions(scope, resourceMfid)
+  if (forceApiResolution) {
+    await queryClient.invalidateQueries({
+      exact: true,
+      queryKey: options.queryKey,
+      refetchType: "none",
+    })
+    return queryClient.fetchQuery(options)
+  }
+  return queryClient.ensureQueryData(options)
 }
 
 export function ResourceWorkspace({

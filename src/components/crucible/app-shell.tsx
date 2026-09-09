@@ -5,6 +5,7 @@ import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
 import { KeyboardShortcuts } from "@/components/crucible/keyboard-shortcuts"
 import { PersonIdentity } from "@/components/crucible/person-identity"
+import { QrScannerAction } from "@/components/crucible/qr-scanner-action"
 import {
   AccountIcon,
   CollapseSidebarIcon,
@@ -146,6 +147,7 @@ export function AppShell({
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
             <SidebarTrigger className="md:hidden" />
             <GlobalSearch projectMfid={projectMfid} />
+            <QrScannerAction />
             {account ? (
               <CreateMenu
                 isServiceAccount={Boolean(account.is_service_account)}

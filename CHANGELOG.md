@@ -8,7 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
-- Added local camera-based MFID QR scanning to global search, with canonical resource resolution, camera switching, retry and text-entry fallback, and immediate stream cleanup without uploading or storing camera content.
+- Added a dedicated application-bar action for local camera-based MFID QR scanning, with API-backed canonical resource resolution, camera switching, retry and text-entry fallback, and immediate stream cleanup without uploading or storing camera content.
 - Added resource-aware browser titles and keyboard navigation, explicit entity refresh timestamps, read-only dataset processing activity, full-text scientific metadata search, and account-isolated session-only recent resources.
 - Added lazy dataset thumbnail galleries, capability-guided add and rename controls, confirmed deletion, and bounded first-thumbnail previews in graph relationship lists.
 - Added self-service profile management for name, email, and username through the top-right account menu and identity-scoped account API operations.

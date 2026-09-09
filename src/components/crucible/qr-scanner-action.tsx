@@ -1,0 +1,134 @@
+import { useCallback, useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
+
+import { ScanQrCodeIcon } from "@/components/crucible/icons"
+import { QrCodeScanner } from "@/components/crucible/qr-code-scanner"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { extractMfidFromQrCode } from "@/lib/crucible-qr-code"
+
+export function QrScannerAction() {
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<"scanner" | "manual">("scanner")
+  const [manualValue, setManualValue] = useState("")
+  const [manualError, setManualError] = useState<string>()
+
+  const openResource = useCallback(
+    (resourceMfid: string) => {
+      setOpen(false)
+      setMode("scanner")
+      setManualValue("")
+      setManualError(undefined)
+      void navigate({
+        params: { resourceMfid },
+        search: {},
+        state: { forceResourceApiResolution: true },
+        to: "/resources/$resourceMfid",
+      })
+    },
+    [navigate]
+  )
+
+  function changeOpen(nextOpen: boolean) {
+    setOpen(nextOpen)
+    if (!nextOpen) {
+      setMode("scanner")
+      setManualValue("")
+      setManualError(undefined)
+    }
+  }
+
+  function submitManualValue(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const mfid = extractMfidFromQrCode(manualValue, window.location.hostname)
+    if (!mfid) {
+      setManualError("Enter a complete MFID or a recognized Crucible link.")
+      return
+    }
+    openResource(mfid)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={changeOpen}>
+      <Tooltip>
+        <TooltipTrigger render={<span className="inline-flex" />}>
+          <DialogTrigger
+            render={
+              <Button aria-label="Scan QR code" size="icon" variant="outline" />
+            }
+          >
+            <ScanQrCodeIcon aria-hidden="true" />
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Scan QR code</TooltipContent>
+      </Tooltip>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>
+            {mode === "scanner" ? "Scan a Crucible code" : "Open by MFID"}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === "scanner"
+              ? "Use your camera to open the resource identified by an MFID QR code."
+              : "Enter a complete MFID or paste a recognized Crucible resource link."}
+          </DialogDescription>
+        </DialogHeader>
+        {mode === "scanner" ? (
+          <QrCodeScanner
+            onBack={() => setMode("manual")}
+            onMfid={openResource}
+          />
+        ) : (
+          <form className="grid gap-3" onSubmit={submitManualValue}>
+            <label className="sr-only" htmlFor="scanner-manual-mfid">
+              MFID or Crucible link
+            </label>
+            <Input
+              autoComplete="off"
+              autoFocus
+              id="scanner-manual-mfid"
+              maxLength={500}
+              onChange={(event) => {
+                setManualValue(event.target.value)
+                setManualError(undefined)
+              }}
+              placeholder="MFID or Crucible link"
+              required
+              value={manualValue}
+            />
+            {manualError ? (
+              <p className="text-body text-destructive" role="alert">
+                {manualError}
+              </p>
+            ) : null}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="submit">Open resource</Button>
+              <Button
+                onClick={() => setMode("scanner")}
+                type="button"
+                variant="outline"
+              >
+                <ScanQrCodeIcon aria-hidden="true" />
+                Use camera
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}

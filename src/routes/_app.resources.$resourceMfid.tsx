@@ -3,16 +3,23 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { preloadResourceDetail } from "@/features/resource-detail/resource-detail-page"
 
+declare module "@tanstack/react-router" {
+  interface HistoryState {
+    forceResourceApiResolution?: boolean
+  }
+}
+
 export const Route = createFileRoute("/_app/resources/$resourceMfid")({
   validateSearch: resourceDetailSearchSchema,
-  loader: async ({ context, params, parentMatchPromise }) => {
+  loader: async ({ context, location, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
     const resource = await preloadResourceDetail(
       context.queryClient,
       source.scope,
-      params.resourceMfid
+      params.resourceMfid,
+      location.state.forceResourceApiResolution === true
     )
     if (!resource) throw notFound()
     if (resource.kind === "sample") {

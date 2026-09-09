@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
-import { ScanQrCodeIcon, SearchIcon } from "@/components/crucible/icons"
-import { QrCodeScanner } from "@/components/crucible/qr-code-scanner"
+import { SearchIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -17,7 +16,6 @@ import { Input } from "@/components/ui/input"
 export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState<"search" | "scanner">("search")
   const [query, setQuery] = useState("")
   const [searchScope, setSearchScope] = useState<"global" | "project">("global")
 
@@ -52,26 +50,8 @@ export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
     })
   }
 
-  const openScannedResource = useCallback(
-    (resourceMfid: string) => {
-      setOpen(false)
-      setMode("search")
-      void navigate({
-        params: { resourceMfid },
-        search: {},
-        to: "/resources/$resourceMfid",
-      })
-    },
-    [navigate]
-  )
-
-  function changeOpen(nextOpen: boolean) {
-    setOpen(nextOpen)
-    if (!nextOpen) setMode("search")
-  }
-
   return (
-    <Dialog open={open} onOpenChange={changeOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         onClick={() => setSearchScope("global")}
         render={
@@ -93,56 +73,34 @@ export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>
-            {mode === "scanner"
-              ? "Scan a Crucible code"
-              : searchScope === "project"
-                ? "Search project data"
-                : "Search Crucible"}
+            {searchScope === "project"
+              ? "Search project data"
+              : "Search Crucible"}
           </DialogTitle>
           <DialogDescription>
-            {mode === "scanner"
-              ? "Use your camera to open the resource identified by an MFID QR code."
-              : searchScope === "project"
-                ? "Find samples and datasets related to this project by name."
-                : "Find projects, instruments, samples, and datasets by name or enter a complete MFID."}
+            {searchScope === "project"
+              ? "Find samples and datasets related to this project by name."
+              : "Find projects, instruments, samples, and datasets by name or enter a complete MFID."}
           </DialogDescription>
         </DialogHeader>
-        {mode === "scanner" ? (
-          <QrCodeScanner
-            onBack={() => setMode("search")}
-            onMfid={openScannedResource}
+        <form className="flex gap-2" onSubmit={submit}>
+          <label className="sr-only" htmlFor="global-search-query">
+            Search query
+          </label>
+          <Input
+            autoComplete="off"
+            autoFocus
+            id="global-search-query"
+            maxLength={200}
+            minLength={3}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Enter at least 3 characters"
+            required
+            type="search"
+            value={query}
           />
-        ) : (
-          <div className="grid gap-2">
-            <form className="flex gap-2" onSubmit={submit}>
-              <label className="sr-only" htmlFor="global-search-query">
-                Search query
-              </label>
-              <Input
-                autoComplete="off"
-                autoFocus
-                id="global-search-query"
-                maxLength={200}
-                minLength={3}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Enter at least 3 characters"
-                required
-                type="search"
-                value={query}
-              />
-              <Button type="submit">Search</Button>
-            </form>
-            <Button
-              className="w-full"
-              onClick={() => setMode("scanner")}
-              type="button"
-              variant="outline"
-            >
-              <ScanQrCodeIcon aria-hidden="true" />
-              Scan QR code
-            </Button>
-          </div>
-        )}
+          <Button type="submit">Search</Button>
+        </form>
       </DialogContent>
     </Dialog>
   )
