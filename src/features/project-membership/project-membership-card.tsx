@@ -1,15 +1,12 @@
 import { useEffect, useId, useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 
 import {
   ProjectRoleBadge,
   sortProjectMembers,
 } from "@/components/crucible/project-members"
 import { PersonLink } from "@/components/crucible/person-link"
-import {
-  PersonIdentity,
-  personDisplayName,
-} from "@/components/crucible/person-identity"
+import { personDisplayName } from "@/components/crucible/person-identity"
 import {
   AddMemberIcon,
   EditMembersIcon,
@@ -17,6 +14,7 @@ import {
   SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,13 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Tooltip,
@@ -66,7 +58,6 @@ import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
-import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type { components } from "@/generated/crucible-api"
 import type {
   WorkspaceProject,
@@ -114,13 +105,6 @@ export function ProjectMembershipCard({
   const canManageMembers = Boolean(
     members !== null && (canManage || capabilities?.can_transfer)
   )
-  const normalizedQuery = personQuery.trim()
-  const search = useQuery({
-    ...searchQueryOptions(scope, normalizedQuery, ["person"]),
-    enabled: addOpen && normalizedQuery.length >= 3,
-  })
-  const personResults =
-    search.data?.groups.find((group) => group.kind === "person")?.items ?? []
   const memberList = members ?? []
   const mutationPending = pendingMember !== undefined
 
@@ -405,23 +389,17 @@ export function ProjectMembershipCard({
             </DialogDescription>
           </DialogHeader>
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor={searchInputId}>Search people</FieldLabel>
-              <Input
-                autoComplete="off"
-                id={searchInputId}
-                onChange={(event) => {
-                  setPersonQuery(event.target.value)
-                  setSelectedPerson(undefined)
-                }}
-                placeholder="Name or identifier"
-                type="search"
-                value={personQuery}
-              />
-              <FieldDescription>
-                Enter at least 3 characters to search.
-              </FieldDescription>
-            </Field>
+            <ResourceSearchCombobox
+              disabled={mutationPending}
+              excludedIds={memberList.map((member) => member.unique_id)}
+              id={searchInputId}
+              kind="person"
+              onQueryChange={setPersonQuery}
+              onValueChange={setSelectedPerson}
+              query={personQuery}
+              scope={scope}
+              value={selectedPerson}
+            />
             <Field>
               <FieldLabel htmlFor={roleInputId}>Project role</FieldLabel>
               <NativeSelect
@@ -441,85 +419,6 @@ export function ProjectMembershipCard({
               </NativeSelect>
             </Field>
           </FieldGroup>
-          {normalizedQuery.length < 3 ? null : search.isPending ||
-            search.isPlaceholderData ? (
-            <p className="text-body text-muted-foreground" role="status">
-              Searching people…
-            </p>
-          ) : search.isError ? (
-            <p className="text-body text-destructive" role="alert">
-              People could not be searched.
-            </p>
-          ) : personResults.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              No people matched this search.
-            </p>
-          ) : (
-            <ul
-              aria-label="People search results"
-              className="flex flex-col gap-1"
-            >
-              {personResults.map((person) => {
-                const existingMember = memberList.some(
-                  (member) => member.unique_id === person.unique_id
-                )
-                return (
-                  <li key={person.unique_id}>
-                    <Button
-                      aria-label={`Select ${person.name}`}
-                      aria-pressed={
-                        selectedPerson?.unique_id === person.unique_id
-                      }
-                      disabled={existingMember || mutationPending}
-                      onClick={() => setSelectedPerson(person)}
-                      size="selection"
-                      type="button"
-                      variant={
-                        selectedPerson?.unique_id === person.unique_id
-                          ? "secondary"
-                          : "ghost"
-                      }
-                    >
-                      {pendingMember === person.unique_id ? (
-                        <SavingChangesIcon
-                          aria-hidden="true"
-                          className="motion-safe:animate-spin"
-                          data-icon="inline-start"
-                        />
-                      ) : (
-                        <ResourceTypeIcon
-                          data-icon="inline-start"
-                          type="person"
-                        />
-                      )}
-                      <span className="min-w-0 text-left">
-                        <PersonIdentity
-                          person={person}
-                          presentation="stacked"
-                        />
-                        {existingMember ? (
-                          <span className="block text-supporting text-muted-foreground">
-                            Already a member
-                          </span>
-                        ) : null}
-                      </span>
-                    </Button>
-                    {memberErrors[person.unique_id] ? (
-                      <p className="text-body text-destructive" role="alert">
-                        {memberErrors[person.unique_id]}
-                      </p>
-                    ) : null}
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-          {selectedPerson ? (
-            <p className="text-body">
-              {selectedPerson.name} will be added as{" "}
-              {roleLabel(selectedRole).toLowerCase()}.
-            </p>
-          ) : null}
           <DialogFooter>
             <Button
               disabled={mutationPending}
@@ -542,9 +441,7 @@ export function ProjectMembershipCard({
                   className="motion-safe:animate-spin"
                   data-icon="inline-start"
                 />
-              ) : (
-                <AddMemberIcon aria-hidden="true" data-icon="inline-start" />
-              )}
+              ) : null}
               Add member
             </Button>
           </DialogFooter>

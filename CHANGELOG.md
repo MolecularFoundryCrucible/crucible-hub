@@ -63,6 +63,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Standardized resource and person pickers on debounced autocomplete with anchored suggestion overlays, keyboard selection, and compact text-only confirmation actions that do not move as results change; reversible public-access confirmations now support Close, Escape, and outside-click dismissal.
 - Tightened the project Lead column and standardized every resource collection on a 12rem Updated column immediately before the trailing Open action.
 - Standardized person identity across account, profile, directory, membership, ownership, access, operator, inspector, and search surfaces with shared inline, stacked, and avatar presentations plus consistent profile hover and click behavior.
 - Replaced oversized project and instrument collection cards with compact responsive directories using linked identity, relevant ownership and location context, normalized unavailable values, and stable trailing navigation.

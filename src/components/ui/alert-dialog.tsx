@@ -75,7 +75,7 @@ function AlertDialogFooter({
   return (
     <div
       className={cn(
-        "sticky bottom-0 -mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted p-4 sm:flex-row sm:justify-end",
+        "sticky bottom-0 flex flex-col-reverse gap-2 border-t bg-popover/95 pt-3 backdrop-blur-sm sm:flex-row sm:justify-end",
         className
       )}
       data-slot="alert-dialog-footer"

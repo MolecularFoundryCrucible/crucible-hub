@@ -1,11 +1,9 @@
 import { useId, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { SavingChangesIcon } from "@/components/crucible/icons"
-import {
-  PersonIdentity,
-  personDisplayName,
-} from "@/components/crucible/person-identity"
+import { personDisplayName } from "@/components/crucible/person-identity"
+import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 
 import {
   AlertDialog,
@@ -33,8 +31,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -44,7 +40,6 @@ import {
 } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
-import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type {
   WorkspaceOwnershipTransfer,
   WorkspaceProject,
@@ -71,13 +66,6 @@ export function OwnershipTransferCard({
   const [personQuery, setPersonQuery] = useState("")
   const [preview, setPreview] = useState<WorkspaceOwnershipTransfer>()
   const [error, setError] = useState<string>()
-  const normalizedQuery = personQuery.trim()
-  const search = useQuery({
-    ...searchQueryOptions(scope, normalizedQuery, ["person"]),
-    enabled: chooserOpen && normalizedQuery.length >= 3,
-  })
-  const people =
-    search.data?.groups.find((group) => group.kind === "person")?.items ?? []
   const previewMutation = useMutation({
     mutationFn: async (newOwner: string) =>
       unwrapHubResult(
@@ -212,64 +200,21 @@ export function OwnershipTransferCard({
               Search for a person and select a candidate for server preview.
             </DialogDescription>
           </DialogHeader>
-          <Field>
-            <FieldLabel htmlFor={searchInputId}>Search people</FieldLabel>
-            <Input
-              autoComplete="off"
-              id={searchInputId}
-              onChange={(event) => setPersonQuery(event.target.value)}
-              placeholder="Name or identifier"
-              type="search"
-              value={personQuery}
-            />
-          </Field>
-          {normalizedQuery.length < 3 ? null : search.isPending ||
-            search.isPlaceholderData ? (
-            <p className="text-body text-muted-foreground" role="status">
-              Searching people...
-            </p>
-          ) : search.isError ? (
-            <p className="text-body text-destructive" role="alert">
-              People could not be searched.
-            </p>
-          ) : people.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              No people matched this search.
-            </p>
-          ) : (
-            <ul
-              aria-label="People search results"
-              className="flex flex-col gap-1"
-            >
-              {people.map((person) => {
-                const isCurrentOwner =
-                  person.unique_id === resource.owner?.unique_id
-                return (
-                  <li key={person.unique_id}>
-                    <Button
-                      disabled={previewMutation.isPending || isCurrentOwner}
-                      onClick={() => void choosePerson(person)}
-                      size="selection"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <span className="min-w-0 text-left">
-                        <PersonIdentity
-                          person={person}
-                          presentation="stacked"
-                        />
-                        {isCurrentOwner ? (
-                          <span className="block text-supporting text-muted-foreground">
-                            Current owner
-                          </span>
-                        ) : null}
-                      </span>
-                    </Button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+          <ResourceSearchCombobox
+            disabled={previewMutation.isPending}
+            excludedIds={
+              resource.owner?.unique_id ? [resource.owner.unique_id] : []
+            }
+            id={searchInputId}
+            kind="person"
+            onQueryChange={setPersonQuery}
+            onValueChange={(person) => {
+              if (person) void choosePerson(person)
+            }}
+            query={personQuery}
+            scope={scope}
+            value={undefined}
+          />
           {error && chooserOpen ? (
             <p className="text-body text-destructive" role="alert">
               {error}

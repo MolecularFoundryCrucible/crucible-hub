@@ -1,7 +1,8 @@
 import { useId, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { SavingChangesIcon } from "@/components/crucible/icons"
+import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 
 import {
   AlertDialog,
@@ -29,8 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { resourceAccessQueryOptions } from "@/data/crucible/access.queries"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
@@ -41,7 +40,6 @@ import {
 } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
-import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type {
   WorkspaceProjectReassignment,
   WorkspaceResourceAccessGrant,
@@ -75,13 +73,6 @@ export function ProjectAssignmentCard({
   const [selectedProject, setSelectedProject] =
     useState<WorkspaceSearchResult>()
   const [error, setError] = useState<string>()
-  const normalizedQuery = projectQuery.trim()
-  const search = useQuery({
-    ...searchQueryOptions(scope, normalizedQuery, ["project"]),
-    enabled: chooserOpen && normalizedQuery.length >= 3,
-  })
-  const projects =
-    search.data?.groups.find((group) => group.kind === "project")?.items ?? []
   const previewMutation = useMutation({
     mutationFn: async (projectMfid: string) =>
       unwrapHubResult(
@@ -239,64 +230,21 @@ export function ProjectAssignmentCard({
               Search for a project and select a candidate for server preview.
             </DialogDescription>
           </DialogHeader>
-          <Field>
-            <FieldLabel htmlFor={searchInputId}>Search projects</FieldLabel>
-            <Input
-              autoComplete="off"
-              id={searchInputId}
-              onChange={(event) => setProjectQuery(event.target.value)}
-              placeholder="Project name or identifier"
-              type="search"
-              value={projectQuery}
-            />
-          </Field>
-          {normalizedQuery.length < 3 ? null : search.isPending ||
-            search.isPlaceholderData ? (
-            <p className="text-body text-muted-foreground" role="status">
-              Searching projects...
-            </p>
-          ) : search.isError ? (
-            <p className="text-body text-destructive" role="alert">
-              Projects could not be searched.
-            </p>
-          ) : projects.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              No projects matched this search.
-            </p>
-          ) : (
-            <ul
-              aria-label="Project search results"
-              className="flex flex-col gap-1"
-            >
-              {projects.map((project) => {
-                const isCurrentProject =
-                  project.unique_id === resource.project?.unique_id
-                return (
-                  <li key={project.unique_id}>
-                    <Button
-                      disabled={previewMutation.isPending || isCurrentProject}
-                      onClick={() => void chooseProject(project)}
-                      size="selection"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <span className="text-left">
-                        <span className="block text-label">
-                          {project.name}
-                          {isCurrentProject ? " (current project)" : ""}
-                        </span>
-                        {project.context ? (
-                          <span className="block text-supporting text-muted-foreground">
-                            {project.context}
-                          </span>
-                        ) : null}
-                      </span>
-                    </Button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+          <ResourceSearchCombobox
+            disabled={previewMutation.isPending}
+            excludedIds={
+              resource.project?.unique_id ? [resource.project.unique_id] : []
+            }
+            id={searchInputId}
+            kind="project"
+            onQueryChange={setProjectQuery}
+            onValueChange={(project) => {
+              if (project) void chooseProject(project)
+            }}
+            query={projectQuery}
+            scope={scope}
+            value={undefined}
+          />
           {error && chooserOpen ? (
             <p className="text-body text-destructive" role="alert">
               {error}

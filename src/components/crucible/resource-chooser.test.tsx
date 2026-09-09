@@ -85,7 +85,7 @@ describe("ResourceChooser", () => {
     vi.mocked(getWorkspaceSearch).mockReset()
   })
 
-  it("searches only after a valid explicit submission and confirms a result", async () => {
+  it("searches automatically after three characters and confirms a result", async () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(
       response("instrument", [instrument])
     )
@@ -96,15 +96,9 @@ describe("ResourceChooser", () => {
     fireEvent.change(input, { target: { value: "be" } })
     expect(getWorkspaceSearch).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole("button", { name: "Search" }))
-    expect(screen.getByRole("alert").textContent).toBe(
-      "Enter at least 3 characters."
-    )
     expect(getWorkspaceSearch).not.toHaveBeenCalled()
 
     fireEvent.change(input, { target: { value: "beam" } })
-    expect(getWorkspaceSearch).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole("button", { name: "Search" }))
 
     await waitFor(() =>
       expect(getWorkspaceSearch).toHaveBeenCalledWith(
@@ -121,11 +115,7 @@ describe("ResourceChooser", () => {
     expect(await screen.findByText("Synchrotron beamline")).toBeTruthy()
     expect(screen.getByText(instrument.unique_id)).toBeTruthy()
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "Select instrument: Beamline 5.3.2",
-      })
-    )
+    fireEvent.click(screen.getByRole("option", { name: /Beamline 5.3.2/ }))
     expect(onChange).toHaveBeenCalledWith(instrument)
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
 
@@ -154,8 +144,6 @@ describe("ResourceChooser", () => {
       screen.getByRole("searchbox", { name: "Search projects" }),
       { target: { value: "catalyst" } }
     )
-    fireEvent.click(screen.getByRole("button", { name: "Search" }))
-
     expect((await screen.findByRole("status")).textContent).toBe(
       "Searching projects…"
     )
@@ -175,10 +163,8 @@ describe("ResourceChooser", () => {
       screen.getByRole("searchbox", { name: "Search projects" }),
       { target: { value: "missing" } }
     )
-    fireEvent.click(screen.getByRole("button", { name: "Search" }))
-
     expect(
-      await screen.findByText("No projects matched this search.")
+      await screen.findByText("No available projects matched this search.")
     ).toBeTruthy()
     expect(onChange).not.toHaveBeenCalled()
   })
@@ -207,12 +193,8 @@ describe("ResourceChooser", () => {
     fireEvent.change(screen.getByRole("searchbox", { name: "Search people" }), {
       target: { value: "ada" },
     })
-    fireEvent.click(screen.getByRole("button", { name: "Search" }))
-
     expect(await screen.findByText("Ada Lovelace")).toBeTruthy()
-    fireEvent.click(
-      screen.getByRole("button", { name: "Select person: Ada Lovelace" })
-    )
+    fireEvent.click(screen.getByRole("option", { name: /Ada Lovelace/ }))
     expect(onChange).toHaveBeenCalledWith(person)
   })
 })

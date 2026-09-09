@@ -486,9 +486,7 @@ export function InstrumentOperatorsCard({
                   className="motion-safe:animate-spin"
                   data-icon="inline-start"
                 />
-              ) : (
-                <RemoveMemberIcon data-icon="inline-start" />
-              )}
+              ) : null}
               Remove operator
             </AlertDialogAction>
           </AlertDialogFooter>

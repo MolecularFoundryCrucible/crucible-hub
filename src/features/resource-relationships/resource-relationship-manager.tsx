@@ -1,5 +1,5 @@
 import { useId, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/components/crucible/icons"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceName } from "@/components/crucible/resource-name"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,11 +42,9 @@ import {
 import {
   Field,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Tooltip,
@@ -63,7 +61,6 @@ import {
 import { mutateWorkspaceResourceRelationship } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
-import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type {
   WorkspaceLinkedResource,
   WorkspaceRelationshipMutationResult,
@@ -311,12 +308,7 @@ export function ResourceRelationshipManager({
                   className="motion-safe:animate-spin"
                   data-icon="inline-start"
                 />
-              ) : (
-                <UnlinkRelationshipIcon
-                  aria-hidden="true"
-                  data-icon="inline-start"
-                />
-              )}
+              ) : null}
               {unlinkMutation.isPending ? "Unlinking" : "Unlink"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -381,34 +373,18 @@ function AddRelationshipDialog({
   const [relationshipType, setRelationshipType] =
     useState<WorkspaceRelationshipType | null>(null)
   const [query, setQuery] = useState("")
-  const [submitted, setSubmitted] = useState("")
   const [selected, setSelected] = useState<WorkspaceSearchResult>()
   const [validationError, setValidationError] = useState<string>()
   const [mutationError, setMutationError] = useState<string>()
   const choice = choices[choiceIndex] ?? choices[0]
-  const search = useQuery({
-    ...searchQueryOptions(scope, submitted, [choice.targetKind]),
-    enabled: open && submitted.length >= 3,
-  })
-  const group = search.data?.groups.find(
-    (candidate) => candidate.kind === choice.targetKind
-  )
-  const existing = new Set(
+  const existing =
     resource.links
       ?.filter(
         (link) =>
           link.relationship === choice.relationship &&
           link.resource_type === choice.targetKind
       )
-      .map((link) => link.unique_id)
-  )
-  const results =
-    group?.items.filter(
-      (item) =>
-        item.kind === choice.targetKind &&
-        item.unique_id !== resource.unique_id &&
-        !existing.has(item.unique_id)
-    ) ?? []
+      .map((link) => link.unique_id) ?? []
   const mutation = useMutation({
     mutationFn: async (target: WorkspaceSearchResult) =>
       unwrapHubResult(
@@ -433,7 +409,6 @@ function AddRelationshipDialog({
     setChoiceIndex(0)
     setRelationshipType(null)
     setQuery("")
-    setSubmitted("")
     setSelected(undefined)
     setValidationError(undefined)
     setMutationError(undefined)
@@ -443,24 +418,6 @@ function AddRelationshipDialog({
     if (mutation.isPending) return
     onOpenChange(nextOpen)
     if (!nextOpen) reset()
-  }
-
-  function runSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const nextQuery = query.trim()
-    if (nextQuery.length < 3) {
-      setSubmitted("")
-      setValidationError("Enter at least 3 characters.")
-      return
-    }
-    setValidationError(undefined)
-    setSelected(undefined)
-    setMutationError(undefined)
-    if (nextQuery === submitted) {
-      void search.refetch()
-    } else {
-      setSubmitted(nextQuery)
-    }
   }
 
   async function add() {
@@ -498,7 +455,7 @@ function AddRelationshipDialog({
               onChange={(event) => {
                 setChoiceIndex(Number(event.target.value))
                 setRelationshipType(null)
-                setSubmitted("")
+                setQuery("")
                 setSelected(undefined)
                 setValidationError(undefined)
                 setMutationError(undefined)
@@ -544,101 +501,25 @@ function AddRelationshipDialog({
               </FieldDescription>
             </Field>
           )}
-          <form onSubmit={runSearch}>
-            <FieldGroup className="sm:flex-row sm:items-end">
-              <Field
-                className="min-w-0 flex-1"
-                data-invalid={Boolean(validationError)}
-              >
-                <FieldLabel htmlFor={inputId}>
-                  Search {choice.targetKind}s
-                </FieldLabel>
-                <Input
-                  aria-invalid={Boolean(validationError) || undefined}
-                  autoComplete="off"
-                  disabled={mutation.isPending}
-                  id={inputId}
-                  minLength={3}
-                  onChange={(event) => {
-                    setQuery(event.target.value)
-                    setSubmitted("")
-                    setSelected(undefined)
-                    setValidationError(undefined)
-                    setMutationError(undefined)
-                  }}
-                  required
-                  type="search"
-                  value={query}
-                />
-                <FieldDescription>
-                  Enter at least 3 characters.
-                </FieldDescription>
-                {validationError ? (
-                  <FieldError>{validationError}</FieldError>
-                ) : null}
-              </Field>
-              <Button
-                disabled={mutation.isPending}
-                type="submit"
-                variant="outline"
-              >
-                Search
-              </Button>
-            </FieldGroup>
-          </form>
-          {!submitted ? null : search.isPending || search.isPlaceholderData ? (
-            <p className="text-body text-muted-foreground" role="status">
-              Searching {choice.targetKind}s...
-            </p>
-          ) : search.isError || group?.error ? (
-            <p className="text-body text-destructive" role="alert">
-              {choice.targetKind === "sample" ? "Samples" : "Datasets"} could
-              not be searched.
-            </p>
-          ) : results.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              No available {choice.targetKind}s matched this search.
-            </p>
-          ) : (
-            <ul aria-label={`${choice.targetKind} search results`}>
-              {results.map((item) => (
-                <li className="border-b last:border-0" key={item.unique_id}>
-                  <Button
-                    aria-pressed={selected?.unique_id === item.unique_id}
-                    disabled={mutation.isPending}
-                    onClick={() => {
-                      setSelected(item)
-                      setValidationError(undefined)
-                      setMutationError(undefined)
-                    }}
-                    size="selection"
-                    type="button"
-                    variant={
-                      selected?.unique_id === item.unique_id
-                        ? "secondary"
-                        : "ghost"
-                    }
-                  >
-                    <ResourceTypeIcon
-                      data-icon="inline-start"
-                      type={item.kind}
-                    />
-                    <span className="min-w-0 text-left">
-                      <span className="block text-label">{item.name}</span>
-                      {item.context ? (
-                        <span className="block text-supporting text-muted-foreground">
-                          {item.context}
-                        </span>
-                      ) : null}
-                      <span className="block font-mono text-identifier break-all text-muted-foreground">
-                        {item.unique_id}
-                      </span>
-                    </span>
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ResourceSearchCombobox
+            disabled={mutation.isPending}
+            excludedIds={[resource.unique_id, ...existing]}
+            id={inputId}
+            kind={choice.targetKind}
+            onQueryChange={(nextQuery) => {
+              setQuery(nextQuery)
+              setValidationError(undefined)
+              setMutationError(undefined)
+            }}
+            onValueChange={(item) => {
+              setSelected(item)
+              setValidationError(undefined)
+              setMutationError(undefined)
+            }}
+            query={query}
+            scope={scope}
+            value={selected}
+          />
           {selected ? (
             <p className="text-body">
               <LinkConfirmation
@@ -652,6 +533,11 @@ function AddRelationshipDialog({
           {mutationError ? (
             <p className="text-body text-destructive" role="alert">
               {mutationError}
+            </p>
+          ) : null}
+          {validationError ? (
+            <p className="text-body text-destructive" role="alert">
+              {validationError}
             </p>
           ) : null}
         </FieldGroup>
@@ -675,12 +561,7 @@ function AddRelationshipDialog({
                 className="motion-safe:animate-spin"
                 data-icon="inline-start"
               />
-            ) : (
-              <AddRelationshipIcon
-                aria-hidden="true"
-                data-icon="inline-start"
-              />
-            )}
+            ) : null}
             {mutation.isPending ? "Adding" : "Add relationship"}
           </Button>
         </DialogFooter>

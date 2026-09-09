@@ -191,9 +191,7 @@ describe("ProjectMembershipCard", () => {
       target: { value: "editor" },
     })
     const dialog = screen.getByRole("dialog", { name: "Add member" })
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Select Jamie Patel" })
-    )
+    fireEvent.click(within(dialog).getByRole("option", { name: /Jamie Patel/ }))
     fireEvent.click(within(dialog).getByRole("button", { name: "Add member" }))
 
     await waitFor(() =>
@@ -229,8 +227,8 @@ describe("ProjectMembershipCard", () => {
     fireEvent.change(screen.getByRole("searchbox", { name: "Search people" }), {
       target: { value: "jam" },
     })
-    const addResult = await screen.findByRole("button", {
-      name: "Select Jamie Patel",
+    const addResult = await screen.findByRole("option", {
+      name: /Jamie Patel/,
     })
     fireEvent.click(addResult)
     fireEvent.click(

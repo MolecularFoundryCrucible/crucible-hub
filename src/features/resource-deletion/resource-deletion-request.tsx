@@ -225,12 +225,7 @@ export function ResourceDeletionRequestCard({
                     className="motion-safe:animate-spin"
                     data-icon="inline-start"
                   />
-                ) : (
-                  <RequestDeletionIcon
-                    aria-hidden="true"
-                    data-icon="inline-start"
-                  />
-                )}
+                ) : null}
                 Submit request
               </Button>
             </DialogFooter>

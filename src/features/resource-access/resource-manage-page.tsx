@@ -23,8 +23,8 @@ import {
   RevokeAccessGrantIcon,
 } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
-import { PersonIdentity } from "@/components/crucible/person-identity"
 import { ResourceName } from "@/components/crucible/resource-name"
+import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   AlertDialog,
@@ -59,14 +59,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -85,7 +78,6 @@ import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
-import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type {
   WorkspaceResourceAccessGrant,
   WorkspaceResourceAccessPrincipalKind,
@@ -625,30 +617,25 @@ function ManagedResourceAccess({
                   className="motion-safe:animate-spin"
                   data-icon="inline-start"
                 />
-              ) : (
-                <RevokeAccessGrantIcon
-                  aria-hidden="true"
-                  data-icon="inline-start"
-                />
-              )}
+              ) : null}
               Revoke access
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog
+      <Dialog
         onOpenChange={(open) => {
           if (mutationPending) return
           if (!open) setPendingPublic(undefined)
         }}
         open={pendingPublic !== undefined}
       >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+        <DialogContent showCloseButton={!mutationPending}>
+          <DialogHeader>
+            <DialogTitle>
               {pendingPublic ? "Publish resource?" : "Make resource private?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
+            </DialogTitle>
+            <DialogDescription>
               {pendingPublic ? (
                 <>
                   <ResourceName>{resource.name}</ResourceName> will be available
@@ -660,25 +647,30 @@ function ManagedResourceAccess({
                   publicly available.
                 </>
               )}
-            </AlertDialogDescription>
+            </DialogDescription>
             {error?.surface === "public" ? (
               <p className="text-body text-destructive" role="alert">
                 {error.message}
               </p>
             ) : null}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={mutationPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
+          </DialogHeader>
+          <DialogFooter>
+            <Button
               disabled={mutationPending}
-              onClick={(event) => {
-                event.preventDefault()
+              onClick={() => setPendingPublic(undefined)}
+              type="button"
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={mutationPending}
+              onClick={() => {
                 if (pendingPublic !== undefined) {
                   void changePublicAccess(pendingPublic)
                 }
               }}
+              type="button"
             >
               {mutationPending ? (
                 <AccessPendingIcon
@@ -688,10 +680,10 @@ function ManagedResourceAccess({
                 />
               ) : null}
               {pendingPublic ? "Publish" : "Make private"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
@@ -726,25 +718,13 @@ function AddAccessDialog({
   const roleInputId = useId()
   const [principalIndex, setPrincipalIndex] = useState(0)
   const [query, setQuery] = useState("")
-  const [submitted, setSubmitted] = useState("")
   const [role, setRole] = useState<GrantRole>(defaultGrantRole(roles))
   const [selected, setSelected] = useState<WorkspaceSearchResult>()
   const [validationError, setValidationError] = useState<string>()
   const choice = principalChoices[principalIndex] ?? principalChoices[0]
-  const search = useQuery({
-    ...searchQueryOptions(scope, submitted, [choice.searchKind]),
-    enabled: open && submitted.length >= 3,
-  })
-  const group = search.data?.groups.find(
-    (candidate) => candidate.kind === choice.searchKind
-  )
-  const existing = new Set(
-    existingGrants
-      .filter((grant) => principalKindFor(grant) === choice.kind)
-      .map((grant) => grant.principal_id)
-  )
-  const results =
-    group?.items.filter((item) => !existing.has(item.unique_id)) ?? []
+  const existing = existingGrants
+    .filter((grant) => principalKindFor(grant) === choice.kind)
+    .map((grant) => grant.principal_id)
 
   useEffect(() => {
     if (!open) reset()
@@ -757,7 +737,6 @@ function AddAccessDialog({
   function reset() {
     setPrincipalIndex(0)
     setQuery("")
-    setSubmitted("")
     setRole(defaultGrantRole(roles))
     setSelected(undefined)
     setValidationError(undefined)
@@ -766,22 +745,6 @@ function AddAccessDialog({
   function changeOpen(nextOpen: boolean) {
     if (pending) return
     onOpenChange(nextOpen)
-  }
-
-  function runSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const nextQuery = query.trim()
-    if (nextQuery.length < 3) {
-      setValidationError("Enter at least 3 characters.")
-      return
-    }
-    setValidationError(undefined)
-    setSelected(undefined)
-    if (nextQuery === submitted) {
-      void search.refetch()
-    } else {
-      setSubmitted(nextQuery)
-    }
   }
 
   async function addGrant() {
@@ -810,7 +773,7 @@ function AddAccessDialog({
               id={principalInputId}
               onChange={(event) => {
                 setPrincipalIndex(Number(event.target.value))
-                setSubmitted("")
+                setQuery("")
                 setSelected(undefined)
                 setValidationError(undefined)
               }}
@@ -823,48 +786,23 @@ function AddAccessDialog({
               ))}
             </NativeSelect>
           </Field>
-          <form onSubmit={runSearch}>
-            <FieldGroup className="sm:flex-row sm:items-end">
-              <Field
-                className="min-w-0 flex-1"
-                data-invalid={Boolean(validationError)}
-              >
-                <FieldLabel htmlFor={queryInputId}>
-                  Search {choice.label.toLowerCase()}s
-                </FieldLabel>
-                <Input
-                  aria-invalid={Boolean(validationError) || undefined}
-                  autoComplete="off"
-                  disabled={pending}
-                  id={queryInputId}
-                  minLength={3}
-                  onChange={(event) => {
-                    setQuery(event.target.value)
-                    setSubmitted("")
-                    setSelected(undefined)
-                    setValidationError(undefined)
-                  }}
-                  required
-                  type="search"
-                  value={query}
-                />
-                <FieldDescription>
-                  Enter at least 3 characters.
-                </FieldDescription>
-                {validationError ? (
-                  <FieldError>{validationError}</FieldError>
-                ) : null}
-              </Field>
-              <Button
-                className="max-sm:w-full"
-                disabled={pending}
-                type="submit"
-                variant="outline"
-              >
-                Search
-              </Button>
-            </FieldGroup>
-          </form>
+          <ResourceSearchCombobox
+            disabled={pending}
+            excludedIds={existing}
+            id={queryInputId}
+            kind={choice.searchKind}
+            onQueryChange={(nextQuery) => {
+              setQuery(nextQuery)
+              setValidationError(undefined)
+            }}
+            onValueChange={(item) => {
+              setSelected(item)
+              setValidationError(undefined)
+            }}
+            query={query}
+            scope={scope}
+            value={selected}
+          />
           <Field>
             <FieldLabel htmlFor={roleInputId}>Access role</FieldLabel>
             <NativeSelect
@@ -884,68 +822,14 @@ function AddAccessDialog({
               ))}
             </NativeSelect>
           </Field>
-          {!submitted ? null : search.isPending || search.isPlaceholderData ? (
-            <p className="text-body text-muted-foreground" role="status">
-              Searching {choice.label.toLowerCase()}s…
-            </p>
-          ) : search.isError || group?.error ? (
-            <p className="text-body text-destructive" role="alert">
-              {choice.label}s could not be searched.
-            </p>
-          ) : results.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              No available {choice.label.toLowerCase()}s matched this search.
-            </p>
-          ) : (
-            <ul aria-label={`${choice.label} search results`}>
-              {results.map((item) => (
-                <li className="border-b last:border-0" key={item.unique_id}>
-                  <Button
-                    aria-pressed={selected?.unique_id === item.unique_id}
-                    disabled={pending}
-                    onClick={() => {
-                      setSelected(item)
-                      setValidationError(undefined)
-                    }}
-                    size="selection"
-                    type="button"
-                    variant={
-                      selected?.unique_id === item.unique_id
-                        ? "secondary"
-                        : "ghost"
-                    }
-                  >
-                    <span className="min-w-0 text-left">
-                      {item.kind === "person" ? (
-                        <PersonIdentity person={item} presentation="stacked" />
-                      ) : (
-                        <>
-                          <span className="block text-label">{item.name}</span>
-                          {item.context ? (
-                            <span className="block text-supporting text-muted-foreground">
-                              {item.context}
-                            </span>
-                          ) : null}
-                        </>
-                      )}
-                      <span className="block font-mono text-identifier break-all text-muted-foreground">
-                        {item.unique_id}
-                      </span>
-                    </span>
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {selected ? (
-            <p className="text-body">
-              <ResourceName>{selected.name}</ResourceName> will have the{" "}
-              {accessRoleLabel(role).toLowerCase()} role.
-            </p>
-          ) : null}
           {error ? (
             <p className="text-body text-destructive" role="alert">
               {error}
+            </p>
+          ) : null}
+          {validationError ? (
+            <p className="text-body text-destructive" role="alert">
+              {validationError}
             </p>
           ) : null}
         </FieldGroup>
@@ -969,9 +853,7 @@ function AddAccessDialog({
                 className="motion-safe:animate-spin"
                 data-icon="inline-start"
               />
-            ) : (
-              <AddAccessGrantIcon aria-hidden="true" data-icon="inline-start" />
-            )}
+            ) : null}
             Add access
           </Button>
         </DialogFooter>

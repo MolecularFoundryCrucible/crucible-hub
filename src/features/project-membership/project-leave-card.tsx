@@ -163,9 +163,7 @@ export function ProjectLeaveCard({
                   className="motion-safe:animate-spin"
                   data-icon="inline-start"
                 />
-              ) : (
-                <LeaveProjectIcon aria-hidden="true" data-icon="inline-start" />
-              )}
+              ) : null}
               Leave project
             </AlertDialogAction>
           </AlertDialogFooter>

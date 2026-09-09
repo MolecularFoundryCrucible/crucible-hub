@@ -312,12 +312,7 @@ export function InstrumentLifecycleCard({
                   className="motion-safe:animate-spin"
                   data-icon="inline-start"
                 />
-              ) : (
-                <UpdateInstrumentStatusIcon
-                  aria-hidden="true"
-                  data-icon="inline-start"
-                />
-              )}
+              ) : null}
               Decommission
             </AlertDialogAction>
           </AlertDialogFooter>
