@@ -225,7 +225,7 @@ function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                <h2 id="home-projects-title">Projects you can access</h2>
+                <h2 id="home-projects-title">Your projects</h2>
               </CardTitle>
               <CardAction>
                 <Link
