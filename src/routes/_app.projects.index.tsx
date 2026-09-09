@@ -12,7 +12,6 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
-import { PersonIdentity } from "@/components/crucible/person-identity"
 import {
   ResourceOpenCell,
   ResourceUpdatedCell,
@@ -197,29 +196,6 @@ function ProjectCollection({
                   return (
                     <TableRow key={project.unique_id}>
                       <ResourceDirectoryNameCell
-                        details={[
-                          ...(complete && project.organization
-                            ? [
-                                {
-                                  label: "Organization",
-                                  value: project.organization,
-                                },
-                              ]
-                            : []),
-                          ...(complete && project.lead
-                            ? [
-                                {
-                                  label: "Lead",
-                                  value: (
-                                    <PersonIdentity
-                                      nameStyle="abbreviated"
-                                      person={project.lead}
-                                    />
-                                  ),
-                                },
-                              ]
-                            : []),
-                        ]}
                         identifier={title ? project.project_id : null}
                         kind="project"
                         mfid={project.unique_id}

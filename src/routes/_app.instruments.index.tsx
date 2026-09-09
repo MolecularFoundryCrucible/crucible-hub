@@ -12,7 +12,6 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
-import { PersonIdentity } from "@/components/crucible/person-identity"
 import {
   ResourceOpenCell,
   ResourceUpdatedCell,
@@ -265,29 +264,6 @@ function InstrumentCollection({
                   return (
                     <TableRow key={instrument.unique_id}>
                       <ResourceDirectoryNameCell
-                        details={[
-                          ...(instrument.location
-                            ? [
-                                {
-                                  label: "Location",
-                                  value: instrument.location,
-                                },
-                              ]
-                            : []),
-                          ...(instrument.owner
-                            ? [
-                                {
-                                  label: "Owner",
-                                  value: (
-                                    <PersonIdentity
-                                      nameStyle="abbreviated"
-                                      person={instrument.owner}
-                                    />
-                                  ),
-                                },
-                              ]
-                            : []),
-                        ]}
                         identifier={instrumentId}
                         kind="instrument"
                         mfid={instrument.unique_id}

@@ -9,7 +9,6 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
-import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -295,9 +294,6 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
         name={item.name}
         presentation="collection"
         projectId={item.projectId}
-        showTruncationTitle={
-          item.kind !== "project" && item.kind !== "instrument"
-        }
       />
       {item.timestamp ? (
         <time
@@ -316,29 +312,32 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
   if (item.kind === "project") {
     return (
       <li>
-        <ResourceIdentityLink
+        <Link
+          aria-label={"Open " + item.kind + ": " + item.name}
           className={className}
-          context={item.projectId}
-          kind="project"
-          mfid={item.uniqueId}
-          name={item.name}
+          params={{ projectMfid: item.uniqueId }}
+          search={{ preview: undefined }}
+          state={{}}
+          to="/projects/$projectMfid"
         >
           {content}
-        </ResourceIdentityLink>
+        </Link>
       </li>
     )
   }
   if (item.kind === "instrument") {
     return (
       <li>
-        <ResourceIdentityLink
+        <Link
+          aria-label={"Open " + item.kind + ": " + item.name}
           className={className}
-          kind="instrument"
-          mfid={item.uniqueId}
-          name={item.name}
+          params={{ instrumentMfid: item.uniqueId }}
+          search={{}}
+          state={{}}
+          to="/instruments/$instrumentMfid"
         >
           {content}
-        </ResourceIdentityLink>
+        </Link>
       </li>
     )
   }
@@ -375,20 +374,12 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
 
   return (
     <li>
-      <ResourceIdentityLink
+      <Link
         className="group/resource flex min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-        context={project.project_id}
-        details={[
-          ...(details?.organization
-            ? [{ label: "Organization", value: details.organization }]
-            : []),
-          ...(details?.status
-            ? [{ label: "Status", value: details.status }]
-            : []),
-        ]}
-        kind="project"
-        mfid={project.unique_id}
-        name={project.title ?? project.project_id}
+        params={{ projectMfid: project.unique_id }}
+        search={{ preview: undefined }}
+        state={{}}
+        to="/projects/$projectMfid"
       >
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start gap-2">
@@ -399,7 +390,6 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
               kind="project"
               name={project.title ?? project.project_id}
               presentation="collection"
-              showTruncationTitle={false}
             />
             {details?.status && (
               <Badge variant="outline">{details.status}</Badge>
@@ -414,7 +404,7 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
             </time>
           )}
         </div>
-      </ResourceIdentityLink>
+      </Link>
     </li>
   )
 }

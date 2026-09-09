@@ -15,7 +15,6 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
-import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -447,19 +446,37 @@ function SearchResult({
     item.kind === "person" ? (
       <PersonLink person={item} presentation="avatar" size="sm" />
     ) : item.kind === "project" ? (
-      <ResourceIdentityLink
-        context={item.context}
-        kind="project"
-        mfid={item.unique_id}
-        name={item.name}
-      />
+      <Link
+        className="group/resource block min-w-0"
+        params={{ projectMfid: item.unique_id }}
+        search={{ preview: undefined }}
+        state={{}}
+        to="/projects/$projectMfid"
+      >
+        <ResourceIdentity
+          context={item.context}
+          interactive
+          kind="project"
+          name={item.name}
+          presentation="collection"
+        />
+      </Link>
     ) : item.kind === "instrument" ? (
-      <ResourceIdentityLink
-        context={item.context}
-        kind="instrument"
-        mfid={item.unique_id}
-        name={item.name}
-      />
+      <Link
+        className="group/resource block min-w-0"
+        params={{ instrumentMfid: item.unique_id }}
+        search={{}}
+        state={{}}
+        to="/instruments/$instrumentMfid"
+      >
+        <ResourceIdentity
+          context={item.context}
+          interactive
+          kind="instrument"
+          name={item.name}
+          presentation="collection"
+        />
+      </Link>
     ) : item.kind === "sample" ? (
       <Link
         className="group/resource block min-w-0"

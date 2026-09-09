@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react"
+import { Link } from "@tanstack/react-router"
 import {
   useQuery,
   useQueryClient,
@@ -26,7 +27,6 @@ import {
   RevokeAccessGrantIcon,
 } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
-import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -864,26 +864,28 @@ function PrincipalName({ grant }: { grant: WorkspaceResourceAccessGrant }) {
   }
   if (grant.principal_type === "project") {
     return (
-      <ResourceIdentityLink
-        context={grant.slug}
-        kind="project"
-        mfid={grant.principal_id}
-        name={name}
+      <Link
+        className="hover:underline"
+        params={{ projectMfid: grant.principal_id }}
+        search={{ preview: undefined }}
+        state={{}}
+        to="/projects/$projectMfid"
       >
-        <span className="group-hover/resource:underline">{name}</span>
-      </ResourceIdentityLink>
+        {name}
+      </Link>
     )
   }
   if (grant.principal_type === "instrument") {
     return (
-      <ResourceIdentityLink
-        context={grant.slug}
-        kind="instrument"
-        mfid={grant.principal_id}
-        name={name}
+      <Link
+        className="hover:underline"
+        params={{ instrumentMfid: grant.principal_id }}
+        search={{}}
+        state={{}}
+        to="/instruments/$instrumentMfid"
       >
-        <span className="group-hover/resource:underline">{name}</span>
-      </ResourceIdentityLink>
+        {name}
+      </Link>
     )
   }
   return name
