@@ -40,6 +40,7 @@ export function ResourceIdentityLink({
       kind={kind}
       name={name}
       presentation={presentation}
+      showTruncationTitle={false}
     />
   )
   const linkClassName = cn("group/resource block min-w-0", className)

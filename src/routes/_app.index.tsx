@@ -295,6 +295,9 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
         name={item.name}
         presentation="collection"
         projectId={item.projectId}
+        showTruncationTitle={
+          item.kind !== "project" && item.kind !== "instrument"
+        }
       />
       {item.timestamp ? (
         <time
@@ -396,6 +399,7 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
               kind="project"
               name={project.title ?? project.project_id}
               presentation="collection"
+              showTruncationTitle={false}
             />
             {details?.status && (
               <Badge variant="outline">{details.status}</Badge>

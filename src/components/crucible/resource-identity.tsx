@@ -15,6 +15,7 @@ export function ResourceIdentity({
   name,
   presentation = "stacked",
   projectId,
+  showTruncationTitle = true,
 }: {
   className?: string
   context?: string | null
@@ -24,6 +25,7 @@ export function ResourceIdentity({
   name: string
   presentation?: ResourceIdentityPresentation
   projectId?: string | null
+  showTruncationTitle?: boolean
 }) {
   const truncate = presentation === "collection"
 
@@ -37,7 +39,7 @@ export function ResourceIdentity({
             truncate ? "truncate" : "wrap-break-word",
             interactive && "group-hover/resource:underline"
           )}
-          title={truncate ? name : undefined}
+          title={truncate && showTruncationTitle ? name : undefined}
           data-directory-name
         >
           {name}
@@ -53,7 +55,9 @@ export function ResourceIdentity({
                 <span className="sr-only">Project ID:</span>
                 <span
                   className={cn("min-w-0", truncate && "truncate")}
-                  title={truncate ? projectId : undefined}
+                  title={
+                    truncate && showTruncationTitle ? projectId : undefined
+                  }
                 >
                   {projectId}
                 </span>
@@ -67,7 +71,7 @@ export function ResourceIdentity({
             {context ? (
               <span
                 className={cn("min-w-0", truncate && "truncate")}
-                title={truncate ? context : undefined}
+                title={truncate && showTruncationTitle ? context : undefined}
               >
                 {context}
               </span>
