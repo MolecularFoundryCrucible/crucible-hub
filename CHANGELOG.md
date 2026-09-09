@@ -111,6 +111,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Fixed
 
+- Normalized timezone-aware PostgreSQL timestamps with space separators, microseconds, or compact UTC offsets into the shared browser-local date and time presentation.
 - Standardized resource and access-principal icons with shared semantic colors, including cyan-teal person identity in Direct access, colored navigation icons, and field-specific Summary and Identity icons.
 - Presented account profiles read-first behind an explicit Edit profile action and restored readable Add member action contrast in light and dark project settings.
 - Improved compact Data readability, creation validation and discard behavior, graph rendering and controls, visible management actions, field error associations, compact creation access, route titles, and fixture browser coverage for creation and consequential mutations.
