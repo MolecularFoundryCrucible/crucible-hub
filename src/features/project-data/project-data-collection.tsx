@@ -314,7 +314,7 @@ function ProjectSampleTable({
             projectId={sample.project_id}
             relation={sample.project_relation}
           />
-          <ResourceOwnerCell username={sample.owner?.username} />
+          <ResourceOwnerCell owner={sample.owner} />
           <ResourceUpdatedCell
             value={sample.modification_time ?? sample.creation_time}
           />
@@ -354,7 +354,7 @@ function ProjectDatasetTable({
             projectId={dataset.project_id}
             relation={dataset.project_relation}
           />
-          <ResourceOwnerCell username={dataset.owner?.username} />
+          <ResourceOwnerCell owner={dataset.owner} />
           <ResourceUpdatedCell
             value={dataset.modification_time ?? dataset.creation_time}
           />
