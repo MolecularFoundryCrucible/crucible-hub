@@ -4,19 +4,8 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import {
-  CancelChangesIcon,
-  SaveChangesIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { EditableCardActions } from "@/components/crucible/editable-card-actions"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
   FieldDescription,
@@ -298,14 +287,13 @@ export function ProjectSettingsForm({
       <SettingsFormCard
         formId={formId}
         isSubmitting={isSubmitting}
-        onCancel={discard.requestCancel}
         onSubmit={(event) => {
           event.preventDefault()
           event.stopPropagation()
           void form.handleSubmit()
         }}
         saveError={saveError}
-        saveAction={
+        actions={
           <form.Subscribe
             selector={(state) => [
               state.canSubmit,
@@ -314,11 +302,12 @@ export function ProjectSettingsForm({
             ]}
           >
             {([canSubmit, formIsDirty, submitting]) => (
-              <SaveButton
+              <EditableCardActions
                 canSubmit={canSubmit}
                 dirty={formIsDirty}
                 formId={formId}
-                submitting={submitting}
+                onCancel={discard.requestCancel}
+                pending={submitting}
               />
             )}
           </form.Subscribe>
@@ -435,14 +424,13 @@ export function InstrumentSettingsForm({
       <SettingsFormCard
         formId={formId}
         isSubmitting={isSubmitting}
-        onCancel={discard.requestCancel}
         onSubmit={(event) => {
           event.preventDefault()
           event.stopPropagation()
           void form.handleSubmit()
         }}
         saveError={saveError}
-        saveAction={
+        actions={
           <form.Subscribe
             selector={(state) => [
               state.canSubmit,
@@ -451,11 +439,12 @@ export function InstrumentSettingsForm({
             ]}
           >
             {([canSubmit, formIsDirty, submitting]) => (
-              <SaveButton
+              <EditableCardActions
                 canSubmit={canSubmit}
                 dirty={formIsDirty}
                 formId={formId}
-                submitting={submitting}
+                onCancel={discard.requestCancel}
+                pending={submitting}
               />
             )}
           </form.Subscribe>
@@ -544,21 +533,19 @@ export function InstrumentSettingsForm({
 }
 
 function SettingsFormCard({
+  actions,
   children,
   formId,
   isSubmitting,
-  onCancel,
   onSubmit,
-  saveAction,
   saveError,
   title,
 }: {
+  actions: ReactNode
   children: ReactNode
   formId: string
   isSubmitting: boolean
-  onCancel: () => void
   onSubmit: FormEventHandler<HTMLFormElement>
-  saveAction: ReactNode
   saveError?: string
   title: string
 }) {
@@ -575,18 +562,7 @@ function SettingsFormCard({
           <SaveError message={saveError} />
         </form>
       </CardContent>
-      <CardFooter className="justify-end gap-2">
-        <Button
-          disabled={isSubmitting}
-          onClick={onCancel}
-          type="button"
-          variant="outline"
-        >
-          <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
-          Cancel
-        </Button>
-        {saveAction}
-      </CardFooter>
+      {actions}
     </Card>
   )
 }
@@ -670,39 +646,6 @@ function SettingsTextAreaField({
       <FieldDescription>Optional</FieldDescription>
       <FieldError errors={field.state.meta.errors} />
     </Field>
-  )
-}
-
-function SaveButton({
-  canSubmit,
-  dirty,
-  formId,
-  submitting,
-}: {
-  canSubmit: boolean
-  dirty: boolean
-  formId: string
-  submitting: boolean
-}) {
-  const label = submitting ? "Saving changes" : "Save changes"
-  return (
-    <Button
-      aria-disabled={!canSubmit || !dirty || submitting}
-      disabled={!canSubmit || !dirty || submitting}
-      form={formId}
-      type="submit"
-    >
-      {submitting ? (
-        <SavingChangesIcon
-          aria-hidden="true"
-          className="motion-safe:animate-spin"
-          data-icon="inline-start"
-        />
-      ) : (
-        <SaveChangesIcon aria-hidden="true" data-icon="inline-start" />
-      )}
-      {label}
-    </Button>
   )
 }
 

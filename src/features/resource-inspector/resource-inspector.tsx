@@ -8,6 +8,11 @@ import {
   CloseInspectorIcon,
   ExploreGraphFocusIcon,
 } from "@/components/crucible/icons"
+import {
+  CollectionRowsPending,
+  PanelState,
+  PanelUpdateError,
+} from "@/components/crucible/collection-state"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
@@ -27,7 +32,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Skeleton } from "@/components/ui/skeleton"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
 import type {
@@ -268,36 +272,19 @@ function InspectorBody({
   resource: WorkspaceResourceDetail | null | undefined
 }) {
   if (query.isPending) {
-    return (
-      <div
-        aria-label="Loading resource details"
-        className="grid gap-3"
-        role="status"
-      >
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="h-5 w-4/5" />
-      </div>
-    )
+    return <CollectionRowsPending label="resource details" />
   }
   if (!resource) {
     return (
-      <div className="flex flex-col items-start gap-3">
-        <p role="alert">
-          {query.isError
+      <PanelState
+        retry={canRetry(query.error) ? () => void query.refetch() : undefined}
+        role="alert"
+        title={
+          query.isError
             ? resourceErrorMessage(query.error)
-            : "This resource is not available in the current workspace."}
-        </p>
-        {canRetry(query.error) && (
-          <Button
-            onClick={() => void query.refetch()}
-            size="sm"
-            variant="outline"
-          >
-            Try again
-          </Button>
-        )}
-      </div>
+            : "This resource is not available in the current workspace"
+        }
+      />
     )
   }
   const hasScientificContext =
@@ -311,24 +298,10 @@ function InspectorBody({
         </p>
       )}
       {query.isError && (
-        <div
-          className="flex flex-wrap items-center justify-between gap-3"
-          role="alert"
-        >
-          <p className="text-body text-muted-foreground">
-            Resource details could not be refreshed. Showing the last available
-            data.
-          </p>
-          {canRetry(query.error) && (
-            <Button
-              onClick={() => void query.refetch()}
-              size="sm"
-              variant="outline"
-            >
-              Try again
-            </Button>
-          )}
-        </div>
+        <PanelUpdateError
+          description="Resource details could not be refreshed. Showing the last available data."
+          retry={canRetry(query.error) ? () => void query.refetch() : undefined}
+        />
       )}
       <InspectorContext resource={resource} />
       {hasScientificContext && (

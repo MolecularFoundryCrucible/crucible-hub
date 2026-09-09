@@ -148,6 +148,14 @@ function scan(directory) {
         `${localPath}: composes MFID typography instead of using MfidText`
       )
     }
+    if (
+      localPath.startsWith("features/") &&
+      content.includes("CancelChangesIcon")
+    ) {
+      violations.push(
+        `${localPath}: composes editable card actions instead of using EditableCardActions`
+      )
+    }
     if (extname(path) === ".tsx") scanButtonUsage(path, localPath, content)
     for (const pattern of patterns) {
       if (pattern.expression.test(content))

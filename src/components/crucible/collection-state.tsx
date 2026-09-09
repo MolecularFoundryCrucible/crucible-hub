@@ -117,3 +117,53 @@ export function CollectionUpdateError({
     </Card>
   )
 }
+
+export function PanelState({
+  description,
+  retry,
+  role,
+  title,
+}: {
+  description?: string
+  retry?: () => void
+  role?: "alert" | "status"
+  title: string
+}) {
+  return (
+    <Empty role={role}>
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description ? (
+          <EmptyDescription>{description}</EmptyDescription>
+        ) : null}
+      </EmptyHeader>
+      {retry ? (
+        <Button onClick={retry} size="sm" variant="outline">
+          Try again
+        </Button>
+      ) : null}
+    </Empty>
+  )
+}
+
+export function PanelUpdateError({
+  description,
+  retry,
+}: {
+  description: string
+  retry?: () => void
+}) {
+  return (
+    <div
+      className="flex flex-wrap items-center justify-between gap-3"
+      role="alert"
+    >
+      <p className="text-body text-muted-foreground">{description}</p>
+      {retry ? (
+        <Button onClick={retry} size="sm" variant="outline">
+          Try again
+        </Button>
+      ) : null}
+    </div>
+  )
+}

@@ -2,11 +2,13 @@ import { useQueries } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { ArrowRightIcon } from "lucide-react"
 
-import { CollectionRowsPending } from "@/components/crucible/collection-state"
+import {
+  CollectionRowsPending,
+  PanelState,
+} from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -17,12 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import {
   datasetsQueryOptions,
@@ -117,12 +113,13 @@ function HomePage() {
                   <CollectionRowsPending label="recent research data" />
                 )}
                 {recentDataUnavailable && (
-                  <HomePanelState
+                  <PanelState
                     description="Projects and navigation remain available."
                     retry={() => {
                       void sampleResult.refetch()
                       void datasetResult.refetch()
                     }}
+                    role="alert"
                     title={
                       sampleResult.isError && datasetResult.isError
                         ? "Recent data could not be loaded"
@@ -133,7 +130,7 @@ function HomePage() {
                 {!recentDataPending &&
                   !recentDataUnavailable &&
                   recentResources.length === 0 && (
-                    <HomePanelState
+                    <PanelState
                       description="New samples and datasets will appear here."
                       title="No data is available yet"
                     />
@@ -245,16 +242,17 @@ function HomePage() {
               {!projectResult.isPending &&
                 projectResult.isError &&
                 !projectResult.data && (
-                  <HomePanelState
+                  <PanelState
                     description="Recent data and navigation remain available."
                     retry={() => void projectResult.refetch()}
+                    role="alert"
                     title="Projects could not be loaded"
                   />
                 )}
               {!projectResult.isPending &&
                 !projectResult.isError &&
                 projects.length === 0 && (
-                  <HomePanelState
+                  <PanelState
                     description="Projects shared with your account will appear here."
                     title="No projects are available yet"
                   />
@@ -374,23 +372,24 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
   return (
     <li>
       <Link
-        className="flex min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+        className="group/resource flex min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
         params={{ projectMfid: project.unique_id }}
         to="/projects/$projectMfid"
       >
-        <ResourceTypeIcon className="mt-0.5 shrink-0" type="project" />
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="min-w-0 truncate text-label">
-              {project.title ?? project.project_id}
-            </p>
+          <div className="flex min-w-0 items-start gap-2">
+            <ResourceIdentity
+              className="flex-1"
+              context={details?.organization ?? project.project_id}
+              interactive
+              kind="project"
+              name={project.title ?? project.project_id}
+              presentation="collection"
+            />
             {details?.status && (
               <Badge variant="outline">{details.status}</Badge>
             )}
           </div>
-          <p className="mt-1 truncate text-body text-muted-foreground">
-            {details?.organization ?? project.project_id}
-          </p>
           {details?.modification_time && (
             <time
               className="mt-1 block text-supporting text-muted-foreground"
@@ -402,30 +401,6 @@ function ProjectLink({ project }: { project: WorkspaceProject }) {
         </div>
       </Link>
     </li>
-  )
-}
-
-function HomePanelState({
-  description,
-  retry,
-  title,
-}: {
-  description: string
-  retry?: () => void
-  title: string
-}) {
-  return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-      {retry && (
-        <Button onClick={retry} size="sm" variant="outline">
-          Try again
-        </Button>
-      )}
-    </Empty>
   )
 }
 

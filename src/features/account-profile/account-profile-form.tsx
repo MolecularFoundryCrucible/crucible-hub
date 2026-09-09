@@ -3,13 +3,9 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import {
-  CancelChangesIcon,
-  EditResourceIcon,
-  SaveChangesIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
 import { ContentBoundary } from "@/components/crucible/content-layout"
+import { EditableCardActions } from "@/components/crucible/editable-card-actions"
+import { EditResourceIcon } from "@/components/crucible/icons"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
@@ -18,7 +14,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -277,46 +272,23 @@ export function AccountProfileForm({
               </p>
             </form>
           </CardContent>
-          <CardFooter className="justify-end gap-2">
-            <Button
-              disabled={isSubmitting}
-              onClick={discard.requestCancel}
-              type="button"
-              variant="outline"
-            >
-              <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
-              Cancel
-            </Button>
-            <form.Subscribe
-              selector={(state) => [
-                state.canSubmit,
-                state.isDirty,
-                state.isSubmitting,
-              ]}
-            >
-              {([canSubmit, dirty, submitting]) => (
-                <Button
-                  disabled={!canSubmit || !dirty || submitting}
-                  form={formId}
-                  type="submit"
-                >
-                  {submitting ? (
-                    <SavingChangesIcon
-                      aria-hidden="true"
-                      className="motion-safe:animate-spin"
-                      data-icon="inline-start"
-                    />
-                  ) : (
-                    <SaveChangesIcon
-                      aria-hidden="true"
-                      data-icon="inline-start"
-                    />
-                  )}
-                  {submitting ? "Saving changes" : "Save changes"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </CardFooter>
+          <form.Subscribe
+            selector={(state) => [
+              state.canSubmit,
+              state.isDirty,
+              state.isSubmitting,
+            ]}
+          >
+            {([canSubmit, dirty, submitting]) => (
+              <EditableCardActions
+                canSubmit={canSubmit}
+                dirty={dirty}
+                formId={formId}
+                onCancel={discard.requestCancel}
+                pending={submitting}
+              />
+            )}
+          </form.Subscribe>
         </Card>
       </ContentBoundary>
       <DiscardChangesDialog {...discard.dialog} />

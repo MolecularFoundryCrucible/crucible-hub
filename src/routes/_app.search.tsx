@@ -14,6 +14,7 @@ import { MfidValue } from "@/components/crucible/mfid-value"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -441,56 +442,60 @@ function SearchResult({
   item: WorkspaceSearchResult
   projectMfid?: string
 }) {
+  const identity =
+    item.kind === "person" ? (
+      <PersonLink person={item} presentation="avatar" size="sm" />
+    ) : (
+      <ResourceIdentity
+        context={item.context}
+        interactive
+        kind={item.kind}
+        name={item.name}
+        presentation="collection"
+      />
+    )
   const link =
     item.kind === "person" ? (
-      <PersonLink person={item} presentation="stacked" />
+      identity
     ) : item.kind === "project" ? (
       <Link
-        className="text-label hover:underline"
+        className="group/resource block min-w-0"
         params={{ projectMfid: item.unique_id }}
         to="/projects/$projectMfid"
       >
-        {item.name}
+        {identity}
       </Link>
     ) : item.kind === "instrument" ? (
       <Link
-        className="text-label hover:underline"
+        className="group/resource block min-w-0"
         params={{ instrumentMfid: item.unique_id }}
         to="/instruments/$instrumentMfid"
       >
-        {item.name}
+        {identity}
       </Link>
     ) : item.kind === "sample" ? (
       <Link
-        className="text-label hover:underline"
+        className="group/resource block min-w-0"
         params={{ sampleMfid: item.unique_id }}
         search={{ fromProject: projectMfid }}
         to="/samples/$sampleMfid"
       >
-        {item.name}
+        {identity}
       </Link>
     ) : (
       <Link
-        className="text-label hover:underline"
+        className="group/resource block min-w-0"
         params={{ datasetMfid: item.unique_id }}
         search={{ fromProject: projectMfid }}
         to="/datasets/$datasetMfid"
       >
-        {item.name}
+        {identity}
       </Link>
     )
 
   return (
     <li className="flex min-w-0 items-start gap-3 px-4 py-3 sm:px-5">
-      <ResourceTypeIcon className="mt-0.5 shrink-0" type={item.kind} />
-      <div className="min-w-0 flex-1">
-        {link}
-        {item.kind !== "person" && item.context ? (
-          <p className="truncate text-supporting text-muted-foreground">
-            {item.context}
-          </p>
-        ) : null}
-      </div>
+      <div className="min-w-0 flex-1">{link}</div>
       <MfidValue className="hidden max-w-64 lg:flex" value={item.unique_id} />
     </li>
   )

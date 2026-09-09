@@ -5,12 +5,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { z } from "zod"
 
-import {
-  CancelChangesIcon,
-  EditResourceIcon,
-  SaveChangesIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
+import { EditableCardActions } from "@/components/crucible/editable-card-actions"
+import { EditResourceIcon } from "@/components/crucible/icons"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import type { SummaryFieldType } from "@/components/crucible/summary-field-icon"
 import { Badge } from "@/components/ui/badge"
@@ -19,7 +15,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -638,33 +633,24 @@ function SampleSummaryForm({
           </form>
           <SummaryFields fields={contextFields(resource)} />
         </CardContent>
-        <CardFooter className="justify-end gap-2">
-          <Button
-            disabled={isSubmitting}
-            onClick={discard.requestCancel}
-            type="button"
-            variant="outline"
-          >
-            <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
-            Cancel
-          </Button>
-          <form.Subscribe
-            selector={(state) => [
-              state.canSubmit,
-              state.isDirty,
-              state.isSubmitting,
-            ]}
-          >
-            {([canSubmit, formIsDirty, submitting]) => (
-              <SaveButton
-                canSubmit={canSubmit}
-                dirty={formIsDirty}
-                formId={formId}
-                submitting={submitting}
-              />
-            )}
-          </form.Subscribe>
-        </CardFooter>
+        <form.Subscribe
+          selector={(state) => [
+            state.canSubmit,
+            state.isDirty,
+            state.isSubmitting,
+          ]}
+        >
+          {([canSubmit, formIsDirty, submitting]) => (
+            <EditableCardActions
+              canSubmit={canSubmit}
+              dirty={formIsDirty}
+              formId={formId}
+              onCancel={discard.requestCancel}
+              pending={submitting}
+              presentation="icon"
+            />
+          )}
+        </form.Subscribe>
       </Card>
       <DiscardChangesDialog {...discard.dialog} />
     </>
@@ -826,74 +812,27 @@ function DatasetSummaryForm({
           </form>
           <SummaryFields fields={contextFields(resource)} />
         </CardContent>
-        <CardFooter className="justify-end gap-2">
-          <Button
-            disabled={isSubmitting}
-            onClick={discard.requestCancel}
-            type="button"
-            variant="outline"
-          >
-            <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
-            Cancel
-          </Button>
-          <form.Subscribe
-            selector={(state) => [
-              state.canSubmit,
-              state.isDirty,
-              state.isSubmitting,
-            ]}
-          >
-            {([canSubmit, formIsDirty, submitting]) => (
-              <SaveButton
-                canSubmit={canSubmit}
-                dirty={formIsDirty}
-                formId={formId}
-                submitting={submitting}
-              />
-            )}
-          </form.Subscribe>
-        </CardFooter>
+        <form.Subscribe
+          selector={(state) => [
+            state.canSubmit,
+            state.isDirty,
+            state.isSubmitting,
+          ]}
+        >
+          {([canSubmit, formIsDirty, submitting]) => (
+            <EditableCardActions
+              canSubmit={canSubmit}
+              dirty={formIsDirty}
+              formId={formId}
+              onCancel={discard.requestCancel}
+              pending={submitting}
+              presentation="icon"
+            />
+          )}
+        </form.Subscribe>
       </Card>
       <DiscardChangesDialog {...discard.dialog} />
     </>
-  )
-}
-
-function SaveButton({
-  canSubmit,
-  dirty,
-  formId,
-  submitting,
-}: {
-  canSubmit: boolean
-  dirty: boolean
-  formId: string
-  submitting: boolean
-}) {
-  const label = submitting ? "Saving changes" : "Save changes"
-  return (
-    <Tooltip>
-      <TooltipTrigger render={<span className="inline-flex" />}>
-        <Button
-          aria-disabled={!canSubmit || !dirty || submitting}
-          aria-label={label}
-          disabled={!canSubmit || !dirty || submitting}
-          form={formId}
-          size="icon-sm"
-          type="submit"
-        >
-          {submitting ? (
-            <SavingChangesIcon
-              aria-hidden="true"
-              className="motion-safe:animate-spin"
-            />
-          ) : (
-            <SaveChangesIcon aria-hidden="true" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
   )
 }
 

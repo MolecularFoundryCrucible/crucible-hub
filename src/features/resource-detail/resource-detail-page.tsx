@@ -9,6 +9,11 @@ import {
   PreparingDownloadIcon,
   RetryDownloadIcon,
 } from "@/components/crucible/icons"
+import {
+  CollectionRowsPending,
+  PanelState,
+  PanelUpdateError,
+} from "@/components/crucible/collection-state"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import {
   ContentGrid,
@@ -51,12 +56,6 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty"
-import {
   Table,
   TableBody,
   TableCell,
@@ -64,7 +63,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -463,19 +461,16 @@ export function DatasetFiles({ datasetMfid }: { datasetMfid: string }) {
       </CardHeader>
       <CardContent className={files?.length ? "px-0" : undefined}>
         {filesResult.isPending ? (
-          <div
-            aria-label="Loading file metadata"
-            className="grid gap-3"
-            role="status"
-          >
-            <Skeleton className="h-5 w-2/3" />
-            <Skeleton className="h-5 w-1/2" />
-            <Skeleton className="h-5 w-3/4" />
-          </div>
+          <CollectionRowsPending label="file metadata" />
         ) : files !== undefined ? (
           <div className="flex flex-col gap-3">
             {filesResult.isError ? (
-              <FileRefreshError retry={() => void filesResult.refetch()} />
+              <div className="px-4 pt-4 sm:px-6">
+                <PanelUpdateError
+                  description="File metadata could not be refreshed. Showing the last available data."
+                  retry={() => void filesResult.refetch()}
+                />
+              </div>
             ) : filesResult.isFetching ? (
               <p
                 className="px-4 pt-4 text-supporting text-muted-foreground sm:px-6"
@@ -487,46 +482,21 @@ export function DatasetFiles({ datasetMfid }: { datasetMfid: string }) {
             {files.length ? (
               <FilesTable files={files} />
             ) : (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyTitle>No associated files</EmptyTitle>
-                  <EmptyDescription>
-                    No file records are attached to this dataset.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <PanelState
+                description="No file records are attached to this dataset."
+                title="No associated files"
+              />
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <p className="text-body text-muted-foreground" role="alert">
-              File metadata could not be loaded.
-            </p>
-            <div>
-              <Button
-                onClick={() => void filesResult.refetch()}
-                variant="outline"
-              >
-                Try again
-              </Button>
-            </div>
-          </div>
+          <PanelState
+            retry={() => void filesResult.refetch()}
+            role="alert"
+            title="File metadata could not be loaded"
+          />
         )}
       </CardContent>
     </Card>
-  )
-}
-
-function FileRefreshError({ retry }: { retry: () => void }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 sm:px-6">
-      <p className="text-body text-muted-foreground" role="alert">
-        File metadata could not be refreshed. Showing the last available data.
-      </p>
-      <Button onClick={retry} size="sm" variant="outline">
-        Try again
-      </Button>
-    </div>
   )
 }
 

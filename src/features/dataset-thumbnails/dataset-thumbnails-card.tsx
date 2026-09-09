@@ -7,6 +7,7 @@ import {
   RemoveThumbnailIcon,
   SaveChangesIcon,
 } from "@/components/crucible/icons"
+import { PanelState } from "@/components/crucible/collection-state"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { Button } from "@/components/ui/button"
@@ -99,18 +100,11 @@ export function DatasetThumbnailsCard({
         {!hydrated || query.isPending ? (
           <ThumbnailSkeleton />
         ) : !query.data ? (
-          <div className="flex flex-col items-start gap-3" role="alert">
-            <p className="text-body text-muted-foreground">
-              Thumbnails could not be loaded.
-            </p>
-            <Button
-              onClick={() => void query.refetch()}
-              size="sm"
-              variant="outline"
-            >
-              Try again
-            </Button>
-          </div>
+          <PanelState
+            retry={() => void query.refetch()}
+            role="alert"
+            title="Thumbnails could not be loaded"
+          />
         ) : editing ? (
           <ThumbnailEditor
             datasetMfid={datasetMfid}
@@ -119,9 +113,7 @@ export function DatasetThumbnailsCard({
             thumbnails={query.data}
           />
         ) : query.data.length === 0 ? (
-          <p className="text-body text-muted-foreground">
-            No thumbnail images have been added.
-          </p>
+          <PanelState title="No thumbnail images have been added" />
         ) : (
           <ThumbnailGallery thumbnails={query.data} />
         )}

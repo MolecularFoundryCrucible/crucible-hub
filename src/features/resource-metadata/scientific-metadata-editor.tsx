@@ -3,12 +3,8 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import {
-  CancelChangesIcon,
-  EditScientificMetadataIcon,
-  SaveChangesIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
+import { EditableCardActions } from "@/components/crucible/editable-card-actions"
+import { EditScientificMetadataIcon } from "@/components/crucible/icons"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,7 +12,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -401,29 +396,20 @@ function ScientificMetadataForm({
             </FieldGroup>
           </form>
         </CardContent>
-        <CardFooter className="justify-end gap-2">
-          <Button
-            disabled={isSubmitting}
-            onClick={discard.requestCancel}
-            type="button"
-            variant="outline"
-          >
-            <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
-            Cancel
-          </Button>
-          <form.Subscribe
-            selector={(state) => [state.canSubmit, state.isDirty]}
-          >
-            {([canSubmit, dirty]) => (
-              <SaveScientificMetadataButton
-                canSubmit={canSubmit}
-                dirty={dirty}
-                formId={formId}
-                submitting={isSubmitting}
-              />
-            )}
-          </form.Subscribe>
-        </CardFooter>
+        <form.Subscribe selector={(state) => [state.canSubmit, state.isDirty]}>
+          {([canSubmit, dirty]) => (
+            <EditableCardActions
+              canSubmit={canSubmit}
+              dirty={dirty}
+              formId={formId}
+              onCancel={discard.requestCancel}
+              pending={isSubmitting}
+              pendingLabel="Saving scientific metadata"
+              presentation="icon"
+              submitLabel="Save scientific metadata"
+            />
+          )}
+        </form.Subscribe>
       </Card>
       <DiscardChangesDialog {...discard.dialog} />
       <MetadataReplacementDialog
@@ -437,46 +423,6 @@ function ScientificMetadataForm({
         open={pendingReplacement !== undefined}
       />
     </>
-  )
-}
-
-function SaveScientificMetadataButton({
-  canSubmit,
-  dirty,
-  formId,
-  submitting,
-}: {
-  canSubmit: boolean
-  dirty: boolean
-  formId: string
-  submitting: boolean
-}) {
-  const label = submitting
-    ? "Saving scientific metadata"
-    : "Save scientific metadata"
-  return (
-    <Tooltip>
-      <TooltipTrigger render={<span className="inline-flex" />}>
-        <Button
-          aria-disabled={!canSubmit || !dirty || submitting}
-          aria-label={label}
-          disabled={!canSubmit || !dirty || submitting}
-          form={formId}
-          size="icon-sm"
-          type="submit"
-        >
-          {submitting ? (
-            <SavingChangesIcon
-              aria-hidden="true"
-              className="motion-safe:animate-spin"
-            />
-          ) : (
-            <SaveChangesIcon aria-hidden="true" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
   )
 }
 

@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { CollectionRowsPending } from "@/components/crucible/collection-state"
+import {
+  CollectionRowsPending,
+  PanelState,
+} from "@/components/crucible/collection-state"
 import { StatusFieldIcon } from "@/components/crucible/icons"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -37,18 +39,13 @@ export function DatasetProcessingActivity({
         {result.isPending ? (
           <CollectionRowsPending label="processing activity" />
         ) : result.isError ? (
-          <div className="flex flex-col items-start gap-3" role="alert">
-            <p className="text-body text-muted-foreground">
-              Processing activity could not be loaded.
-            </p>
-            <Button onClick={() => void result.refetch()} variant="outline">
-              Try again
-            </Button>
-          </div>
+          <PanelState
+            retry={() => void result.refetch()}
+            role="alert"
+            title="Processing activity could not be loaded"
+          />
         ) : result.data.length === 0 ? (
-          <p className="text-body text-muted-foreground">
-            No processing activity has been reported.
-          </p>
+          <PanelState title="No processing activity has been reported" />
         ) : (
           <ul className="flex flex-col" role="list">
             {result.data.map((request, index) => (
