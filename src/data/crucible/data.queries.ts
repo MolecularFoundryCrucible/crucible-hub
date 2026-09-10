@@ -5,6 +5,11 @@ import { normalizeCollectionFilters } from "./collection-filters"
 import type { CollectionQueryOptions } from "./collection-query"
 import { normalizeCollectionQueryOptions } from "./collection-query"
 import { getWorkspaceDatasets, getWorkspaceSamples } from "./data.functions"
+import {
+  normalizeDatasetFacetFilters,
+  normalizeSampleFacetFilters,
+} from "./facets"
+import type { DatasetFacetFilters, SampleFacetFilters } from "./facets"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
@@ -23,11 +28,16 @@ export type CursorFilters = ProjectFilters &
   CollectionQueryOptions & {
     cursor?: string
     limit: number
-  }
+  } & SampleFacetFilters
 
-export type DatasetCursorFilters = CursorFilters & {
-  instrumentMfid?: string
-}
+export type DatasetCursorFilters = ProjectFilters &
+  CollectionFilters &
+  CollectionQueryOptions &
+  DatasetFacetFilters & {
+    cursor?: string
+    instrumentMfid?: string
+    limit: number
+  }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -42,6 +52,14 @@ function collectionScopedPreviousData<TData>(
     instrumentMfid?: string
     projectMfid?: string
     projectScope?: ProjectScope
+    sampleType?: string
+    sampleTypeIsNull?: true
+    dataFormat?: string
+    dataFormatIsNull?: true
+    measurement?: string
+    measurementIsNull?: true
+    sessionName?: string
+    sessionNameIsNull?: true
     visibility?: "all" | "public" | "private"
     affiliation?: "owner"
     direction?: "asc" | "desc"
@@ -57,9 +75,17 @@ function collectionScopedPreviousData<TData>(
     "createdFrom",
     "createdTo",
     "direction",
+    "dataFormat",
+    "dataFormatIsNull",
     "instrumentMfid",
     "projectMfid",
     "projectScope",
+    "measurement",
+    "measurementIsNull",
+    "sampleType",
+    "sampleTypeIsNull",
+    "sessionName",
+    "sessionNameIsNull",
     "sort",
     "visibility",
   ] as const
@@ -86,7 +112,7 @@ export function datasetInstrumentScopedPreviousData<TData>(
   projectMfid?: string,
   projectScope?: ProjectScope,
   collectionFilters: CollectionFilters = {},
-  collectionQuery: CollectionQueryOptions = {}
+  collectionQuery: CollectionQueryOptions & DatasetFacetFilters = {}
 ) {
   const normalizedCollectionFilters =
     normalizeCollectionFilters(collectionFilters)
@@ -99,6 +125,7 @@ export function datasetInstrumentScopedPreviousData<TData>(
       projectScope,
       ...normalizedCollectionFilters,
       ...normalizeCollectionQueryOptions(collectionQuery),
+      ...normalizeDatasetFacetFilters(collectionQuery),
     },
     previousData,
     previousQuery
@@ -144,6 +171,7 @@ export function samplesQueryOptions(
   const projectFilters = normalizeProjectFilters(filters)
   const collectionFilters = normalizeCollectionFilters(filters)
   const collectionQuery = normalizeCollectionQueryOptions(filters)
+  const facetFilters = normalizeSampleFacetFilters(filters)
   return queryOptions({
     queryKey: crucibleKeys.samples(scope, {
       cursor: filters.cursor ?? null,
@@ -151,6 +179,7 @@ export function samplesQueryOptions(
       ...projectFilters,
       ...collectionFilters,
       ...collectionQuery,
+      ...facetFilters,
     }),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
@@ -161,6 +190,7 @@ export function samplesQueryOptions(
             ...projectFilters,
             ...collectionFilters,
             ...collectionQuery,
+            ...facetFilters,
             scenario,
           },
           signal,
@@ -170,7 +200,12 @@ export function samplesQueryOptions(
       collectionScopedPreviousData(
         scope,
         "samples",
-        { ...projectFilters, ...collectionFilters, ...collectionQuery },
+        {
+          ...projectFilters,
+          ...collectionFilters,
+          ...collectionQuery,
+          ...facetFilters,
+        },
         previousData,
         previousQuery
       ),
@@ -187,17 +222,15 @@ export function datasetsQueryOptions(
   const projectFilters = normalizeProjectFilters(filters)
   const collectionFilters = normalizeCollectionFilters(filters)
   const collectionQuery = normalizeCollectionQueryOptions(filters)
-  const pageFilters: CursorFilters = {
-    cursor: filters.cursor,
-    limit: filters.limit,
-  }
+  const facetFilters = normalizeDatasetFacetFilters(filters)
   const keyFilters = {
-    cursor: pageFilters.cursor ?? null,
-    limit: pageFilters.limit,
+    cursor: filters.cursor ?? null,
+    limit: filters.limit,
     ...(instrumentMfid ? { instrumentMfid } : {}),
     ...projectFilters,
     ...collectionFilters,
     ...collectionQuery,
+    ...facetFilters,
   }
   return queryOptions({
     queryKey: crucibleKeys.datasets(scope, keyFilters),
@@ -205,11 +238,13 @@ export function datasetsQueryOptions(
       unwrapHubResult(
         await getWorkspaceDatasets({
           data: {
-            ...pageFilters,
+            cursor: filters.cursor,
+            limit: filters.limit,
             ...(instrumentMfid ? { instrumentMfid } : {}),
             ...projectFilters,
             ...collectionFilters,
             ...collectionQuery,
+            ...facetFilters,
             scenario,
           },
           signal,
@@ -224,7 +259,7 @@ export function datasetsQueryOptions(
         projectFilters.projectMfid,
         projectFilters.projectScope,
         collectionFilters,
-        collectionQuery
+        { ...collectionQuery, ...facetFilters }
       ),
     retry: scenario ? false : undefined,
   })

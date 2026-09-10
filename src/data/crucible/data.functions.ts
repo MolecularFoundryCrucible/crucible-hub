@@ -13,9 +13,15 @@ import {
   resourceSortSchema,
   sortDirectionSchema,
 } from "./collection-query"
-import { readWorkspaceDatasets, readWorkspaceSamples } from "./data.server"
+import {
+  readWorkspaceDatasetFacets,
+  readWorkspaceDatasets,
+  readWorkspaceSampleFacets,
+  readWorkspaceSamples,
+} from "./data.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
+import { datasetFacetFieldSchema, sampleFacetFieldSchema } from "./facets"
 
 export const projectScopeSchema = z.enum(["all", "assigned", "shared"])
 
@@ -29,6 +35,23 @@ const cursorPageInputFields = {
   projectScope: projectScopeSchema.optional(),
   scenario: fixtureScenarioSchema.optional(),
   sort: resourceSortSchema.optional(),
+}
+
+const nullableFacetFilter = z.string().max(255).optional()
+const nullSelector = z.literal(true).optional()
+
+const sampleFacetFilterFields = {
+  sampleType: nullableFacetFilter,
+  sampleTypeIsNull: nullSelector,
+}
+
+const datasetFacetFilterFields = {
+  dataFormat: nullableFacetFilter,
+  dataFormatIsNull: nullSelector,
+  measurement: nullableFacetFilter,
+  measurementIsNull: nullSelector,
+  sessionName: nullableFacetFilter,
+  sessionNameIsNull: nullSelector,
 }
 
 function validateProjectScope(
@@ -74,6 +97,7 @@ function validateCursorInput(
   context: z.RefinementCtx
 ) {
   validateProjectScope(input, context)
+  validateFacetSelections(input, context)
   if (
     input.createdFrom &&
     input.createdTo &&
@@ -94,17 +118,74 @@ function validateCursorInput(
   }
 }
 
+function validateFacetSelections(
+  input: Record<string, unknown>,
+  context: z.RefinementCtx
+) {
+  const pairs = [
+    ["dataFormat", "dataFormatIsNull"],
+    ["measurement", "measurementIsNull"],
+    ["sampleType", "sampleTypeIsNull"],
+    ["sessionName", "sessionNameIsNull"],
+  ] as const
+  for (const [valueKey, nullKey] of pairs) {
+    if (input[valueKey] !== undefined && input[nullKey] === true) {
+      context.addIssue({
+        code: "custom",
+        message: "Choose either an exact value or the unspecified bucket.",
+        path: [valueKey],
+      })
+    }
+  }
+}
+
 export const cursorPageInputSchema = z
-  .object(cursorPageInputFields)
+  .object({ ...cursorPageInputFields, ...sampleFacetFilterFields })
   .superRefine(validateCursorInput)
   .transform(normalizeProjectScope)
 
 export const datasetCursorPageInputSchema = z
   .object({
     ...cursorPageInputFields,
+    ...datasetFacetFilterFields,
     instrumentMfid: z.string().trim().min(1).max(255).optional(),
   })
   .superRefine(validateCursorInput)
+  .transform(normalizeProjectScope)
+
+const facetPageInputFields = {
+  ...collectionFilterFields,
+  affiliation: collectionAffiliationSchema.optional(),
+  cursor: z.string().min(1).max(4096).optional(),
+  limit: z.number().int().min(1).max(1000),
+  projectMfid: z.string().trim().min(1).max(255).optional(),
+  projectScope: projectScopeSchema.optional(),
+  scenario: fixtureScenarioSchema.optional(),
+}
+
+export const sampleFacetPageInputSchema = z
+  .object({
+    ...facetPageInputFields,
+    ...sampleFacetFilterFields,
+    field: sampleFacetFieldSchema,
+  })
+  .superRefine((input, context) => {
+    validateProjectScope(input, context)
+    validateFacetSelections(input, context)
+  })
+  .transform(normalizeProjectScope)
+
+export const datasetFacetPageInputSchema = z
+  .object({
+    ...facetPageInputFields,
+    ...datasetFacetFilterFields,
+    field: datasetFacetFieldSchema,
+    instrumentMfid: z.string().trim().min(1).max(255).optional(),
+  })
+  .superRefine((input, context) => {
+    validateProjectScope(input, context)
+    validateFacetSelections(input, context)
+  })
   .transform(normalizeProjectScope)
 
 export const getWorkspaceSamples = createServerFn({ method: "GET" })
@@ -124,5 +205,25 @@ export const getWorkspaceDatasets = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceDatasets(data, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceSampleFacets = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(sampleFacetPageInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceSampleFacets(data, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceDatasetFacets = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(datasetFacetPageInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceDatasetFacets(data, context.requestSignal)
     )
   })

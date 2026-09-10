@@ -17,20 +17,42 @@ import type {
   SortDirection,
 } from "@/data/crucible/collection-query"
 import type { ProjectScope } from "@/data/crucible/data.queries"
+import type {
+  DatasetFacetFilters,
+  SampleFacetFilters,
+} from "@/data/crucible/facets"
 
 const filterSearchValue = z.string().max(255).optional().catch("")
+const facetSearchValue = z.string().max(255).optional().catch(undefined)
+const selectedFacetSchema = z
+  .union([z.literal(true), z.literal("true")])
+  .transform(() => true as const)
+  .optional()
+  .catch(undefined)
 
 export const dataSearchSchema = z.object({
   affiliation: filterSearchValue,
   createdFrom: filterSearchValue,
   createdTo: filterSearchValue,
+  dataFormat: facetSearchValue,
+  dataFormatIsNull: selectedFacetSchema,
+  dataFormatSet: selectedFacetSchema,
   datasetCursor: collectionCursorSchema,
   direction: filterSearchValue,
   instrumentMfid: filterSearchValue,
   kind: filterSearchValue,
+  measurement: facetSearchValue,
+  measurementIsNull: selectedFacetSchema,
+  measurementSet: selectedFacetSchema,
   projectMfid: filterSearchValue,
   projectScope: filterSearchValue,
   sampleCursor: collectionCursorSchema,
+  sampleType: facetSearchValue,
+  sampleTypeIsNull: selectedFacetSchema,
+  sampleTypeSet: selectedFacetSchema,
+  sessionName: facetSearchValue,
+  sessionNameIsNull: selectedFacetSchema,
+  sessionNameSet: selectedFacetSchema,
   sort: filterSearchValue,
   visibility: filterSearchValue,
 })
@@ -48,7 +70,9 @@ type ProjectSelection =
   | { projectMfid: string; projectScope: ProjectScope }
 
 export type DataFilterValues = CollectionFilters &
-  ProjectSelection & {
+  DatasetFacetFilters &
+  ProjectSelection &
+  SampleFacetFilters & {
     affiliation?: CollectionAffiliation
     direction?: SortDirection
     instrumentMfid?: string
@@ -76,45 +100,75 @@ const mfidSchema = z
   .max(255, "The resource identifier is too long.")
   .regex(/^[a-zA-Z0-9_-]+$/, "The resource identifier is not valid.")
   .optional()
+const exactFacetValueSchema = z.string().max(255).optional()
 
 const domainFiltersSchema = z
   .object({
-    instrumentMfid: mfidSchema,
     affiliation: collectionAffiliationSchema.optional(),
+    dataFormat: exactFacetValueSchema,
+    dataFormatIsNull: z.literal(true).optional(),
     direction: sortDirectionSchema.optional(),
+    instrumentMfid: mfidSchema,
     kind: dataKindSchema,
+    measurement: exactFacetValueSchema,
+    measurementIsNull: z.literal(true).optional(),
     projectMfid: mfidSchema,
     projectScope: projectScopeSchema,
+    sampleType: exactFacetValueSchema,
+    sampleTypeIsNull: z.literal(true).optional(),
+    sessionName: exactFacetValueSchema,
+    sessionNameIsNull: z.literal(true).optional(),
     sort: resourceSortSchema.optional(),
   })
   .superRefine((filters, context) => {
     if (filters.projectScope && !filters.projectMfid) {
-      context.addIssue({
-        code: "custom",
-        message: "Choose a project before selecting its relationship.",
-        path: ["projectScope"],
-      })
+      addIssue(
+        context,
+        "projectScope",
+        "Choose a project before selecting its relationship."
+      )
     }
     if (filters.instrumentMfid && filters.kind !== "datasets") {
-      context.addIssue({
-        code: "custom",
-        message: "Acquisition instrument filters apply only to datasets.",
-        path: ["instrumentMfid"],
-      })
+      addIssue(
+        context,
+        "instrumentMfid",
+        "Acquisition instrument filters apply only to datasets."
+      )
     }
     if (filters.sort && !filters.kind) {
-      context.addIssue({
-        code: "custom",
-        message: "Choose Samples or Datasets before selecting an order.",
-        path: ["sort"],
-      })
+      addIssue(
+        context,
+        "sort",
+        "Choose Samples or Datasets before selecting an order."
+      )
     }
     if (filters.direction && !filters.sort) {
-      context.addIssue({
-        code: "custom",
-        message: "Choose an order before selecting its direction.",
-        path: ["direction"],
-      })
+      addIssue(
+        context,
+        "direction",
+        "Choose an order before selecting its direction."
+      )
+    }
+    if (
+      filters.kind !== "samples" &&
+      (filters.sampleType !== undefined || filters.sampleTypeIsNull)
+    ) {
+      addIssue(
+        context,
+        "sampleType",
+        "Sample type filters apply only to samples."
+      )
+    }
+    if (
+      filters.kind !== "datasets" &&
+      (filters.dataFormat !== undefined ||
+        filters.dataFormatIsNull ||
+        filters.measurement !== undefined ||
+        filters.measurementIsNull ||
+        filters.sessionName !== undefined ||
+        filters.sessionNameIsNull)
+    ) {
+      addIssue(context, "measurement", "Dataset facets apply only to datasets.")
     }
   })
 
@@ -126,11 +180,35 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
   })
   const domain = domainFiltersSchema.safeParse({
     affiliation: search.affiliation,
+    dataFormat: selectedFacetValue(
+      search.dataFormat,
+      search.dataFormatSet,
+      search.dataFormatIsNull
+    ),
+    dataFormatIsNull: search.dataFormatIsNull,
     direction: search.direction,
     instrumentMfid: search.instrumentMfid,
     kind: search.kind,
+    measurement: selectedFacetValue(
+      search.measurement,
+      search.measurementSet,
+      search.measurementIsNull
+    ),
+    measurementIsNull: search.measurementIsNull,
     projectMfid: search.projectMfid,
     projectScope: search.projectScope,
+    sampleType: selectedFacetValue(
+      search.sampleType,
+      search.sampleTypeSet,
+      search.sampleTypeIsNull
+    ),
+    sampleTypeIsNull: search.sampleTypeIsNull,
+    sessionName: selectedFacetValue(
+      search.sessionName,
+      search.sessionNameSet,
+      search.sessionNameIsNull
+    ),
+    sessionNameIsNull: search.sessionNameIsNull,
     sort: search.sort,
   })
   if (!collection.success || !domain.success) {
@@ -168,6 +246,22 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
           sort: domain.data.sort,
         }
       : {}),
+    ...(domain.data.kind === "samples"
+      ? {
+          sampleType: domain.data.sampleType,
+          sampleTypeIsNull: domain.data.sampleTypeIsNull,
+        }
+      : {}),
+    ...(domain.data.kind === "datasets"
+      ? {
+          dataFormat: domain.data.dataFormat,
+          dataFormatIsNull: domain.data.dataFormatIsNull,
+          measurement: domain.data.measurement,
+          measurementIsNull: domain.data.measurementIsNull,
+          sessionName: domain.data.sessionName,
+          sessionNameIsNull: domain.data.sessionNameIsNull,
+        }
+      : {}),
     kind: domain.data.kind ?? "all",
   }
 
@@ -183,6 +277,7 @@ export function applyDataFilters(
     affiliation: filters.affiliation,
     createdFrom: filters.createdFrom,
     createdTo: filters.createdTo,
+    ...facetSearchState(filters),
     datasetCursor: undefined,
     direction: filters.direction,
     instrumentMfid:
@@ -206,6 +301,7 @@ export function clearDataFilters(
     affiliation: undefined,
     createdFrom: undefined,
     createdTo: undefined,
+    ...emptyFacetSearchState,
     datasetCursor: undefined,
     direction: undefined,
     instrumentMfid: undefined,
@@ -228,6 +324,7 @@ export function switchDataKind(
 ) {
   return {
     ...previous,
+    ...facetSearchStateForKind(previous, kind),
     datasetCursor: undefined,
     direction: kind === "all" ? undefined : previous.direction,
     instrumentMfid: kind === "datasets" ? previous.instrumentMfid : undefined,
@@ -250,20 +347,82 @@ export function setDataFilterProject(
   }
 }
 
-function dataFilterField(field: PropertyKey | undefined): DataFilterField {
-  switch (field) {
-    case "affiliation":
-    case "createdFrom":
-    case "createdTo":
-    case "direction":
-    case "instrumentMfid":
-    case "kind":
-    case "projectMfid":
-    case "projectScope":
-    case "sort":
-    case "visibility":
-      return field
-    default:
-      return "kind"
+function selectedFacetValue(
+  value: string | undefined,
+  selected: true | undefined,
+  isNull: true | undefined
+) {
+  return !isNull && selected ? (value ?? "") : undefined
+}
+
+function facetSearchState(filters: DataFilterValues) {
+  return {
+    dataFormat: filters.dataFormat,
+    dataFormatIsNull: filters.dataFormatIsNull,
+    dataFormatSet: filters.dataFormat !== undefined || undefined,
+    measurement: filters.measurement,
+    measurementIsNull: filters.measurementIsNull,
+    measurementSet: filters.measurement !== undefined || undefined,
+    sampleType: filters.sampleType,
+    sampleTypeIsNull: filters.sampleTypeIsNull,
+    sampleTypeSet: filters.sampleType !== undefined || undefined,
+    sessionName: filters.sessionName,
+    sessionNameIsNull: filters.sessionNameIsNull,
+    sessionNameSet: filters.sessionName !== undefined || undefined,
   }
+}
+
+const emptyFacetSearchState = {
+  dataFormat: undefined,
+  dataFormatIsNull: undefined,
+  dataFormatSet: undefined,
+  measurement: undefined,
+  measurementIsNull: undefined,
+  measurementSet: undefined,
+  sampleType: undefined,
+  sampleTypeIsNull: undefined,
+  sampleTypeSet: undefined,
+  sessionName: undefined,
+  sessionNameIsNull: undefined,
+  sessionNameSet: undefined,
+}
+
+function facetSearchStateForKind(search: DataSearch, kind: DataKindFilter) {
+  return {
+    ...emptyFacetSearchState,
+    ...(kind === "samples"
+      ? {
+          sampleType: search.sampleType,
+          sampleTypeIsNull: search.sampleTypeIsNull,
+          sampleTypeSet: search.sampleTypeSet,
+        }
+      : {}),
+    ...(kind === "datasets"
+      ? {
+          dataFormat: search.dataFormat,
+          dataFormatIsNull: search.dataFormatIsNull,
+          dataFormatSet: search.dataFormatSet,
+          measurement: search.measurement,
+          measurementIsNull: search.measurementIsNull,
+          measurementSet: search.measurementSet,
+          sessionName: search.sessionName,
+          sessionNameIsNull: search.sessionNameIsNull,
+          sessionNameSet: search.sessionNameSet,
+        }
+      : {}),
+  }
+}
+
+function addIssue(
+  context: z.RefinementCtx,
+  path: DataFilterField,
+  message: string
+) {
+  context.addIssue({ code: "custom", message, path: [path] })
+}
+
+function dataFilterField(field: PropertyKey | undefined): DataFilterField {
+  return typeof field === "string" && field in dataSearchSchema.shape
+    ? (field as DataFilterField)
+    : "kind"
 }

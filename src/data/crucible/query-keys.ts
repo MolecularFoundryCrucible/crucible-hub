@@ -5,13 +5,16 @@ export type IdentityScope = readonly [
 ]
 
 export type ListFilters = Readonly<
-  Record<string, boolean | number | string | null | readonly string[]>
+  Record<
+    string,
+    boolean | number | string | null | undefined | readonly string[]
+  >
 >
 
 function normalizeFilters(filters: ListFilters) {
   return Object.fromEntries(
     Object.entries(filters)
-      .filter(([, value]) => value !== null)
+      .filter(([, value]) => value !== null && value !== undefined)
       .sort(([left], [right]) => left.localeCompare(right))
   )
 }
@@ -40,10 +43,20 @@ export const crucibleKeys = {
   samples: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "samples", "list", normalizeFilters(filters)] as const,
   sampleLists: (scope: IdentityScope) => [...scope, "samples", "list"] as const,
+  sampleFacets: (scope: IdentityScope, filters: ListFilters) =>
+    [...scope, "samples", "list", "facets", normalizeFilters(filters)] as const,
   datasets: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "datasets", "list", normalizeFilters(filters)] as const,
   datasetLists: (scope: IdentityScope) =>
     [...scope, "datasets", "list"] as const,
+  datasetFacets: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "datasets",
+      "list",
+      "facets",
+      normalizeFilters(filters),
+    ] as const,
   instruments: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "instruments", "list", normalizeFilters(filters)] as const,
   instrumentLists: (scope: IdentityScope) =>

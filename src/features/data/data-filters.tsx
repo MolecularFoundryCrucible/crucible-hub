@@ -18,6 +18,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
+import { DatasetFacetFilter, SampleFacetFilter } from "./data-facet-filter"
+import type { FacetSelection } from "./data-facet-filter"
 
 import {
   applyDataFilters,
@@ -98,6 +100,26 @@ export function DataFilters({
         resolution.filters.visibility
           ? `Visibility: ${capitalize(resolution.filters.visibility)}`
           : undefined,
+        facetSummary(
+          "Sample type",
+          resolution.filters.sampleType,
+          resolution.filters.sampleTypeIsNull
+        ),
+        facetSummary(
+          "Measurement",
+          resolution.filters.measurement,
+          resolution.filters.measurementIsNull
+        ),
+        facetSummary(
+          "Session",
+          resolution.filters.sessionName,
+          resolution.filters.sessionNameIsNull
+        ),
+        facetSummary(
+          "Data format",
+          resolution.filters.dataFormat,
+          resolution.filters.dataFormatIsNull
+        ),
         resolution.filters.createdFrom
           ? `Created from (UTC): ${resolution.filters.createdFrom}`
           : undefined,
@@ -272,6 +294,104 @@ export function DataFilters({
                 <NativeSelectOption value="private">Private</NativeSelectOption>
               </NativeSelect>
             </Field>
+            {kind === "samples" && resolution.valid ? (
+              <SampleFacetFilter
+                enabled={filtersOpen}
+                field="sample_type"
+                filters={resolution.filters}
+                id="data-sample-type"
+                label="Sample type"
+                onChange={(selection) =>
+                  setDraft((current) =>
+                    setFacetDraft(
+                      current,
+                      "sampleType",
+                      "sampleTypeSet",
+                      "sampleTypeIsNull",
+                      selection
+                    )
+                  )
+                }
+                selection={facetSelection(
+                  draft.sampleType,
+                  draft.sampleTypeSet,
+                  draft.sampleTypeIsNull
+                )}
+              />
+            ) : null}
+            {kind === "datasets" && resolution.valid ? (
+              <>
+                <DatasetFacetFilter
+                  enabled={filtersOpen}
+                  field="measurement"
+                  filters={resolution.filters}
+                  id="data-measurement"
+                  label="Measurement"
+                  onChange={(selection) =>
+                    setDraft((current) =>
+                      setFacetDraft(
+                        current,
+                        "measurement",
+                        "measurementSet",
+                        "measurementIsNull",
+                        selection
+                      )
+                    )
+                  }
+                  selection={facetSelection(
+                    draft.measurement,
+                    draft.measurementSet,
+                    draft.measurementIsNull
+                  )}
+                />
+                <DatasetFacetFilter
+                  enabled={filtersOpen}
+                  field="session"
+                  filters={resolution.filters}
+                  id="data-session"
+                  label="Session"
+                  onChange={(selection) =>
+                    setDraft((current) =>
+                      setFacetDraft(
+                        current,
+                        "sessionName",
+                        "sessionNameSet",
+                        "sessionNameIsNull",
+                        selection
+                      )
+                    )
+                  }
+                  selection={facetSelection(
+                    draft.sessionName,
+                    draft.sessionNameSet,
+                    draft.sessionNameIsNull
+                  )}
+                />
+                <DatasetFacetFilter
+                  enabled={filtersOpen}
+                  field="data_format"
+                  filters={resolution.filters}
+                  id="data-format"
+                  label="Data format"
+                  onChange={(selection) =>
+                    setDraft((current) =>
+                      setFacetDraft(
+                        current,
+                        "dataFormat",
+                        "dataFormatSet",
+                        "dataFormatIsNull",
+                        selection
+                      )
+                    )
+                  }
+                  selection={facetSelection(
+                    draft.dataFormat,
+                    draft.dataFormatSet,
+                    draft.dataFormatIsNull
+                  )}
+                />
+              </>
+            ) : null}
             <Field data-invalid={invalid("createdFrom")}>
               <FieldLabel htmlFor="data-created-from">
                 Created from (UTC)
@@ -417,13 +537,64 @@ function filterDraft(values: DataSearch): DataFilterSearch {
     affiliation: values.affiliation,
     createdFrom: values.createdFrom,
     createdTo: values.createdTo,
+    dataFormat: values.dataFormat,
+    dataFormatIsNull: values.dataFormatIsNull,
+    dataFormatSet: values.dataFormatSet,
     direction: values.direction,
     instrumentMfid: values.instrumentMfid,
     kind: values.kind,
+    measurement: values.measurement,
+    measurementIsNull: values.measurementIsNull,
+    measurementSet: values.measurementSet,
     projectMfid: values.projectMfid,
     projectScope: values.projectScope,
+    sampleType: values.sampleType,
+    sampleTypeIsNull: values.sampleTypeIsNull,
+    sampleTypeSet: values.sampleTypeSet,
+    sessionName: values.sessionName,
+    sessionNameIsNull: values.sessionNameIsNull,
+    sessionNameSet: values.sessionNameSet,
     sort: values.sort,
     visibility: values.visibility,
+  }
+}
+
+function facetSummary(
+  label: string,
+  value: string | undefined,
+  isNull: true | undefined
+) {
+  if (isNull) return `${label}: Unspecified`
+  if (value === undefined) return undefined
+  return `${label}: ${value || "Empty value"}`
+}
+
+function facetSelection(
+  value: string | undefined,
+  selected: true | undefined,
+  isNull: true | undefined
+): FacetSelection {
+  if (isNull) return { kind: "null" }
+  return selected ? { kind: "value", value: value ?? "" } : { kind: "all" }
+}
+
+function setFacetDraft(
+  filters: DataFilterSearch,
+  valueKey: "dataFormat" | "measurement" | "sampleType" | "sessionName",
+  selectedKey:
+    "dataFormatSet" | "measurementSet" | "sampleTypeSet" | "sessionNameSet",
+  nullKey:
+    | "dataFormatIsNull"
+    | "measurementIsNull"
+    | "sampleTypeIsNull"
+    | "sessionNameIsNull",
+  selection: FacetSelection
+): DataFilterSearch {
+  return {
+    ...filters,
+    [nullKey]: selection.kind === "null" || undefined,
+    [selectedKey]: selection.kind === "value" || undefined,
+    [valueKey]: selection.kind === "value" ? selection.value : undefined,
   }
 }
 

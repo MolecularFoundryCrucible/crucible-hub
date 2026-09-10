@@ -1,0 +1,207 @@
+import { useInfiniteQuery } from "@tanstack/react-query"
+
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { Button } from "@/components/ui/button"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  datasetFacetQueryOptions,
+  sampleFacetQueryOptions,
+} from "@/data/crucible/facets.queries"
+import type {
+  DatasetFacetField,
+  SampleFacetField,
+  WorkspaceFacetBucket,
+} from "@/data/crucible/facets"
+
+import type { DataFilterValues } from "./data-filter-state"
+
+export type FacetSelection =
+  { kind: "all" } | { kind: "null" } | { kind: "value"; value: string }
+
+export function SampleFacetFilter({
+  enabled,
+  field,
+  filters,
+  id,
+  label,
+  onChange,
+  selection,
+}: FacetFilterProps & { field: SampleFacetField }) {
+  const scope = useWorkspaceScope()
+  const query = useInfiniteQuery({
+    ...sampleFacetQueryOptions(scope, field, filters),
+    enabled,
+  })
+  return (
+    <FacetFilter
+      id={id}
+      label={label}
+      onChange={onChange}
+      query={query}
+      selection={selection}
+    />
+  )
+}
+
+export function DatasetFacetFilter({
+  enabled,
+  field,
+  filters,
+  id,
+  label,
+  onChange,
+  selection,
+}: FacetFilterProps & { field: DatasetFacetField }) {
+  const scope = useWorkspaceScope()
+  const query = useInfiniteQuery({
+    ...datasetFacetQueryOptions(scope, field, filters),
+    enabled,
+  })
+  return (
+    <FacetFilter
+      id={id}
+      label={label}
+      onChange={onChange}
+      query={query}
+      selection={selection}
+    />
+  )
+}
+
+type FacetFilterProps = {
+  enabled: boolean
+  filters: DataFilterValues
+  id: string
+  label: string
+  onChange: (selection: FacetSelection) => void
+  selection: FacetSelection
+}
+
+type FacetQuery = {
+  data?: { pages: readonly { items: readonly WorkspaceFacetBucket[] }[] }
+  fetchNextPage: () => Promise<unknown>
+  hasNextPage: boolean
+  isError: boolean
+  isFetchNextPageError: boolean
+  isFetchingNextPage: boolean
+  isPending: boolean
+  refetch: () => Promise<unknown>
+}
+
+function FacetFilter({
+  id,
+  label,
+  onChange,
+  query,
+  selection,
+}: Omit<FacetFilterProps, "enabled" | "filters"> & { query: FacetQuery }) {
+  const items = query.data?.pages.flatMap((page) => page.items) ?? []
+  const selectedAvailable = items.some((item) =>
+    selection.kind === "null"
+      ? item.value === null
+      : selection.kind === "value" && item.value === selection.value
+  )
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <NativeSelect
+        className="w-full"
+        id={id}
+        onChange={(event) => onChange(decodeSelection(event.target.value))}
+        value={encodeSelection(selection)}
+      >
+        <NativeSelectOption value="all">All</NativeSelectOption>
+        {selection.kind !== "all" && !selectedAvailable ? (
+          <NativeSelectOption value={encodeSelection(selection)}>
+            {facetLabel(selection.kind === "null" ? null : selection.value)}
+          </NativeSelectOption>
+        ) : null}
+        {items.map((item) => (
+          <NativeSelectOption
+            key={item.value === null ? "null" : `value:${item.value}`}
+            value={encodeSelection(
+              item.value === null
+                ? { kind: "null" }
+                : { kind: "value", value: item.value }
+            )}
+          >
+            {facetLabel(item.value)} ({item.count})
+          </NativeSelectOption>
+        ))}
+        {query.isPending ? (
+          <NativeSelectOption disabled value="loading">
+            Loading values...
+          </NativeSelectOption>
+        ) : null}
+        {query.isError && items.length === 0 ? (
+          <NativeSelectOption disabled value="unavailable">
+            Values unavailable
+          </NativeSelectOption>
+        ) : null}
+      </NativeSelect>
+      {query.isFetchNextPageError ? (
+        <Button
+          className="self-start"
+          onClick={() => void query.fetchNextPage()}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Retry more values
+        </Button>
+      ) : query.isError ? (
+        <Button
+          className="self-start"
+          onClick={() => void query.refetch()}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Retry values
+        </Button>
+      ) : query.hasNextPage ? (
+        <Button
+          className="self-start"
+          disabled={query.isFetchingNextPage}
+          onClick={() => void query.fetchNextPage()}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          {query.isFetchingNextPage ? "Loading..." : "Load more values"}
+        </Button>
+      ) : null}
+    </Field>
+  )
+}
+
+function facetLabel(value: string | null) {
+  if (value === null) return "Unspecified"
+  return value === "" ? "Empty value" : value
+}
+
+function encodeSelection(selection: FacetSelection) {
+  if (selection.kind === "all") return "all"
+  if (selection.kind === "null") return "null"
+  return JSON.stringify(["value", selection.value])
+}
+
+function decodeSelection(value: string): FacetSelection {
+  if (value === "all") return { kind: "all" }
+  if (value === "null") return { kind: "null" }
+  try {
+    const decoded: unknown = JSON.parse(value)
+    if (
+      Array.isArray(decoded) &&
+      decoded.length === 2 &&
+      decoded[0] === "value" &&
+      typeof decoded[1] === "string"
+    ) {
+      return { kind: "value", value: decoded[1] }
+    }
+  } catch {
+    return { kind: "all" }
+  }
+  return { kind: "all" }
+}

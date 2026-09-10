@@ -10,6 +10,18 @@ import { normalizeCollectionFilters } from "./collection-filters"
 import type { CollectionQueryOptions, ResourceSort } from "./collection-query"
 import { normalizeCollectionQueryOptions } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
+import {
+  normalizeDatasetFacetFilters,
+  normalizeSampleFacetFilters,
+} from "./facets"
+import type {
+  DatasetFacetField,
+  DatasetFacetFilters,
+  SampleFacetField,
+  SampleFacetFilters,
+  WorkspaceFacetBucket,
+  WorkspaceFacetPage,
+} from "./facets"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import {
   assertFixtureScenarioAvailable,
@@ -89,6 +101,8 @@ function toWorkspaceDataset(
     instrument_id: dataset.instrument?.instrument_id ?? dataset.instrument_id,
     instrument: dataset.instrument ?? null,
     size: dataset.size,
+    data_format: dataset.data_format,
+    session_name: dataset.session_name,
     timestamp: dataset.timestamp,
     creation_time: dataset.creation_time,
     modification_time: dataset.modification_time,
@@ -154,6 +168,123 @@ function fixtureCollectionRows<
       (!bounds.creation_time_lte || creationTime <= bounds.creation_time_lte)
     )
   })
+}
+
+function matchesFacetValue(
+  value: string | null | undefined,
+  selected: string | undefined,
+  isNull: true | undefined
+) {
+  if (selected !== undefined) return value === selected
+  if (isNull) return value == null
+  return true
+}
+
+function fixtureSampleFacetRows(
+  items: readonly WorkspaceSample[],
+  input: SampleFacetFilters
+) {
+  const filters = normalizeSampleFacetFilters(input)
+  return items.filter((item) =>
+    matchesFacetValue(
+      item.sample_type,
+      filters.sampleType,
+      filters.sampleTypeIsNull
+    )
+  )
+}
+
+function fixtureDatasetFacetRows(
+  items: readonly WorkspaceDataset[],
+  input: DatasetFacetFilters
+) {
+  const filters = normalizeDatasetFacetFilters(input)
+  return items.filter(
+    (item) =>
+      matchesFacetValue(
+        item.data_format,
+        filters.dataFormat,
+        filters.dataFormatIsNull
+      ) &&
+      matchesFacetValue(
+        item.measurement,
+        filters.measurement,
+        filters.measurementIsNull
+      ) &&
+      matchesFacetValue(
+        item.session_name,
+        filters.sessionName,
+        filters.sessionNameIsNull
+      )
+  )
+}
+
+function facetBuckets(values: readonly (string | null | undefined)[]) {
+  const counts = new Map<string | null, number>()
+  for (const value of values) {
+    const normalized = value ?? null
+    counts.set(normalized, (counts.get(normalized) ?? 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort(([left], [right]) => {
+      if (left === null && right === null) return 0
+      if (left === null) return 1
+      if (right === null) return -1
+      return left.localeCompare(right)
+    })
+    .map(([value, count]): WorkspaceFacetBucket => ({ count, value }))
+}
+
+function toWorkspaceFacetPage(
+  response: Schema<"FacetResponse">,
+  field: DatasetFacetField | SampleFacetField
+): WorkspaceFacetPage {
+  if (response.field !== field) {
+    throw new Error("The facet response field does not match the request.")
+  }
+  return {
+    field,
+    items: response.items.map((item) => ({
+      count: item.count,
+      value: item.value,
+    })),
+    limit: response.limit,
+    nextCursor: response.next_cursor ?? null,
+  }
+}
+
+function fixtureFacetPage(
+  buckets: readonly WorkspaceFacetBucket[],
+  input: { cursor?: string; limit: number },
+  field: DatasetFacetField | SampleFacetField
+): WorkspaceFacetPage {
+  const page = fixtureCursorPage(buckets, input)
+  return {
+    field,
+    items: page.items,
+    limit: page.limit,
+    nextCursor: page.nextCursor,
+  }
+}
+
+function sampleFacetQuery(filters: SampleFacetFilters) {
+  const normalized = normalizeSampleFacetFilters(filters)
+  return {
+    sample_type: normalized.sampleType,
+    sample_type_is_null: normalized.sampleTypeIsNull,
+  }
+}
+
+function datasetFacetQuery(filters: DatasetFacetFilters) {
+  const normalized = normalizeDatasetFacetFilters(filters)
+  return {
+    data_format: normalized.dataFormat,
+    data_format_is_null: normalized.dataFormatIsNull,
+    measurement: normalized.measurement,
+    measurement_is_null: normalized.measurementIsNull,
+    session_name: normalized.sessionName,
+    session_name_is_null: normalized.sessionNameIsNull,
+  }
 }
 
 function fixtureQueryRows<
@@ -256,7 +387,8 @@ export async function readWorkspaceSamples(
   input: {
     cursor?: string
     limit: number
-  } & ProjectScopedInput,
+  } & ProjectScopedInput &
+    SampleFacetFilters,
   requestSignal?: AbortSignal
 ): Promise<WorkspaceCursorPage<WorkspaceSample>> {
   const configuration = readWorkspaceConfiguration()
@@ -286,7 +418,10 @@ export async function readWorkspaceSamples(
     )
     return fixtureCursorPage(
       fixtureQueryRows(
-        fixtureCollectionRows(projectSamples, input),
+        fixtureSampleFacetRows(
+          fixtureCollectionRows(projectSamples, input),
+          input
+        ),
         input,
         workspace.account.unique_id,
         (sample) => sample.sample_name
@@ -312,6 +447,7 @@ export async function readWorkspaceSamples(
         limit: input.limit,
         project_mfid: input.projectMfid,
         project_scope: projectScope,
+        ...sampleFacetQuery(input),
         sort: collectionQuery.sort,
         visibility: collectionFilters.visibility,
         ...creationTimeBounds(collectionFilters),
@@ -335,7 +471,8 @@ export async function readWorkspaceDatasets(
     cursor?: string
     instrumentMfid?: string
     limit: number
-  } & ProjectScopedInput,
+  } & ProjectScopedInput &
+    DatasetFacetFilters,
   requestSignal?: AbortSignal
 ): Promise<WorkspaceCursorPage<WorkspaceDataset>> {
   const instrumentMfid = normalizedInstrumentMfid(input.instrumentMfid)
@@ -369,7 +506,10 @@ export async function readWorkspaceDatasets(
     )
     return fixtureCursorPage(
       fixtureQueryRows(
-        fixtureCollectionRows(filteredDatasets, input),
+        fixtureDatasetFacetRows(
+          fixtureCollectionRows(filteredDatasets, input),
+          input
+        ),
         input,
         workspace.account.unique_id,
         (dataset) => dataset.dataset_name ?? ""
@@ -396,6 +536,7 @@ export async function readWorkspaceDatasets(
         limit: input.limit,
         project_mfid: input.projectMfid,
         project_scope: projectScope,
+        ...datasetFacetQuery(input),
         sort: collectionQuery.sort,
         visibility: collectionFilters.visibility,
         ...creationTimeBounds(collectionFilters),
@@ -412,4 +553,128 @@ export async function readWorkspaceDatasets(
     nextCursor: result.data.next_cursor ?? null,
     total: result.data.total ?? null,
   }
+}
+
+type FacetContextInput = ProjectScopedInput & {
+  cursor?: string
+  limit: number
+}
+
+export async function readWorkspaceSampleFacets(
+  input: FacetContextInput & SampleFacetFilters & { field: SampleFacetField },
+  requestSignal?: AbortSignal
+): Promise<WorkspaceFacetPage> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable")
+    throw new Error(configuration.reason)
+  if (configuration.mode === "fixture") {
+    const workspace = fixtureWorkspace(input.scenario)
+    const samples = fixtureSampleFacetRows(
+      fixtureCollectionRows(
+        fixtureProjectRows(
+          workspace.samples,
+          input,
+          "samples",
+          workspace.projects
+        ),
+        input
+      ),
+      input
+    )
+    return fixtureFacetPage(
+      facetBuckets(samples.map((sample) => sample.sample_type)),
+      input,
+      input.field
+    )
+  }
+
+  const filters = normalizeCollectionFilters(input)
+  const query = normalizeCollectionQueryOptions(input)
+  const result = await createCrucibleClient(configuration).GET(
+    "/samples/facets",
+    {
+      params: {
+        query: {
+          affiliation: query.affiliation ? [query.affiliation] : undefined,
+          cursor: input.cursor,
+          field: input.field,
+          limit: input.limit,
+          project_mfid: input.projectMfid,
+          project_scope: normalizedProjectScope(input),
+          visibility: filters.visibility,
+          ...creationTimeBounds(filters),
+          ...sampleFacetQuery(input),
+        },
+      },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return toWorkspaceFacetPage(result.data, input.field)
+}
+
+export async function readWorkspaceDatasetFacets(
+  input: FacetContextInput &
+    DatasetFacetFilters & {
+      field: DatasetFacetField
+      instrumentMfid?: string
+    },
+  requestSignal?: AbortSignal
+): Promise<WorkspaceFacetPage> {
+  const instrumentMfid = normalizedInstrumentMfid(input.instrumentMfid)
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable")
+    throw new Error(configuration.reason)
+  if (configuration.mode === "fixture") {
+    const workspace = fixtureWorkspace(input.scenario)
+    const datasets = fixtureDatasetFacetRows(
+      fixtureCollectionRows(
+        fixtureProjectRows(
+          instrumentMfid
+            ? workspace.datasets.filter(
+                (dataset) => dataset.instrument?.unique_id === instrumentMfid
+              )
+            : workspace.datasets,
+          input,
+          "datasets",
+          workspace.projects
+        ),
+        input
+      ),
+      input
+    )
+    const values = datasets.map((dataset) =>
+      input.field === "session"
+        ? dataset.session_name
+        : input.field === "measurement"
+          ? dataset.measurement
+          : dataset.data_format
+    )
+    return fixtureFacetPage(facetBuckets(values), input, input.field)
+  }
+
+  const filters = normalizeCollectionFilters(input)
+  const query = normalizeCollectionQueryOptions(input)
+  const result = await createCrucibleClient(configuration).GET(
+    "/datasets/facets",
+    {
+      params: {
+        query: {
+          affiliation: query.affiliation ? [query.affiliation] : undefined,
+          cursor: input.cursor,
+          field: input.field,
+          instrument_mfid: instrumentMfid,
+          limit: input.limit,
+          project_mfid: input.projectMfid,
+          project_scope: normalizedProjectScope(input),
+          visibility: filters.visibility,
+          ...creationTimeBounds(filters),
+          ...datasetFacetQuery(input),
+        },
+      },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return toWorkspaceFacetPage(result.data, input.field)
 }

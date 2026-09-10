@@ -63,6 +63,10 @@ import type {
   SortDirection,
 } from "@/data/crucible/collection-query"
 import type { ProjectScope } from "@/data/crucible/data.queries"
+import type {
+  DatasetFacetFilters,
+  SampleFacetFilters,
+} from "@/data/crucible/facets"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 
 export const Route = createFileRoute("/_app/data")({
@@ -72,13 +76,25 @@ export const Route = createFileRoute("/_app/data")({
     affiliation: search.affiliation,
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
+    dataFormat: search.dataFormat,
+    dataFormatIsNull: search.dataFormatIsNull,
+    dataFormatSet: search.dataFormatSet,
     datasetCursor: search.datasetCursor,
     direction: search.direction,
     instrumentMfid: search.instrumentMfid,
     kind: search.kind,
+    measurement: search.measurement,
+    measurementIsNull: search.measurementIsNull,
+    measurementSet: search.measurementSet,
     projectMfid: search.projectMfid,
     projectScope: search.projectScope,
     sampleCursor: search.sampleCursor,
+    sampleType: search.sampleType,
+    sampleTypeIsNull: search.sampleTypeIsNull,
+    sampleTypeSet: search.sampleTypeSet,
+    sessionName: search.sessionName,
+    sessionNameIsNull: search.sessionNameIsNull,
+    sessionNameSet: search.sessionNameSet,
     sort: search.sort,
     visibility: search.visibility,
   }),
@@ -225,8 +241,16 @@ function DataResults({
   const hasActiveFilters = Boolean(
     filters.createdFrom ||
     filters.createdTo ||
+    filters.dataFormat !== undefined ||
+    filters.dataFormatIsNull ||
     filters.instrumentMfid ||
     filters.projectMfid ||
+    filters.measurement !== undefined ||
+    filters.measurementIsNull ||
+    filters.sampleType !== undefined ||
+    filters.sampleTypeIsNull ||
+    filters.sessionName !== undefined ||
+    filters.sessionNameIsNull ||
     filters.visibility ||
     filters.affiliation ||
     filters.sort
@@ -542,6 +566,8 @@ function dataKind(kind: string | undefined): DataKindFilter {
 
 type DataCollectionQueryFilters = CollectionFilters &
   CollectionQueryOptions &
+  DatasetFacetFilters &
+  SampleFacetFilters &
   (
     | { projectMfid?: undefined; projectScope?: undefined }
     | { projectMfid: string; projectScope: ProjectScope }
@@ -560,12 +586,23 @@ function collectionQueryFilters(
     direction: filters.direction,
     sort: filters.sort,
   }
+  const facetFilters: DatasetFacetFilters & SampleFacetFilters = {
+    dataFormat: filters.dataFormat,
+    dataFormatIsNull: filters.dataFormatIsNull,
+    measurement: filters.measurement,
+    measurementIsNull: filters.measurementIsNull,
+    sampleType: filters.sampleType,
+    sampleTypeIsNull: filters.sampleTypeIsNull,
+    sessionName: filters.sessionName,
+    sessionNameIsNull: filters.sessionNameIsNull,
+  }
   return filters.projectMfid
     ? {
         ...collectionFilters,
         ...collectionQuery,
+        ...facetFilters,
         projectMfid: filters.projectMfid,
         projectScope: filters.projectScope,
       }
-    : { ...collectionFilters, ...collectionQuery }
+    : { ...collectionFilters, ...collectionQuery, ...facetFilters }
 }

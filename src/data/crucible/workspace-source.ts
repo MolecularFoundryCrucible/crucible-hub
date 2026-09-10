@@ -92,12 +92,14 @@ export type WorkspaceSample = Pick<
 export type WorkspaceDataset = Pick<
   Schema<"DatasetResponse">,
   | "creation_time"
+  | "data_format"
   | "dataset_name"
   | "instrument_id"
   | "measurement"
   | "modification_time"
   | "project_id"
   | "public"
+  | "session_name"
   | "size"
   | "timestamp"
   | "unique_id"
