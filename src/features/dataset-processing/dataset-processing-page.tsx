@@ -38,7 +38,6 @@ import {
   FieldTitle,
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { Separator } from "@/components/ui/separator"
 import {
   Table,
   TableBody,
@@ -125,7 +124,7 @@ function FilesAndIngestionCard({
           </CardAction>
         ) : null}
       </CardHeader>
-      <CardContent className="flex flex-col gap-5 px-0">
+      <CardContent className="flex flex-col px-0">
         <section aria-labelledby="processing-files-heading">
           <h3 className="sr-only" id="processing-files-heading">
             Files
@@ -170,19 +169,27 @@ function FilesAndIngestionCard({
             />
           )}
         </section>
-        <Separator />
         <section
           aria-labelledby="ingestion-history-heading"
-          className="px-4 sm:px-6"
+          className="bg-muted/30 py-4"
         >
-          <h3
-            className="mb-3 font-heading text-label"
-            id="ingestion-history-heading"
-          >
-            Request history
-          </h3>
+          <div className="mb-3 flex items-baseline gap-2 px-4 sm:px-6">
+            <h3
+              className="font-heading text-label"
+              id="ingestion-history-heading"
+            >
+              Request history
+            </h3>
+            {requestPage ? (
+              <span className="text-supporting text-muted-foreground tabular-nums">
+                {requestPage.total}
+              </span>
+            ) : null}
+          </div>
           {requestsResult.isPending ? (
-            <CollectionRowsPending label="ingestion request history" />
+            <div className="px-4 sm:px-6">
+              <CollectionRowsPending label="ingestion request history" />
+            </div>
           ) : requests !== undefined ? (
             requests.length ? (
               <IngestionRequestHistory
@@ -190,14 +197,18 @@ function FilesAndIngestionCard({
                 total={requestPage?.total ?? requests.length}
               />
             ) : (
-              <PanelState title="No ingestion requests" />
+              <div className="px-4 sm:px-6">
+                <PanelState title="No ingestion requests" />
+              </div>
             )
           ) : (
-            <PanelState
-              retry={() => void requestsResult.refetch()}
-              role="alert"
-              title="Request history could not be loaded"
-            />
+            <div className="px-4 sm:px-6">
+              <PanelState
+                retry={() => void requestsResult.refetch()}
+                role="alert"
+                title="Request history could not be loaded"
+              />
+            </div>
           )}
         </section>
       </CardContent>
@@ -302,7 +313,7 @@ function IngestionRequestHistory({
   return (
     <div className="flex flex-col gap-2">
       {total > requests.length ? (
-        <p className="text-supporting text-muted-foreground">
+        <p className="px-4 text-supporting text-muted-foreground sm:px-6">
           Showing {requests.length} of {total}
         </p>
       ) : null}
