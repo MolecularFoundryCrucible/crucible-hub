@@ -8,16 +8,29 @@ const initialFieldLimit = 6
 const additionalFieldsPath = '{"hub":"additional-fields"}'
 
 type MetadataEntry = readonly [string, WorkspaceMetadataValue]
+export type ScientificMetadataExpansion = ReturnType<
+  typeof useScientificMetadataExpansion
+>
 
 export function ScientificMetadata({
   emptyMessage = "No scientific metadata is available.",
+  expansion,
   expandFirstLevel = false,
   metadata,
+  showExpansionAction = false,
 }: {
   emptyMessage?: string
+  expansion?: ScientificMetadataExpansion
   expandFirstLevel?: boolean
   metadata: WorkspaceMetadataValue | undefined
+  showExpansionAction?: boolean
 }) {
+  const internalExpansion = useScientificMetadataExpansion(
+    metadata,
+    expandFirstLevel
+  )
+  const activeExpansion = expansion ?? internalExpansion
+
   if (metadata === null || metadata === undefined || isEmptyValue(metadata)) {
     return <p className="text-body text-muted-foreground">{emptyMessage}</p>
   }
@@ -25,9 +38,9 @@ export function ScientificMetadata({
   if (isMetadataArray(metadata)) {
     return (
       <MetadataTree
-        expandFirstLevel={expandFirstLevel}
+        expansion={activeExpansion}
         initialEntries={arrayEntries(metadata)}
-        metadata={metadata}
+        showExpansionAction={showExpansionAction}
       />
     )
   }
@@ -40,40 +53,35 @@ export function ScientificMetadata({
   return (
     <MetadataTree
       additionalEntries={entries.slice(initialFieldLimit)}
-      expandFirstLevel={expandFirstLevel}
+      expansion={activeExpansion}
       initialEntries={entries.slice(0, initialFieldLimit)}
-      metadata={metadata}
+      showExpansionAction={showExpansionAction}
     />
   )
 }
 
-function MetadataTree({
-  additionalEntries = [],
-  expandFirstLevel,
-  initialEntries,
-  metadata,
-}: {
-  additionalEntries?: readonly MetadataEntry[]
-  expandFirstLevel: boolean
-  initialEntries: readonly MetadataEntry[]
-  metadata: WorkspaceMetadataValue
-}) {
-  const allPaths = expandablePaths([...initialEntries, ...additionalEntries])
-  if (additionalEntries.length > 0) allPaths.push(additionalFieldsPath)
+export function useScientificMetadataExpansion(
+  metadata: WorkspaceMetadataValue | undefined,
+  expandFirstLevel = false
+) {
+  const entries = metadataEntries(metadata)
+  const allPaths = expandablePaths(entries)
+  if (entries.length > initialFieldLimit) allPaths.push(additionalFieldsPath)
   const [expandedPaths, setExpandedPaths] = useState<ReadonlySet<string>>(
     () =>
       new Set(
         expandFirstLevel
-          ? expandablePaths(initialEntries, [], true)
-          : ([] as string[])
+          ? expandablePaths(entries.slice(0, initialFieldLimit), [], true)
+          : []
       )
   )
 
   useEffect(() => {
+    const nextEntries = metadataEntries(metadata)
     setExpandedPaths(
       new Set(
         expandFirstLevel
-          ? expandablePaths(metadataInitialEntries(metadata), [], true)
+          ? expandablePaths(nextEntries.slice(0, initialFieldLimit), [], true)
           : []
       )
     )
@@ -92,35 +100,68 @@ function MetadataTree({
     })
   }
 
+  return {
+    allExpanded,
+    canExpand: allPaths.length > 0,
+    expandedPaths,
+    setExpanded,
+    toggleAll: () =>
+      setExpandedPaths(allExpanded ? new Set() : new Set(allPaths)),
+  }
+}
+
+export function ScientificMetadataExpansionAction({
+  expansion,
+}: {
+  expansion: ScientificMetadataExpansion
+}) {
+  if (!expansion.canExpand) return null
+  return (
+    <Button
+      onClick={expansion.toggleAll}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
+      {expansion.allExpanded ? "Collapse all" : "Expand all"}
+    </Button>
+  )
+}
+
+function MetadataTree({
+  additionalEntries = [],
+  expansion,
+  initialEntries,
+  showExpansionAction,
+}: {
+  additionalEntries?: readonly MetadataEntry[]
+  expansion: ScientificMetadataExpansion
+  initialEntries: readonly MetadataEntry[]
+  showExpansionAction: boolean
+}) {
   return (
     <div className="min-w-0">
-      {allPaths.length > 0 ? (
+      {showExpansionAction && expansion.canExpand ? (
         <div className="mb-2 flex justify-end">
-          <Button
-            onClick={() =>
-              setExpandedPaths(allExpanded ? new Set() : new Set(allPaths))
-            }
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {allExpanded ? "Collapse all" : "Expand all"}
-          </Button>
+          <ScientificMetadataExpansionAction expansion={expansion} />
         </div>
       ) : null}
       <MetadataEntries
         entries={initialEntries}
-        expandedPaths={expandedPaths}
-        onExpandedChange={setExpanded}
+        expandedPaths={expansion.expandedPaths}
+        onExpandedChange={expansion.setExpanded}
         path={[]}
       />
       {additionalEntries.length > 0 ? (
         <details
           className="group/more border-t"
           onToggle={(event) =>
-            setExpanded(additionalFieldsPath, event.currentTarget.open)
+            expansion.setExpanded(
+              additionalFieldsPath,
+              event.currentTarget.open
+            )
           }
-          open={expandedPaths.has(additionalFieldsPath)}
+          open={expansion.expandedPaths.has(additionalFieldsPath)}
         >
           <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 py-2 text-label text-muted-foreground [&::-webkit-details-marker]:hidden">
             <MetadataDisclosureIcon
@@ -131,8 +172,8 @@ function MetadataTree({
           </summary>
           <MetadataEntries
             entries={additionalEntries}
-            expandedPaths={expandedPaths}
-            onExpandedChange={setExpanded}
+            expandedPaths={expansion.expandedPaths}
+            onExpandedChange={expansion.setExpanded}
             path={[]}
           />
         </details>
@@ -233,7 +274,7 @@ function MetadataCollection({
           {label}
         </span>
         <span className="font-mono text-body text-muted-foreground sm:col-span-2">
-          {array ? "Empty list" : "Empty object"}
+          {array ? "[]" : "{}"}
         </span>
       </div>
     )
@@ -326,12 +367,13 @@ function arrayEntries(value: readonly WorkspaceMetadataValue[]) {
   return value.map((item, index) => [String(index + 1), item] as const)
 }
 
-function metadataInitialEntries(
-  metadata: WorkspaceMetadataValue
+function metadataEntries(
+  metadata: WorkspaceMetadataValue | undefined
 ): readonly MetadataEntry[] {
+  if (metadata === undefined) return []
   if (isMetadataArray(metadata)) return arrayEntries(metadata)
   if (isMetadataObject(metadata)) {
-    return sortedEntries(metadata).slice(0, initialFieldLimit)
+    return sortedEntries(metadata)
   }
   return []
 }

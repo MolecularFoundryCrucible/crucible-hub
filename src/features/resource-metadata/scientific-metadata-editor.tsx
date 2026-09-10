@@ -5,7 +5,11 @@ import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditScientificMetadataIcon } from "@/components/crucible/icons"
-import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
+import {
+  ScientificMetadata,
+  ScientificMetadataExpansionAction,
+  useScientificMetadataExpansion,
+} from "@/components/crucible/scientific-metadata"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -201,6 +205,10 @@ export function ScientificMetadataEditor({
   scope: IdentityScope
 }) {
   const [editing, setEditing] = useState(false)
+  const expansion = useScientificMetadataExpansion(
+    resource.scientific_metadata,
+    true
+  )
   if (editing) {
     return (
       <ScientificMetadataForm
@@ -217,15 +225,23 @@ export function ScientificMetadataEditor({
     <Card>
       <CardHeader>
         <CardTitle>Scientific metadata</CardTitle>
-        {resource.capabilities?.can_edit === true ? (
+        {expansion.canExpand || resource.capabilities?.can_edit === true ? (
           <CardAction>
-            <EditScientificMetadataButton onClick={() => setEditing(true)} />
+            <div className="flex items-center justify-end gap-1">
+              <ScientificMetadataExpansionAction expansion={expansion} />
+              {resource.capabilities?.can_edit === true ? (
+                <EditScientificMetadataButton
+                  onClick={() => setEditing(true)}
+                />
+              ) : null}
+            </div>
           </CardAction>
         ) : null}
       </CardHeader>
       <CardContent>
         <ScientificMetadata
           emptyMessage="This resource does not currently expose scientific metadata."
+          expansion={expansion}
           expandFirstLevel
           metadata={resource.scientific_metadata}
         />

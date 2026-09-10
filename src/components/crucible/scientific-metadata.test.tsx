@@ -91,8 +91,8 @@ describe("ScientificMetadata", () => {
       />
     )
 
-    expect(screen.getByText("Empty list")).toBeTruthy()
-    expect(screen.getByText("Empty object")).toBeTruthy()
+    expect(screen.getByText("[]")).toBeTruthy()
+    expect(screen.getByText("{}")).toBeTruthy()
     expect(screen.getByText("Empty string")).toBeTruthy()
   })
 
@@ -108,6 +108,7 @@ describe("ScientificMetadata", () => {
           gamma: 3,
           theta: { value: 8 },
         }}
+        showExpansionAction
       />
     )
 
