@@ -225,8 +225,11 @@ export function ResourceOverview({
 
   return (
     <ContentGrid variant="detail">
-      <ContentGridItem span="wide">
+      <ContentGridItem className="flex flex-col gap-page-section" span="wide">
         <ResourceSummaryCard mode={mode} resource={resource} scope={scope} />
+        {resource.kind === "dataset" ? (
+          <DatasetFiles datasetMfid={resource.unique_id} />
+        ) : null}
       </ContentGridItem>
       <ContentGridItem className="flex flex-col gap-page-section" span="narrow">
         <IdentityCard resource={resource} />
@@ -239,11 +242,6 @@ export function ResourceOverview({
           />
         ) : null}
       </ContentGridItem>
-      {resource.kind === "dataset" ? (
-        <ContentGridItem span="wide">
-          <DatasetFiles datasetMfid={resource.unique_id} />
-        </ContentGridItem>
-      ) : null}
       <ContentGridItem span="full">
         <ContentGrid variant="split">
           <ResourceRelationshipManager resource={resource} scope={scope} />
