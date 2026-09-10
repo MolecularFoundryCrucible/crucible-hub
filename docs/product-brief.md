@@ -61,7 +61,7 @@ Dataset Overview loads thumbnail previews and a compact downloadable file list i
 
 ### Create and upload
 
-Creation uses dedicated project, sample, and dataset routes. Sample and dataset creation selects a project, dataset creation may select a registered instrument and associated samples, and all selectors retain canonical MFIDs while the server resolves mutable API slugs. Hub omits canonical identity from creation input and navigates by the API-assigned MFID. Structural creation is confirmed before scientific metadata, relationships, or files become later stages. Each completed stage remains visible after a later failure so retry never duplicates successful work.
+Creation uses dedicated project, sample, and dataset routes. Sample and dataset creation selects a project, dataset creation may select a registered instrument, and both resource forms may queue supported parent-child or cross-type relationships. All selectors retain canonical MFIDs while the server resolves mutable API slugs. Hub omits canonical identity from creation input and navigates by the API-assigned MFID. Structural creation is confirmed before relationship, scientific metadata, or file operations become later stages. Each completed stage remains visible after a later failure so retry never duplicates successful work.
 
 ### Manage resources and access
 

@@ -75,11 +75,7 @@ function NewDatasetPage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        description="Create a dataset and optionally associate it with samples."
-        eyebrow="Data"
-        title="Create dataset"
-      />
+      <PageHeader eyebrow="Data" title="Create dataset" />
       <DatasetCreationForm
         initialInstrument={loaderData?.initialInstrument}
         initialProject={loaderData?.initialProject}

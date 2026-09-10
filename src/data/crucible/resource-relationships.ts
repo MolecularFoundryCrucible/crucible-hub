@@ -1,8 +1,43 @@
+import type { FixtureScenario } from "./fixture-scenarios"
 import type {
   WorkspaceLinkedResource,
   WorkspaceRelationshipOperation,
   WorkspaceRelationshipType,
 } from "./workspace-source"
+
+export type WorkspaceRelationshipResourceKind = "dataset" | "sample"
+export type WorkspaceRelationship =
+  WorkspaceRelationshipOperation["relationship"]
+
+export type WorkspaceRelationshipChoice = {
+  label: string
+  relationship: WorkspaceRelationship
+  targetKind: WorkspaceRelationshipResourceKind
+}
+
+export const workspaceRelationshipChoices = {
+  dataset: [
+    { label: "Parent dataset", relationship: "parent", targetKind: "dataset" },
+    { label: "Child dataset", relationship: "child", targetKind: "dataset" },
+    {
+      label: "Linked sample",
+      relationship: "associated",
+      targetKind: "sample",
+    },
+  ],
+  sample: [
+    { label: "Parent sample", relationship: "parent", targetKind: "sample" },
+    { label: "Child sample", relationship: "child", targetKind: "sample" },
+    {
+      label: "Linked dataset",
+      relationship: "associated",
+      targetKind: "dataset",
+    },
+  ],
+} as const satisfies Record<
+  WorkspaceRelationshipResourceKind,
+  readonly WorkspaceRelationshipChoice[]
+>
 
 export const workspaceRelationshipTypeOptions = [
   { label: "Derived from", value: "is_derived_from" },
@@ -95,4 +130,72 @@ export function inverseWorkspaceRelationship(
 ) {
   if (relationship === "associated") return relationship
   return relationship === "parent" ? "child" : "parent"
+}
+
+export function workspaceRelationshipOperation({
+  action,
+  relationship,
+  relationshipType,
+  resourceKind,
+  resourceMfid,
+  scenario,
+  targetMfid,
+}: {
+  action: "link" | "unlink"
+  relationship: WorkspaceRelationship
+  relationshipType?: WorkspaceRelationshipType | null
+  resourceKind: WorkspaceRelationshipResourceKind
+  resourceMfid: string
+  scenario?: FixtureScenario
+  targetMfid: string
+}): WorkspaceRelationshipOperation {
+  const base = {
+    action,
+    relationship,
+    scenario,
+    sourceMfid: resourceMfid,
+    targetMfid,
+  }
+  if (relationship === "associated") {
+    return resourceKind === "sample"
+      ? {
+          ...base,
+          relationship: "associated",
+          sourceKind: "sample",
+          targetKind: "dataset",
+        }
+      : {
+          ...base,
+          relationship: "associated",
+          sourceKind: "dataset",
+          targetKind: "sample",
+        }
+  }
+  return resourceKind === "sample"
+    ? {
+        ...base,
+        relationship,
+        relationshipType,
+        sourceKind: "sample",
+        targetKind: "sample",
+      }
+    : {
+        ...base,
+        relationship,
+        relationshipType,
+        sourceKind: "dataset",
+        targetKind: "dataset",
+      }
+}
+
+export function workspaceRelationshipChoiceDescription(
+  resourceKind: WorkspaceRelationshipResourceKind,
+  choice: WorkspaceRelationshipChoice
+) {
+  if (choice.relationship === "associated") {
+    return `The ${choice.targetKind} and ${resourceKind} will be linked without a parent-child direction.`
+  }
+  return choice.relationship === "parent"
+    ? `The selected ${choice.targetKind} will be a parent of this ${resourceKind}.`
+    : `The selected ${choice.targetKind} will be a child of this ${resourceKind}.`
 }

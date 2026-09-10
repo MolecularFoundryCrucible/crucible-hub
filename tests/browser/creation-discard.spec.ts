@@ -110,13 +110,13 @@ test("creates a sample in a preselected project", async ({ page }) => {
   ).toBeVisible()
 })
 
-test("creates a dataset with optional details collapsed", async ({ page }) => {
+test("creates a dataset with optional details visible", async ({ page }) => {
   await page.goto(
     `/hub/datasets/new?scenario=populated&projectMfid=${projectMfid}`
   )
   await page.waitForLoadState("networkidle")
-  await expect(page.getByText("Optional acquisition details")).toBeVisible()
-  await expect(page.getByLabel("Measurement")).toBeHidden()
+  await expect(page.getByRole("group", { name: "Acquisition" })).toBeVisible()
+  await expect(page.getByLabel("Measurement")).toBeVisible()
   await page.getByLabel("Name", { exact: true }).fill("Validation scan")
   await page.getByLabel("Name", { exact: true }).press("Tab")
   await page.getByRole("button", { name: "Create dataset" }).click()

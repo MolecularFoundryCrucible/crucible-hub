@@ -42,9 +42,19 @@ import {
 } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { unwrapHubResult } from "@/data/crucible/result"
-import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
+import type {
+  WorkspaceResourceDetail,
+  WorkspaceSearchResult,
+} from "@/data/crucible/workspace-source"
 import { isValidLocalDateTime, localDateTimeToUtc } from "@/lib/format"
 
+import {
+  creationRelationshipDraftSchema,
+  CreationRelationshipsField,
+  useCreationRelationshipSubmission,
+} from "./creation-relationships"
+import type { CreationRelationshipDraft } from "./creation-relationships"
+import { CreationFormSection } from "./creation-form-section"
 import {
   creationFailureMessage,
   isUncertainCreationError,
@@ -67,6 +77,7 @@ const sampleSchema = z.object({
       `Use ${SAMPLE_DESCRIPTION_MAX_LENGTH.toLocaleString()} characters or fewer.`
     ),
   project: selectedProjectSchema,
+  relationships: z.array(creationRelationshipDraftSchema).max(10),
   sample_name: z
     .string()
     .trim()
@@ -105,6 +116,8 @@ export function SampleCreationForm({
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string>()
   const [uncertainOutcome, setUncertainOutcome] = useState(false)
+  const [createdSample, setCreatedSample] =
+    useState<Extract<WorkspaceResourceDetail, { kind: "sample" }>>()
   const mutation = useMutation({
     mutationFn: async (value: SampleValues) =>
       unwrapHubResult(
@@ -123,13 +136,35 @@ export function SampleCreationForm({
         })
       ),
   })
+  const relationships = useCreationRelationshipSubmission({
+    onApplied: (resource) => {
+      if (resource.kind === "sample") setCreatedSample(resource)
+    },
+    resourceKind: "sample",
+    scope,
+  })
   const form = useSampleForm(initialProject, async (value, submittedForm) => {
     setSaveError(undefined)
+    if (createdSample) {
+      const complete = await relationships.apply(
+        createdSample.unique_id,
+        value.relationships
+      )
+      if (complete) {
+        await navigate({
+          params: { sampleMfid: createdSample.unique_id },
+          to: "/samples/$sampleMfid",
+        })
+      }
+      return
+    }
+    if (uncertainOutcome) return
     try {
       const resource = await mutation.mutateAsync(value)
       if (resource.kind !== "sample") {
         throw new Error("The sample creation response is invalid.")
       }
+      setCreatedSample(resource)
       const resourceQuery = resourceQueryOptions(scope, resource.unique_id)
       queryClient.setQueryData(resourceQuery.queryKey, resource)
       void queryClient.invalidateQueries({
@@ -139,10 +174,16 @@ export function SampleCreationForm({
         queryKey: crucibleKeys.searches(scope),
       })
       submittedForm.reset(value)
-      await navigate({
-        params: { sampleMfid: resource.unique_id },
-        to: "/samples/$sampleMfid",
-      })
+      const complete = await relationships.apply(
+        resource.unique_id,
+        value.relationships
+      )
+      if (complete) {
+        await navigate({
+          params: { sampleMfid: resource.unique_id },
+          to: "/samples/$sampleMfid",
+        })
+      }
     } catch (error) {
       const uncertain = isUncertainCreationError(error)
       setUncertainOutcome(uncertain)
@@ -150,6 +191,7 @@ export function SampleCreationForm({
     }
   })
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+  const busy = isSubmitting || mutation.isPending || relationships.isPending
   const discard = useDiscardProtection(
     () => form.state.isDirty,
     () => {
@@ -161,13 +203,9 @@ export function SampleCreationForm({
 
   return (
     <PageLayout>
-      <PageHeader
-        description="Create a sample record and associate it with a project."
-        eyebrow="Samples"
-        title="Create sample"
-      />
+      <PageHeader eyebrow="Samples" title="Create sample" />
       <ContentBoundary width="reading">
-        <Card aria-busy={isSubmitting}>
+        <Card aria-busy={busy}>
           <CardHeader>
             <CardTitle>Sample details</CardTitle>
           </CardHeader>
@@ -181,13 +219,19 @@ export function SampleCreationForm({
                 void form.handleSubmit()
               }}
             >
-              <fieldset disabled={isSubmitting}>
+              <fieldset disabled={busy || Boolean(createdSample)}>
                 <FieldGroup>
+                  <SampleTextField
+                    autoFocus
+                    fieldName="sample_name"
+                    form={form}
+                    label="Name"
+                    required
+                  />
                   <form.Field name="project">
                     {(field) => {
                       const invalid =
                         field.state.meta.isTouched && !field.state.meta.isValid
-                      const descriptionId = `${field.name}-description`
                       const errorId = `${field.name}-error`
                       return (
                         <Field data-invalid={invalid}>
@@ -195,7 +239,7 @@ export function SampleCreationForm({
                             Project <span aria-hidden="true">*</span>
                           </FieldLabel>
                           <ResourceChooser
-                            describedBy={`${descriptionId} ${errorId}`}
+                            describedBy={errorId}
                             emptyLabel="Choose a project"
                             invalid={invalid}
                             kind="project"
@@ -205,98 +249,12 @@ export function SampleCreationForm({
                             triggerId={field.name}
                             value={field.state.value ?? undefined}
                           />
-                          <FieldDescription id={descriptionId}>
-                            Choose the sample&apos;s primary project.
-                          </FieldDescription>
                           {invalid ? (
                             <FieldError
                               errors={field.state.meta.errors}
                               id={errorId}
                             />
                           ) : null}
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-                  <SampleTextField
-                    autoFocus
-                    fieldName="sample_name"
-                    form={form}
-                    label="Name"
-                    required
-                  />
-                  <SampleTextField
-                    fieldName="sample_type"
-                    form={form}
-                    label="Type"
-                  />
-                  <form.Field name="description">
-                    {(field) => {
-                      const invalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
-                      const descriptionId = `${field.name}-description`
-                      const errorId = `${field.name}-error`
-                      return (
-                        <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            Description
-                          </FieldLabel>
-                          <Textarea
-                            aria-describedby={`${descriptionId} ${errorId}`}
-                            aria-errormessage={invalid ? errorId : undefined}
-                            aria-invalid={invalid || undefined}
-                            id={field.name}
-                            name={field.name}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
-                            rows={4}
-                            value={field.state.value}
-                          />
-                          <FieldDescription id={descriptionId}>
-                            Optional
-                          </FieldDescription>
-                          <FieldError
-                            errors={field.state.meta.errors}
-                            id={errorId}
-                          />
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-                  <form.Field name="timestamp">
-                    {(field) => {
-                      const invalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
-                      const descriptionId = `${field.name}-description`
-                      const errorId = `${field.name}-error`
-                      return (
-                        <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            Timestamp (local)
-                          </FieldLabel>
-                          <Input
-                            aria-describedby={`${descriptionId} ${errorId}`}
-                            aria-errormessage={invalid ? errorId : undefined}
-                            aria-invalid={invalid || undefined}
-                            id={field.name}
-                            name={field.name}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            type="datetime-local"
-                            value={field.state.value}
-                          />
-                          <FieldDescription id={descriptionId}>
-                            Optional. Stored as UTC.
-                          </FieldDescription>
-                          <FieldError
-                            errors={field.state.meta.errors}
-                            id={errorId}
-                          />
                         </Field>
                       )
                     }}
@@ -345,6 +303,91 @@ export function SampleCreationForm({
                       )
                     }}
                   </form.Field>
+                  <CreationFormSection title="Details">
+                    <SampleTextField
+                      fieldName="sample_type"
+                      form={form}
+                      label="Sample type"
+                    />
+                    <form.Field name="timestamp">
+                      {(field) => {
+                        const invalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid
+                        const errorId = `${field.name}-error`
+                        return (
+                          <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor={field.name}>
+                              Local date and time
+                            </FieldLabel>
+                            <Input
+                              aria-describedby={errorId}
+                              aria-errormessage={invalid ? errorId : undefined}
+                              aria-invalid={invalid || undefined}
+                              id={field.name}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              type="datetime-local"
+                              value={field.state.value}
+                            />
+                            <FieldError
+                              errors={field.state.meta.errors}
+                              id={errorId}
+                            />
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                    <form.Field name="description">
+                      {(field) => {
+                        const invalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid
+                        const errorId = `${field.name}-error`
+                        return (
+                          <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor={field.name}>
+                              Description
+                            </FieldLabel>
+                            <Textarea
+                              aria-describedby={errorId}
+                              aria-errormessage={invalid ? errorId : undefined}
+                              aria-invalid={invalid || undefined}
+                              id={field.name}
+                              maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              rows={4}
+                              value={field.state.value}
+                            />
+                            <FieldError
+                              errors={field.state.meta.errors}
+                              id={errorId}
+                            />
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                  </CreationFormSection>
+                  <CreationFormSection title="Relationships">
+                    <form.Field name="relationships">
+                      {(field) => (
+                        <CreationRelationshipsField
+                          disabled={busy || Boolean(createdSample)}
+                          onChange={field.handleChange}
+                          resourceKind="sample"
+                          scope={scope}
+                          value={field.state.value}
+                        />
+                      )}
+                    </form.Field>
+                  </CreationFormSection>
                 </FieldGroup>
               </fieldset>
               <div aria-live="polite" className="min-h-5 pt-5 text-body">
@@ -353,12 +396,21 @@ export function SampleCreationForm({
                     {saveError}
                   </p>
                 ) : null}
+                {createdSample && relationships.failures.length ? (
+                  <p className="text-destructive" role="alert">
+                    The sample was created, but relationships with{" "}
+                    {relationships.failures
+                      .map((draft) => draft.target.name)
+                      .join(", ")}{" "}
+                    still need recovery.
+                  </p>
+                ) : null}
               </div>
             </form>
           </CardContent>
           <CardFooter className="justify-end gap-2">
             <Button
-              disabled={isSubmitting}
+              disabled={busy}
               onClick={discard.requestCancel}
               type="button"
               variant="outline"
@@ -366,18 +418,24 @@ export function SampleCreationForm({
               Cancel
             </Button>
             <Button
-              className="w-36"
-              disabled={isSubmitting || uncertainOutcome}
+              className="min-w-52"
+              disabled={
+                busy ||
+                uncertainOutcome ||
+                (Boolean(createdSample) && relationships.failures.length === 0)
+              }
               form={formId}
               type="submit"
             >
-              <span className="inline-grid min-w-28 place-items-center">
-                {uncertainOutcome
+              {createdSample
+                ? relationships.failures.length
+                  ? "Retry missing relationships"
+                  : "Sample created"
+                : uncertainOutcome
                   ? "Create sample"
-                  : isSubmitting
+                  : busy
                     ? "Creating sample"
                     : "Create sample"}
-              </span>
             </Button>
           </CardFooter>
         </Card>
@@ -395,6 +453,7 @@ function useSampleForm(
     defaultValues: {
       description: "",
       project: initialProject ?? null,
+      relationships: [] as CreationRelationshipDraft[],
       sample_name: "",
       sample_type: "",
       timestamp: "",
@@ -407,14 +466,12 @@ function useSampleForm(
 
 function SampleTextField({
   autoFocus,
-  description,
   fieldName,
   form,
   label,
   required = false,
 }: {
   autoFocus?: boolean
-  description?: string
   fieldName: "sample_name" | "sample_type"
   form: ReturnType<typeof useSampleForm>
   label: string
@@ -424,18 +481,14 @@ function SampleTextField({
     <form.Field name={fieldName}>
       {(field) => {
         const invalid = field.state.meta.isTouched && !field.state.meta.isValid
-        const descriptionId = `${field.name}-description`
         const errorId = `${field.name}-error`
-        const hasDescription = Boolean(description || !required)
         return (
           <Field data-invalid={invalid}>
             <FieldLabel htmlFor={field.name}>
               {label} {required ? <span aria-hidden="true">*</span> : null}
             </FieldLabel>
             <Input
-              aria-describedby={
-                hasDescription ? `${descriptionId} ${errorId}` : errorId
-              }
+              aria-describedby={errorId}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               autoFocus={autoFocus}
@@ -450,13 +503,6 @@ function SampleTextField({
               onChange={(event) => field.handleChange(event.target.value)}
               value={field.state.value}
             />
-            {description ? (
-              <FieldDescription id={descriptionId}>
-                {description}
-              </FieldDescription>
-            ) : !required ? (
-              <FieldDescription id={descriptionId}>Optional</FieldDescription>
-            ) : null}
             <FieldError errors={field.state.meta.errors} id={errorId} />
           </Field>
         )

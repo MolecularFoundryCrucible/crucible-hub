@@ -47,8 +47,12 @@ import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import {
   isWorkspaceRelationshipType,
+  workspaceRelationshipChoiceDescription,
+  workspaceRelationshipChoices,
+  workspaceRelationshipOperation,
   workspaceRelationshipTypeOptions,
 } from "@/data/crucible/resource-relationships"
+import type { WorkspaceRelationshipChoice } from "@/data/crucible/resource-relationships"
 import { mutateWorkspaceResourceRelationship } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
@@ -65,35 +69,6 @@ type RelationshipResource = Extract<
   WorkspaceResourceDetail,
   { kind: "dataset" | "sample" }
 >
-type Relationship = WorkspaceRelationshipOperation["relationship"]
-
-type RelationshipChoice = {
-  label: string
-  relationship: Relationship
-  targetKind: "dataset" | "sample"
-}
-
-const relationshipChoices = {
-  dataset: [
-    { label: "Parent dataset", relationship: "parent", targetKind: "dataset" },
-    { label: "Child dataset", relationship: "child", targetKind: "dataset" },
-    {
-      label: "Linked sample",
-      relationship: "associated",
-      targetKind: "sample",
-    },
-  ],
-  sample: [
-    { label: "Parent sample", relationship: "parent", targetKind: "sample" },
-    { label: "Child sample", relationship: "child", targetKind: "sample" },
-    {
-      label: "Linked dataset",
-      relationship: "associated",
-      targetKind: "dataset",
-    },
-  ],
-} satisfies Record<RelationshipResource["kind"], readonly RelationshipChoice[]>
-
 export function ResourceRelationshipManager({
   resource,
   scope,
@@ -335,7 +310,7 @@ function AddRelationshipDialog({
   const inputId = useId()
   const typeId = useId()
   const relationshipTypeId = useId()
-  const choices = relationshipChoices[resource.kind]
+  const choices = workspaceRelationshipChoices[resource.kind]
   const [choiceIndex, setChoiceIndex] = useState(0)
   const [relationshipType, setRelationshipType] =
     useState<WorkspaceRelationshipType | null>(null)
@@ -436,7 +411,7 @@ function AddRelationshipDialog({
               ))}
             </NativeSelect>
             <FieldDescription>
-              {choiceDescription(resource, choice)}
+              {workspaceRelationshipChoiceDescription(resource.kind, choice)}
             </FieldDescription>
           </Field>
           {choice.relationship === "associated" ? null : (
@@ -556,59 +531,17 @@ function operationFor(
   action: "link" | "unlink",
   scope: IdentityScope
 ): WorkspaceRelationshipOperation {
-  const base = {
+  return workspaceRelationshipOperation({
     action,
     relationship: link.relationship,
+    relationshipType: isWorkspaceRelationshipType(link.relationship_type)
+      ? link.relationship_type
+      : null,
+    resourceKind: resource.kind,
     scenario: fixtureScenarioFromScope(scope),
-    sourceMfid: resource.unique_id,
+    resourceMfid: resource.unique_id,
     targetMfid: link.unique_id,
-  }
-  if (link.relationship === "associated") {
-    return resource.kind === "sample"
-      ? {
-          ...base,
-          relationship: "associated",
-          sourceKind: "sample",
-          targetKind: "dataset",
-        }
-      : {
-          ...base,
-          relationship: "associated",
-          sourceKind: "dataset",
-          targetKind: "sample",
-        }
-  }
-  return resource.kind === "sample"
-    ? {
-        ...base,
-        relationship: link.relationship,
-        relationshipType: isWorkspaceRelationshipType(link.relationship_type)
-          ? link.relationship_type
-          : null,
-        sourceKind: "sample",
-        targetKind: "sample",
-      }
-    : {
-        ...base,
-        relationship: link.relationship,
-        relationshipType: isWorkspaceRelationshipType(link.relationship_type)
-          ? link.relationship_type
-          : null,
-        sourceKind: "dataset",
-        targetKind: "dataset",
-      }
-}
-
-function choiceDescription(
-  resource: RelationshipResource,
-  choice: RelationshipChoice
-) {
-  if (choice.relationship === "associated") {
-    return `The ${choice.targetKind} and ${resource.kind} will be linked without a parent-child direction.`
-  }
-  return choice.relationship === "parent"
-    ? `The selected ${choice.targetKind} will be a parent of this ${resource.kind}.`
-    : `The selected ${choice.targetKind} will be a child of this ${resource.kind}.`
+  })
 }
 
 function LinkConfirmation({
@@ -617,7 +550,7 @@ function LinkConfirmation({
   resource,
   target,
 }: {
-  choice: RelationshipChoice
+  choice: WorkspaceRelationshipChoice
   relationshipType: WorkspaceRelationshipType | null
   resource: RelationshipResource
   target: WorkspaceSearchResult

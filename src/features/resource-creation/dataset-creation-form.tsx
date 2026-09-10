@@ -36,7 +36,6 @@ import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceResourceDetail,
-  WorkspaceRelationshipOperation,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
 import {
@@ -45,10 +44,16 @@ import {
   DATASET_MEASUREMENT_MAX_LENGTH,
   DATASET_NAME_MAX_LENGTH,
   DATASET_SESSION_NAME_MAX_LENGTH,
-  mutateWorkspaceResourceRelationship,
 } from "@/data/crucible/resources.functions"
 import { isValidLocalDateTime, localDateTimeToUtc } from "@/lib/format"
 
+import {
+  creationRelationshipDraftSchema,
+  CreationRelationshipsField,
+  useCreationRelationshipSubmission,
+} from "./creation-relationships"
+import type { CreationRelationshipDraft } from "./creation-relationships"
+import { CreationFormSection } from "./creation-form-section"
 import {
   creationFailureMessage,
   isUncertainCreationError,
@@ -82,7 +87,7 @@ const datasetFormSchema = z.object({
     .optional()
     .refine((value) => Boolean(value), "Choose a project."),
   public: z.boolean(),
-  samples: z.array(selectionOf("sample")).max(10, "Choose up to 10 samples."),
+  relationships: z.array(creationRelationshipDraftSchema).max(10),
   session_name: optionalText(DATASET_SESSION_NAME_MAX_LENGTH, "session name"),
   timestamp: z
     .string()
@@ -107,12 +112,7 @@ export function DatasetCreationForm({
   const queryClient = useQueryClient()
   const [uncertainOutcome, setUncertainOutcome] = useState(false)
   const [createdDataset, setCreatedDataset] = useState<DatasetResource>()
-  const [linkedSampleIds, setLinkedSampleIds] = useState<Set<string>>(
-    () => new Set()
-  )
-  const [linkFailures, setLinkFailures] = useState<WorkspaceSearchResult[]>([])
   const [saveError, setSaveError] = useState<string>()
-  const [linking, setLinking] = useState(false)
   const createMutation = useMutation({
     mutationFn: async (value: DatasetFormValues) => {
       if (!value.project) throw new Error("Choose a project before creating.")
@@ -138,6 +138,13 @@ export function DatasetCreationForm({
       )
     },
   })
+  const relationships = useCreationRelationshipSubmission({
+    onApplied: (resource) => {
+      if (resource.kind === "dataset") setCreatedDataset(resource)
+    },
+    resourceKind: "dataset",
+    scope,
+  })
   const form = useDatasetForm(
     {
       data_format: "",
@@ -147,16 +154,16 @@ export function DatasetCreationForm({
       measurement: "",
       project: initialProject,
       public: false,
-      samples: [],
+      relationships: [] as CreationRelationshipDraft[],
       session_name: "",
       timestamp: "",
     },
     async ({ formApi, value }) => {
       setSaveError(undefined)
       if (createdDataset) {
-        const complete = await linkSelectedSamples(
-          createdDataset,
-          value.samples
+        const complete = await relationships.apply(
+          createdDataset.unique_id,
+          value.relationships
         )
         if (complete) await openCreatedDataset(createdDataset.unique_id)
         return
@@ -172,7 +179,10 @@ export function DatasetCreationForm({
         setCreatedDataset(created)
         cacheDataset(created)
         formApi.reset(value)
-        const complete = await linkSelectedSamples(created, value.samples)
+        const complete = await relationships.apply(
+          created.unique_id,
+          value.relationships
+        )
         if (complete) await openCreatedDataset(created.unique_id)
       } catch (error) {
         setUncertainOutcome(isUncertainCreationError(error))
@@ -188,57 +198,9 @@ export function DatasetCreationForm({
     },
     true
   )
-  const busy = isSubmitting || createMutation.isPending || linking
+  const busy =
+    isSubmitting || createMutation.isPending || relationships.isPending
   const formId = "dataset-creation"
-
-  async function linkSelectedSamples(
-    dataset: DatasetResource,
-    samples: readonly WorkspaceSearchResult[]
-  ) {
-    setLinking(true)
-    setLinkFailures([])
-    const completed = new Set(linkedSampleIds)
-    const failures: WorkspaceSearchResult[] = []
-    try {
-      for (const sample of samples) {
-        if (completed.has(sample.unique_id)) continue
-        try {
-          const result = await unwrapHubResult(
-            await mutateWorkspaceResourceRelationship({
-              data: datasetSampleLinkOperation(
-                dataset.unique_id,
-                sample.unique_id,
-                scope
-              ),
-            })
-          )
-          completed.add(sample.unique_id)
-          setLinkedSampleIds(new Set(completed))
-          if (result.source.kind === "dataset") {
-            setCreatedDataset(result.source)
-            cacheDataset(result.source)
-          }
-          if (result.target.kind === "sample") {
-            queryClient.setQueryData(
-              resourceQueryOptions(scope, result.target.unique_id).queryKey,
-              result.target
-            )
-            if (mode === "api") {
-              void queryClient.invalidateQueries({
-                queryKey: crucibleKeys.sampleLists(scope),
-              })
-            }
-          }
-        } catch {
-          failures.push(sample)
-        }
-      }
-    } finally {
-      setLinkFailures(failures)
-      setLinking(false)
-    }
-    return failures.length === 0
-  }
 
   function cacheDataset(dataset: DatasetResource) {
     queryClient.setQueryData(
@@ -264,15 +226,6 @@ export function DatasetCreationForm({
       params: { datasetMfid },
       to: "/datasets/$datasetMfid",
     })
-  }
-
-  function removeSample(sampleMfid: string) {
-    form.setFieldValue(
-      "samples",
-      form.state.values.samples.filter(
-        (sample) => sample.unique_id !== sampleMfid
-      )
-    )
   }
 
   return (
@@ -301,7 +254,9 @@ export function DatasetCreationForm({
                       const errorId = `${field.name}-error`
                       return (
                         <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                          <FieldLabel htmlFor={field.name}>
+                            Name <span aria-hidden="true">*</span>
+                          </FieldLabel>
                           <Input
                             aria-describedby={errorId}
                             aria-errormessage={invalid ? errorId : undefined}
@@ -335,7 +290,7 @@ export function DatasetCreationForm({
                           data-disabled={Boolean(createdDataset)}
                         >
                           <FieldLabel htmlFor="dataset-project-trigger">
-                            Project
+                            Project <span aria-hidden="true">*</span>
                           </FieldLabel>
                           <ResourceChooser
                             describedBy="dataset-project-error"
@@ -354,160 +309,6 @@ export function DatasetCreationForm({
                       )
                     }}
                   </form.Field>
-                  <details
-                    className="rounded-lg border p-3"
-                    open={Boolean(initialInstrument)}
-                  >
-                    <summary className="cursor-pointer text-label">
-                      Optional acquisition details
-                    </summary>
-                    <FieldDescription className="pt-2">
-                      Add an instrument, related samples, measurement details,
-                      or acquisition time.
-                    </FieldDescription>
-                    <FieldGroup className="pt-4">
-                      <form.Field name="instrument">
-                        {(field) => (
-                          <Field data-disabled={Boolean(createdDataset)}>
-                            <FieldLabel htmlFor="dataset-instrument-trigger">
-                              Acquisition instrument
-                            </FieldLabel>
-                            <ResourceChooser
-                              emptyLabel="Not selected"
-                              kind="instrument"
-                              onChange={field.handleChange}
-                              triggerId="dataset-instrument-trigger"
-                              value={field.state.value}
-                            />
-                            <FieldDescription>Optional</FieldDescription>
-                          </Field>
-                        )}
-                      </form.Field>
-                      <form.Field name="samples">
-                        {(field) => (
-                          <Field data-disabled={Boolean(createdDataset)}>
-                            <FieldLabel htmlFor="dataset-sample-trigger">
-                              Samples
-                            </FieldLabel>
-                            <ResourceChooser
-                              emptyLabel="Not selected"
-                              kind="sample"
-                              onChange={(sample) => {
-                                if (
-                                  sample &&
-                                  field.state.value.length < 10 &&
-                                  !field.state.value.some(
-                                    (selected) =>
-                                      selected.unique_id === sample.unique_id
-                                  )
-                                ) {
-                                  field.handleChange([
-                                    ...field.state.value,
-                                    sample,
-                                  ])
-                                }
-                              }}
-                              triggerId="dataset-sample-trigger"
-                              value={undefined}
-                            />
-                            <FieldDescription>
-                              Optional, up to 10 samples
-                            </FieldDescription>
-                            {field.state.value.length ? (
-                              <ul
-                                aria-label="Selected samples"
-                                className="flex flex-col gap-2"
-                              >
-                                {field.state.value.map((sample) => (
-                                  <li
-                                    className="flex items-center justify-between gap-2"
-                                    key={sample.unique_id}
-                                  >
-                                    <span className="min-w-0 truncate text-body">
-                                      {sample.name}
-                                    </span>
-                                    <Button
-                                      onClick={() =>
-                                        removeSample(sample.unique_id)
-                                      }
-                                      size="sm"
-                                      type="button"
-                                      variant="ghost"
-                                    >
-                                      Remove
-                                    </Button>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : null}
-                          </Field>
-                        )}
-                      </form.Field>
-                      <DatasetTextField
-                        fieldName="measurement"
-                        form={form}
-                        label="Measurement"
-                        maxLength={DATASET_MEASUREMENT_MAX_LENGTH}
-                      />
-                      <DatasetTextField
-                        fieldName="data_format"
-                        form={form}
-                        label="Data format"
-                        maxLength={DATASET_DATA_FORMAT_MAX_LENGTH}
-                      />
-                      <DatasetTextField
-                        fieldName="data_type"
-                        form={form}
-                        label="Data type"
-                        maxLength={DATASET_DATA_TYPE_MAX_LENGTH}
-                      />
-                      <DatasetTextField
-                        fieldName="session_name"
-                        form={form}
-                        label="Session name"
-                        maxLength={DATASET_SESSION_NAME_MAX_LENGTH}
-                      />
-                      <form.Field name="timestamp">
-                        {(field) => {
-                          const invalid =
-                            field.state.meta.isTouched &&
-                            !field.state.meta.isValid
-                          const descriptionId = `${field.name}-description`
-                          const errorId = `${field.name}-error`
-                          return (
-                            <Field data-invalid={invalid}>
-                              <FieldLabel htmlFor={field.name}>
-                                Local date and time
-                              </FieldLabel>
-                              <Input
-                                aria-describedby={`${descriptionId} ${errorId}`}
-                                aria-errormessage={
-                                  invalid ? errorId : undefined
-                                }
-                                aria-invalid={invalid || undefined}
-                                id={field.name}
-                                name={field.name}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                                step={1}
-                                type="datetime-local"
-                                value={field.state.value}
-                              />
-                              <FieldDescription id={descriptionId}>
-                                Optional
-                              </FieldDescription>
-                              <FieldError
-                                errors={field.state.meta.errors}
-                                id={errorId}
-                              />
-                            </Field>
-                          )
-                        }}
-                      </form.Field>
-                    </FieldGroup>
-                  </details>
                   <form.Field name="public">
                     {(field) => {
                       const descriptionId = `${field.name}-description`
@@ -542,6 +343,96 @@ export function DatasetCreationForm({
                       )
                     }}
                   </form.Field>
+                  <CreationFormSection title="Acquisition">
+                    <form.Field name="instrument">
+                      {(field) => (
+                        <Field data-disabled={Boolean(createdDataset)}>
+                          <FieldLabel htmlFor="dataset-instrument-trigger">
+                            Acquisition instrument
+                          </FieldLabel>
+                          <ResourceChooser
+                            emptyLabel="Not selected"
+                            kind="instrument"
+                            onChange={field.handleChange}
+                            triggerId="dataset-instrument-trigger"
+                            value={field.state.value}
+                          />
+                        </Field>
+                      )}
+                    </form.Field>
+                    <DatasetTextField
+                      fieldName="measurement"
+                      form={form}
+                      label="Measurement"
+                      maxLength={DATASET_MEASUREMENT_MAX_LENGTH}
+                    />
+                    <form.Field name="timestamp">
+                      {(field) => {
+                        const invalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid
+                        const errorId = `${field.name}-error`
+                        return (
+                          <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor={field.name}>
+                              Local date and time
+                            </FieldLabel>
+                            <Input
+                              aria-describedby={errorId}
+                              aria-errormessage={invalid ? errorId : undefined}
+                              aria-invalid={invalid || undefined}
+                              id={field.name}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              step={1}
+                              type="datetime-local"
+                              value={field.state.value}
+                            />
+                            <FieldError
+                              errors={field.state.meta.errors}
+                              id={errorId}
+                            />
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                    <DatasetTextField
+                      fieldName="session_name"
+                      form={form}
+                      label="Session name"
+                      maxLength={DATASET_SESSION_NAME_MAX_LENGTH}
+                    />
+                  </CreationFormSection>
+                  <CreationFormSection title="Data">
+                    <DatasetTextField
+                      fieldName="data_format"
+                      form={form}
+                      label="Data format"
+                      maxLength={DATASET_DATA_FORMAT_MAX_LENGTH}
+                    />
+                    <DatasetTextField
+                      fieldName="data_type"
+                      form={form}
+                      label="Data type"
+                      maxLength={DATASET_DATA_TYPE_MAX_LENGTH}
+                    />
+                  </CreationFormSection>
+                  <CreationFormSection title="Relationships">
+                    <form.Field name="relationships">
+                      {(field) => (
+                        <CreationRelationshipsField
+                          disabled={busy || Boolean(createdDataset)}
+                          onChange={field.handleChange}
+                          resourceKind="dataset"
+                          scope={scope}
+                          value={field.state.value}
+                        />
+                      )}
+                    </form.Field>
+                  </CreationFormSection>
                 </FieldGroup>
               </fieldset>
               <div aria-live="polite" className="min-h-5 pt-5 text-body">
@@ -550,12 +441,14 @@ export function DatasetCreationForm({
                     {saveError}
                   </p>
                 ) : null}
-                {createdDataset && linkFailures.length ? (
+                {createdDataset && relationships.failures.length ? (
                   <div className="flex flex-col gap-2" role="alert">
                     <p className="text-destructive">
-                      The dataset was created, but these sample links still need
-                      recovery:{" "}
-                      {linkFailures.map((sample) => sample.name).join(", ")}.
+                      The dataset was created, but relationships with{" "}
+                      {relationships.failures
+                        .map((draft) => draft.target.name)
+                        .join(", ")}{" "}
+                      still need recovery.
                     </p>
                   </div>
                 ) : null}
@@ -575,28 +468,26 @@ export function DatasetCreationForm({
               aria-disabled={
                 busy ||
                 uncertainOutcome ||
-                (Boolean(createdDataset) && linkFailures.length === 0)
+                (Boolean(createdDataset) && relationships.failures.length === 0)
               }
               disabled={
                 busy ||
                 uncertainOutcome ||
-                (Boolean(createdDataset) && linkFailures.length === 0)
+                (Boolean(createdDataset) && relationships.failures.length === 0)
               }
-              className="w-48"
+              className="min-w-52"
               form={formId}
               type="submit"
             >
-              <span className="inline-grid min-w-40 place-items-center">
-                {createdDataset
-                  ? linkFailures.length
-                    ? "Retry missing links"
-                    : "Dataset created"
-                  : uncertainOutcome
-                    ? "Create dataset"
-                    : isSubmitting || createMutation.isPending
-                      ? "Creating dataset"
-                      : "Create dataset"}
-              </span>
+              {createdDataset
+                ? relationships.failures.length
+                  ? "Retry missing relationships"
+                  : "Dataset created"
+                : uncertainOutcome
+                  ? "Create dataset"
+                  : isSubmitting || createMutation.isPending
+                    ? "Creating dataset"
+                    : "Create dataset"}
             </Button>
           </CardFooter>
         </Card>
@@ -621,13 +512,12 @@ function DatasetTextField({
     <form.Field name={fieldName}>
       {(field) => {
         const invalid = field.state.meta.isTouched && !field.state.meta.isValid
-        const descriptionId = `${field.name}-description`
         const errorId = `${field.name}-error`
         return (
           <Field data-invalid={invalid}>
             <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
             <Input
-              aria-describedby={descriptionId}
+              aria-describedby={errorId}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               id={field.name}
@@ -637,7 +527,6 @@ function DatasetTextField({
               onChange={(event) => field.handleChange(event.target.value)}
               value={field.state.value}
             />
-            <FieldDescription id={descriptionId}>Optional</FieldDescription>
             <FieldError errors={field.state.meta.errors} id={errorId} />
           </Field>
         )
@@ -670,20 +559,4 @@ function optionalText(maxLength: number, label: string) {
 
 function optionalValue(value: string) {
   return value.trim() || null
-}
-
-function datasetSampleLinkOperation(
-  datasetMfid: string,
-  sampleMfid: string,
-  scope: IdentityScope
-): WorkspaceRelationshipOperation {
-  return {
-    action: "link",
-    relationship: "associated",
-    scenario: fixtureScenarioFromScope(scope),
-    sourceKind: "dataset",
-    sourceMfid: datasetMfid,
-    targetKind: "sample",
-    targetMfid: sampleMfid,
-  }
 }
