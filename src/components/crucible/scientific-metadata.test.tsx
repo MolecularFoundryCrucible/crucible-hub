@@ -96,6 +96,36 @@ describe("ScientificMetadata", () => {
     expect(screen.getByText("Empty string")).toBeTruthy()
   })
 
+  it("expands and collapses every metadata disclosure", () => {
+    render(
+      <ScientificMetadata
+        metadata={{
+          alpha: { nested: { value: 1 } },
+          beta: 2,
+          delta: 4,
+          epsilon: 5,
+          eta: 7,
+          gamma: 3,
+          theta: { value: 8 },
+        }}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand all" }))
+    expect(
+      Array.from(document.querySelectorAll("details")).every(
+        (details) => details.open
+      )
+    ).toBe(true)
+
+    fireEvent.click(screen.getByRole("button", { name: "Collapse all" }))
+    expect(
+      Array.from(document.querySelectorAll("details")).every(
+        (details) => !details.open
+      )
+    ).toBe(true)
+  })
+
   it("handles absent and empty root metadata", () => {
     const { rerender } = render(<ScientificMetadata metadata={null} />)
     expect(
