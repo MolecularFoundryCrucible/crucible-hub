@@ -19,8 +19,11 @@ describe("workspace project source", () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "")
 
-    const first = await readWorkspaceProjects({ limit: 1, offset: 0 })
-    const second = await readWorkspaceProjects({ limit: 1, offset: 1 })
+    const first = await readWorkspaceProjects({ limit: 1 })
+    const second = await readWorkspaceProjects({
+      cursor: "fixture:1",
+      limit: 1,
+    })
 
     expect(first.items).toHaveLength(1)
     expect(second.items).toHaveLength(1)
@@ -215,7 +218,7 @@ describe("workspace project source", () => {
       })
     )
 
-    const page = await readWorkspaceProjects({ limit: 20, offset: 0 })
+    const page = await readWorkspaceProjects({ limit: 20 })
 
     expect(page.items[0]).toMatchObject({ members: null })
     expect(page.items[0]?.capabilities).toMatchObject({ can_edit: true })
@@ -229,9 +232,9 @@ describe("workspace project source", () => {
     vi.stubEnv("HUB_DATA_SOURCE", "")
     vi.stubEnv("HUB_ENABLE_FIXTURES", "")
 
-    await expect(
-      readWorkspaceProjects({ limit: 20, offset: 0 })
-    ).rejects.toThrow("The Crucible API login exchange is not connected yet.")
+    await expect(readWorkspaceProjects({ limit: 20 })).rejects.toThrow(
+      "The Crucible API login exchange is not connected yet."
+    )
   })
 
   it("adds a project member through the API query", async () => {

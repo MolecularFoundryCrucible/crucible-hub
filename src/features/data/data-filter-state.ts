@@ -5,25 +5,33 @@ import {
   normalizeCollectionFilters,
 } from "@/data/crucible/collection-filters"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
+import {
+  collectionAffiliationSchema,
+  collectionCursorSchema,
+  resourceSortSchema,
+  sortDirectionSchema,
+} from "@/data/crucible/collection-query"
+import type {
+  CollectionAffiliation,
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 
 const filterSearchValue = z.string().max(255).optional().catch("")
-const cursorSearchValue = z
-  .string()
-  .min(1)
-  .max(2048)
-  .optional()
-  .catch(undefined)
 
 export const dataSearchSchema = z.object({
+  affiliation: filterSearchValue,
   createdFrom: filterSearchValue,
   createdTo: filterSearchValue,
-  datasetCursor: cursorSearchValue,
+  datasetCursor: collectionCursorSchema,
+  direction: filterSearchValue,
   instrumentMfid: filterSearchValue,
   kind: filterSearchValue,
   projectMfid: filterSearchValue,
   projectScope: filterSearchValue,
-  sampleCursor: cursorSearchValue,
+  sampleCursor: collectionCursorSchema,
+  sort: filterSearchValue,
   visibility: filterSearchValue,
 })
 
@@ -41,8 +49,11 @@ type ProjectSelection =
 
 export type DataFilterValues = CollectionFilters &
   ProjectSelection & {
+    affiliation?: CollectionAffiliation
+    direction?: SortDirection
     instrumentMfid?: string
     kind: DataKindFilter
+    sort?: ResourceSort
   }
 
 export type DataFilterField = keyof DataFilterSearch
@@ -69,9 +80,12 @@ const mfidSchema = z
 const domainFiltersSchema = z
   .object({
     instrumentMfid: mfidSchema,
+    affiliation: collectionAffiliationSchema.optional(),
+    direction: sortDirectionSchema.optional(),
     kind: dataKindSchema,
     projectMfid: mfidSchema,
     projectScope: projectScopeSchema,
+    sort: resourceSortSchema.optional(),
   })
   .superRefine((filters, context) => {
     if (filters.projectScope && !filters.projectMfid) {
@@ -88,6 +102,20 @@ const domainFiltersSchema = z
         path: ["instrumentMfid"],
       })
     }
+    if (filters.sort && !filters.kind) {
+      context.addIssue({
+        code: "custom",
+        message: "Choose Samples or Datasets before selecting an order.",
+        path: ["sort"],
+      })
+    }
+    if (filters.direction && !filters.sort) {
+      context.addIssue({
+        code: "custom",
+        message: "Choose an order before selecting its direction.",
+        path: ["direction"],
+      })
+    }
   })
 
 export function resolveDataFilters(search: DataSearch): DataFilterResolution {
@@ -97,10 +125,13 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
     visibility: search.visibility,
   })
   const domain = domainFiltersSchema.safeParse({
+    affiliation: search.affiliation,
+    direction: search.direction,
     instrumentMfid: search.instrumentMfid,
     kind: search.kind,
     projectMfid: search.projectMfid,
     projectScope: search.projectScope,
+    sort: search.sort,
   })
   if (!collection.success || !domain.success) {
     const issues = [
@@ -125,8 +156,17 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
   const filters: DataFilterValues = {
     ...normalizeCollectionFilters(collection.data),
     ...projectSelection,
+    ...(domain.data.affiliation
+      ? { affiliation: domain.data.affiliation }
+      : {}),
     ...(domain.data.kind === "datasets" && domain.data.instrumentMfid
       ? { instrumentMfid: domain.data.instrumentMfid }
+      : {}),
+    ...(domain.data.sort
+      ? {
+          direction: domain.data.direction ?? "desc",
+          sort: domain.data.sort,
+        }
       : {}),
     kind: domain.data.kind ?? "all",
   }
@@ -140,9 +180,11 @@ export function applyDataFilters(
 ) {
   return {
     ...previous,
+    affiliation: filters.affiliation,
     createdFrom: filters.createdFrom,
     createdTo: filters.createdTo,
     datasetCursor: undefined,
+    direction: filters.direction,
     instrumentMfid:
       filters.kind === "datasets" ? filters.instrumentMfid : undefined,
     kind: filters.kind === "all" ? undefined : filters.kind,
@@ -151,6 +193,7 @@ export function applyDataFilters(
       filters.projectScope === "all" ? undefined : filters.projectScope,
     preview: undefined,
     sampleCursor: undefined,
+    sort: filters.sort,
     visibility: filters.visibility,
   }
 }
@@ -160,9 +203,11 @@ export function clearDataFilters(
 ) {
   return {
     ...previous,
+    affiliation: undefined,
     createdFrom: undefined,
     createdTo: undefined,
     datasetCursor: undefined,
+    direction: undefined,
     instrumentMfid: undefined,
     kind:
       previous.kind === "datasets" || previous.kind === "samples"
@@ -172,6 +217,7 @@ export function clearDataFilters(
     projectScope: undefined,
     preview: undefined,
     sampleCursor: undefined,
+    sort: undefined,
     visibility: undefined,
   }
 }
@@ -183,10 +229,12 @@ export function switchDataKind(
   return {
     ...previous,
     datasetCursor: undefined,
+    direction: kind === "all" ? undefined : previous.direction,
     instrumentMfid: kind === "datasets" ? previous.instrumentMfid : undefined,
     kind: kind === "all" ? undefined : kind,
     preview: undefined,
     sampleCursor: undefined,
+    sort: kind === "all" ? undefined : previous.sort,
   }
 }
 
@@ -204,12 +252,15 @@ export function setDataFilterProject(
 
 function dataFilterField(field: PropertyKey | undefined): DataFilterField {
   switch (field) {
+    case "affiliation":
     case "createdFrom":
     case "createdTo":
+    case "direction":
     case "instrumentMfid":
     case "kind":
     case "projectMfid":
     case "projectScope":
+    case "sort":
     case "visibility":
       return field
     default:

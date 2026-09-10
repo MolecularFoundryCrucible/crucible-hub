@@ -3,6 +3,10 @@ import { setResponseHeader } from "@tanstack/react-start/server"
 import { z } from "zod"
 
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
+import {
+  collectionAffiliationSchema,
+  collectionCursorSchema,
+} from "./collection-query"
 
 import {
   addWorkspaceInstrumentOperator as addWorkspaceInstrumentOperatorServer,
@@ -18,8 +22,9 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 
 export const instrumentListInputSchema = z.object({
+  affiliation: collectionAffiliationSchema.optional(),
+  cursor: collectionCursorSchema,
   limit: z.number().int().min(1).max(100),
-  offset: z.number().int().min(0),
   scenario: fixtureScenarioSchema.optional(),
   status: z.enum(instrumentStatuses).optional(),
 })

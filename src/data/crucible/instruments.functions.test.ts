@@ -111,17 +111,15 @@ describe("instrument list server function input", () => {
     expect(
       instrumentListInputSchema.parse({
         limit: 20,
-        offset: 0,
         status: "decommissioned",
       })
-    ).toEqual({ limit: 20, offset: 0, status: "decommissioned" })
+    ).toEqual({ limit: 20, status: "decommissioned" })
   })
 
   it("rejects an unknown lifecycle status filter", () => {
     expect(() =>
       instrumentListInputSchema.parse({
         limit: 20,
-        offset: 0,
         status: "retired",
       })
     ).toThrow()

@@ -1,17 +1,22 @@
 import { queryOptions } from "@tanstack/react-query"
 
+import type { CollectionAffiliation } from "./collection-query"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { getWorkspaceProject, getWorkspaceProjects } from "./projects.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
-import { identityScopedPreviousData } from "./pagination"
+import { collectionScopedPreviousData } from "./pagination"
 import { unwrapHubResult } from "./result"
 
 export const projectPageLimit = 20
 
 export function projectsQueryOptions(
   scope: IdentityScope,
-  filters: { limit: number; offset: number }
+  filters: {
+    affiliation?: CollectionAffiliation
+    cursor?: string
+    limit: number
+  }
 ) {
   return queryOptions({
     queryKey: crucibleKeys.projects(scope, filters),
@@ -23,7 +28,12 @@ export function projectsQueryOptions(
         })
       ),
     placeholderData: (previousData, previousQuery) =>
-      identityScopedPreviousData(scope, previousData, previousQuery),
+      collectionScopedPreviousData(
+        scope,
+        { affiliation: filters.affiliation },
+        previousData,
+        previousQuery
+      ),
   })
 }
 

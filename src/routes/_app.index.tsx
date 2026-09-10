@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_app/")({
     if (!source || source.status === "unavailable") return
 
     void context.queryClient.prefetchQuery(
-      projectsQueryOptions(source.scope, { limit: homeProjectLimit, offset: 0 })
+      projectsQueryOptions(source.scope, { limit: homeProjectLimit })
     )
     void context.queryClient.prefetchQuery(
       samplesQueryOptions(source.scope, { limit: homeRecentResourceLimit })
@@ -59,7 +59,7 @@ function HomePage() {
     useQueries({
       queries: [
         accountQueryOptions(scope),
-        projectsQueryOptions(scope, { limit: homeProjectLimit, offset: 0 }),
+        projectsQueryOptions(scope, { limit: homeProjectLimit }),
         samplesQueryOptions(scope, { limit: homeRecentResourceLimit }),
         datasetsQueryOptions(scope, { limit: homeRecentResourceLimit }),
       ],
@@ -227,7 +227,7 @@ function HomePage() {
               <CardAction>
                 <Link
                   className={buttonVariants({ variant: "ghost" })}
-                  search={{ offset: undefined }}
+                  search={{ affiliation: undefined, cursor: undefined }}
                   to="/projects"
                 >
                   View all

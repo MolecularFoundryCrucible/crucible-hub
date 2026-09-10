@@ -469,26 +469,16 @@ export function workspaceContent(workspace: Workspace): WorkspaceContent {
   return content
 }
 
-export type WorkspaceProjectPage = {
-  items: readonly WorkspaceProject[]
-  limit: number
-  offset: number
-  total: number | null
-}
-
-export type WorkspaceInstrumentPage = {
-  items: readonly WorkspaceInstrument[]
-  limit: number
-  offset: number
-  total: number | null
-}
-
 export type WorkspaceCursorPage<TItem> = {
   items: readonly TItem[]
   limit: number
   nextCursor: string | null
   total: number | null
 }
+
+export type WorkspaceProjectPage = WorkspaceCursorPage<WorkspaceProject>
+
+export type WorkspaceInstrumentPage = WorkspaceCursorPage<WorkspaceInstrument>
 
 export type WorkspaceSearchKind =
   "dataset" | "instrument" | "person" | "project" | "sample"

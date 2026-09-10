@@ -2,6 +2,8 @@ import { queryOptions } from "@tanstack/react-query"
 
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
+import type { CollectionQueryOptions } from "./collection-query"
+import { normalizeCollectionQueryOptions } from "./collection-query"
 import { getWorkspaceDatasets, getWorkspaceSamples } from "./data.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import type { IdentityScope } from "./query-keys"
@@ -17,7 +19,8 @@ type ProjectFilters =
   | { projectMfid: string; projectScope?: ProjectScope }
 
 export type CursorFilters = ProjectFilters &
-  CollectionFilters & {
+  CollectionFilters &
+  CollectionQueryOptions & {
     cursor?: string
     limit: number
   }
@@ -40,50 +43,37 @@ function collectionScopedPreviousData<TData>(
     projectMfid?: string
     projectScope?: ProjectScope
     visibility?: "all" | "public" | "private"
+    affiliation?: "owner"
+    direction?: "asc" | "desc"
+    sort?: "created" | "name" | "updated"
   },
   previousData: TData | undefined,
   previousQuery: { queryKey: readonly unknown[] } | undefined
 ) {
   const queryKey = previousQuery?.queryKey
   const previousFilters = queryKey?.[5]
-  const previousInstrumentMfid =
-    isRecord(previousFilters) &&
-    typeof previousFilters.instrumentMfid === "string"
-      ? previousFilters.instrumentMfid
-      : undefined
-  const previousProjectMfid =
-    isRecord(previousFilters) && typeof previousFilters.projectMfid === "string"
-      ? previousFilters.projectMfid
-      : undefined
-  const previousProjectScope =
-    isRecord(previousFilters) &&
-    typeof previousFilters.projectScope === "string"
-      ? previousFilters.projectScope
-      : undefined
-  const previousVisibility =
-    isRecord(previousFilters) && typeof previousFilters.visibility === "string"
-      ? previousFilters.visibility
-      : undefined
-  const previousCreatedFrom =
-    isRecord(previousFilters) && typeof previousFilters.createdFrom === "string"
-      ? previousFilters.createdFrom
-      : undefined
-  const previousCreatedTo =
-    isRecord(previousFilters) && typeof previousFilters.createdTo === "string"
-      ? previousFilters.createdTo
-      : undefined
+  const contextKeys = [
+    "affiliation",
+    "createdFrom",
+    "createdTo",
+    "direction",
+    "instrumentMfid",
+    "projectMfid",
+    "projectScope",
+    "sort",
+    "visibility",
+  ] as const
 
   return queryKey?.[0] === scope[0] &&
     queryKey[1] === scope[1] &&
     queryKey[2] === scope[2] &&
     queryKey[3] === family &&
     queryKey[4] === "list" &&
-    previousInstrumentMfid === filters.instrumentMfid &&
-    previousProjectMfid === filters.projectMfid &&
-    previousProjectScope === filters.projectScope &&
-    previousVisibility === filters.visibility &&
-    previousCreatedFrom === filters.createdFrom &&
-    previousCreatedTo === filters.createdTo
+    contextKeys.every(
+      (key) =>
+        (isRecord(previousFilters) ? previousFilters[key] : undefined) ===
+        filters[key]
+    )
     ? previousData
     : undefined
 }
@@ -95,7 +85,8 @@ export function datasetInstrumentScopedPreviousData<TData>(
   previousQuery: { queryKey: readonly unknown[] } | undefined,
   projectMfid?: string,
   projectScope?: ProjectScope,
-  collectionFilters: CollectionFilters = {}
+  collectionFilters: CollectionFilters = {},
+  collectionQuery: CollectionQueryOptions = {}
 ) {
   const normalizedCollectionFilters =
     normalizeCollectionFilters(collectionFilters)
@@ -107,6 +98,7 @@ export function datasetInstrumentScopedPreviousData<TData>(
       projectMfid,
       projectScope,
       ...normalizedCollectionFilters,
+      ...normalizeCollectionQueryOptions(collectionQuery),
     },
     previousData,
     previousQuery
@@ -151,12 +143,14 @@ export function samplesQueryOptions(
   const scenario = fixtureScenarioFromScope(scope)
   const projectFilters = normalizeProjectFilters(filters)
   const collectionFilters = normalizeCollectionFilters(filters)
+  const collectionQuery = normalizeCollectionQueryOptions(filters)
   return queryOptions({
     queryKey: crucibleKeys.samples(scope, {
       cursor: filters.cursor ?? null,
       limit: filters.limit,
       ...projectFilters,
       ...collectionFilters,
+      ...collectionQuery,
     }),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
@@ -166,6 +160,7 @@ export function samplesQueryOptions(
             limit: filters.limit,
             ...projectFilters,
             ...collectionFilters,
+            ...collectionQuery,
             scenario,
           },
           signal,
@@ -175,7 +170,7 @@ export function samplesQueryOptions(
       collectionScopedPreviousData(
         scope,
         "samples",
-        { ...projectFilters, ...collectionFilters },
+        { ...projectFilters, ...collectionFilters, ...collectionQuery },
         previousData,
         previousQuery
       ),
@@ -191,6 +186,7 @@ export function datasetsQueryOptions(
   const instrumentMfid = normalizeInstrumentMfid(filters.instrumentMfid)
   const projectFilters = normalizeProjectFilters(filters)
   const collectionFilters = normalizeCollectionFilters(filters)
+  const collectionQuery = normalizeCollectionQueryOptions(filters)
   const pageFilters: CursorFilters = {
     cursor: filters.cursor,
     limit: filters.limit,
@@ -201,6 +197,7 @@ export function datasetsQueryOptions(
     ...(instrumentMfid ? { instrumentMfid } : {}),
     ...projectFilters,
     ...collectionFilters,
+    ...collectionQuery,
   }
   return queryOptions({
     queryKey: crucibleKeys.datasets(scope, keyFilters),
@@ -212,6 +209,7 @@ export function datasetsQueryOptions(
             ...(instrumentMfid ? { instrumentMfid } : {}),
             ...projectFilters,
             ...collectionFilters,
+            ...collectionQuery,
             scenario,
           },
           signal,
@@ -225,7 +223,8 @@ export function datasetsQueryOptions(
         previousQuery,
         projectFilters.projectMfid,
         projectFilters.projectScope,
-        collectionFilters
+        collectionFilters,
+        collectionQuery
       ),
     retry: scenario ? false : undefined,
   })

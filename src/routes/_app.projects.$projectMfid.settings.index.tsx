@@ -76,7 +76,7 @@ function ProjectManagePage() {
                   onSuccess={() =>
                     void navigate({
                       replace: true,
-                      search: { offset: undefined },
+                      search: { cursor: undefined },
                       to: "/projects",
                     })
                   }

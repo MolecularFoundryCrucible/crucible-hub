@@ -14,7 +14,7 @@ function NewInstrumentPage() {
   const scope = useWorkspaceScope()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   if (account.is_service_account) {
-    return <Navigate replace search={{ offset: undefined }} to="/instruments" />
+    return <Navigate replace search={{ cursor: undefined }} to="/instruments" />
   }
   return <InstrumentRegistrationForm scope={scope} />
 }

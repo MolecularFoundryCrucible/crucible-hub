@@ -8,6 +8,8 @@ import { crucibleRequestSignal } from "../../server/crucible/request-signal.serv
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import { normalizeScientificMetadata } from "./scientific-metadata"
+import type { CollectionAffiliation } from "./collection-query"
+import { fixtureCursorPage } from "./pagination"
 import type { WorkspaceProject, WorkspaceProjectPage } from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
 
@@ -66,12 +68,14 @@ type ProjectDescriptiveChanges = {
 
 export async function readWorkspaceProjects(
   {
+    affiliation,
+    cursor,
     limit,
-    offset,
     scenario,
   }: {
+    affiliation?: CollectionAffiliation
+    cursor?: string
     limit: number
-    offset: number
     scenario?: FixtureScenario
   },
   requestSignal?: AbortSignal
@@ -83,26 +87,25 @@ export async function readWorkspaceProjects(
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(scenario)
     if (source.status === "unavailable") throw new Error(source.reason)
-    return {
-      items: source.workspace.projects.slice(offset, offset + limit),
-      limit,
-      offset,
-      total: source.workspace.projects.length,
-    }
+    const projects = affiliation
+      ? source.workspace.projects.filter(
+          (project) =>
+            "lead" in project &&
+            project.lead?.unique_id === source.workspace.account.unique_id
+        )
+      : source.workspace.projects
+    return fixtureCursorPage(projects, { cursor, limit })
   }
 
   const client = createCrucibleClient(configuration)
-  const accountResult = await client.GET("/account/profile", {
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (!accountResult.data) {
-    throw new CrucibleResponseError(accountResult.response.status)
-  }
-
-  const projectsResult = await client.GET("/users/{user_id}/projects", {
+  const projectsResult = await client.GET("/projects", {
     params: {
-      path: { user_id: accountResult.data.unique_id },
-      query: { limit, offset },
+      query: {
+        affiliation: affiliation ? [affiliation] : undefined,
+        cursor,
+        include_total: true,
+        limit,
+      },
     },
     signal: crucibleRequestSignal(requestSignal),
   })
@@ -113,7 +116,7 @@ export async function readWorkspaceProjects(
   return {
     items: projectsResult.data.items.map(toWorkspaceProject),
     limit: projectsResult.data.limit,
-    offset: projectsResult.data.offset ?? offset,
+    nextCursor: projectsResult.data.next_cursor ?? null,
     total: projectsResult.data.total ?? null,
   }
 }

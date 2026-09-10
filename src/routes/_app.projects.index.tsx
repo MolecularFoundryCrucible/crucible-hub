@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
+import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -38,23 +39,31 @@ import {
   projectPageLimit,
   projectsQueryOptions,
 } from "@/data/crucible/projects.queries"
+import {
+  collectionAffiliationSchema,
+  collectionCursorSchema,
+} from "@/data/crucible/collection-query"
 import type { WorkspaceProjectPage } from "@/data/crucible/workspace-source"
 
 const projectSearchSchema = z.object({
-  offset: z.coerce.number().int().min(0).catch(0).optional(),
+  affiliation: collectionAffiliationSchema.optional().catch(undefined),
+  cursor: collectionCursorSchema,
 })
 
 export const Route = createFileRoute("/_app/projects/")({
   head: () => ({ meta: [{ title: "Projects | Crucible Hub" }] }),
   validateSearch: projectSearchSchema,
-  loaderDeps: ({ search }) => ({ offset: search.offset ?? 0 }),
+  loaderDeps: ({ search }) => ({
+    affiliation: search.affiliation,
+    cursor: search.cursor,
+  }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
     const options = projectsQueryOptions(source.scope, {
       limit: projectPageLimit,
-      offset: deps.offset,
+      ...deps,
     })
     const hasData =
       context.queryClient.getQueryData(options.queryKey) !== undefined
@@ -73,14 +82,18 @@ export const Route = createFileRoute("/_app/projects/")({
 function ProjectsPage() {
   const scope = useWorkspaceScope()
   const search = Route.useSearch()
-  const offset = search.offset ?? 0
   const projectResult = useQuery(
-    projectsQueryOptions(scope, { limit: projectPageLimit, offset })
+    projectsQueryOptions(scope, {
+      affiliation: search.affiliation,
+      cursor: search.cursor,
+      limit: projectPageLimit,
+    })
   )
 
   return (
     <PageLayout>
       <ProjectsPageHeader />
+      <ProjectDirectoryFilters affiliation={search.affiliation} />
       {projectResult.isPending ? (
         <CollectionTablePending label="projects" />
       ) : projectResult.isError && !projectResult.data ? (
@@ -89,19 +102,6 @@ function ProjectsPage() {
             label="Projects"
             retry={() => void projectResult.refetch()}
           />
-          {offset > 0 ? (
-            <nav className="flex justify-end" aria-label="Project pages">
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                search={{
-                  offset: Math.max(0, offset - projectPageLimit) || undefined,
-                }}
-                to="/projects"
-              >
-                Previous
-              </Link>
-            </nav>
-          ) : null}
         </>
       ) : (
         <>
@@ -113,7 +113,7 @@ function ProjectsPage() {
             />
           ) : null}
           <ProjectCollection
-            offset={offset}
+            affiliation={search.affiliation}
             projectPage={projectResult.data}
             updating={projectResult.isFetching}
           />
@@ -127,6 +127,7 @@ function ProjectsRoutePending() {
   return (
     <PageLayout>
       <ProjectsPageHeader />
+      <ProjectDirectoryFilters affiliation={Route.useSearch().affiliation} />
       <CollectionTablePending label="projects" />
     </PageLayout>
   )
@@ -142,26 +143,37 @@ function ProjectsPageHeader() {
         </Link>
       }
       eyebrow="Projects"
-      title="Your projects"
+      title="Projects you can access"
+    />
+  )
+}
+
+function ProjectDirectoryFilters({ affiliation }: { affiliation?: "owner" }) {
+  const navigate = Route.useNavigate()
+  return (
+    <CollectionAffiliationFilter
+      id="project-ownership"
+      onChange={(nextAffiliation) =>
+        void navigate({
+          search: { affiliation: nextAffiliation, cursor: undefined },
+          state: {},
+          to: "/projects",
+        })
+      }
+      value={affiliation}
     />
   )
 }
 
 function ProjectCollection({
-  offset,
+  affiliation,
   projectPage,
   updating,
 }: {
-  offset: number
+  affiliation?: "owner"
   projectPage: WorkspaceProjectPage
   updating: boolean
 }) {
-  const previousOffset = Math.max(0, offset - projectPageLimit)
-  const nextOffset = offset + projectPage.items.length
-  const hasNext =
-    projectPage.items.length === projectPageLimit &&
-    (projectPage.total === null || nextOffset < projectPage.total)
-
   return (
     <>
       <CollectionUpdateStatus label="projects" updating={updating} />
@@ -234,36 +246,25 @@ function ProjectCollection({
           <EmptyHeader>
             <EmptyTitle>No projects found</EmptyTitle>
             <EmptyDescription>
-              No projects are available to this account.
+              {affiliation
+                ? "This account does not own any projects."
+                : "No projects are available to this account."}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
       )}
-      {!updating && (offset > 0 || hasNext) && (
+      {!updating && projectPage.nextCursor && (
         <nav
           className="flex items-center justify-end gap-2"
           aria-label="Project pages"
         >
-          {offset > 0 && (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                offset: previousOffset === 0 ? undefined : previousOffset,
-              }}
-              to="/projects"
-            >
-              Previous
-            </Link>
-          )}
-          {hasNext && (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{ offset: nextOffset }}
-              to="/projects"
-            >
-              Next
-            </Link>
-          )}
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            search={{ affiliation, cursor: projectPage.nextCursor }}
+            to="/projects"
+          >
+            Next
+          </Link>
         </nav>
       )}
     </>

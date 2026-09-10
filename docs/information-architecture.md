@@ -132,7 +132,7 @@ The inspector is non-modal without a backdrop when the underlying page remains v
 
 Page composition assigns semantic width by responsibility. Forms and identity-management lists use the reading boundary, compact actions use capped adaptive tracks, entity detail cards use normal DOM order in the shared wide and narrow grid, and tables or graphs retain workspace width. Responsive layout changes columns without changing reading, focus, or screen-reader order. Optional cards collapse through normal grid placement rather than reserved rows.
 
-Collection grouping and sorting require stable server-owned contracts. Hub must not sort, group, or filter only a loaded cursor page while presenting the result as complete.
+Collection grouping requires a stable server-owned contract. Sample and dataset collections expose API-owned sorting only in type-specific views; the combined Data view remains fixed until the API supplies a unified ordering contract. Hub must not sort, group, or filter only a loaded cursor page while presenting the result as complete.
 
 ## Responsive and accessible behavior
 

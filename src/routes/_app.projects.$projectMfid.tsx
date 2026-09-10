@@ -95,7 +95,7 @@ function ProjectWorkspace() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink
-              render={<Link search={{ offset: undefined }} to="/projects" />}
+              render={<Link search={{ cursor: undefined }} to="/projects" />}
             >
               Projects
             </BreadcrumbLink>

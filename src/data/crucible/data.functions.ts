@@ -8,6 +8,11 @@ import {
   collectionFilterFields,
   normalizeCollectionFilters,
 } from "./collection-filters"
+import {
+  collectionAffiliationSchema,
+  resourceSortSchema,
+  sortDirectionSchema,
+} from "./collection-query"
 import { readWorkspaceDatasets, readWorkspaceSamples } from "./data.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
@@ -16,11 +21,14 @@ export const projectScopeSchema = z.enum(["all", "assigned", "shared"])
 
 const cursorPageInputFields = {
   ...collectionFilterFields,
-  cursor: z.string().min(1).max(2048).optional(),
+  affiliation: collectionAffiliationSchema.optional(),
+  cursor: z.string().min(1).max(4096).optional(),
+  direction: sortDirectionSchema.optional(),
   limit: z.number().int().min(1).max(100),
   projectMfid: z.string().trim().min(1).max(255).optional(),
   projectScope: projectScopeSchema.optional(),
   scenario: fixtureScenarioSchema.optional(),
+  sort: resourceSortSchema.optional(),
 }
 
 function validateProjectScope(
@@ -57,8 +65,10 @@ function validateCursorInput(
   input: {
     createdFrom?: string
     createdTo?: string
+    direction?: string
     projectMfid?: string
     projectScope?: string
+    sort?: string
     visibility?: string
   },
   context: z.RefinementCtx
@@ -73,6 +83,13 @@ function validateCursorInput(
       code: "custom",
       message: "The start date must not be after the end date.",
       path: ["createdTo"],
+    })
+  }
+  if (input.direction && !input.sort) {
+    context.addIssue({
+      code: "custom",
+      message: "A sort field is required when selecting a direction.",
+      path: ["direction"],
     })
   }
 }

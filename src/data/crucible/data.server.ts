@@ -7,6 +7,9 @@ import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
+import type { CollectionQueryOptions, ResourceSort } from "./collection-query"
+import { normalizeCollectionQueryOptions } from "./collection-query"
+import { fixtureCursorPage } from "./pagination"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import {
   assertFixtureScenarioAvailable,
@@ -24,11 +27,12 @@ import type {
 
 type ProjectScope = "all" | "assigned" | "shared"
 
-type ProjectScopedInput = CollectionFilters & {
-  projectMfid?: string
-  projectScope?: ProjectScope
-  scenario?: FixtureScenario
-}
+type ProjectScopedInput = CollectionFilters &
+  CollectionQueryOptions & {
+    projectMfid?: string
+    projectScope?: ProjectScope
+    scenario?: FixtureScenario
+  }
 
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
@@ -92,28 +96,6 @@ function toWorkspaceDataset(
   }
 }
 
-function fixtureOffset(cursor: string | undefined) {
-  if (!cursor) return 0
-  const match = /^fixture:(\d+)$/.exec(cursor)
-  if (!match) throw new Error("The fixture cursor is invalid.")
-  return Number(match[1])
-}
-
-function fixturePage<TItem>(
-  items: readonly TItem[],
-  input: { cursor?: string; limit: number }
-): WorkspaceCursorPage<TItem> {
-  const offset = fixtureOffset(input.cursor)
-  const pageItems = items.slice(offset, offset + input.limit)
-  const nextOffset = offset + pageItems.length
-  return {
-    items: pageItems,
-    limit: input.limit,
-    nextCursor: nextOffset < items.length ? `fixture:${nextOffset}` : null,
-    total: input.cursor ? null : items.length,
-  }
-}
-
 function fixtureWorkspace(scenario?: FixtureScenario) {
   const source = readWorkspaceFixture(scenario)
   if (source.status === "unavailable") throw new Error(source.reason)
@@ -172,6 +154,53 @@ function fixtureCollectionRows<
       (!bounds.creation_time_lte || creationTime <= bounds.creation_time_lte)
     )
   })
+}
+
+function fixtureQueryRows<
+  TItem extends {
+    creation_time?: string | null
+    modification_time?: string | null
+    owner: WorkspacePerson | null
+    unique_id: string
+  },
+>(
+  items: readonly TItem[],
+  input: CollectionQueryOptions,
+  accountMfid: string,
+  name: (item: TItem) => string
+) {
+  const options = normalizeCollectionQueryOptions(input)
+  const affiliated = options.affiliation
+    ? items.filter((item) => item.owner?.unique_id === accountMfid)
+    : items
+  if (!options.sort) {
+    return [...affiliated].sort((left, right) =>
+      right.unique_id.localeCompare(left.unique_id)
+    )
+  }
+  const sort = options.sort
+  const direction = options.direction === "asc" ? 1 : -1
+  return [...affiliated].sort((left, right) => {
+    const leftValue = fixtureSortValue(left, sort, name)
+    const rightValue = fixtureSortValue(right, sort, name)
+    if (leftValue === null && rightValue !== null) return 1
+    if (leftValue !== null && rightValue === null) return -1
+    if (leftValue !== rightValue) {
+      return String(leftValue).localeCompare(String(rightValue)) * direction
+    }
+    return left.unique_id.localeCompare(right.unique_id) * direction
+  })
+}
+
+function fixtureSortValue<
+  TItem extends {
+    creation_time?: string | null
+    modification_time?: string | null
+  },
+>(item: TItem, sort: ResourceSort, name: (item: TItem) => string) {
+  if (sort === "name") return name(item).toLocaleLowerCase()
+  if (sort === "created") return item.creation_time ?? null
+  return item.modification_time ?? item.creation_time ?? null
 }
 
 function fixtureProjectRows<
@@ -255,20 +284,35 @@ export async function readWorkspaceSamples(
       "samples",
       workspace.projects
     )
-    return fixturePage(fixtureCollectionRows(projectSamples, input), input)
+    return fixtureCursorPage(
+      fixtureQueryRows(
+        fixtureCollectionRows(projectSamples, input),
+        input,
+        workspace.account.unique_id,
+        (sample) => sample.sample_name
+      ),
+      input
+    )
   }
 
   const projectScope = normalizedProjectScope(input)
   const collectionFilters = normalizeCollectionFilters(input)
+  const collectionQuery = normalizeCollectionQueryOptions(input)
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/samples", {
     params: {
       query: {
+        affiliation: collectionQuery.affiliation
+          ? [collectionQuery.affiliation]
+          : undefined,
         cursor: input.cursor,
+        direction: collectionQuery.direction,
         include_owner: true,
+        include_total: true,
         limit: input.limit,
         project_mfid: input.projectMfid,
         project_scope: projectScope,
+        sort: collectionQuery.sort,
         visibility: collectionFilters.visibility,
         ...creationTimeBounds(collectionFilters),
       },
@@ -323,21 +367,36 @@ export async function readWorkspaceDatasets(
       "datasets",
       workspace.projects
     )
-    return fixturePage(fixtureCollectionRows(filteredDatasets, input), input)
+    return fixtureCursorPage(
+      fixtureQueryRows(
+        fixtureCollectionRows(filteredDatasets, input),
+        input,
+        workspace.account.unique_id,
+        (dataset) => dataset.dataset_name ?? ""
+      ),
+      input
+    )
   }
 
   const projectScope = normalizedProjectScope(input)
   const collectionFilters = normalizeCollectionFilters(input)
+  const collectionQuery = normalizeCollectionQueryOptions(input)
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/datasets", {
     params: {
       query: {
+        affiliation: collectionQuery.affiliation
+          ? [collectionQuery.affiliation]
+          : undefined,
         cursor: input.cursor,
+        direction: collectionQuery.direction,
         include_owner: true,
+        include_total: true,
         instrument_mfid: instrumentMfid,
         limit: input.limit,
         project_mfid: input.projectMfid,
         project_scope: projectScope,
+        sort: collectionQuery.sort,
         visibility: collectionFilters.visibility,
         ...creationTimeBounds(collectionFilters),
       },

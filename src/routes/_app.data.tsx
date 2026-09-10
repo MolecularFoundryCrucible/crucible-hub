@@ -16,6 +16,7 @@ import {
   ResourceUpdatedCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import {
   ResourcePreviewContext,
   resourcePreviewSearchSchema,
@@ -56,6 +57,11 @@ import {
   samplesQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
+import type {
+  CollectionQueryOptions,
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 
@@ -63,14 +69,17 @@ export const Route = createFileRoute("/_app/data")({
   head: () => ({ meta: [{ title: "Data | Crucible Hub" }] }),
   validateSearch: dataSearchSchema.merge(resourcePreviewSearchSchema),
   loaderDeps: ({ search }) => ({
+    affiliation: search.affiliation,
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
     datasetCursor: search.datasetCursor,
+    direction: search.direction,
     instrumentMfid: search.instrumentMfid,
     kind: search.kind,
     projectMfid: search.projectMfid,
     projectScope: search.projectScope,
     sampleCursor: search.sampleCursor,
+    sort: search.sort,
     visibility: search.visibility,
   }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
@@ -179,6 +188,7 @@ function DataResults({
   search: DataSearch
 }) {
   const scope = useWorkspaceScope()
+  const navigate = Route.useNavigate()
   const kind = filters.kind
   const showSamples = kind === "all" || kind === "samples"
   const showDatasets = kind === "all" || kind === "datasets"
@@ -217,7 +227,9 @@ function DataResults({
     filters.createdTo ||
     filters.instrumentMfid ||
     filters.projectMfid ||
-    filters.visibility
+    filters.visibility ||
+    filters.affiliation ||
+    filters.sort
   )
   const updating =
     (showSamples && sampleResult.isFetching) ||
@@ -226,6 +238,21 @@ function DataResults({
   function retrySelected() {
     if (showSamples) void sampleResult.refetch()
     if (showDatasets) void datasetResult.refetch()
+  }
+
+  function changeSort(sort: ResourceSort, direction: SortDirection) {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        datasetCursor: undefined,
+        direction,
+        preview: undefined,
+        sampleCursor: undefined,
+        sort,
+      }),
+      state: {},
+      to: "/data",
+    })
   }
 
   return (
@@ -276,13 +303,33 @@ function DataResults({
                   </colgroup>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
+                      {kind === "all" ? (
+                        <TableHead>Name</TableHead>
+                      ) : (
+                        <SortableTableHead
+                          active={filters.sort === "name"}
+                          direction={filters.direction ?? "desc"}
+                          field="name"
+                          label="Name"
+                          onChange={changeSort}
+                        />
+                      )}
                       <TableHead className="hidden xl:table-cell">
                         Type
                       </TableHead>
                       <TableHead>Project</TableHead>
                       <TableHead>Owner</TableHead>
-                      <TableHead>Updated</TableHead>
+                      {kind === "all" ? (
+                        <TableHead>Updated</TableHead>
+                      ) : (
+                        <SortableTableHead
+                          active={filters.sort === "updated"}
+                          direction={filters.direction ?? "desc"}
+                          field="updated"
+                          label="Updated"
+                          onChange={changeSort}
+                        />
+                      )}
                       <TableHead className="text-center">
                         <span className="sr-only">Open</span>
                       </TableHead>
@@ -494,6 +541,7 @@ function dataKind(kind: string | undefined): DataKindFilter {
 }
 
 type DataCollectionQueryFilters = CollectionFilters &
+  CollectionQueryOptions &
   (
     | { projectMfid?: undefined; projectScope?: undefined }
     | { projectMfid: string; projectScope: ProjectScope }
@@ -507,11 +555,17 @@ function collectionQueryFilters(
     createdTo: filters.createdTo,
     visibility: filters.visibility,
   }
+  const collectionQuery: CollectionQueryOptions = {
+    affiliation: filters.affiliation,
+    direction: filters.direction,
+    sort: filters.sort,
+  }
   return filters.projectMfid
     ? {
         ...collectionFilters,
+        ...collectionQuery,
         projectMfid: filters.projectMfid,
         projectScope: filters.projectScope,
       }
-    : collectionFilters
+    : { ...collectionFilters, ...collectionQuery }
 }

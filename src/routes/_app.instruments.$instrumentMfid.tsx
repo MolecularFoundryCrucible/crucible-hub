@@ -93,7 +93,7 @@ function InstrumentPage() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink
-              render={<Link search={{ offset: undefined }} to="/instruments" />}
+              render={<Link search={{ cursor: undefined }} to="/instruments" />}
             >
               Instruments
             </BreadcrumbLink>

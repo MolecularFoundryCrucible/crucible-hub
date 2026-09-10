@@ -4,8 +4,9 @@ import {
   getWorkspaceInstrumentOperators,
   getWorkspaceInstruments,
 } from "./instruments.functions"
+import type { CollectionAffiliation } from "./collection-query"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
-import { identityScopedPreviousData } from "./pagination"
+import { collectionScopedPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
@@ -15,29 +16,30 @@ export const instrumentPageLimit = 20
 
 function instrumentStatusScopedPreviousData<TData>(
   scope: IdentityScope,
+  affiliation: CollectionAffiliation | undefined,
   status: WorkspaceInstrumentStatus,
   previousData: TData | undefined,
   previousQuery: { queryKey: readonly unknown[] } | undefined
 ) {
   if (
-    identityScopedPreviousData(scope, previousData, previousQuery) === undefined
+    collectionScopedPreviousData(
+      scope,
+      { affiliation, status },
+      previousData,
+      previousQuery
+    ) === undefined
   ) {
     return undefined
   }
-  const previousFilters = previousQuery?.queryKey[5]
-  return typeof previousFilters === "object" &&
-    previousFilters !== null &&
-    "status" in previousFilters &&
-    previousFilters.status === status
-    ? previousData
-    : undefined
+  return previousData
 }
 
 export function instrumentsQueryOptions(
   scope: IdentityScope,
   filters: {
+    affiliation?: CollectionAffiliation
+    cursor?: string
     limit: number
-    offset: number
     status: WorkspaceInstrumentStatus
   }
 ) {
@@ -54,6 +56,7 @@ export function instrumentsQueryOptions(
     placeholderData: (previousData, previousQuery) =>
       instrumentStatusScopedPreviousData(
         scope,
+        filters.affiliation,
         filters.status,
         previousData,
         previousQuery

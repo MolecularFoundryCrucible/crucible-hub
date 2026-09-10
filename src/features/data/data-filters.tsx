@@ -87,6 +87,7 @@ export function DataFilters({
 
   const active = resolution.valid
     ? [
+        resolution.filters.affiliation ? "Ownership: Owned by me" : undefined,
         resolution.filters.projectMfid
           ? `Project: ${resolvedProjectName ?? resolution.filters.projectMfid}`
           : undefined,
@@ -105,6 +106,9 @@ export function DataFilters({
           : undefined,
         activeInstrumentMfid
           ? `Instrument: ${resolvedInstrumentName ?? activeInstrumentMfid}`
+          : undefined,
+        resolution.filters.sort
+          ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
           : undefined,
       ].filter((value): value is string => Boolean(value))
     : []
@@ -194,6 +198,29 @@ export function DataFilters({
                 triggerId="data-project-trigger"
                 value={selectedProject}
               />
+            </Field>
+            <Field data-invalid={invalid("affiliation")}>
+              <FieldLabel htmlFor="data-affiliation">Ownership</FieldLabel>
+              <NativeSelect
+                aria-describedby={
+                  invalid("affiliation") ? errorDescription : undefined
+                }
+                aria-invalid={invalid("affiliation") || undefined}
+                className="w-full"
+                id="data-affiliation"
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    affiliation: event.target.value || undefined,
+                  }))
+                }
+                value={draft.affiliation ?? ""}
+              >
+                <NativeSelectOption value="">All accessible</NativeSelectOption>
+                <NativeSelectOption value="owner">
+                  Owned by me
+                </NativeSelectOption>
+              </NativeSelect>
             </Field>
             {draft.projectMfid ? (
               <Field data-invalid={invalid("projectScope")}>
@@ -308,6 +335,67 @@ export function DataFilters({
                 />
               </Field>
             ) : null}
+            {kind !== "all" ? (
+              <>
+                <Field data-invalid={invalid("sort")}>
+                  <FieldLabel htmlFor="data-sort">Order by</FieldLabel>
+                  <NativeSelect
+                    aria-describedby={
+                      invalid("sort") ? errorDescription : undefined
+                    }
+                    aria-invalid={invalid("sort") || undefined}
+                    className="w-full"
+                    id="data-sort"
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        direction: event.target.value
+                          ? (current.direction ?? "desc")
+                          : undefined,
+                        sort: event.target.value || undefined,
+                      }))
+                    }
+                    value={draft.sort ?? ""}
+                  >
+                    <NativeSelectOption value="">Default</NativeSelectOption>
+                    <NativeSelectOption value="name">Name</NativeSelectOption>
+                    <NativeSelectOption value="created">
+                      Created
+                    </NativeSelectOption>
+                    <NativeSelectOption value="updated">
+                      Updated
+                    </NativeSelectOption>
+                  </NativeSelect>
+                </Field>
+                {draft.sort ? (
+                  <Field data-invalid={invalid("direction")}>
+                    <FieldLabel htmlFor="data-direction">Direction</FieldLabel>
+                    <NativeSelect
+                      aria-describedby={
+                        invalid("direction") ? errorDescription : undefined
+                      }
+                      aria-invalid={invalid("direction") || undefined}
+                      className="w-full"
+                      id="data-direction"
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          direction: event.target.value,
+                        }))
+                      }
+                      value={draft.direction ?? "desc"}
+                    >
+                      <NativeSelectOption value="asc">
+                        Ascending
+                      </NativeSelectOption>
+                      <NativeSelectOption value="desc">
+                        Descending
+                      </NativeSelectOption>
+                    </NativeSelect>
+                  </Field>
+                ) : null}
+              </>
+            ) : null}
           </FieldGroup>
         </FieldSet>
         {draftErrors.length ? (
@@ -326,14 +414,23 @@ export function DataFilters({
 
 function filterDraft(values: DataSearch): DataFilterSearch {
   return {
+    affiliation: values.affiliation,
     createdFrom: values.createdFrom,
     createdTo: values.createdTo,
+    direction: values.direction,
     instrumentMfid: values.instrumentMfid,
     kind: values.kind,
     projectMfid: values.projectMfid,
     projectScope: values.projectScope,
+    sort: values.sort,
     visibility: values.visibility,
   }
+}
+
+function sortLabel(sort: string) {
+  if (sort === "created") return "Created"
+  if (sort === "updated") return "Updated"
+  return "Name"
 }
 
 function dataKind(kind: string | undefined): DataKindFilter {

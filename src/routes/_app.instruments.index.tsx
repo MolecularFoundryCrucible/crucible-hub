@@ -2,6 +2,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
+import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -40,6 +41,10 @@ import {
   instrumentsQueryOptions,
 } from "@/data/crucible/instruments.queries"
 import {
+  collectionAffiliationSchema,
+  collectionCursorSchema,
+} from "@/data/crucible/collection-query"
+import {
   instrumentStatusLabel,
   instrumentStatuses,
 } from "@/data/crucible/instrument-status"
@@ -49,7 +54,8 @@ import type {
 } from "@/data/crucible/workspace-source"
 
 const instrumentSearchSchema = z.object({
-  offset: z.coerce.number().int().min(0).catch(0).optional(),
+  affiliation: collectionAffiliationSchema.optional().catch(undefined),
+  cursor: collectionCursorSchema,
   status: z.enum(instrumentStatuses).optional().catch(undefined),
 })
 
@@ -57,7 +63,8 @@ export const Route = createFileRoute("/_app/instruments/")({
   head: () => ({ meta: [{ title: "Instruments | Crucible Hub" }] }),
   validateSearch: instrumentSearchSchema,
   loaderDeps: ({ search }) => ({
-    offset: search.offset ?? 0,
+    affiliation: search.affiliation,
+    cursor: search.cursor,
     status: search.status ?? "active",
   }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
@@ -66,8 +73,7 @@ export const Route = createFileRoute("/_app/instruments/")({
 
     const options = instrumentsQueryOptions(source.scope, {
       limit: instrumentPageLimit,
-      offset: deps.offset,
-      status: deps.status,
+      ...deps,
     })
     const hasData =
       context.queryClient.getQueryData(options.queryKey) !== undefined
@@ -87,12 +93,12 @@ function InstrumentsPage() {
   const scope = useWorkspaceScope()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
-  const offset = search.offset ?? 0
   const status = search.status ?? "active"
   const instrumentResult = useQuery(
     instrumentsQueryOptions(scope, {
+      affiliation: search.affiliation,
+      cursor: search.cursor,
       limit: instrumentPageLimit,
-      offset,
       status,
     })
   )
@@ -100,7 +106,11 @@ function InstrumentsPage() {
   return (
     <PageLayout>
       <InstrumentsPageHeader canRegister={!account.is_service_account} />
-      <InstrumentStatusNavigation status={status} />
+      <InstrumentStatusNavigation
+        affiliation={search.affiliation}
+        status={status}
+      />
+      <InstrumentDirectoryFilters affiliation={search.affiliation} />
       {instrumentResult.isPending ? (
         <CollectionTablePending label="instruments" />
       ) : instrumentResult.isError && !instrumentResult.data ? (
@@ -109,21 +119,6 @@ function InstrumentsPage() {
             label="Instruments"
             retry={() => void instrumentResult.refetch()}
           />
-          {offset > 0 ? (
-            <nav className="flex justify-end" aria-label="Instrument pages">
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                search={{
-                  offset:
-                    Math.max(0, offset - instrumentPageLimit) || undefined,
-                  status: status === "active" ? undefined : status,
-                }}
-                to="/instruments"
-              >
-                Previous
-              </Link>
-            </nav>
-          ) : null}
         </>
       ) : (
         <>
@@ -135,8 +130,8 @@ function InstrumentsPage() {
             />
           ) : null}
           <InstrumentCollection
+            affiliation={search.affiliation}
             instrumentPage={instrumentResult.data}
-            offset={offset}
             status={status}
             updating={instrumentResult.isFetching}
           />
@@ -155,9 +150,38 @@ function InstrumentsRoutePending() {
       <InstrumentsPageHeader
         canRegister={account?.is_service_account === false}
       />
-      <InstrumentStatusNavigation status={search.status ?? "active"} />
+      <InstrumentStatusNavigation
+        affiliation={search.affiliation}
+        status={search.status ?? "active"}
+      />
+      <InstrumentDirectoryFilters affiliation={search.affiliation} />
       <CollectionTablePending label="instruments" />
     </PageLayout>
+  )
+}
+
+function InstrumentDirectoryFilters({
+  affiliation,
+}: {
+  affiliation?: "owner"
+}) {
+  const navigate = Route.useNavigate()
+  return (
+    <CollectionAffiliationFilter
+      id="instrument-ownership"
+      onChange={(nextAffiliation) =>
+        void navigate({
+          search: (previous) => ({
+            ...previous,
+            affiliation: nextAffiliation,
+            cursor: undefined,
+          }),
+          state: {},
+          to: "/instruments",
+        })
+      }
+      value={affiliation}
+    />
   )
 }
 
@@ -179,8 +203,10 @@ function InstrumentsPageHeader({ canRegister }: { canRegister: boolean }) {
 }
 
 function InstrumentStatusNavigation({
+  affiliation,
   status,
 }: {
+  affiliation?: "owner"
   status: WorkspaceInstrumentStatus
 }) {
   return (
@@ -197,7 +223,8 @@ function InstrumentStatusNavigation({
           })}
           key={candidate}
           search={{
-            offset: undefined,
+            affiliation,
+            cursor: undefined,
             status: candidate === "active" ? undefined : candidate,
           }}
           to="/instruments"
@@ -210,22 +237,16 @@ function InstrumentStatusNavigation({
 }
 
 function InstrumentCollection({
+  affiliation,
   instrumentPage,
-  offset,
   status,
   updating,
 }: {
+  affiliation?: "owner"
   instrumentPage: WorkspaceInstrumentPage
-  offset: number
   status: WorkspaceInstrumentStatus
   updating: boolean
 }) {
-  const previousOffset = Math.max(0, offset - instrumentPageLimit)
-  const nextOffset = offset + instrumentPage.items.length
-  const hasNext =
-    instrumentPage.items.length === instrumentPageLimit &&
-    (instrumentPage.total === null || nextOffset < instrumentPage.total)
-
   return (
     <>
       <CollectionUpdateStatus label="instruments" updating={updating} />
@@ -309,42 +330,30 @@ function InstrumentCollection({
             <EmptyHeader>
               <EmptyTitle>No instruments found</EmptyTitle>
               <EmptyDescription>
-                No {instrumentStatusLabel(status).toLowerCase()} instruments are
+                {affiliation ? "No owned " : "No "}
+                {instrumentStatusLabel(status).toLowerCase()} instruments are
                 available to this account.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
         </section>
       )}
-      {!updating && (offset > 0 || hasNext) && (
+      {!updating && instrumentPage.nextCursor && (
         <nav
           className="flex items-center justify-end gap-2"
           aria-label="Instrument pages"
         >
-          {offset > 0 && (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                offset: previousOffset === 0 ? undefined : previousOffset,
-                status: status === "active" ? undefined : status,
-              }}
-              to="/instruments"
-            >
-              Previous
-            </Link>
-          )}
-          {hasNext && (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                offset: nextOffset,
-                status: status === "active" ? undefined : status,
-              }}
-              to="/instruments"
-            >
-              Next
-            </Link>
-          )}
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            search={{
+              affiliation,
+              cursor: instrumentPage.nextCursor,
+              status: status === "active" ? undefined : status,
+            }}
+            to="/instruments"
+          >
+            Next
+          </Link>
         </nav>
       )}
     </>

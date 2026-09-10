@@ -10,15 +10,14 @@ import {
 } from "./projects.functions"
 
 describe("project server-function inputs", () => {
-  it("accepts bounded offset pagination", () => {
-    expect(
-      projectListInputSchema.safeParse({ limit: 20, offset: 0 }).success
-    ).toBe(true)
+  it("accepts bounded cursor pagination", () => {
+    expect(projectListInputSchema.safeParse({ limit: 20 }).success).toBe(true)
   })
 
   it("rejects malformed pagination", () => {
     expect(
-      projectListInputSchema.safeParse({ limit: 101, offset: -1 }).success
+      projectListInputSchema.safeParse({ cursor: "x".repeat(4097), limit: 101 })
+        .success
     ).toBe(false)
   })
 

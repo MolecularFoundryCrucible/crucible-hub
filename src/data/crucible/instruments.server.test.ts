@@ -20,14 +20,17 @@ describe("workspace instrument source", () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "")
 
-    const first = await readWorkspaceInstruments({ limit: 1, offset: 0 })
-    const second = await readWorkspaceInstruments({ limit: 1, offset: 1 })
+    const first = await readWorkspaceInstruments({ limit: 1 })
+    const second = await readWorkspaceInstruments({
+      cursor: "fixture:1",
+      limit: 1,
+    })
 
     expect(first.items).toHaveLength(1)
     expect(second.items).toHaveLength(0)
     expect(first.total).toBe(1)
-    expect(first.offset).toBe(0)
-    expect(second.offset).toBe(1)
+    expect(first.nextCursor).toBeNull()
+    expect(second.nextCursor).toBeNull()
     expect(first.items[0]?.capabilities).toMatchObject({ can_edit: true })
   })
 
@@ -38,10 +41,9 @@ describe("workspace instrument source", () => {
     await expect(
       readWorkspaceInstruments({
         limit: 20,
-        offset: 0,
         status: "maintenance",
       })
-    ).resolves.toEqual({ items: [], limit: 20, offset: 0, total: 0 })
+    ).resolves.toEqual({ items: [], limit: 20, nextCursor: null, total: 0 })
   })
 
   it("preserves API capability guidance and normalizes omission", async () => {
@@ -81,7 +83,7 @@ describe("workspace instrument source", () => {
       )
     )
 
-    const page = await readWorkspaceInstruments({ limit: 20, offset: 0 })
+    const page = await readWorkspaceInstruments({ limit: 20 })
 
     expect(page.items[0]?.capabilities).toMatchObject({
       can_edit: true,
@@ -110,14 +112,13 @@ describe("workspace instrument source", () => {
 
     await readWorkspaceInstruments({
       limit: 20,
-      offset: 0,
       status: "decommissioned",
     })
 
     expect(Object.fromEntries(new URL(requests[0].url).searchParams)).toEqual({
       include_owner: "true",
+      include_total: "true",
       limit: "20",
-      offset: "0",
       status: "decommissioned",
     })
   })
@@ -127,9 +128,9 @@ describe("workspace instrument source", () => {
     vi.stubEnv("HUB_DATA_SOURCE", "")
     vi.stubEnv("HUB_ENABLE_FIXTURES", "")
 
-    await expect(
-      readWorkspaceInstruments({ limit: 20, offset: 0 })
-    ).rejects.toThrow("The Crucible API login exchange is not connected yet.")
+    await expect(readWorkspaceInstruments({ limit: 20 })).rejects.toThrow(
+      "The Crucible API login exchange is not connected yet."
+    )
   })
 
   it("returns a non-persistent fixture instrument descriptive update", async () => {

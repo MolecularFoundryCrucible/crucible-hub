@@ -12,6 +12,8 @@ import {
   readWorkspaceFixture,
 } from "./workspace-fixture.server"
 import { isWorkspaceInstrumentStatus } from "./instrument-status"
+import type { CollectionAffiliation } from "./collection-query"
+import { fixtureCursorPage } from "./pagination"
 import { toWorkspaceResourceDetail } from "./resources.server"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type {
@@ -387,13 +389,15 @@ export async function setWorkspaceInstrumentStatus(
 
 export async function readWorkspaceInstruments(
   {
+    affiliation,
+    cursor,
     limit,
-    offset,
     scenario,
     status,
   }: {
+    affiliation?: CollectionAffiliation
+    cursor?: string
     limit: number
-    offset: number
     scenario?: FixtureScenario
     status?: WorkspaceInstrumentStatus
   },
@@ -408,20 +412,25 @@ export async function readWorkspaceInstruments(
     const source = readWorkspaceFixture(scenario)
     if (source.status === "unavailable") throw new Error(source.reason)
     const instruments = source.workspace.instruments.filter(
-      (instrument) => instrument.status === (status ?? "active")
+      (instrument) =>
+        instrument.status === (status ?? "active") &&
+        (!affiliation ||
+          instrument.owner?.unique_id === source.workspace.account.unique_id)
     )
-    return {
-      items: instruments.slice(offset, offset + limit),
-      limit,
-      offset,
-      total: instruments.length,
-    }
+    return fixtureCursorPage(instruments, { cursor, limit })
   }
 
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/instruments", {
     params: {
-      query: { include_owner: true, limit, offset, status },
+      query: {
+        affiliation: affiliation ? [affiliation] : undefined,
+        cursor,
+        include_owner: true,
+        include_total: true,
+        limit,
+        status,
+      },
     },
     signal: crucibleRequestSignal(requestSignal),
   })
@@ -431,7 +440,7 @@ export async function readWorkspaceInstruments(
   return {
     items: result.data.items.map(toWorkspaceInstrument),
     limit: result.data.limit,
-    offset: result.data.offset ?? offset,
+    nextCursor: result.data.next_cursor ?? null,
     total: result.data.total ?? null,
   }
 }
