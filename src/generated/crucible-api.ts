@@ -330,24 +330,44 @@ export interface paths {
          *     By default, results are ordered by unique_id descending. To fetch a keyset page,
          *     pass cursor=<next_cursor from the previous response>. The first page omits cursor.
          *     next_cursor is null when there are no further pages. total is included only when
-         *     cursor is omitted and offset is zero.
+         *     cursor is omitted and offset is zero. Pass include_total=true to request it on
+         *     any page or include_total=false to suppress it.
          *
          *     Offset pagination is supported for backward compatibility: pass offset=<n> instead
-         *     of cursor. Supplying both returns 422. Prefer cursor for large result sets, since
-         *     deep offsets are slower.
+         *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
+         *     result sets, since deep offsets are slower.
          *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
+         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
          *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
          *     Pass include_links=true to include parent, child, and associated resources for each dataset.
          *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
          *     Pass instrument_mfid to filter by the instrument's canonical stable identity.
          *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
          *     Pass sample_mfid to filter by a readable sample's canonical stable identity.
+         *     Faceted nullable fields also accept field-specific is_null=true or false filters.
          *     Access selectors use AND semantics and only narrow resources readable by the caller.
          */
         get: operations["list_datasets_datasets_get"];
         put?: never;
         /** Create Dataset */
         post: operations["create_dataset_datasets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dataset Facets */
+        get: operations["get_dataset_facets_datasets_facets_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -388,6 +408,7 @@ export interface paths {
         /**
          * Search Datasets
          * @description Search readable datasets by name and return results ordered by match quality.
+         *     Use owner_id for an exact owner match.
          *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
          */
         get: operations["search_datasets_datasets_search_get"];
@@ -1275,7 +1296,9 @@ export interface paths {
          *     Use instrument_id for exact slug lookup. Other filterable fields include
          *     other_id, other_id_source, instrument_name, manufacturer,
          *     model, owner, location, description, instrument_type, status.
+         *     Use owner_id for an exact owner match; owner remains as a deprecated alias.
          *     Pass affiliation=owner to return only instruments authoritatively owned by the caller.
+         *     Pass include_total=false to omit the exact authorization-filtered count.
          *     Defaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.
          *     An exact instrument_id lookup searches every status unless status is also provided.
          */
@@ -1303,6 +1326,7 @@ export interface paths {
          * Search Instruments
          * @description Search instruments by name, type, or manufacturer using fuzzy matching.
          *     Returns results ordered by match quality. Maximum 50 results.
+         *     Use owner_id for an exact owner match.
          */
         get: operations["search_instruments_instruments_search_get"];
         put?: never;
@@ -1575,6 +1599,7 @@ export interface paths {
          * List Projects
          * @description Returns a paginated list of projects the user is authorized to see, including the resolved project lead.
          *     Pass affiliation=owner to return only projects authoritatively owned by the caller.
+         *     Pass include_total=false to omit the exact authorization-filtered count.
          */
         get: operations["list_projects_projects_get"];
         put?: never;
@@ -2079,18 +2104,21 @@ export interface paths {
          *     By default, results are ordered by unique_id descending. To fetch a keyset page,
          *     pass cursor=<next_cursor from the previous response>. The first page omits cursor.
          *     next_cursor is null when there are no further pages. total is included only when
-         *     cursor is omitted and offset is zero.
+         *     cursor is omitted and offset is zero. Pass include_total=true to request it on
+         *     any page or include_total=false to suppress it.
          *
          *     Offset pagination is supported for backward compatibility: pass offset=<n> instead
-         *     of cursor. Supplying both returns 422. Prefer cursor for large result sets, since
-         *     deep offsets are slower.
+         *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
+         *     result sets, since deep offsets are slower.
          *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
+         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
          *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
          *     Pass include_links=true to include parent, child, and associated resources for each sample.
          *     include_datasets is deprecated; use include_links instead.
          *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
          *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
          *     Pass dataset_mfid to filter by a readable dataset's canonical stable identity.
+         *     Faceted nullable fields also accept field-specific is_null=true or false filters.
          *     Access selectors use AND semantics and only narrow resources readable by the caller.
          */
         get: operations["list_samples_samples_get"];
@@ -2107,6 +2135,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/samples/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sample Facets */
+        get: operations["get_sample_facets_samples_facets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/samples/search": {
         parameters: {
             query?: never;
@@ -2117,6 +2162,7 @@ export interface paths {
         /**
          * Search Samples
          * @description Search readable samples by name and return results ordered by match quality.
+         *     Use owner_id for an exact owner match.
          *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
          */
         get: operations["search_samples_samples_search_get"];
@@ -2948,6 +2994,11 @@ export interface components {
             /** Unique Id */
             unique_id?: string | null;
         };
+        /**
+         * DatasetFacetField
+         * @enum {string}
+         */
+        DatasetFacetField: "session" | "measurement" | "data_format" | "owner" | "instrument" | "project";
         /** DatasetLink */
         DatasetLink: {
             /** Child Dataset Id */
@@ -3180,6 +3231,24 @@ export interface components {
             /** Images */
             images: components["schemas"]["ImageInput"][];
         };
+        /** FacetBucket */
+        FacetBucket: {
+            /** Count */
+            count: number;
+            /** Value */
+            value: string | null;
+        };
+        /** FacetResponse */
+        FacetResponse: {
+            /** Field */
+            field: string;
+            /** Items */
+            items: (components["schemas"]["FacetBucket"] | components["schemas"]["OwnerFacetBucket"] | components["schemas"]["ProjectFacetBucket"] | components["schemas"]["InstrumentFacetBucket"])[];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -3250,6 +3319,14 @@ export interface components {
              * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
              */
             owner_orcid?: string | null;
+        };
+        /** InstrumentFacetBucket */
+        InstrumentFacetBucket: {
+            /** Count */
+            count: number;
+            instrument: components["schemas"]["InstrumentReferenceRead"] | null;
+            /** Value */
+            value: string | null;
         };
         /** InstrumentReferenceRead */
         InstrumentReferenceRead: {
@@ -3411,6 +3488,14 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** OwnerFacetBucket */
+        OwnerFacetBucket: {
+            /** Count */
+            count: number;
+            owner: components["schemas"]["UserPublicRead"] | null;
+            /** Value */
+            value: string | null;
         };
         /** PaginatedResponse[AccessGroupMemberRead] */
         PaginatedResponse_AccessGroupMemberRead_: {
@@ -3642,6 +3727,14 @@ export interface components {
             status?: string | null;
             /** Title */
             title?: string | null;
+        };
+        /** ProjectFacetBucket */
+        ProjectFacetBucket: {
+            /** Count */
+            count: number;
+            project: components["schemas"]["ProjectReferenceRead"] | null;
+            /** Value */
+            value: string | null;
         };
         /**
          * ProjectMembershipRole
@@ -3877,6 +3970,11 @@ export interface components {
             /** Unique Id */
             unique_id?: string | null;
         };
+        /**
+         * SampleFacetField
+         * @enum {string}
+         */
+        SampleFacetField: "sample_type" | "owner" | "project";
         /** SampleLink */
         SampleLink: {
             /** Parent Sample Id */
@@ -4685,10 +4783,12 @@ export interface operations {
                 include_metadata?: boolean;
                 include_links?: boolean;
                 include_owner?: boolean;
+                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
+                include_total?: boolean | null;
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous page. */
                 cursor?: string | null;
-                /** @description Compatibility offset. Cannot be supplied with cursor. */
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
                 /** @description Inclusive creation-time lower bound. */
                 creation_time_gte?: string | null;
@@ -4718,9 +4818,11 @@ export interface operations {
                 unique_id?: string | null;
                 public?: boolean | null;
                 dataset_name?: string | null;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
                 /**
                  * @deprecated
-                 * @description Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.
+                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
                  */
                 owner_orcid?: string | null;
                 instrument_name?: string | null;
@@ -4730,6 +4832,18 @@ export interface operations {
                 data_type?: string | null;
                 measurement?: string | null;
                 session_name?: string | null;
+                /** @description Filter by whether session_name is null. */
+                session_name_is_null?: boolean | null;
+                /** @description Filter by whether measurement is null. */
+                measurement_is_null?: boolean | null;
+                /** @description Filter by whether data_format is null. */
+                data_format_is_null?: boolean | null;
+                /** @description Filter by whether the stored owner identifier is null. */
+                owner_id_is_null?: boolean | null;
+                /** @description Filter by whether a canonical registered instrument is assigned. */
+                instrument_mfid_is_null?: boolean | null;
+                /** @description Filter by whether a canonical primary project is assigned. */
+                project_mfid_is_null?: boolean | null;
             };
             header?: never;
             path?: never;
@@ -4790,6 +4904,80 @@ export interface operations {
             };
         };
     };
+    get_dataset_facets_datasets_facets_get: {
+        parameters: {
+            query: {
+                accessible_to_user?: string[] | null;
+                accessible_to_project?: string[] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
+                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Restrict the resources contributing to bucket counts by public visibility. */
+                visibility?: "all" | "public" | "private";
+                /** @description Project slug. May be combined with a matching project_mfid. */
+                project_id?: string | null;
+                /** @description Canonical project MFID. May be combined with a matching project_id. */
+                project_mfid?: string | null;
+                /** @description Project relationship to include. Requires a project filter and defaults to assigned. */
+                project_scope?: ("assigned" | "shared" | "all") | null;
+                /** @description Inclusive creation-time lower bound. */
+                creation_time_gte?: string | null;
+                /** @description Inclusive creation-time upper bound. */
+                creation_time_lte?: string | null;
+                /** @description Inclusive modification-time lower bound. */
+                modification_time_gte?: string | null;
+                /** @description Inclusive modification-time upper bound. */
+                modification_time_lte?: string | null;
+                /** @description Maximum number of facet buckets to return. */
+                limit?: number;
+                /** @description Opaque continuation cursor returned by a previous facet page. */
+                cursor?: string | null;
+                /** @description Dataset field to group into facet buckets. */
+                field: components["schemas"]["DatasetFacetField"];
+                sample_mfid?: string | null;
+                instrument_mfid?: string | null;
+                session_name?: string | null;
+                measurement?: string | null;
+                data_format?: string | null;
+                owner_id?: string | null;
+                /** @description Restrict contributing datasets by whether session_name is null. */
+                session_name_is_null?: boolean | null;
+                /** @description Restrict contributing datasets by whether measurement is null. */
+                measurement_is_null?: boolean | null;
+                /** @description Restrict contributing datasets by whether data_format is null. */
+                data_format_is_null?: boolean | null;
+                /** @description Restrict contributing datasets by whether the stored owner identifier is null. */
+                owner_id_is_null?: boolean | null;
+                /** @description Restrict contributing datasets by canonical instrument assignment. */
+                instrument_mfid_is_null?: boolean | null;
+                /** @description Restrict contributing datasets by canonical primary project assignment. */
+                project_mfid_is_null?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_first_thumbnails_datasets_first_thumbnails_post: {
         parameters: {
             query?: never;
@@ -4833,6 +5021,8 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
                 limit?: number;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
                 /** @description Restrict results related to this canonical project MFID. */
@@ -6487,16 +6677,22 @@ export interface operations {
                 affiliation?: components["schemas"]["Affiliation"][] | null;
                 include_metadata?: boolean;
                 include_owner?: boolean;
+                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
+                include_total?: boolean | null;
                 limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
                 offset?: number;
                 other_id?: string | null;
                 other_id_source?: string | null;
                 instrument_name?: string | null;
                 manufacturer?: string | null;
                 model?: string | null;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
                 /**
                  * @deprecated
-                 * @description Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.
+                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
                  */
                 owner?: string | null;
                 location?: string | null;
@@ -6572,6 +6768,8 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
                 limit?: number;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
                 /** @description Restrict results to one lifecycle status. */
                 status?: components["schemas"]["InstrumentStatus"] | null;
                 include_owner?: boolean;
@@ -7036,9 +7234,13 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
                 include_metadata?: boolean;
+                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
+                include_total?: boolean | null;
                 /** @description Include members for an exact project_id lookup when authorized. */
                 include_members?: boolean;
                 limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
                 offset?: number;
             };
             header?: never;
@@ -7798,7 +8000,7 @@ export interface operations {
                 include_metadata?: boolean;
                 include_links?: boolean;
                 include_owner?: boolean;
-                /** @description For samples, include legacy embedded dataset objects. Set false and use include_links or GET /datasets?sample_mfid=... for efficient relationship access. */
+                /** @description Include legacy embedded dataset objects. Set false and use include_links or GET /datasets?sample_mfid=... for efficient relationship access. */
                 include_datasets?: boolean;
             };
             header?: never;
@@ -8046,10 +8248,12 @@ export interface operations {
                 include_metadata?: boolean;
                 include_links?: boolean;
                 include_owner?: boolean;
+                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
+                include_total?: boolean | null;
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous page. */
                 cursor?: string | null;
-                /** @description Compatibility offset. Cannot be supplied with cursor. */
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
                 /** @description Inclusive creation-time lower bound. */
                 creation_time_gte?: string | null;
@@ -8082,13 +8286,21 @@ export interface operations {
                 public?: boolean | null;
                 sample_name?: string | null;
                 sample_type?: string | null;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
                 /**
                  * @deprecated
-                 * @description Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.
+                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
                  */
                 owner_orcid?: string | null;
                 description?: string | null;
                 timestamp?: string | null;
+                /** @description Filter by whether sample_type is null. */
+                sample_type_is_null?: boolean | null;
+                /** @description Filter by whether the stored owner identifier is null. */
+                owner_id_is_null?: boolean | null;
+                /** @description Filter by whether a canonical primary project is assigned. */
+                project_mfid_is_null?: boolean | null;
             };
             header?: never;
             path?: never;
@@ -8149,6 +8361,71 @@ export interface operations {
             };
         };
     };
+    get_sample_facets_samples_facets_get: {
+        parameters: {
+            query: {
+                accessible_to_user?: string[] | null;
+                accessible_to_project?: string[] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
+                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Restrict the resources contributing to bucket counts by public visibility. */
+                visibility?: "all" | "public" | "private";
+                /** @description Project slug. May be combined with a matching project_mfid. */
+                project_id?: string | null;
+                /** @description Canonical project MFID. May be combined with a matching project_id. */
+                project_mfid?: string | null;
+                /** @description Project relationship to include. Requires a project filter and defaults to assigned. */
+                project_scope?: ("assigned" | "shared" | "all") | null;
+                /** @description Inclusive creation-time lower bound. */
+                creation_time_gte?: string | null;
+                /** @description Inclusive creation-time upper bound. */
+                creation_time_lte?: string | null;
+                /** @description Inclusive modification-time lower bound. */
+                modification_time_gte?: string | null;
+                /** @description Inclusive modification-time upper bound. */
+                modification_time_lte?: string | null;
+                /** @description Maximum number of facet buckets to return. */
+                limit?: number;
+                /** @description Opaque continuation cursor returned by a previous facet page. */
+                cursor?: string | null;
+                /** @description Sample field to group into facet buckets. */
+                field: components["schemas"]["SampleFacetField"];
+                dataset_mfid?: string | null;
+                sample_type?: string | null;
+                owner_id?: string | null;
+                /** @description Restrict contributing samples by whether sample_type is null. */
+                sample_type_is_null?: boolean | null;
+                /** @description Restrict contributing samples by whether the stored owner identifier is null. */
+                owner_id_is_null?: boolean | null;
+                /** @description Restrict contributing samples by canonical primary project assignment. */
+                project_mfid_is_null?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     search_samples_samples_search_get: {
         parameters: {
             query: {
@@ -8157,6 +8434,8 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
                 limit?: number;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
                 /** @description Restrict results related to this canonical project MFID. */
@@ -8460,8 +8739,8 @@ export interface operations {
     read_sample_samples__sample_mfid__get: {
         parameters: {
             query?: {
-                include_links?: boolean;
                 include_metadata?: boolean;
+                include_links?: boolean;
                 include_owner?: boolean;
                 /** @description Include legacy embedded dataset objects. Set false and use include_links or GET /datasets?sample_mfid=... for efficient relationship access. */
                 include_datasets?: boolean;

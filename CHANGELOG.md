@@ -65,6 +65,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Updated the pinned staging API contract and generated client for owned-resource affiliation, explicit totals, project and instrument cursors, preferred owner filtering, and authorization-scoped dataset and sample facets with explicit null buckets.
 - Reorganized sample and dataset creation into visible, consistently labelled sections, prefilled new-resource timestamps from browser-local time, standardized inline optional labels across forms, and added shared parent, child, and cross-resource relationship selection with partial-failure recovery.
 - Rebalanced sample and dataset Overview cards so Identity and Thumbnails share a column, Relationships and Scientific metadata share an equal-width row, relationship groups retain a single readable column, and nested metadata renders as an expandable row-based JSON tree with header-level expansion controls and compact empty-collection notation.
 - Distinguished service-account owners on sample and dataset Identity cards with the semantic robot icon while keeping owner names free of trailing type icons.
