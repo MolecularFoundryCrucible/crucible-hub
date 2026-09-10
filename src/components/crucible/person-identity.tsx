@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils"
 type PersonIdentityPresentation = "avatar" | "inline" | "stacked"
 type PersonNameStyle = "abbreviated" | "full"
 type PersonIdentitySize = "default" | "lg" | "sm"
-const mfidPattern = /^[0-9A-HJKMNP-TV-Z]{26}$/i
 
 export type PersonIdentityProfile = {
   context?: string | null
@@ -35,7 +34,7 @@ export function personDisplayName(
 }
 
 export function personIsServiceAccount(person: PersonIdentityProfile) {
-  return person.is_service_account ?? mfidPattern.test(person.unique_id)
+  return person.is_service_account === true
 }
 
 export function PersonIdentity({

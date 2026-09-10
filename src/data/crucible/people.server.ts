@@ -16,11 +16,9 @@ type Schema<TSchemaName extends keyof components["schemas"]> =
 function toWorkspacePerson(
   person: Schema<"UserRead"> | Schema<"UserPublicRead">
 ): WorkspacePerson {
-  const accountType =
-    "is_service_account" in person ? person.is_service_account : null
   return {
     first_name: person.first_name,
-    is_service_account: typeof accountType === "boolean" ? accountType : false,
+    is_service_account: person.is_service_account ?? false,
     last_name: person.last_name,
     unique_id: person.unique_id,
     username: person.username,

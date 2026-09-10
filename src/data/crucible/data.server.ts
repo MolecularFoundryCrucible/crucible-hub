@@ -40,8 +40,7 @@ function safeOwner(value: unknown): WorkspacePerson | null {
     typeof owner.unique_id !== "string" ||
     typeof owner.first_name !== "string" ||
     typeof owner.last_name !== "string" ||
-    (typeof owner.is_service_account !== "boolean" &&
-      owner.is_service_account != null) ||
+    typeof owner.is_service_account !== "boolean" ||
     (typeof owner.username !== "string" && owner.username != null)
   ) {
     return null
@@ -49,7 +48,7 @@ function safeOwner(value: unknown): WorkspacePerson | null {
   return {
     unique_id: owner.unique_id,
     first_name: owner.first_name,
-    is_service_account: owner.is_service_account ?? false,
+    is_service_account: owner.is_service_account,
     last_name: owner.last_name,
     username: owner.username ?? null,
   }
