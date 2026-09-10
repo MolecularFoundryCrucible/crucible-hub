@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/breadcrumb"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -359,68 +358,74 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
 
   return (
     <Card>
-      <CardHeader className="grid-cols-[1fr_auto]">
-        <CardTitle>Identity</CardTitle>
-        <CardAction className="col-start-2 row-start-1 mt-0 w-auto justify-self-end">
-          <MfidQrCode value={resource.unique_id} />
-        </CardAction>
-      </CardHeader>
       <CardContent>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="min-w-0 sm:col-span-2">
-            <dt className="text-label text-muted-foreground">MFID</dt>
-            <dd className="mt-1">
-              <MfidValue value={resource.unique_id} />
-            </dd>
-          </div>
-          <div>
-            <dt className="text-label text-muted-foreground">Owner</dt>
-            <dd className="mt-1 flex items-start gap-2 text-body">
-              <IdentityFieldIcon
-                accountType={
-                  owner && personIsServiceAccount(owner)
-                    ? "service-account"
-                    : "person"
-                }
-                type="owner"
-              />
-              {owner ? (
-                <PersonLink nameStyle="abbreviated" person={owner} />
-              ) : (
-                "Unknown owner"
+        <ContentGrid variant="identity">
+          <div className="min-w-0">
+            <CardTitle>Identity</CardTitle>
+            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="min-w-0 sm:col-span-2">
+                <dt className="text-label text-muted-foreground">MFID</dt>
+                <dd className="mt-1">
+                  <MfidValue value={resource.unique_id} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-label text-muted-foreground">Owner</dt>
+                <dd className="mt-1 flex items-start gap-2 text-body">
+                  <IdentityFieldIcon
+                    accountType={
+                      owner && personIsServiceAccount(owner)
+                        ? "service-account"
+                        : "person"
+                    }
+                    type="owner"
+                  />
+                  {owner ? (
+                    <PersonLink nameStyle="abbreviated" person={owner} />
+                  ) : (
+                    "Unknown owner"
+                  )}
+                </dd>
+              </div>
+              {"public" in resource && (
+                <div>
+                  <dt className="text-label text-muted-foreground">
+                    Visibility
+                  </dt>
+                  <dd className="mt-1 flex items-center gap-2 text-body">
+                    <IdentityFieldIcon
+                      type={
+                        resource.public
+                          ? "visibility-public"
+                          : "visibility-private"
+                      }
+                    />
+                    <Badge variant={resource.public ? "secondary" : "outline"}>
+                      {resource.public ? "Public" : "Private"}
+                    </Badge>
+                  </dd>
+                </div>
               )}
-            </dd>
+            </dl>
           </div>
-          {"public" in resource && (
+          <MfidQrCode value={resource.unique_id} />
+          <dl className="col-span-2 grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-label text-muted-foreground">Visibility</dt>
-              <dd className="mt-1 flex items-center gap-2 text-body">
-                <IdentityFieldIcon
-                  type={
-                    resource.public ? "visibility-public" : "visibility-private"
-                  }
-                />
-                <Badge variant={resource.public ? "secondary" : "outline"}>
-                  {resource.public ? "Public" : "Private"}
-                </Badge>
+              <dt className="text-label text-muted-foreground">Created</dt>
+              <dd className="mt-1 flex items-start gap-2 text-body">
+                <IdentityFieldIcon type="created" />
+                {formatDate(resource.creation_time)}
               </dd>
             </div>
-          )}
-          <div>
-            <dt className="text-label text-muted-foreground">Created</dt>
-            <dd className="mt-1 flex items-start gap-2 text-body">
-              <IdentityFieldIcon type="created" />
-              {formatDate(resource.creation_time)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-label text-muted-foreground">Updated</dt>
-            <dd className="mt-1 flex items-start gap-2 text-body">
-              <IdentityFieldIcon type="updated" />
-              {formatDate(resource.modification_time)}
-            </dd>
-          </div>
-        </dl>
+            <div>
+              <dt className="text-label text-muted-foreground">Updated</dt>
+              <dd className="mt-1 flex items-start gap-2 text-body">
+                <IdentityFieldIcon type="updated" />
+                {formatDate(resource.modification_time)}
+              </dd>
+            </div>
+          </dl>
+        </ContentGrid>
       </CardContent>
     </Card>
   )

@@ -23,6 +23,7 @@ const contentGridVariants = cva(
       variant: {
         actions: "content-grid-actions",
         detail: "grid grid-cols-1 xl:grid-cols-7",
+        identity: "content-grid-identity grid gap-4",
         split: "grid grid-cols-1 xl:grid-cols-2",
       },
     },

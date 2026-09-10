@@ -454,6 +454,10 @@ body {
   max-width: var(--container-action);
 }
 
+.content-grid-identity {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .metadata-disclosure[open] > summary > .metadata-disclosure-icon {
   transform: rotate(90deg);
 }
