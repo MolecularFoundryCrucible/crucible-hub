@@ -32,6 +32,157 @@ This document contains only requests for `crucible-api` ownership. Hub implement
 | Canonical access principals and capability guidance | Stable principal shapes and operation-specific guidance for ACL, lifecycle, deletion, ownership, and related management.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Unsupported principals remain visible and read-only; unavailable operations stay omitted.                                                                                                                                                                                                                                                          |
 | Resource Access contract                            | Correct the write schema's owner field because the endpoint forbids owner writes; constrain the kind path to documented user and project principals; define pagination for grant lists; type DELETE and unpublish bodies; publish explicit 403, 404, and 409 outcomes; document mutable principal identifier semantics; and provide a read-only ACL view for non-managers.                                                                                                                                                                                                                                                            | Hub keeps access controls within Manage bounded and read-only where the contract is incomplete, uses exact `can_manage_access` and `max_grant_role` guidance, and does not infer missing principal or error semantics.                                                                                                                             |
 
+## Implemented dataset and sample facet contract
+
+Status: Implemented in `crucible-api` commit `300cd58` on `feature/get-query-contract`, pending review, deployment, pinned OpenAPI refresh, and generated Hub client regeneration. This section describes the staged API contract and does not authorize Hub to hand-code types or enable the feature before those gates complete.
+
+### Operations and fields
+
+| Operation | Required `field` values |
+| --- | --- |
+| `GET /datasets/facets` | `session`, `measurement`, `data_format`, `owner`, `instrument`, `project` |
+| `GET /samples/facets` | `sample_type`, `owner`, `project` |
+
+`session` groups the stored dataset `session_name`. Project buckets group the canonical primary `project_mfid`, not every project that can read the resource. Instrument buckets group the dataset's canonical registered `instrument_mfid`, not its legacy free-text `instrument_name`.
+
+Text values are grouped exactly as stored. The API does not trim, case-fold, relabel, or merge values, so `XAS`, `xas`, `""`, and null are separate buckets. Hub may provide contextual presentation labels for null, such as "Unspecified", "No primary project", or "No registered instrument", but must retain null as the query value and must not convert it to a sentinel string.
+
+### Facet request parameters
+
+All facet requests require `field`. They accept `limit` from 1 through 1000 with a default of 100 and an optional opaque `cursor` from the previous response.
+
+Both operations accept these authorization and scope filters:
+
+- Repeatable `accessible_to_user` and `accessible_to_project` selectors.
+- Repeatable `affiliation`, currently supporting `owner`.
+- `visibility=all|public|private`, defaulting to `all`.
+- `project_id` or `project_mfid`, optionally with `project_scope=assigned|shared|all`; scope defaults to `assigned` when a project filter is present.
+- Time bounds `creation_time_gte`, `creation_time_lte`, `modification_time_gte`, and `modification_time_lte`, each requiring a timezone-aware datetime.
+
+Dataset facets additionally accept `sample_mfid`, `instrument_mfid`, `session_name`, `measurement`, `data_format`, `owner_id`, `session_name_is_null`, `measurement_is_null`, `data_format_is_null`, `owner_id_is_null`, `instrument_mfid_is_null`, and `project_mfid_is_null`.
+
+Sample facets additionally accept `dataset_mfid`, `sample_type`, `owner_id`, `sample_type_is_null`, `owner_id_is_null`, and `project_mfid_is_null`.
+
+Example first-page requests are:
+
+```http
+GET /datasets/facets?field=measurement&project_mfid=00000000000000000000000001&project_scope=assigned&limit=50
+GET /samples/facets?field=sample_type&owner_id=0000-0001-2345-6789&limit=50
+```
+
+Facet requests do not accept resource sort, response expansions, offset, or exact-total controls. Counts include only resources readable by the authenticated caller and not excluded by the deletion policy after all supplied filters are applied. Unknown parameters, unsupported fields, invalid cursor context, invalid time ranges, a project scope without a project, and contradictory exact plus `is_null=true` filters return 422. An inaccessible or missing `sample_mfid` or `dataset_mfid` relationship filter returns 404. Project `shared` or `all` inspection retains the API's existing project authorization and access-group errors.
+
+### Response shapes
+
+Every successful response has this envelope:
+
+```json
+{
+  "field": "measurement",
+  "limit": 100,
+  "items": [],
+  "next_cursor": null
+}
+```
+
+Text buckets contain only the exact value and authorization-filtered count:
+
+```json
+{
+  "value": "XAS",
+  "count": 42
+}
+```
+
+Null has an explicit bucket and remains JSON null:
+
+```json
+{
+  "value": null,
+  "count": 23
+}
+```
+
+Owner buckets include the public-safe resolved account when available. The stable `value` may identify either a person or service account, and Hub must use `owner.is_service_account` rather than identifier format to distinguish them:
+
+```json
+{
+  "value": "0000-0001-2345-6789",
+  "count": 12,
+  "owner": {
+    "unique_id": "0000-0001-2345-6789",
+    "username": "scientist",
+    "first_name": "Ada",
+    "last_name": "Lovelace",
+    "is_service_account": false
+  }
+}
+```
+
+Project buckets use the stable MFID as `value` and include the current resolved slug and title:
+
+```json
+{
+  "value": "00000000000000000000000001",
+  "count": 31,
+  "project": {
+    "unique_id": "00000000000000000000000001",
+    "project_id": "battery-study",
+    "title": "Battery Study"
+  }
+}
+```
+
+Instrument buckets use the stable MFID as `value` and include the current resolved identifier and name:
+
+```json
+{
+  "value": "00000000000000000000000002",
+  "count": 17,
+  "instrument": {
+    "unique_id": "00000000000000000000000002",
+    "instrument_id": "bl-832",
+    "instrument_name": "Beamline 8.3.2"
+  }
+}
+```
+
+A null owner, project, or instrument bucket has both `value` and its resolved object set to null. A non-null value may have a null resolved object when legacy or inconsistent data no longer resolves; Hub may display the raw stable value but must not invent identity metadata.
+
+### Pagination and cache identity
+
+Buckets are ordered by raw stored value ascending with null last. The API returns at most `limit` buckets and sets `next_cursor` to null only at the end. Follow a non-null cursor on the same operation while keeping `field` and every result-shaping filter unchanged. `limit` may change between pages. Cursors are signed and bound to the authenticated principal, resource kind, field, and filters, and cannot be reused across resource-list or different facet requests.
+
+```http
+GET /datasets/facets?field=measurement&project_mfid=00000000000000000000000001&project_scope=assigned&limit=100&cursor={next_cursor}
+```
+
+Hub Query keys must include API server identity, authenticated account identity, resource kind, facet field, every supplied filter, and page cursor. A committed facet or filter change starts a new cursor chain. Do not parse cursors, derive an offset, merge buckets with different filter contexts, or claim a complete bucket set until `next_cursor` is null.
+
+### Selecting a bucket
+
+Use the normal collection route to retrieve resources for a selected bucket:
+
+| Facet | Concrete bucket filter | Null bucket filter |
+| --- | --- | --- |
+| Dataset `session` | `GET /datasets?session_name={value}` | `GET /datasets?session_name_is_null=true` |
+| Dataset `measurement` | `GET /datasets?measurement={value}` | `GET /datasets?measurement_is_null=true` |
+| Dataset `data_format` | `GET /datasets?data_format={value}` | `GET /datasets?data_format_is_null=true` |
+| Dataset `owner` | `GET /datasets?owner_id={value}` | `GET /datasets?owner_id_is_null=true` |
+| Dataset `instrument` | `GET /datasets?instrument_mfid={value}` | `GET /datasets?instrument_mfid_is_null=true` |
+| Dataset `project` | `GET /datasets?project_mfid={value}` | `GET /datasets?project_mfid_is_null=true` |
+| Sample `sample_type` | `GET /samples?sample_type={value}` | `GET /samples?sample_type_is_null=true` |
+| Sample `owner` | `GET /samples?owner_id={value}` | `GET /samples?owner_id_is_null=true` |
+| Sample `project` | `GET /samples?project_mfid={value}` | `GET /samples?project_mfid_is_null=true` |
+
+Each `*_is_null` selector is optional. Omission does not constrain nullability, true selects null values, and false selects non-null values. A true selector cannot be combined with a concrete selector for the same field. Empty strings are concrete stored values and must be requested as empty values, not through the null selector.
+
+Facet buckets are navigation and filtering metadata, not embedded grouped resource collections. Hub may render the bounded bucket list and lazily request a normal cursor-paginated collection for a selected or expanded bucket. It must not group one incomplete resource page and present those groups as complete, and it should not eagerly issue one resource request for every bucket.
+
+### Deferred behavior
+
+There is no calendar facet in this delivery. A future lifecycle facet should use API-managed `creation_time` in UTC with an explicit name such as `created_month`. Hub must not derive a server-wide month or year grouping from the producer-supplied `timestamp`, whose format and timezone are not enforced.
+
 ## Dynamic Hub capability plan
 
 This section groups the API additions that would let Hub expose Pinned, Activity, join-request review, and capability-gated administration as complete product destinations. Endpoint names below are proposed shapes for discussion. The API owns final paths, authorization, persistence, event semantics, and compatibility.
