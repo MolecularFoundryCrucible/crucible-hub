@@ -43,3 +43,4 @@ A decision record does not override a contract owned by another Crucible reposit
 | [0026](0026-explore-bounded-resource-graphs.md)              | Accepted   | Bounded route-backed resource graph traversal                                     |
 | [0027](0027-edit-projects-and-instruments-from-overview.md)  | Accepted   | Read-first project and instrument Overview editing                                |
 | [0028](0028-consolidate-resource-management.md)              | Accepted   | Consolidated sample and dataset management                                        |
+| [0029](0029-separate-dataset-processing.md)                  | Accepted   | Dedicated file ingestion and future dataset processing workspace                  |

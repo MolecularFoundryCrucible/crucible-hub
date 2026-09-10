@@ -1,0 +1,604 @@
+import { useEffect, useMemo, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import type { UseQueryResult } from "@tanstack/react-query"
+
+import {
+  CollectionRowsPending,
+  PanelState,
+  PanelUpdateError,
+} from "@/components/crucible/collection-state"
+import { RequestIngestionIcon } from "@/components/crucible/icons"
+import { MfidText } from "@/components/crucible/mfid-text"
+import { MfidValue } from "@/components/crucible/mfid-value"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Field,
+  FieldContent,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Separator } from "@/components/ui/separator"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import { crucibleKeys } from "@/data/crucible/query-keys"
+import { requestWorkspaceIngestion } from "@/data/crucible/resources.functions"
+import {
+  datasetFilesQueryOptions,
+  datasetIngestionRequestsQueryOptions,
+  ingestionClassesQueryOptions,
+} from "@/data/crucible/resources.queries"
+import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import type {
+  WorkspaceDatasetFile,
+  WorkspaceIngestionRequest,
+  WorkspaceIngestionRequestPage,
+} from "@/data/crucible/workspace-source"
+import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
+import { formatBytes, formatLocalDateTime } from "@/lib/format"
+
+export function DatasetProcessingPage({
+  datasetMfid,
+}: {
+  datasetMfid: string
+}) {
+  const scope = useWorkspaceScope()
+  const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
+  const requestsResult = useQuery(
+    datasetIngestionRequestsQueryOptions(scope, datasetMfid)
+  )
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <FilesAndIngestionCard
+        datasetMfid={datasetMfid}
+        filesResult={filesResult}
+        requestsResult={requestsResult}
+      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Dataset processes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PanelState title="No dataset processes are available" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function FilesAndIngestionCard({
+  datasetMfid,
+  filesResult,
+  requestsResult,
+}: {
+  datasetMfid: string
+  filesResult: UseQueryResult<readonly WorkspaceDatasetFile[]>
+  requestsResult: UseQueryResult<WorkspaceIngestionRequestPage>
+}) {
+  const files = filesResult.data
+  const requestPage = requestsResult.data
+  const requests = requestPage?.items
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const eligibleFiles = files?.filter((file) => file.storage_backend === "gcs")
+
+  return (
+    <Card aria-busy={filesResult.isFetching || requestsResult.isFetching}>
+      <CardHeader>
+        <CardTitle>Files and ingestion</CardTitle>
+        {eligibleFiles?.length ? (
+          <CardAction>
+            <Button onClick={() => setDialogOpen(true)} type="button">
+              <RequestIngestionIcon
+                aria-hidden="true"
+                data-icon="inline-start"
+              />
+              Request ingestion
+            </Button>
+          </CardAction>
+        ) : null}
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5 px-0">
+        <section aria-labelledby="processing-files-heading">
+          <h3 className="sr-only" id="processing-files-heading">
+            Files
+          </h3>
+          {filesResult.isPending || requestsResult.isPending ? (
+            <div className="px-4 sm:px-6">
+              <CollectionRowsPending label="file processing information" />
+            </div>
+          ) : files !== undefined && requests !== undefined ? (
+            <>
+              {filesResult.isError || requestsResult.isError ? (
+                <div className="mb-4 px-4 sm:px-6">
+                  <PanelUpdateError
+                    description="Some processing information could not be refreshed."
+                    retry={() => {
+                      void filesResult.refetch()
+                      void requestsResult.refetch()
+                    }}
+                  />
+                </div>
+              ) : null}
+              {files.length ? (
+                <ProcessingFilesTable
+                  historyComplete={
+                    (requestPage?.total ?? requests.length) <= requests.length
+                  }
+                  files={files}
+                  requests={requests}
+                />
+              ) : (
+                <PanelState title="No associated files" />
+              )}
+            </>
+          ) : (
+            <PanelState
+              retry={() => {
+                void filesResult.refetch()
+                void requestsResult.refetch()
+              }}
+              role="alert"
+              title="Processing information could not be loaded"
+            />
+          )}
+        </section>
+        <Separator />
+        <section
+          aria-labelledby="ingestion-history-heading"
+          className="px-4 sm:px-6"
+        >
+          <h3
+            className="mb-3 font-heading text-label"
+            id="ingestion-history-heading"
+          >
+            Request history
+          </h3>
+          {requestsResult.isPending ? (
+            <CollectionRowsPending label="ingestion request history" />
+          ) : requests !== undefined ? (
+            requests.length ? (
+              <IngestionRequestHistory
+                requests={requests}
+                total={requestPage?.total ?? requests.length}
+              />
+            ) : (
+              <PanelState title="No ingestion requests" />
+            )
+          ) : (
+            <PanelState
+              retry={() => void requestsResult.refetch()}
+              role="alert"
+              title="Request history could not be loaded"
+            />
+          )}
+        </section>
+      </CardContent>
+      {files?.length ? (
+        <IngestionRequestDialog
+          datasetMfid={datasetMfid}
+          files={files}
+          onOpenChange={setDialogOpen}
+          open={dialogOpen}
+        />
+      ) : null}
+    </Card>
+  )
+}
+
+function ProcessingFilesTable({
+  files,
+  historyComplete,
+  requests,
+}: {
+  files: readonly WorkspaceDatasetFile[]
+  historyComplete: boolean
+  requests: readonly WorkspaceIngestionRequest[]
+}) {
+  const scope = useWorkspaceScope()
+  const identity = JSON.stringify(scope)
+  const scenario = fixtureScenarioFromScope(scope)
+  const latestRequests = useMemo(
+    () => latestRequestsByFile(requests),
+    [requests]
+  )
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>File</TableHead>
+          <TableHead>File MFID</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Ingestor</TableHead>
+          <TableHead className="text-right">Updated</TableHead>
+          <TableHead className="text-right">
+            <span className="sr-only">File action</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {files.map((file) => {
+          const request = latestRequests.get(file.mfid)
+          return (
+            <TableRow key={file.mfid}>
+              <TableCell>
+                <span
+                  className="block max-w-64 truncate text-label"
+                  title={file.filename}
+                >
+                  {file.filename}
+                </span>
+                <span className="text-supporting text-muted-foreground">
+                  {file.storage_backend} · {formatBytes(file.size)}
+                </span>
+              </TableCell>
+              <TableCell>
+                <MfidValue value={file.mfid} />
+              </TableCell>
+              <TableCell>
+                <IngestionStatusBadge
+                  emptyLabel={
+                    historyComplete ? "Not requested" : "No recent status"
+                  }
+                  status={request?.status}
+                />
+              </TableCell>
+              <TableCell>{request?.ingestionClass ?? "Auto-detect"}</TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatLocalDateTime(
+                  request?.timeCompleted ?? request?.timeCreated
+                ) ?? "-"}
+              </TableCell>
+              <TableCell className="text-right">
+                <FileDownloadAction
+                  file={file}
+                  identity={identity}
+                  scenario={scenario}
+                />
+              </TableCell>
+            </TableRow>
+          )
+        })}
+      </TableBody>
+    </Table>
+  )
+}
+
+function IngestionRequestHistory({
+  requests,
+  total,
+}: {
+  requests: readonly WorkspaceIngestionRequest[]
+  total: number
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      {total > requests.length ? (
+        <p className="text-supporting text-muted-foreground">
+          Showing {requests.length} of {total}
+        </p>
+      ) : null}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Request</TableHead>
+            <TableHead>File MFID</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Ingestor</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>Completed</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {requests.map((request, index) => (
+            <TableRow
+              key={request.id ?? `${request.fileMfid ?? "request"}-${index}`}
+            >
+              <TableCell className="tabular-nums">
+                {request.id ?? "-"}
+              </TableCell>
+              <TableCell>
+                {request.fileMfid ? <MfidText value={request.fileMfid} /> : "-"}
+              </TableCell>
+              <TableCell>
+                <IngestionStatusBadge status={request.status} />
+              </TableCell>
+              <TableCell>
+                <span>{request.ingestionClass ?? "Auto-detect"}</span>
+                {request.ingestionGitHash ? (
+                  <span className="block font-mono text-supporting text-muted-foreground">
+                    {request.ingestionGitHash}
+                  </span>
+                ) : null}
+              </TableCell>
+              <TableCell>
+                {formatLocalDateTime(request.timeCreated) ?? "-"}
+              </TableCell>
+              <TableCell>
+                {formatLocalDateTime(request.timeCompleted) ?? "-"}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+function IngestionRequestDialog({
+  datasetMfid,
+  files,
+  onOpenChange,
+  open,
+}: {
+  datasetMfid: string
+  files: readonly WorkspaceDatasetFile[]
+  onOpenChange: (open: boolean) => void
+  open: boolean
+}) {
+  const scope = useWorkspaceScope()
+  const queryClient = useQueryClient()
+  const scenario = fixtureScenarioFromScope(scope)
+  const eligibleFiles = useMemo(
+    () => files.filter((file) => file.storage_backend === "gcs"),
+    [files]
+  )
+  const eligibleMfids = useMemo(
+    () => eligibleFiles.map((file) => file.mfid),
+    [eligibleFiles]
+  )
+  const [selectedMfids, setSelectedMfids] = useState<readonly string[]>([])
+  const [ingestionClass, setIngestionClass] = useState("")
+  const [error, setError] = useState<string>()
+  const classesResult = useQuery({
+    ...ingestionClassesQueryOptions(scope),
+    enabled: open,
+  })
+  const mutation = useMutation({
+    mutationFn: async (fileMfids: readonly string[]) => {
+      const results = await Promise.allSettled(
+        fileMfids.map(async (fileMfid) =>
+          unwrapHubResult(
+            await requestWorkspaceIngestion({
+              data: {
+                fileMfid,
+                ...(ingestionClass ? { ingestionClass } : {}),
+                scenario,
+              },
+            })
+          )
+        )
+      )
+      return results.map((result, index) => ({
+        fileMfid: fileMfids[index],
+        result,
+      }))
+    },
+  })
+
+  useEffect(() => {
+    if (!open) return
+    setSelectedMfids(eligibleMfids)
+    setIngestionClass("")
+    setError(undefined)
+  }, [eligibleMfids, open])
+
+  function updateOpen(nextOpen: boolean) {
+    if (mutation.isPending) return
+    onOpenChange(nextOpen)
+  }
+
+  function toggleFile(fileMfid: string, checked: boolean) {
+    setSelectedMfids((current) =>
+      checked
+        ? [...new Set([...current, fileMfid])]
+        : current.filter((candidate) => candidate !== fileMfid)
+    )
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedMfids.length) {
+      setError("Select at least one file.")
+      return
+    }
+    setError(undefined)
+    const outcomes = await mutation.mutateAsync(selectedMfids)
+    const failures = outcomes.filter(
+      (outcome) => outcome.result.status === "rejected"
+    )
+    await queryClient.invalidateQueries({
+      exact: true,
+      queryKey: crucibleKeys.datasetIngestionRequests(scope, datasetMfid),
+    })
+    if (!failures.length) {
+      onOpenChange(false)
+      return
+    }
+    setSelectedMfids(failures.map((failure) => failure.fileMfid))
+    const firstFailure = failures[0].result
+    setError(
+      firstFailure.status === "rejected" &&
+        firstFailure.reason instanceof HubApiClientError
+        ? firstFailure.reason.message
+        : `Ingestion could not be requested for ${failures.length} file${failures.length === 1 ? "" : "s"}.`
+    )
+  }
+
+  const allSelected =
+    eligibleMfids.length > 0 &&
+    eligibleMfids.every((fileMfid) => selectedMfids.includes(fileMfid))
+
+  return (
+    <Dialog onOpenChange={updateOpen} open={open}>
+      <DialogContent
+        className="sm:max-w-lg"
+        showCloseButton={!mutation.isPending}
+      >
+        <form className="flex min-h-0 flex-col gap-4" onSubmit={submit}>
+          <DialogHeader>
+            <DialogTitle>Request ingestion</DialogTitle>
+          </DialogHeader>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="ingestion-class">Ingestion class</FieldLabel>
+              <NativeSelect
+                className="w-full"
+                disabled={mutation.isPending}
+                id="ingestion-class"
+                onChange={(event) => setIngestionClass(event.target.value)}
+                value={ingestionClass}
+              >
+                <NativeSelectOption value="">Auto-detect</NativeSelectOption>
+                {classesResult.data?.map((value) => (
+                  <NativeSelectOption key={value} value={value}>
+                    {value}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              {classesResult.isError ? (
+                <p className="text-supporting text-muted-foreground">
+                  Ingestion classes could not be loaded. Auto-detect remains
+                  available.
+                </p>
+              ) : null}
+            </Field>
+            <FieldSet>
+              <FieldLegend>Files</FieldLegend>
+              <Field orientation="horizontal">
+                <Checkbox
+                  checked={allSelected}
+                  disabled={mutation.isPending}
+                  id="ingestion-select-all"
+                  onCheckedChange={(checked) =>
+                    setSelectedMfids(checked ? eligibleMfids : [])
+                  }
+                />
+                <FieldLabel htmlFor="ingestion-select-all">
+                  Select all
+                </FieldLabel>
+              </Field>
+              <div className="max-h-64 overflow-y-auto overscroll-contain pr-1">
+                <FieldGroup data-slot="checkbox-group">
+                  {files.map((file) => {
+                    const eligible = file.storage_backend === "gcs"
+                    const id = `ingestion-file-${file.mfid}`
+                    return (
+                      <Field
+                        data-disabled={!eligible || mutation.isPending}
+                        key={file.mfid}
+                        orientation="horizontal"
+                      >
+                        <Checkbox
+                          checked={selectedMfids.includes(file.mfid)}
+                          disabled={!eligible || mutation.isPending}
+                          id={id}
+                          onCheckedChange={(checked) =>
+                            toggleFile(file.mfid, checked)
+                          }
+                        />
+                        <FieldLabel htmlFor={id}>
+                          <FieldContent>
+                            <FieldTitle>{file.filename}</FieldTitle>
+                            <span className="flex flex-wrap gap-x-2 text-supporting text-muted-foreground">
+                              <MfidText value={file.mfid} />
+                              <span>{formatBytes(file.size)}</span>
+                              {!eligible ? <span>Unavailable</span> : null}
+                            </span>
+                          </FieldContent>
+                        </FieldLabel>
+                      </Field>
+                    )
+                  })}
+                </FieldGroup>
+              </div>
+            </FieldSet>
+          </FieldGroup>
+          {error ? (
+            <p className="text-body text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button
+              disabled={mutation.isPending}
+              onClick={() => updateOpen(false)}
+              type="button"
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={mutation.isPending || !selectedMfids.length}
+              type="submit"
+            >
+              {mutation.isPending ? "Requesting…" : "Request ingestion"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function latestRequestsByFile(requests: readonly WorkspaceIngestionRequest[]) {
+  const latest = new Map<string, WorkspaceIngestionRequest>()
+  for (const request of requests) {
+    if (request.fileMfid && !latest.has(request.fileMfid)) {
+      latest.set(request.fileMfid, request)
+    }
+  }
+  return latest
+}
+
+function IngestionStatusBadge({
+  emptyLabel = "Not requested",
+  status,
+}: {
+  emptyLabel?: string
+  status?: string | null
+}) {
+  const normalized = status?.trim().toLowerCase()
+  const label = normalized ? normalized.replaceAll("_", " ") : emptyLabel
+  const variant =
+    normalized === "failed" || normalized === "error"
+      ? "destructive"
+      : normalized === "complete" ||
+          normalized === "completed" ||
+          normalized === "success"
+        ? "secondary"
+        : "outline"
+  return (
+    <Badge className="capitalize" variant={variant}>
+      {label}
+    </Badge>
+  )
+}

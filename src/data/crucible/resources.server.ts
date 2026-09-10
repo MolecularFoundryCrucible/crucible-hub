@@ -19,6 +19,7 @@ import type { FixtureScenario } from "./fixture-scenarios"
 import type {
   WorkspaceDatasetFile,
   WorkspaceIngestionRequest,
+  WorkspaceIngestionRequestPage,
   WorkspaceDatasetThumbnail,
   WorkspaceDatasetThumbnailOperation,
   WorkspaceDatasetDescriptiveUpdate,
@@ -103,6 +104,7 @@ const demoThumbnailBase64 =
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAQABADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAABv/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKQBokf/2Q=="
 
 const fixtureThumbnailState = new Map<string, WorkspaceDatasetThumbnail[]>()
+const fixtureIngestionState = new Map<string, WorkspaceIngestionRequest[]>()
 
 const workspaceDeletionRequestSchema = z
   .object({
@@ -424,7 +426,7 @@ export async function readWorkspaceDatasetIngestionRequests(
   datasetMfid: string,
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal
-): Promise<readonly WorkspaceIngestionRequest[]> {
+): Promise<WorkspaceIngestionRequestPage> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
     throw new Error(configuration.reason)
@@ -434,42 +436,156 @@ export async function readWorkspaceDatasetIngestionRequests(
       (candidate) => candidate.unique_id === datasetMfid
     )
     if (!dataset) throw new CrucibleResponseError(404)
-    if (datasetMfid !== demoWorkspace.datasets[0].unique_id) return []
-    const fileMfid = demoWorkspace.files.find(
+    const key = fixtureIngestionKey(datasetMfid, scenario)
+    const stored = fixtureIngestionState.get(key)
+    if (stored) return { items: stored, total: stored.length }
+    const fileMfid = fixtureWorkspace(scenario).files.find(
       (file) => file.dataset_mfid === datasetMfid
     )?.mfid
-    return [
-      {
-        datasetMfid,
-        fileMfid: fileMfid ?? null,
-        id: 101,
-        ingestionClass: "metadata extraction",
-        status: "completed",
-        timeCompleted: "2026-08-28T18:06:00Z",
-        timeCreated: "2026-08-28T17:58:00Z",
-      },
-    ]
+    const requests =
+      datasetMfid === demoWorkspace.datasets[0].unique_id && fileMfid
+        ? [
+            {
+              datasetMfid,
+              fileMfid,
+              fileToUpload: null,
+              id: 101,
+              ingestionClass: "H5Ingestor",
+              ingestionGitHash: "a1b2c3d",
+              status: "complete",
+              timeCompleted: "2026-08-28T18:06:00Z",
+              timeCreated: "2026-08-28T17:58:00Z",
+            },
+          ]
+        : []
+    fixtureIngestionState.set(key, requests)
+    return { items: requests, total: requests.length }
   }
 
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/ingestion_requests", {
     params: {
-      query: { dataset_id: datasetMfid, limit: 20, offset: 0 },
+      query: { dataset_id: datasetMfid, limit: 100, offset: 0 },
     },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
   }
-  return result.data.items.map((request) => ({
+  return {
+    items: result.data.items.map(workspaceIngestionRequest),
+    total: result.data.total ?? result.data.items.length,
+  }
+}
+
+function fixtureIngestionKey(datasetMfid: string, scenario?: FixtureScenario) {
+  return `${scenario ?? "populated"}\0${datasetMfid}`
+}
+
+function workspaceIngestionRequest(
+  request: Schema<"IngestionRequest">
+): WorkspaceIngestionRequest {
+  return {
     datasetMfid: request.dataset_mfid ?? null,
     fileMfid: request.file_mfid ?? null,
+    fileToUpload: request.file_to_upload ?? null,
     id: request.id ?? null,
     ingestionClass: request.ingestion_class ?? null,
+    ingestionGitHash: request.ingestion_githash ?? null,
     status: request.status ?? null,
     timeCompleted: request.time_completed ?? null,
     timeCreated: request.time_created ?? null,
-  }))
+  }
+}
+
+export async function readWorkspaceIngestionClasses(
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<readonly string[]> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    fixtureWorkspace(scenario)
+    return ["H5Ingestor", "ImageIngestor"]
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/ingestors", {
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response.status)
+  }
+  return [...new Set(result.data.map((value) => value.trim()).filter(Boolean))]
+}
+
+export async function requestWorkspaceFileIngestion(
+  fileMfid: string,
+  ingestionClass?: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceIngestionRequest> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const workspace = fixtureWorkspace(scenario)
+    const file = workspace.files.find(
+      (candidate) => candidate.mfid === fileMfid
+    )
+    if (!file) throw new CrucibleResponseError(404)
+    if (file.storage_backend !== "gcs") throw new CrucibleResponseError(400)
+    const dataset = await readWorkspaceResource(
+      file.dataset_mfid,
+      scenario,
+      requestSignal
+    )
+    if (dataset?.kind !== "dataset" || !dataset.capabilities?.can_edit) {
+      throw new CrucibleResponseError(403)
+    }
+    const key = fixtureIngestionKey(file.dataset_mfid, scenario)
+    const current = [
+      ...(
+        await readWorkspaceDatasetIngestionRequests(
+          file.dataset_mfid,
+          scenario,
+          requestSignal
+        )
+      ).items,
+    ]
+    const request = {
+      datasetMfid: file.dataset_mfid,
+      fileMfid,
+      fileToUpload: file.storage_path ?? null,
+      id: Math.max(0, ...current.map((candidate) => candidate.id ?? 0)) + 1,
+      ingestionClass: ingestionClass ?? null,
+      ingestionGitHash: null,
+      status: "requested",
+      timeCompleted: null,
+      timeCreated: new Date().toISOString(),
+    }
+    fixtureIngestionState.set(key, [request, ...current])
+    return request
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.POST("/files/{file_id}/ingest", {
+    params: {
+      path: { file_id: fileMfid },
+      query: {
+        ...(ingestionClass ? { ingestion_class: ingestionClass } : {}),
+        status: "requested",
+      },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response.status)
+  }
+  return workspaceIngestionRequest(result.data)
 }
 
 function workspaceDatasetThumbnail(value: unknown): WorkspaceDatasetThumbnail {

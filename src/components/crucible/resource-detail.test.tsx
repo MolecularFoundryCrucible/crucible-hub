@@ -18,13 +18,13 @@ import {
 } from "@/data/crucible/resources.functions"
 import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
-
 import {
   DatasetFiles,
   FilesTable,
   initiateFileDownload,
-  preloadResourceDetail,
-} from "../../features/resource-detail/resource-detail-page"
+} from "@/features/dataset-files/dataset-files-card"
+
+import { preloadResourceDetail } from "../../features/resource-detail/resource-detail-page"
 
 vi.mock("@/data/crucible/resources.functions", () => ({
   DATASET_DATA_FORMAT_MAX_LENGTH: 255,

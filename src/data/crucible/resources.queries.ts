@@ -7,6 +7,7 @@ import {
   getWorkspaceDatasetIngestionRequests,
   getWorkspaceDatasetThumbnailPreviews,
   getWorkspaceDatasetThumbnails,
+  getWorkspaceIngestionClasses,
   getWorkspaceResource,
   getWorkspaceResourceGraph,
 } from "./resources.functions"
@@ -60,6 +61,20 @@ export function datasetIngestionRequestsQueryOptions(
           signal,
         })
       ),
+  })
+}
+
+export function ingestionClassesQueryOptions(scope: IdentityScope) {
+  return queryOptions({
+    queryKey: crucibleKeys.ingestionClasses(scope),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceIngestionClasses({
+          data: { scenario: fixtureScenarioFromScope(scope) },
+          signal,
+        })
+      ),
+    staleTime: 5 * 60 * 1000,
   })
 }
 

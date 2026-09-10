@@ -33,6 +33,7 @@ import { Route as AppDatasetsDatasetMfidIndexRouteImport } from './routes/_app.d
 import { Route as AppDatasetsDatasetMfidAccessRouteImport } from './routes/_app.datasets.$datasetMfid.access'
 import { Route as AppDatasetsDatasetMfidGraphRouteImport } from './routes/_app.datasets.$datasetMfid.graph'
 import { Route as AppDatasetsDatasetMfidManageRouteImport } from './routes/_app.datasets.$datasetMfid.manage'
+import { Route as AppDatasetsDatasetMfidProcessingRouteImport } from './routes/_app.datasets.$datasetMfid.processing'
 import { Route as AppInstrumentsInstrumentMfidIndexRouteImport } from './routes/_app.instruments.$instrumentMfid.index'
 import { Route as AppInstrumentsInstrumentMfidDatasetsRouteImport } from './routes/_app.instruments.$instrumentMfid.datasets'
 import { Route as AppInstrumentsInstrumentMfidSettingsRouteImport } from './routes/_app.instruments.$instrumentMfid.settings'
@@ -177,6 +178,12 @@ const AppDatasetsDatasetMfidManageRoute =
     path: '/manage',
     getParentRoute: () => AppDatasetsDatasetMfidRoute,
   } as any)
+const AppDatasetsDatasetMfidProcessingRoute =
+  AppDatasetsDatasetMfidProcessingRouteImport.update({
+    id: '/processing',
+    path: '/processing',
+    getParentRoute: () => AppDatasetsDatasetMfidRoute,
+  } as any)
 const AppInstrumentsInstrumentMfidIndexRoute =
   AppInstrumentsInstrumentMfidIndexRouteImport.update({
     id: '/',
@@ -309,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
+  '/datasets/$datasetMfid/processing': typeof AppDatasetsDatasetMfidProcessingRoute
   '/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
   '/instruments/$instrumentMfid/settings': typeof AppInstrumentsInstrumentMfidSettingsRouteWithChildren
   '/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
@@ -348,6 +356,7 @@ export interface FileRoutesByTo {
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
+  '/datasets/$datasetMfid/processing': typeof AppDatasetsDatasetMfidProcessingRoute
   '/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
   '/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
   '/projects/$projectMfid/overview': typeof AppProjectsProjectMfidOverviewRoute
@@ -391,6 +400,7 @@ export interface FileRoutesById {
   '/_app/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/_app/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/_app/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
+  '/_app/datasets/$datasetMfid/processing': typeof AppDatasetsDatasetMfidProcessingRoute
   '/_app/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
   '/_app/instruments/$instrumentMfid/settings': typeof AppInstrumentsInstrumentMfidSettingsRouteWithChildren
   '/_app/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
     | '/datasets/$datasetMfid/manage'
+    | '/datasets/$datasetMfid/processing'
     | '/instruments/$instrumentMfid/datasets'
     | '/instruments/$instrumentMfid/settings'
     | '/projects/$projectMfid/members'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
     | '/datasets/$datasetMfid/manage'
+    | '/datasets/$datasetMfid/processing'
     | '/instruments/$instrumentMfid/datasets'
     | '/projects/$projectMfid/members'
     | '/projects/$projectMfid/overview'
@@ -517,6 +529,7 @@ export interface FileRouteTypes {
     | '/_app/datasets/$datasetMfid/access'
     | '/_app/datasets/$datasetMfid/graph'
     | '/_app/datasets/$datasetMfid/manage'
+    | '/_app/datasets/$datasetMfid/processing'
     | '/_app/instruments/$instrumentMfid/datasets'
     | '/_app/instruments/$instrumentMfid/settings'
     | '/_app/projects/$projectMfid/members'
@@ -715,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDatasetsDatasetMfidManageRouteImport
       parentRoute: typeof AppDatasetsDatasetMfidRoute
     }
+    '/_app/datasets/$datasetMfid/processing': {
+      id: '/_app/datasets/$datasetMfid/processing'
+      path: '/processing'
+      fullPath: '/datasets/$datasetMfid/processing'
+      preLoaderRoute: typeof AppDatasetsDatasetMfidProcessingRouteImport
+      parentRoute: typeof AppDatasetsDatasetMfidRoute
+    }
     '/_app/instruments/$instrumentMfid/': {
       id: '/_app/instruments/$instrumentMfid/'
       path: '/'
@@ -848,6 +868,7 @@ interface AppDatasetsDatasetMfidRouteChildren {
   AppDatasetsDatasetMfidAccessRoute: typeof AppDatasetsDatasetMfidAccessRoute
   AppDatasetsDatasetMfidGraphRoute: typeof AppDatasetsDatasetMfidGraphRoute
   AppDatasetsDatasetMfidManageRoute: typeof AppDatasetsDatasetMfidManageRoute
+  AppDatasetsDatasetMfidProcessingRoute: typeof AppDatasetsDatasetMfidProcessingRoute
   AppDatasetsDatasetMfidIndexRoute: typeof AppDatasetsDatasetMfidIndexRoute
 }
 
@@ -856,6 +877,8 @@ const AppDatasetsDatasetMfidRouteChildren: AppDatasetsDatasetMfidRouteChildren =
     AppDatasetsDatasetMfidAccessRoute: AppDatasetsDatasetMfidAccessRoute,
     AppDatasetsDatasetMfidGraphRoute: AppDatasetsDatasetMfidGraphRoute,
     AppDatasetsDatasetMfidManageRoute: AppDatasetsDatasetMfidManageRoute,
+    AppDatasetsDatasetMfidProcessingRoute:
+      AppDatasetsDatasetMfidProcessingRoute,
     AppDatasetsDatasetMfidIndexRoute: AppDatasetsDatasetMfidIndexRoute,
   }
 

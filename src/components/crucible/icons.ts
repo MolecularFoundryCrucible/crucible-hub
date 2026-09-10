@@ -3,6 +3,7 @@ export {
   Database as DatasetIcon,
   Download as DownloadFileIcon,
   FileX2 as DownloadUnavailableIcon,
+  FileInput as RequestIngestionIcon,
   FlaskConical as SampleIcon,
   FolderKanban as ProjectIcon,
   House as WorkspaceIcon,

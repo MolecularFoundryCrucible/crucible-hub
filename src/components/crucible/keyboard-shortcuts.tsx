@@ -114,6 +114,9 @@ export function KeyboardShortcuts({
         resourceContext.kind === "dataset"
           ? [
               ["G then G", "Go to this resource's Graph"],
+              ...(resourceContext.kind === "dataset"
+                ? [["G then P", "Go to this dataset's Processing page"]]
+                : []),
               ["G then M", "Go to this resource's Manage page"],
             ]
           : []),
@@ -238,7 +241,8 @@ function navigateWithinResource(
   }
 
   if (context.kind !== "sample" && context.kind !== "dataset") return false
-  if (key !== "g" && key !== "m") return false
+  if (key !== "g" && key !== "m" && key !== "p") return false
+  if (key === "p" && context.kind !== "dataset") return false
 
   if (context.kind === "sample") {
     void navigate({
@@ -256,7 +260,9 @@ function navigateWithinResource(
       to:
         key === "g"
           ? "/datasets/$datasetMfid/graph"
-          : "/datasets/$datasetMfid/manage",
+          : key === "p"
+            ? "/datasets/$datasetMfid/processing"
+            : "/datasets/$datasetMfid/manage",
     })
   }
   return true

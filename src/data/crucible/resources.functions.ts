@@ -8,6 +8,7 @@ import {
   createWorkspaceFileDownload,
   mutateWorkspaceDatasetThumbnails,
   mutateWorkspaceRelationship,
+  requestWorkspaceFileIngestion,
   requestWorkspaceResourceDeletion,
   patchWorkspaceDatasetDescription,
   patchWorkspaceSampleDescription,
@@ -16,6 +17,7 @@ import {
   readWorkspaceDatasetIngestionRequests,
   readWorkspaceDatasetThumbnailPreviews,
   readWorkspaceDatasetThumbnails,
+  readWorkspaceIngestionClasses,
   readWorkspaceResource,
   readWorkspaceResourceGraph,
   transferWorkspaceResourceOwnership,
@@ -105,6 +107,23 @@ export const fileDownloadInputSchema = z
       .min(1)
       .max(255)
       .regex(/^[a-zA-Z0-9_-]+$/),
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
+
+export const ingestionClassesInputSchema = z
+  .object({ scenario: fixtureScenarioSchema.optional() })
+  .strict()
+
+export const fileIngestionInputSchema = z
+  .object({
+    fileMfid: z
+      .string()
+      .trim()
+      .min(1)
+      .max(255)
+      .regex(/^[a-zA-Z0-9_-]+$/),
+    ingestionClass: z.string().trim().min(1).max(255).optional(),
     scenario: fixtureScenarioSchema.optional(),
   })
   .strict()
@@ -465,6 +484,31 @@ export const getWorkspaceDatasetIngestionRequests = createServerFn({
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceDatasetIngestionRequests(
         data.datasetMfid,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const getWorkspaceIngestionClasses = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(ingestionClassesInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceIngestionClasses(data.scenario, context.requestSignal)
+    )
+  })
+
+export const requestWorkspaceIngestion = createServerFn({ method: "POST" })
+  .middleware([queryCancellationMiddleware])
+  .validator(fileIngestionInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      requestWorkspaceFileIngestion(
+        data.fileMfid,
+        data.ingestionClass,
         data.scenario,
         context.requestSignal
       )

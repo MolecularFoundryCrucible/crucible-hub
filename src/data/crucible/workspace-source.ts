@@ -376,11 +376,18 @@ export type WorkspaceDatasetFile = Schema<"AssociatedFileRead">
 export type WorkspaceIngestionRequest = {
   datasetMfid: string | null
   fileMfid: string | null
+  fileToUpload: string | null
   id: number | null
   ingestionClass: string | null
+  ingestionGitHash: string | null
   status: string | null
   timeCompleted: string | null
   timeCreated: string | null
+}
+
+export type WorkspaceIngestionRequestPage = {
+  items: readonly WorkspaceIngestionRequest[]
+  total: number
 }
 
 export type WorkspaceDatasetThumbnail = Pick<
