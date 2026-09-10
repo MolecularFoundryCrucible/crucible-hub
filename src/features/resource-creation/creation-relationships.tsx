@@ -188,7 +188,7 @@ export function CreationRelationshipsField({
         </ul>
       ) : null}
       <Button
-        className="w-full"
+        className="self-start"
         disabled={disabled || value.length >= 10}
         onClick={() => setOpen(true)}
         type="button"
