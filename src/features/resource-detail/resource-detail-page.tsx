@@ -228,24 +228,19 @@ export function ResourceOverview({
       <ContentGridItem span="wide">
         <ResourceSummaryCard mode={mode} resource={resource} scope={scope} />
       </ContentGridItem>
-      <ContentGridItem span="narrow">
+      <ContentGridItem className="flex flex-col gap-page-section" span="narrow">
         <IdentityCard resource={resource} />
-      </ContentGridItem>
-      {resource.kind === "dataset" ? (
-        <ContentGridItem
-          className="xl:col-start-5 xl:row-start-2 xl:-mt-4"
-          span="narrow"
-        >
+        {resource.kind === "dataset" ? (
           <DatasetThumbnailsCard
             canEdit={resource.capabilities?.can_edit === true}
             datasetMfid={resource.unique_id}
             mode={mode}
             scope={scope}
           />
-        </ContentGridItem>
-      ) : null}
+        ) : null}
+      </ContentGridItem>
       {resource.kind === "dataset" ? (
-        <ContentGridItem className="xl:col-start-1 xl:row-start-2" span="wide">
+        <ContentGridItem span="wide">
           <DatasetFiles datasetMfid={resource.unique_id} />
         </ContentGridItem>
       ) : null}
