@@ -232,7 +232,10 @@ export function ResourceOverview({
         <IdentityCard resource={resource} />
       </ContentGridItem>
       {resource.kind === "dataset" ? (
-        <ContentGridItem span="full">
+        <ContentGridItem
+          className="xl:col-start-5 xl:row-start-2"
+          span="narrow"
+        >
           <DatasetThumbnailsCard
             canEdit={resource.capabilities?.can_edit === true}
             datasetMfid={resource.unique_id}
@@ -242,14 +245,14 @@ export function ResourceOverview({
         </ContentGridItem>
       ) : null}
       {resource.kind === "dataset" ? (
-        <ContentGridItem span="wide">
+        <ContentGridItem className="xl:col-start-1 xl:row-start-2" span="wide">
           <DatasetFiles datasetMfid={resource.unique_id} />
         </ContentGridItem>
       ) : null}
-      <ContentGridItem span="narrow">
+      <ContentGridItem span="full">
         <ResourceRelationshipManager resource={resource} scope={scope} />
       </ContentGridItem>
-      <ContentGridItem span="wide">
+      <ContentGridItem span="full">
         <ScientificMetadataEditor
           mode={mode}
           resource={resource}

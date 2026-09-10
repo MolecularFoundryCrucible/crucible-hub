@@ -38,6 +38,7 @@ export {
   X as CancelChangesIcon,
   Check as CopySuccessIcon,
   Copy as CopyIcon,
+  ChevronRight as MetadataDisclosureIcon,
   Clock3 as DeletionRequestedIcon,
   Trash2 as RequestDeletionIcon,
   GitBranchPlus as AddRelationshipIcon,

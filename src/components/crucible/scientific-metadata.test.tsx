@@ -43,6 +43,7 @@ describe("ScientificMetadata", () => {
   it("renders nested dictionaries and lists as recursive disclosures", () => {
     render(
       <ScientificMetadata
+        expandFirstLevel
         metadata={{
           acquisition: {
             detector: {
@@ -62,8 +63,9 @@ describe("ScientificMetadata", () => {
     expect(acquisitionSummary.getAttribute("aria-label")).toBe(
       "acquisition: 2 fields"
     )
-    fireEvent.click(acquisitionSummary)
+    expect(acquisitionSummary.closest("details")?.open).toBe(true)
 
+    expect(detectorSummary.closest("details")?.open).toBe(false)
     fireEvent.click(detectorSummary)
 
     const listSummary = screen.getByText("3 items")
@@ -71,10 +73,11 @@ describe("ScientificMetadata", () => {
     expect(listSummary.getAttribute("aria-label")).toBe("channels: 3 items")
     fireEvent.click(listSummary)
 
-    expect(screen.getByText("fluorescence")).toBeTruthy()
-    expect(screen.getByText("1.")).toBeTruthy()
-    expect(screen.getByText("3.")).toBeTruthy()
-    expect(screen.getByText("Null")).toBeTruthy()
+    const listDetails = listSummary.closest("details")
+    expect(within(listDetails!).getByText("fluorescence")).toBeTruthy()
+    expect(within(listDetails!).getByText("1")).toBeTruthy()
+    expect(within(listDetails!).getByText("3")).toBeTruthy()
+    expect(within(listDetails!).getByText("Null")).toBeTruthy()
     expect(
       screen.getByText("Complete scientific value with a second line")
         .textContent

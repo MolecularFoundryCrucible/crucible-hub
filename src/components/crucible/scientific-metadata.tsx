@@ -1,20 +1,35 @@
+import { MetadataDisclosureIcon } from "@/components/crucible/icons"
 import type { WorkspaceMetadataValue } from "@/data/crucible/workspace-source"
 
 const initialFieldLimit = 6
 
 export function ScientificMetadata({
   emptyMessage = "No scientific metadata is available.",
+  expandFirstLevel = false,
   metadata,
 }: {
   emptyMessage?: string
+  expandFirstLevel?: boolean
   metadata: WorkspaceMetadataValue | undefined
 }) {
   if (metadata === null || metadata === undefined || isEmptyValue(metadata)) {
     return <p className="text-body text-muted-foreground">{emptyMessage}</p>
   }
 
+  if (isMetadataArray(metadata)) {
+    return (
+      <MetadataEntries
+        depth={0}
+        entries={metadata.map(
+          (item, index) => [String(index + 1), item] as const
+        )}
+        expandFirstLevel={expandFirstLevel}
+      />
+    )
+  }
+
   if (!isMetadataObject(metadata)) {
-    return <MetadataValue value={metadata} />
+    return <MetadataScalar value={metadata} />
   }
 
   const entries = sortedEntries(metadata)
@@ -22,113 +37,181 @@ export function ScientificMetadata({
   const additionalEntries = entries.slice(initialFieldLimit)
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <MetadataFields entries={initialEntries} />
-      {additionalEntries.length > 0 && (
-        <details className="min-w-0 border-t pt-3">
-          <summary className="cursor-pointer text-label text-muted-foreground">
+    <div className="min-w-0">
+      <MetadataEntries
+        depth={0}
+        entries={initialEntries}
+        expandFirstLevel={expandFirstLevel}
+      />
+      {additionalEntries.length > 0 ? (
+        <details className="group/more border-t">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 py-2 text-label text-muted-foreground [&::-webkit-details-marker]:hidden">
+            <MetadataDisclosureIcon
+              aria-hidden="true"
+              className="size-4 shrink-0 transition-transform group-open/more:rotate-90"
+            />
             {fieldCount(additionalEntries.length, "additional field")}
           </summary>
-          <div className="mt-3">
-            <MetadataFields entries={additionalEntries} />
-          </div>
+          <MetadataEntries
+            depth={0}
+            entries={additionalEntries}
+            expandFirstLevel={expandFirstLevel}
+          />
         </details>
-      )}
+      ) : null}
     </div>
   )
 }
 
-function MetadataFields({
+function MetadataEntries({
+  depth,
   entries,
+  expandFirstLevel,
 }: {
-  entries: readonly [string, WorkspaceMetadataValue][]
+  depth: number
+  entries: readonly (readonly [string, WorkspaceMetadataValue])[]
+  expandFirstLevel: boolean
 }) {
   return (
-    <dl className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+    <dl className="min-w-0">
       {entries.map(([key, value]) => (
-        <div className="min-w-0" key={key}>
-          <dt className="text-supporting break-words text-muted-foreground">
-            {key}
-          </dt>
-          <dd className="mt-1 min-w-0">
-            <MetadataValue label={key} value={value} />
-          </dd>
-        </div>
+        <MetadataEntry
+          depth={depth}
+          expandFirstLevel={expandFirstLevel}
+          key={key}
+          name={key}
+          value={value}
+        />
       ))}
     </dl>
   )
 }
 
-function MetadataValue({
+function MetadataEntry({
+  depth,
+  expandFirstLevel,
+  name,
+  value,
+}: {
+  depth: number
+  expandFirstLevel: boolean
+  name: string
+  value: WorkspaceMetadataValue
+}) {
+  if (isMetadataArray(value) || isMetadataObject(value)) {
+    return (
+      <div className="min-w-0 border-t first:border-t-0">
+        <dt className="sr-only">{name}</dt>
+        <dd className="min-w-0">
+          <MetadataCollection
+            depth={depth}
+            expandFirstLevel={expandFirstLevel}
+            label={name}
+            value={value}
+          />
+        </dd>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid min-w-0 grid-cols-1 gap-1 border-t py-2 first:border-t-0 sm:grid-cols-3 sm:gap-3">
+      <dt className="text-label break-words text-muted-foreground">{name}</dt>
+      <dd className="min-w-0 sm:col-span-2">
+        <MetadataScalar value={value} />
+      </dd>
+    </div>
+  )
+}
+
+function MetadataCollection({
+  depth,
+  expandFirstLevel,
   label,
   value,
 }: {
-  label?: string
-  value: WorkspaceMetadataValue
+  depth: number
+  expandFirstLevel: boolean
+  label: string
+  value:
+    | readonly WorkspaceMetadataValue[]
+    | Readonly<Record<string, WorkspaceMetadataValue>>
 }) {
+  const array = isMetadataArray(value)
+  const entries = array
+    ? value.map((item, index) => [String(index + 1), item] as const)
+    : sortedEntries(value)
+
+  if (entries.length === 0) {
+    return (
+      <div className="grid min-w-0 grid-cols-1 gap-1 py-2 sm:grid-cols-3 sm:gap-3">
+        <span className="text-label break-words text-muted-foreground">
+          {label}
+        </span>
+        <span className="font-mono text-body text-muted-foreground sm:col-span-2">
+          {array ? "Empty list" : "Empty object"}
+        </span>
+      </div>
+    )
+  }
+
+  const count = array
+    ? itemCount(entries.length)
+    : fieldCount(entries.length, "field")
+
+  return (
+    <details
+      className="metadata-disclosure min-w-0"
+      open={expandFirstLevel && depth === 0}
+    >
+      <summary
+        aria-label={`${label}: ${count}`}
+        className="metadata-disclosure-summary min-h-10 cursor-pointer list-none items-center gap-2 py-2 [&::-webkit-details-marker]:hidden"
+      >
+        <MetadataDisclosureIcon
+          aria-hidden="true"
+          className="metadata-disclosure-icon size-4 shrink-0 text-muted-foreground transition-transform"
+        />
+        <span className="text-label break-words text-muted-foreground">
+          {label}
+        </span>
+        <span className="text-supporting text-muted-foreground">{count}</span>
+      </summary>
+      <div className="mb-2 ml-2 min-w-0 border-l pl-4">
+        <MetadataEntries
+          depth={depth + 1}
+          entries={entries}
+          expandFirstLevel={expandFirstLevel}
+        />
+      </div>
+    </details>
+  )
+}
+
+function MetadataScalar({ value }: { value: WorkspaceMetadataValue }) {
   if (value === null) {
-    return <span className="text-body text-muted-foreground">Null</span>
+    return (
+      <span className="font-mono text-body text-muted-foreground">Null</span>
+    )
   }
   if (typeof value === "string") {
     if (value.length === 0) {
       return (
-        <span className="text-body text-muted-foreground">Empty string</span>
+        <span className="font-mono text-body text-muted-foreground">
+          Empty string
+        </span>
       )
     }
     return (
-      <span className="text-body break-words whitespace-pre-wrap">{value}</span>
+      <span className="font-mono text-body break-words whitespace-pre-wrap">
+        {value}
+      </span>
     )
   }
   if (typeof value === "number" || typeof value === "boolean") {
-    return <span className="text-body">{String(value)}</span>
+    return <span className="font-mono text-body">{String(value)}</span>
   }
-  if (isMetadataArray(value)) {
-    if (value.length === 0) {
-      return <span className="text-body text-muted-foreground">Empty list</span>
-    }
-    const count = itemCount(value.length)
-    return (
-      <details className="min-w-0">
-        <summary
-          aria-label={label ? `${label}: ${count}` : count}
-          className="cursor-pointer text-label text-muted-foreground"
-        >
-          {count}
-        </summary>
-        <ol className="mt-3 flex min-w-0 flex-col gap-3 border-l pl-3">
-          {value.map((item, index) => (
-            <li className="flex min-w-0 gap-2" key={index}>
-              <span className="shrink-0 text-supporting text-muted-foreground">
-                {index + 1}.
-              </span>
-              <div className="min-w-0 flex-1">
-                <MetadataValue label={`Item ${index + 1}`} value={item} />
-              </div>
-            </li>
-          ))}
-        </ol>
-      </details>
-    )
-  }
-
-  const entries = sortedEntries(value)
-  if (entries.length === 0) {
-    return <span className="text-body text-muted-foreground">Empty object</span>
-  }
-  const count = fieldCount(entries.length, "field")
-  return (
-    <details className="min-w-0">
-      <summary
-        aria-label={label ? `${label}: ${count}` : count}
-        className="cursor-pointer text-label text-muted-foreground"
-      >
-        {count}
-      </summary>
-      <div className="mt-3 border-l pl-3">
-        <MetadataFields entries={entries} />
-      </div>
-    </details>
-  )
+  return null
 }
 
 function isEmptyValue(value: WorkspaceMetadataValue) {

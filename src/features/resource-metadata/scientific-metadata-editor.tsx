@@ -226,6 +226,7 @@ export function ScientificMetadataEditor({
       <CardContent>
         <ScientificMetadata
           emptyMessage="This resource does not currently expose scientific metadata."
+          expandFirstLevel
           metadata={resource.scientific_metadata}
         />
       </CardContent>
