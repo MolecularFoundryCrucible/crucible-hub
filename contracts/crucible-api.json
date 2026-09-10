@@ -250,6 +250,13 @@
         "title": "AccountProfileUpdate",
         "type": "object"
       },
+      "Affiliation": {
+        "enum": [
+          "owner"
+        ],
+        "title": "Affiliation",
+        "type": "string"
+      },
       "ApiKeyRead": {
         "properties": {
           "api_key": {
@@ -1001,6 +1008,7 @@
           "creation_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -1114,6 +1122,7 @@
           "modification_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -2018,6 +2027,7 @@
           "creation_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -2092,6 +2102,7 @@
           "modification_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -3712,6 +3723,7 @@
           "creation_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -3747,6 +3759,7 @@
           "modification_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -3979,6 +3992,7 @@
           "creation_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -3990,6 +4004,7 @@
           "modification_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -4061,6 +4076,15 @@
         ],
         "title": "ResourceSearchResult",
         "type": "object"
+      },
+      "ResourceSort": {
+        "enum": [
+          "created",
+          "updated",
+          "name"
+        ],
+        "title": "ResourceSort",
+        "type": "string"
       },
       "SampleCreate": {
         "additionalProperties": false,
@@ -4318,6 +4342,7 @@
           "creation_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -4382,6 +4407,7 @@
           "modification_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -4649,6 +4675,14 @@
         ],
         "title": "ServiceAccountRead",
         "type": "object"
+      },
+      "SortDirection": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "title": "SortDirection",
+        "type": "string"
       },
       "ThumbnailCreate": {
         "description": "Fields required to attach a thumbnail to a dataset.",
@@ -5041,6 +5075,11 @@
           "first_name": {
             "title": "First Name",
             "type": "string"
+          },
+          "is_service_account": {
+            "default": false,
+            "title": "Is Service Account",
+            "type": "boolean"
           },
           "last_name": {
             "title": "Last Name",
@@ -5858,7 +5897,7 @@
     },
     "/datasets": {
       "get": {
-        "description": "Returns a paginated list of datasets the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nKeyset (cursor) pagination: results are ordered by unique_id descending, which is\ncreation order since unique_id is a time-sortable UUIDv7. To fetch the next page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only on the\nfirst page (cursor omitted); subsequent pages omit it to avoid a redundant count.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. cursor takes precedence when both are given. Prefer cursor for large\nresult sets, since deep offsets are slower.\nPass include_links=true to include parent, child, and associated resources for each dataset.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass instrument_mfid to filter by the instrument's canonical stable identity.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass sample_mfid to filter by a readable sample's canonical stable identity.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
+        "description": "Returns a paginated list of datasets the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nBy default, results are ordered by unique_id descending. To fetch a keyset page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only when\ncursor is omitted and offset is zero.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. Supplying both returns 422. Prefer cursor for large result sets, since\ndeep offsets are slower.\nPass affiliation=owner to return only resources authoritatively owned by the caller.\nPass sort=created, updated, or name with direction=asc or desc for explicit ordering.\nPass include_links=true to include parent, child, and associated resources for each dataset.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass instrument_mfid to filter by the instrument's canonical stable identity.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass sample_mfid to filter by a readable sample's canonical stable identity.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
         "operationId": "list_datasets_datasets_get",
         "parameters": [
           {
@@ -5872,6 +5911,8 @@
                   "items": {
                     "type": "string"
                   },
+                  "maxItems": 10,
+                  "minItems": 1,
                   "type": "array"
                 },
                 {
@@ -5893,6 +5934,8 @@
                   "items": {
                     "type": "string"
                   },
+                  "maxItems": 10,
+                  "minItems": 1,
                   "type": "array"
                 },
                 {
@@ -5901,6 +5944,29 @@
               ],
               "description": "Project MFIDs or slugs whose direct access must all include each result.",
               "title": "Accessible To Project"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
             }
           },
           {
@@ -5946,102 +6012,122 @@
             }
           },
           {
+            "description": "Opaque continuation cursor returned by a previous page.",
             "in": "query",
             "name": "cursor",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "maxLength": 4096,
+                  "minLength": 1,
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Opaque continuation cursor returned by a previous page.",
               "title": "Cursor"
             }
           },
           {
+            "description": "Compatibility offset. Cannot be supplied with cursor.",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
               "default": 0,
+              "description": "Compatibility offset. Cannot be supplied with cursor.",
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
             }
           },
           {
+            "description": "Inclusive creation-time lower bound.",
             "in": "query",
             "name": "creation_time_gte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive creation-time lower bound.",
               "title": "Creation Time Gte"
             }
           },
           {
+            "description": "Inclusive creation-time upper bound.",
             "in": "query",
             "name": "creation_time_lte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive creation-time upper bound.",
               "title": "Creation Time Lte"
             }
           },
           {
+            "description": "Inclusive modification-time lower bound.",
             "in": "query",
             "name": "modification_time_gte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive modification-time lower bound.",
               "title": "Modification Time Gte"
             }
           },
           {
+            "description": "Inclusive modification-time upper bound.",
             "in": "query",
             "name": "modification_time_lte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive modification-time upper bound.",
               "title": "Modification Time Lte"
             }
           },
           {
+            "description": "Restrict results by public visibility.",
             "in": "query",
             "name": "visibility",
             "required": false,
             "schema": {
               "default": "all",
+              "description": "Restrict results by public visibility.",
               "enum": [
                 "all",
                 "public",
@@ -6049,6 +6135,112 @@
               ],
               "title": "Visibility",
               "type": "string"
+            }
+          },
+          {
+            "description": "Project slug. May be combined with a matching project_mfid.",
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Project slug. May be combined with a matching project_mfid.",
+              "title": "Project Id"
+            }
+          },
+          {
+            "description": "Canonical project MFID. May be combined with a matching project_id.",
+            "in": "query",
+            "name": "project_mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Canonical project MFID. May be combined with a matching project_id.",
+              "title": "Project Mfid"
+            }
+          },
+          {
+            "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
+            "in": "query",
+            "name": "project_scope",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "assigned",
+                    "shared",
+                    "all"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
+              "title": "Project Scope"
+            }
+          },
+          {
+            "description": "Explicit ordering. Omit to preserve the legacy unique_id descending order.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ResourceSort"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Explicit ordering. Omit to preserve the legacy unique_id descending order.",
+              "title": "Sort"
+            }
+          },
+          {
+            "description": "Direction for an explicit sort. Supplying direction without sort returns 422.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc",
+              "description": "Direction for an explicit sort. Supplying direction without sort returns 422."
+            }
+          },
+          {
+            "description": "Filter datasets linked to this canonical sample MFID.",
+            "in": "query",
+            "name": "sample_mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter datasets linked to this canonical sample MFID.",
+              "title": "Sample Mfid"
             }
           },
           {
@@ -6070,9 +6262,8 @@
             }
           },
           {
-            "description": "Filter datasets related to this project slug. May be combined with a matching project_mfid.",
             "in": "query",
-            "name": "project_id",
+            "name": "keyword",
             "required": false,
             "schema": {
               "anyOf": [
@@ -6083,14 +6274,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter datasets related to this project slug. May be combined with a matching project_mfid.",
-              "title": "Project Id"
+              "title": "Keyword"
             }
           },
           {
-            "description": "Filter datasets related to this canonical project MFID.",
             "in": "query",
-            "name": "project_mfid",
+            "name": "unique_id",
             "required": false,
             "schema": {
               "anyOf": [
@@ -6101,37 +6290,28 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter datasets related to this canonical project MFID.",
-              "title": "Project Mfid"
+              "title": "Unique Id"
             }
           },
           {
-            "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
             "in": "query",
-            "name": "project_scope",
+            "name": "public",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "assigned",
-                    "shared",
-                    "all"
-                  ],
-                  "type": "string"
+                  "type": "boolean"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
-              "title": "Project Scope"
+              "title": "Public"
             }
           },
           {
-            "description": "Filter datasets linked to this canonical sample MFID.",
             "in": "query",
-            "name": "sample_mfid",
+            "name": "dataset_name",
             "required": false,
             "schema": {
               "anyOf": [
@@ -6142,8 +6322,139 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter datasets linked to this canonical sample MFID.",
-              "title": "Sample Mfid"
+              "title": "Dataset Name"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.",
+            "in": "query",
+            "name": "owner_orcid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "deprecated": true,
+              "description": "Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.",
+              "title": "Owner Orcid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "instrument_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Instrument Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timestamp",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timestamp"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Size"
+            }
+          },
+          {
+            "in": "query",
+            "name": "data_format",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data Format"
+            }
+          },
+          {
+            "in": "query",
+            "name": "data_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "measurement",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Measurement"
+            }
+          },
+          {
+            "in": "query",
+            "name": "session_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Name"
             }
           }
         ],
@@ -6285,16 +6596,51 @@
         "operationId": "search_datasets_datasets_search_get",
         "parameters": [
           {
-            "description": "Search term matched against dataset_name. Queries may contain at most 200 characters and 10 terms.",
+            "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
             "in": "query",
             "name": "q",
             "required": true,
             "schema": {
-              "description": "Search term matched against dataset_name. Queries may contain at most 200 characters and 10 terms.",
+              "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
               "maxLength": 200,
               "minLength": 3,
               "title": "Q",
               "type": "string"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
@@ -6334,7 +6680,7 @@
             }
           },
           {
-            "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
+            "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
             "in": "query",
             "name": "project_scope",
             "required": false,
@@ -6352,20 +6698,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
+              "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
               "title": "Project Scope"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 20,
-              "maximum": 50,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
             }
           }
         ],
@@ -9255,7 +9589,7 @@
     },
     "/instruments": {
       "get": {
-        "description": "Returns a paginated list of instruments filtered by any provided query parameters that\nmatch Instrument attributes. Matching is case-insensitive exact match.\nUse instrument_id for exact slug lookup. Other filterable fields include\nother_id, other_id_source, instrument_name, manufacturer,\nmodel, owner, location, description, instrument_type, status.\nDefaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.\nAn exact instrument_id lookup searches every status unless status is also provided.",
+        "description": "Returns a paginated list of instruments filtered by any provided query parameters that\nmatch Instrument attributes. Matching is case-insensitive exact match.\nUse instrument_id for exact slug lookup. Other filterable fields include\nother_id, other_id_source, instrument_name, manufacturer,\nmodel, owner, location, description, instrument_type, status.\nPass affiliation=owner to return only instruments authoritatively owned by the caller.\nDefaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.\nAn exact instrument_id lookup searches every status unless status is also provided.",
         "operationId": "list_instruments_instruments_get",
         "parameters": [
           {
@@ -9274,6 +9608,29 @@
               ],
               "description": "Exact instrument slug.",
               "title": "Instrument Id"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
             }
           },
           {
@@ -9317,6 +9674,172 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "other_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Other Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "other_id_source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Other Id Source"
+            }
+          },
+          {
+            "in": "query",
+            "name": "instrument_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Instrument Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "manufacturer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Manufacturer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "model",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Model"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.",
+            "in": "query",
+            "name": "owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "deprecated": true,
+              "description": "Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.",
+              "title": "Owner"
+            }
+          },
+          {
+            "in": "query",
+            "name": "location",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Location"
+            }
+          },
+          {
+            "in": "query",
+            "name": "description",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Description"
+            }
+          },
+          {
+            "in": "query",
+            "name": "instrument_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Instrument Type"
+            }
+          },
+          {
+            "description": "Restrict results to one lifecycle status.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/InstrumentStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict results to one lifecycle status.",
+              "title": "Status"
             }
           }
         ],
@@ -9404,16 +9927,51 @@
         "operationId": "search_instruments_instruments_search_get",
         "parameters": [
           {
-            "description": "Search term matched against instrument_name, instrument_type, and manufacturer. Queries may contain at most 200 characters and 10 terms.",
+            "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
             "in": "query",
             "name": "q",
             "required": true,
             "schema": {
-              "description": "Search term matched against instrument_name, instrument_type, and manufacturer. Queries may contain at most 200 characters and 10 terms.",
+              "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
               "maxLength": 200,
               "minLength": 3,
               "title": "Q",
               "type": "string"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
@@ -9442,18 +10000,6 @@
               "default": false,
               "title": "Include Owner",
               "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 20,
-              "maximum": 50,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
             }
           }
         ],
@@ -10225,7 +10771,7 @@
     },
     "/projects": {
       "get": {
-        "description": "Returns a paginated list of projects the user is authorized to see, including the resolved project lead.",
+        "description": "Returns a paginated list of projects the user is authorized to see, including the resolved project lead.\nPass affiliation=owner to return only projects authoritatively owned by the caller.",
         "operationId": "list_projects_projects_get",
         "parameters": [
           {
@@ -10257,6 +10803,8 @@
                   "items": {
                     "type": "string"
                   },
+                  "maxItems": 10,
+                  "minItems": 1,
                   "type": "array"
                 },
                 {
@@ -10278,6 +10826,8 @@
                   "items": {
                     "type": "string"
                   },
+                  "maxItems": 10,
+                  "minItems": 1,
                   "type": "array"
                 },
                 {
@@ -10286,6 +10836,29 @@
               ],
               "description": "Project MFIDs or slugs whose direct access must all include each result.",
               "title": "Accessible To Project"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
             }
           },
           {
@@ -10418,16 +10991,39 @@
         "operationId": "search_projects_projects_search_get",
         "parameters": [
           {
-            "description": "Search term matched against project title and project_id. Queries may contain at most 200 characters and 10 terms.",
+            "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
             "in": "query",
             "name": "q",
             "required": true,
             "schema": {
-              "description": "Search term matched against project title and project_id. Queries may contain at most 200 characters and 10 terms.",
+              "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
               "maxLength": 200,
               "minLength": 3,
               "title": "Q",
               "type": "string"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
             }
           },
           {
@@ -12141,7 +12737,7 @@
     },
     "/samples": {
       "get": {
-        "description": "Returns a paginated list of samples the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nKeyset (cursor) pagination: results are ordered by unique_id descending, which is\ncreation order since unique_id is a time-sortable UUIDv7. To fetch the next page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only on the\nfirst page (cursor omitted); subsequent pages omit it to avoid a redundant count.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. cursor takes precedence when both are given. Prefer cursor for large\nresult sets, since deep offsets are slower.\nPass include_links=true to include parent, child, and associated resources for each sample.\ninclude_datasets is deprecated; use include_links instead.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass dataset_mfid to filter by a readable dataset's canonical stable identity.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
+        "description": "Returns a paginated list of samples the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nBy default, results are ordered by unique_id descending. To fetch a keyset page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only when\ncursor is omitted and offset is zero.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. Supplying both returns 422. Prefer cursor for large result sets, since\ndeep offsets are slower.\nPass affiliation=owner to return only resources authoritatively owned by the caller.\nPass sort=created, updated, or name with direction=asc or desc for explicit ordering.\nPass include_links=true to include parent, child, and associated resources for each sample.\ninclude_datasets is deprecated; use include_links instead.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass dataset_mfid to filter by a readable dataset's canonical stable identity.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
         "operationId": "list_samples_samples_get",
         "parameters": [
           {
@@ -12155,6 +12751,8 @@
                   "items": {
                     "type": "string"
                   },
+                  "maxItems": 10,
+                  "minItems": 1,
                   "type": "array"
                 },
                 {
@@ -12176,6 +12774,8 @@
                   "items": {
                     "type": "string"
                   },
+                  "maxItems": 10,
+                  "minItems": 1,
                   "type": "array"
                 },
                 {
@@ -12184,6 +12784,29 @@
               ],
               "description": "Project MFIDs or slugs whose direct access must all include each result.",
               "title": "Accessible To Project"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
             }
           },
           {
@@ -12203,16 +12826,6 @@
             "schema": {
               "default": false,
               "title": "Include Links",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "include_datasets",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Include Datasets",
               "type": "boolean"
             }
           },
@@ -12239,102 +12852,122 @@
             }
           },
           {
+            "description": "Opaque continuation cursor returned by a previous page.",
             "in": "query",
             "name": "cursor",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "maxLength": 4096,
+                  "minLength": 1,
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Opaque continuation cursor returned by a previous page.",
               "title": "Cursor"
             }
           },
           {
+            "description": "Compatibility offset. Cannot be supplied with cursor.",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
               "default": 0,
+              "description": "Compatibility offset. Cannot be supplied with cursor.",
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
             }
           },
           {
+            "description": "Inclusive creation-time lower bound.",
             "in": "query",
             "name": "creation_time_gte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive creation-time lower bound.",
               "title": "Creation Time Gte"
             }
           },
           {
+            "description": "Inclusive creation-time upper bound.",
             "in": "query",
             "name": "creation_time_lte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive creation-time upper bound.",
               "title": "Creation Time Lte"
             }
           },
           {
+            "description": "Inclusive modification-time lower bound.",
             "in": "query",
             "name": "modification_time_gte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive modification-time lower bound.",
               "title": "Modification Time Gte"
             }
           },
           {
+            "description": "Inclusive modification-time upper bound.",
             "in": "query",
             "name": "modification_time_lte",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "format": "date-time",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "Inclusive modification-time upper bound.",
               "title": "Modification Time Lte"
             }
           },
           {
+            "description": "Restrict results by public visibility.",
             "in": "query",
             "name": "visibility",
             "required": false,
             "schema": {
               "default": "all",
+              "description": "Restrict results by public visibility.",
               "enum": [
                 "all",
                 "public",
@@ -12345,7 +12978,7 @@
             }
           },
           {
-            "description": "Filter samples related to this project slug. May be combined with a matching project_mfid.",
+            "description": "Project slug. May be combined with a matching project_mfid.",
             "in": "query",
             "name": "project_id",
             "required": false,
@@ -12358,12 +12991,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter samples related to this project slug. May be combined with a matching project_mfid.",
+              "description": "Project slug. May be combined with a matching project_mfid.",
               "title": "Project Id"
             }
           },
           {
-            "description": "Filter samples related to this canonical project MFID.",
+            "description": "Canonical project MFID. May be combined with a matching project_id.",
             "in": "query",
             "name": "project_mfid",
             "required": false,
@@ -12376,12 +13009,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter samples related to this canonical project MFID.",
+              "description": "Canonical project MFID. May be combined with a matching project_id.",
               "title": "Project Mfid"
             }
           },
           {
-            "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
+            "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
             "in": "query",
             "name": "project_scope",
             "required": false,
@@ -12399,8 +13032,51 @@
                   "type": "null"
                 }
               ],
-              "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
+              "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
               "title": "Project Scope"
+            }
+          },
+          {
+            "description": "Explicit ordering. Omit to preserve the legacy unique_id descending order.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ResourceSort"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Explicit ordering. Omit to preserve the legacy unique_id descending order.",
+              "title": "Sort"
+            }
+          },
+          {
+            "description": "Direction for an explicit sort. Supplying direction without sort returns 422.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc",
+              "description": "Direction for an explicit sort. Supplying direction without sort returns 422."
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated embedded dataset expansion. Use include_links instead.",
+            "in": "query",
+            "name": "include_datasets",
+            "required": false,
+            "schema": {
+              "default": false,
+              "deprecated": true,
+              "description": "Deprecated embedded dataset expansion. Use include_links instead.",
+              "title": "Include Datasets",
+              "type": "boolean"
             }
           },
           {
@@ -12419,6 +13095,122 @@
               ],
               "description": "Filter samples linked to this canonical dataset MFID.",
               "title": "Dataset Mfid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unique_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unique Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "public",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Public"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sample_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sample Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sample_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sample Type"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.",
+            "in": "query",
+            "name": "owner_orcid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "deprecated": true,
+              "description": "Deprecated exact owner filter. Use affiliation=owner for the authenticated caller.",
+              "title": "Owner Orcid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "description",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Description"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timestamp",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timestamp"
             }
           }
         ],
@@ -12506,16 +13298,51 @@
         "operationId": "search_samples_samples_search_get",
         "parameters": [
           {
-            "description": "Search term matched against sample_name. Queries may contain at most 200 characters and 10 terms.",
+            "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
             "in": "query",
             "name": "q",
             "required": true,
             "schema": {
-              "description": "Search term matched against sample_name. Queries may contain at most 200 characters and 10 terms.",
+              "description": "Search text. Whitespace is normalized and at most 10 terms are accepted.",
               "maxLength": 200,
               "minLength": 3,
               "title": "Q",
               "type": "string"
+            }
+          },
+          {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/Affiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "title": "Affiliation"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
@@ -12555,7 +13382,7 @@
             }
           },
           {
-            "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
+            "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
             "in": "query",
             "name": "project_scope",
             "required": false,
@@ -12573,20 +13400,8 @@
                   "type": "null"
                 }
               ],
-              "description": "Project relationship to include. Requires project_id or project_mfid; defaults to assigned.",
+              "description": "Project relationship to include. Requires project_id or project_mfid and defaults to assigned.",
               "title": "Project Scope"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 20,
-              "maximum": 50,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
             }
           }
         ],
@@ -14401,7 +15216,7 @@
   },
   "servers": [
     {
-      "url": "/testapi"
+      "url": "/api/v3"
     }
   ]
 }

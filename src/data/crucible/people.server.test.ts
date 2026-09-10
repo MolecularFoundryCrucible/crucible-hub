@@ -46,6 +46,7 @@ describe("workspace person source", () => {
 
     expect(person).toEqual({
       first_name: "Morgan",
+      is_service_account: false,
       last_name: "Lee",
       unique_id: "0000-0000-0000-0018",
       username: "morgan.lee",

@@ -33,6 +33,7 @@ const collaborator = {
   unique_id: "0000-0000-0000-0018",
   username: "morgan.lee",
   first_name: "Morgan",
+  is_service_account: false,
   last_name: "Lee",
 } satisfies Schema<"UserPublicRead">
 
@@ -40,6 +41,7 @@ const prospectiveMember = {
   unique_id: "0000-0000-0000-0026",
   username: "jamie.patel",
   first_name: "Jamie",
+  is_service_account: false,
   last_name: "Patel",
 } satisfies Schema<"UserPublicRead">
 

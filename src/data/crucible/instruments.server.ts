@@ -45,7 +45,7 @@ function safeOwner(value: unknown): WorkspacePerson | null {
   return {
     unique_id: owner.unique_id,
     first_name: owner.first_name,
-    is_service_account: owner.is_service_account ?? null,
+    is_service_account: owner.is_service_account ?? false,
     last_name: owner.last_name,
     username: owner.username ?? null,
   }

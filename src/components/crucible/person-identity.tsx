@@ -34,6 +34,10 @@ export function personDisplayName(
   )
 }
 
+export function personIsServiceAccount(person: PersonIdentityProfile) {
+  return person.is_service_account ?? mfidPattern.test(person.unique_id)
+}
+
 export function PersonIdentity({
   className,
   detailsClassName,
@@ -53,12 +57,8 @@ export function PersonIdentity({
 }) {
   const name = personDisplayName(person, nameStyle)
   const username = normalizedUsername(person.username ?? person.context)
-  const isServiceAccount =
-    person.is_service_account ?? mfidPattern.test(person.unique_id)
-  const secondary = [
-    username,
-    isServiceAccount ? "Service account" : null,
-  ]
+  const isServiceAccount = personIsServiceAccount(person)
+  const secondary = [username, isServiceAccount ? "Service account" : null]
     .filter(Boolean)
     .join(" · ")
 
@@ -113,9 +113,7 @@ export function PersonIdentity({
               ? "bg-muted text-foreground ring-(--resource-service-account)"
               : "bg-muted text-foreground ring-(--resource-person)"
           )}
-          data-account-type={
-            isServiceAccount ? "service-account" : "person"
-          }
+          data-account-type={isServiceAccount ? "service-account" : "person"}
         >
           {personInitials(person)}
         </AvatarFallback>

@@ -12,12 +12,18 @@ import {
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
+    "aria-label": ariaLabel,
     children,
     params,
   }: {
+    "aria-label"?: string
     children: ReactNode
     params: { personId: string }
-  }) => <a href={`/people/${params.personId}`}>{children}</a>,
+  }) => (
+    <a aria-label={ariaLabel} href={`/people/${params.personId}`}>
+      {children}
+    </a>
+  ),
 }))
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
@@ -108,7 +114,12 @@ describe("ProjectMembers", () => {
       "bg-access-role-viewer"
     )
     expect(
-      screen.getByText(/beamline-collector \(Service account\)/)
+      screen.getByText("@beamline-collector · Service account")
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("link", {
+        name: "Beamline Collector, Service account",
+      })
     ).toBeTruthy()
   })
 

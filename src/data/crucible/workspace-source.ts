@@ -6,20 +6,23 @@ type Schema<TSchemaName extends keyof components["schemas"]> =
 
 export type WorkspacePerson = Pick<
   Schema<"UserPublicRead">,
-  "first_name" | "last_name" | "unique_id" | "username"
-> & {
-  is_service_account?: boolean | null
-}
-
-export type WorkspaceAccount = Pick<
-  Schema<"UserRead">,
-  | "email"
-  | "first_name"
-  | "is_service_account"
-  | "last_name"
-  | "unique_id"
-  | "username"
+  "first_name" | "is_service_account" | "last_name" | "unique_id" | "username"
 >
+
+export type WorkspaceAccount = Omit<
+  Pick<
+    Schema<"UserRead">,
+    | "email"
+    | "first_name"
+    | "is_service_account"
+    | "last_name"
+    | "unique_id"
+    | "username"
+  >,
+  "is_service_account"
+> & {
+  is_service_account: boolean
+}
 
 export type WorkspaceAccountProfileUpdate = {
   email?: string | null

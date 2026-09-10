@@ -20,8 +20,7 @@ function toWorkspacePerson(
     "is_service_account" in person ? person.is_service_account : null
   return {
     first_name: person.first_name,
-    is_service_account:
-      typeof accountType === "boolean" ? accountType : null,
+    is_service_account: typeof accountType === "boolean" ? accountType : false,
     last_name: person.last_name,
     unique_id: person.unique_id,
     username: person.username,

@@ -65,6 +65,7 @@ const dataset: Extract<WorkspaceResourceDetail, { kind: "dataset" }> = {
   name: "Initial dataset",
   owner: {
     first_name: "Avery",
+    is_service_account: false,
     last_name: "Chen",
     unique_id: "owner-mfid",
     username: "avery.chen",

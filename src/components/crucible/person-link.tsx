@@ -1,7 +1,11 @@
 import { Link } from "@tanstack/react-router"
 
 import { IdentityHoverCard } from "@/components/crucible/identity-hover-card"
-import { PersonIdentity } from "@/components/crucible/person-identity"
+import {
+  PersonIdentity,
+  personDisplayName,
+  personIsServiceAccount,
+} from "@/components/crucible/person-identity"
 import { MfidText } from "@/components/crucible/mfid-text"
 import type {
   PersonIdentityPresentation,
@@ -24,8 +28,12 @@ export function PersonLink({
   presentation?: PersonIdentityPresentation
   size?: PersonIdentitySize
 }) {
+  const label = personDisplayName(person, nameStyle)
   const link = (
     <Link
+      aria-label={
+        personIsServiceAccount(person) ? `${label}, Service account` : label
+      }
       className={cn(
         "group/person min-w-0",
         presentation === "inline" || presentation === undefined
