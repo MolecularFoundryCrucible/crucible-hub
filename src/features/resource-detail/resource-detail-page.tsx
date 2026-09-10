@@ -24,6 +24,7 @@ import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action
 import { PageLayout } from "@/components/crucible/page-layout"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
+import { personIsServiceAccount } from "@/components/crucible/person-identity"
 import {
   ResourcePreviewContext,
   useResourcePreviewNavigation,
@@ -407,7 +408,14 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
           <div>
             <dt className="text-label text-muted-foreground">Owner</dt>
             <dd className="mt-1 flex items-start gap-2 text-body">
-              <IdentityFieldIcon type="owner" />
+              <IdentityFieldIcon
+                accountType={
+                  owner && personIsServiceAccount(owner)
+                    ? "service-account"
+                    : "person"
+                }
+                type="owner"
+              />
               {owner ? (
                 <PersonLink nameStyle="abbreviated" person={owner} />
               ) : (
