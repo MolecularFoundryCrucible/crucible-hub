@@ -1,10 +1,10 @@
-import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
 type PersonIdentityPresentation = "avatar" | "inline" | "stacked"
 type PersonNameStyle = "abbreviated" | "full"
 type PersonIdentitySize = "default" | "lg" | "sm"
+const mfidPattern = /^[0-9A-HJKMNP-TV-Z]{26}$/i
 
 export type PersonIdentityProfile = {
   context?: string | null
@@ -53,9 +53,11 @@ export function PersonIdentity({
 }) {
   const name = personDisplayName(person, nameStyle)
   const username = normalizedUsername(person.username ?? person.context)
+  const isServiceAccount =
+    person.is_service_account ?? mfidPattern.test(person.unique_id)
   const secondary = [
     username,
-    person.is_service_account ? "Service account" : null,
+    isServiceAccount ? "Service account" : null,
   ]
     .filter(Boolean)
     .join(" · ")
@@ -64,19 +66,12 @@ export function PersonIdentity({
     return (
       <span
         className={cn(
-          "inline-flex min-w-0 items-center gap-1 text-label",
+          "text-label break-words",
           interactive && "group-hover/person:underline",
           className
         )}
       >
-        <span className="break-words">{name}</span>
-        {person.is_service_account ? (
-          <PrincipalTypeIcon
-            className="size-3.5"
-            label="Service account"
-            type="service_account"
-          />
-        ) : null}
+        {name}
       </span>
     )
   }
@@ -114,12 +109,12 @@ export function PersonIdentity({
         <AvatarFallback
           className={cn(
             "ring-2",
-            person.is_service_account
+            isServiceAccount
               ? "bg-muted text-foreground ring-(--resource-service-account)"
               : "bg-muted text-foreground ring-(--resource-person)"
           )}
           data-account-type={
-            person.is_service_account ? "service-account" : "person"
+            isServiceAccount ? "service-account" : "person"
           }
         >
           {personInitials(person)}
