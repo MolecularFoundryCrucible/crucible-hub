@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
+- Show each sample and dataset MFID as a scannable QR code in its Identity card.
 - Added a dedicated dataset Processing page with file MFIDs, latest ingestion state, request history, dynamic ingestor selection, partial-success multi-file ingestion requests, and retained quick downloads on Overview.
 - Added a dedicated application-bar action for local camera-based MFID QR scanning, with API-backed canonical resource resolution, camera switching, retry and text-entry fallback, and immediate stream cleanup without uploading or storing camera content.
 - Added resource-aware browser titles and keyboard navigation, explicit entity refresh timestamps, full-text scientific metadata search, and account-isolated session-only recent resources.

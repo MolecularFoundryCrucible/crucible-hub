@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { MfidValue } from "@/components/crucible/mfid-value"
+import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personIsServiceAccount } from "@/components/crucible/person-identity"
 import {
@@ -38,6 +39,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -357,8 +359,11 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="grid-cols-[1fr_auto]">
         <CardTitle>Identity</CardTitle>
+        <CardAction className="col-start-2 row-start-1 mt-0 w-auto justify-self-end">
+          <MfidQrCode value={resource.unique_id} />
+        </CardAction>
       </CardHeader>
       <CardContent>
         <dl className="grid gap-4 sm:grid-cols-2">
