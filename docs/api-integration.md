@@ -6,7 +6,7 @@ Date: 2026-09-06
 
 ## Authority and generated contract
 
-This document owns Hub-side generated-client, server-function, Query, pagination, invalidation, and safe-error conventions. `crucible-api` owns paths, schemas, authorization, resource semantics, pagination shapes, and security schemes. Do not reproduce endpoint inventories or infer a missing contract. [`architecture.md`](architecture.md) owns runtime boundaries and [`authentication-transition.md`](authentication-transition.md) owns authentication cutover.
+This document owns Hub-side generated-client, server-function, Query, pagination, invalidation, and safe-error conventions. `crucible-api` owns paths, schemas, authorization, resource semantics, pagination shapes, and security schemes. Do not reproduce endpoint inventories or infer a missing contract. [`architecture.md`](architecture.md) owns runtime boundaries, [`authentication-transition.md`](authentication-transition.md) owns authentication cutover, and [Crucible API handoff](crucible-api-handoff.md#dynamic-hub-capability-plan) defines the proposed API additions for dynamic Hub destinations and workflows.
 
 `contracts/crucible-api.json` is the reviewed deterministic input, `contracts/crucible-api.lock.json` records its source revision and digest, and `src/generated/crucible-api.ts` is deterministic generated output that is never hand-edited. `src/server/crucible/` is the server-only transport and adapter boundary; `src/data/crucible/` contains browser-safe models and Query options.
 

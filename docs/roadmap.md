@@ -118,14 +118,14 @@ Add API-backed bulk operations, saved views, exports, richer activity and audit 
 
 ## External dependencies
 
-| Dependency                      | Required outcome                                                                                                               |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Web login exchange              | One-time, server-to-server credential exchange suitable for opaque Hub sessions.                                               |
-| Session infrastructure          | Shared storage, encryption and rotation approach, revocation behavior, and multi-replica verification.                         |
-| Upload contract                 | Authorized direct upload lifecycle, CORS, retry, resume, expiry, cleanup, and non-production feasibility evidence.             |
-| Collection and search contracts | Owned-resource filtering, stable sorting and grouping, scalable facets, and bounded summaries where requested.                 |
-| Resource graph contract         | Typed nodes and edges, relationship semantics, bounded depth, truncation, permission behavior, and stable error outcomes.      |
-| Mutation contracts              | Operation-specific capability guidance, conditional-write safety, complete authoritative responses, and clear-field semantics. |
+| Dependency                      | Required outcome                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web login exchange              | One-time, server-to-server credential exchange suitable for opaque Hub sessions.                                                                                                                                                                                                                                                                 |
+| Session infrastructure          | Shared storage, encryption and rotation approach, revocation behavior, and multi-replica verification.                                                                                                                                                                                                                                           |
+| Upload contract                 | Authorized direct upload lifecycle, CORS, retry, resume, expiry, cleanup, and non-production feasibility evidence.                                                                                                                                                                                                                               |
+| Collection and search contracts | Owned-resource filtering, stable sorting and grouping, scalable facets, and bounded summaries where requested.                                                                                                                                                                                                                                   |
+| Resource graph contract         | Typed nodes and edges, relationship semantics, bounded depth, truncation, permission behavior, and stable error outcomes.                                                                                                                                                                                                                        |
+| Mutation contracts              | Operation-specific capability guidance, conditional-write safety, complete authoritative responses, and clear-field semantics. The proposed pins, activity, join-review, administration, collection-summary, and processing contracts are prioritized in the [dynamic Hub capability plan](crucible-api-handoff.md#dynamic-hub-capability-plan). |
 
 ## Completion gates
 
