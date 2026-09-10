@@ -57,6 +57,10 @@ function padDateTimePart(value: number) {
   return value.toString().padStart(2, "0")
 }
 
+export function currentLocalDateTimeInput(date = new Date()) {
+  return `${date.getFullYear()}-${padDateTimePart(date.getMonth() + 1)}-${padDateTimePart(date.getDate())}T${padDateTimePart(date.getHours())}:${padDateTimePart(date.getMinutes())}`
+}
+
 export function timestampToLocalInput(value: string | null | undefined) {
   if (!value) return ""
   const date = timestampDate(value)

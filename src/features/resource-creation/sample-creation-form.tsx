@@ -54,7 +54,10 @@ import {
   useCreationRelationshipSubmission,
 } from "./creation-relationships"
 import type { CreationRelationshipDraft } from "./creation-relationships"
-import { CreationFormSection } from "./creation-form-section"
+import {
+  CreationFormSection,
+  useCreationTimestampDefault,
+} from "./creation-form"
 import {
   creationFailureMessage,
   isUncertainCreationError,
@@ -190,6 +193,7 @@ export function SampleCreationForm({
       setSaveError(creationFailureMessage("sample", error))
     }
   })
+  useCreationTimestampDefault(form)
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const busy = isSubmitting || mutation.isPending || relationships.isPending
   const discard = useDiscardProtection(
@@ -317,7 +321,7 @@ export function SampleCreationForm({
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name}>
+                            <FieldLabel htmlFor={field.name} optional>
                               Local date and time
                             </FieldLabel>
                             <Input
@@ -349,7 +353,7 @@ export function SampleCreationForm({
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name}>
+                            <FieldLabel htmlFor={field.name} optional>
                               Description
                             </FieldLabel>
                             <Textarea
@@ -484,7 +488,7 @@ function SampleTextField({
         const errorId = `${field.name}-error`
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name}>
+            <FieldLabel htmlFor={field.name} optional={!required}>
               {label} {required ? <span aria-hidden="true">*</span> : null}
             </FieldLabel>
             <Input

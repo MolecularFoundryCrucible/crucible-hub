@@ -174,7 +174,7 @@ export function ResourceDeletionRequestCard({
             </DialogHeader>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="deletion-request-reason">
+                <FieldLabel htmlFor="deletion-request-reason" optional>
                   Reason
                 </FieldLabel>
                 <Textarea
@@ -185,9 +185,7 @@ export function ResourceDeletionRequestCard({
                   placeholder="Why should this resource be deleted?"
                   value={reason}
                 />
-                <FieldDescription>
-                  Optional, up to 2,000 characters.
-                </FieldDescription>
+                <FieldDescription>Up to 2,000 characters.</FieldDescription>
               </Field>
               {error ? (
                 <p className="text-body text-destructive" role="alert">

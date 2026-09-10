@@ -324,7 +324,9 @@ function ProfileField({
 }) {
   return (
     <Field data-invalid={!field.state.meta.isValid}>
-      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name} optional={!required}>
+        {label}
+      </FieldLabel>
       <Input
         aria-invalid={!field.state.meta.isValid || undefined}
         id={field.name}
@@ -336,11 +338,7 @@ function ProfileField({
         type={type}
         value={field.state.value}
       />
-      {description ? (
-        <FieldDescription>{description}</FieldDescription>
-      ) : required ? null : (
-        <FieldDescription>Optional</FieldDescription>
-      )}
+      {description ? <FieldDescription>{description}</FieldDescription> : null}
       <FieldError errors={field.state.meta.errors} />
     </Field>
   )

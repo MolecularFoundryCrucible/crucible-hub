@@ -8,7 +8,6 @@ import { EditableCardActions } from "@/components/crucible/editable-card-actions
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -593,7 +592,9 @@ function SettingsTextField({
 }) {
   return (
     <Field data-invalid={!field.state.meta.isValid}>
-      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name} optional={!required}>
+        {label}
+      </FieldLabel>
       <Input
         aria-invalid={!field.state.meta.isValid || undefined}
         autoFocus={autoFocus}
@@ -605,7 +606,6 @@ function SettingsTextField({
         required={required}
         value={field.state.value}
       />
-      {required ? null : <FieldDescription>Optional</FieldDescription>}
       <FieldError errors={field.state.meta.errors} />
     </Field>
   )
@@ -633,7 +633,9 @@ function SettingsTextAreaField({
 }) {
   return (
     <Field data-invalid={!field.state.meta.isValid}>
-      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name} optional>
+        {label}
+      </FieldLabel>
       <Textarea
         aria-invalid={!field.state.meta.isValid || undefined}
         id={field.name}
@@ -643,7 +645,6 @@ function SettingsTextAreaField({
         onChange={(event) => field.handleChange(event.target.value)}
         value={field.state.value}
       />
-      <FieldDescription>Optional</FieldDescription>
       <FieldError errors={field.state.meta.errors} />
     </Field>
   )

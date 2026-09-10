@@ -196,7 +196,7 @@ function timestampFieldDescription(timestamp: string | null) {
   if (timestamp && timestampToLocalInput(timestamp) === "") {
     return `Current nonstandard value: ${timestamp}. Choose a local date and time to replace it.`
   }
-  return "Optional. Entered in your local time and stored as UTC."
+  return "Entered in your local time and stored as UTC."
 }
 
 function sampleFormValues(resource: SampleDetail): SampleSummaryFormValues {
@@ -562,7 +562,9 @@ function SampleSummaryForm({
               <form.Field name="sample_type">
                 {(field) => (
                   <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>Sample type</FieldLabel>
+                    <FieldLabel htmlFor={field.name} optional>
+                      Sample type
+                    </FieldLabel>
                     <Input
                       aria-invalid={!field.state.meta.isValid || undefined}
                       disabled={isSubmitting}
@@ -575,7 +577,6 @@ function SampleSummaryForm({
                       }
                       value={field.state.value}
                     />
-                    <FieldDescription>Optional</FieldDescription>
                     <FieldError errors={field.state.meta.errors} />
                   </Field>
                 )}
@@ -584,7 +585,9 @@ function SampleSummaryForm({
               <form.Field name="description">
                 {(field) => (
                   <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                    <FieldLabel htmlFor={field.name} optional>
+                      Description
+                    </FieldLabel>
                     <Textarea
                       aria-invalid={!field.state.meta.isValid || undefined}
                       disabled={isSubmitting}
@@ -597,7 +600,6 @@ function SampleSummaryForm({
                       }
                       value={field.state.value}
                     />
-                    <FieldDescription>Optional</FieldDescription>
                     <FieldError errors={field.state.meta.errors} />
                   </Field>
                 )}
@@ -606,7 +608,9 @@ function SampleSummaryForm({
               <form.Field name="timestamp">
                 {(field) => (
                   <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>Timestamp</FieldLabel>
+                    <FieldLabel htmlFor={field.name} optional>
+                      Timestamp
+                    </FieldLabel>
                     <Input
                       aria-invalid={!field.state.meta.isValid || undefined}
                       disabled={isSubmitting}
@@ -758,7 +762,10 @@ function DatasetSummaryForm({
                 <form.Field key={definition.name} name={definition.name}>
                   {(field) => (
                     <Field data-invalid={!field.state.meta.isValid}>
-                      <FieldLabel htmlFor={field.name}>
+                      <FieldLabel
+                        htmlFor={field.name}
+                        optional={!definition.required}
+                      >
                         {definition.label}
                       </FieldLabel>
                       <Input
@@ -775,9 +782,6 @@ function DatasetSummaryForm({
                         required={definition.required}
                         value={field.state.value}
                       />
-                      {definition.required ? null : (
-                        <FieldDescription>Optional</FieldDescription>
-                      )}
                       <FieldError errors={field.state.meta.errors} />
                     </Field>
                   )}
@@ -786,7 +790,9 @@ function DatasetSummaryForm({
               <form.Field name="timestamp">
                 {(field) => (
                   <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>Timestamp</FieldLabel>
+                    <FieldLabel htmlFor={field.name} optional>
+                      Timestamp
+                    </FieldLabel>
                     <Input
                       aria-invalid={!field.state.meta.isValid || undefined}
                       disabled={isSubmitting}

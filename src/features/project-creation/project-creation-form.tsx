@@ -151,11 +151,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
 
   return (
     <PageLayout>
-      <PageHeader
-        description="Create a project to organize your Crucible resources."
-        eyebrow="Projects"
-        title="Create project"
-      />
+      <PageHeader eyebrow="Projects" title="Create project" />
       <ContentBoundary width="reading">
         <Card aria-busy={isSubmitting}>
           <CardHeader>
@@ -302,10 +298,12 @@ function ProjectTextField({
         const invalid = field.state.meta.isTouched && !field.state.meta.isValid
         const descriptionId = `project-creation-${field.name}-description`
         const errorId = `project-creation-${field.name}-error`
-        const hasDescription = Boolean(description || !required)
+        const hasDescription = Boolean(description)
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+            <FieldLabel htmlFor={field.name} optional={!required}>
+              {label}
+            </FieldLabel>
             <Input
               aria-describedby={
                 hasDescription ? `${descriptionId} ${errorId}` : errorId
@@ -325,8 +323,6 @@ function ProjectTextField({
               <FieldDescription id={descriptionId}>
                 {description}
               </FieldDescription>
-            ) : !required ? (
-              <FieldDescription id={descriptionId}>Optional</FieldDescription>
             ) : null}
             <FieldError errors={field.state.meta.errors} id={errorId} />
           </Field>

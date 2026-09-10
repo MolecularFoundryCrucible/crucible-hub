@@ -53,7 +53,10 @@ import {
   useCreationRelationshipSubmission,
 } from "./creation-relationships"
 import type { CreationRelationshipDraft } from "./creation-relationships"
-import { CreationFormSection } from "./creation-form-section"
+import {
+  CreationFormSection,
+  useCreationTimestampDefault,
+} from "./creation-form"
 import {
   creationFailureMessage,
   isUncertainCreationError,
@@ -190,6 +193,7 @@ export function DatasetCreationForm({
       }
     }
   )
+  useCreationTimestampDefault(form)
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(
     () => form.state.isDirty,
@@ -347,7 +351,10 @@ export function DatasetCreationForm({
                     <form.Field name="instrument">
                       {(field) => (
                         <Field data-disabled={Boolean(createdDataset)}>
-                          <FieldLabel htmlFor="dataset-instrument-trigger">
+                          <FieldLabel
+                            htmlFor="dataset-instrument-trigger"
+                            optional
+                          >
                             Acquisition instrument
                           </FieldLabel>
                           <ResourceChooser
@@ -374,7 +381,7 @@ export function DatasetCreationForm({
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name}>
+                            <FieldLabel htmlFor={field.name} optional>
                               Local date and time
                             </FieldLabel>
                             <Input
@@ -387,7 +394,6 @@ export function DatasetCreationForm({
                               onChange={(event) =>
                                 field.handleChange(event.target.value)
                               }
-                              step={1}
                               type="datetime-local"
                               value={field.state.value}
                             />
@@ -515,7 +521,9 @@ function DatasetTextField({
         const errorId = `${field.name}-error`
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+            <FieldLabel htmlFor={field.name} optional>
+              {label}
+            </FieldLabel>
             <Input
               aria-describedby={errorId}
               aria-errormessage={invalid ? errorId : undefined}

@@ -152,11 +152,7 @@ export function InstrumentRegistrationForm({
 
   return (
     <PageLayout>
-      <PageHeader
-        description="Register an instrument for acquisition work. You will become its owner."
-        eyebrow="Instruments"
-        title="Register instrument"
-      />
+      <PageHeader eyebrow="Instruments" title="Register instrument" />
       <ContentBoundary width="reading">
         <Card aria-busy={isSubmitting}>
           <CardHeader>
@@ -297,10 +293,12 @@ function RegistrationTextField({
         const invalid = !field.state.meta.isValid
         const descriptionId = `instrument-registration-${field.name}-description`
         const errorId = `instrument-registration-${field.name}-error`
-        const hasDescription = Boolean(description || !required)
+        const hasDescription = Boolean(description)
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+            <FieldLabel htmlFor={field.name} optional={!required}>
+              {label}
+            </FieldLabel>
             <Input
               aria-describedby={
                 hasDescription ? `${descriptionId} ${errorId}` : errorId
@@ -320,9 +318,6 @@ function RegistrationTextField({
               <FieldDescription id={descriptionId}>
                 {description}
               </FieldDescription>
-            ) : null}
-            {!required && !description ? (
-              <FieldDescription id={descriptionId}>Optional</FieldDescription>
             ) : null}
             <FieldError errors={field.state.meta.errors} id={errorId} />
           </Field>
@@ -345,13 +340,14 @@ function RegistrationTextAreaField({
     <form.Field name={fieldName}>
       {(field) => {
         const invalid = !field.state.meta.isValid
-        const descriptionId = `instrument-registration-${field.name}-description`
         const errorId = `instrument-registration-${field.name}-error`
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+            <FieldLabel htmlFor={field.name} optional>
+              {label}
+            </FieldLabel>
             <Textarea
-              aria-describedby={`${descriptionId} ${errorId}`}
+              aria-describedby={errorId}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               id={field.name}
@@ -361,7 +357,6 @@ function RegistrationTextAreaField({
               onChange={(event) => field.handleChange(event.target.value)}
               value={field.state.value}
             />
-            <FieldDescription id={descriptionId}>Optional</FieldDescription>
             <FieldError errors={field.state.meta.errors} id={errorId} />
           </Field>
         )
