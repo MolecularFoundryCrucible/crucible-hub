@@ -69,7 +69,7 @@ export function ResourceRelationships({
   const GroupHeading = groupHeadingLevel === 4 ? "h4" : "h3"
 
   return (
-    <div className="resource-relationship-groups">
+    <div className="flex flex-col gap-5">
       {groupResourceRelationships(kind, links).map((group) => (
         <section className="min-w-0" key={group.title}>
           <GroupHeading className="text-label">

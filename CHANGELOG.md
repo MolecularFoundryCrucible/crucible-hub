@@ -64,7 +64,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Rebalanced sample and dataset Overview cards so Identity and Thumbnails share a column, Relationships and Scientific metadata share an equal-width row, and nested metadata renders as an expandable row-based JSON tree with header-level expansion controls and compact empty-collection notation.
+- Rebalanced sample and dataset Overview cards so Identity and Thumbnails share a column, Relationships and Scientific metadata share an equal-width row, relationship groups retain a single readable column, and nested metadata renders as an expandable row-based JSON tree with header-level expansion controls and compact empty-collection notation.
 - Distinguished service-account owners on sample and dataset Identity cards with the semantic robot icon while keeping owner names free of trailing type icons.
 - Distinguished service accounts from people across shared identity presentations with an orange avatar border and service-account label, using the public account-type discriminator.
 - Resolved sample and dataset owners in project data tables through the shared person identity presentation, including name fallback when no username is set, profile navigation, and hover details.

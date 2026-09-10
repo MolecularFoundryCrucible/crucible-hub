@@ -20,7 +20,6 @@
   --container-reading: 48rem;
   --container-action: 32rem;
   --container-action-min: 22rem;
-  --container-relationship-group: 18rem;
   --container-state: 36rem;
   --spacing-page-gutter: 1rem;
   --spacing-page-gutter-medium: 1.5rem;
@@ -453,15 +452,6 @@ body {
 .content-grid-actions > * {
   width: 100%;
   max-width: var(--container-action);
-}
-
-.resource-relationship-groups {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(100%, var(--container-relationship-group)), 1fr)
-  );
-  gap: calc(var(--spacing) * 5);
 }
 
 .metadata-disclosure[open] > summary > .metadata-disclosure-icon {
