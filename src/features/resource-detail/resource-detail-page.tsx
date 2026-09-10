@@ -233,7 +233,7 @@ export function ResourceOverview({
       </ContentGridItem>
       {resource.kind === "dataset" ? (
         <ContentGridItem
-          className="xl:col-start-5 xl:row-start-2"
+          className="xl:col-start-5 xl:row-start-2 xl:-mt-4"
           span="narrow"
         >
           <DatasetThumbnailsCard
