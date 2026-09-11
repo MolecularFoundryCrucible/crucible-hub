@@ -185,12 +185,18 @@ function fixtureSampleFacetRows(
   input: SampleFacetFilters
 ) {
   const filters = normalizeSampleFacetFilters(input)
-  return items.filter((item) =>
-    matchesFacetValue(
-      item.sample_type,
-      filters.sampleType,
-      filters.sampleTypeIsNull
-    )
+  return items.filter(
+    (item) =>
+      matchesFacetValue(
+        item.sample_type,
+        filters.sampleType,
+        filters.sampleTypeIsNull
+      ) &&
+      matchesFacetValue(
+        item.owner?.unique_id,
+        filters.ownerId,
+        filters.ownerIdIsNull
+      )
   )
 }
 
@@ -215,7 +221,13 @@ function fixtureDatasetFacetRows(
         item.session_name,
         filters.sessionName,
         filters.sessionNameIsNull
-      )
+      ) &&
+      matchesFacetValue(
+        item.owner?.unique_id,
+        filters.ownerId,
+        filters.ownerIdIsNull
+      ) &&
+      (!filters.instrumentMfidIsNull || item.instrument == null)
   )
 }
 
@@ -235,6 +247,23 @@ function facetBuckets(values: readonly (string | null | undefined)[]) {
     .map(([value, count]): WorkspaceFacetBucket => ({ count, value }))
 }
 
+function resolvedFacetBuckets<TItem, TReference>(
+  items: readonly TItem[],
+  value: (item: TItem) => string | null | undefined,
+  reference: (item: TItem) => TReference | null | undefined,
+  key: "instrument" | "owner" | "project"
+): WorkspaceFacetBucket[] {
+  return facetBuckets(items.map(value)).map((bucket) => {
+    const item = items.find(
+      (candidate) => (value(candidate) ?? null) === bucket.value
+    )
+    return {
+      ...bucket,
+      [key]: item ? (reference(item) ?? null) : null,
+    }
+  })
+}
+
 function toWorkspaceFacetPage(
   response: Schema<"FacetResponse">,
   field: DatasetFacetField | SampleFacetField
@@ -246,6 +275,9 @@ function toWorkspaceFacetPage(
     field,
     items: response.items.map((item) => ({
       count: item.count,
+      ...("instrument" in item ? { instrument: item.instrument } : {}),
+      ...("owner" in item ? { owner: safeOwner(item.owner) } : {}),
+      ...("project" in item ? { project: item.project } : {}),
       value: item.value,
     })),
     limit: response.limit,
@@ -270,6 +302,8 @@ function fixtureFacetPage(
 function sampleFacetQuery(filters: SampleFacetFilters) {
   const normalized = normalizeSampleFacetFilters(filters)
   return {
+    owner_id: normalized.ownerId,
+    owner_id_is_null: normalized.ownerIdIsNull,
     sample_type: normalized.sampleType,
     sample_type_is_null: normalized.sampleTypeIsNull,
   }
@@ -280,8 +314,11 @@ function datasetFacetQuery(filters: DatasetFacetFilters) {
   return {
     data_format: normalized.dataFormat,
     data_format_is_null: normalized.dataFormatIsNull,
+    instrument_mfid_is_null: normalized.instrumentMfidIsNull,
     measurement: normalized.measurement,
     measurement_is_null: normalized.measurementIsNull,
+    owner_id: normalized.ownerId,
+    owner_id_is_null: normalized.ownerIdIsNull,
     session_name: normalized.sessionName,
     session_name_is_null: normalized.sessionNameIsNull,
   }
@@ -581,11 +618,23 @@ export async function readWorkspaceSampleFacets(
       ),
       input
     )
-    return fixtureFacetPage(
-      facetBuckets(samples.map((sample) => sample.sample_type)),
-      input,
-      input.field
-    )
+    const buckets =
+      input.field === "owner"
+        ? resolvedFacetBuckets(
+            samples,
+            (sample) => sample.owner?.unique_id,
+            (sample) => sample.owner,
+            "owner"
+          )
+        : input.field === "project"
+          ? resolvedFacetBuckets(
+              samples,
+              (sample) => sample.project?.unique_id,
+              (sample) => sample.project,
+              "project"
+            )
+          : facetBuckets(samples.map((sample) => sample.sample_type))
+    return fixtureFacetPage(buckets, input, input.field)
   }
 
   const filters = normalizeCollectionFilters(input)
@@ -643,14 +692,38 @@ export async function readWorkspaceDatasetFacets(
       ),
       input
     )
-    const values = datasets.map((dataset) =>
-      input.field === "session"
-        ? dataset.session_name
-        : input.field === "measurement"
-          ? dataset.measurement
-          : dataset.data_format
-    )
-    return fixtureFacetPage(facetBuckets(values), input, input.field)
+    const buckets =
+      input.field === "owner"
+        ? resolvedFacetBuckets(
+            datasets,
+            (dataset) => dataset.owner?.unique_id,
+            (dataset) => dataset.owner,
+            "owner"
+          )
+        : input.field === "instrument"
+          ? resolvedFacetBuckets(
+              datasets,
+              (dataset) => dataset.instrument?.unique_id,
+              (dataset) => dataset.instrument,
+              "instrument"
+            )
+          : input.field === "project"
+            ? resolvedFacetBuckets(
+                datasets,
+                (dataset) => dataset.project?.unique_id,
+                (dataset) => dataset.project,
+                "project"
+              )
+            : facetBuckets(
+                datasets.map((dataset) =>
+                  input.field === "session"
+                    ? dataset.session_name
+                    : input.field === "measurement"
+                      ? dataset.measurement
+                      : dataset.data_format
+                )
+              )
+    return fixtureFacetPage(buckets, input, input.field)
   }
 
   const filters = normalizeCollectionFilters(input)

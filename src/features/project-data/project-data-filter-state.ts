@@ -38,9 +38,13 @@ export type ProjectDataFilterSearch = {
   dataFormatSet?: true
   direction?: string
   instrumentMfid?: string
+  instrumentMfidIsNull?: true
   measurement?: string
   measurementIsNull?: true
   measurementSet?: true
+  ownerId?: string
+  ownerIdIsNull?: true
+  ownerIdSet?: true
   sampleType?: string
   sampleTypeIsNull?: true
   sampleTypeSet?: true
@@ -74,8 +78,11 @@ const domainFiltersSchema = z
     dataFormatIsNull: z.literal(true).optional(),
     direction: sortDirectionSchema.optional(),
     instrumentMfid: instrumentMfidSchema,
+    instrumentMfidIsNull: z.literal(true).optional(),
     measurement: exactFacetValueSchema,
     measurementIsNull: z.literal(true).optional(),
+    ownerId: exactFacetValueSchema,
+    ownerIdIsNull: z.literal(true).optional(),
     sampleType: exactFacetValueSchema,
     sampleTypeIsNull: z.literal(true).optional(),
     sessionName: exactFacetValueSchema,
@@ -83,6 +90,20 @@ const domainFiltersSchema = z
     sort: resourceSortSchema.optional(),
   })
   .superRefine((filters, context) => {
+    if (filters.instrumentMfid && filters.instrumentMfidIsNull) {
+      context.addIssue({
+        code: "custom",
+        message: "Choose either an instrument or the unspecified bucket.",
+        path: ["instrumentMfid"],
+      })
+    }
+    if (filters.ownerId !== undefined && filters.ownerIdIsNull) {
+      context.addIssue({
+        code: "custom",
+        message: "Choose either an owner or the unspecified bucket.",
+        path: ["ownerId"],
+      })
+    }
     if (filters.direction && !filters.sort) {
       context.addIssue({
         code: "custom",
@@ -110,12 +131,19 @@ export function resolveProjectDataFilters(
     dataFormatIsNull: search.dataFormatIsNull,
     direction: search.direction,
     instrumentMfid: search.instrumentMfid,
+    instrumentMfidIsNull: search.instrumentMfidIsNull,
     measurement: selectedFacetValue(
       search.measurement,
       search.measurementSet,
       search.measurementIsNull
     ),
     measurementIsNull: search.measurementIsNull,
+    ownerId: selectedFacetValue(
+      search.ownerId,
+      search.ownerIdSet,
+      search.ownerIdIsNull
+    ),
+    ownerIdIsNull: search.ownerIdIsNull,
     sampleType: selectedFacetValue(
       search.sampleType,
       search.sampleTypeSet,
@@ -137,6 +165,7 @@ export function resolveProjectDataFilters(
   if (
     kind === "samples" &&
     (search.instrumentMfid !== undefined ||
+      search.instrumentMfidIsNull ||
       search.dataFormatSet ||
       search.dataFormatIsNull ||
       search.measurementSet ||
@@ -183,13 +212,18 @@ export function resolveProjectDataFilters(
         ? {
             sampleType: domain.data.sampleType,
             sampleTypeIsNull: domain.data.sampleTypeIsNull,
+            ownerId: domain.data.ownerId,
+            ownerIdIsNull: domain.data.ownerIdIsNull,
           }
         : {
             dataFormat: domain.data.dataFormat,
             dataFormatIsNull: domain.data.dataFormatIsNull,
             instrumentMfid: domain.data.instrumentMfid,
+            instrumentMfidIsNull: domain.data.instrumentMfidIsNull,
             measurement: domain.data.measurement,
             measurementIsNull: domain.data.measurementIsNull,
+            ownerId: domain.data.ownerId,
+            ownerIdIsNull: domain.data.ownerIdIsNull,
             sessionName: domain.data.sessionName,
             sessionNameIsNull: domain.data.sessionNameIsNull,
           }),

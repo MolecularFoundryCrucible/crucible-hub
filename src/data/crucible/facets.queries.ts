@@ -8,7 +8,10 @@ import {
   getWorkspaceSampleFacets,
 } from "./data.functions"
 import type { ProjectScope } from "./data.queries"
-import { normalizeDatasetFacetFilters } from "./facets"
+import {
+  normalizeDatasetFacetFilters,
+  normalizeSampleFacetFilters,
+} from "./facets"
 import type {
   DatasetFacetField,
   DatasetFacetFilters,
@@ -25,6 +28,9 @@ export const facetPageLimit = 100
 export type FacetContext = CollectionFilters &
   Pick<CollectionQueryOptions, "affiliation"> & {
     instrumentMfid?: string
+    instrumentMfidIsNull?: true
+    ownerId?: string
+    ownerIdIsNull?: true
     projectMfid?: string
     projectScope?: ProjectScope
   }
@@ -36,6 +42,7 @@ export function sampleFacetQueryOptions(
 ) {
   const context = {
     ...normalizeFacetContext(filters),
+    ...withoutSampleFacetField(field, normalizeSampleFacetFilters(filters)),
   }
   return infiniteQueryOptions({
     initialPageParam: undefined as string | undefined,
@@ -64,7 +71,11 @@ export function datasetFacetQueryOptions(
 ) {
   const context = {
     ...normalizeFacetContext(filters),
-    ...withoutDatasetFacetField(field, normalizeDatasetFacetFilters(filters)),
+    ...withoutDatasetFacetField(field, {
+      ...normalizeDatasetFacetFilters(filters),
+      instrumentMfid: filters.instrumentMfid,
+      instrumentMfidIsNull: filters.instrumentMfidIsNull,
+    }),
   }
   return infiniteQueryOptions({
     initialPageParam: undefined as string | undefined,
@@ -90,9 +101,6 @@ function normalizeFacetContext(filters: FacetContext) {
   return {
     ...normalizeCollectionFilters(filters),
     ...(filters.affiliation ? { affiliation: filters.affiliation } : {}),
-    ...(filters.instrumentMfid
-      ? { instrumentMfid: filters.instrumentMfid }
-      : {}),
     ...(filters.projectMfid
       ? {
           projectMfid: filters.projectMfid,
@@ -102,23 +110,88 @@ function normalizeFacetContext(filters: FacetContext) {
   }
 }
 
+function withoutSampleFacetField(
+  field: SampleFacetField,
+  filters: SampleFacetFilters
+) {
+  const { ownerId, ownerIdIsNull, sampleType, sampleTypeIsNull } = filters
+  return field === "owner"
+    ? { sampleType, sampleTypeIsNull }
+    : { ownerId, ownerIdIsNull }
+}
+
 function withoutDatasetFacetField(
   field: DatasetFacetField,
-  filters: DatasetFacetFilters
+  filters: DatasetFacetFilters &
+    Pick<FacetContext, "instrumentMfid" | "instrumentMfidIsNull">
 ) {
   const {
     dataFormat,
     dataFormatIsNull,
     measurement,
     measurementIsNull,
+    ownerId,
+    ownerIdIsNull,
     sessionName,
     sessionNameIsNull,
   } = filters
+  const instrument = filters.instrumentMfid
+    ? { instrumentMfid: filters.instrumentMfid }
+    : filters.instrumentMfidIsNull
+      ? { instrumentMfidIsNull: true as const }
+      : {}
+  if (field === "owner") {
+    return {
+      dataFormat,
+      dataFormatIsNull,
+      ...instrument,
+      measurement,
+      measurementIsNull,
+      sessionName,
+      sessionNameIsNull,
+    }
+  }
+  if (field === "instrument") {
+    return {
+      dataFormat,
+      dataFormatIsNull,
+      measurement,
+      measurementIsNull,
+      ownerId,
+      ownerIdIsNull,
+      sessionName,
+      sessionNameIsNull,
+    }
+  }
   if (field === "data_format") {
-    return { measurement, measurementIsNull, sessionName, sessionNameIsNull }
+    return {
+      measurement,
+      measurementIsNull,
+      ...instrument,
+      ownerId,
+      ownerIdIsNull,
+      sessionName,
+      sessionNameIsNull,
+    }
   }
   if (field === "measurement") {
-    return { dataFormat, dataFormatIsNull, sessionName, sessionNameIsNull }
+    return {
+      dataFormat,
+      dataFormatIsNull,
+      ...instrument,
+      ownerId,
+      ownerIdIsNull,
+      sessionName,
+      sessionNameIsNull,
+    }
   }
-  return { dataFormat, dataFormatIsNull, measurement, measurementIsNull }
+  return {
+    dataFormat,
+    dataFormatIsNull,
+    ...instrument,
+    measurement,
+    measurementIsNull,
+    ownerId,
+    ownerIdIsNull,
+  }
 }

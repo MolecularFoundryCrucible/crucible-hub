@@ -40,10 +40,14 @@ export const dataSearchSchema = z.object({
   datasetCursor: collectionCursorSchema,
   direction: filterSearchValue,
   instrumentMfid: filterSearchValue,
+  instrumentMfidIsNull: selectedFacetSchema,
   kind: filterSearchValue,
   measurement: facetSearchValue,
   measurementIsNull: selectedFacetSchema,
   measurementSet: selectedFacetSchema,
+  ownerId: facetSearchValue,
+  ownerIdIsNull: selectedFacetSchema,
+  ownerIdSet: selectedFacetSchema,
   projectMfid: filterSearchValue,
   projectScope: filterSearchValue,
   sampleCursor: collectionCursorSchema,
@@ -109,9 +113,12 @@ const domainFiltersSchema = z
     dataFormatIsNull: z.literal(true).optional(),
     direction: sortDirectionSchema.optional(),
     instrumentMfid: mfidSchema,
+    instrumentMfidIsNull: z.literal(true).optional(),
     kind: dataKindSchema,
     measurement: exactFacetValueSchema,
     measurementIsNull: z.literal(true).optional(),
+    ownerId: exactFacetValueSchema,
+    ownerIdIsNull: z.literal(true).optional(),
     projectMfid: mfidSchema,
     projectScope: projectScopeSchema,
     sampleType: exactFacetValueSchema,
@@ -121,6 +128,20 @@ const domainFiltersSchema = z
     sort: resourceSortSchema.optional(),
   })
   .superRefine((filters, context) => {
+    if (filters.instrumentMfid && filters.instrumentMfidIsNull) {
+      addIssue(
+        context,
+        "instrumentMfid",
+        "Choose either an instrument or the unspecified bucket."
+      )
+    }
+    if (filters.ownerId !== undefined && filters.ownerIdIsNull) {
+      addIssue(
+        context,
+        "ownerId",
+        "Choose either an owner or the unspecified bucket."
+      )
+    }
     if (filters.projectScope && !filters.projectMfid) {
       addIssue(
         context,
@@ -128,7 +149,10 @@ const domainFiltersSchema = z
         "Choose a project before selecting its relationship."
       )
     }
-    if (filters.instrumentMfid && filters.kind !== "datasets") {
+    if (
+      (filters.instrumentMfid || filters.instrumentMfidIsNull) &&
+      filters.kind !== "datasets"
+    ) {
       addIssue(
         context,
         "instrumentMfid",
@@ -160,6 +184,16 @@ const domainFiltersSchema = z
       )
     }
     if (
+      !filters.kind &&
+      (filters.ownerId !== undefined || filters.ownerIdIsNull)
+    ) {
+      addIssue(
+        context,
+        "ownerId",
+        "Choose Samples or Datasets before selecting an owner."
+      )
+    }
+    if (
       filters.kind !== "datasets" &&
       (filters.dataFormat !== undefined ||
         filters.dataFormatIsNull ||
@@ -188,6 +222,7 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
     dataFormatIsNull: search.dataFormatIsNull,
     direction: search.direction,
     instrumentMfid: search.instrumentMfid,
+    instrumentMfidIsNull: search.instrumentMfidIsNull,
     kind: search.kind,
     measurement: selectedFacetValue(
       search.measurement,
@@ -195,6 +230,12 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
       search.measurementIsNull
     ),
     measurementIsNull: search.measurementIsNull,
+    ownerId: selectedFacetValue(
+      search.ownerId,
+      search.ownerIdSet,
+      search.ownerIdIsNull
+    ),
+    ownerIdIsNull: search.ownerIdIsNull,
     projectMfid: search.projectMfid,
     projectScope: search.projectScope,
     sampleType: selectedFacetValue(
@@ -237,9 +278,6 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
     ...(domain.data.affiliation
       ? { affiliation: domain.data.affiliation }
       : {}),
-    ...(domain.data.kind === "datasets" && domain.data.instrumentMfid
-      ? { instrumentMfid: domain.data.instrumentMfid }
-      : {}),
     ...(domain.data.sort
       ? {
           direction: domain.data.direction ?? "desc",
@@ -248,6 +286,8 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
       : {}),
     ...(domain.data.kind === "samples"
       ? {
+          ownerId: domain.data.ownerId,
+          ownerIdIsNull: domain.data.ownerIdIsNull,
           sampleType: domain.data.sampleType,
           sampleTypeIsNull: domain.data.sampleTypeIsNull,
         }
@@ -256,8 +296,12 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
       ? {
           dataFormat: domain.data.dataFormat,
           dataFormatIsNull: domain.data.dataFormatIsNull,
+          instrumentMfid: domain.data.instrumentMfid,
+          instrumentMfidIsNull: domain.data.instrumentMfidIsNull,
           measurement: domain.data.measurement,
           measurementIsNull: domain.data.measurementIsNull,
+          ownerId: domain.data.ownerId,
+          ownerIdIsNull: domain.data.ownerIdIsNull,
           sessionName: domain.data.sessionName,
           sessionNameIsNull: domain.data.sessionNameIsNull,
         }
@@ -282,6 +326,8 @@ export function applyDataFilters(
     direction: filters.direction,
     instrumentMfid:
       filters.kind === "datasets" ? filters.instrumentMfid : undefined,
+    instrumentMfidIsNull:
+      filters.kind === "datasets" ? filters.instrumentMfidIsNull : undefined,
     kind: filters.kind === "all" ? undefined : filters.kind,
     projectMfid: filters.projectMfid,
     projectScope:
@@ -305,6 +351,10 @@ export function clearDataFilters(
     datasetCursor: undefined,
     direction: undefined,
     instrumentMfid: undefined,
+    instrumentMfidIsNull: undefined,
+    ownerId: undefined,
+    ownerIdIsNull: undefined,
+    ownerIdSet: undefined,
     kind:
       previous.kind === "datasets" || previous.kind === "samples"
         ? previous.kind
@@ -328,6 +378,8 @@ export function switchDataKind(
     datasetCursor: undefined,
     direction: kind === "all" ? undefined : previous.direction,
     instrumentMfid: kind === "datasets" ? previous.instrumentMfid : undefined,
+    instrumentMfidIsNull:
+      kind === "datasets" ? previous.instrumentMfidIsNull : undefined,
     kind: kind === "all" ? undefined : kind,
     preview: undefined,
     sampleCursor: undefined,
@@ -363,6 +415,9 @@ function facetSearchState(filters: DataFilterValues) {
     measurement: filters.measurement,
     measurementIsNull: filters.measurementIsNull,
     measurementSet: filters.measurement !== undefined || undefined,
+    ownerId: filters.ownerId,
+    ownerIdIsNull: filters.ownerIdIsNull,
+    ownerIdSet: filters.ownerId !== undefined || undefined,
     sampleType: filters.sampleType,
     sampleTypeIsNull: filters.sampleTypeIsNull,
     sampleTypeSet: filters.sampleType !== undefined || undefined,
@@ -379,6 +434,9 @@ const emptyFacetSearchState = {
   measurement: undefined,
   measurementIsNull: undefined,
   measurementSet: undefined,
+  ownerId: undefined,
+  ownerIdIsNull: undefined,
+  ownerIdSet: undefined,
   sampleType: undefined,
   sampleTypeIsNull: undefined,
   sampleTypeSet: undefined,
@@ -395,6 +453,9 @@ function facetSearchStateForKind(search: DataSearch, kind: DataKindFilter) {
           sampleType: search.sampleType,
           sampleTypeIsNull: search.sampleTypeIsNull,
           sampleTypeSet: search.sampleTypeSet,
+          ownerId: search.ownerId,
+          ownerIdIsNull: search.ownerIdIsNull,
+          ownerIdSet: search.ownerIdSet,
         }
       : {}),
     ...(kind === "datasets"
@@ -405,6 +466,9 @@ function facetSearchStateForKind(search: DataSearch, kind: DataKindFilter) {
           measurement: search.measurement,
           measurementIsNull: search.measurementIsNull,
           measurementSet: search.measurementSet,
+          ownerId: search.ownerId,
+          ownerIdIsNull: search.ownerIdIsNull,
+          ownerIdSet: search.ownerIdSet,
           sessionName: search.sessionName,
           sessionNameIsNull: search.sessionNameIsNull,
           sessionNameSet: search.sessionNameSet,

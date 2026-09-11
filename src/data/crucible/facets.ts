@@ -1,16 +1,30 @@
 import { z } from "zod"
 
-export const sampleFacetFieldSchema = z.literal("sample_type")
+import type {
+  WorkspacePerson,
+  WorkspaceProjectReference,
+} from "./workspace-source"
+
+export const sampleFacetFieldSchema = z.enum([
+  "sample_type",
+  "owner",
+  "project",
+])
 export const datasetFacetFieldSchema = z.enum([
   "session",
   "measurement",
   "data_format",
+  "owner",
+  "instrument",
+  "project",
 ])
 
 export type SampleFacetField = z.infer<typeof sampleFacetFieldSchema>
 export type DatasetFacetField = z.infer<typeof datasetFacetFieldSchema>
 
 export type SampleFacetFilters = {
+  ownerId?: string
+  ownerIdIsNull?: true
   sampleType?: string
   sampleTypeIsNull?: true
 }
@@ -18,14 +32,24 @@ export type SampleFacetFilters = {
 export type DatasetFacetFilters = {
   dataFormat?: string
   dataFormatIsNull?: true
+  instrumentMfidIsNull?: true
   measurement?: string
   measurementIsNull?: true
+  ownerId?: string
+  ownerIdIsNull?: true
   sessionName?: string
   sessionNameIsNull?: true
 }
 
 export type WorkspaceFacetBucket = {
   count: number
+  instrument?: {
+    instrument_id?: string | null
+    instrument_name: string
+    unique_id: string
+  } | null
+  owner?: WorkspacePerson | null
+  project?: WorkspaceProjectReference | null
   value: string | null
 }
 
@@ -39,17 +63,32 @@ export type WorkspaceFacetPage = {
 export function normalizeSampleFacetFilters(
   filters: SampleFacetFilters
 ): SampleFacetFilters {
-  return filters.sampleType !== undefined
-    ? { sampleType: filters.sampleType }
-    : filters.sampleTypeIsNull
-      ? { sampleTypeIsNull: true }
-      : {}
+  return {
+    ...normalizeFacetValue(
+      "ownerId",
+      "ownerIdIsNull",
+      filters.ownerId,
+      filters.ownerIdIsNull
+    ),
+    ...normalizeFacetValue(
+      "sampleType",
+      "sampleTypeIsNull",
+      filters.sampleType,
+      filters.sampleTypeIsNull
+    ),
+  }
 }
 
 export function normalizeDatasetFacetFilters(
   filters: DatasetFacetFilters
 ): DatasetFacetFilters {
   return {
+    ...normalizeFacetValue(
+      "ownerId",
+      "ownerIdIsNull",
+      filters.ownerId,
+      filters.ownerIdIsNull
+    ),
     ...normalizeFacetValue(
       "dataFormat",
       "dataFormatIsNull",
@@ -68,6 +107,7 @@ export function normalizeDatasetFacetFilters(
       filters.sessionName,
       filters.sessionNameIsNull
     ),
+    ...(filters.instrumentMfidIsNull ? { instrumentMfidIsNull: true } : {}),
   }
 }
 

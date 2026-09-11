@@ -541,6 +541,8 @@ function ProjectDataFilterLink({
         datasetCursor: undefined,
         instrumentMfid:
           kind === "samples" ? undefined : previous.instrumentMfid,
+        instrumentMfidIsNull:
+          kind === "samples" ? undefined : previous.instrumentMfidIsNull,
         kind: kind === "samples" ? undefined : kind,
         measurement: kind === "samples" ? undefined : previous.measurement,
         measurementIsNull:

@@ -41,6 +41,8 @@ const nullableFacetFilter = z.string().max(255).optional()
 const nullSelector = z.literal(true).optional()
 
 const sampleFacetFilterFields = {
+  ownerId: nullableFacetFilter,
+  ownerIdIsNull: nullSelector,
   sampleType: nullableFacetFilter,
   sampleTypeIsNull: nullSelector,
 }
@@ -48,8 +50,11 @@ const sampleFacetFilterFields = {
 const datasetFacetFilterFields = {
   dataFormat: nullableFacetFilter,
   dataFormatIsNull: nullSelector,
+  instrumentMfidIsNull: nullSelector,
   measurement: nullableFacetFilter,
   measurementIsNull: nullSelector,
+  ownerId: nullableFacetFilter,
+  ownerIdIsNull: nullSelector,
   sessionName: nullableFacetFilter,
   sessionNameIsNull: nullSelector,
 }
@@ -125,6 +130,7 @@ function validateFacetSelections(
   const pairs = [
     ["dataFormat", "dataFormatIsNull"],
     ["measurement", "measurementIsNull"],
+    ["ownerId", "ownerIdIsNull"],
     ["sampleType", "sampleTypeIsNull"],
     ["sessionName", "sessionNameIsNull"],
   ] as const

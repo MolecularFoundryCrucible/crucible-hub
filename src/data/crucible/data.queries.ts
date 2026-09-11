@@ -36,6 +36,9 @@ export type DatasetCursorFilters = ProjectFilters &
   DatasetFacetFilters & {
     cursor?: string
     instrumentMfid?: string
+    instrumentMfidIsNull?: true
+    ownerId?: string
+    ownerIdIsNull?: true
     limit: number
   }
 
@@ -50,6 +53,9 @@ function collectionScopedPreviousData<TData>(
     createdFrom?: string
     createdTo?: string
     instrumentMfid?: string
+    instrumentMfidIsNull?: true
+    ownerId?: string
+    ownerIdIsNull?: true
     projectMfid?: string
     projectScope?: ProjectScope
     sampleType?: string
@@ -78,10 +84,13 @@ function collectionScopedPreviousData<TData>(
     "dataFormat",
     "dataFormatIsNull",
     "instrumentMfid",
+    "instrumentMfidIsNull",
     "projectMfid",
     "projectScope",
     "measurement",
     "measurementIsNull",
+    "ownerId",
+    "ownerIdIsNull",
     "sampleType",
     "sampleTypeIsNull",
     "sessionName",

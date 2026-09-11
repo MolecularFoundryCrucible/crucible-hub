@@ -36,6 +36,7 @@ export function SampleFacetFilter({
   })
   return (
     <FacetFilter
+      field={field}
       id={id}
       label={label}
       onChange={onChange}
@@ -61,6 +62,7 @@ export function DatasetFacetFilter({
   })
   return (
     <FacetFilter
+      field={field}
       id={id}
       label={label}
       onChange={onChange}
@@ -91,12 +93,16 @@ type FacetQuery = {
 }
 
 function FacetFilter({
+  field,
   id,
   label,
   onChange,
   query,
   selection,
-}: Omit<FacetFilterProps, "enabled" | "filters"> & { query: FacetQuery }) {
+}: Omit<FacetFilterProps, "enabled" | "filters"> & {
+  field: DatasetFacetField | SampleFacetField
+  query: FacetQuery
+}) {
   const items = query.data?.pages.flatMap((page) => page.items) ?? []
   const selectedAvailable = items.some((item) =>
     selection.kind === "null"
@@ -115,7 +121,9 @@ function FacetFilter({
         <NativeSelectOption value="all">All</NativeSelectOption>
         {selection.kind !== "all" && !selectedAvailable ? (
           <NativeSelectOption value={encodeSelection(selection)}>
-            {facetLabel(selection.kind === "null" ? null : selection.value)}
+            {facetValueLabel(
+              selection.kind === "null" ? null : selection.value
+            )}
           </NativeSelectOption>
         ) : null}
         {items.map((item) => (
@@ -127,7 +135,7 @@ function FacetFilter({
                 : { kind: "value", value: item.value }
             )}
           >
-            {facetLabel(item.value)} ({item.count})
+            {facetBucketLabel(item, field)} ({item.count})
           </NativeSelectOption>
         ))}
         {query.isPending ? (
@@ -177,9 +185,26 @@ function FacetFilter({
   )
 }
 
-function facetLabel(value: string | null) {
+function facetValueLabel(value: string | null) {
   if (value === null) return "Unspecified"
   return value === "" ? "Empty value" : value
+}
+
+function facetBucketLabel(
+  bucket: WorkspaceFacetBucket,
+  field: DatasetFacetField | SampleFacetField
+) {
+  if (field === "owner" && bucket.owner) {
+    const name = `${bucket.owner.first_name} ${bucket.owner.last_name}`.trim()
+    return bucket.owner.username ? `${name} (${bucket.owner.username})` : name
+  }
+  if (field === "instrument" && bucket.instrument) {
+    return bucket.instrument.instrument_name
+  }
+  if (field === "project" && bucket.project) {
+    return bucket.project.title ?? bucket.project.project_id
+  }
+  return facetValueLabel(bucket.value)
 }
 
 function encodeSelection(selection: FacetSelection) {

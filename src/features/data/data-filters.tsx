@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
+import { personQueryOptions } from "@/data/crucible/people.queries"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 import {
@@ -52,7 +53,6 @@ export function DataFilters({
     useState<readonly DataFilterError[]>(errors)
   const [filtersOpen, setFiltersOpen] = useState(errors.length > 0)
   const [projectName, setProjectName] = useState<string>()
-  const [instrumentName, setInstrumentName] = useState<string>()
   const scope = useWorkspaceScope()
   const resolution = resolveDataFilters(values)
   const activeProjectMfid = resolution.valid
@@ -62,6 +62,9 @@ export function DataFilters({
     resolution.valid && resolution.filters.kind === "datasets"
       ? resolution.filters.instrumentMfid
       : undefined
+  const activeOwnerId = resolution.valid
+    ? resolution.filters.ownerId
+    : undefined
   const projectResult = useQuery({
     ...projectQueryOptions(scope, activeProjectMfid ?? ""),
     enabled: Boolean(activeProjectMfid),
@@ -70,6 +73,10 @@ export function DataFilters({
     ...resourceQueryOptions(scope, activeInstrumentMfid ?? ""),
     enabled: Boolean(activeInstrumentMfid),
   })
+  const ownerResult = useQuery({
+    ...personQueryOptions(scope, activeOwnerId ?? ""),
+    enabled: Boolean(activeOwnerId),
+  })
   const resolvedProjectName = projectResult.data
     ? (projectResult.data.title ?? projectResult.data.project_id)
     : undefined
@@ -77,6 +84,9 @@ export function DataFilters({
     instrumentResult.data?.kind === "instrument"
       ? instrumentResult.data.name
       : undefined
+  const resolvedOwnerName = ownerResult.data
+    ? `${ownerResult.data.first_name} ${ownerResult.data.last_name}`.trim()
+    : undefined
   const errorKey = JSON.stringify(errors)
   const hasErrors = errors.length > 0
   const valuesKey = JSON.stringify(filterDraft(values))
@@ -85,7 +95,6 @@ export function DataFilters({
     setDraft(JSON.parse(valuesKey) as DataFilterSearch)
     setDraftErrors(errorKey ? JSON.parse(errorKey) : [])
     setProjectName(undefined)
-    setInstrumentName(undefined)
     if (hasErrors) setFiltersOpen(true)
   }, [errorKey, hasErrors, valuesKey])
 
@@ -102,6 +111,11 @@ export function DataFilters({
         resolution.filters.visibility
           ? `Visibility: ${capitalize(resolution.filters.visibility)}`
           : undefined,
+        resolution.filters.ownerIdIsNull
+          ? "Owner: Unspecified"
+          : activeOwnerId
+            ? `Owner: ${resolvedOwnerName ?? activeOwnerId}`
+            : undefined,
         facetSummary(
           "Sample type",
           resolution.filters.sampleType,
@@ -128,9 +142,11 @@ export function DataFilters({
         resolution.filters.createdTo
           ? `Created to (UTC): ${resolution.filters.createdTo}`
           : undefined,
-        activeInstrumentMfid
-          ? `Instrument: ${resolvedInstrumentName ?? activeInstrumentMfid}`
-          : undefined,
+        resolution.filters.instrumentMfidIsNull
+          ? "Instrument: Unspecified"
+          : activeInstrumentMfid
+            ? `Instrument: ${resolvedInstrumentName ?? activeInstrumentMfid}`
+            : undefined,
         resolution.filters.sort
           ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
           : undefined,
@@ -149,17 +165,6 @@ export function DataFilters({
             : undefined)
       )
     : undefined
-  const selectedInstrument = draft.instrumentMfid
-    ? chooserValue(
-        "instrument",
-        draft.instrumentMfid,
-        instrumentName ??
-          (draft.instrumentMfid === activeInstrumentMfid
-            ? resolvedInstrumentName
-            : undefined)
-      )
-    : undefined
-
   function apply(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const next = resolveDataFilters({ ...values, ...draft })
@@ -179,7 +184,6 @@ export function DataFilters({
     setDraft({ kind: kind === "all" ? undefined : kind })
     setDraftErrors([])
     setProjectName(undefined)
-    setInstrumentName(undefined)
     void navigate({
       search: (previous) => clearDataFilters(previous),
       state: {},
@@ -246,6 +250,55 @@ export function DataFilters({
                 </NativeSelectOption>
               </NativeSelect>
             </Field>
+            {kind === "samples" && resolution.valid ? (
+              <SampleFacetFilter
+                enabled={filtersOpen}
+                field="owner"
+                filters={resolution.filters}
+                id="data-owner"
+                label="Owner"
+                onChange={(selection) =>
+                  setDraft((current) =>
+                    setFacetDraft(
+                      current,
+                      "ownerId",
+                      "ownerIdSet",
+                      "ownerIdIsNull",
+                      selection
+                    )
+                  )
+                }
+                selection={facetSelection(
+                  draft.ownerId,
+                  draft.ownerIdSet,
+                  draft.ownerIdIsNull
+                )}
+              />
+            ) : kind === "datasets" && resolution.valid ? (
+              <DatasetFacetFilter
+                enabled={filtersOpen}
+                field="owner"
+                filters={resolution.filters}
+                id="data-owner"
+                label="Owner"
+                onChange={(selection) =>
+                  setDraft((current) =>
+                    setFacetDraft(
+                      current,
+                      "ownerId",
+                      "ownerIdSet",
+                      "ownerIdIsNull",
+                      selection
+                    )
+                  )
+                }
+                selection={facetSelection(
+                  draft.ownerId,
+                  draft.ownerIdSet,
+                  draft.ownerIdIsNull
+                )}
+              />
+            ) : null}
             {draft.projectMfid ? (
               <Field data-invalid={invalid("projectScope")}>
                 <FieldLabel htmlFor="data-project-relationship">
@@ -434,28 +487,30 @@ export function DataFilters({
                 value={draft.createdTo ?? ""}
               />
             </Field>
-            {kind === "datasets" ? (
-              <Field data-invalid={invalid("instrumentMfid")}>
-                <FieldLabel htmlFor="data-instrument-trigger">
-                  Acquisition instrument
-                </FieldLabel>
-                <ResourceChooser
-                  describedBy={
-                    invalid("instrumentMfid") ? errorDescription : undefined
-                  }
-                  invalid={invalid("instrumentMfid")}
-                  kind="instrument"
-                  onChange={(instrument) => {
-                    setDraft((current) => ({
-                      ...current,
-                      instrumentMfid: instrument?.unique_id,
-                    }))
-                    setInstrumentName(instrument?.name)
-                  }}
-                  triggerId="data-instrument-trigger"
-                  value={selectedInstrument}
-                />
-              </Field>
+            {kind === "datasets" && resolution.valid ? (
+              <DatasetFacetFilter
+                enabled={filtersOpen}
+                field="instrument"
+                filters={resolution.filters}
+                id="data-instrument"
+                label="Acquisition instrument"
+                onChange={(selection) => {
+                  setDraft((current) => ({
+                    ...current,
+                    instrumentMfid:
+                      selection.kind === "value" ? selection.value : undefined,
+                    instrumentMfidIsNull:
+                      selection.kind === "null" || undefined,
+                  }))
+                }}
+                selection={
+                  draft.instrumentMfidIsNull
+                    ? { kind: "null" }
+                    : draft.instrumentMfid
+                      ? { kind: "value", value: draft.instrumentMfid }
+                      : { kind: "all" }
+                }
+              />
             ) : null}
             {kind !== "all" ? (
               <>
@@ -544,10 +599,14 @@ function filterDraft(values: DataSearch): DataFilterSearch {
     dataFormatSet: values.dataFormatSet,
     direction: values.direction,
     instrumentMfid: values.instrumentMfid,
+    instrumentMfidIsNull: values.instrumentMfidIsNull,
     kind: values.kind,
     measurement: values.measurement,
     measurementIsNull: values.measurementIsNull,
     measurementSet: values.measurementSet,
+    ownerId: values.ownerId,
+    ownerIdIsNull: values.ownerIdIsNull,
+    ownerIdSet: values.ownerIdSet,
     projectMfid: values.projectMfid,
     projectScope: values.projectScope,
     sampleType: values.sampleType,
@@ -582,12 +641,18 @@ function facetSelection(
 
 function setFacetDraft(
   filters: DataFilterSearch,
-  valueKey: "dataFormat" | "measurement" | "sampleType" | "sessionName",
+  valueKey:
+    "dataFormat" | "measurement" | "ownerId" | "sampleType" | "sessionName",
   selectedKey:
-    "dataFormatSet" | "measurementSet" | "sampleTypeSet" | "sessionNameSet",
+    | "dataFormatSet"
+    | "measurementSet"
+    | "ownerIdSet"
+    | "sampleTypeSet"
+    | "sessionNameSet",
   nullKey:
     | "dataFormatIsNull"
     | "measurementIsNull"
+    | "ownerIdIsNull"
     | "sampleTypeIsNull"
     | "sessionNameIsNull",
   selection: FacetSelection
