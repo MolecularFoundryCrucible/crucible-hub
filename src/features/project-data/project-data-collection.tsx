@@ -230,6 +230,7 @@ function ProjectBrowseFrame({
       ...(view === "grouped"
         ? clearCollectionGroupFilterSearch(browseField)
         : {}),
+      groupBy: view === "grouped" ? browseField : undefined,
       view: view === "grouped" ? "grouped" : undefined,
     })
   }

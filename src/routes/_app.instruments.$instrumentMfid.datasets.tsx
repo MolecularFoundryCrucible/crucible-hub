@@ -185,6 +185,7 @@ function InstrumentDatasetsPage() {
         onViewChange={(view) =>
           updateBrowse({
             ...collectionBrowseSearchState({ kind: "all" }),
+            groupBy: view === "grouped" ? browse.field : undefined,
             view: view === "grouped" ? "grouped" : undefined,
           })
         }

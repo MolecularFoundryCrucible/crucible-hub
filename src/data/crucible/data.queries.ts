@@ -136,7 +136,8 @@ export function datasetInstrumentScopedPreviousData<TData>(
   projectMfid?: string,
   projectScope?: ProjectScope,
   collectionFilters: CollectionFilters = {},
-  collectionQuery: CollectionQueryOptions & DatasetFacetFilters = {}
+  collectionQuery: CollectionQueryOptions & DatasetFacetFilters = {},
+  projectMfidIsNull?: true
 ) {
   const normalizedCollectionFilters =
     normalizeCollectionFilters(collectionFilters)
@@ -146,6 +147,7 @@ export function datasetInstrumentScopedPreviousData<TData>(
     {
       instrumentMfid,
       projectMfid,
+      projectMfidIsNull,
       projectScope,
       ...normalizedCollectionFilters,
       ...normalizeCollectionQueryOptions(collectionQuery),
@@ -289,7 +291,8 @@ export function datasetsQueryOptions(
         projectFilters.projectMfid,
         projectFilters.projectScope,
         collectionFilters,
-        { ...collectionQuery, ...facetFilters }
+        { ...collectionQuery, ...facetFilters },
+        projectFilters.projectMfidIsNull
       ),
     retry: scenario ? false : undefined,
   })

@@ -195,6 +195,12 @@ export function facetBucketLabel(
   bucket: WorkspaceFacetBucket,
   field: DatasetFacetField | SampleFacetField
 ) {
+  if (bucket.value === null) {
+    if (field === "owner") return "Unknown owner"
+    if (field === "instrument") return "No registered instrument"
+    if (field === "project") return "No primary project"
+    return "Unspecified"
+  }
   if (field === "owner" && bucket.owner) {
     const name = personDisplayName(bucket.owner)
     const username = bucket.owner.username?.trim().replace(/^@/, "")

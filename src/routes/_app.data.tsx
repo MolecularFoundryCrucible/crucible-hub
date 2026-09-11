@@ -627,6 +627,7 @@ function DataBrowseFrame({
           ? clearCollectionGroupFilterSearch(browseField)
           : {}),
         datasetCursor: undefined,
+        groupBy: view === "grouped" ? browseField : undefined,
         preview: undefined,
         sampleCursor: undefined,
         view: view === "grouped" ? "grouped" : undefined,

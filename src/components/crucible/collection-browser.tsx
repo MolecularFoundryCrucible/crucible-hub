@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/empty"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { CollectionBrowseOption } from "@/data/crucible/collection-browse"
 import {
   datasetFacetQueryOptions,
@@ -36,7 +37,7 @@ import type {
   SampleFacetFilters,
   WorkspaceFacetBucket,
 } from "@/data/crucible/facets"
-import { facetBucketLabel, facetValueLabel } from "./collection-facet-filter"
+import { facetBucketLabel } from "./collection-facet-filter"
 
 export function CollectionBrowseToolbar<TField extends string>({
   field,
@@ -180,6 +181,7 @@ function CollectionBrowser({
 }) {
   const items = query.data?.pages.flatMap((page) => page.items) ?? []
   const title = facetFieldLabel(field)
+  const selectionLabel = facetFieldSelectionLabel(field)
   const selectedAvailable = items.some((bucket) =>
     sameSelection(
       selection,
@@ -189,7 +191,7 @@ function CollectionBrowser({
     )
   )
   return (
-    <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+    <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[var(--container-group-directory)_minmax(0,1fr)]">
       <Card size="sm">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
@@ -198,10 +200,7 @@ function CollectionBrowser({
           {query.isPending ? (
             <div className="grid gap-1" aria-label={`Loading ${title}`}>
               {Array.from({ length: 4 }, (_, index) => (
-                <div
-                  className="h-9 animate-pulse rounded-lg bg-muted"
-                  key={index}
-                />
+                <Skeleton className="h-8 w-full" key={index} />
               ))}
             </div>
           ) : query.isError && items.length === 0 ? (
@@ -240,8 +239,13 @@ function CollectionBrowser({
                   <span className="flex min-w-0 items-center gap-2">
                     <FacetFieldIcon field={field} />
                     <span className="truncate">
-                      {facetValueLabel(
-                        selection.kind === "null" ? null : selection.value
+                      {facetBucketLabel(
+                        {
+                          count: 0,
+                          value:
+                            selection.kind === "null" ? null : selection.value,
+                        },
+                        field
                       )}
                     </span>
                   </span>
@@ -309,7 +313,7 @@ function CollectionBrowser({
         {selection.kind === "all" ? (
           <Empty className="min-h-state border">
             <EmptyHeader>
-              <EmptyTitle>Choose a {title.toLocaleLowerCase()}</EmptyTitle>
+              <EmptyTitle>Choose a {selectionLabel}</EmptyTitle>
               <EmptyDescription>
                 Select a group to browse its resources.
               </EmptyDescription>
@@ -364,6 +368,16 @@ function facetFieldLabel(field: DatasetFacetField | SampleFacetField) {
   if (field === "project") return "Primary projects"
   if (field === "session") return "Sessions"
   return "Measurements"
+}
+
+function facetFieldSelectionLabel(field: DatasetFacetField | SampleFacetField) {
+  if (field === "sample_type") return "sample type"
+  if (field === "data_format") return "data format"
+  if (field === "owner") return "owner"
+  if (field === "instrument") return "instrument"
+  if (field === "project") return "primary project"
+  if (field === "session") return "session"
+  return "measurement"
 }
 
 function sameSelection(left: FacetSelection, right: FacetSelection) {
