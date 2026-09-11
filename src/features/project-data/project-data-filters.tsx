@@ -163,6 +163,9 @@ export function ProjectDataFilters({
       params: { projectMfid },
       search: (previous) => ({
         ...previous,
+        groupValue: undefined,
+        groupValueIsNull: undefined,
+        groupValueSet: undefined,
         createdFrom: next.filters.createdFrom,
         createdTo: next.filters.createdTo,
         dataFormat: next.filters.dataFormat,

@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
+- Added URL-backed, API-grouped browsing for type-specific global Data, Project Data, and Instrument Datasets, with reusable responsive group directories, server-owned counts and null buckets, lazy selected-group loading, and paginated group values.
 - Added route-backed ownership filtering across Data, Projects, and Instruments, API-owned sorting and bounded sample-type, measurement, session, data-format, resolved-owner, and resolved-instrument facets in global and project-scoped type-specific Data views, explicit collection totals, and cursor pagination for project and instrument directories.
 - Show each sample and dataset MFID as a scannable QR code in its Identity card.
 - Added a dedicated dataset Processing page with file MFIDs, latest ingestion state, request history, dynamic ingestor selection, partial-success multi-file ingestion requests, and retained quick downloads on Overview.

@@ -3,6 +3,10 @@ import { Link, createFileRoute, getRouteApi } from "@tanstack/react-router"
 import { z } from "zod"
 
 import {
+  CollectionBrowseToolbar,
+  DatasetCollectionBrowser,
+} from "@/components/crucible/collection-browser"
+import {
   CollectionLoadError,
   CollectionTablePending,
   CollectionUpdateError,
@@ -12,11 +16,20 @@ import { InstrumentDatasetCollection } from "@/components/crucible/instrument-da
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import {
+  collectionBrowseSearchFields,
+  collectionBrowseSearchState,
+  datasetFiltersForGroup,
+  instrumentDatasetBrowseOptions,
+  resolveCollectionBrowse,
+} from "@/data/crucible/collection-browse"
+import type { FacetSelection } from "@/data/crucible/facets"
+import {
   dataPageLimit,
   datasetsQueryOptions,
 } from "@/data/crucible/data.queries"
 
 const instrumentDatasetSearchSchema = z.object({
+  ...collectionBrowseSearchFields,
   cursor: z.string().min(1).max(2048).optional().catch(undefined),
 })
 
@@ -26,14 +39,31 @@ export const Route = createFileRoute(
   "/_app/instruments/$instrumentMfid/datasets"
 )({
   validateSearch: instrumentDatasetSearchSchema,
-  loaderDeps: ({ search }) => ({ cursor: search.cursor }),
+  loaderDeps: ({ search }) => ({
+    cursor: search.cursor,
+    groupBy: search.groupBy,
+    groupValue: search.groupValue,
+    groupValueIsNull: search.groupValueIsNull,
+    groupValueSet: search.groupValueSet,
+    view: search.view,
+  }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const instrument = (await parentMatchPromise).loaderData
     if (!instrument?.isInstrument || !instrument.instrumentMfid) return
 
+    const browse = resolveCollectionBrowse(deps, instrumentDatasetBrowseOptions)
+    if (browse.view === "grouped" && browse.selection.kind === "all") return
+    const filters =
+      browse.view === "grouped"
+        ? datasetFiltersForGroup(
+            { instrumentMfid: instrument.instrumentMfid },
+            browse.field,
+            browse.selection
+          )
+        : { instrumentMfid: instrument.instrumentMfid }
     const options = datasetsQueryOptions(instrument.scope, {
       cursor: deps.cursor,
-      instrumentMfid: instrument.instrumentMfid,
+      ...filters,
       limit: dataPageLimit,
     })
     const hasData =
@@ -56,50 +86,57 @@ function InstrumentDatasetsPending() {
 
 function InstrumentDatasetsPage() {
   const { instrumentMfid: routeInstrumentMfid } = Route.useParams()
-  const { cursor } = Route.useSearch()
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const { cursor } = search
   const instrument = instrumentRoute.useLoaderData()
   const scope = useWorkspaceScope()
   const instrumentMfid = instrument?.instrumentMfid ?? ""
+  const browse = resolveCollectionBrowse(search, instrumentDatasetBrowseOptions)
+  const collectionFilters =
+    browse.view === "grouped"
+      ? datasetFiltersForGroup(
+          { instrumentMfid },
+          browse.field,
+          browse.selection
+        )
+      : { instrumentMfid }
   const result = useQuery({
     ...datasetsQueryOptions(scope, {
       cursor,
-      instrumentMfid,
+      ...collectionFilters,
       limit: dataPageLimit,
     }),
-    enabled: Boolean(instrumentMfid),
+    enabled:
+      Boolean(instrumentMfid) &&
+      (browse.view !== "grouped" || browse.selection.kind !== "all"),
   })
 
   if (!instrumentMfid) return null
 
-  if (result.isPending) return <InstrumentDatasetsPending />
-  if (result.isError && !result.data) {
-    return (
-      <>
-        <CollectionLoadError
-          label="Datasets"
-          retry={() => void result.refetch()}
-        />
-        {cursor ? (
-          <nav
-            className="flex justify-end"
-            aria-label="Instrument dataset pages"
+  const content = result.isPending ? (
+    <InstrumentDatasetsPending />
+  ) : result.isError && !result.data ? (
+    <>
+      <CollectionLoadError
+        label="Datasets"
+        retry={() => void result.refetch()}
+      />
+      {cursor ? (
+        <nav className="flex justify-end" aria-label="Instrument dataset pages">
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            from="/instruments/$instrumentMfid/datasets"
+            params={{ instrumentMfid: routeInstrumentMfid }}
+            search={(previous) => ({ ...previous, cursor: undefined })}
+            to="/instruments/$instrumentMfid/datasets"
           >
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              from="/instruments/$instrumentMfid/datasets"
-              params={{ instrumentMfid: routeInstrumentMfid }}
-              search={(previous) => ({ ...previous, cursor: undefined })}
-              to="/instruments/$instrumentMfid/datasets"
-            >
-              First datasets
-            </Link>
-          </nav>
-        ) : null}
-      </>
-    )
-  }
-
-  return (
+            First datasets
+          </Link>
+        </nav>
+      ) : null}
+    </>
+  ) : (
     <>
       <CollectionUpdateStatus label="datasets" updating={result.isFetching} />
       {result.isError ? (
@@ -116,5 +153,56 @@ function InstrumentDatasetsPage() {
         updating={result.isFetching}
       />
     </>
+  )
+
+  function updateBrowse(values: Record<string, unknown>) {
+    void navigate({
+      params: { instrumentMfid: routeInstrumentMfid },
+      search: (previous) => ({
+        ...previous,
+        cursor: undefined,
+        ...values,
+      }),
+      to: "/instruments/$instrumentMfid/datasets",
+    })
+  }
+
+  function selectGroup(selection: FacetSelection) {
+    updateBrowse(collectionBrowseSearchState(selection))
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <CollectionBrowseToolbar
+        field={browse.field}
+        id="instrument-dataset-browse-field"
+        onFieldChange={(field) =>
+          updateBrowse({
+            ...collectionBrowseSearchState({ kind: "all" }),
+            groupBy: field,
+          })
+        }
+        onViewChange={(view) =>
+          updateBrowse({
+            ...collectionBrowseSearchState({ kind: "all" }),
+            view: view === "grouped" ? "grouped" : undefined,
+          })
+        }
+        options={instrumentDatasetBrowseOptions}
+        view={browse.view}
+      />
+      {browse.view === "grouped" ? (
+        <DatasetCollectionBrowser
+          field={browse.field}
+          filters={{ instrumentMfid }}
+          onSelect={selectGroup}
+          selection={browse.selection}
+        >
+          {content}
+        </DatasetCollectionBrowser>
+      ) : (
+        content
+      )}
+    </div>
   )
 }

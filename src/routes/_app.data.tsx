@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
 import {
+  CollectionBrowseToolbar,
+  DatasetCollectionBrowser,
+  SampleCollectionBrowser,
+} from "@/components/crucible/collection-browser"
+import {
   CollectionLoadError,
   CollectionTablePending,
   CollectionUpdateError,
@@ -57,6 +62,15 @@ import {
   samplesQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
+import {
+  collectionBrowseSearchState,
+  clearCollectionGroupFilterSearch,
+  datasetFiltersForGroup,
+  globalDatasetBrowseOptions,
+  globalSampleBrowseOptions,
+  resolveCollectionBrowse,
+  sampleFiltersForGroup,
+} from "@/data/crucible/collection-browse"
 import type {
   CollectionQueryOptions,
   ResourceSort,
@@ -65,6 +79,9 @@ import type {
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import type {
   DatasetFacetFilters,
+  FacetSelection,
+  DatasetFacetField,
+  SampleFacetField,
   SampleFacetFilters,
 } from "@/data/crucible/facets"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
@@ -81,6 +98,10 @@ export const Route = createFileRoute("/_app/data")({
     dataFormatSet: search.dataFormatSet,
     datasetCursor: search.datasetCursor,
     direction: search.direction,
+    groupBy: search.groupBy,
+    groupValue: search.groupValue,
+    groupValueIsNull: search.groupValueIsNull,
+    groupValueSet: search.groupValueSet,
     instrumentMfid: search.instrumentMfid,
     instrumentMfidIsNull: search.instrumentMfidIsNull,
     kind: search.kind,
@@ -101,16 +122,38 @@ export const Route = createFileRoute("/_app/data")({
     sessionNameSet: search.sessionNameSet,
     sort: search.sort,
     visibility: search.visibility,
+    view: search.view,
   }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
     const resolution = resolveDataFilters(deps)
     if (!resolution.valid) return
-    const filters = collectionQueryFilters(resolution.filters)
+    const baseFilters = collectionQueryFilters(resolution.filters)
+    const sampleBrowse =
+      resolution.filters.kind === "samples"
+        ? resolveCollectionBrowse(deps, globalSampleBrowseOptions)
+        : undefined
+    const datasetBrowse =
+      resolution.filters.kind === "datasets"
+        ? resolveCollectionBrowse(deps, globalDatasetBrowseOptions)
+        : undefined
+    const hasGroupedSelection =
+      (sampleBrowse?.view !== "grouped" ||
+        sampleBrowse.selection.kind !== "all") &&
+      (datasetBrowse?.view !== "grouped" ||
+        datasetBrowse.selection.kind !== "all")
 
     const missing: Promise<void>[] = []
-    if (resolution.filters.kind !== "datasets") {
+    if (resolution.filters.kind !== "datasets" && hasGroupedSelection) {
+      const filters =
+        sampleBrowse?.view === "grouped"
+          ? sampleFiltersForGroup(
+              baseFilters,
+              sampleBrowse.field,
+              sampleBrowse.selection
+            )
+          : baseFilters
       const options = samplesQueryOptions(source.scope, {
         cursor: deps.sampleCursor,
         ...filters,
@@ -121,11 +164,18 @@ export const Route = createFileRoute("/_app/data")({
       const request = context.queryClient.prefetchQuery(options)
       if (!hasData) missing.push(request)
     }
-    if (resolution.filters.kind !== "samples") {
+    if (resolution.filters.kind !== "samples" && hasGroupedSelection) {
+      const filters =
+        datasetBrowse?.view === "grouped"
+          ? datasetFiltersForGroup(
+              baseFilters,
+              datasetBrowse.field,
+              datasetBrowse.selection
+            )
+          : baseFilters
       const options = datasetsQueryOptions(source.scope, {
         cursor: deps.datasetCursor,
         ...filters,
-        instrumentMfid: resolution.filters.instrumentMfid,
         limit: dataPageLimit,
       })
       const hasData =
@@ -213,28 +263,58 @@ function DataResults({
   const showSamples = kind === "all" || kind === "samples"
   const showDatasets = kind === "all" || kind === "datasets"
   const collectionFilters = collectionQueryFilters(filters)
+  const sampleBrowse =
+    kind === "samples"
+      ? resolveCollectionBrowse(search, globalSampleBrowseOptions)
+      : undefined
+  const datasetBrowse =
+    kind === "datasets"
+      ? resolveCollectionBrowse(search, globalDatasetBrowseOptions)
+      : undefined
+  const sampleCollectionFilters =
+    sampleBrowse?.view === "grouped"
+      ? sampleFiltersForGroup(
+          collectionFilters,
+          sampleBrowse.field,
+          sampleBrowse.selection
+        )
+      : collectionFilters
+  const datasetCollectionFilters =
+    datasetBrowse?.view === "grouped"
+      ? datasetFiltersForGroup(
+          collectionFilters,
+          datasetBrowse.field,
+          datasetBrowse.selection
+        )
+      : collectionFilters
+  const loadSamples =
+    showSamples &&
+    (sampleBrowse?.view !== "grouped" || sampleBrowse.selection.kind !== "all")
+  const loadDatasets =
+    showDatasets &&
+    (datasetBrowse?.view !== "grouped" ||
+      datasetBrowse.selection.kind !== "all")
   const sampleResult = useQuery({
     ...samplesQueryOptions(scope, {
       cursor: search.sampleCursor,
-      ...collectionFilters,
+      ...sampleCollectionFilters,
       limit: dataPageLimit,
     }),
-    enabled: showSamples,
+    enabled: loadSamples,
   })
   const datasetResult = useQuery({
     ...datasetsQueryOptions(scope, {
       cursor: search.datasetCursor,
-      ...collectionFilters,
-      instrumentMfid: filters.instrumentMfid,
+      ...datasetCollectionFilters,
       limit: dataPageLimit,
     }),
-    enabled: showDatasets,
+    enabled: loadDatasets,
   })
 
   const samplePage = sampleResult.data
   const datasetPage = datasetResult.data
-  const samplePending = showSamples && sampleResult.isPending
-  const datasetPending = showDatasets && datasetResult.isPending
+  const samplePending = loadSamples && sampleResult.isPending
+  const datasetPending = loadDatasets && datasetResult.isPending
   const hasReadableData = Boolean(
     (showSamples && samplePage) || (showDatasets && datasetPage)
   )
@@ -248,6 +328,9 @@ function DataResults({
     filters.dataFormat !== undefined ||
     filters.dataFormatIsNull ||
     filters.instrumentMfid ||
+    filters.instrumentMfidIsNull ||
+    filters.ownerId !== undefined ||
+    filters.ownerIdIsNull ||
     filters.projectMfid ||
     filters.measurement !== undefined ||
     filters.measurementIsNull ||
@@ -295,214 +378,346 @@ function DataResults({
         sampleLabel={collectionLabel("Samples", samplePage)}
       />
       <DataFilters errors={[]} values={search} />
+      <DataBrowseFrame
+        datasetBrowse={datasetBrowse}
+        filters={collectionFilters}
+        sampleBrowse={sampleBrowse}
+      >
+        {!hasReadableData && (samplePending || datasetPending) ? (
+          <CollectionTablePending label="data" />
+        ) : !hasReadableData ? (
+          <CollectionLoadError label="Data" retry={retrySelected} />
+        ) : (
+          <>
+            {showSamples && sampleResult.isError ? (
+              <CollectionUpdateError
+                label="Samples"
+                preserved={Boolean(samplePage)}
+                retry={() => void sampleResult.refetch()}
+              />
+            ) : null}
+            {showDatasets && datasetResult.isError ? (
+              <CollectionUpdateError
+                label="Datasets"
+                preserved={Boolean(datasetPage)}
+                retry={() => void datasetResult.refetch()}
+              />
+            ) : null}
 
-      {!hasReadableData && (samplePending || datasetPending) ? (
-        <CollectionTablePending label="data" />
-      ) : !hasReadableData ? (
-        <CollectionLoadError label="Data" retry={retrySelected} />
-      ) : (
-        <>
-          {showSamples && sampleResult.isError ? (
-            <CollectionUpdateError
-              label="Samples"
-              preserved={Boolean(samplePage)}
-              retry={() => void sampleResult.refetch()}
-            />
-          ) : null}
-          {showDatasets && datasetResult.isError ? (
-            <CollectionUpdateError
-              label="Datasets"
-              preserved={Boolean(datasetPage)}
-              retry={() => void datasetResult.refetch()}
-            />
-          ) : null}
+            {hasRows ? (
+              <Card aria-busy={updating}>
+                <CardContent className="px-0">
+                  <Table className="resource-collection-table table-fixed">
+                    <colgroup>
+                      <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
+                      <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
+                      <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
+                      <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
+                      <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
+                      <col className="w-data-action-column" />
+                    </colgroup>
+                    <TableHeader>
+                      <TableRow>
+                        {kind === "all" ? (
+                          <TableHead>Name</TableHead>
+                        ) : (
+                          <SortableTableHead
+                            active={filters.sort === "name"}
+                            direction={filters.direction ?? "desc"}
+                            field="name"
+                            label="Name"
+                            onChange={changeSort}
+                          />
+                        )}
+                        <TableHead className="hidden xl:table-cell">
+                          Type
+                        </TableHead>
+                        <TableHead>Project</TableHead>
+                        <TableHead>Owner</TableHead>
+                        {kind === "all" ? (
+                          <TableHead>Updated</TableHead>
+                        ) : (
+                          <SortableTableHead
+                            active={filters.sort === "updated"}
+                            direction={filters.direction ?? "desc"}
+                            field="updated"
+                            label="Updated"
+                            onChange={changeSort}
+                          />
+                        )}
+                        <TableHead className="text-center">
+                          <span className="sr-only">Open</span>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {showSamples &&
+                        samplePage?.items.map((sample) => (
+                          <TableRow key={sample.unique_id}>
+                            <ResourceCollectionNameCell
+                              className="resource-collection-name"
+                              kind="sample"
+                              mfid={sample.unique_id}
+                              name={sample.sample_name}
+                              subtype={
+                                sample.sample_type ?? "Unspecified sample type"
+                              }
+                              subtypeVisibility="compact"
+                            />
+                            <TableCell className="resource-collection-type hidden xl:table-cell">
+                              <span
+                                className="block truncate"
+                                title={sample.sample_type ?? undefined}
+                              >
+                                {sample.sample_type ?? "Unspecified"}
+                              </span>
+                            </TableCell>
+                            <ResourceProjectCell
+                              project={sample.project}
+                              projectId={sample.project_id}
+                              relation={sample.project_relation}
+                            />
+                            <ResourceOwnerCell owner={sample.owner} />
+                            <ResourceUpdatedCell
+                              value={
+                                sample.modification_time ?? sample.creation_time
+                              }
+                            />
+                            <ResourceOpenCell
+                              kind="sample"
+                              mfid={sample.unique_id}
+                              name={sample.sample_name}
+                            />
+                          </TableRow>
+                        ))}
+                      {showDatasets &&
+                        datasetPage?.items.map((dataset) => (
+                          <TableRow key={dataset.unique_id}>
+                            <ResourceCollectionNameCell
+                              className="resource-collection-name"
+                              kind="dataset"
+                              mfid={dataset.unique_id}
+                              name={dataset.dataset_name ?? "Untitled dataset"}
+                              subtype={
+                                dataset.measurement ?? "Unspecified measurement"
+                              }
+                              subtypeVisibility="compact"
+                            />
+                            <TableCell className="resource-collection-type hidden xl:table-cell">
+                              <span
+                                className="block truncate"
+                                title={dataset.measurement ?? undefined}
+                              >
+                                {dataset.measurement ?? "Unspecified"}
+                              </span>
+                            </TableCell>
+                            <ResourceProjectCell
+                              project={dataset.project}
+                              projectId={dataset.project_id}
+                              relation={dataset.project_relation}
+                            />
+                            <ResourceOwnerCell owner={dataset.owner} />
+                            <ResourceUpdatedCell
+                              value={
+                                dataset.modification_time ??
+                                dataset.creation_time
+                              }
+                            />
+                            <ResourceOpenCell
+                              kind="dataset"
+                              mfid={dataset.unique_id}
+                              name={dataset.dataset_name ?? "Untitled dataset"}
+                            />
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            ) : (
+              <Empty className="min-h-state border">
+                <EmptyHeader>
+                  <EmptyTitle>
+                    {hasActiveFilters
+                      ? `No ${kind === "all" ? "data" : kind} match these filters`
+                      : `No ${kind === "all" ? "data are" : `${kind} are`} available`}
+                  </EmptyTitle>
+                  <EmptyDescription>
+                    {hasActiveFilters
+                      ? "Try changing the filters or data type."
+                      : "New resources will appear here when they are available."}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </>
+        )}
+        {!updating &&
+        ((showSamples && samplePage?.nextCursor) ||
+          (showDatasets && datasetPage?.nextCursor)) ? (
+          <nav
+            className="flex flex-wrap items-center justify-end gap-2"
+            aria-label="Data pages"
+          >
+            {showSamples && samplePage?.nextCursor && (
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                from="/data"
+                search={(previous) => ({
+                  ...previous,
+                  preview: undefined,
+                  sampleCursor: samplePage.nextCursor ?? undefined,
+                })}
+                state={{}}
+                to="/data"
+              >
+                Next samples
+              </Link>
+            )}
+            {showDatasets && datasetPage?.nextCursor && (
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                from="/data"
+                search={(previous) => ({
+                  ...previous,
+                  datasetCursor: datasetPage.nextCursor ?? undefined,
+                  preview: undefined,
+                })}
+                state={{}}
+                to="/data"
+              >
+                Next datasets
+              </Link>
+            )}
+          </nav>
+        ) : null}
+      </DataBrowseFrame>
+    </div>
+  )
+}
 
-          {hasRows ? (
-            <Card aria-busy={updating}>
-              <CardContent className="px-0">
-                <Table className="resource-collection-table table-fixed">
-                  <colgroup>
-                    <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
-                    <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
-                    <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
-                    <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
-                    <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
-                    <col className="w-data-action-column" />
-                  </colgroup>
-                  <TableHeader>
-                    <TableRow>
-                      {kind === "all" ? (
-                        <TableHead>Name</TableHead>
-                      ) : (
-                        <SortableTableHead
-                          active={filters.sort === "name"}
-                          direction={filters.direction ?? "desc"}
-                          field="name"
-                          label="Name"
-                          onChange={changeSort}
-                        />
-                      )}
-                      <TableHead className="hidden xl:table-cell">
-                        Type
-                      </TableHead>
-                      <TableHead>Project</TableHead>
-                      <TableHead>Owner</TableHead>
-                      {kind === "all" ? (
-                        <TableHead>Updated</TableHead>
-                      ) : (
-                        <SortableTableHead
-                          active={filters.sort === "updated"}
-                          direction={filters.direction ?? "desc"}
-                          field="updated"
-                          label="Updated"
-                          onChange={changeSort}
-                        />
-                      )}
-                      <TableHead className="text-center">
-                        <span className="sr-only">Open</span>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {showSamples &&
-                      samplePage?.items.map((sample) => (
-                        <TableRow key={sample.unique_id}>
-                          <ResourceCollectionNameCell
-                            className="resource-collection-name"
-                            kind="sample"
-                            mfid={sample.unique_id}
-                            name={sample.sample_name}
-                            subtype={
-                              sample.sample_type ?? "Unspecified sample type"
-                            }
-                            subtypeVisibility="compact"
-                          />
-                          <TableCell className="resource-collection-type hidden xl:table-cell">
-                            <span
-                              className="block truncate"
-                              title={sample.sample_type ?? undefined}
-                            >
-                              {sample.sample_type ?? "Unspecified"}
-                            </span>
-                          </TableCell>
-                          <ResourceProjectCell
-                            project={sample.project}
-                            projectId={sample.project_id}
-                            relation={sample.project_relation}
-                          />
-                          <ResourceOwnerCell owner={sample.owner} />
-                          <ResourceUpdatedCell
-                            value={
-                              sample.modification_time ?? sample.creation_time
-                            }
-                          />
-                          <ResourceOpenCell
-                            kind="sample"
-                            mfid={sample.unique_id}
-                            name={sample.sample_name}
-                          />
-                        </TableRow>
-                      ))}
-                    {showDatasets &&
-                      datasetPage?.items.map((dataset) => (
-                        <TableRow key={dataset.unique_id}>
-                          <ResourceCollectionNameCell
-                            className="resource-collection-name"
-                            kind="dataset"
-                            mfid={dataset.unique_id}
-                            name={dataset.dataset_name ?? "Untitled dataset"}
-                            subtype={
-                              dataset.measurement ?? "Unspecified measurement"
-                            }
-                            subtypeVisibility="compact"
-                          />
-                          <TableCell className="resource-collection-type hidden xl:table-cell">
-                            <span
-                              className="block truncate"
-                              title={dataset.measurement ?? undefined}
-                            >
-                              {dataset.measurement ?? "Unspecified"}
-                            </span>
-                          </TableCell>
-                          <ResourceProjectCell
-                            project={dataset.project}
-                            projectId={dataset.project_id}
-                            relation={dataset.project_relation}
-                          />
-                          <ResourceOwnerCell owner={dataset.owner} />
-                          <ResourceUpdatedCell
-                            value={
-                              dataset.modification_time ?? dataset.creation_time
-                            }
-                          />
-                          <ResourceOpenCell
-                            kind="dataset"
-                            mfid={dataset.unique_id}
-                            name={dataset.dataset_name ?? "Untitled dataset"}
-                          />
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          ) : (
-            <Empty className="min-h-state border">
-              <EmptyHeader>
-                <EmptyTitle>
-                  {hasActiveFilters
-                    ? `No ${kind === "all" ? "data" : kind} match these filters`
-                    : `No ${kind === "all" ? "data are" : `${kind} are`} available`}
-                </EmptyTitle>
-                <EmptyDescription>
-                  {hasActiveFilters
-                    ? "Try changing the filters or data type."
-                    : "New resources will appear here when they are available."}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </>
-      )}
-      {!updating &&
-      ((showSamples && samplePage?.nextCursor) ||
-        (showDatasets && datasetPage?.nextCursor)) ? (
-        <nav
-          className="flex flex-wrap items-center justify-end gap-2"
-          aria-label="Data pages"
+type DataBrowseState<TField extends string> = {
+  field: TField
+  selection: FacetSelection
+  view: "grouped" | "list"
+}
+
+function DataBrowseFrame({
+  children,
+  datasetBrowse,
+  filters,
+  sampleBrowse,
+}: {
+  children: React.ReactNode
+  datasetBrowse?: DataBrowseState<DatasetFacetField>
+  filters: DataCollectionQueryFilters
+  sampleBrowse?: DataBrowseState<SampleFacetField>
+}) {
+  const navigate = Route.useNavigate()
+  const browse = sampleBrowse ?? datasetBrowse
+  if (!browse) return children
+  const browseField = browse.field
+
+  function changeView(view: "grouped" | "list") {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        ...collectionBrowseSearchState({ kind: "all" }),
+        ...(view === "grouped"
+          ? clearCollectionGroupFilterSearch(browseField)
+          : {}),
+        datasetCursor: undefined,
+        preview: undefined,
+        sampleCursor: undefined,
+        view: view === "grouped" ? "grouped" : undefined,
+      }),
+      state: {},
+      to: "/data",
+    })
+  }
+
+  function selectGroup(selection: FacetSelection) {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        ...collectionBrowseSearchState(selection),
+        ...clearCollectionGroupFilterSearch(browseField),
+        datasetCursor: undefined,
+        preview: undefined,
+        sampleCursor: undefined,
+      }),
+      state: {},
+      to: "/data",
+    })
+  }
+
+  function changeField(field: DatasetFacetField | SampleFacetField) {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        ...collectionBrowseSearchState({ kind: "all" }),
+        ...clearCollectionGroupFilterSearch(field),
+        datasetCursor: undefined,
+        groupBy: field,
+        preview: undefined,
+        sampleCursor: undefined,
+      }),
+      state: {},
+      to: "/data",
+    })
+  }
+
+  if (sampleBrowse) {
+    return (
+      <div className="flex min-w-0 flex-col gap-6">
+        <CollectionBrowseToolbar
+          field={sampleBrowse.field}
+          id="data-sample-browse-field"
+          onFieldChange={changeField}
+          onViewChange={changeView}
+          options={globalSampleBrowseOptions}
+          view={sampleBrowse.view}
+        />
+        {sampleBrowse.view === "grouped" ? (
+          <SampleCollectionBrowser
+            field={sampleBrowse.field}
+            filters={filters}
+            onSelect={selectGroup}
+            selection={sampleBrowse.selection}
+          >
+            {children}
+          </SampleCollectionBrowser>
+        ) : (
+          children
+        )}
+      </div>
+    )
+  }
+
+  if (!datasetBrowse) return children
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <CollectionBrowseToolbar
+        field={datasetBrowse.field}
+        id="data-dataset-browse-field"
+        onFieldChange={changeField}
+        onViewChange={changeView}
+        options={globalDatasetBrowseOptions}
+        view={datasetBrowse.view}
+      />
+      {datasetBrowse.view === "grouped" ? (
+        <DatasetCollectionBrowser
+          field={datasetBrowse.field}
+          filters={filters}
+          onSelect={selectGroup}
+          selection={datasetBrowse.selection}
         >
-          {showSamples && samplePage?.nextCursor && (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              from="/data"
-              search={(previous) => ({
-                ...previous,
-                preview: undefined,
-                sampleCursor: samplePage.nextCursor ?? undefined,
-              })}
-              state={{}}
-              to="/data"
-            >
-              Next samples
-            </Link>
-          )}
-          {showDatasets && datasetPage?.nextCursor && (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              from="/data"
-              search={(previous) => ({
-                ...previous,
-                datasetCursor: datasetPage.nextCursor ?? undefined,
-                preview: undefined,
-              })}
-              state={{}}
-              to="/data"
-            >
-              Next datasets
-            </Link>
-          )}
-        </nav>
-      ) : null}
+          {children}
+        </DatasetCollectionBrowser>
+      ) : (
+        children
+      )}
     </div>
   )
 }
@@ -571,10 +786,22 @@ function dataKind(kind: string | undefined): DataKindFilter {
 type DataCollectionQueryFilters = CollectionFilters &
   CollectionQueryOptions &
   DatasetFacetFilters &
-  SampleFacetFilters &
-  (
-    | { projectMfid?: undefined; projectScope?: undefined }
-    | { projectMfid: string; projectScope: ProjectScope }
+  SampleFacetFilters & { instrumentMfid?: string } & (
+    | {
+        projectMfid?: undefined
+        projectMfidIsNull?: undefined
+        projectScope?: undefined
+      }
+    | {
+        projectMfid: string
+        projectMfidIsNull?: undefined
+        projectScope: ProjectScope
+      }
+    | {
+        projectMfid?: undefined
+        projectMfidIsNull: true
+        projectScope?: undefined
+      }
   )
 
 function collectionQueryFilters(
@@ -603,13 +830,22 @@ function collectionQueryFilters(
     sessionName: filters.sessionName,
     sessionNameIsNull: filters.sessionNameIsNull,
   }
+  const instrumentFilter = filters.instrumentMfid
+    ? { instrumentMfid: filters.instrumentMfid }
+    : {}
   return filters.projectMfid
     ? {
         ...collectionFilters,
         ...collectionQuery,
         ...facetFilters,
+        ...instrumentFilter,
         projectMfid: filters.projectMfid,
         projectScope: filters.projectScope,
       }
-    : { ...collectionFilters, ...collectionQuery, ...facetFilters }
+    : {
+        ...collectionFilters,
+        ...collectionQuery,
+        ...facetFilters,
+        ...instrumentFilter,
+      }
 }

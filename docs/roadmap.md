@@ -46,7 +46,11 @@ Entry: accepted API login and session contract. Completion: production-shaped au
 
 ### P1: useful read workspace
 
-The local workspace is complete enough for continued feature work: Home continuation with session-only recently viewed resources, global and project Data collections and filters, projects, instruments and scoped datasets, resource and contextual inspection, bounded name and scientific metadata search, file-scoped dataset ingestion requests and history, explicit entity refresh, public-safe people, and on-demand single-file downloads are implemented. Production release remains subject to P0.
+The local workspace is complete enough for continued feature work: Home continuation with session-only recently viewed resources, global and project Data collections with filters and API-backed grouped browsing, projects, instruments and grouped scoped datasets, resource and contextual inspection, bounded name and scientific metadata search, file-scoped dataset ingestion requests and history, explicit entity refresh, public-safe people, and on-demand single-file downloads are implemented. Production release remains subject to P0.
+
+#### Grouped collection browsing
+
+Implemented for local development. Type-specific global Data, Project Data, and Instrument Datasets can switch between the existing list and an API-backed group directory. Facet counts, null buckets, and bucket pagination remain server-owned; selecting one group lazily starts the normal filtered resource cursor chain. Browse state is URL-backed and uses one shared presentation and mapping model across scopes. Cross-device saved views and direct sibling navigation from a deep-linked preview remain deferred to the contracts in [Crucible API handoff](crucible-api-handoff.md).
 
 #### Resource inspector slice
 

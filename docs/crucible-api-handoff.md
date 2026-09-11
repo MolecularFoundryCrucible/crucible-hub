@@ -285,6 +285,7 @@ The staged collection sorting and `include_total` work is the foundation for dyn
 - Authorization-aware instrument dataset counts with explicit acquisition-instrument semantics.
 - Additional bounded server-side facets only after their field meaning, cardinality, resolution, null behavior, and filtering semantics are defined. Dataset session, measurement, data format, owner, instrument, and project facets and sample type, owner, and project facets are implemented on `feature/get-query-contract`.
 - Stable saved views owned by the authenticated account, containing a versioned validated filter and sort model rather than an arbitrary URL or query language.
+- Optional direct sibling navigation for a deeply linked resource within a saved or supplied collection context. The response must preserve the collection's authorization scope, filters, grouping selection, sort order, and stable cursor semantics without requiring Hub to scan preceding pages. Ordinary navigation that starts from a loaded Hub page can continue through its known cursor chain without this addition.
 - A lightweight navigation summary for pending join reviews, deletion reviews, failed processing, or other actionable categories, with exact or capped count semantics.
 
 Do not update resource or container modification timestamps to simulate activity, counts, or attention. Do not require Hub to load whole collections, merge incomplete pages, or issue per-row requests to construct these summaries.

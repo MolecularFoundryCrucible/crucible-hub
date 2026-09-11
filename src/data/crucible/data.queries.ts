@@ -20,8 +20,21 @@ export const dataPageLimit = 50
 export type ProjectScope = "all" | "assigned" | "shared"
 
 type ProjectFilters =
-  | { projectMfid?: undefined; projectScope?: undefined }
-  | { projectMfid: string; projectScope?: ProjectScope }
+  | {
+      projectMfid?: undefined
+      projectMfidIsNull?: undefined
+      projectScope?: undefined
+    }
+  | {
+      projectMfid: string
+      projectMfidIsNull?: undefined
+      projectScope?: ProjectScope
+    }
+  | {
+      projectMfid?: undefined
+      projectMfidIsNull: true
+      projectScope?: undefined
+    }
 
 export type CursorFilters = ProjectFilters &
   CollectionFilters &
@@ -57,6 +70,7 @@ function collectionScopedPreviousData<TData>(
     ownerId?: string
     ownerIdIsNull?: true
     projectMfid?: string
+    projectMfidIsNull?: true
     projectScope?: ProjectScope
     sampleType?: string
     sampleTypeIsNull?: true
@@ -86,6 +100,7 @@ function collectionScopedPreviousData<TData>(
     "instrumentMfid",
     "instrumentMfidIsNull",
     "projectMfid",
+    "projectMfidIsNull",
     "projectScope",
     "measurement",
     "measurementIsNull",
@@ -152,6 +167,7 @@ function normalizeInstrumentMfid(instrumentMfid: string | undefined) {
 
 type NormalizedProjectFilters = {
   projectMfid?: string
+  projectMfidIsNull?: true
   projectScope?: ProjectScope
 }
 
@@ -167,9 +183,14 @@ function normalizeProjectFilters(
       "A project MFID is required when selecting a project scope."
     )
   }
+  if (projectMfid && filters.projectMfidIsNull) {
+    throw new Error("Choose either a project or the unspecified bucket.")
+  }
   return projectMfid
     ? { projectMfid, projectScope: filters.projectScope ?? "all" }
-    : {}
+    : filters.projectMfidIsNull
+      ? { projectMfidIsNull: true }
+      : {}
 }
 
 export function samplesQueryOptions(

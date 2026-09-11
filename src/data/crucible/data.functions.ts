@@ -24,6 +24,7 @@ import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { datasetFacetFieldSchema, sampleFacetFieldSchema } from "./facets"
 
 export const projectScopeSchema = z.enum(["all", "assigned", "shared"])
+const nullSelector = z.literal(true).optional()
 
 const cursorPageInputFields = {
   ...collectionFilterFields,
@@ -32,13 +33,13 @@ const cursorPageInputFields = {
   direction: sortDirectionSchema.optional(),
   limit: z.number().int().min(1).max(100),
   projectMfid: z.string().trim().min(1).max(255).optional(),
+  projectMfidIsNull: nullSelector,
   projectScope: projectScopeSchema.optional(),
   scenario: fixtureScenarioSchema.optional(),
   sort: resourceSortSchema.optional(),
 }
 
 const nullableFacetFilter = z.string().max(255).optional()
-const nullSelector = z.literal(true).optional()
 
 const sampleFacetFilterFields = {
   ownerId: nullableFacetFilter,
@@ -60,7 +61,11 @@ const datasetFacetFilterFields = {
 }
 
 function validateProjectScope(
-  input: { projectMfid?: string; projectScope?: string },
+  input: {
+    projectMfid?: string
+    projectMfidIsNull?: true
+    projectScope?: string
+  },
   context: z.RefinementCtx
 ) {
   if (input.projectScope && !input.projectMfid) {
@@ -70,6 +75,13 @@ function validateProjectScope(
       path: ["projectScope"],
     })
   }
+  if (input.projectMfid && input.projectMfidIsNull) {
+    context.addIssue({
+      code: "custom",
+      message: "Choose either a project or the unspecified bucket.",
+      path: ["projectMfid"],
+    })
+  }
 }
 
 function normalizeProjectScope<
@@ -77,6 +89,7 @@ function normalizeProjectScope<
     createdFrom?: string
     createdTo?: string
     projectMfid?: string
+    projectMfidIsNull?: true
     projectScope?: string
     visibility?: "all" | "public" | "private"
   },
@@ -165,6 +178,7 @@ const facetPageInputFields = {
   cursor: z.string().min(1).max(4096).optional(),
   limit: z.number().int().min(1).max(1000),
   projectMfid: z.string().trim().min(1).max(255).optional(),
+  projectMfidIsNull: nullSelector,
   projectScope: projectScopeSchema.optional(),
   scenario: fixtureScenarioSchema.optional(),
 }

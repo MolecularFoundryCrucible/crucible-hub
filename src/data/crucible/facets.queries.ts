@@ -32,17 +32,23 @@ export type FacetContext = CollectionFilters &
     ownerId?: string
     ownerIdIsNull?: true
     projectMfid?: string
+    projectMfidIsNull?: true
     projectScope?: ProjectScope
   }
 
 export function sampleFacetQueryOptions(
   scope: IdentityScope,
   field: SampleFacetField,
-  filters: FacetContext & SampleFacetFilters
+  filters: FacetContext & SampleFacetFilters,
+  options: { excludeField?: boolean } = {}
 ) {
+  const excludeField = options.excludeField ?? true
+  const facetFilters = normalizeSampleFacetFilters(filters)
   const context = {
-    ...normalizeFacetContext(filters),
-    ...withoutSampleFacetField(field, normalizeSampleFacetFilters(filters)),
+    ...normalizeFacetContext(filters, excludeField && field === "project"),
+    ...(excludeField
+      ? withoutSampleFacetField(field, facetFilters)
+      : facetFilters),
   }
   return infiniteQueryOptions({
     initialPageParam: undefined as string | undefined,
@@ -67,15 +73,20 @@ export function sampleFacetQueryOptions(
 export function datasetFacetQueryOptions(
   scope: IdentityScope,
   field: DatasetFacetField,
-  filters: FacetContext & DatasetFacetFilters
+  filters: FacetContext & DatasetFacetFilters,
+  options: { excludeField?: boolean } = {}
 ) {
+  const excludeField = options.excludeField ?? true
+  const facetFilters = {
+    ...normalizeDatasetFacetFilters(filters),
+    instrumentMfid: filters.instrumentMfid,
+    instrumentMfidIsNull: filters.instrumentMfidIsNull,
+  }
   const context = {
-    ...normalizeFacetContext(filters),
-    ...withoutDatasetFacetField(field, {
-      ...normalizeDatasetFacetFilters(filters),
-      instrumentMfid: filters.instrumentMfid,
-      instrumentMfidIsNull: filters.instrumentMfidIsNull,
-    }),
+    ...normalizeFacetContext(filters, excludeField && field === "project"),
+    ...(excludeField
+      ? withoutDatasetFacetField(field, facetFilters)
+      : facetFilters),
   }
   return infiniteQueryOptions({
     initialPageParam: undefined as string | undefined,
@@ -97,16 +108,18 @@ export function datasetFacetQueryOptions(
   })
 }
 
-function normalizeFacetContext(filters: FacetContext) {
+function normalizeFacetContext(filters: FacetContext, omitProject: boolean) {
   return {
     ...normalizeCollectionFilters(filters),
     ...(filters.affiliation ? { affiliation: filters.affiliation } : {}),
-    ...(filters.projectMfid
+    ...(!omitProject && filters.projectMfid
       ? {
           projectMfid: filters.projectMfid,
           projectScope: filters.projectScope ?? "all",
         }
-      : {}),
+      : !omitProject && filters.projectMfidIsNull
+        ? { projectMfidIsNull: true as const }
+        : {}),
   }
 }
 

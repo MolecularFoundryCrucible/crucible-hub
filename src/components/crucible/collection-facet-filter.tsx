@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { personDisplayName } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -12,13 +13,13 @@ import type { FacetContext } from "@/data/crucible/facets.queries"
 import type {
   DatasetFacetField,
   DatasetFacetFilters,
+  FacetSelection,
   SampleFacetField,
   SampleFacetFilters,
   WorkspaceFacetBucket,
 } from "@/data/crucible/facets"
 
-export type FacetSelection =
-  { kind: "all" } | { kind: "null" } | { kind: "value"; value: string }
+export type { FacetSelection } from "@/data/crucible/facets"
 
 export function SampleFacetFilter({
   enabled,
@@ -185,18 +186,19 @@ function FacetFilter({
   )
 }
 
-function facetValueLabel(value: string | null) {
+export function facetValueLabel(value: string | null) {
   if (value === null) return "Unspecified"
   return value === "" ? "Empty value" : value
 }
 
-function facetBucketLabel(
+export function facetBucketLabel(
   bucket: WorkspaceFacetBucket,
   field: DatasetFacetField | SampleFacetField
 ) {
   if (field === "owner" && bucket.owner) {
-    const name = `${bucket.owner.first_name} ${bucket.owner.last_name}`.trim()
-    return bucket.owner.username ? `${name} (${bucket.owner.username})` : name
+    const name = personDisplayName(bucket.owner)
+    const username = bucket.owner.username?.trim().replace(/^@/, "")
+    return username && name !== `@${username}` ? `${name} (@${username})` : name
   }
   if (field === "instrument" && bucket.instrument) {
     return bucket.instrument.instrument_name

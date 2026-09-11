@@ -22,6 +22,9 @@ export const datasetFacetFieldSchema = z.enum([
 export type SampleFacetField = z.infer<typeof sampleFacetFieldSchema>
 export type DatasetFacetField = z.infer<typeof datasetFacetFieldSchema>
 
+export type FacetSelection =
+  { kind: "all" } | { kind: "null" } | { kind: "value"; value: string }
+
 export type SampleFacetFilters = {
   ownerId?: string
   ownerIdIsNull?: true

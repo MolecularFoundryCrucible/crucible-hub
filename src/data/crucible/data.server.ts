@@ -42,6 +42,7 @@ type ProjectScope = "all" | "assigned" | "shared"
 type ProjectScopedInput = CollectionFilters &
   CollectionQueryOptions & {
     projectMfid?: string
+    projectMfidIsNull?: true
     projectScope?: ProjectScope
     scenario?: FixtureScenario
   }
@@ -387,6 +388,11 @@ function fixtureProjectRows<
   }[]
 ): Array<TItem & { project_relation: WorkspaceProjectRelation | null }> {
   const projectScope = normalizedProjectScope(input)
+  if (input.projectMfidIsNull) {
+    return items
+      .filter((item) => item.project == null && item.project_id == null)
+      .map((item) => ({ ...item, project_relation: null }))
+  }
   if (!input.projectMfid || !projectScope) {
     return items.map((item) => ({ ...item, project_relation: null }))
   }
@@ -483,6 +489,7 @@ export async function readWorkspaceSamples(
         include_total: true,
         limit: input.limit,
         project_mfid: input.projectMfid,
+        project_mfid_is_null: input.projectMfidIsNull,
         project_scope: projectScope,
         ...sampleFacetQuery(input),
         sort: collectionQuery.sort,
@@ -572,6 +579,7 @@ export async function readWorkspaceDatasets(
         instrument_mfid: instrumentMfid,
         limit: input.limit,
         project_mfid: input.projectMfid,
+        project_mfid_is_null: input.projectMfidIsNull,
         project_scope: projectScope,
         ...datasetFacetQuery(input),
         sort: collectionQuery.sort,
@@ -649,6 +657,7 @@ export async function readWorkspaceSampleFacets(
           field: input.field,
           limit: input.limit,
           project_mfid: input.projectMfid,
+          project_mfid_is_null: input.projectMfidIsNull,
           project_scope: normalizedProjectScope(input),
           visibility: filters.visibility,
           ...creationTimeBounds(filters),
@@ -739,6 +748,7 @@ export async function readWorkspaceDatasetFacets(
           instrument_mfid: instrumentMfid,
           limit: input.limit,
           project_mfid: input.projectMfid,
+          project_mfid_is_null: input.projectMfidIsNull,
           project_scope: normalizedProjectScope(input),
           visibility: filters.visibility,
           ...creationTimeBounds(filters),

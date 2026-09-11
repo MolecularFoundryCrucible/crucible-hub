@@ -3,6 +3,14 @@ import { z } from "zod"
 
 import { CollectionTablePending } from "@/components/crucible/collection-state"
 import {
+  collectionBrowseSearchFields,
+  datasetFiltersForGroup,
+  projectDatasetBrowseOptions,
+  projectSampleBrowseOptions,
+  resolveCollectionBrowse,
+  sampleFiltersForGroup,
+} from "@/data/crucible/collection-browse"
+import {
   ResourcePreviewContext,
   resourcePreviewSearchSchema,
   useResourcePreviewNavigation,
@@ -31,6 +39,7 @@ const selectedFacetSchema = z
   .optional()
   .catch(undefined)
 const projectDataSearchSchema = resourcePreviewSearchSchema.extend({
+  ...collectionBrowseSearchFields,
   createdFrom: filterSearchValue,
   createdTo: filterSearchValue,
   dataFormat: facetSearchValue,
@@ -72,6 +81,10 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     dataFormatIsNull: search.dataFormatIsNull,
     dataFormatSet: search.dataFormatSet,
     direction: search.direction,
+    groupBy: search.groupBy,
+    groupValue: search.groupValue,
+    groupValueIsNull: search.groupValueIsNull,
+    groupValueSet: search.groupValueSet,
     instrumentMfid: search.instrumentMfid,
     instrumentMfidIsNull: search.instrumentMfidIsNull,
     kind: search.kind ?? "samples",
@@ -91,6 +104,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     sessionNameSet: search.sessionNameSet,
     sort: search.sort,
     visibility: search.visibility,
+    view: search.view,
   }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     if (cause === "stay") return
@@ -98,14 +112,23 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     if (!project?.isProject || !project.projectMfid) return
     const resolution = resolveProjectDataFilters(deps, deps.kind)
     if (!resolution.valid) return
-
     if (deps.kind === "samples") {
+      const browse = resolveCollectionBrowse(deps, projectSampleBrowseOptions)
+      if (browse.view === "grouped" && browse.selection.kind === "all") return
+      const filters =
+        browse.view === "grouped"
+          ? sampleFiltersForGroup(
+              resolution.filters,
+              browse.field,
+              browse.selection
+            )
+          : resolution.filters
       const options = samplesQueryOptions(project.scope, {
         cursor: deps.sampleCursor,
         limit: dataPageLimit,
         projectMfid: project.projectMfid,
         projectScope: deps.projectScope,
-        ...resolution.filters,
+        ...filters,
       })
       const hasData =
         context.queryClient.getQueryData(options.queryKey) !== undefined
@@ -118,12 +141,22 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
       return
     }
 
+    const browse = resolveCollectionBrowse(deps, projectDatasetBrowseOptions)
+    if (browse.view === "grouped" && browse.selection.kind === "all") return
+    const filters =
+      browse.view === "grouped"
+        ? datasetFiltersForGroup(
+            resolution.filters,
+            browse.field,
+            browse.selection
+          )
+        : resolution.filters
     const options = datasetsQueryOptions(project.scope, {
       cursor: deps.datasetCursor,
       limit: dataPageLimit,
       projectMfid: project.projectMfid,
       projectScope: deps.projectScope,
-      ...resolution.filters,
+      ...filters,
     })
     const hasData =
       context.queryClient.getQueryData(options.queryKey) !== undefined
@@ -183,6 +216,7 @@ function ProjectDataPage() {
   return (
     <ResourcePreviewContext.Provider value={navigation}>
       <ProjectDataCollection
+        browseSearch={search}
         cursor={kind === "samples" ? search.sampleCursor : search.datasetCursor}
         filterResolution={filterResolution}
         filterValues={filterValues}

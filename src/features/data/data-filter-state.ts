@@ -16,6 +16,10 @@ import type {
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
+import {
+  collectionBrowseSearchFields,
+  collectionBrowseSearchState,
+} from "@/data/crucible/collection-browse"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import type {
   DatasetFacetFilters,
@@ -31,6 +35,7 @@ const selectedFacetSchema = z
   .catch(undefined)
 
 export const dataSearchSchema = z.object({
+  ...collectionBrowseSearchFields,
   affiliation: filterSearchValue,
   createdFrom: filterSearchValue,
   createdTo: filterSearchValue,
@@ -66,7 +71,13 @@ export type DataKindFilter = "all" | DataKind
 export type DataSearch = z.infer<typeof dataSearchSchema>
 export type DataFilterSearch = Omit<
   DataSearch,
-  "datasetCursor" | "sampleCursor"
+  | "datasetCursor"
+  | "groupBy"
+  | "groupValue"
+  | "groupValueIsNull"
+  | "groupValueSet"
+  | "sampleCursor"
+  | "view"
 >
 
 type ProjectSelection =
@@ -318,6 +329,9 @@ export function applyDataFilters(
 ) {
   return {
     ...previous,
+    ...(previous.view === "grouped"
+      ? collectionBrowseSearchState({ kind: "all" })
+      : {}),
     affiliation: filters.affiliation,
     createdFrom: filters.createdFrom,
     createdTo: filters.createdTo,
@@ -381,9 +395,14 @@ export function switchDataKind(
     instrumentMfidIsNull:
       kind === "datasets" ? previous.instrumentMfidIsNull : undefined,
     kind: kind === "all" ? undefined : kind,
+    groupBy: undefined,
+    groupValue: undefined,
+    groupValueIsNull: undefined,
+    groupValueSet: undefined,
     preview: undefined,
     sampleCursor: undefined,
     sort: kind === "all" ? undefined : previous.sort,
+    view: kind === "all" ? undefined : previous.view,
   }
 }
 

@@ -2,10 +2,25 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 
 import {
+  CollectionBrowseToolbar,
+  DatasetCollectionBrowser,
+  SampleCollectionBrowser,
+} from "@/components/crucible/collection-browser"
+import {
   CollectionTablePending,
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import {
+  collectionBrowseSearchState,
+  clearCollectionGroupFilterSearch,
+  datasetFiltersForGroup,
+  projectDatasetBrowseOptions,
+  projectSampleBrowseOptions,
+  resolveCollectionBrowse,
+  sampleFiltersForGroup,
+} from "@/data/crucible/collection-browse"
+import type { CollectionBrowseSearch } from "@/data/crucible/collection-browse"
 import {
   ResourceOpenCell,
   ResourceOwnerCell,
@@ -37,6 +52,11 @@ import {
 } from "@/data/crucible/data.queries"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import type {
+  DatasetFacetField,
+  FacetSelection,
+  SampleFacetField,
+} from "@/data/crucible/facets"
+import type {
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
@@ -56,6 +76,7 @@ import type {
 export type ProjectDataKind = "datasets" | "samples"
 
 export function ProjectDataCollection({
+  browseSearch,
   cursor,
   filterResolution,
   filterValues,
@@ -63,6 +84,7 @@ export function ProjectDataCollection({
   projectMfid,
   projectScope,
 }: {
+  browseSearch: CollectionBrowseSearch
   cursor: string | undefined
   filterResolution: ProjectDataFilterResolution
   filterValues: ProjectDataFilterSearch
@@ -71,6 +93,14 @@ export function ProjectDataCollection({
   projectScope: ProjectScope
 }) {
   const navigate = useNavigate({ from: "/projects/$projectMfid" })
+  const sampleBrowse =
+    kind === "samples"
+      ? resolveCollectionBrowse(browseSearch, projectSampleBrowseOptions)
+      : undefined
+  const datasetBrowse =
+    kind === "datasets"
+      ? resolveCollectionBrowse(browseSearch, projectDatasetBrowseOptions)
+      : undefined
   const onSort = (sort: ResourceSort, direction: SortDirection) =>
     void navigate({
       params: { projectMfid },
@@ -99,31 +129,176 @@ export function ProjectDataCollection({
         projectScope={projectScope}
         values={filterValues}
       />
-      {!filterResolution.valid ? (
-        <Empty className="min-h-state border" role="alert">
-          <EmptyHeader>
-            <EmptyTitle>Project data filters are not valid</EmptyTitle>
-            <EmptyDescription>
-              Correct or clear the filters before loading project data.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      ) : kind === "samples" ? (
-        <ProjectSamples
-          cursor={cursor}
-          filters={filterResolution.filters}
-          onSort={onSort}
-          projectMfid={projectMfid}
-          projectScope={projectScope}
+      <ProjectBrowseFrame
+        datasetBrowse={datasetBrowse}
+        filters={filterResolution.valid ? filterResolution.filters : undefined}
+        projectMfid={projectMfid}
+        projectScope={projectScope}
+        sampleBrowse={sampleBrowse}
+      >
+        {!filterResolution.valid ? (
+          <Empty className="min-h-state border" role="alert">
+            <EmptyHeader>
+              <EmptyTitle>Project data filters are not valid</EmptyTitle>
+              <EmptyDescription>
+                Correct or clear the filters before loading project data.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : kind === "samples" ? (
+          <ProjectSamples
+            cursor={cursor}
+            filters={
+              sampleBrowse?.view === "grouped"
+                ? sampleFiltersForGroup(
+                    filterResolution.filters,
+                    sampleBrowse.field,
+                    sampleBrowse.selection
+                  )
+                : filterResolution.filters
+            }
+            onSort={onSort}
+            projectMfid={projectMfid}
+            projectScope={projectScope}
+          />
+        ) : (
+          <ProjectDatasets
+            cursor={cursor}
+            filters={
+              datasetBrowse?.view === "grouped"
+                ? datasetFiltersForGroup(
+                    filterResolution.filters,
+                    datasetBrowse.field,
+                    datasetBrowse.selection
+                  )
+                : filterResolution.filters
+            }
+            onSort={onSort}
+            projectMfid={projectMfid}
+            projectScope={projectScope}
+          />
+        )}
+      </ProjectBrowseFrame>
+    </div>
+  )
+}
+
+type ProjectBrowseState<TField extends string> = {
+  field: TField
+  selection: FacetSelection
+  view: "grouped" | "list"
+}
+
+function ProjectBrowseFrame({
+  children,
+  datasetBrowse,
+  filters,
+  projectMfid,
+  projectScope,
+  sampleBrowse,
+}: {
+  children: React.ReactNode
+  datasetBrowse?: ProjectBrowseState<DatasetFacetField>
+  filters: ProjectDataCollectionFilters | undefined
+  projectMfid: string
+  projectScope: ProjectScope
+  sampleBrowse?: ProjectBrowseState<SampleFacetField>
+}) {
+  const navigate = useNavigate({ from: "/projects/$projectMfid" })
+  const browse = sampleBrowse ?? datasetBrowse
+  if (!browse || !filters) return children
+  const browseField = browse.field
+
+  function updateSearch(values: Record<string, unknown>) {
+    void navigate({
+      params: { projectMfid },
+      search: (previous) => ({
+        ...previous,
+        datasetCursor: undefined,
+        preview: undefined,
+        sampleCursor: undefined,
+        ...values,
+      }),
+      state: {},
+      to: "/projects/$projectMfid",
+    })
+  }
+
+  function changeView(view: "grouped" | "list") {
+    updateSearch({
+      ...collectionBrowseSearchState({ kind: "all" }),
+      ...(view === "grouped"
+        ? clearCollectionGroupFilterSearch(browseField)
+        : {}),
+      view: view === "grouped" ? "grouped" : undefined,
+    })
+  }
+
+  function changeField(field: DatasetFacetField | SampleFacetField) {
+    updateSearch({
+      ...collectionBrowseSearchState({ kind: "all" }),
+      ...clearCollectionGroupFilterSearch(field),
+      groupBy: field,
+    })
+  }
+
+  function selectGroup(selection: FacetSelection) {
+    updateSearch({
+      ...collectionBrowseSearchState(selection),
+      ...clearCollectionGroupFilterSearch(browseField),
+    })
+  }
+
+  const facetFilters = { ...filters, projectMfid, projectScope }
+  if (sampleBrowse) {
+    return (
+      <div className="flex min-w-0 flex-col gap-6">
+        <CollectionBrowseToolbar
+          field={sampleBrowse.field}
+          id="project-sample-browse-field"
+          onFieldChange={changeField}
+          onViewChange={changeView}
+          options={projectSampleBrowseOptions}
+          view={sampleBrowse.view}
         />
+        {sampleBrowse.view === "grouped" ? (
+          <SampleCollectionBrowser
+            field={sampleBrowse.field}
+            filters={facetFilters}
+            onSelect={selectGroup}
+            selection={sampleBrowse.selection}
+          >
+            {children}
+          </SampleCollectionBrowser>
+        ) : (
+          children
+        )}
+      </div>
+    )
+  }
+
+  if (!datasetBrowse) return children
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <CollectionBrowseToolbar
+        field={datasetBrowse.field}
+        id="project-dataset-browse-field"
+        onFieldChange={changeField}
+        onViewChange={changeView}
+        options={projectDatasetBrowseOptions}
+        view={datasetBrowse.view}
+      />
+      {datasetBrowse.view === "grouped" ? (
+        <DatasetCollectionBrowser
+          field={datasetBrowse.field}
+          filters={facetFilters}
+          onSelect={selectGroup}
+          selection={datasetBrowse.selection}
+        >
+          {children}
+        </DatasetCollectionBrowser>
       ) : (
-        <ProjectDatasets
-          cursor={cursor}
-          filters={filterResolution.filters}
-          onSort={onSort}
-          projectMfid={projectMfid}
-          projectScope={projectScope}
-        />
+        children
       )}
     </div>
   )
@@ -543,6 +718,10 @@ function ProjectDataFilterLink({
           kind === "samples" ? undefined : previous.instrumentMfid,
         instrumentMfidIsNull:
           kind === "samples" ? undefined : previous.instrumentMfidIsNull,
+        groupBy: undefined,
+        groupValue: undefined,
+        groupValueIsNull: undefined,
+        groupValueSet: undefined,
         kind: kind === "samples" ? undefined : kind,
         measurement: kind === "samples" ? undefined : previous.measurement,
         measurementIsNull:
