@@ -6,6 +6,7 @@ import {
   DatasetFacetFilter,
   SampleFacetFilter,
 } from "@/components/crucible/collection-facet-filter"
+import { CollectionFilterPanel } from "@/components/crucible/collection-filter-panel"
 import type { FacetSelection } from "@/components/crucible/collection-facet-filter"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
@@ -240,20 +241,12 @@ export function ProjectDataFilters({
   }
 
   return (
-    <details
-      className="rounded-lg border p-4"
-      onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
+    <CollectionFilterPanel
+      activeFilters={active}
+      onOpenChange={setFiltersOpen}
       open={filtersOpen}
     >
-      <summary className="cursor-pointer text-label">
-        Filters
-        {active.length ? (
-          <span className="ml-2 text-supporting break-all text-muted-foreground">
-            {active.join("; ")}
-          </span>
-        ) : null}
-      </summary>
-      <form className="mt-4 flex flex-col gap-4" onSubmit={apply}>
+      <form className="flex flex-col gap-4" onSubmit={apply}>
         <FieldSet>
           <FieldLegend className="sr-only">Project data filters</FieldLegend>
           <FieldGroup className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -615,7 +608,7 @@ export function ProjectDataFilters({
           </Button>
         </div>
       </form>
-    </details>
+    </CollectionFilterPanel>
   )
 }
 

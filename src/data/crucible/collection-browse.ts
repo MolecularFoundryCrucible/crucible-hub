@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import type { ResourceSort, SortDirection } from "./collection-query"
 import type { ProjectScope } from "./data.queries"
 import type {
   DatasetFacetField,
@@ -177,9 +178,11 @@ export function clearCollectionGroupFilterSearch(
 
 export function sampleFiltersForGroup<
   TFilters extends SampleFacetFilters & {
+    direction?: SortDirection
     projectMfid?: string
     projectMfidIsNull?: true
     projectScope?: ProjectScope
+    sort?: ResourceSort
   },
 >(filters: TFilters, field: SampleFacetField, selection: FacetSelection) {
   const next = { ...filters }
@@ -205,15 +208,17 @@ export function sampleFiltersForGroup<
     }
     if (selection.kind === "null") next.projectMfidIsNull = true
   }
-  return next
+  return withBrowseDefaultSort(next)
 }
 
 export function datasetFiltersForGroup<
   TFilters extends DatasetFacetFilters & {
+    direction?: SortDirection
     instrumentMfid?: string
     projectMfid?: string
     projectMfidIsNull?: true
     projectScope?: ProjectScope
+    sort?: ResourceSort
   },
 >(filters: TFilters, field: DatasetFacetField, selection: FacetSelection) {
   const next = { ...filters }
@@ -257,5 +262,21 @@ export function datasetFiltersForGroup<
     }
     if (selection.kind === "null") next.projectMfidIsNull = true
   }
-  return next
+  return withBrowseDefaultSort(next)
+}
+
+function withBrowseDefaultSort<
+  TFilters extends { direction?: SortDirection; sort?: ResourceSort },
+>(filters: TFilters) {
+  if (filters.sort) {
+    return {
+      ...filters,
+      direction: filters.direction ?? "desc",
+    }
+  }
+  return {
+    ...filters,
+    direction: "asc" as const,
+    sort: "name" as const,
+  }
 }

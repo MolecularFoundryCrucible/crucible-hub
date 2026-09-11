@@ -3,7 +3,6 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
 import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -14,7 +13,6 @@ import {
 } from "@/components/crucible/resource-section-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -114,17 +112,6 @@ function InstrumentPage() {
         }
         title={resource.name}
         description={resource.description ?? undefined}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline">
-              <ResourceTypeIcon type="instrument" data-icon="inline-start" />
-              {resource.instrument_type ?? "Instrument"}
-            </Badge>
-            {resource.status ? (
-              <InstrumentStatusBadge status={resource.status} />
-            ) : null}
-          </div>
-        }
       />
 
       <ResourceSectionNavigation

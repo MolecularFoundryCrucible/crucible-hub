@@ -6,7 +6,10 @@ import {
   MeasurementFieldIcon,
   SessionFieldIcon,
 } from "@/components/crucible/icons"
-import { personIsServiceAccount } from "@/components/crucible/person-identity"
+import {
+  PersonIdentity,
+  personIsServiceAccount,
+} from "@/components/crucible/person-identity"
 import {
   PrincipalTypeIcon,
   ResourceTypeIcon,
@@ -55,7 +58,7 @@ export function CollectionBrowseToolbar<TField extends string>({
   view: "grouped" | "list"
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap gap-2" aria-label="Collection view">
         <Button
           aria-pressed={view === "list"}
@@ -75,9 +78,12 @@ export function CollectionBrowseToolbar<TField extends string>({
         </Button>
       </div>
       {view === "grouped" ? (
-        <Field className="w-full sm:w-auto sm:min-w-48">
-          <FieldLabel htmlFor={id}>Browse by</FieldLabel>
+        <Field className="w-auto min-w-0 flex-none" orientation="horizontal">
+          <FieldLabel className="shrink-0 whitespace-nowrap" htmlFor={id}>
+            Browse by
+          </FieldLabel>
           <NativeSelect
+            className="w-44 min-w-0"
             id={id}
             onChange={(event) => {
               const next = options.find(
@@ -268,12 +274,7 @@ function CollectionBrowser({
                   >
                     <span className="flex min-w-0 items-center gap-2">
                       <FacetFieldIcon bucket={bucket} field={field} />
-                      <span
-                        className="truncate"
-                        title={facetBucketLabel(bucket, field)}
-                      >
-                        {facetBucketLabel(bucket, field)}
-                      </span>
+                      <FacetBucketName bucket={bucket} field={field} />
                     </span>
                     <span className="shrink-0 text-supporting text-muted-foreground tabular-nums">
                       {bucket.count}
@@ -313,7 +314,9 @@ function CollectionBrowser({
         {selection.kind === "all" ? (
           <Empty className="min-h-state border">
             <EmptyHeader>
-              <EmptyTitle>Choose a {selectionLabel}</EmptyTitle>
+              <EmptyTitle>
+                Choose {indefiniteArticle(selectionLabel)} {selectionLabel}
+              </EmptyTitle>
               <EmptyDescription>
                 Select a group to browse its resources.
               </EmptyDescription>
@@ -324,6 +327,31 @@ function CollectionBrowser({
         )}
       </div>
     </div>
+  )
+}
+
+function FacetBucketName({
+  bucket,
+  field,
+}: {
+  bucket: WorkspaceFacetBucket
+  field: DatasetFacetField | SampleFacetField
+}) {
+  const label = facetBucketLabel(bucket, field)
+  if (field === "owner" && bucket.owner) {
+    return (
+      <PersonIdentity
+        className="block min-w-0 truncate"
+        nameStyle="abbreviated"
+        person={bucket.owner}
+        presentation="inline"
+      />
+    )
+  }
+  return (
+    <span className="truncate" title={label}>
+      {label}
+    </span>
   )
 }
 
@@ -378,6 +406,10 @@ function facetFieldSelectionLabel(field: DatasetFacetField | SampleFacetField) {
   if (field === "project") return "primary project"
   if (field === "session") return "session"
   return "measurement"
+}
+
+function indefiniteArticle(value: string) {
+  return /^[aeiou]/i.test(value) ? "an" : "a"
 }
 
 function sameSelection(left: FacetSelection, right: FacetSelection) {

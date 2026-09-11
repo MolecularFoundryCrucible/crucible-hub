@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
+import { CollectionFilterPanel } from "@/components/crucible/collection-filter-panel"
 import {
   DatasetFacetFilter,
   SampleFacetFilter,
@@ -192,20 +193,12 @@ export function DataFilters({
   }
 
   return (
-    <details
-      className="rounded-lg border p-4"
-      onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
+    <CollectionFilterPanel
+      activeFilters={active}
+      onOpenChange={setFiltersOpen}
       open={filtersOpen}
     >
-      <summary className="cursor-pointer text-label">
-        Filters
-        {active.length ? (
-          <span className="ml-2 text-supporting break-all text-muted-foreground">
-            {active.join("; ")}
-          </span>
-        ) : null}
-      </summary>
-      <form className="mt-4 flex flex-col gap-4" onSubmit={apply}>
+      <form className="flex flex-col gap-4" onSubmit={apply}>
         <FieldSet>
           <FieldLegend className="sr-only">Data filters</FieldLegend>
           <FieldGroup className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -585,7 +578,7 @@ export function DataFilters({
           </Button>
         </div>
       </form>
-    </details>
+    </CollectionFilterPanel>
   )
 }
 

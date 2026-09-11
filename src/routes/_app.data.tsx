@@ -287,6 +287,8 @@ function DataResults({
           datasetBrowse.selection
         )
       : collectionFilters
+  const displayedCollectionFilters =
+    kind === "samples" ? sampleCollectionFilters : datasetCollectionFilters
   const loadSamples =
     showSamples &&
     (sampleBrowse?.view !== "grouped" || sampleBrowse.selection.kind !== "all")
@@ -422,8 +424,10 @@ function DataResults({
                           <TableHead>Name</TableHead>
                         ) : (
                           <SortableTableHead
-                            active={filters.sort === "name"}
-                            direction={filters.direction ?? "desc"}
+                            active={displayedCollectionFilters.sort === "name"}
+                            direction={
+                              displayedCollectionFilters.direction ?? "desc"
+                            }
                             field="name"
                             label="Name"
                             onChange={changeSort}
@@ -438,8 +442,12 @@ function DataResults({
                           <TableHead>Updated</TableHead>
                         ) : (
                           <SortableTableHead
-                            active={filters.sort === "updated"}
-                            direction={filters.direction ?? "desc"}
+                            active={
+                              displayedCollectionFilters.sort === "updated"
+                            }
+                            direction={
+                              displayedCollectionFilters.direction ?? "desc"
+                            }
                             field="updated"
                             label="Updated"
                             onChange={changeSort}

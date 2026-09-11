@@ -3,8 +3,13 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
 import { EditResourceIcon } from "@/components/crucible/icons"
-import { MfidText } from "@/components/crucible/mfid-text"
+import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
+import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
+import { personIsServiceAccount } from "@/components/crucible/person-identity"
+import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -13,7 +18,11 @@ import {
   ContentGrid,
   ContentGridItem,
 } from "@/components/crucible/content-layout"
-import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
+import {
+  ScientificMetadata,
+  ScientificMetadataExpansionAction,
+  useScientificMetadataExpansion,
+} from "@/components/crucible/scientific-metadata"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -28,7 +37,7 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceScientificMetadata,
 } from "@/data/crucible/workspace-source"
-import { formatDate } from "@/lib/format"
+import { formatLocalDateTime } from "@/lib/format"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 
@@ -72,7 +81,7 @@ function InstrumentOverviewPage() {
       <ContentGridItem span="narrow">
         <InstrumentIdentity instrument={resource} />
       </ContentGridItem>
-      <ContentGridItem span="wide">
+      <ContentGridItem span="full">
         <InstrumentMetadata metadata={resource.scientific_metadata} />
       </ContentGridItem>
     </ContentGrid>
@@ -87,10 +96,11 @@ function InstrumentSummary({
   onEdit?: () => void
 }) {
   const fields = [
-    ["Type", instrument.instrument_type],
-    ["Location", instrument.location],
-    ["Manufacturer", instrument.manufacturer],
-    ["Model", instrument.model],
+    ["Instrument type", instrument.instrument_type, "type"],
+    ["Location", instrument.location, "location"],
+    ["Manufacturer", instrument.manufacturer, "manufacturer"],
+    ["Model", instrument.model, "model"],
+    ["Status", instrument.status, "status"],
   ] as const
 
   return (
@@ -108,11 +118,12 @@ function InstrumentSummary({
       </CardHeader>
       <CardContent>
         <dl className="grid gap-4 sm:grid-cols-2">
-          {fields.map(([label, value]) => (
+          {fields.map(([label, value, type]) => (
             <div className="min-w-0" key={label}>
-              <dt className="text-supporting text-muted-foreground">{label}</dt>
-              <dd className="mt-1 text-body break-words">
-                {value ?? "Unknown"}
+              <dt className="text-label text-muted-foreground">{label}</dt>
+              <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
+                <SummaryFieldIcon type={type} />
+                <span className="min-w-0">{value ?? "-"}</span>
               </dd>
             </div>
           ))}
@@ -125,51 +136,71 @@ function InstrumentSummary({
 function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Identity</CardTitle>
-      </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <dt className="text-supporting text-muted-foreground">
-              Instrument ID
-            </dt>
-            <dd className="mt-1 text-body break-words">
-              {instrument.instrument_id ?? "Not provided"}
-            </dd>
+        <ContentGrid variant="identity">
+          <div className="min-w-0">
+            <CardTitle>Identity</CardTitle>
+            <dl className="mt-4 grid gap-4">
+              <div className="min-w-0">
+                <dt className="text-label text-muted-foreground">
+                  Instrument ID
+                </dt>
+                <dd className="mt-1 flex items-start gap-2 text-body break-words">
+                  <ResourceTypeIcon
+                    className="mt-0.5 size-4 shrink-0"
+                    type="instrument"
+                  />
+                  {instrument.instrument_id ?? "-"}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-label text-muted-foreground">MFID</dt>
+                <dd className="mt-1">
+                  <MfidValue value={instrument.unique_id} />
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-label text-muted-foreground">Owner</dt>
+                <dd className="mt-1 flex items-start gap-2 text-body">
+                  <IdentityFieldIcon
+                    accountType={
+                      instrument.owner &&
+                      personIsServiceAccount(instrument.owner)
+                        ? "service-account"
+                        : "person"
+                    }
+                    type="owner"
+                  />
+                  {instrument.owner ? (
+                    <PersonLink
+                      nameStyle="abbreviated"
+                      person={instrument.owner}
+                    />
+                  ) : (
+                    "Unknown owner"
+                  )}
+                </dd>
+              </div>
+            </dl>
           </div>
-          <div className="col-span-2">
-            <dt className="text-supporting text-muted-foreground">MFID</dt>
-            <dd className="mt-1">
-              <MfidText
-                className="break-all sm:break-normal sm:whitespace-nowrap"
-                value={instrument.unique_id}
-              />
-            </dd>
-          </div>
-          <div className="col-span-2">
-            <dt className="text-supporting text-muted-foreground">Owner</dt>
-            <dd className="mt-1 text-body">
-              {instrument.owner ? (
-                <PersonLink person={instrument.owner} />
-              ) : (
-                "Unknown owner"
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-supporting text-muted-foreground">Created</dt>
-            <dd className="mt-1 text-body">
-              {formatDate(instrument.creation_time)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-supporting text-muted-foreground">Updated</dt>
-            <dd className="mt-1 text-body">
-              {formatDate(instrument.modification_time)}
-            </dd>
-          </div>
-        </dl>
+          <MfidQrCode value={instrument.unique_id} />
+          <dl className="col-span-2 grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-label text-muted-foreground">Created</dt>
+              <dd className="mt-1 flex items-start gap-2 text-body">
+                <IdentityFieldIcon type="created" />
+                {formatLocalDateTime(instrument.creation_time) ?? "-"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-label text-muted-foreground">Updated</dt>
+              <dd className="mt-1 flex items-start gap-2 text-body">
+                <IdentityFieldIcon type="updated" />
+                {formatLocalDateTime(instrument.modification_time) ?? "-"}
+              </dd>
+            </div>
+          </dl>
+        </ContentGrid>
       </CardContent>
     </Card>
   )
@@ -180,14 +211,22 @@ function InstrumentMetadata({
 }: {
   metadata: WorkspaceScientificMetadata | null
 }) {
+  const expansion = useScientificMetadataExpansion(metadata, true)
   return (
     <Card>
       <CardHeader>
         <CardTitle>Scientific metadata</CardTitle>
+        {expansion.canExpand ? (
+          <CardAction>
+            <ScientificMetadataExpansionAction expansion={expansion} />
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent>
         <ScientificMetadata
           emptyMessage="This instrument does not currently expose scientific metadata."
+          expandFirstLevel
+          expansion={expansion}
           metadata={metadata}
         />
       </CardContent>
