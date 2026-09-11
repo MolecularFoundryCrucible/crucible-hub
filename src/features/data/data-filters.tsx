@@ -3,6 +3,11 @@ import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
+import {
+  DatasetFacetFilter,
+  SampleFacetFilter,
+} from "@/components/crucible/collection-facet-filter"
+import type { FacetSelection } from "@/components/crucible/collection-facet-filter"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,9 +23,6 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
-import { DatasetFacetFilter, SampleFacetFilter } from "./data-facet-filter"
-import type { FacetSelection } from "./data-facet-filter"
-
 import {
   applyDataFilters,
   clearDataFilters,

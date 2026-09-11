@@ -22,7 +22,7 @@ import { unwrapHubResult } from "./result"
 
 export const facetPageLimit = 100
 
-type FacetContext = CollectionFilters &
+export type FacetContext = CollectionFilters &
   Pick<CollectionQueryOptions, "affiliation"> & {
     instrumentMfid?: string
     projectMfid?: string

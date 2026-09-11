@@ -2,6 +2,11 @@ import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 
+import {
+  DatasetFacetFilter,
+  SampleFacetFilter,
+} from "@/components/crucible/collection-facet-filter"
+import type { FacetSelection } from "@/components/crucible/collection-facet-filter"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
@@ -25,6 +30,10 @@ import type {
   ProjectDataFilterSearch,
 } from "./project-data-filter-state"
 
+type ProjectDataFilterDraft = ProjectDataFilterSearch & {
+  projectScope: ProjectScope
+}
+
 export function ProjectDataFilters({
   errors,
   kind,
@@ -39,11 +48,10 @@ export function ProjectDataFilters({
   values: ProjectDataFilterSearch
 }) {
   const navigate = useNavigate({ from: "/projects/$projectMfid" })
-  const [draft, setDraft] = useState<
-    ProjectDataFilterSearch & {
-      projectScope: ProjectScope
-    }
-  >({ ...values, projectScope })
+  const [draft, setDraft] = useState<ProjectDataFilterDraft>({
+    ...values,
+    projectScope,
+  })
   const [draftErrors, setDraftErrors] =
     useState<readonly ProjectDataFilterError[]>(errors)
   const [filtersOpen, setFiltersOpen] = useState(errors.length > 0)
@@ -64,28 +72,17 @@ export function ProjectDataFilters({
       : undefined
   const errorKey = JSON.stringify(errors)
   const hasErrors = errors.length > 0
-  const { createdFrom, createdTo, instrumentMfid, visibility } = values
+  const valuesKey = JSON.stringify(values)
 
   useEffect(() => {
     setDraft({
-      createdFrom,
-      createdTo,
-      instrumentMfid,
+      ...(JSON.parse(valuesKey) as ProjectDataFilterSearch),
       projectScope,
-      visibility,
     })
     setDraftErrors(errorKey ? JSON.parse(errorKey) : [])
     setInstrumentName(undefined)
     if (hasErrors) setFiltersOpen(true)
-  }, [
-    createdFrom,
-    createdTo,
-    errorKey,
-    hasErrors,
-    instrumentMfid,
-    projectScope,
-    visibility,
-  ])
+  }, [errorKey, hasErrors, projectScope, valuesKey])
 
   const active = [
     projectScope !== "all"
@@ -100,6 +97,37 @@ export function ProjectDataFilters({
     values.createdTo ? `Created to (UTC): ${values.createdTo}` : undefined,
     activeInstrumentMfid
       ? `Instrument: ${resolvedInstrument ?? activeInstrumentMfid}`
+      : undefined,
+    resolution.valid
+      ? facetSummary(
+          "Sample type",
+          resolution.filters.sampleType,
+          resolution.filters.sampleTypeIsNull
+        )
+      : undefined,
+    resolution.valid
+      ? facetSummary(
+          "Measurement",
+          resolution.filters.measurement,
+          resolution.filters.measurementIsNull
+        )
+      : undefined,
+    resolution.valid
+      ? facetSummary(
+          "Session",
+          resolution.filters.sessionName,
+          resolution.filters.sessionNameIsNull
+        )
+      : undefined,
+    resolution.valid
+      ? facetSummary(
+          "Data format",
+          resolution.filters.dataFormat,
+          resolution.filters.dataFormatIsNull
+        )
+      : undefined,
+    resolution.valid && resolution.filters.sort
+      ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
       : undefined,
   ].filter((value): value is string => Boolean(value))
   const invalid = (field: keyof ProjectDataFilterSearch) =>
@@ -122,12 +150,26 @@ export function ProjectDataFilters({
         ...previous,
         createdFrom: next.filters.createdFrom,
         createdTo: next.filters.createdTo,
+        dataFormat: next.filters.dataFormat,
+        dataFormatIsNull: next.filters.dataFormatIsNull,
+        dataFormatSet: next.filters.dataFormat !== undefined || undefined,
         datasetCursor: undefined,
+        direction: next.filters.direction,
         instrumentMfid:
           kind === "datasets" ? next.filters.instrumentMfid : undefined,
+        measurement: next.filters.measurement,
+        measurementIsNull: next.filters.measurementIsNull,
+        measurementSet: next.filters.measurement !== undefined || undefined,
         preview: undefined,
         sampleCursor: undefined,
+        sampleType: next.filters.sampleType,
+        sampleTypeIsNull: next.filters.sampleTypeIsNull,
+        sampleTypeSet: next.filters.sampleType !== undefined || undefined,
         scope: draft.projectScope === "all" ? undefined : draft.projectScope,
+        sessionName: next.filters.sessionName,
+        sessionNameIsNull: next.filters.sessionNameIsNull,
+        sessionNameSet: next.filters.sessionName !== undefined || undefined,
+        sort: next.filters.sort,
         visibility: next.filters.visibility,
       }),
       state: {},
@@ -145,11 +187,25 @@ export function ProjectDataFilters({
         ...previous,
         createdFrom: undefined,
         createdTo: undefined,
+        dataFormat: undefined,
+        dataFormatIsNull: undefined,
+        dataFormatSet: undefined,
         datasetCursor: undefined,
+        direction: undefined,
         instrumentMfid: undefined,
+        measurement: undefined,
+        measurementIsNull: undefined,
+        measurementSet: undefined,
         preview: undefined,
         sampleCursor: undefined,
+        sampleType: undefined,
+        sampleTypeIsNull: undefined,
+        sampleTypeSet: undefined,
         scope: undefined,
+        sessionName: undefined,
+        sessionNameIsNull: undefined,
+        sessionNameSet: undefined,
+        sort: undefined,
         visibility: undefined,
       }),
       state: {},
@@ -225,6 +281,120 @@ export function ProjectDataFilters({
                 <NativeSelectOption value="private">Private</NativeSelectOption>
               </NativeSelect>
             </Field>
+            {kind === "samples" && resolution.valid ? (
+              <SampleFacetFilter
+                enabled={filtersOpen}
+                field="sample_type"
+                filters={{
+                  ...resolution.filters,
+                  projectMfid,
+                  projectScope,
+                }}
+                id="project-data-sample-type"
+                label="Sample type"
+                onChange={(selection) =>
+                  setDraft((current) =>
+                    setFacetDraft(
+                      current,
+                      "sampleType",
+                      "sampleTypeSet",
+                      "sampleTypeIsNull",
+                      selection
+                    )
+                  )
+                }
+                selection={facetSelection(
+                  draft.sampleType,
+                  draft.sampleTypeSet,
+                  draft.sampleTypeIsNull
+                )}
+              />
+            ) : null}
+            {kind === "datasets" && resolution.valid ? (
+              <>
+                <DatasetFacetFilter
+                  enabled={filtersOpen}
+                  field="measurement"
+                  filters={{
+                    ...resolution.filters,
+                    projectMfid,
+                    projectScope,
+                  }}
+                  id="project-data-measurement"
+                  label="Measurement"
+                  onChange={(selection) =>
+                    setDraft((current) =>
+                      setFacetDraft(
+                        current,
+                        "measurement",
+                        "measurementSet",
+                        "measurementIsNull",
+                        selection
+                      )
+                    )
+                  }
+                  selection={facetSelection(
+                    draft.measurement,
+                    draft.measurementSet,
+                    draft.measurementIsNull
+                  )}
+                />
+                <DatasetFacetFilter
+                  enabled={filtersOpen}
+                  field="session"
+                  filters={{
+                    ...resolution.filters,
+                    projectMfid,
+                    projectScope,
+                  }}
+                  id="project-data-session"
+                  label="Session"
+                  onChange={(selection) =>
+                    setDraft((current) =>
+                      setFacetDraft(
+                        current,
+                        "sessionName",
+                        "sessionNameSet",
+                        "sessionNameIsNull",
+                        selection
+                      )
+                    )
+                  }
+                  selection={facetSelection(
+                    draft.sessionName,
+                    draft.sessionNameSet,
+                    draft.sessionNameIsNull
+                  )}
+                />
+                <DatasetFacetFilter
+                  enabled={filtersOpen}
+                  field="data_format"
+                  filters={{
+                    ...resolution.filters,
+                    projectMfid,
+                    projectScope,
+                  }}
+                  id="project-data-format"
+                  label="Data format"
+                  onChange={(selection) =>
+                    setDraft((current) =>
+                      setFacetDraft(
+                        current,
+                        "dataFormat",
+                        "dataFormatSet",
+                        "dataFormatIsNull",
+                        selection
+                      )
+                    )
+                  }
+                  selection={facetSelection(
+                    draft.dataFormat,
+                    draft.dataFormatSet,
+                    draft.dataFormatIsNull
+                  )}
+                />
+              </>
+            ) : null}
             <Field data-invalid={invalid("createdFrom")}>
               <FieldLabel htmlFor="project-data-created-from">
                 Created from (UTC)
@@ -285,6 +455,59 @@ export function ProjectDataFilters({
                   }}
                   value={draft.instrumentMfid}
                 />
+              </Field>
+            ) : null}
+            <Field data-invalid={invalid("sort")}>
+              <FieldLabel htmlFor="project-data-sort">Order by</FieldLabel>
+              <NativeSelect
+                aria-describedby={
+                  invalid("sort") ? errorDescription : undefined
+                }
+                aria-invalid={invalid("sort") || undefined}
+                className="w-full"
+                id="project-data-sort"
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    direction: event.target.value
+                      ? (current.direction ?? "desc")
+                      : undefined,
+                    sort: event.target.value || undefined,
+                  }))
+                }
+                value={draft.sort ?? ""}
+              >
+                <NativeSelectOption value="">Default</NativeSelectOption>
+                <NativeSelectOption value="name">Name</NativeSelectOption>
+                <NativeSelectOption value="created">Created</NativeSelectOption>
+                <NativeSelectOption value="updated">Updated</NativeSelectOption>
+              </NativeSelect>
+            </Field>
+            {draft.sort ? (
+              <Field data-invalid={invalid("direction")}>
+                <FieldLabel htmlFor="project-data-direction">
+                  Direction
+                </FieldLabel>
+                <NativeSelect
+                  aria-describedby={
+                    invalid("direction") ? errorDescription : undefined
+                  }
+                  aria-invalid={invalid("direction") || undefined}
+                  className="w-full"
+                  id="project-data-direction"
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      direction: event.target.value,
+                    }))
+                  }
+                  value={draft.direction ?? "desc"}
+                >
+                  <NativeSelectOption value="asc">Ascending</NativeSelectOption>
+                  <NativeSelectOption value="desc">
+                    Descending
+                  </NativeSelectOption>
+                </NativeSelect>
               </Field>
             ) : null}
           </FieldGroup>
@@ -349,4 +572,49 @@ function InstrumentChooser({
 
 function capitalize(value: string) {
   return `${value.charAt(0).toUpperCase()}${value.slice(1)}`
+}
+
+function facetSummary(
+  label: string,
+  value: string | undefined,
+  isNull: true | undefined
+) {
+  if (isNull) return `${label}: Unspecified`
+  if (value === undefined) return undefined
+  return `${label}: ${value || "Empty value"}`
+}
+
+function facetSelection(
+  value: string | undefined,
+  selected: true | undefined,
+  isNull: true | undefined
+): FacetSelection {
+  if (isNull) return { kind: "null" }
+  return selected ? { kind: "value", value: value ?? "" } : { kind: "all" }
+}
+
+function setFacetDraft(
+  filters: ProjectDataFilterDraft,
+  valueKey: "dataFormat" | "measurement" | "sampleType" | "sessionName",
+  selectedKey:
+    "dataFormatSet" | "measurementSet" | "sampleTypeSet" | "sessionNameSet",
+  nullKey:
+    | "dataFormatIsNull"
+    | "measurementIsNull"
+    | "sampleTypeIsNull"
+    | "sessionNameIsNull",
+  selection: FacetSelection
+): ProjectDataFilterDraft {
+  return {
+    ...filters,
+    [nullKey]: selection.kind === "null" || undefined,
+    [selectedKey]: selection.kind === "value" || undefined,
+    [valueKey]: selection.kind === "value" ? selection.value : undefined,
+  }
+}
+
+function sortLabel(sort: string) {
+  if (sort === "created") return "Created"
+  if (sort === "updated") return "Updated"
+  return "Name"
 }

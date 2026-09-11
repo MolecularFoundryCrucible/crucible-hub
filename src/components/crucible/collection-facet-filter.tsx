@@ -8,13 +8,14 @@ import {
   datasetFacetQueryOptions,
   sampleFacetQueryOptions,
 } from "@/data/crucible/facets.queries"
+import type { FacetContext } from "@/data/crucible/facets.queries"
 import type {
   DatasetFacetField,
+  DatasetFacetFilters,
   SampleFacetField,
+  SampleFacetFilters,
   WorkspaceFacetBucket,
 } from "@/data/crucible/facets"
-
-import type { DataFilterValues } from "./data-filter-state"
 
 export type FacetSelection =
   { kind: "all" } | { kind: "null" } | { kind: "value"; value: string }
@@ -71,7 +72,7 @@ export function DatasetFacetFilter({
 
 type FacetFilterProps = {
   enabled: boolean
-  filters: DataFilterValues
+  filters: FacetContext & DatasetFacetFilters & SampleFacetFilters
   id: string
   label: string
   onChange: (selection: FacetSelection) => void

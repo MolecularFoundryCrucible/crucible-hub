@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 
 import {
   CollectionTablePending,
@@ -13,6 +13,7 @@ import {
   ResourceUpdatedCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -35,6 +36,10 @@ import {
   samplesQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { ProjectScope } from "@/data/crucible/data.queries"
+import type {
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
 import { HubApiClientError } from "@/data/crucible/result"
 import type {
   WorkspaceDataset,
@@ -65,6 +70,21 @@ export function ProjectDataCollection({
   projectMfid: string
   projectScope: ProjectScope
 }) {
+  const navigate = useNavigate({ from: "/projects/$projectMfid" })
+  const onSort = (sort: ResourceSort, direction: SortDirection) =>
+    void navigate({
+      params: { projectMfid },
+      search: (previous) => ({
+        ...previous,
+        datasetCursor: undefined,
+        direction,
+        preview: undefined,
+        sampleCursor: undefined,
+        sort,
+      }),
+      state: {},
+      to: "/projects/$projectMfid",
+    })
   return (
     <div className="flex min-w-0 flex-col gap-6">
       <ProjectDataTypeFilters
@@ -92,6 +112,7 @@ export function ProjectDataCollection({
         <ProjectSamples
           cursor={cursor}
           filters={filterResolution.filters}
+          onSort={onSort}
           projectMfid={projectMfid}
           projectScope={projectScope}
         />
@@ -99,6 +120,7 @@ export function ProjectDataCollection({
         <ProjectDatasets
           cursor={cursor}
           filters={filterResolution.filters}
+          onSort={onSort}
           projectMfid={projectMfid}
           projectScope={projectScope}
         />
@@ -110,11 +132,13 @@ export function ProjectDataCollection({
 function ProjectSamples({
   cursor,
   filters,
+  onSort,
   projectMfid,
   projectScope,
 }: {
   cursor: string | undefined
   filters: ProjectDataCollectionFilters
+  onSort: (sort: ResourceSort, direction: SortDirection) => void
   projectMfid: string
   projectScope: ProjectScope
 }) {
@@ -145,12 +169,15 @@ function ProjectSamples({
   return (
     <ProjectDataResult
       cursor={cursor}
+      direction={filters.direction ?? "desc"}
       error={result.isError}
       items={result.data.items}
       kind="samples"
       nextCursor={result.data.nextCursor}
+      onSort={onSort}
       projectMfid={projectMfid}
       retry={() => void result.refetch()}
+      sort={filters.sort}
       updating={result.isFetching}
     />
   )
@@ -159,11 +186,13 @@ function ProjectSamples({
 function ProjectDatasets({
   cursor,
   filters,
+  onSort,
   projectMfid,
   projectScope,
 }: {
   cursor: string | undefined
   filters: ProjectDataCollectionFilters
+  onSort: (sort: ResourceSort, direction: SortDirection) => void
   projectMfid: string
   projectScope: ProjectScope
 }) {
@@ -194,12 +223,15 @@ function ProjectDatasets({
   return (
     <ProjectDataResult
       cursor={cursor}
+      direction={filters.direction ?? "desc"}
       error={result.isError}
       items={result.data.items}
       kind="datasets"
       nextCursor={result.data.nextCursor}
+      onSort={onSort}
       projectMfid={projectMfid}
       retry={() => void result.refetch()}
+      sort={filters.sort}
       updating={result.isFetching}
     />
   )
@@ -207,32 +239,41 @@ function ProjectDatasets({
 
 function ProjectDataResult({
   cursor,
+  direction,
   error,
   items,
   kind,
   nextCursor,
+  onSort,
   projectMfid,
   retry,
+  sort,
   updating,
 }:
   | {
       cursor: string | undefined
+      direction: SortDirection
       error: boolean
       items: readonly WorkspaceSample[]
       kind: "samples"
       nextCursor: string | null
+      onSort: (sort: ResourceSort, direction: SortDirection) => void
       projectMfid: string
       retry: () => void
+      sort: ResourceSort | undefined
       updating: boolean
     }
   | {
       cursor: string | undefined
+      direction: SortDirection
       error: boolean
       items: readonly WorkspaceDataset[]
       kind: "datasets"
       nextCursor: string | null
+      onSort: (sort: ResourceSort, direction: SortDirection) => void
       projectMfid: string
       retry: () => void
+      sort: ResourceSort | undefined
       updating: boolean
     }) {
   const label = kind === "samples" ? "Samples" : "Datasets"
@@ -246,9 +287,21 @@ function ProjectDataResult({
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             {kind === "samples" ? (
-              <ProjectSampleTable items={items} projectMfid={projectMfid} />
+              <ProjectSampleTable
+                direction={direction}
+                items={items}
+                onSort={onSort}
+                projectMfid={projectMfid}
+                sort={sort}
+              />
             ) : (
-              <ProjectDatasetTable items={items} projectMfid={projectMfid} />
+              <ProjectDatasetTable
+                direction={direction}
+                items={items}
+                onSort={onSort}
+                projectMfid={projectMfid}
+                sort={sort}
+              />
             )}
           </CardContent>
         </Card>
@@ -291,14 +344,20 @@ function ProjectDataResult({
 }
 
 function ProjectSampleTable({
+  direction,
   items,
+  onSort,
   projectMfid,
+  sort,
 }: {
+  direction: SortDirection
   items: readonly WorkspaceSample[]
+  onSort: (sort: ResourceSort, direction: SortDirection) => void
   projectMfid: string
+  sort: ResourceSort | undefined
 }) {
   return (
-    <ProjectTable>
+    <ProjectTable direction={direction} onSort={onSort} sort={sort}>
       {items.map((sample) => (
         <TableRow key={sample.unique_id}>
           <ResourceCollectionNameCell
@@ -331,14 +390,20 @@ function ProjectSampleTable({
 }
 
 function ProjectDatasetTable({
+  direction,
   items,
+  onSort,
   projectMfid,
+  sort,
 }: {
+  direction: SortDirection
   items: readonly WorkspaceDataset[]
+  onSort: (sort: ResourceSort, direction: SortDirection) => void
   projectMfid: string
+  sort: ResourceSort | undefined
 }) {
   return (
-    <ProjectTable>
+    <ProjectTable direction={direction} onSort={onSort} sort={sort}>
       {items.map((dataset) => (
         <TableRow key={dataset.unique_id}>
           <ResourceCollectionNameCell
@@ -370,7 +435,17 @@ function ProjectDatasetTable({
   )
 }
 
-function ProjectTable({ children }: { children: React.ReactNode }) {
+function ProjectTable({
+  children,
+  direction,
+  onSort,
+  sort,
+}: {
+  children: React.ReactNode
+  direction: SortDirection
+  onSort: (sort: ResourceSort, direction: SortDirection) => void
+  sort: ResourceSort | undefined
+}) {
   return (
     <Table className="resource-collection-table table-fixed">
       <colgroup>
@@ -382,10 +457,22 @@ function ProjectTable({ children }: { children: React.ReactNode }) {
       </colgroup>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
+          <SortableTableHead
+            active={sort === "name"}
+            direction={direction}
+            field="name"
+            label="Name"
+            onChange={onSort}
+          />
           <TableHead>Project</TableHead>
           <TableHead>Owner</TableHead>
-          <TableHead>Updated</TableHead>
+          <SortableTableHead
+            active={sort === "updated"}
+            direction={direction}
+            field="updated"
+            label="Updated"
+            onChange={onSort}
+          />
           <TableHead className="text-center">
             <span className="sr-only">Open</span>
           </TableHead>
@@ -447,13 +534,31 @@ function ProjectDataFilterLink({
       params={{ projectMfid }}
       search={(previous) => ({
         ...previous,
+        dataFormat: kind === "samples" ? undefined : previous.dataFormat,
+        dataFormatIsNull:
+          kind === "samples" ? undefined : previous.dataFormatIsNull,
+        dataFormatSet: kind === "samples" ? undefined : previous.dataFormatSet,
         datasetCursor: undefined,
         instrumentMfid:
           kind === "samples" ? undefined : previous.instrumentMfid,
         kind: kind === "samples" ? undefined : kind,
+        measurement: kind === "samples" ? undefined : previous.measurement,
+        measurementIsNull:
+          kind === "samples" ? undefined : previous.measurementIsNull,
+        measurementSet:
+          kind === "samples" ? undefined : previous.measurementSet,
         preview: undefined,
         sampleCursor: undefined,
+        sampleType: kind === "datasets" ? undefined : previous.sampleType,
+        sampleTypeIsNull:
+          kind === "datasets" ? undefined : previous.sampleTypeIsNull,
+        sampleTypeSet: kind === "datasets" ? undefined : previous.sampleTypeSet,
         scope: projectScope === "all" ? undefined : projectScope,
+        sessionName: kind === "samples" ? undefined : previous.sessionName,
+        sessionNameIsNull:
+          kind === "samples" ? undefined : previous.sessionNameIsNull,
+        sessionNameSet:
+          kind === "samples" ? undefined : previous.sessionNameSet,
       })}
       state={{}}
       to="/projects/$projectMfid"

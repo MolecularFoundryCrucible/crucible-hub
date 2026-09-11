@@ -12,6 +12,11 @@ import type { ProjectDataKind } from "@/features/project-data/project-data-colle
 import { resolveProjectDataFilters } from "@/features/project-data/project-data-filter-state"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import {
+  collectionCursorSchema,
+  resourceSortSchema,
+  sortDirectionSchema,
+} from "@/data/crucible/collection-query"
+import {
   dataPageLimit,
   datasetsQueryOptions,
   samplesQueryOptions,
@@ -19,14 +24,34 @@ import {
 import type { ProjectScope } from "@/data/crucible/data.queries"
 
 const filterSearchValue = z.string().max(255).optional().catch("")
+const facetSearchValue = z.string().max(255).optional().catch(undefined)
+const selectedFacetSchema = z
+  .union([z.literal(true), z.literal("true")])
+  .transform(() => true as const)
+  .optional()
+  .catch(undefined)
 const projectDataSearchSchema = resourcePreviewSearchSchema.extend({
   createdFrom: filterSearchValue,
   createdTo: filterSearchValue,
+  dataFormat: facetSearchValue,
+  dataFormatIsNull: selectedFacetSchema,
+  dataFormatSet: selectedFacetSchema,
+  direction: sortDirectionSchema.optional().catch(undefined),
   instrumentMfid: filterSearchValue,
   kind: z.enum(["samples", "datasets"]).optional().catch(undefined),
+  measurement: facetSearchValue,
+  measurementIsNull: selectedFacetSchema,
+  measurementSet: selectedFacetSchema,
   scope: z.enum(["all", "assigned", "shared"]).optional().catch(undefined),
-  sampleCursor: z.string().min(1).max(2048).optional().catch(undefined),
-  datasetCursor: z.string().min(1).max(2048).optional().catch(undefined),
+  sampleCursor: collectionCursorSchema,
+  datasetCursor: collectionCursorSchema,
+  sampleType: facetSearchValue,
+  sampleTypeIsNull: selectedFacetSchema,
+  sampleTypeSet: selectedFacetSchema,
+  sessionName: facetSearchValue,
+  sessionNameIsNull: selectedFacetSchema,
+  sessionNameSet: selectedFacetSchema,
+  sort: resourceSortSchema.optional().catch(undefined),
   visibility: filterSearchValue,
 })
 
@@ -39,10 +64,24 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     datasetCursor: search.datasetCursor,
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
+    dataFormat: search.dataFormat,
+    dataFormatIsNull: search.dataFormatIsNull,
+    dataFormatSet: search.dataFormatSet,
+    direction: search.direction,
     instrumentMfid: search.instrumentMfid,
     kind: search.kind ?? "samples",
+    measurement: search.measurement,
+    measurementIsNull: search.measurementIsNull,
+    measurementSet: search.measurementSet,
     projectScope: search.scope ?? "all",
     sampleCursor: search.sampleCursor,
+    sampleType: search.sampleType,
+    sampleTypeIsNull: search.sampleTypeIsNull,
+    sampleTypeSet: search.sampleTypeSet,
+    sessionName: search.sessionName,
+    sessionNameIsNull: search.sessionNameIsNull,
+    sessionNameSet: search.sessionNameSet,
+    sort: search.sort,
     visibility: search.visibility,
   }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
@@ -111,7 +150,21 @@ function ProjectDataPage() {
   const filterValues = {
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
+    dataFormat: search.dataFormat,
+    dataFormatIsNull: search.dataFormatIsNull,
+    dataFormatSet: search.dataFormatSet,
+    direction: search.direction,
     instrumentMfid: search.instrumentMfid,
+    measurement: search.measurement,
+    measurementIsNull: search.measurementIsNull,
+    measurementSet: search.measurementSet,
+    sampleType: search.sampleType,
+    sampleTypeIsNull: search.sampleTypeIsNull,
+    sampleTypeSet: search.sampleTypeSet,
+    sessionName: search.sessionName,
+    sessionNameIsNull: search.sessionNameIsNull,
+    sessionNameSet: search.sessionNameSet,
+    sort: search.sort,
     visibility: search.visibility,
   }
   const filterResolution = resolveProjectDataFilters(filterValues, kind)
