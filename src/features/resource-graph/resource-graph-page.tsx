@@ -13,10 +13,12 @@ import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import {
   ResourcePreviewLink,
-  staticResourcePreviewSiblingCollection,
-  useRegisterResourcePreviewSiblings,
   useResourcePreviewContext,
 } from "@/components/crucible/resource-preview-navigation"
+import {
+  staticResourceSiblingCollection,
+  useRegisterResourceSiblings,
+} from "@/components/crucible/resource-sibling-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
@@ -89,9 +91,9 @@ export function ResourceGraphPage({
             name: node.name,
           }))
       : []
-    return items.length ? [staticResourcePreviewSiblingCollection(items)] : []
+    return items.length ? [staticResourceSiblingCollection(items)] : []
   }, [query.data])
-  useRegisterResourcePreviewSiblings(previewSiblingCollections)
+  useRegisterResourceSiblings(previewSiblingCollections)
 
   if (query.isPending) return <ResourceGraphPending />
   if (!query.data) {

@@ -16,9 +16,9 @@ import {
   groupResourceRelationships,
 } from "@/components/crucible/resource-relationships"
 import {
-  staticResourcePreviewSiblingCollection,
-  useRegisterResourcePreviewSiblings,
-} from "@/components/crucible/resource-preview-navigation"
+  staticResourceSiblingCollection,
+  useRegisterResourceSiblings,
+} from "@/components/crucible/resource-sibling-navigation"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -100,9 +100,9 @@ export function ResourceRelationshipManager({
         mfid: link.unique_id,
         name: link.name || link.unique_id,
       }))
-    return items.length ? [staticResourcePreviewSiblingCollection(items)] : []
+    return items.length ? [staticResourceSiblingCollection(items)] : []
   }, [resource.kind, resource.links])
-  useRegisterResourcePreviewSiblings(previewSiblingCollections)
+  useRegisterResourceSiblings(previewSiblingCollections)
   const canManage =
     resource.capabilities?.can_edit === true && resource.links !== null
   const hasRelationships = (resource.links?.length ?? 0) > 0

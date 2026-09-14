@@ -36,7 +36,7 @@ import {
   ResourceUpdatedCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
-import { useRegisterResourcePreviewSiblings } from "@/components/crucible/resource-preview-navigation"
+import { useRegisterResourceSiblings } from "@/components/crucible/resource-sibling-navigation"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -372,7 +372,7 @@ function ProjectSamples({
     () => [collection.siblingCollection],
     [collection.siblingCollection]
   )
-  useRegisterResourcePreviewSiblings(siblingCollections)
+  useRegisterResourceSiblings(siblingCollections)
 
   if (result.isPending) return <CollectionTablePending label="samples" />
   if (result.isError && !result.data) {
@@ -445,7 +445,7 @@ function ProjectDatasets({
     () => [collection.siblingCollection],
     [collection.siblingCollection]
   )
-  useRegisterResourcePreviewSiblings(siblingCollections)
+  useRegisterResourceSiblings(siblingCollections)
 
   if (result.isPending) return <CollectionTablePending label="datasets" />
   if (result.isError && !result.data) {

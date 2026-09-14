@@ -16,6 +16,7 @@ import {
 } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
+import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { useTheme } from "@/components/theme-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -196,7 +197,11 @@ export function AppShell({
             </div>
           </header>
           <div className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">
-            {children}
+            <ResourceSiblingNavigationProvider
+              key={scope?.join(":") ?? account?.unique_id ?? "anonymous"}
+            >
+              {children}
+            </ResourceSiblingNavigationProvider>
           </div>
         </SidebarInset>
       </SidebarProvider>

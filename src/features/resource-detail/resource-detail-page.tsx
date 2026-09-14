@@ -25,6 +25,10 @@ import {
   resourceSectionLinkClassName,
 } from "@/components/crucible/resource-section-navigation"
 import {
+  ResourceSiblingNavigationControls,
+  useActiveResourceSiblingNavigation,
+} from "@/components/crucible/resource-sibling-navigation"
+import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
@@ -107,6 +111,7 @@ export function ResourceWorkspace({
   const scope = useWorkspaceScope()
   const resourceOptions = resourceQueryOptions(scope, resourceMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
+  const siblingNavigation = useActiveResourceSiblingNavigation(resourceMfid)
   useRememberRecentlyViewed(
     resource && (resource.kind === "sample" || resource.kind === "dataset")
       ? {
@@ -194,14 +199,23 @@ export function ResourceWorkspace({
         />
         <ResourceNavigation
           actions={
-            <EntityRefreshAction
-              label={`Refresh ${resource.name}`}
-              queryKey={resourceOptions.queryKey}
-              refreshedAt={dataUpdatedAt}
-            />
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+              {siblingNavigation ? (
+                <ResourceSiblingNavigationControls
+                  fromProject={fromProject}
+                  navigation={siblingNavigation}
+                />
+              ) : null}
+              <EntityRefreshAction
+                label={`Refresh ${resource.name}`}
+                queryKey={resourceOptions.queryKey}
+                refreshedAt={dataUpdatedAt}
+              />
+            </div>
           }
           fromProject={fromProject}
           resource={resource}
+          siblingSessionId={siblingNavigation?.id}
         />
         <Outlet />
       </PageLayout>
@@ -261,11 +275,16 @@ function ResourceNavigation({
   actions,
   fromProject,
   resource,
+  siblingSessionId,
 }: {
   actions?: React.ReactNode
   fromProject?: string
   resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
+  siblingSessionId?: string
 }) {
+  const historyState = siblingSessionId
+    ? { resourceSiblingSession: siblingSessionId }
+    : {}
   if (resource.kind === "sample") {
     return (
       <ResourceSectionNavigation actions={actions} label="Sample sections">
@@ -275,6 +294,7 @@ function ResourceNavigation({
           className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           search={{ fromProject, preview: undefined }}
+          state={historyState}
           to="/samples/$sampleMfid"
         >
           Overview
@@ -286,6 +306,7 @@ function ResourceNavigation({
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
           search={{ fromProject, preview: undefined }}
+          state={historyState}
           to="/samples/$sampleMfid/graph"
         >
           Graph
@@ -297,6 +318,7 @@ function ResourceNavigation({
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
           search={{ fromProject, preview: undefined }}
+          state={historyState}
           to="/samples/$sampleMfid/manage"
         >
           Manage
@@ -312,6 +334,7 @@ function ResourceNavigation({
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         search={{ fromProject, preview: undefined }}
+        state={historyState}
         to="/datasets/$datasetMfid"
       >
         Overview
@@ -323,6 +346,7 @@ function ResourceNavigation({
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{ fromProject, preview: undefined }}
+        state={historyState}
         to="/datasets/$datasetMfid/processing"
       >
         Processing
@@ -334,6 +358,7 @@ function ResourceNavigation({
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{ fromProject, preview: undefined }}
+        state={historyState}
         to="/datasets/$datasetMfid/graph"
       >
         Graph
@@ -345,6 +370,7 @@ function ResourceNavigation({
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{ fromProject, preview: undefined }}
+        state={historyState}
         to="/datasets/$datasetMfid/manage"
       >
         Manage

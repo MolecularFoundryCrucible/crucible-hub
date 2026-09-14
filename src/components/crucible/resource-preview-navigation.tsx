@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useContext, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 import {
@@ -45,80 +45,10 @@ export type ResourcePreviewHost =
       section?: "graph"
     }
 
-export type ResourcePreviewSibling = {
-  kind: "dataset" | "sample"
-  mfid: string
-  name: string
-}
-
 export type ResourcePreviewIdentity = {
   kind?: "dataset" | "instrument" | "project" | "sample"
   mfid: string
   name: string
-}
-
-export type ResourcePreviewSiblingCollection = {
-  hasNextPage: boolean
-  isFetchingNextPage: boolean
-  items: readonly ResourcePreviewSibling[]
-  loadMore: () => Promise<readonly ResourcePreviewSibling[]>
-  loadMoreError: boolean
-  startsAtBeginning: boolean
-  total: number | null
-}
-
-export function resourcePreviewSiblingCollection<
-  TItem extends { unique_id: string },
->({
-  getName,
-  hasNextPage,
-  isFetchingNextPage,
-  items,
-  kind,
-  loadMore,
-  loadMoreError,
-  startsAtBeginning,
-  total,
-}: {
-  getName: (item: TItem) => string
-  hasNextPage: boolean
-  isFetchingNextPage: boolean
-  items: readonly TItem[]
-  kind: "dataset" | "sample"
-  loadMore: () => Promise<readonly TItem[]>
-  loadMoreError: boolean
-  startsAtBeginning: boolean
-  total: number | null
-}): ResourcePreviewSiblingCollection {
-  const mapItems = (resources: readonly TItem[]) =>
-    resources.map((resource) => ({
-      kind,
-      mfid: resource.unique_id,
-      name: getName(resource),
-    }))
-  return {
-    hasNextPage,
-    isFetchingNextPage,
-    items: mapItems(items),
-    loadMore: async () => mapItems(await loadMore()),
-    loadMoreError,
-    startsAtBeginning,
-    total,
-  }
-}
-
-export function staticResourcePreviewSiblingCollection(
-  items: readonly ResourcePreviewSibling[]
-): ResourcePreviewSiblingCollection {
-  return {
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    items,
-    loadMore: async () => items,
-    loadMoreError: false,
-    startsAtBeginning: true,
-    total: items.length,
-  }
 }
 
 export function resolveResourcePreview(value: unknown) {
@@ -208,9 +138,6 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
   const client = useQueryClient()
   const router = useRouter()
   const trigger = useRef<HTMLElement | null>(null)
-  const [siblingCollections, setSiblingCollections] = useState<
-    readonly ResourcePreviewSiblingCollection[]
-  >([])
   const [preparedPreview, setPreparedPreview] =
     useState<ResourcePreviewIdentity>()
   const location = useRouterState({ select: (state) => state.location })
@@ -391,44 +318,8 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
     })
   }
 
-  const siblingCollection = preview
-    ? siblingCollections.find((collection) =>
-        collection.items.some((item) => item.mfid === preview)
-      )
-    : undefined
-  const siblingIndex = siblingCollection
-    ? siblingCollection.items.findIndex((item) => item.mfid === preview)
-    : -1
-  const previousSibling =
-    siblingIndex > 0 ? siblingCollection?.items[siblingIndex - 1] : undefined
-  const nextSibling =
-    siblingIndex >= 0 ? siblingCollection?.items[siblingIndex + 1] : undefined
-  const siblingPosition =
-    siblingCollection && siblingIndex >= 0
-      ? siblingCollection.startsAtBeginning && siblingCollection.total !== null
-        ? `${siblingIndex + 1} of ${siblingCollection.total}`
-        : `${siblingIndex + 1} of ${siblingCollection.items.length} loaded`
-      : undefined
-  const siblingPreview =
-    siblingIndex >= 0 ? siblingCollection?.items[siblingIndex] : undefined
   const previewIdentity =
-    siblingPreview ??
-    (preparedPreview?.mfid === preview ? preparedPreview : undefined)
-
-  const moveToPreviousSibling = () => {
-    if (previousSibling) open(previousSibling.mfid, undefined, previousSibling)
-  }
-  const moveToNextSibling = async () => {
-    if (nextSibling) {
-      open(nextSibling.mfid, undefined, nextSibling)
-      return
-    }
-    if (!siblingCollection?.hasNextPage) return
-    const items = await siblingCollection.loadMore()
-    const currentIndex = items.findIndex((item) => item.mfid === preview)
-    const target = currentIndex >= 0 ? items[currentIndex + 1] : undefined
-    if (target) open(target.mfid, undefined, target)
-  }
+    preparedPreview?.mfid === preview ? preparedPreview : undefined
 
   return {
     host,
@@ -441,15 +332,6 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
     state,
     targetPreview,
     close,
-    moveToNextSibling,
-    moveToPreviousSibling,
-    nextSibling,
-    previousSibling,
-    siblingCanLoadNext: Boolean(siblingCollection?.hasNextPage),
-    siblingIsLoading: Boolean(siblingCollection?.isFetchingNextPage),
-    siblingLoadError: Boolean(siblingCollection?.loadMoreError),
-    siblingPosition,
-    setSiblingCollections,
     trigger,
     replace: hasPreview,
   }
@@ -468,16 +350,6 @@ export function useResourcePreviewContext() {
     throw new Error("Resource preview navigation is unavailable.")
   }
   return navigation
-}
-
-export function useRegisterResourcePreviewSiblings(
-  collections: readonly ResourcePreviewSiblingCollection[]
-) {
-  const navigation = useResourcePreviewContext()
-  useEffect(() => {
-    navigation.setSiblingCollections(collections)
-    return () => navigation.setSiblingCollections([])
-  }, [collections, navigation.setSiblingCollections])
 }
 
 export function ResourcePreviewLink({

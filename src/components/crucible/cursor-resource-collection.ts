@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import type { InfiniteData } from "@tanstack/react-query"
 
-import { resourcePreviewSiblingCollection } from "@/components/crucible/resource-preview-navigation"
+import type { ResourceSibling } from "@/components/crucible/resource-sibling-navigation"
 import {
   cursorPageTotal,
   flattenCursorPages,
@@ -16,10 +16,10 @@ type CursorQueryResult<TItem> = {
   data: InfiniteData<WorkspaceCursorPage<TItem>, unknown> | undefined
   fetchNextPage: () => Promise<{
     data?: InfiniteData<WorkspaceCursorPage<TItem>, unknown>
+    error?: unknown
+    isError: boolean
   }>
   hasNextPage: boolean
-  isFetchNextPageError: boolean
-  isFetching: boolean
 }
 
 export function useCursorResourceCollection<
@@ -40,34 +40,40 @@ export function useCursorResourceCollection<
     [query.data]
   )
   const total = cursorPageTotal(query.data?.pages)
-  const siblingCollection = useMemo(
-    () =>
-      resourcePreviewSiblingCollection({
-        getName,
-        hasNextPage: query.hasNextPage,
-        isFetchingNextPage: query.isFetching,
-        items,
+  const siblingCollection = useMemo(() => {
+    const mapItems = (resources: readonly TItem[]): ResourceSibling[] =>
+      resources.map((resource) => ({
         kind,
-        loadMore: async () => {
-          const next = await query.fetchNextPage()
-          return flattenCursorPages(next.data?.pages)
-        },
-        loadMoreError: query.isFetchNextPageError,
-        startsAtBeginning: !initialCursor,
-        total,
-      }),
-    [
-      getName,
-      initialCursor,
-      items,
-      kind,
-      query.fetchNextPage,
-      query.hasNextPage,
-      query.isFetchNextPageError,
-      query.isFetching,
+        mfid: resource.unique_id,
+        name: getName(resource),
+      }))
+    return {
+      hasNextPage: query.hasNextPage,
+      items: mapItems(items),
+      loadMore: async () => {
+        const next = await query.fetchNextPage()
+        if (next.isError) {
+          throw next.error ?? new Error("The next page could not be loaded.")
+        }
+        const pages = next.data?.pages
+        return {
+          hasNextPage: Boolean(pages?.at(-1)?.nextCursor),
+          items: mapItems(flattenCursorPages(pages)),
+          total: cursorPageTotal(pages),
+        }
+      },
+      startsAtBeginning: !initialCursor,
       total,
-    ]
-  )
+    }
+  }, [
+    getName,
+    initialCursor,
+    items,
+    kind,
+    query.fetchNextPage,
+    query.hasNextPage,
+    total,
+  ])
   return { items, siblingCollection, total }
 }
 

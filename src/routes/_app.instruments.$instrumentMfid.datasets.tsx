@@ -14,7 +14,12 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import {
+  datasetCollectionName,
+  useCursorResourceCollection,
+} from "@/components/crucible/cursor-resource-collection"
 import { InstrumentDatasetCollection } from "@/components/crucible/instrument-dataset-collection"
+import { useRegisterResourceSiblings } from "@/components/crucible/resource-sibling-navigation"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -29,10 +34,6 @@ import {
   dataPageLimit,
   datasetsCursorQueryOptions,
 } from "@/data/crucible/data.queries"
-import {
-  cursorPageTotal,
-  flattenCursorPages,
-} from "@/data/crucible/cursor-pages"
 
 const instrumentDatasetSearchSchema = z.object({
   ...collectionBrowseSearchFields,
@@ -117,11 +118,19 @@ function InstrumentDatasetsPage() {
       Boolean(instrumentMfid) &&
       (browse.view !== "grouped" || browse.selection.kind !== "all"),
   })
-  const items = useMemo(
-    () => flattenCursorPages(result.data?.pages),
-    [result.data]
+  const collection = useCursorResourceCollection({
+    getName: datasetCollectionName,
+    initialCursor: cursor,
+    kind: "dataset",
+    query: result,
+  })
+  const siblingCollections = useMemo(
+    () => (result.data ? [collection.siblingCollection] : []),
+    [collection.siblingCollection, result.data]
   )
-  const total = cursorPageTotal(result.data?.pages)
+  useRegisterResourceSiblings(siblingCollections)
+  const items = collection.items
+  const total = collection.total
 
   if (!instrumentMfid) return null
 

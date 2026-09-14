@@ -414,12 +414,17 @@ test("keeps the main resource through a delayed inspector failure and retry", as
       name: "Operando spectroscopy acquisition with a deliberately long descriptive name",
     })
   ).toBeVisible()
+  await expect(
+    panel.getByRole("navigation", { name: "Resources in this collection" })
+  ).toHaveCount(0)
   await page.keyboard.press("ArrowLeft")
   await expect
     .poll(() => new URL(page.url()).searchParams.get("preview"))
-    .toBe("fixture-sample-3")
+    .toBe("fixture-dataset-1")
   await expect(
-    panel.getByRole("heading", { name: "Catalyst sample 3" })
+    panel.getByRole("heading", {
+      name: "Operando spectroscopy acquisition with a deliberately long descriptive name",
+    })
   ).toBeVisible()
   await expect(heading).toHaveAttribute("data-test-retained", "true")
 })

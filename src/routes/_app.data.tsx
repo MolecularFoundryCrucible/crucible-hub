@@ -33,9 +33,9 @@ import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import {
   ResourcePreviewContext,
   resourcePreviewSearchSchema,
-  useRegisterResourcePreviewSiblings,
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
+import { useRegisterResourceSiblings } from "@/components/crucible/resource-sibling-navigation"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
@@ -362,7 +362,7 @@ function DataResults({
       sampleResult.data,
     ]
   )
-  useRegisterResourcePreviewSiblings(siblingCollections)
+  useRegisterResourceSiblings(siblingCollections)
   const samplePending = loadSamples && sampleResult.isPending
   const datasetPending = loadDatasets && datasetResult.isPending
   const hasReadableData = Boolean(

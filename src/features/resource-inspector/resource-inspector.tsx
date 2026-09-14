@@ -1,15 +1,12 @@
-import { useEffect, useEffectEvent, useRef } from "react"
+import { useEffect, useRef } from "react"
 import type { MouseEventHandler, ReactNode } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
 import {
   BackPreviewIcon,
   CloseInspectorIcon,
   ExploreGraphFocusIcon,
-  LoadingMoreIcon,
-  NextSiblingIcon,
-  PreviousSiblingIcon,
 } from "@/components/crucible/icons"
 import {
   CollectionRowsPending,
@@ -55,7 +52,6 @@ export function ResourceInspector({
   const open = Boolean(navigation.preview) || navigation.invalidPreview
   const isMobile = useIsMobile()
   const scope = useWorkspaceScope()
-  const queryClient = useQueryClient()
   const query = useQuery({
     ...resourceQueryOptions(scope, navigation.preview ?? ""),
     enabled: Boolean(navigation.preview),
@@ -64,11 +60,6 @@ export function ResourceInspector({
   const previewIdentity = navigation.previewIdentity
   const previewKind = resource?.kind ?? previewIdentity?.kind
   const previewName = resource?.name ?? previewIdentity?.name
-  const canMoveToNextSibling = Boolean(
-    navigation.nextSibling || navigation.siblingCanLoadNext
-  )
-  const moveToPreviousSibling = useEffectEvent(navigation.moveToPreviousSibling)
-  const moveToNextSibling = useEffectEvent(navigation.moveToNextSibling)
 
   useEffect(() => {
     if (open) {
@@ -77,62 +68,6 @@ export function ResourceInspector({
       body.current?.scrollTo({ top: 0 })
     }
   }, [navigation.preview, open])
-
-  useEffect(() => {
-    if (!open) return
-    for (const sibling of [
-      navigation.previousSibling,
-      navigation.nextSibling,
-    ]) {
-      if (sibling) {
-        void queryClient.prefetchQuery(
-          resourceQueryOptions(scope, sibling.mfid)
-        )
-      }
-    }
-  }, [
-    navigation.nextSibling,
-    navigation.previousSibling,
-    open,
-    queryClient,
-    scope,
-  ])
-
-  useEffect(() => {
-    if (!open || !navigation.siblingPosition) return
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.defaultPrevented ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        event.shiftKey ||
-        isEditableTarget(event.target)
-      ) {
-        return
-      }
-      if (event.key === "ArrowLeft" && navigation.previousSibling) {
-        event.preventDefault()
-        moveToPreviousSibling()
-      }
-      if (
-        event.key === "ArrowRight" &&
-        canMoveToNextSibling &&
-        !navigation.siblingIsLoading
-      ) {
-        event.preventDefault()
-        void moveToNextSibling()
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [
-    canMoveToNextSibling,
-    navigation.previousSibling,
-    navigation.siblingIsLoading,
-    navigation.siblingPosition,
-    open,
-  ])
 
   const suppressFocusRestore: MouseEventHandler<HTMLAnchorElement> = (
     event
@@ -266,9 +201,6 @@ export function ResourceInspector({
                 presentation="inspector-footer"
               />
             ) : null}
-            {navigation.siblingPosition ? (
-              <ResourceSiblingNavigation navigation={navigation} />
-            ) : null}
           </div>
         </SheetHeader>
         <div ref={body} className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
@@ -290,85 +222,6 @@ export function ResourceInspector({
         ) : null}
       </SheetContent>
     </Sheet>
-  )
-}
-
-function ResourceSiblingNavigation({
-  navigation,
-}: {
-  navigation: ResourcePreviewNavigation
-}) {
-  const canMoveNext = Boolean(
-    navigation.nextSibling || navigation.siblingCanLoadNext
-  )
-  return (
-    <nav
-      aria-label="Resources in this collection"
-      className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-3"
-    >
-      <Button
-        aria-label={
-          navigation.previousSibling
-            ? `Previous item: ${navigation.previousSibling.name}`
-            : "Previous item"
-        }
-        disabled={!navigation.previousSibling}
-        onClick={navigation.moveToPreviousSibling}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        <PreviousSiblingIcon aria-hidden="true" data-icon="inline-start" />
-        Previous
-      </Button>
-      <span className="flex items-center gap-2 text-supporting text-muted-foreground">
-        {navigation.siblingPosition}
-        <span aria-hidden="true" className="hidden items-center gap-1 sm:flex">
-          <kbd className="rounded border bg-muted px-1.5 py-0.5 text-label-compact">
-            ←
-          </kbd>
-          <kbd className="rounded border bg-muted px-1.5 py-0.5 text-label-compact">
-            →
-          </kbd>
-        </span>
-      </span>
-      <Button
-        aria-label={
-          navigation.nextSibling
-            ? `Next item: ${navigation.nextSibling.name}`
-            : "Next item"
-        }
-        disabled={!canMoveNext || navigation.siblingIsLoading}
-        onClick={() => void navigation.moveToNextSibling()}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        Next
-        {navigation.siblingIsLoading ? (
-          <LoadingMoreIcon
-            aria-hidden="true"
-            className="animate-spin motion-reduce:animate-none"
-            data-icon="inline-end"
-          />
-        ) : (
-          <NextSiblingIcon aria-hidden="true" data-icon="inline-end" />
-        )}
-      </Button>
-      {navigation.siblingLoadError ? (
-        <p className="basis-full text-supporting text-destructive" role="alert">
-          The next items could not be loaded. Try again.
-        </p>
-      ) : null}
-    </nav>
-  )
-}
-
-function isEditableTarget(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      target.matches("input, textarea, select, [role='textbox']"))
   )
 }
 

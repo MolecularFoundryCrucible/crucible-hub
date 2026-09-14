@@ -118,7 +118,7 @@ export function KeyboardShortcuts({
                 ? [["G then P", "Go to this dataset's Processing page"]]
                 : []),
               ["G then M", "Go to this resource's Manage page"],
-              ["← / →", "Move between related resource previews"],
+              ["← / →", "Previous or next item when opened from a list"],
             ]
           : []),
       ]

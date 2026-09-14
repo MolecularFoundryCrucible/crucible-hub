@@ -138,7 +138,7 @@ test("filtered paginated Data preview preserves the collection and restores focu
         ).length
     )
     .toBe(1)
-  expect(resourceResponses.length).toBeLessThanOrEqual(3)
+  expect(resourceResponses).toHaveLength(1)
   expect(collectionResponses).toHaveLength(0)
   expect(fileResponses).toHaveLength(0)
 
@@ -158,6 +158,53 @@ test("filtered paginated Data preview preserves the collection and restores focu
     sampleCursor: "fixture:50",
     scenario: "dense",
   })
+})
+
+test("moves through the originating collection from canonical detail", async ({
+  page,
+}) => {
+  await page.goto(pagedDataUrl)
+  await page.waitForLoadState("networkidle")
+  const resourceRequests: string[] = []
+  page.on("request", (request) => {
+    if (isResourceRequest(request.url())) resourceRequests.push(request.url())
+  })
+
+  await dataRow(page, "Catalyst sample 51")
+    .getByRole("link", {
+      name: "Open full page: Catalyst sample 51",
+      exact: true,
+    })
+    .click()
+
+  await expect(page).toHaveURL(new RegExp(`/hub/samples/${sampleFiftyOne}`))
+  const siblings = page.getByRole("navigation", {
+    name: "Resources in the originating collection",
+  })
+  await expect(siblings).toBeVisible()
+  await expect(
+    siblings.getByRole("button", { name: "Previous", exact: true })
+  ).toBeDisabled()
+  await expect(
+    siblings.getByRole("link", { name: "Next item: Catalyst sample 52" })
+  ).toBeVisible()
+  expect(
+    resourceRequests.filter((url) =>
+      isResourceRequest(url, "fixture-sample-52")
+    )
+  ).toHaveLength(0)
+
+  await page.keyboard.press("ArrowRight")
+  await expect(page).toHaveURL(/\/hub\/samples\/fixture-sample-52/)
+  await expect(page.locator("main h1")).toHaveText("Catalyst sample 52")
+  await expect(siblings).toContainText("2 of 50 loaded")
+
+  await page.reload()
+  await expect(
+    page.getByRole("navigation", {
+      name: "Resources in the originating collection",
+    })
+  ).toHaveCount(0)
 })
 
 test("Data preview follows relationships and promotes to a canonical page", async ({
