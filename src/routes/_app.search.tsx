@@ -514,7 +514,7 @@ function SearchResult({
   return (
     <li className="flex min-w-0 items-start gap-3 px-4 py-3 sm:px-5">
       <div className="min-w-0 flex-1">{link}</div>
-      <MfidValue className="hidden max-w-64 lg:flex" value={item.unique_id} />
+      <MfidValue className="hidden shrink-0 lg:flex" value={item.unique_id} />
     </li>
   )
 }
