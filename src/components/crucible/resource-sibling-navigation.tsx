@@ -279,7 +279,7 @@ export function useActiveResourceSiblingNavigation(currentMfid: string) {
   const session =
     navigation?.active &&
     (navigation.active.id === sessionId ||
-      (!sessionId && navigation.active.anchorMfid === currentMfid))
+      navigation.active.anchorMfid === currentMfid)
       ? navigation.active
       : undefined
   const index = session?.items.findIndex((item) => item.mfid === currentMfid)

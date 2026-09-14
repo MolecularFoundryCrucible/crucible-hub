@@ -163,21 +163,21 @@ test("filtered paginated Data preview preserves the collection and restores focu
 test("moves through the originating collection from canonical detail", async ({
   page,
 }) => {
-  await page.goto(pagedDataUrl)
+  await page.goto("/hub/data?scenario=dense&kind=samples")
   await page.waitForLoadState("networkidle")
   const resourceRequests: string[] = []
   page.on("request", (request) => {
     if (isResourceRequest(request.url())) resourceRequests.push(request.url())
   })
 
-  await dataRow(page, "Catalyst sample 51")
+  await dataRow(page, "Catalyst sample 9")
     .getByRole("link", {
-      name: "Open full page: Catalyst sample 51",
+      name: "Open full page: Catalyst sample 9",
       exact: true,
     })
     .click()
 
-  await expect(page).toHaveURL(new RegExp(`/hub/samples/${sampleFiftyOne}`))
+  await expect(page).toHaveURL(/\/hub\/samples\/fixture-sample-9/)
   const siblings = page.getByRole("navigation", {
     name: "Resource sequence navigation",
   })
@@ -186,26 +186,61 @@ test("moves through the originating collection from canonical detail", async ({
     siblings.getByRole("button", { name: "Previous item", exact: true })
   ).toBeDisabled()
   await expect(
-    siblings.getByRole("link", { name: "Next item: Catalyst sample 52" })
+    siblings.getByRole("link", { name: "Next item: Catalyst sample 8" })
   ).toBeVisible()
   expect(
-    resourceRequests.filter((url) =>
-      isResourceRequest(url, "fixture-sample-52")
-    )
+    resourceRequests.filter((url) => isResourceRequest(url, "fixture-sample-8"))
   ).toHaveLength(0)
 
   await page.keyboard.press("ArrowRight")
-  await expect(page).toHaveURL(/\/hub\/samples\/fixture-sample-52/)
-  await expect(page.locator("main h1")).toHaveText("Catalyst sample 52")
-  await expect(siblings).toContainText("2 / 50 loaded")
+  await expect(page).toHaveURL(/\/hub\/samples\/fixture-sample-8/)
+  await expect(page.locator("main h1")).toHaveText("Catalyst sample 8")
+  await expect(siblings).toContainText("2 / 54")
   await expect(siblings).toContainText("Samples · Default order")
 
   await page.reload()
+  await expect(siblings).toBeVisible()
   await expect(
-    page.getByRole("navigation", {
-      name: "Resource sequence navigation",
+    siblings.getByRole("button", { name: /Change resource sequence/ })
+  ).toContainText("Browse nearby resources")
+})
+
+test("reconfigures sibling navigation from canonical detail", async ({
+  page,
+}) => {
+  await page.goto("/hub/data?scenario=dense&kind=samples")
+  await page.waitForLoadState("networkidle")
+
+  await dataRow(page, "Catalyst sample 51")
+    .getByRole("link", {
+      name: "Open full page: Catalyst sample 51",
+      exact: true,
     })
-  ).toHaveCount(0)
+    .click()
+
+  const siblings = page.getByRole("navigation", {
+    name: "Resource sequence navigation",
+  })
+  await siblings
+    .getByRole("button", { name: /Change resource sequence/ })
+    .click()
+
+  const dialog = page.getByRole("dialog", { name: "Browse nearby samples" })
+  await dialog.getByLabel("Include").selectOption("all")
+  await dialog.getByRole("button", { name: "Apply", exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+
+  await expect(
+    siblings.getByRole("link", { name: /^Previous item:/ })
+  ).toBeVisible()
+  await expect(
+    siblings.getByRole("link", { name: /^Next item:/ })
+  ).toBeVisible()
+
+  await page.keyboard.press("ArrowRight")
+  await expect(page.locator("main h1")).toHaveText("Catalyst sample 52")
+  await page.keyboard.press("ArrowLeft")
+  await expect(page.locator("main h1")).toHaveText("Catalyst sample 51")
 })
 
 test("Data preview follows relationships and promotes to a canonical page", async ({
