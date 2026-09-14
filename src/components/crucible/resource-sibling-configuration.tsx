@@ -76,9 +76,7 @@ export function ResourceSiblingConfigurationAction({
     }
   }
 
-  const title = navigation
-    ? `${navigation.position}, ${navigation.label}`
-    : "Browse nearby resources"
+  const title = navigation?.label ?? "Browse nearby resources"
 
   return (
     <Dialog onOpenChange={changeOpen} open={open}>

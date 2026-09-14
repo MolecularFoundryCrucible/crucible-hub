@@ -366,7 +366,6 @@ function ProjectSamples({
 
   const collection = useCursorResourceCollection({
     getName: sampleCollectionName,
-    initialCursor: cursor,
     kind: "sample",
     label: resourceSiblingSequenceLabel({
       filters,
@@ -444,7 +443,6 @@ function ProjectDatasets({
 
   const collection = useCursorResourceCollection({
     getName: datasetCollectionName,
-    initialCursor: cursor,
     kind: "dataset",
     label: resourceSiblingSequenceLabel({
       filters,

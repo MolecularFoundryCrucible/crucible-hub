@@ -152,7 +152,6 @@ function InstrumentDatasetsPage() {
   })
   const collection = useCursorResourceCollection({
     getName: datasetCollectionName,
-    initialCursor: cursor,
     kind: "dataset",
     label: resourceSiblingSequenceLabel({
       filters: collectionFilters,

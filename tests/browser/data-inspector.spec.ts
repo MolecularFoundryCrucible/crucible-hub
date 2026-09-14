@@ -195,7 +195,6 @@ test("moves through the originating collection from canonical detail", async ({
   await page.keyboard.press("ArrowRight")
   await expect(page).toHaveURL(/\/hub\/samples\/fixture-sample-8/)
   await expect(page.locator("main h1")).toHaveText("Catalyst sample 8")
-  await expect(siblings).toContainText("2 / 54")
   await expect(siblings).toContainText("Samples · Default order")
 
   await page.reload()

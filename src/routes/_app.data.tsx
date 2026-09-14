@@ -330,7 +330,6 @@ function DataResults({
 
   const sampleCollection = useCursorResourceCollection({
     getName: sampleCollectionName,
-    initialCursor: search.sampleCursor,
     kind: "sample",
     label: resourceSiblingSequenceLabel({
       filters: sampleCollectionFilters,
@@ -340,7 +339,6 @@ function DataResults({
   })
   const datasetCollection = useCursorResourceCollection({
     getName: datasetCollectionName,
-    initialCursor: search.datasetCursor,
     kind: "dataset",
     label: resourceSiblingSequenceLabel({
       filters: datasetCollectionFilters,

@@ -37,7 +37,6 @@ type ResourceSiblingPage = {
   hasNextPage: boolean
   hasPreviousPage: boolean
   items: readonly ResourceSibling[]
-  total: number | null
 }
 
 export type ResourceSiblingCollection = ResourceSiblingPage & {
@@ -46,7 +45,6 @@ export type ResourceSiblingCollection = ResourceSiblingPage & {
   label: string
   loadNext: () => Promise<ResourceSiblingPage>
   loadPrevious: () => Promise<ResourceSiblingPage>
-  startsAtBeginning: boolean
 }
 
 export type ResourceSiblingConfiguration = {
@@ -291,10 +289,6 @@ export function useActiveResourceSiblingNavigation(currentMfid: string) {
     loadPrevious: () =>
       navigation.loadSibling("previous", session.id, currentMfid),
     next: session.items.at(index + 1),
-    position:
-      session.startsAtBeginning && session.total !== null
-        ? `${index + 1} / ${session.total}`
-        : `${index + 1} / ${session.items.length} loaded`,
     previous: index > 0 ? session.items.at(index - 1) : undefined,
   }
 }
@@ -404,11 +398,7 @@ export function ResourceSiblingNavigationControls({
       className="flex min-w-0 flex-col items-end gap-1"
     >
       <ButtonGroup
-        aria-label={
-          navigation
-            ? `${navigation.label}, ${navigation.position}`
-            : "Browse nearby resources"
-        }
+        aria-label={navigation ? navigation.label : "Browse nearby resources"}
         className="max-w-full"
       >
         {navigation?.previous ? (
@@ -664,13 +654,11 @@ export function staticResourceSiblingCollection(
     hasNextPage: false,
     hasPreviousPage: false,
     items,
-    total: items.length,
   }
   return {
     ...page,
     label,
     loadNext: async () => page,
     loadPrevious: async () => page,
-    startsAtBeginning: true,
   }
 }

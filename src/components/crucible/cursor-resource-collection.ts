@@ -26,13 +26,11 @@ export function useCursorResourceCollection<
   TItem extends { unique_id: string },
 >({
   getName,
-  initialCursor,
   kind,
   label,
   query,
 }: {
   getName: (item: TItem) => string
-  initialCursor: string | undefined
   kind: "dataset" | "sample"
   label: string
   query: CursorQueryResult<TItem>
@@ -64,21 +62,16 @@ export function useCursorResourceCollection<
           hasNextPage: Boolean(pages?.at(-1)?.nextCursor),
           hasPreviousPage: false,
           items: mapItems(flattenCursorPages(pages)),
-          total: cursorPageTotal(pages),
         }
       },
       loadPrevious: async () => ({
         hasNextPage: query.hasNextPage,
         hasPreviousPage: false,
         items: mapItems(items),
-        total,
       }),
-      startsAtBeginning: !initialCursor,
-      total,
     }
   }, [
     getName,
-    initialCursor,
     items,
     kind,
     label,

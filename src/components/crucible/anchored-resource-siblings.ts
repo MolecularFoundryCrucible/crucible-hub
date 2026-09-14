@@ -49,7 +49,7 @@ export async function createAnchoredResourceSiblingCollection({
             ...filters,
             anchorMfid,
             direction,
-            includeTotal: direction === configuration.direction,
+            includeTotal: false,
           })
         ),
       fetchCursor: (direction, cursor) =>
@@ -87,7 +87,7 @@ export async function createAnchoredResourceSiblingCollection({
           ...filters,
           anchorMfid,
           direction,
-          includeTotal: direction === configuration.direction,
+          includeTotal: false,
         })
       ),
     fetchCursor: (direction, cursor) =>
@@ -223,14 +223,11 @@ async function createAnchoredCollection<TItem extends { unique_id: string }>({
     ...mapSiblings([...previousPage.items.slice(1)].reverse(), kind, mapName),
     ...mapSiblings(nextPage.items, kind, mapName),
   ])
-  const total = nextPage.total ?? previousPage.total
-
   function currentPage() {
     return {
       hasNextPage: Boolean(nextCursor),
       hasPreviousPage: Boolean(previousCursor),
       items,
-      total,
     }
   }
 
@@ -259,7 +256,6 @@ async function createAnchoredCollection<TItem extends { unique_id: string }>({
       ])
       return currentPage()
     },
-    startsAtBeginning: false,
   } satisfies ResourceSiblingCollection
 }
 

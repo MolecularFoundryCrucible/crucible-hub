@@ -68,6 +68,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Sibling navigation now omits sequence positions and partial loaded-row counts from its compact control.
 - Kept search-result MFIDs and their copy actions separated at desktop widths.
 - Streamlined Graph and picker copy, renamed the project directory to Your projects, refined semantic role badge colors, and added distinct Created and Updated columns with API-backed Created sorting and filtering where supported.
 - Project-context search now names the resolved project in the application bar, resource previews retain known row identity while loading, and canonical sample and dataset pages opened from a collection provide a compact labeled sibling control through its loaded sequence with cursor continuation at the forward boundary; resource refresh is now a low-weight page-header utility.
