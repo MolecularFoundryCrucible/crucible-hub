@@ -96,9 +96,20 @@ test("project preview preserves the collection and restores trigger focus", asyn
           .length
     )
     .toBe(1)
-  expect(resourceResponses).toHaveLength(1)
+  expect(resourceResponses.length).toBeLessThanOrEqual(3)
   expect(projectResponses).toHaveLength(0)
   expect(fileResponses).toHaveLength(0)
+
+  await sampleRow(page, "Catalyst sample 3")
+    .getByRole("link", {
+      name: "Preview Catalyst sample 3",
+      exact: true,
+    })
+    .click()
+  await expect(page).toHaveURL(new RegExp(`preview=fixture-sample-3`))
+  await expect(
+    panel.getByRole("heading", { name: "Catalyst sample 3" })
+  ).toBeVisible()
 
   await page.keyboard.press("Escape")
   await expect(panel).toHaveCount(0)

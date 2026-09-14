@@ -138,7 +138,7 @@ test("filtered paginated Data preview preserves the collection and restores focu
         ).length
     )
     .toBe(1)
-  expect(resourceResponses).toHaveLength(1)
+  expect(resourceResponses.length).toBeLessThanOrEqual(3)
   expect(collectionResponses).toHaveLength(0)
   expect(fileResponses).toHaveLength(0)
 

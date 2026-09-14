@@ -67,7 +67,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Project-context search now names the resolved project in the application bar, and resource previews retain known row identity while loading, prefetch on navigation intent, register Overview and Graph relationships as neighbour sequences, prefetch only adjacent neighbours, and support visible Left and Right Arrow navigation.
+- Project-context search now names the resolved project in the application bar, and resource previews retain known row identity while loading, register Overview and Graph relationships as neighbour sequences, prefetch only adjacent neighbours, and support visible Left and Right Arrow navigation.
 - Resource collections now request up to 100 rows, automatically append the next cursor page near the collection boundary while retaining explicit load and retry controls, and make project search visible in the application bar with an explicit project or global scope choice that persists through contextual resource navigation.
 - Replaced page-replacing sample and dataset continuation with shared cursor-backed Load more results across global, project, and instrument collections, and added collection-scoped Previous and Next navigation to resource previews with on-demand forward-page loading.
 
@@ -133,6 +133,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Fixed
 
+- Prevented desktop resource-preview dismissal from racing an underlying link or control navigation, and removed redundant detail requests from preview-link hover and focus.
 - Prevented invalid dataset file or ingestion responses from crashing the Processing page by validating them at the server boundary and keeping failures local to the affected panel.
 - Normalized timezone-aware PostgreSQL timestamps with space separators, microseconds, or compact UTC offsets into the shared browser-local date and time presentation.
 - Standardized resource and access-principal icons with shared semantic colors, including cyan-teal person identity in Direct access, colored navigation icons, and field-specific Summary and Identity icons.

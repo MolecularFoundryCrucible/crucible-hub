@@ -156,6 +156,10 @@ export function ResourceInspector({
         if (!nextOpen) {
           if (eventDetails.reason === "outside-press") {
             restoreFocus.current = false
+            if (isInteractiveOutsideTarget(eventDetails.event.target)) {
+              eventDetails.cancel()
+              return
+            }
           }
           navigation.close()
         }
@@ -365,6 +369,17 @@ function isEditableTarget(target: EventTarget | null) {
     target instanceof HTMLElement &&
     (target.isContentEditable ||
       target.matches("input, textarea, select, [role='textbox']"))
+  )
+}
+
+function isInteractiveOutsideTarget(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    Boolean(
+      target.closest(
+        "a[href], button, input, select, textarea, [contenteditable='true'], [role='button'], [role='link']"
+      )
+    )
   )
 }
 

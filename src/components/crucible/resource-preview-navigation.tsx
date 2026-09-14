@@ -9,7 +9,6 @@ import {
 } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { useWorkspaceScope } from "./workspace-provider"
 
 const previewMfidSchema = z
@@ -258,7 +257,6 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       : invalidPreviewSearchValue
   const preparePreview = (previewIdentity: ResourcePreviewIdentity) => {
     setPreparedPreview(previewIdentity)
-    void client.prefetchQuery(resourceQueryOptions(scope, previewIdentity.mfid))
   }
 
   const open = (
