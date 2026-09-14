@@ -51,9 +51,10 @@ export function useCursorResourceCollection<
       }))
     return {
       hasNextPage: query.hasNextPage,
+      hasPreviousPage: false,
       items: mapItems(items),
       label,
-      loadMore: async () => {
+      loadNext: async () => {
         const next = await query.fetchNextPage()
         if (next.isError) {
           throw next.error ?? new Error("The next page could not be loaded.")
@@ -61,10 +62,17 @@ export function useCursorResourceCollection<
         const pages = next.data?.pages
         return {
           hasNextPage: Boolean(pages?.at(-1)?.nextCursor),
+          hasPreviousPage: false,
           items: mapItems(flattenCursorPages(pages)),
           total: cursorPageTotal(pages),
         }
       },
+      loadPrevious: async () => ({
+        hasNextPage: query.hasNextPage,
+        hasPreviousPage: false,
+        items: mapItems(items),
+        total,
+      }),
       startsAtBeginning: !initialCursor,
       total,
     }

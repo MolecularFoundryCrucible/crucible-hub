@@ -50,6 +50,8 @@ export const crucibleKeys = {
       "cursor-chain",
       normalizeFilters(filters),
     ] as const,
+  sampleAnchor: (scope: IdentityScope, filters: ListFilters) =>
+    [...scope, "samples", "list", "anchor", normalizeFilters(filters)] as const,
   sampleLists: (scope: IdentityScope) => [...scope, "samples", "list"] as const,
   sampleFacets: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "samples", "list", "facets", normalizeFilters(filters)] as const,
@@ -61,6 +63,14 @@ export const crucibleKeys = {
       "datasets",
       "list",
       "cursor-chain",
+      normalizeFilters(filters),
+    ] as const,
+  datasetAnchor: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "datasets",
+      "list",
+      "anchor",
       normalizeFilters(filters),
     ] as const,
   datasetLists: (scope: IdentityScope) =>

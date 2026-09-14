@@ -28,6 +28,7 @@ import {
   ResourceSiblingNavigationControls,
   useActiveResourceSiblingNavigation,
 } from "@/components/crucible/resource-sibling-navigation"
+import { ResourceSiblingConfigurationAction } from "@/components/crucible/resource-sibling-configuration"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -207,12 +208,17 @@ export function ResourceWorkspace({
         />
         <ResourceNavigation
           actions={
-            siblingNavigation ? (
-              <ResourceSiblingNavigationControls
-                fromProject={fromProject}
-                navigation={siblingNavigation}
-              />
-            ) : null
+            <ResourceSiblingNavigationControls
+              configurationAction={
+                <ResourceSiblingConfigurationAction
+                  navigation={siblingNavigation}
+                  resource={resource}
+                  scope={scope}
+                />
+              }
+              fromProject={fromProject}
+              navigation={siblingNavigation}
+            />
           }
           fromProject={fromProject}
           resource={resource}

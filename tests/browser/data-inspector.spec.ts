@@ -179,7 +179,7 @@ test("moves through the originating collection from canonical detail", async ({
 
   await expect(page).toHaveURL(new RegExp(`/hub/samples/${sampleFiftyOne}`))
   const siblings = page.getByRole("navigation", {
-    name: "Resources in the originating collection",
+    name: "Resource sequence navigation",
   })
   await expect(siblings).toBeVisible()
   await expect(
@@ -203,7 +203,7 @@ test("moves through the originating collection from canonical detail", async ({
   await page.reload()
   await expect(
     page.getByRole("navigation", {
-      name: "Resources in the originating collection",
+      name: "Resource sequence navigation",
     })
   ).toHaveCount(0)
 })

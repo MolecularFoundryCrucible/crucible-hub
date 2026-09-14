@@ -339,6 +339,8 @@ export interface paths {
          *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
          *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
          *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
+         *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
+         *     within the authorized, filtered, and ordered collection.
          *     Pass include_links=true to include parent, child, and associated resources for each dataset.
          *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
          *     Pass instrument_mfid to filter by the instrument's canonical stable identity.
@@ -629,6 +631,40 @@ export interface paths {
         put?: never;
         /** Request Insitu Aggregation */
         post: operations["request_insitu_aggregation_datasets__dsid__insitu_spec_aggregation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dsid}/instrument": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Assign Dataset Instrument
+         * @description Assign or reassign the dataset's instrument, by slug or MFID.
+         *
+         *     The three instrument columns are written from one resolved instrument row,
+         *     so instrument_id (the integer FK), instrument_mfid, and the instrument_name
+         *     label cannot drift apart. Nothing about the instrument is taken from the
+         *     request body beyond the identifier used to look it up.
+         *
+         *     The instrument's access group is granted contributor on the dataset, the
+         *     same grant dataset creation makes. Reassignment removes the grant belonging
+         *     to the outgoing instrument's group only — resourceacl records no provenance,
+         *     so a broader sweep could not tell a derived grant from a deliberate one.
+         *
+         *     Resubmitting the dataset's current instrument changes no columns but still
+         *     ensures the ACL row exists, which repairs datasets whose instrument columns
+         *     were backfilled without the accompanying grant.
+         */
+        put: operations["assign_dataset_instrument_datasets__dsid__instrument_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2113,6 +2149,8 @@ export interface paths {
          *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
          *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
          *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
+         *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
+         *     within the authorized, filtered, and ordered collection.
          *     Pass include_links=true to include parent, child, and associated resources for each sample.
          *     include_datasets is deprecated; use include_links instead.
          *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
@@ -2999,6 +3037,42 @@ export interface components {
          * @enum {string}
          */
         DatasetFacetField: "session" | "measurement" | "data_format" | "owner" | "instrument" | "project";
+        /**
+         * DatasetInstrumentAssign
+         * @description Body for PUT /datasets/{dataset_mfid}/instrument.
+         *
+         *     Either identifier resolves the instrument; supplying both is checked for
+         *     agreement by resolve_instrument_identifiers. instrument_name is not
+         *     accepted — it is a label derived from the resolved instrument, so letting
+         *     a caller set it independently is how the three columns drift apart.
+         */
+        DatasetInstrumentAssign: {
+            /**
+             * Instrument Id
+             * @description Registered instrument slug. May be combined with a matching instrument_mfid.
+             */
+            instrument_id?: string | null;
+            /**
+             * Instrument Mfid
+             * @description Canonical registered instrument MFID. May be combined with a matching instrument_id.
+             */
+            instrument_mfid?: string | null;
+        };
+        /**
+         * DatasetInstrumentRead
+         * @description Result of PUT /datasets/{dataset_mfid}/instrument.
+         */
+        DatasetInstrumentRead: {
+            /** Dataset Mfid */
+            dataset_mfid: string;
+            instrument: components["schemas"]["InstrumentReferenceRead"];
+            previous_instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
+            /**
+             * Previous Instrument Name
+             * @description The dataset's instrument_name before the change. For datasets whose name never named a registered instrument, this is the only record of it.
+             */
+            previous_instrument_name?: string | null;
+        };
         /** DatasetLink */
         DatasetLink: {
             /** Child Dataset Id */
@@ -3129,13 +3203,13 @@ export interface components {
             /**
              * Instrument Id
              * @deprecated
-             * @description Deprecated for dataset updates. Only the current value is accepted.
+             * @description Deprecated for dataset updates. Only the current value is accepted. Use PUT /datasets/{dataset_mfid}/instrument.
              */
             instrument_id?: string | null;
             /**
              * Instrument Name
              * @deprecated
-             * @description Deprecated for dataset updates. Only the current value is accepted.
+             * @description Deprecated for dataset updates. Only the current value is accepted. Use PUT /datasets/{dataset_mfid}/instrument.
              */
             instrument_name?: string | null;
             /** Measurement */
@@ -4788,6 +4862,8 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous page. */
                 cursor?: string | null;
+                /** @description Start the page at this readable resource, inclusive, using the requested ordering. */
+                anchor_mfid?: string | null;
                 /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
                 /** @description Inclusive creation-time lower bound. */
@@ -5404,6 +5480,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_dataset_instrument_datasets__dsid__instrument_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dsid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatasetInstrumentAssign"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetInstrumentRead"];
                 };
             };
             /** @description Validation Error */
@@ -8253,6 +8364,8 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous page. */
                 cursor?: string | null;
+                /** @description Start the page at this readable resource, inclusive, using the requested ordering. */
+                anchor_mfid?: string | null;
                 /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
                 /** @description Inclusive creation-time lower bound. */

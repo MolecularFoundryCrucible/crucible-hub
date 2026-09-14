@@ -62,12 +62,14 @@ type CollectionOrder = {
 }
 
 export function CollectionOrderFields({
+  allowDefault = true,
   describedBy,
   idPrefix,
   invalid = () => false,
   onChange,
   value,
 }: {
+  allowDefault?: boolean
   describedBy?: string
   idPrefix: string
   invalid?: (field: keyof CollectionOrder) => boolean
@@ -93,13 +95,15 @@ export function CollectionOrderFields({
           }
           value={value.sort ?? ""}
         >
-          <NativeSelectOption value="">Default</NativeSelectOption>
+          {allowDefault ? (
+            <NativeSelectOption value="">Default</NativeSelectOption>
+          ) : null}
           <NativeSelectOption value="name">Name</NativeSelectOption>
           <NativeSelectOption value="created">Created</NativeSelectOption>
           <NativeSelectOption value="updated">Updated</NativeSelectOption>
         </NativeSelect>
       </Field>
-      {value.sort ? (
+      {value.sort || !allowDefault ? (
         <Field data-invalid={invalid("direction")}>
           <FieldLabel htmlFor={`${idPrefix}-direction`}>Direction</FieldLabel>
           <NativeSelect

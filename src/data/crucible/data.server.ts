@@ -428,7 +428,9 @@ function fixtureProjectRows<
 
 export async function readWorkspaceSamples(
   input: {
+    anchorMfid?: string
     cursor?: string
+    includeTotal?: boolean
     limit: number
   } & ProjectScopedInput &
     SampleFacetFilters,
@@ -459,18 +461,16 @@ export async function readWorkspaceSamples(
       "samples",
       workspace.projects
     )
-    return fixtureCursorPage(
-      fixtureQueryRows(
-        fixtureSampleFacetRows(
-          fixtureCollectionRows(projectSamples, input),
-          input
-        ),
-        input,
-        workspace.account.unique_id,
-        (sample) => sample.sample_name
+    const items = fixtureQueryRows(
+      fixtureSampleFacetRows(
+        fixtureCollectionRows(projectSamples, input),
+        input
       ),
-      { ...input, limit: Math.min(input.limit, fixtureResourcePageLimit) }
+      input,
+      workspace.account.unique_id,
+      (sample) => sample.sample_name
     )
+    return fixtureResourceCursorPage(items, input)
   }
 
   const projectScope = normalizedProjectScope(input)
@@ -483,10 +483,11 @@ export async function readWorkspaceSamples(
         affiliation: collectionQuery.affiliation
           ? [collectionQuery.affiliation]
           : undefined,
+        anchor_mfid: input.anchorMfid,
         cursor: input.cursor,
         direction: collectionQuery.direction,
         include_owner: true,
-        include_total: true,
+        include_total: input.includeTotal ?? true,
         limit: input.limit,
         project_mfid: input.projectMfid,
         project_mfid_is_null: input.projectMfidIsNull,
@@ -512,7 +513,9 @@ export async function readWorkspaceSamples(
 
 export async function readWorkspaceDatasets(
   input: {
+    anchorMfid?: string
     cursor?: string
+    includeTotal?: boolean
     instrumentMfid?: string
     limit: number
   } & ProjectScopedInput &
@@ -548,18 +551,16 @@ export async function readWorkspaceDatasets(
       "datasets",
       workspace.projects
     )
-    return fixtureCursorPage(
-      fixtureQueryRows(
-        fixtureDatasetFacetRows(
-          fixtureCollectionRows(filteredDatasets, input),
-          input
-        ),
-        input,
-        workspace.account.unique_id,
-        (dataset) => dataset.dataset_name ?? ""
+    const items = fixtureQueryRows(
+      fixtureDatasetFacetRows(
+        fixtureCollectionRows(filteredDatasets, input),
+        input
       ),
-      { ...input, limit: Math.min(input.limit, fixtureResourcePageLimit) }
+      input,
+      workspace.account.unique_id,
+      (dataset) => dataset.dataset_name ?? ""
     )
+    return fixtureResourceCursorPage(items, input)
   }
 
   const projectScope = normalizedProjectScope(input)
@@ -572,10 +573,11 @@ export async function readWorkspaceDatasets(
         affiliation: collectionQuery.affiliation
           ? [collectionQuery.affiliation]
           : undefined,
+        anchor_mfid: input.anchorMfid,
         cursor: input.cursor,
         direction: collectionQuery.direction,
         include_owner: true,
-        include_total: true,
+        include_total: input.includeTotal ?? true,
         instrument_mfid: instrumentMfid,
         limit: input.limit,
         project_mfid: input.projectMfid,
@@ -598,6 +600,37 @@ export async function readWorkspaceDatasets(
     nextCursor: result.data.next_cursor ?? null,
     total: result.data.total ?? null,
   }
+}
+
+function fixtureResourceCursorPage<TItem extends { unique_id: string }>(
+  items: readonly TItem[],
+  input: {
+    anchorMfid?: string
+    cursor?: string
+    includeTotal?: boolean
+    limit: number
+  }
+) {
+  const limit = Math.min(input.limit, fixtureResourcePageLimit)
+  if (input.anchorMfid && input.cursor) {
+    throw new Error("Choose either an anchor or a continuation cursor.")
+  }
+  const page = input.anchorMfid
+    ? fixtureCursorPage(items, {
+        cursor: fixtureAnchorCursor(items, input.anchorMfid),
+        limit,
+      })
+    : fixtureCursorPage(items, { cursor: input.cursor, limit })
+  return input.includeTotal === false ? { ...page, total: null } : page
+}
+
+function fixtureAnchorCursor<TItem extends { unique_id: string }>(
+  items: readonly TItem[],
+  anchorMfid: string
+) {
+  const anchorIndex = items.findIndex((item) => item.unique_id === anchorMfid)
+  if (anchorIndex < 0) throw new CrucibleResponseError(404)
+  return `fixture:${String(anchorIndex)}`
 }
 
 type FacetContextInput = ProjectScopedInput & {

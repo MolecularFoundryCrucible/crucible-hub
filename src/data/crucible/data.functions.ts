@@ -29,8 +29,10 @@ const nullSelector = z.literal(true).optional()
 const cursorPageInputFields = {
   ...collectionFilterFields,
   affiliation: collectionAffiliationSchema.optional(),
+  anchorMfid: z.string().trim().min(1).max(255).optional(),
   cursor: z.string().min(1).max(4096).optional(),
   direction: sortDirectionSchema.optional(),
+  includeTotal: z.boolean().optional(),
   limit: z.number().int().min(1).max(100),
   projectMfid: z.string().trim().min(1).max(255).optional(),
   projectMfidIsNull: nullSelector,
@@ -104,8 +106,10 @@ function normalizeProjectScope<
 
 function validateCursorInput(
   input: {
+    anchorMfid?: string
     createdFrom?: string
     createdTo?: string
+    cursor?: string
     direction?: string
     projectMfid?: string
     projectScope?: string
@@ -116,6 +120,13 @@ function validateCursorInput(
 ) {
   validateProjectScope(input, context)
   validateFacetSelections(input, context)
+  if (input.anchorMfid && input.cursor) {
+    context.addIssue({
+      code: "custom",
+      message: "Choose either an anchor or a continuation cursor.",
+      path: ["anchorMfid"],
+    })
+  }
   if (
     input.createdFrom &&
     input.createdTo &&

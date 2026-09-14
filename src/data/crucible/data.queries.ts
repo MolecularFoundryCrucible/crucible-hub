@@ -2,7 +2,11 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
-import type { CollectionQueryOptions } from "./collection-query"
+import type {
+  CollectionQueryOptions,
+  ResourceSort,
+  SortDirection,
+} from "./collection-query"
 import { normalizeCollectionQueryOptions } from "./collection-query"
 import { getWorkspaceDatasets, getWorkspaceSamples } from "./data.functions"
 import {
@@ -36,24 +40,42 @@ type ProjectFilters =
       projectScope?: undefined
     }
 
-export type CursorFilters = ProjectFilters &
+type SampleCollectionFilters = ProjectFilters &
   CollectionFilters &
   CollectionQueryOptions & {
-    cursor?: string
+    includeTotal?: boolean
     limit: number
   } & SampleFacetFilters
 
-export type DatasetCursorFilters = ProjectFilters &
+type DatasetCollectionFilters = ProjectFilters &
   CollectionFilters &
   CollectionQueryOptions &
   DatasetFacetFilters & {
-    cursor?: string
+    includeTotal?: boolean
     instrumentMfid?: string
     instrumentMfidIsNull?: true
     ownerId?: string
     ownerIdIsNull?: true
     limit: number
   }
+
+export type CursorFilters = SampleCollectionFilters & { cursor?: string }
+
+export type DatasetCursorFilters = DatasetCollectionFilters & {
+  cursor?: string
+}
+
+export type AnchoredSampleFilters = SampleCollectionFilters & {
+  anchorMfid: string
+  direction: SortDirection
+  sort: ResourceSort
+}
+
+export type AnchoredDatasetFilters = DatasetCollectionFilters & {
+  anchorMfid: string
+  direction: SortDirection
+  sort: ResourceSort
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -195,7 +217,7 @@ function normalizeProjectFilters(
       : {}
 }
 
-function normalizedSampleContext(filters: CursorFilters) {
+function normalizedSampleContext(filters: SampleCollectionFilters) {
   return {
     ...normalizeProjectFilters(filters),
     ...normalizeCollectionFilters(filters),
@@ -204,7 +226,7 @@ function normalizedSampleContext(filters: CursorFilters) {
   }
 }
 
-function normalizedDatasetContext(filters: DatasetCursorFilters) {
+function normalizedDatasetContext(filters: DatasetCollectionFilters) {
   const instrumentMfid = normalizeInstrumentMfid(filters.instrumentMfid)
   return {
     ...(instrumentMfid ? { instrumentMfid } : {}),
@@ -224,6 +246,7 @@ export function samplesQueryOptions(
   return queryOptions({
     queryKey: crucibleKeys.samples(scope, {
       cursor: filters.cursor ?? null,
+      includeTotal: filters.includeTotal ?? true,
       limit: filters.limit,
       ...context,
     }),
@@ -232,6 +255,7 @@ export function samplesQueryOptions(
         await getWorkspaceSamples({
           data: {
             cursor: filters.cursor,
+            includeTotal: filters.includeTotal,
             limit: filters.limit,
             ...context,
             scenario,
@@ -281,6 +305,36 @@ export function samplesCursorQueryOptions(
   })
 }
 
+export function samplesAnchorQueryOptions(
+  scope: IdentityScope,
+  filters: AnchoredSampleFilters
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  const context = normalizedSampleContext(filters)
+  return queryOptions({
+    queryKey: crucibleKeys.sampleAnchor(scope, {
+      anchorMfid: filters.anchorMfid,
+      includeTotal: filters.includeTotal ?? true,
+      limit: filters.limit,
+      ...context,
+    }),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceSamples({
+          data: {
+            anchorMfid: filters.anchorMfid,
+            includeTotal: filters.includeTotal,
+            limit: filters.limit,
+            ...context,
+            scenario,
+          },
+          signal,
+        })
+      ),
+    retry: scenario ? false : undefined,
+  })
+}
+
 export function datasetsQueryOptions(
   scope: IdentityScope,
   filters: DatasetCursorFilters
@@ -289,6 +343,7 @@ export function datasetsQueryOptions(
   const context = normalizedDatasetContext(filters)
   const keyFilters = {
     cursor: filters.cursor ?? null,
+    includeTotal: filters.includeTotal ?? true,
     limit: filters.limit,
     ...context,
   }
@@ -299,6 +354,7 @@ export function datasetsQueryOptions(
         await getWorkspaceDatasets({
           data: {
             cursor: filters.cursor,
+            includeTotal: filters.includeTotal,
             limit: filters.limit,
             ...context,
             scenario,
@@ -344,6 +400,36 @@ export function datasetsCursorQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    retry: scenario ? false : undefined,
+  })
+}
+
+export function datasetsAnchorQueryOptions(
+  scope: IdentityScope,
+  filters: AnchoredDatasetFilters
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  const context = normalizedDatasetContext(filters)
+  return queryOptions({
+    queryKey: crucibleKeys.datasetAnchor(scope, {
+      anchorMfid: filters.anchorMfid,
+      includeTotal: filters.includeTotal ?? true,
+      limit: filters.limit,
+      ...context,
+    }),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceDatasets({
+          data: {
+            anchorMfid: filters.anchorMfid,
+            includeTotal: filters.includeTotal,
+            limit: filters.limit,
+            ...context,
+            scenario,
+          },
+          signal,
+        })
+      ),
     retry: scenario ? false : undefined,
   })
 }
