@@ -60,6 +60,43 @@ const apiFileDownloadSchema = z
   })
   .strict()
 
+const apiDatasetFileSchema = z
+  .object({
+    access_note: z.string().nullable().optional(),
+    dataset_id: z.number().int(),
+    dataset_mfid: z.string().min(1).max(255),
+    filename: z.string().min(1).max(10_000),
+    mfid: z.string().min(1).max(255),
+    sha256_hash: z.string(),
+    size: z.number().int().nonnegative(),
+    storage_backend: z.string().min(1).max(255),
+    storage_path: z.string().nullable().optional(),
+  })
+  .passthrough()
+
+const apiDatasetFilesSchema = z.array(apiDatasetFileSchema).max(10_000)
+
+const apiIngestionRequestSchema = z
+  .object({
+    dataset_mfid: z.string().nullable().optional(),
+    file_mfid: z.string().nullable().optional(),
+    file_to_upload: z.string().nullable().optional(),
+    id: z.number().int().nullable().optional(),
+    ingestion_class: z.string().nullable().optional(),
+    ingestion_githash: z.string().nullable().optional(),
+    status: z.string().nullable().optional(),
+    time_completed: z.string().nullable().optional(),
+    time_created: z.string().nullable().optional(),
+  })
+  .passthrough()
+
+const apiIngestionRequestPageSchema = z
+  .object({
+    items: z.array(apiIngestionRequestSchema).max(1_000),
+    total: z.number().int().nonnegative().nullable().optional(),
+  })
+  .passthrough()
+
 const apiResourceGraphSchema = z
   .object({
     directed: z.literal(true),
@@ -419,7 +456,11 @@ export async function readWorkspaceDatasetFiles(
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
   }
-  return result.data
+  const files = apiDatasetFilesSchema.safeParse(result.data)
+  if (!files.success) {
+    throw new Error("The dataset files response is invalid.")
+  }
+  return files.data
 }
 
 export async function readWorkspaceDatasetIngestionRequests(
@@ -472,9 +513,13 @@ export async function readWorkspaceDatasetIngestionRequests(
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
   }
+  const page = apiIngestionRequestPageSchema.safeParse(result.data)
+  if (!page.success) {
+    throw new Error("The ingestion requests response is invalid.")
+  }
   return {
-    items: result.data.items.map(workspaceIngestionRequest),
-    total: result.data.total ?? result.data.items.length,
+    items: page.data.items.map(workspaceIngestionRequest),
+    total: page.data.total ?? page.data.items.length,
   }
 }
 
@@ -483,7 +528,7 @@ function fixtureIngestionKey(datasetMfid: string, scenario?: FixtureScenario) {
 }
 
 function workspaceIngestionRequest(
-  request: Schema<"IngestionRequest">
+  request: z.infer<typeof apiIngestionRequestSchema>
 ): WorkspaceIngestionRequest {
   return {
     datasetMfid: request.dataset_mfid ?? null,
