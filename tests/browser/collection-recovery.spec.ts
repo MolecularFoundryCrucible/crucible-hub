@@ -14,7 +14,7 @@ test("keeps samples available when the dataset collection fails", async ({
   await expect(page.getByLabel("Data type filter")).toBeVisible()
 })
 
-test("keeps loaded samples visible after a failed continuation", async ({
+test("keeps loaded samples visible after a failed automatic continuation", async ({
   page,
 }) => {
   await page.goto("/hub/data?scenario=dense&kind=samples")
@@ -38,7 +38,9 @@ test("keeps loaded samples visible after a failed continuation", async ({
     }
   })
 
-  await page.getByRole("button", { name: "Load more samples" }).click()
+  await page
+    .getByRole("button", { name: "Load more samples" })
+    .scrollIntoViewIfNeeded()
 
   await expect(page).toHaveURL(/kind=samples/)
   await expect(page).not.toHaveURL(/sampleCursor=/)

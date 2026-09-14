@@ -67,6 +67,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Resource collections now request up to 100 rows, automatically append the next cursor page near the collection boundary while retaining explicit load and retry controls, and make project search visible in the application bar with an explicit project or global scope choice that persists through contextual resource navigation.
 - Replaced page-replacing sample and dataset continuation with shared cursor-backed Load more results across global, project, and instrument collections, and added collection-scoped Previous and Next navigation to resource previews with on-demand forward-page loading.
 
 - Streamlined global, project, and instrument data collections with one responsive type, filter, and grouping toolbar; replaced separate List and Browse controls with `Group by`, moved filters into a scrollable side sheet with persistent actions, and aligned instrument navigation and header identity with project workspaces.

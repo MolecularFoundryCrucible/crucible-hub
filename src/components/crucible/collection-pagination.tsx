@@ -1,5 +1,9 @@
+import { useEffect, useEffectEvent, useRef } from "react"
+
 import { LoadingMoreIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
+
+const collectionLoadAheadMargin = "480px 0px"
 
 export function CollectionPagination({
   disabled = false,
@@ -20,6 +24,34 @@ export function CollectionPagination({
   onLoadMore: () => void
   total: number | null
 }) {
+  const loadMoreTarget = useRef<HTMLDivElement>(null)
+  const requestNextPage = useEffectEvent(onLoadMore)
+
+  useEffect(() => {
+    const target = loadMoreTarget.current
+    if (
+      !target ||
+      !hasNextPage ||
+      disabled ||
+      isError ||
+      isLoading ||
+      typeof IntersectionObserver === "undefined"
+    ) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        requestNextPage()
+      },
+      { rootMargin: collectionLoadAheadMargin }
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [disabled, hasNextPage, isError, isLoading])
+
   if (!loaded) return null
   const progress =
     total !== null && total >= loaded
@@ -30,7 +62,10 @@ export function CollectionPagination({
         ? `${loaded} ${label} loaded`
         : `All ${loaded} ${label} shown`
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div
+      className="flex flex-wrap items-center justify-between gap-3"
+      ref={loadMoreTarget}
+    >
       <p className="text-supporting text-muted-foreground" role="status">
         {progress}
       </p>

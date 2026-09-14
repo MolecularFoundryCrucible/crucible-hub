@@ -37,6 +37,8 @@ import type {
   WorkspaceSample,
 } from "./workspace-source"
 
+const fixtureResourcePageLimit = 50
+
 type ProjectScope = "all" | "assigned" | "shared"
 
 type ProjectScopedInput = CollectionFilters &
@@ -469,7 +471,7 @@ export async function readWorkspaceSamples(
         workspace.account.unique_id,
         (sample) => sample.sample_name
       ),
-      input
+      { ...input, limit: Math.min(input.limit, fixtureResourcePageLimit) }
     )
   }
 
@@ -558,7 +560,7 @@ export async function readWorkspaceDatasets(
         workspace.account.unique_id,
         (dataset) => dataset.dataset_name ?? ""
       ),
-      input
+      { ...input, limit: Math.min(input.limit, fixtureResourcePageLimit) }
     )
   }
 

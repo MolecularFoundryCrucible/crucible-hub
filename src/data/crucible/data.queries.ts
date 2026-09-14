@@ -15,7 +15,7 @@ import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
 
-export const dataPageLimit = 50
+export const dataPageLimit = 100
 
 export type ProjectScope = "all" | "assigned" | "shared"
 

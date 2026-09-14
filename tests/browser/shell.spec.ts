@@ -433,9 +433,18 @@ test("searches data within the active project and retains return context", async
   const projectMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z3"
   await page.goto(`/hub/projects/${projectMfid}`)
   await page.waitForLoadState("networkidle")
+  await expect(
+    page.getByRole("button", { name: "Search this project" })
+  ).toBeVisible()
   await page.keyboard.press("Control+Shift+k")
 
   const dialog = page.getByRole("dialog", { name: "Search project data" })
+  await expect(
+    dialog.getByRole("button", { name: "This project" })
+  ).toHaveAttribute("aria-pressed", "true")
+  await expect(
+    dialog.getByRole("button", { name: "All Crucible" })
+  ).toHaveAttribute("aria-pressed", "false")
   await dialog.getByRole("searchbox", { name: "Search query" }).fill("NiFe")
   await dialog.getByRole("button", { name: "Search" }).click()
 
@@ -453,6 +462,10 @@ test("searches data within the active project and retains return context", async
     "href",
     new RegExp(`fromProject=${projectMfid}`)
   )
+  await sample.click()
+  await expect(
+    page.getByRole("button", { name: "Search this project" })
+  ).toBeVisible()
 })
 
 test("adapts navigation for a compact browser viewport", async ({ page }) => {

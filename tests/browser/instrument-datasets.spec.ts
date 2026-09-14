@@ -28,7 +28,9 @@ test("appends instrument datasets and restores the loaded collection after detai
     if (isDatasetRequest(request.url())) datasetRequests.push(request.url())
   })
 
-  await page.getByRole("button", { name: "Load more datasets" }).click()
+  await page
+    .getByRole("button", { name: "Load more datasets" })
+    .scrollIntoViewIfNeeded()
   await expect(page).not.toHaveURL(/cursor=/)
   const dataset = page.getByRole("link", {
     name: "Dataset: Measurement dataset 51",

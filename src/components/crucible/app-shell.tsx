@@ -83,10 +83,11 @@ export function AppShell({
   account?: Workspace["account"]
   children: React.ReactNode
 }) {
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
+  const location = useRouterState({
+    select: (state) => state.location,
   })
-  const projectMfid = pathname.match(/^\/projects\/([^/]+)/)?.[1]
+  const pathname = location.pathname
+  const projectMfid = activeProjectMfid(pathname, location.search)
 
   return (
     <RecentlyViewedProvider key={account?.unique_id ?? "anonymous"}>
@@ -196,6 +197,21 @@ export function AppShell({
       </SidebarProvider>
     </RecentlyViewedProvider>
   )
+}
+
+function activeProjectMfid(pathname: string, search: Record<string, unknown>) {
+  const routeProjectMfid = pathname.match(/^\/projects\/([^/]+)/)?.[1]
+  if (routeProjectMfid) return routeProjectMfid
+
+  const contextualProjectMfid =
+    pathname === "/search"
+      ? search.projectMfid
+      : /^\/(datasets|samples)\/[^/]+/.test(pathname)
+        ? search.fromProject
+        : undefined
+  return typeof contextualProjectMfid === "string"
+    ? contextualProjectMfid
+    : undefined
 }
 
 function SidebarBrand() {
