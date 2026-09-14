@@ -9,7 +9,7 @@ import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
 import type { CollectionQueryOptions, ResourceSort } from "./collection-query"
 import { normalizeCollectionQueryOptions } from "./collection-query"
-import { fixtureCursorPage } from "./pagination"
+import { fixtureCursorPage, fixtureResourcePageLimit } from "./pagination"
 import {
   normalizeDatasetFacetFilters,
   normalizeSampleFacetFilters,
@@ -36,8 +36,6 @@ import type {
   WorkspaceProjectRelation,
   WorkspaceSample,
 } from "./workspace-source"
-
-const fixtureResourcePageLimit = 50
 
 type ProjectScope = "all" | "assigned" | "shared"
 

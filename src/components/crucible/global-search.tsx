@@ -14,11 +14,18 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
-export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
+export function GlobalSearch({
+  projectMfid,
+  projectName,
+}: {
+  projectMfid?: string
+  projectName?: string
+}) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [searchScope, setSearchScope] = useState<"global" | "project">("global")
+  const projectLabel = projectName?.trim()
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -68,7 +75,9 @@ export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
       >
         <SearchIcon aria-hidden="true" className="text-muted-foreground" />
         <span className="truncate text-muted-foreground">
-          {projectMfid ? "Search this project" : "Search Crucible"}
+          {projectMfid
+            ? `Search ${projectLabel || "this project"}`
+            : "Search Crucible"}
         </span>
         <kbd
           className="ml-auto hidden rounded border bg-muted px-1.5 py-0.5 text-label-compact sm:inline"
@@ -81,7 +90,9 @@ export function GlobalSearch({ projectMfid }: { projectMfid?: string }) {
         <DialogHeader>
           <DialogTitle>
             {searchScope === "project"
-              ? "Search project data"
+              ? projectLabel
+                ? `Search ${projectLabel}`
+                : "Search project data"
               : "Search Crucible"}
           </DialogTitle>
           <DialogDescription>

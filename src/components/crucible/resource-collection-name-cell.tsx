@@ -28,6 +28,7 @@ export function ResourceCollectionNameCell({
         className="group/resource block min-w-0"
         mfid={mfid}
         resourceKind={kind}
+        resourceName={name}
       >
         <ResourceIdentity
           className={cn(

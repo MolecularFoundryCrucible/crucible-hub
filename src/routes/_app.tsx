@@ -17,6 +17,7 @@ import {
   fixtureServerId,
 } from "@/data/crucible/fixture-scenarios"
 import { instrumentPageLimit } from "@/data/crucible/instruments.queries"
+import { fixtureResourcePageLimit } from "@/data/crucible/pagination"
 import { projectPageLimit } from "@/data/crucible/projects.queries"
 import { crucibleKeys, identityScope } from "@/data/crucible/query-keys"
 import { getWorkspace } from "@/data/crucible/workspace.functions"
@@ -53,6 +54,10 @@ export const Route = createFileRoute("/_app")({
       workspaceContent(source.workspace)
     )
     if (source.mode === "fixture") {
+      const resourcePageLimit = Math.min(
+        dataPageLimit,
+        fixtureResourcePageLimit
+      )
       context.queryClient.setQueryData(
         crucibleKeys.projects(scope, { limit: projectPageLimit, offset: 0 }),
         {
@@ -80,11 +85,11 @@ export const Route = createFileRoute("/_app")({
       context.queryClient.setQueryData(
         crucibleKeys.samples(scope, { cursor: null, limit: dataPageLimit }),
         {
-          items: source.workspace.samples.slice(0, dataPageLimit),
-          limit: dataPageLimit,
+          items: source.workspace.samples.slice(0, resourcePageLimit),
+          limit: resourcePageLimit,
           nextCursor:
-            source.workspace.samples.length > dataPageLimit
-              ? `fixture:${dataPageLimit}`
+            source.workspace.samples.length > resourcePageLimit
+              ? `fixture:${resourcePageLimit}`
               : null,
           total: source.workspace.samples.length,
         }
@@ -93,11 +98,11 @@ export const Route = createFileRoute("/_app")({
         context.queryClient.setQueryData(
           crucibleKeys.datasets(scope, { cursor: null, limit: dataPageLimit }),
           {
-            items: source.workspace.datasets.slice(0, dataPageLimit),
-            limit: dataPageLimit,
+            items: source.workspace.datasets.slice(0, resourcePageLimit),
+            limit: resourcePageLimit,
             nextCursor:
-              source.workspace.datasets.length > dataPageLimit
-                ? `fixture:${dataPageLimit}`
+              source.workspace.datasets.length > resourcePageLimit
+                ? `fixture:${resourcePageLimit}`
                 : null,
             total: source.workspace.datasets.length,
           }
@@ -144,7 +149,7 @@ function ReadyWorkspace({
 
   return (
     <WorkspaceProvider mode={mode} scope={scope} workspace={workspace}>
-      <AppShell account={account}>
+      <AppShell account={account} scope={scope}>
         <Outlet />
       </AppShell>
     </WorkspaceProvider>

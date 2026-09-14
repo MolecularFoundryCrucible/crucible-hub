@@ -67,6 +67,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Project-context search now names the resolved project in the application bar, and resource previews retain known row identity while loading, prefetch on navigation intent, register Overview and Graph relationships as neighbour sequences, prefetch only adjacent neighbours, and support visible Left and Right Arrow navigation.
 - Resource collections now request up to 100 rows, automatically append the next cursor page near the collection boundary while retaining explicit load and retry controls, and make project search visible in the application bar with an explicit project or global scope choice that persists through contextual resource navigation.
 - Replaced page-replacing sample and dataset continuation with shared cursor-backed Load more results across global, project, and instrument collections, and added collection-scoped Previous and Next navigation to resource previews with on-demand forward-page loading.
 

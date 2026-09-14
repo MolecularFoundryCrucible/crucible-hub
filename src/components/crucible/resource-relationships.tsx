@@ -126,6 +126,7 @@ function RelationshipRow({
           className="group/resource min-w-0 flex-1"
           mfid={link.unique_id}
           resourceKind={link.resource_type}
+          resourceName={label}
         >
           <span className="sr-only">Preview {label}</span>
           <span aria-hidden="true" className="block">

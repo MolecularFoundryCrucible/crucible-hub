@@ -1,5 +1,7 @@
 import type { IdentityScope } from "./query-keys"
 
+export const fixtureResourcePageLimit = 50
+
 type PreviousQuery = {
   queryKey: readonly unknown[]
 }

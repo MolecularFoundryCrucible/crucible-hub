@@ -434,11 +434,13 @@ test("searches data within the active project and retains return context", async
   await page.goto(`/hub/projects/${projectMfid}`)
   await page.waitForLoadState("networkidle")
   await expect(
-    page.getByRole("button", { name: "Search this project" })
+    page.getByRole("button", { name: "Search Operando Catalyst Mapping" })
   ).toBeVisible()
   await page.keyboard.press("Control+Shift+k")
 
-  const dialog = page.getByRole("dialog", { name: "Search project data" })
+  const dialog = page.getByRole("dialog", {
+    name: "Search Operando Catalyst Mapping",
+  })
   await expect(
     dialog.getByRole("button", { name: "This project" })
   ).toHaveAttribute("aria-pressed", "true")
@@ -464,7 +466,7 @@ test("searches data within the active project and retains return context", async
   )
   await sample.click()
   await expect(
-    page.getByRole("button", { name: "Search this project" })
+    page.getByRole("button", { name: "Search Operando Catalyst Mapping" })
   ).toBeVisible()
 })
 

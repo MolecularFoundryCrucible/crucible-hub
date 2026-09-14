@@ -1,4 +1,4 @@
-import { useId, useState } from "react"
+import { useId, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
@@ -11,7 +11,14 @@ import {
   UnlinkRelationshipIcon,
 } from "@/components/crucible/icons"
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
-import { ResourceRelationships } from "@/components/crucible/resource-relationships"
+import {
+  ResourceRelationships,
+  groupResourceRelationships,
+} from "@/components/crucible/resource-relationships"
+import {
+  staticResourcePreviewSiblingCollection,
+  useRegisterResourcePreviewSiblings,
+} from "@/components/crucible/resource-preview-navigation"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -81,6 +88,21 @@ export function ResourceRelationshipManager({
   const [managing, setManaging] = useState(false)
   const [pendingUnlink, setPendingUnlink] = useState<WorkspaceLinkedResource>()
   const [unlinkError, setUnlinkError] = useState<string>()
+  const previewSiblingCollections = useMemo(() => {
+    const items = groupResourceRelationships(
+      resource.kind,
+      resource.links ?? []
+    )
+      .flatMap((group) => group.links)
+      .filter(isPreviewableRelationship)
+      .map((link) => ({
+        kind: link.resource_type,
+        mfid: link.unique_id,
+        name: link.name || link.unique_id,
+      }))
+    return items.length ? [staticResourcePreviewSiblingCollection(items)] : []
+  }, [resource.kind, resource.links])
+  useRegisterResourcePreviewSiblings(previewSiblingCollections)
   const canManage =
     resource.capabilities?.can_edit === true && resource.links !== null
   const hasRelationships = (resource.links?.length ?? 0) > 0
@@ -258,6 +280,12 @@ export function ResourceRelationshipManager({
       />
     </Card>
   )
+}
+
+function isPreviewableRelationship(
+  link: WorkspaceLinkedResource
+): link is WorkspaceLinkedResource & { resource_type: "dataset" | "sample" } {
+  return link.resource_type === "dataset" || link.resource_type === "sample"
 }
 
 function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {

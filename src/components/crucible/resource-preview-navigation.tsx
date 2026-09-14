@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router"
 import { z } from "zod"
 
+import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { useWorkspaceScope } from "./workspace-provider"
 
 const previewMfidSchema = z
@@ -47,6 +48,12 @@ export type ResourcePreviewHost =
 
 export type ResourcePreviewSibling = {
   kind: "dataset" | "sample"
+  mfid: string
+  name: string
+}
+
+export type ResourcePreviewIdentity = {
+  kind?: "dataset" | "instrument" | "project" | "sample"
   mfid: string
   name: string
 }
@@ -98,6 +105,20 @@ export function resourcePreviewSiblingCollection<
     loadMoreError,
     startsAtBeginning,
     total,
+  }
+}
+
+export function staticResourcePreviewSiblingCollection(
+  items: readonly ResourcePreviewSibling[]
+): ResourcePreviewSiblingCollection {
+  return {
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    items,
+    loadMore: async () => items,
+    loadMoreError: false,
+    startsAtBeginning: true,
+    total: items.length,
   }
 }
 
@@ -191,11 +212,16 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
   const [siblingCollections, setSiblingCollections] = useState<
     readonly ResourcePreviewSiblingCollection[]
   >([])
+  const [preparedPreview, setPreparedPreview] =
+    useState<ResourcePreviewIdentity>()
   const location = useRouterState({ select: (state) => state.location })
-  const identity = JSON.stringify(scope)
+  const scopeIdentity = JSON.stringify(scope)
   let ownership = owners.get(client)
-  if (!ownership || ownership.scope !== identity) {
-    ownership = { scope: identity, token: createResourcePreviewOwnerMarker() }
+  if (!ownership || ownership.scope !== scopeIdentity) {
+    ownership = {
+      scope: scopeIdentity,
+      token: createResourcePreviewOwnerMarker(),
+    }
     owners.set(client, ownership)
   }
   const owner = ownership.token
@@ -230,9 +256,18 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
     previewMfidSchema.safeParse(target).success
       ? target
       : invalidPreviewSearchValue
+  const preparePreview = (previewIdentity: ResourcePreviewIdentity) => {
+    setPreparedPreview(previewIdentity)
+    void client.prefetchQuery(resourceQueryOptions(scope, previewIdentity.mfid))
+  }
 
-  const open = (target: string, source?: HTMLElement | null) => {
+  const open = (
+    target: string,
+    source?: HTMLElement | null,
+    previewIdentity?: ResourcePreviewIdentity
+  ) => {
     if (preview === target) return
+    if (previewIdentity) preparePreview(previewIdentity)
     if (!hasPreview && source) trigger.current = source
     const common = {
       hash: true as const,
@@ -376,20 +411,25 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
         ? `${siblingIndex + 1} of ${siblingCollection.total}`
         : `${siblingIndex + 1} of ${siblingCollection.items.length} loaded`
       : undefined
+  const siblingPreview =
+    siblingIndex >= 0 ? siblingCollection?.items[siblingIndex] : undefined
+  const previewIdentity =
+    siblingPreview ??
+    (preparedPreview?.mfid === preview ? preparedPreview : undefined)
 
   const moveToPreviousSibling = () => {
-    if (previousSibling) open(previousSibling.mfid)
+    if (previousSibling) open(previousSibling.mfid, undefined, previousSibling)
   }
   const moveToNextSibling = async () => {
     if (nextSibling) {
-      open(nextSibling.mfid)
+      open(nextSibling.mfid, undefined, nextSibling)
       return
     }
     if (!siblingCollection?.hasNextPage) return
     const items = await siblingCollection.loadMore()
     const currentIndex = items.findIndex((item) => item.mfid === preview)
     const target = currentIndex >= 0 ? items[currentIndex + 1] : undefined
-    if (target) open(target.mfid)
+    if (target) open(target.mfid, undefined, target)
   }
 
   return {
@@ -397,6 +437,8 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
     preview,
     invalidPreview,
     previous,
+    preparePreview,
+    previewIdentity,
     open,
     state,
     targetPreview,
@@ -446,6 +488,7 @@ export function ResourcePreviewLink({
   className,
   back = false,
   resourceKind,
+  resourceName,
   ...props
 }: {
   mfid: string
@@ -453,6 +496,7 @@ export function ResourcePreviewLink({
   className?: string
   back?: boolean
   resourceKind?: "dataset" | "instrument" | "project" | "sample"
+  resourceName?: string
 } & Omit<
   React.ComponentProps<typeof Link>,
   "children" | "className" | "to" | "params" | "search" | "state"
@@ -520,6 +564,12 @@ export function ResourcePreviewLink({
   }
 
   const sameTarget = navigation.preview === mfid
+  const preparePreview = () =>
+    navigation.preparePreview({
+      kind: resourceKind,
+      mfid,
+      name: resourceName || mfid,
+    })
   const onClick: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
     props.onClick?.(event)
     if (event.defaultPrevented) return
@@ -534,13 +584,24 @@ export function ResourcePreviewLink({
     if (!navigation.preview && !navigation.invalidPreview && plainNavigation) {
       navigation.trigger.current = event.currentTarget
     }
+    if (plainNavigation) preparePreview()
     if (sameTarget && plainNavigation) event.preventDefault()
+  }
+  const onFocus: React.FocusEventHandler<HTMLAnchorElement> = (event) => {
+    props.onFocus?.(event)
+    if (!event.defaultPrevented) preparePreview()
+  }
+  const onMouseEnter: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
+    props.onMouseEnter?.(event)
+    if (!event.defaultPrevented) preparePreview()
   }
   const common = {
     ...props,
     className,
     hash: true as const,
     onClick,
+    onFocus,
+    onMouseEnter,
     preload: false as const,
     replace: navigation.replace,
     resetScroll: false,

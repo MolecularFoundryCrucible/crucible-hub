@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import cytoscape from "cytoscape"
 import type { Core, ElementDefinition, StylesheetJson } from "cytoscape"
@@ -13,6 +13,8 @@ import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import {
   ResourcePreviewLink,
+  staticResourcePreviewSiblingCollection,
+  useRegisterResourcePreviewSiblings,
   useResourcePreviewContext,
 } from "@/components/crucible/resource-preview-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -76,6 +78,20 @@ export function ResourceGraphPage({
     ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
     enabled: query.isSuccess && datasetMfids.length > 0,
   })
+  const previewSiblingCollections = useMemo(() => {
+    const graphData = query.data
+    const items = graphData
+      ? graphData.nodes
+          .filter((node) => node.unique_id !== graphData.rootMfid)
+          .map((node) => ({
+            kind: node.kind,
+            mfid: node.unique_id,
+            name: node.name,
+          }))
+      : []
+    return items.length ? [staticResourcePreviewSiblingCollection(items)] : []
+  }, [query.data])
+  useRegisterResourcePreviewSiblings(previewSiblingCollections)
 
   if (query.isPending) return <ResourceGraphPending />
   if (!query.data) {
@@ -210,7 +226,16 @@ export function ResourceGraphPage({
         <ResourceGraphCanvas
           graph={query.data}
           instanceRef={graph}
-          onInspect={(mfid, trigger) => navigation.open(mfid, trigger)}
+          onInspect={(mfid, trigger) => {
+            const node = relatedNodes.find(
+              (candidate) => candidate.unique_id === mfid
+            )
+            navigation.open(
+              mfid,
+              trigger,
+              node ? { kind: node.kind, mfid, name: node.name } : undefined
+            )
+          }}
         />
       )}
 
@@ -497,6 +522,7 @@ function ResourceGraphTable({
                           className="text-label hover:underline"
                           mfid={node.unique_id}
                           resourceKind={node.kind}
+                          resourceName={node.name}
                         >
                           {node.name}
                         </ResourcePreviewLink>

@@ -390,6 +390,14 @@ test("keeps the main resource through a delayed inspector failure and retry", as
     .getByRole("link", { name: "Preview Operando spectroscopy acquisition" })
     .click()
   const panel = page.getByRole("dialog")
+  await expect(
+    panel.getByRole("heading", {
+      name: "Operando spectroscopy acquisition",
+    })
+  ).toBeVisible()
+  await expect(
+    panel.getByText("Resource preview", { exact: true })
+  ).toHaveCount(0)
   await expect(panel.getByLabel("Loading resource details")).toBeVisible()
   await expect(heading).toHaveAttribute("data-test-retained", "true")
   releaseRequest()
@@ -405,6 +413,13 @@ test("keeps the main resource through a delayed inspector failure and retry", as
     panel.getByRole("heading", {
       name: "Operando spectroscopy acquisition with a deliberately long descriptive name",
     })
+  ).toBeVisible()
+  await page.keyboard.press("ArrowLeft")
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get("preview"))
+    .toBe("fixture-sample-3")
+  await expect(
+    panel.getByRole("heading", { name: "Catalyst sample 3" })
   ).toBeVisible()
   await expect(heading).toHaveAttribute("data-test-retained", "true")
 })

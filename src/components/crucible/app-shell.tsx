@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query"
 import { Link, useRouterState } from "@tanstack/react-router"
 
 import { BrandMark } from "@/components/crucible/brand-mark"
@@ -45,6 +46,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import type { Workspace } from "@/data/crucible/workspace-source"
+import type { IdentityScope } from "@/data/crucible/query-keys"
+import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { RecentlyViewedProvider } from "@/features/recently-viewed/recently-viewed"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
@@ -79,9 +82,11 @@ const primaryItems = [
 export function AppShell({
   account,
   children,
+  scope,
 }: {
   account?: Workspace["account"]
   children: React.ReactNode
+  scope?: IdentityScope
 }) {
   const location = useRouterState({
     select: (state) => state.location,
@@ -147,7 +152,7 @@ export function AppShell({
         <SidebarInset>
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
             <SidebarTrigger className="md:hidden" />
-            <GlobalSearch projectMfid={projectMfid} />
+            <AppSearch projectMfid={projectMfid} scope={scope} />
             <QrScannerAction />
             {account ? (
               <CreateMenu
@@ -196,6 +201,33 @@ export function AppShell({
         </SidebarInset>
       </SidebarProvider>
     </RecentlyViewedProvider>
+  )
+}
+
+function AppSearch({
+  projectMfid,
+  scope,
+}: {
+  projectMfid?: string
+  scope?: IdentityScope
+}) {
+  if (!projectMfid || !scope) return <GlobalSearch />
+  return <ProjectContextSearch projectMfid={projectMfid} scope={scope} />
+}
+
+function ProjectContextSearch({
+  projectMfid,
+  scope,
+}: {
+  projectMfid: string
+  scope: IdentityScope
+}) {
+  const { data: project } = useQuery(projectQueryOptions(scope, projectMfid))
+  return (
+    <GlobalSearch
+      projectMfid={projectMfid}
+      projectName={project?.title ?? project?.project_id}
+    />
   )
 }
 

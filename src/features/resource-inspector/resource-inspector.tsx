@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useEffectEvent, useRef } from "react"
 import type { MouseEventHandler, ReactNode } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
 import {
@@ -26,6 +26,7 @@ import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
   SheetClose,
@@ -54,11 +55,20 @@ export function ResourceInspector({
   const open = Boolean(navigation.preview) || navigation.invalidPreview
   const isMobile = useIsMobile()
   const scope = useWorkspaceScope()
+  const queryClient = useQueryClient()
   const query = useQuery({
     ...resourceQueryOptions(scope, navigation.preview ?? ""),
     enabled: Boolean(navigation.preview),
   })
   const resource = query.data
+  const previewIdentity = navigation.previewIdentity
+  const previewKind = resource?.kind ?? previewIdentity?.kind
+  const previewName = resource?.name ?? previewIdentity?.name
+  const canMoveToNextSibling = Boolean(
+    navigation.nextSibling || navigation.siblingCanLoadNext
+  )
+  const moveToPreviousSibling = useEffectEvent(navigation.moveToPreviousSibling)
+  const moveToNextSibling = useEffectEvent(navigation.moveToNextSibling)
 
   useEffect(() => {
     if (open) {
@@ -67,6 +77,62 @@ export function ResourceInspector({
       body.current?.scrollTo({ top: 0 })
     }
   }, [navigation.preview, open])
+
+  useEffect(() => {
+    if (!open) return
+    for (const sibling of [
+      navigation.previousSibling,
+      navigation.nextSibling,
+    ]) {
+      if (sibling) {
+        void queryClient.prefetchQuery(
+          resourceQueryOptions(scope, sibling.mfid)
+        )
+      }
+    }
+  }, [
+    navigation.nextSibling,
+    navigation.previousSibling,
+    open,
+    queryClient,
+    scope,
+  ])
+
+  useEffect(() => {
+    if (!open || !navigation.siblingPosition) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        isEditableTarget(event.target)
+      ) {
+        return
+      }
+      if (event.key === "ArrowLeft" && navigation.previousSibling) {
+        event.preventDefault()
+        moveToPreviousSibling()
+      }
+      if (
+        event.key === "ArrowRight" &&
+        canMoveToNextSibling &&
+        !navigation.siblingIsLoading
+      ) {
+        event.preventDefault()
+        void moveToNextSibling()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [
+    canMoveToNextSibling,
+    navigation.previousSibling,
+    navigation.siblingIsLoading,
+    navigation.siblingPosition,
+    open,
+  ])
 
   const suppressFocusRestore: MouseEventHandler<HTMLAnchorElement> = (
     event
@@ -142,22 +208,31 @@ export function ResourceInspector({
           <div className="flex min-w-0 flex-col gap-3">
             <SheetTitle
               ref={title}
+              aria-label={
+                navigation.invalidPreview
+                  ? "Invalid resource preview"
+                  : (previewName ?? "Loading resource preview")
+              }
               aria-atomic="true"
               aria-live="polite"
               className="flex min-w-0 items-start gap-2"
               tabIndex={-1}
             >
-              {resource ? (
+              {previewKind ? (
                 <ResourceTypeIcon
                   className="mt-1 shrink-0"
-                  type={resource.kind}
+                  type={previewKind}
                 />
               ) : null}
-              <span className="min-w-0 wrap-break-word">
-                {navigation.invalidPreview
-                  ? "Invalid resource preview"
-                  : (resource?.name ?? "Resource preview")}
-              </span>
+              {navigation.invalidPreview ? (
+                <span className="min-w-0 wrap-break-word">
+                  Invalid resource preview
+                </span>
+              ) : previewName ? (
+                <span className="min-w-0 wrap-break-word">{previewName}</span>
+              ) : (
+                <Skeleton aria-hidden="true" className="h-6 w-48" />
+              )}
             </SheetTitle>
             {navigation.preview ? (
               <div className="flex min-w-0">
@@ -180,9 +255,9 @@ export function ResourceInspector({
                       ? navigation.host.fromProject
                       : undefined
                 }
-                kind={resource?.kind}
+                kind={previewKind}
                 mfid={resource?.unique_id ?? navigation.preview}
-                name={resource?.name ?? navigation.preview}
+                name={previewName ?? navigation.preview}
                 onClick={suppressFocusRestore}
                 presentation="inspector-footer"
               />
@@ -242,8 +317,16 @@ function ResourceSiblingNavigation({
         <PreviousSiblingIcon aria-hidden="true" data-icon="inline-start" />
         Previous
       </Button>
-      <span className="text-supporting text-muted-foreground">
+      <span className="flex items-center gap-2 text-supporting text-muted-foreground">
         {navigation.siblingPosition}
+        <span aria-hidden="true" className="hidden items-center gap-1 sm:flex">
+          <kbd className="rounded border bg-muted px-1.5 py-0.5 text-label-compact">
+            ←
+          </kbd>
+          <kbd className="rounded border bg-muted px-1.5 py-0.5 text-label-compact">
+            →
+          </kbd>
+        </span>
       </span>
       <Button
         aria-label={
@@ -274,6 +357,14 @@ function ResourceSiblingNavigation({
         </p>
       ) : null}
     </nav>
+  )
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      target.matches("input, textarea, select, [role='textbox']"))
   )
 }
 
@@ -439,6 +530,9 @@ function inspectorContextFields(
               className="text-label hover:underline"
               mfid={resource.project.unique_id}
               resourceKind="project"
+              resourceName={
+                resource.project.title ?? resource.project.project_id
+              }
             >
               {resource.project.title ?? resource.project.project_id}
             </ResourcePreviewLink>
@@ -454,6 +548,7 @@ function inspectorContextFields(
               className="text-label hover:underline"
               mfid={resource.instrument.unique_id}
               resourceKind="instrument"
+              resourceName={resource.instrument.instrument_name}
             >
               {resource.instrument.instrument_name}
             </ResourcePreviewLink>
@@ -474,6 +569,9 @@ function inspectorContextFields(
               className="text-label hover:underline"
               mfid={resource.project.unique_id}
               resourceKind="project"
+              resourceName={
+                resource.project.title ?? resource.project.project_id
+              }
             >
               {resource.project.title ?? resource.project.project_id}
             </ResourcePreviewLink>
