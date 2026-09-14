@@ -13,14 +13,15 @@ type GrantRole = Exclude<AccessRole, "owner">
 
 const roleClasses = {
   admin:
-    "border-access-role-admin bg-access-role-admin text-access-role-admin-foreground",
+    "border-access-role-admin-foreground/25 bg-access-role-admin text-access-role-admin-foreground",
   contributor:
-    "border-access-role-contributor bg-access-role-contributor text-access-role-contributor-foreground",
+    "border-access-role-contributor-foreground/25 bg-access-role-contributor text-access-role-contributor-foreground",
   editor:
-    "border-access-role-editor bg-access-role-editor text-access-role-editor-foreground",
-  owner: "border-foreground bg-secondary text-secondary-foreground",
+    "border-access-role-editor-foreground/25 bg-access-role-editor text-access-role-editor-foreground",
+  owner:
+    "border-access-role-owner-foreground/25 bg-access-role-owner text-access-role-owner-foreground",
   viewer:
-    "border-access-role-viewer bg-access-role-viewer text-access-role-viewer-foreground",
+    "border-access-role-viewer-foreground/25 bg-access-role-viewer text-access-role-viewer-foreground",
 } satisfies Record<AccessRole, string>
 
 export function accessRoleLabel(role: string) {

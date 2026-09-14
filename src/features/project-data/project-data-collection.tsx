@@ -30,6 +30,7 @@ import {
 } from "@/data/crucible/collection-browse"
 import type { CollectionBrowseSearch } from "@/data/crucible/collection-browse"
 import {
+  ResourceCreatedCell,
   ResourceOpenCell,
   ResourceOwnerCell,
   ResourceProjectCell,
@@ -638,9 +639,11 @@ function ProjectSampleTable({
             relation={sample.project_relation}
           />
           <ResourceOwnerCell owner={sample.owner} />
-          <ResourceUpdatedCell
-            value={sample.modification_time ?? sample.creation_time}
+          <ResourceCreatedCell
+            className="hidden xl:table-cell"
+            value={sample.creation_time}
           />
+          <ResourceUpdatedCell value={sample.modification_time} />
           <ResourceOpenCell
             fromProject={projectMfid}
             kind="sample"
@@ -684,9 +687,11 @@ function ProjectDatasetTable({
             relation={dataset.project_relation}
           />
           <ResourceOwnerCell owner={dataset.owner} />
-          <ResourceUpdatedCell
-            value={dataset.modification_time ?? dataset.creation_time}
+          <ResourceCreatedCell
+            className="hidden xl:table-cell"
+            value={dataset.creation_time}
           />
+          <ResourceUpdatedCell value={dataset.modification_time} />
           <ResourceOpenCell
             fromProject={projectMfid}
             kind="dataset"
@@ -716,6 +721,7 @@ function ProjectTable({
         <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
         <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
         <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
+        <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
         <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
         <col className="w-data-action-column" />
       </colgroup>
@@ -730,6 +736,14 @@ function ProjectTable({
           />
           <TableHead>Project</TableHead>
           <TableHead>Owner</TableHead>
+          <SortableTableHead
+            active={sort === "created"}
+            className="hidden xl:table-cell"
+            direction={direction}
+            field="created"
+            label="Created"
+            onChange={onSort}
+          />
           <SortableTableHead
             active={sort === "updated"}
             direction={direction}

@@ -23,6 +23,7 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import {
+  ResourceCreatedCell,
   ResourceOpenCell,
   ResourceOwnerCell,
   ResourceProjectCell,
@@ -484,6 +485,7 @@ function DataResults({
                       <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
                       <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
                       <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
+                      <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
                       <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
                       <col className="w-data-action-column" />
                     </colgroup>
@@ -507,6 +509,24 @@ function DataResults({
                         </TableHead>
                         <TableHead>Project</TableHead>
                         <TableHead>Owner</TableHead>
+                        {kind === "all" ? (
+                          <TableHead className="hidden xl:table-cell">
+                            Created
+                          </TableHead>
+                        ) : (
+                          <SortableTableHead
+                            active={
+                              displayedCollectionFilters.sort === "created"
+                            }
+                            className="hidden xl:table-cell"
+                            direction={
+                              displayedCollectionFilters.direction ?? "desc"
+                            }
+                            field="created"
+                            label="Created"
+                            onChange={changeSort}
+                          />
+                        )}
                         {kind === "all" ? (
                           <TableHead>Updated</TableHead>
                         ) : (
@@ -555,10 +575,12 @@ function DataResults({
                               relation={sample.project_relation}
                             />
                             <ResourceOwnerCell owner={sample.owner} />
+                            <ResourceCreatedCell
+                              className="hidden xl:table-cell"
+                              value={sample.creation_time}
+                            />
                             <ResourceUpdatedCell
-                              value={
-                                sample.modification_time ?? sample.creation_time
-                              }
+                              value={sample.modification_time}
                             />
                             <ResourceOpenCell
                               kind="sample"
@@ -594,11 +616,12 @@ function DataResults({
                               relation={dataset.project_relation}
                             />
                             <ResourceOwnerCell owner={dataset.owner} />
+                            <ResourceCreatedCell
+                              className="hidden xl:table-cell"
+                              value={dataset.creation_time}
+                            />
                             <ResourceUpdatedCell
-                              value={
-                                dataset.modification_time ??
-                                dataset.creation_time
-                              }
+                              value={dataset.modification_time}
                             />
                             <ResourceOpenCell
                               kind="dataset"

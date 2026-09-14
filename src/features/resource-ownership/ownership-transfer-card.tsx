@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -176,9 +175,6 @@ export function OwnershipTransferCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Choose a new owner</DialogTitle>
-            <DialogDescription>
-              Search for a person and select a candidate for server preview.
-            </DialogDescription>
           </DialogHeader>
           <ResourceSearchCombobox
             disabled={previewMutation.isPending}

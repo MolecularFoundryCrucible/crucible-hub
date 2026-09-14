@@ -290,8 +290,7 @@ function ThumbnailEditor({
             type="file"
           />
           <FieldDescription>
-            JPEG, PNG, WebP, TIFF, BMP, or GIF up to 50 MiB. The API converts
-            the image to a JPEG preview.
+            JPEG, PNG, WebP, TIFF, BMP, or GIF up to 50 MiB.
           </FieldDescription>
         </Field>
         <Field>

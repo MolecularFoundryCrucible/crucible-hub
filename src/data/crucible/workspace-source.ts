@@ -115,6 +115,7 @@ export type WorkspaceDataset = Pick<
 
 export type WorkspaceInstrument = Pick<
   Schema<"InstrumentResponse">,
+  | "creation_time"
   | "description"
   | "instrument_id"
   | "instrument_name"

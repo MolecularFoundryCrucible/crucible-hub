@@ -35,57 +35,58 @@
   --spacing-pill-height: 1.5rem;
   --spacing-pill-inline: 0.625rem;
   --spacing-pill-icon-inline: 0.5rem;
-  --spacing-resource-updated-column: 12rem;
+  --spacing-resource-date-column: 12rem;
   --spacing-data-name-column: calc(
-    (100% - var(--spacing-resource-updated-column)) * 0.447
+    (100% - var(--spacing-resource-date-column)) * 0.447
   );
   --spacing-data-project-column: calc(
-    (100% - var(--spacing-resource-updated-column)) * 0.318
+    (100% - var(--spacing-resource-date-column)) * 0.318
   );
   --spacing-data-owner-column: calc(
-    (100% - var(--spacing-resource-updated-column)) * 0.235
+    (100% - var(--spacing-resource-date-column)) * 0.235
   );
-  --spacing-data-date-column: var(--spacing-resource-updated-column);
+  --spacing-data-date-column: var(--spacing-resource-date-column);
   --spacing-data-name-column-wide: calc(
-    (100% - var(--spacing-resource-updated-column)) * 0.329
+    (100% - (var(--spacing-resource-date-column) * 2)) * 0.329
   );
   --spacing-data-type-column-wide: calc(
-    (100% - var(--spacing-resource-updated-column)) * 0.235
+    (100% - (var(--spacing-resource-date-column) * 2)) * 0.235
   );
   --spacing-data-project-column-wide: calc(
-    (100% - var(--spacing-resource-updated-column)) * 0.259
+    (100% - (var(--spacing-resource-date-column) * 2)) * 0.259
   );
   --spacing-data-owner-column-wide: calc(
-    (100% - var(--spacing-resource-updated-column)) * 0.177
+    (100% - (var(--spacing-resource-date-column) * 2)) * 0.177
   );
-  --spacing-data-date-column-wide: var(--spacing-resource-updated-column);
+  --spacing-data-date-column-wide: var(--spacing-resource-date-column);
   --spacing-data-action-column: 3rem;
   --spacing-directory-action-column: 3rem;
-  --spacing-directory-date-column: var(--spacing-resource-updated-column);
+  --spacing-directory-date-column: var(--spacing-resource-date-column);
+  --spacing-directory-date-columns: var(--spacing-directory-date-column);
   --spacing-directory-instrument-location-column: calc(
     (
         100% - var(--spacing-directory-action-column) -
-          var(--spacing-directory-date-column)
+          var(--spacing-directory-date-columns)
       ) *
       0.24
   );
   --spacing-directory-instrument-name-column: calc(
     (
         100% - var(--spacing-directory-action-column) -
-          var(--spacing-directory-date-column)
+          var(--spacing-directory-date-columns)
       ) *
       0.42
   );
   --spacing-directory-instrument-person-column: calc(
     (
         100% - var(--spacing-directory-action-column) -
-          var(--spacing-directory-date-column)
+          var(--spacing-directory-date-columns)
       ) *
       0.34
   );
   --spacing-directory-project-name-column: calc(
     100% - var(--spacing-directory-action-column) -
-      var(--spacing-directory-date-column) -
+      var(--spacing-directory-date-columns) -
       var(--spacing-directory-project-person-column)
   );
   --spacing-directory-project-person-column: 14rem;
@@ -93,57 +94,55 @@
   --spacing-data-name-column-with-action: calc(
     (
         100% - var(--spacing-data-action-column) -
-          var(--spacing-resource-updated-column)
+          var(--spacing-resource-date-column)
       ) *
       0.447
   );
   --spacing-data-project-column-with-action: calc(
     (
         100% - var(--spacing-data-action-column) -
-          var(--spacing-resource-updated-column)
+          var(--spacing-resource-date-column)
       ) *
       0.318
   );
   --spacing-data-owner-column-with-action: calc(
     (
         100% - var(--spacing-data-action-column) -
-          var(--spacing-resource-updated-column)
+          var(--spacing-resource-date-column)
       ) *
       0.235
   );
-  --spacing-data-date-column-with-action: var(
-    --spacing-resource-updated-column
-  );
+  --spacing-data-date-column-with-action: var(--spacing-resource-date-column);
   --spacing-data-name-column-wide-with-action: calc(
     (
         100% - var(--spacing-data-action-column) -
-          var(--spacing-resource-updated-column)
+          (var(--spacing-resource-date-column) * 2)
       ) *
       0.329
   );
   --spacing-data-type-column-wide-with-action: calc(
     (
         100% - var(--spacing-data-action-column) -
-          var(--spacing-resource-updated-column)
+          (var(--spacing-resource-date-column) * 2)
       ) *
       0.235
   );
   --spacing-data-project-column-wide-with-action: calc(
     (
         100% - var(--spacing-data-action-column) -
-          var(--spacing-resource-updated-column)
+          (var(--spacing-resource-date-column) * 2)
       ) *
       0.259
   );
   --spacing-data-owner-column-wide-with-action: calc(
     (
         100% - var(--spacing-data-action-column) -
-          var(--spacing-resource-updated-column)
+          (var(--spacing-resource-date-column) * 2)
       ) *
       0.177
   );
   --spacing-data-date-column-wide-with-action: var(
-    --spacing-resource-updated-column
+    --spacing-resource-date-column
   );
   --text-title-page: 1.75rem;
   --text-title-page--line-height: 2.25rem;
@@ -247,6 +246,14 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@media (min-width: 80rem) {
+  :root {
+    --spacing-directory-date-columns: calc(
+      var(--spacing-directory-date-column) * 2
+    );
+  }
+}
+
 :root {
   --brand-crucible-dark-blue: #031e2d;
   --brand-crucible-light-blue: #a8c4cd;
@@ -273,16 +280,16 @@
   --warning-foreground: oklch(0.205 0 0);
   --info: oklch(0.5 0.14 245);
   --info-foreground: oklch(0.985 0 0);
-  --access-role-owner: oklch(0.46 0.15 25);
-  --access-role-owner-foreground: oklch(0.985 0 0);
-  --access-role-admin: oklch(0.45 0.13 300);
-  --access-role-admin-foreground: oklch(0.985 0 0);
-  --access-role-editor: oklch(0.45 0.12 250);
-  --access-role-editor-foreground: oklch(0.985 0 0);
-  --access-role-contributor: oklch(0.43 0.1 155);
-  --access-role-contributor-foreground: oklch(0.985 0 0);
-  --access-role-viewer: oklch(0.45 0.04 250);
-  --access-role-viewer-foreground: oklch(0.985 0 0);
+  --access-role-owner: oklch(0.95 0.05 55);
+  --access-role-owner-foreground: oklch(0.42 0.14 35);
+  --access-role-admin: oklch(0.95 0.04 300);
+  --access-role-admin-foreground: oklch(0.4 0.13 300);
+  --access-role-editor: oklch(0.95 0.035 250);
+  --access-role-editor-foreground: oklch(0.38 0.12 250);
+  --access-role-contributor: oklch(0.95 0.04 155);
+  --access-role-contributor-foreground: oklch(0.36 0.1 155);
+  --access-role-viewer: oklch(0.95 0.015 250);
+  --access-role-viewer-foreground: oklch(0.38 0.04 250);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --action-border: oklch(0.65 0 0);
@@ -369,16 +376,16 @@
   --warning-foreground: oklch(0.145 0 0);
   --info: oklch(0.72 0.12 245);
   --info-foreground: oklch(0.145 0 0);
-  --access-role-owner: oklch(0.78 0.14 25);
-  --access-role-owner-foreground: oklch(0.145 0 0);
-  --access-role-admin: oklch(0.76 0.13 300);
-  --access-role-admin-foreground: oklch(0.145 0 0);
-  --access-role-editor: oklch(0.75 0.12 250);
-  --access-role-editor-foreground: oklch(0.145 0 0);
-  --access-role-contributor: oklch(0.74 0.11 155);
-  --access-role-contributor-foreground: oklch(0.145 0 0);
-  --access-role-viewer: oklch(0.72 0.04 250);
-  --access-role-viewer-foreground: oklch(0.145 0 0);
+  --access-role-owner: oklch(0.28 0.055 45);
+  --access-role-owner-foreground: oklch(0.86 0.12 60);
+  --access-role-admin: oklch(0.28 0.05 300);
+  --access-role-admin-foreground: oklch(0.84 0.1 300);
+  --access-role-editor: oklch(0.28 0.045 250);
+  --access-role-editor-foreground: oklch(0.84 0.09 250);
+  --access-role-contributor: oklch(0.28 0.045 155);
+  --access-role-contributor-foreground: oklch(0.84 0.09 155);
+  --access-role-viewer: oklch(0.28 0.02 250);
+  --access-role-viewer-foreground: oklch(0.8 0.04 250);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --action-border: oklch(1 0 0 / 35%);
@@ -580,7 +587,7 @@ body {
   .resource-collection-table .resource-collection-action {
     align-self: center;
     grid-column: 2;
-    grid-row: 2 / 5;
+    grid-row: 2 / 6;
   }
 }
 

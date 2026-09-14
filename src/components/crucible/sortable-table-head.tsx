@@ -9,12 +9,14 @@ import type {
 
 export function SortableTableHead({
   active,
+  className,
   direction,
   field,
   label,
   onChange,
 }: {
   active: boolean
+  className?: string
   direction: SortDirection
   field: ResourceSort
   label: string
@@ -34,7 +36,10 @@ export function SortableTableHead({
     : ChevronsUpDownIcon
 
   return (
-    <TableHead aria-sort={active ? sortAria(direction) : "none"}>
+    <TableHead
+      aria-sort={active ? sortAria(direction) : "none"}
+      className={className}
+    >
       <Button
         aria-label={
           active

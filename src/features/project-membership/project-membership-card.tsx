@@ -27,7 +27,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -374,10 +373,6 @@ export function ProjectMembershipCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add member</DialogTitle>
-            <DialogDescription>
-              Search for a person, choose their role, then add them to this
-              project.
-            </DialogDescription>
           </DialogHeader>
           <FieldGroup>
             <ResourceSearchCombobox

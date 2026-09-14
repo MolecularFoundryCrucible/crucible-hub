@@ -30,7 +30,7 @@ test("renders the desktop workspace without development chrome", async ({
     page.getByRole("heading", { name: "Recently added data" })
   ).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Projects you can access" })
+    page.getByRole("heading", { name: "Your projects" })
   ).toBeVisible()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
   await expect(page.getByText("Activated catalyst morphology")).toBeVisible()
@@ -74,7 +74,7 @@ test("keeps Home useful when one recent data source fails", async ({
   ).toBeVisible()
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Projects you can access" })
+    page.getByRole("heading", { name: "Your projects" })
   ).toBeVisible()
   await expect(
     page.getByText("Projects and navigation remain available.")

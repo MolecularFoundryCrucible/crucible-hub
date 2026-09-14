@@ -57,6 +57,7 @@ function toWorkspaceInstrument(
   instrument: Schema<"InstrumentResponse">
 ): WorkspaceInstrument {
   return {
+    creation_time: instrument.creation_time,
     instrument_id: instrument.instrument_id,
     unique_id: instrument.unique_id,
     instrument_name: instrument.instrument_name,

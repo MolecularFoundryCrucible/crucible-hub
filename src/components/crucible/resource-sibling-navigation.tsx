@@ -47,6 +47,8 @@ export type ResourceSiblingCollection = ResourceSiblingPage & {
 }
 
 type ResourceSiblingSequenceFilters = {
+  createdFrom?: string
+  createdTo?: string
   dataFormat?: string
   dataFormatIsNull?: true
   direction?: SortDirection
@@ -511,6 +513,8 @@ export function resourceSiblingSequenceLabel({
 
 function hasSequenceFilters(filters: ResourceSiblingSequenceFilters) {
   return Boolean(
+    filters.createdFrom ||
+    filters.createdTo ||
     filters.dataFormat !== undefined ||
     filters.dataFormatIsNull ||
     filters.instrumentMfid ||

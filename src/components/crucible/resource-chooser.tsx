@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -108,11 +107,6 @@ export function ResourceChooser({
               <DialogTitle>
                 Choose {labels.singular.toLocaleLowerCase()}
               </DialogTitle>
-              <DialogDescription>
-                Search by {labels.singular.toLocaleLowerCase()} name or
-                identifier, then choose a returned{" "}
-                {labels.singular.toLocaleLowerCase()}.
-              </DialogDescription>
             </DialogHeader>
             <ResourceSearchCombobox
               id={queryId}

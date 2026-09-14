@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -95,11 +94,6 @@ export function GlobalSearch({
                 : "Search project data"
               : "Search Crucible"}
           </DialogTitle>
-          <DialogDescription>
-            {searchScope === "project"
-              ? "Find samples and datasets related to this project by name."
-              : "Find projects, instruments, samples, and datasets by name or enter a complete MFID."}
-          </DialogDescription>
         </DialogHeader>
         {projectMfid ? (
           <div

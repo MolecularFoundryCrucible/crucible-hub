@@ -14,6 +14,7 @@ import { PageLayout } from "@/components/crucible/page-layout"
 import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
+  ResourceCreatedCell,
   ResourceOpenCell,
   ResourceUpdatedCell,
 } from "@/components/crucible/resource-collection-cells"
@@ -143,7 +144,7 @@ function ProjectsPageHeader() {
         </Link>
       }
       eyebrow="Projects"
-      title="Projects you can access"
+      title="Your projects"
     />
   )
 }
@@ -187,6 +188,7 @@ function ProjectCollection({
               <colgroup>
                 <col className="resource-directory-name-column" />
                 <col className="resource-directory-person-column" />
+                <col className="resource-directory-date-column hidden xl:table-column" />
                 <col className="resource-directory-date-column" />
                 <col className="resource-directory-action-column" />
               </colgroup>
@@ -194,6 +196,9 @@ function ProjectCollection({
                 <TableRow>
                   <TableHead>Project</TableHead>
                   <TableHead>Lead</TableHead>
+                  <TableHead className="hidden xl:table-cell">
+                    Created
+                  </TableHead>
                   <TableHead>Updated</TableHead>
                   <TableHead className="text-center">
                     <span className="sr-only">Open</span>
@@ -226,6 +231,10 @@ function ProjectCollection({
                           <span aria-label="Not available">-</span>
                         )}
                       </TableCell>
+                      <ResourceCreatedCell
+                        className="hidden xl:table-cell"
+                        value={complete ? project.creation_time : undefined}
+                      />
                       <ResourceUpdatedCell
                         value={complete ? project.modification_time : undefined}
                       />

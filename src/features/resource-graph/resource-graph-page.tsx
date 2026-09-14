@@ -127,72 +127,70 @@ export function ResourceGraphPage({
   return (
     <section
       aria-busy={query.isFetching}
-      aria-labelledby="resource-graph-heading"
+      aria-label="Resource graph"
       className="flex min-w-0 flex-col gap-4"
     >
-      <ResourceGraphHeader>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">{query.data.nodes.length} resources</Badge>
-          <Badge variant="outline">
-            {query.data.edges.length}{" "}
-            {query.data.edges.length === 1 ? "relationship" : "relationships"}
-          </Badge>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  aria-label="Zoom graph out"
-                  onClick={() => {
-                    const instance = graph.current
-                    if (instance) instance.zoom(instance.zoom() / 1.25)
-                  }}
-                  size="icon-sm"
-                  type="button"
-                  variant="outline"
-                />
-              }
-            >
-              <ZoomOutGraphIcon aria-hidden="true" />
-            </TooltipTrigger>
-            <TooltipContent>Zoom graph out</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  aria-label="Zoom graph in"
-                  onClick={() => {
-                    const instance = graph.current
-                    if (instance) instance.zoom(instance.zoom() * 1.25)
-                  }}
-                  size="icon-sm"
-                  type="button"
-                  variant="outline"
-                />
-              }
-            >
-              <ZoomInGraphIcon aria-hidden="true" />
-            </TooltipTrigger>
-            <TooltipContent>Zoom graph in</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  aria-label="Fit graph to view"
-                  onClick={() => graph.current?.fit()}
-                  size="icon-sm"
-                  type="button"
-                  variant="outline"
-                />
-              }
-            >
-              <FitGraphIcon aria-hidden="true" />
-            </TooltipTrigger>
-            <TooltipContent>Fit graph to view</TooltipContent>
-          </Tooltip>
-        </div>
-      </ResourceGraphHeader>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Badge variant="outline">{query.data.nodes.length} resources</Badge>
+        <Badge variant="outline">
+          {query.data.edges.length}{" "}
+          {query.data.edges.length === 1 ? "relationship" : "relationships"}
+        </Badge>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                aria-label="Zoom graph out"
+                onClick={() => {
+                  const instance = graph.current
+                  if (instance) instance.zoom(instance.zoom() / 1.25)
+                }}
+                size="icon-sm"
+                type="button"
+                variant="outline"
+              />
+            }
+          >
+            <ZoomOutGraphIcon aria-hidden="true" />
+          </TooltipTrigger>
+          <TooltipContent>Zoom graph out</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                aria-label="Zoom graph in"
+                onClick={() => {
+                  const instance = graph.current
+                  if (instance) instance.zoom(instance.zoom() * 1.25)
+                }}
+                size="icon-sm"
+                type="button"
+                variant="outline"
+              />
+            }
+          >
+            <ZoomInGraphIcon aria-hidden="true" />
+          </TooltipTrigger>
+          <TooltipContent>Zoom graph in</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                aria-label="Fit graph to view"
+                onClick={() => graph.current?.fit()}
+                size="icon-sm"
+                type="button"
+                variant="outline"
+              />
+            }
+          >
+            <FitGraphIcon aria-hidden="true" />
+          </TooltipTrigger>
+          <TooltipContent>Fit graph to view</TooltipContent>
+        </Tooltip>
+      </div>
 
       {query.isError ? (
         <div
@@ -265,32 +263,8 @@ export function ResourceGraphPage({
 
 function ResourceGraphPending() {
   return (
-    <div
-      aria-label="Loading resource graph"
-      className="flex flex-col gap-4"
-      role="status"
-    >
-      <ResourceGraphHeader>
-        <Skeleton className="h-7 w-32" />
-      </ResourceGraphHeader>
+    <div aria-label="Loading resource graph" role="status">
       <Skeleton className="min-h-graph-canvas w-full" />
-    </div>
-  )
-}
-
-function ResourceGraphHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="min-w-0">
-        <h2 className="text-title-section" id="resource-graph-heading">
-          Resource graph
-        </h2>
-        <p className="text-body text-muted-foreground">
-          Select a resource to inspect it, then explore from there to traverse
-          its immediate relationships.
-        </p>
-      </div>
-      {children}
     </div>
   )
 }

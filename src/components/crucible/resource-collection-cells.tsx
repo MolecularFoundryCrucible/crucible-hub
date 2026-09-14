@@ -5,16 +5,65 @@ import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-l
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { TableCell } from "@/components/ui/table"
 import { formatDate } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
-export function ResourceUpdatedCell({
+export function ResourceCreatedCell({
+  className,
   empty = "-",
   value,
 }: {
+  className?: string
   empty?: string
   value: string | null | undefined
 }) {
   return (
-    <TableCell className="resource-collection-date" data-label="Updated">
+    <ResourceDateCell
+      className={className}
+      empty={empty}
+      label="Created"
+      value={value}
+    />
+  )
+}
+
+export function ResourceUpdatedCell({
+  className,
+  empty = "-",
+  value,
+}: {
+  className?: string
+  empty?: string
+  value: string | null | undefined
+}) {
+  return (
+    <ResourceDateCell
+      className={className}
+      empty={empty}
+      label="Updated"
+      value={value}
+    />
+  )
+}
+
+function ResourceDateCell({
+  className,
+  empty,
+  label,
+  value,
+}: {
+  className?: string
+  empty: string
+  label: "Created" | "Updated"
+  value: string | null | undefined
+}) {
+  return (
+    <TableCell
+      className={cn(
+        "resource-collection-date resource-directory-date",
+        className
+      )}
+      data-label={label}
+    >
       {value ? formatDate(value) : empty}
     </TableCell>
   )

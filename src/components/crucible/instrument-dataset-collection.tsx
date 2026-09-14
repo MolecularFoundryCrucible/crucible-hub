@@ -2,12 +2,14 @@ import { Link } from "@tanstack/react-router"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
+  ResourceCreatedCell,
   ResourceOpenCell,
   ResourceOwnerCell,
   ResourceProjectCell,
   ResourceUpdatedCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -25,9 +27,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { WorkspaceDataset } from "@/data/crucible/workspace-source"
+import type {
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
 
 export function InstrumentDatasetCollection({
   cursor,
+  direction,
   hasNextPage,
   instrumentMfid,
   isPaginationDisabled,
@@ -35,10 +42,13 @@ export function InstrumentDatasetCollection({
   items,
   loadMoreError,
   onLoadMore,
+  onSort,
+  sort,
   total,
   updating,
 }: {
   cursor: string | undefined
+  direction: SortDirection
   hasNextPage: boolean
   instrumentMfid: string
   isPaginationDisabled: boolean
@@ -46,6 +56,8 @@ export function InstrumentDatasetCollection({
   items: readonly WorkspaceDataset[]
   loadMoreError: boolean
   onLoadMore: () => void
+  onSort: (sort: ResourceSort, direction: SortDirection) => void
+  sort?: ResourceSort
   total: number | null
   updating: boolean
 }) {
@@ -63,18 +75,39 @@ export function InstrumentDatasetCollection({
                 <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
                 <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
                 <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
+                <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
                 <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
                 <col className="w-data-action-column" />
               </colgroup>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <SortableTableHead
+                    active={sort === "name"}
+                    direction={direction}
+                    field="name"
+                    label="Name"
+                    onChange={onSort}
+                  />
                   <TableHead className="hidden xl:table-cell">
                     Measurement
                   </TableHead>
                   <TableHead>Project</TableHead>
                   <TableHead>Owner</TableHead>
-                  <TableHead>Updated</TableHead>
+                  <SortableTableHead
+                    active={sort === "created"}
+                    className="hidden xl:table-cell"
+                    direction={direction}
+                    field="created"
+                    label="Created"
+                    onChange={onSort}
+                  />
+                  <SortableTableHead
+                    active={sort === "updated"}
+                    direction={direction}
+                    field="updated"
+                    label="Updated"
+                    onChange={onSort}
+                  />
                   <TableHead className="text-center">
                     <span className="sr-only">Open</span>
                   </TableHead>
@@ -105,9 +138,11 @@ export function InstrumentDatasetCollection({
                       relation={dataset.project_relation}
                     />
                     <ResourceOwnerCell owner={dataset.owner} />
-                    <ResourceUpdatedCell
-                      value={dataset.modification_time ?? dataset.creation_time}
+                    <ResourceCreatedCell
+                      className="hidden xl:table-cell"
+                      value={dataset.creation_time}
                     />
+                    <ResourceUpdatedCell value={dataset.modification_time} />
                     <ResourceOpenCell
                       kind="dataset"
                       mfid={dataset.unique_id}

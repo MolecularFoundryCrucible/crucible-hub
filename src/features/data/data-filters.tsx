@@ -5,6 +5,10 @@ import { useNavigate } from "@tanstack/react-router"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
 import { CollectionFilterPanel } from "@/components/crucible/collection-filter-panel"
 import {
+  CollectionCreatedRangeFields,
+  CollectionOrderFields,
+} from "@/components/crucible/collection-query-fields"
+import {
   DatasetFacetFilter,
   SampleFacetFilter,
 } from "@/components/crucible/collection-facet-filter"
@@ -19,7 +23,6 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { personQueryOptions } from "@/data/crucible/people.queries"
@@ -452,46 +455,15 @@ export function DataFilters({
                 />
               </>
             ) : null}
-            <Field data-invalid={invalid("createdFrom")}>
-              <FieldLabel htmlFor="data-created-from">
-                Created from (UTC)
-              </FieldLabel>
-              <Input
-                aria-describedby={
-                  invalid("createdFrom") ? errorDescription : undefined
-                }
-                aria-invalid={invalid("createdFrom") || undefined}
-                id="data-created-from"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    createdFrom: event.target.value || undefined,
-                  }))
-                }
-                type="date"
-                value={draft.createdFrom ?? ""}
-              />
-            </Field>
-            <Field data-invalid={invalid("createdTo")}>
-              <FieldLabel htmlFor="data-created-to">
-                Created to (UTC)
-              </FieldLabel>
-              <Input
-                aria-describedby={
-                  invalid("createdTo") ? errorDescription : undefined
-                }
-                aria-invalid={invalid("createdTo") || undefined}
-                id="data-created-to"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    createdTo: event.target.value || undefined,
-                  }))
-                }
-                type="date"
-                value={draft.createdTo ?? ""}
-              />
-            </Field>
+            <CollectionCreatedRangeFields
+              describedBy={errorDescription}
+              idPrefix="data"
+              invalid={invalid}
+              onChange={(field, value) =>
+                setDraft((current) => ({ ...current, [field]: value }))
+              }
+              value={draft}
+            />
             {kind === "datasets" && resolution.valid ? (
               <DatasetFacetFilter
                 enabled={filtersOpen}
@@ -518,65 +490,15 @@ export function DataFilters({
               />
             ) : null}
             {kind !== "all" ? (
-              <>
-                <Field data-invalid={invalid("sort")}>
-                  <FieldLabel htmlFor="data-sort">Order by</FieldLabel>
-                  <NativeSelect
-                    aria-describedby={
-                      invalid("sort") ? errorDescription : undefined
-                    }
-                    aria-invalid={invalid("sort") || undefined}
-                    className="w-full"
-                    id="data-sort"
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        direction: event.target.value
-                          ? (current.direction ?? "desc")
-                          : undefined,
-                        sort: event.target.value || undefined,
-                      }))
-                    }
-                    value={draft.sort ?? ""}
-                  >
-                    <NativeSelectOption value="">Default</NativeSelectOption>
-                    <NativeSelectOption value="name">Name</NativeSelectOption>
-                    <NativeSelectOption value="created">
-                      Created
-                    </NativeSelectOption>
-                    <NativeSelectOption value="updated">
-                      Updated
-                    </NativeSelectOption>
-                  </NativeSelect>
-                </Field>
-                {draft.sort ? (
-                  <Field data-invalid={invalid("direction")}>
-                    <FieldLabel htmlFor="data-direction">Direction</FieldLabel>
-                    <NativeSelect
-                      aria-describedby={
-                        invalid("direction") ? errorDescription : undefined
-                      }
-                      aria-invalid={invalid("direction") || undefined}
-                      className="w-full"
-                      id="data-direction"
-                      onChange={(event) =>
-                        setDraft((current) => ({
-                          ...current,
-                          direction: event.target.value,
-                        }))
-                      }
-                      value={draft.direction ?? "desc"}
-                    >
-                      <NativeSelectOption value="asc">
-                        Ascending
-                      </NativeSelectOption>
-                      <NativeSelectOption value="desc">
-                        Descending
-                      </NativeSelectOption>
-                    </NativeSelect>
-                  </Field>
-                ) : null}
-              </>
+              <CollectionOrderFields
+                describedBy={errorDescription}
+                idPrefix="data"
+                invalid={invalid}
+                onChange={(value) =>
+                  setDraft((current) => ({ ...current, ...value }))
+                }
+                value={draft}
+              />
             ) : null}
           </FieldGroup>
         </FieldSet>

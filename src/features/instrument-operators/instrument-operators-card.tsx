@@ -30,12 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Tooltip,
@@ -359,9 +354,6 @@ export function InstrumentOperatorsCard({
                   type="search"
                   value={reference}
                 />
-                <FieldDescription>
-                  Use the service account&apos;s exact username or MFID.
-                </FieldDescription>
               </Field>
             </FieldGroup>
             {submittedReference !== undefined && lookupQuery.isPending ? (

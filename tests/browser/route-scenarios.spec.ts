@@ -12,7 +12,7 @@ const scenarioCases = [
   {
     name: "restricted-projects",
     path: "/hub/projects?scenario=restricted",
-    heading: "Projects you can access",
+    heading: "Your projects",
     evidence: "Limited details",
   },
   {
@@ -67,7 +67,7 @@ const zoomEquivalentCases = [
   {
     name: "restricted-projects",
     path: "/hub/projects?scenario=restricted",
-    heading: "Projects you can access",
+    heading: "Your projects",
   },
   {
     name: "instruments",

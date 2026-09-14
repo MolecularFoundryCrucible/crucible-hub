@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -207,9 +206,6 @@ export function ProjectAssignmentCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Choose a project</DialogTitle>
-            <DialogDescription>
-              Search for a project and select a candidate for server preview.
-            </DialogDescription>
           </DialogHeader>
           <ResourceSearchCombobox
             disabled={previewMutation.isPending}
