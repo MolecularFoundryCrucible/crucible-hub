@@ -79,10 +79,7 @@ test("loads only the selected project data family and resets cursors with filter
   )
   expect(requests).toHaveLength(1)
 
-  await page
-    .locator("summary")
-    .filter({ hasText: /^Filters/ })
-    .click()
+  await page.getByRole("button", { name: /^Filters/ }).click()
   await page.getByLabel("Relationship to this project").selectOption("shared")
   expect(requests).toHaveLength(1)
   await page.getByRole("button", { name: "Apply filters" }).click()
@@ -121,10 +118,7 @@ test("loads only the selected project data family and resets cursors with filter
   await page.goto(
     `${projectPath}?scenario=dense&kind=datasets&scope=shared&sampleCursor=fixture%3A50&datasetCursor=fixture%3A50`
   )
-  await page
-    .locator("summary")
-    .filter({ hasText: /^Filters/ })
-    .click()
+  await page.getByRole("button", { name: /^Filters/ }).click()
   await page.getByLabel("Relationship to this project").selectOption("assigned")
   await page.getByRole("button", { name: "Apply filters" }).click()
   await expect(page).not.toHaveURL(/sampleCursor|datasetCursor/)

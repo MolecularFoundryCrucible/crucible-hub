@@ -32,10 +32,7 @@ test("applies and clears creation and visibility filters without eager requests"
     }
   })
 
-  await page
-    .locator("summary")
-    .filter({ hasText: /^Filters/ })
-    .click()
+  await page.getByRole("button", { name: /^Filters/ }).click()
   await expect(page.getByLabel("Relationship to this project")).toHaveValue(
     "assigned"
   )
@@ -66,6 +63,7 @@ test("applies and clears creation and visibility filters without eager requests"
   expect(filteredRequest).toContain("projectScope")
   expect(filteredRequest).toContain("assigned")
 
+  await page.getByRole("button", { name: /^Filters/ }).click()
   await page.getByRole("button", { name: "Clear filters" }).click()
   await expect(page).not.toHaveURL(
     /createdFrom|createdTo|visibility|sampleCursor|datasetCursor|preview|scope/
@@ -90,10 +88,7 @@ test("confirms an instrument search without submitting the outer filter form", a
     }
   })
 
-  await page
-    .locator("summary")
-    .filter({ hasText: /^Filters/ })
-    .click()
+  await page.getByRole("button", { name: /^Filters/ }).click()
   await page.getByRole("button", { name: "Choose instrument" }).click()
   const dialog = page.getByRole("dialog", {
     name: "Choose acquisition instrument",

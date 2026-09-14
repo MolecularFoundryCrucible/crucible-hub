@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
 import {
-  CollectionBrowseToolbar,
+  CollectionGroupControl,
+  CollectionToolbar,
   DatasetCollectionBrowser,
   SampleCollectionBrowser,
 } from "@/components/crucible/collection-browser"
@@ -232,9 +233,11 @@ function DataCollection() {
   const resolution = resolveDataFilters(search)
   if (!resolution.valid) {
     return (
-      <div className="flex min-w-0 flex-col gap-6">
-        <DataTypeFilters kind={dataKind(search.kind)} />
-        <DataFilters errors={resolution.errors} values={search} />
+      <div className="flex min-w-0 flex-col gap-4">
+        <CollectionToolbar
+          actions={<DataFilters errors={resolution.errors} values={search} />}
+          primary={<DataTypeFilters kind={dataKind(search.kind)} />}
+        />
         <Empty className="min-h-state border" role="alert">
           <EmptyHeader>
             <EmptyTitle>Data filters are not valid</EmptyTitle>
@@ -369,21 +372,23 @@ function DataResults({
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-4">
       <CollectionUpdateStatus
         label="data"
         updating={hasReadableData && updating}
       />
-      <DataTypeFilters
-        datasetLabel={collectionLabel("Datasets", datasetPage)}
-        kind={kind}
-        sampleLabel={collectionLabel("Samples", samplePage)}
-      />
-      <DataFilters errors={[]} values={search} />
       <DataBrowseFrame
         datasetBrowse={datasetBrowse}
         filters={collectionFilters}
         sampleBrowse={sampleBrowse}
+        toolbarActions={<DataFilters errors={[]} values={search} />}
+        toolbarPrimary={
+          <DataTypeFilters
+            datasetLabel={collectionLabel("Datasets", datasetPage)}
+            kind={kind}
+            sampleLabel={collectionLabel("Samples", samplePage)}
+          />
+        }
       >
         {!hasReadableData && (samplePending || datasetPending) ? (
           <CollectionTablePending label="data" />
@@ -615,30 +620,41 @@ function DataBrowseFrame({
   datasetBrowse,
   filters,
   sampleBrowse,
+  toolbarActions,
+  toolbarPrimary,
 }: {
   children: React.ReactNode
   datasetBrowse?: DataBrowseState<DatasetFacetField>
   filters: DataCollectionQueryFilters
   sampleBrowse?: DataBrowseState<SampleFacetField>
+  toolbarActions: React.ReactNode
+  toolbarPrimary: React.ReactNode
 }) {
   const navigate = Route.useNavigate()
   const browse = sampleBrowse ?? datasetBrowse
-  if (!browse) return children
+  if (!browse) {
+    return (
+      <div className="flex min-w-0 flex-col gap-4">
+        <CollectionToolbar actions={toolbarActions} primary={toolbarPrimary} />
+        {children}
+      </div>
+    )
+  }
   const browseField = browse.field
 
-  function changeView(view: "grouped" | "list") {
+  function changeGroup(
+    field: DatasetFacetField | SampleFacetField | undefined
+  ) {
     void navigate({
       search: (previous) => ({
         ...previous,
         ...collectionBrowseSearchState({ kind: "all" }),
-        ...(view === "grouped"
-          ? clearCollectionGroupFilterSearch(browseField)
-          : {}),
+        ...clearCollectionGroupFilterSearch(field ?? browseField),
         datasetCursor: undefined,
-        groupBy: view === "grouped" ? browseField : undefined,
+        groupBy: field,
         preview: undefined,
         sampleCursor: undefined,
-        view: view === "grouped" ? "grouped" : undefined,
+        view: field ? "grouped" : undefined,
       }),
       state: {},
       to: "/data",
@@ -660,32 +676,23 @@ function DataBrowseFrame({
     })
   }
 
-  function changeField(field: DatasetFacetField | SampleFacetField) {
-    void navigate({
-      search: (previous) => ({
-        ...previous,
-        ...collectionBrowseSearchState({ kind: "all" }),
-        ...clearCollectionGroupFilterSearch(field),
-        datasetCursor: undefined,
-        groupBy: field,
-        preview: undefined,
-        sampleCursor: undefined,
-      }),
-      state: {},
-      to: "/data",
-    })
-  }
-
   if (sampleBrowse) {
     return (
-      <div className="flex min-w-0 flex-col gap-6">
-        <CollectionBrowseToolbar
-          field={sampleBrowse.field}
-          id="data-sample-browse-field"
-          onFieldChange={changeField}
-          onViewChange={changeView}
-          options={globalSampleBrowseOptions}
-          view={sampleBrowse.view}
+      <div className="flex min-w-0 flex-col gap-4">
+        <CollectionToolbar
+          actions={
+            <>
+              {toolbarActions}
+              <CollectionGroupControl
+                field={sampleBrowse.field}
+                id="data-sample-group-field"
+                onChange={changeGroup}
+                options={globalSampleBrowseOptions}
+                view={sampleBrowse.view}
+              />
+            </>
+          }
+          primary={toolbarPrimary}
         />
         {sampleBrowse.view === "grouped" ? (
           <SampleCollectionBrowser
@@ -706,14 +713,21 @@ function DataBrowseFrame({
   if (!datasetBrowse) return children
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <CollectionBrowseToolbar
-        field={datasetBrowse.field}
-        id="data-dataset-browse-field"
-        onFieldChange={changeField}
-        onViewChange={changeView}
-        options={globalDatasetBrowseOptions}
-        view={datasetBrowse.view}
+    <div className="flex min-w-0 flex-col gap-4">
+      <CollectionToolbar
+        actions={
+          <>
+            {toolbarActions}
+            <CollectionGroupControl
+              field={datasetBrowse.field}
+              id="data-dataset-group-field"
+              onChange={changeGroup}
+              options={globalDatasetBrowseOptions}
+              view={datasetBrowse.view}
+            />
+          </>
+        }
+        primary={toolbarPrimary}
       />
       {datasetBrowse.view === "grouped" ? (
         <DatasetCollectionBrowser

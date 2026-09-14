@@ -160,6 +160,7 @@ export function ProjectDataFilters({
       return
     }
     setDraftErrors([])
+    setFiltersOpen(false)
     void navigate({
       params: { projectMfid },
       search: (previous) => ({
@@ -243,13 +244,28 @@ export function ProjectDataFilters({
   return (
     <CollectionFilterPanel
       activeFilters={active}
+      footer={
+        <>
+          <Button onClick={clear} type="button" variant="outline">
+            Clear filters
+          </Button>
+          <Button form="project-data-filters" type="submit">
+            Apply filters
+          </Button>
+        </>
+      }
       onOpenChange={setFiltersOpen}
       open={filtersOpen}
+      title="Project data filters"
     >
-      <form className="flex flex-col gap-4" onSubmit={apply}>
+      <form
+        className="flex flex-col gap-4"
+        id="project-data-filters"
+        onSubmit={apply}
+      >
         <FieldSet>
           <FieldLegend className="sr-only">Project data filters</FieldLegend>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <FieldGroup className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="project-data-relationship">
                 Relationship to this project
@@ -601,12 +617,6 @@ export function ProjectDataFilters({
             errors={[...draftErrors]}
           />
         ) : null}
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit">Apply filters</Button>
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-        </div>
       </form>
     </CollectionFilterPanel>
   )

@@ -118,6 +118,13 @@ function InstrumentSummary({
       </CardHeader>
       <CardContent>
         <dl className="grid gap-4 sm:grid-cols-2">
+          <div className="min-w-0 sm:col-span-2">
+            <dt className="text-label text-muted-foreground">Description</dt>
+            <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
+              <SummaryFieldIcon type="description" />
+              <span className="min-w-0">{instrument.description ?? "-"}</span>
+            </dd>
+          </div>
           {fields.map(([label, value, type]) => (
             <div className="min-w-0" key={label}>
               <dt className="text-label text-muted-foreground">{label}</dt>

@@ -3,7 +3,8 @@ import { Link, createFileRoute, getRouteApi } from "@tanstack/react-router"
 import { z } from "zod"
 
 import {
-  CollectionBrowseToolbar,
+  CollectionGroupControl,
+  CollectionToolbar,
   DatasetCollectionBrowser,
 } from "@/components/crucible/collection-browser"
 import {
@@ -22,7 +23,7 @@ import {
   instrumentDatasetBrowseOptions,
   resolveCollectionBrowse,
 } from "@/data/crucible/collection-browse"
-import type { FacetSelection } from "@/data/crucible/facets"
+import type { DatasetFacetField, FacetSelection } from "@/data/crucible/facets"
 import {
   dataPageLimit,
   datasetsQueryOptions,
@@ -171,26 +172,27 @@ function InstrumentDatasetsPage() {
     updateBrowse(collectionBrowseSearchState(selection))
   }
 
+  function changeGroup(field: DatasetFacetField | undefined) {
+    updateBrowse({
+      ...collectionBrowseSearchState({ kind: "all" }),
+      groupBy: field,
+      view: field ? "grouped" : undefined,
+    })
+  }
+
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <CollectionBrowseToolbar
-        field={browse.field}
-        id="instrument-dataset-browse-field"
-        onFieldChange={(field) =>
-          updateBrowse({
-            ...collectionBrowseSearchState({ kind: "all" }),
-            groupBy: field,
-          })
+    <div className="flex min-w-0 flex-col gap-4">
+      <CollectionToolbar
+        actions={
+          <CollectionGroupControl
+            field={browse.field}
+            id="instrument-dataset-group-field"
+            onChange={changeGroup}
+            options={instrumentDatasetBrowseOptions}
+            view={browse.view}
+          />
         }
-        onViewChange={(view) =>
-          updateBrowse({
-            ...collectionBrowseSearchState({ kind: "all" }),
-            groupBy: view === "grouped" ? browse.field : undefined,
-            view: view === "grouped" ? "grouped" : undefined,
-          })
-        }
-        options={instrumentDatasetBrowseOptions}
-        view={browse.view}
+        primary={<h2 className="text-title-section">Datasets</h2>}
       />
       {browse.view === "grouped" ? (
         <DatasetCollectionBrowser

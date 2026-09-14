@@ -42,66 +42,65 @@ import type {
 } from "@/data/crucible/facets"
 import { facetBucketLabel } from "./collection-facet-filter"
 
-export function CollectionBrowseToolbar<TField extends string>({
+export function CollectionToolbar({
+  actions,
+  primary,
+}: {
+  actions?: React.ReactNode
+  primary: React.ReactNode
+}) {
+  return (
+    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">{primary}</div>
+      {actions ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">
+          {actions}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+export function CollectionGroupControl<TField extends string>({
+  disabled = false,
   field,
   id,
-  onFieldChange,
-  onViewChange,
+  onChange,
   options,
   view,
 }: {
+  disabled?: boolean
   field: TField
   id: string
-  onFieldChange: (field: TField) => void
-  onViewChange: (view: "grouped" | "list") => void
+  onChange: (field: TField | undefined) => void
   options: readonly CollectionBrowseOption<TField>[]
   view: "grouped" | "list"
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex flex-wrap gap-2" aria-label="Collection view">
-        <Button
-          aria-pressed={view === "list"}
-          onClick={() => onViewChange("list")}
-          type="button"
-          variant={view === "list" ? "secondary" : "ghost"}
-        >
-          List
-        </Button>
-        <Button
-          aria-pressed={view === "grouped"}
-          onClick={() => onViewChange("grouped")}
-          type="button"
-          variant={view === "grouped" ? "secondary" : "ghost"}
-        >
-          Browse
-        </Button>
-      </div>
-      {view === "grouped" ? (
-        <Field className="w-auto min-w-0 flex-none" orientation="horizontal">
-          <FieldLabel className="shrink-0 whitespace-nowrap" htmlFor={id}>
-            Browse by
-          </FieldLabel>
-          <NativeSelect
-            className="w-44 min-w-0"
-            id={id}
-            onChange={(event) => {
-              const next = options.find(
-                (option) => option.value === event.target.value
-              )
-              if (next) onFieldChange(next.value)
-            }}
-            value={field}
-          >
-            {options.map((option) => (
-              <NativeSelectOption key={option.value} value={option.value}>
-                {option.label}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </Field>
-      ) : null}
-    </div>
+    <Field className="w-auto min-w-0 flex-none" orientation="horizontal">
+      <FieldLabel className="shrink-0 whitespace-nowrap" htmlFor={id}>
+        Group by
+      </FieldLabel>
+      <NativeSelect
+        className="w-44 min-w-0"
+        disabled={disabled}
+        id={id}
+        onChange={(event) => {
+          const next = options.find(
+            (option) => option.value === event.target.value
+          )
+          onChange(next?.value)
+        }}
+        value={view === "grouped" ? field : ""}
+      >
+        <NativeSelectOption value="">None</NativeSelectOption>
+        {options.map((option) => (
+          <NativeSelectOption key={option.value} value={option.value}>
+            {option.label}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+    </Field>
   )
 }
 

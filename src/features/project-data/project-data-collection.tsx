@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 
 import {
-  CollectionBrowseToolbar,
+  CollectionGroupControl,
+  CollectionToolbar,
   DatasetCollectionBrowser,
   SampleCollectionBrowser,
 } from "@/components/crucible/collection-browser"
@@ -116,25 +117,29 @@ export function ProjectDataCollection({
       to: "/projects/$projectMfid",
     })
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <ProjectDataTypeFilters
-        kind={kind}
-        projectMfid={projectMfid}
-        projectScope={projectScope}
-      />
-      <ProjectDataFilters
-        errors={filterResolution.valid ? [] : filterResolution.errors}
-        kind={kind}
-        projectMfid={projectMfid}
-        projectScope={projectScope}
-        values={filterValues}
-      />
+    <div className="flex min-w-0 flex-col gap-4">
       <ProjectBrowseFrame
         datasetBrowse={datasetBrowse}
         filters={filterResolution.valid ? filterResolution.filters : undefined}
         projectMfid={projectMfid}
         projectScope={projectScope}
         sampleBrowse={sampleBrowse}
+        toolbarActions={
+          <ProjectDataFilters
+            errors={filterResolution.valid ? [] : filterResolution.errors}
+            kind={kind}
+            projectMfid={projectMfid}
+            projectScope={projectScope}
+            values={filterValues}
+          />
+        }
+        toolbarPrimary={
+          <ProjectDataTypeFilters
+            kind={kind}
+            projectMfid={projectMfid}
+            projectScope={projectScope}
+          />
+        }
       >
         {!filterResolution.valid ? (
           <Empty className="min-h-state border" role="alert">
@@ -196,6 +201,8 @@ function ProjectBrowseFrame({
   projectMfid,
   projectScope,
   sampleBrowse,
+  toolbarActions,
+  toolbarPrimary,
 }: {
   children: React.ReactNode
   datasetBrowse?: ProjectBrowseState<DatasetFacetField>
@@ -203,10 +210,12 @@ function ProjectBrowseFrame({
   projectMfid: string
   projectScope: ProjectScope
   sampleBrowse?: ProjectBrowseState<SampleFacetField>
+  toolbarActions: React.ReactNode
+  toolbarPrimary: React.ReactNode
 }) {
   const navigate = useNavigate({ from: "/projects/$projectMfid" })
   const browse = sampleBrowse ?? datasetBrowse
-  if (!browse || !filters) return children
+  if (!browse) return children
   const browseField = browse.field
 
   function updateSearch(values: Record<string, unknown>) {
@@ -224,22 +233,14 @@ function ProjectBrowseFrame({
     })
   }
 
-  function changeView(view: "grouped" | "list") {
+  function changeGroup(
+    field: DatasetFacetField | SampleFacetField | undefined
+  ) {
     updateSearch({
       ...collectionBrowseSearchState({ kind: "all" }),
-      ...(view === "grouped"
-        ? clearCollectionGroupFilterSearch(browseField)
-        : {}),
-      groupBy: view === "grouped" ? browseField : undefined,
-      view: view === "grouped" ? "grouped" : undefined,
-    })
-  }
-
-  function changeField(field: DatasetFacetField | SampleFacetField) {
-    updateSearch({
-      ...collectionBrowseSearchState({ kind: "all" }),
-      ...clearCollectionGroupFilterSearch(field),
+      ...clearCollectionGroupFilterSearch(field ?? browseField),
       groupBy: field,
+      view: field ? "grouped" : undefined,
     })
   }
 
@@ -250,18 +251,47 @@ function ProjectBrowseFrame({
     })
   }
 
+  const toolbar = (
+    <CollectionToolbar
+      actions={
+        <>
+          {toolbarActions}
+          <CollectionGroupControl
+            disabled={!filters}
+            field={browse.field}
+            id={
+              sampleBrowse
+                ? "project-sample-group-field"
+                : "project-dataset-group-field"
+            }
+            onChange={changeGroup}
+            options={
+              sampleBrowse
+                ? projectSampleBrowseOptions
+                : projectDatasetBrowseOptions
+            }
+            view={browse.view}
+          />
+        </>
+      }
+      primary={toolbarPrimary}
+    />
+  )
+
+  if (!filters) {
+    return (
+      <div className="flex min-w-0 flex-col gap-4">
+        {toolbar}
+        {children}
+      </div>
+    )
+  }
+
   const facetFilters = { ...filters, projectMfid, projectScope }
   if (sampleBrowse) {
     return (
-      <div className="flex min-w-0 flex-col gap-6">
-        <CollectionBrowseToolbar
-          field={sampleBrowse.field}
-          id="project-sample-browse-field"
-          onFieldChange={changeField}
-          onViewChange={changeView}
-          options={projectSampleBrowseOptions}
-          view={sampleBrowse.view}
-        />
+      <div className="flex min-w-0 flex-col gap-4">
+        {toolbar}
         {sampleBrowse.view === "grouped" ? (
           <SampleCollectionBrowser
             field={sampleBrowse.field}
@@ -280,15 +310,8 @@ function ProjectBrowseFrame({
 
   if (!datasetBrowse) return children
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <CollectionBrowseToolbar
-        field={datasetBrowse.field}
-        id="project-dataset-browse-field"
-        onFieldChange={changeField}
-        onViewChange={changeView}
-        options={projectDatasetBrowseOptions}
-        view={datasetBrowse.view}
-      />
+    <div className="flex min-w-0 flex-col gap-4">
+      {toolbar}
       {datasetBrowse.view === "grouped" ? (
         <DatasetCollectionBrowser
           field={datasetBrowse.field}

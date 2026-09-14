@@ -104,6 +104,7 @@ function InstrumentPage() {
       </Breadcrumb>
 
       <PageHeader
+        eyebrow={resource.instrument_id ?? undefined}
         icon={
           <ResourceTypeIcon
             className="mt-1 size-6 shrink-0"
@@ -111,7 +112,6 @@ function InstrumentPage() {
           />
         }
         title={resource.name}
-        description={resource.description ?? undefined}
       />
 
       <ResourceSectionNavigation
@@ -131,6 +131,16 @@ function InstrumentPage() {
         label="Instrument sections"
       >
         <Link
+          activeOptions={{ includeSearch: false }}
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
+          params={{ instrumentMfid }}
+          search={{ cursor: undefined }}
+          to="/instruments/$instrumentMfid/datasets"
+        >
+          Data
+        </Link>
+        <Link
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={resourceSectionActiveProps}
           className={resourceSectionLinkClassName}
@@ -139,16 +149,6 @@ function InstrumentPage() {
           to="/instruments/$instrumentMfid"
         >
           Overview
-        </Link>
-        <Link
-          activeOptions={{ includeSearch: false }}
-          activeProps={resourceSectionActiveProps}
-          className={resourceSectionLinkClassName}
-          params={{ instrumentMfid }}
-          search={{ cursor: undefined }}
-          to="/instruments/$instrumentMfid/datasets"
-        >
-          Datasets
         </Link>
         {resource.capabilities?.can_change_status === true ||
         resource.capabilities?.can_manage_access === true ||

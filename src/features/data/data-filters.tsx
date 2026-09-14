@@ -174,6 +174,7 @@ export function DataFilters({
       return
     }
     setDraftErrors([])
+    setFiltersOpen(false)
     void navigate({
       search: (previous) => applyDataFilters(previous, next.filters),
       state: {},
@@ -195,13 +196,24 @@ export function DataFilters({
   return (
     <CollectionFilterPanel
       activeFilters={active}
+      footer={
+        <>
+          <Button onClick={clear} type="button" variant="outline">
+            Clear filters
+          </Button>
+          <Button form="data-filters" type="submit">
+            Apply filters
+          </Button>
+        </>
+      }
       onOpenChange={setFiltersOpen}
       open={filtersOpen}
+      title="Data filters"
     >
-      <form className="flex flex-col gap-4" onSubmit={apply}>
+      <form className="flex flex-col gap-4" id="data-filters" onSubmit={apply}>
         <FieldSet>
           <FieldLegend className="sr-only">Data filters</FieldLegend>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <FieldGroup className="grid gap-4 sm:grid-cols-2">
             <Field data-invalid={invalid("projectMfid")}>
               <FieldLabel htmlFor="data-project-trigger">Project</FieldLabel>
               <ResourceChooser
@@ -571,12 +583,6 @@ export function DataFilters({
         {draftErrors.length ? (
           <FieldError id="data-filter-errors" errors={[...draftErrors]} />
         ) : null}
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit">Apply filters</Button>
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-        </div>
       </form>
     </CollectionFilterPanel>
   )

@@ -23,10 +23,7 @@ test("applies project, relationship, visibility, date, and instrument filters be
     }
   })
 
-  await page
-    .locator("summary")
-    .filter({ hasText: /^Filters/ })
-    .click()
+  await page.getByRole("button", { name: /^Filters/ }).click()
   await expect(page.getByLabel("Relationship to this project")).toHaveCount(0)
   await page.getByRole("button", { name: "Choose project" }).click()
   const projectDialog = page.getByRole("dialog", { name: "Choose project" })
@@ -93,6 +90,7 @@ test("applies project, relationship, visibility, date, and instrument filters be
   await expect(page).toHaveURL(/projectMfid=fixture-project-1/)
   await expect(page.getByText("Acquisition instrument")).toHaveCount(0)
 
+  await page.getByRole("button", { name: /^Filters/ }).click()
   await page.getByRole("button", { name: "Clear filters" }).click()
   await expect(page).toHaveURL(/kind=samples/)
   await expect(page).not.toHaveURL(
