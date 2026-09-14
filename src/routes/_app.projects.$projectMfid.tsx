@@ -110,6 +110,14 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
+        actions={
+          <EntityRefreshAction
+            label={`Refresh ${project.title ?? project.project_id}`}
+            presentation="icon"
+            queryKey={projectOptions.queryKey}
+            refreshedAt={dataUpdatedAt}
+          />
+        }
         eyebrow={project.project_id}
         icon={
           <ResourceTypeIcon className="mt-1 size-6 shrink-0" type="project" />
@@ -118,16 +126,7 @@ function ProjectWorkspace() {
       />
 
       <ResourceSectionNavigation
-        actions={
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <ResourceCreationActions projectMfid={project.unique_id} />
-            <EntityRefreshAction
-              label={`Refresh ${project.title ?? project.project_id}`}
-              queryKey={projectOptions.queryKey}
-              refreshedAt={dataUpdatedAt}
-            />
-          </div>
-        }
+        actions={<ResourceCreationActions projectMfid={project.unique_id} />}
         label="Project sections"
       >
         <Link

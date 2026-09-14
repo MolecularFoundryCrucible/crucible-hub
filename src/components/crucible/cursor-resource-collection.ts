@@ -28,11 +28,13 @@ export function useCursorResourceCollection<
   getName,
   initialCursor,
   kind,
+  label,
   query,
 }: {
   getName: (item: TItem) => string
   initialCursor: string | undefined
   kind: "dataset" | "sample"
+  label: string
   query: CursorQueryResult<TItem>
 }) {
   const items = useMemo(
@@ -50,6 +52,7 @@ export function useCursorResourceCollection<
     return {
       hasNextPage: query.hasNextPage,
       items: mapItems(items),
+      label,
       loadMore: async () => {
         const next = await query.fetchNextPage()
         if (next.isError) {
@@ -70,6 +73,7 @@ export function useCursorResourceCollection<
     initialCursor,
     items,
     kind,
+    label,
     query.fetchNextPage,
     query.hasNextPage,
     total,

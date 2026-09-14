@@ -35,7 +35,10 @@ import {
   resourcePreviewSearchSchema,
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
-import { useRegisterResourceSiblings } from "@/components/crucible/resource-sibling-navigation"
+import {
+  resourceSiblingSequenceLabel,
+  useRegisterResourceSiblings,
+} from "@/components/crucible/resource-sibling-navigation"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
@@ -328,12 +331,20 @@ function DataResults({
     getName: sampleCollectionName,
     initialCursor: search.sampleCursor,
     kind: "sample",
+    label: resourceSiblingSequenceLabel({
+      filters: sampleCollectionFilters,
+      kind: "sample",
+    }),
     query: sampleResult,
   })
   const datasetCollection = useCursorResourceCollection({
     getName: datasetCollectionName,
     initialCursor: search.datasetCursor,
     kind: "dataset",
+    label: resourceSiblingSequenceLabel({
+      filters: datasetCollectionFilters,
+      kind: "dataset",
+    }),
     query: datasetResult,
   })
   const sampleItems = sampleCollection.items

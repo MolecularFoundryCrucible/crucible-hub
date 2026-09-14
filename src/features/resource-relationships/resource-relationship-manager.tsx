@@ -100,7 +100,9 @@ export function ResourceRelationshipManager({
         mfid: link.unique_id,
         name: link.name || link.unique_id,
       }))
-    return items.length ? [staticResourceSiblingCollection(items)] : []
+    return items.length
+      ? [staticResourceSiblingCollection(items, "Relationships")]
+      : []
   }, [resource.kind, resource.links])
   useRegisterResourceSiblings(previewSiblingCollections)
   const canManage =

@@ -19,7 +19,10 @@ import {
   useCursorResourceCollection,
 } from "@/components/crucible/cursor-resource-collection"
 import { InstrumentDatasetCollection } from "@/components/crucible/instrument-dataset-collection"
-import { useRegisterResourceSiblings } from "@/components/crucible/resource-sibling-navigation"
+import {
+  resourceSiblingSequenceLabel,
+  useRegisterResourceSiblings,
+} from "@/components/crucible/resource-sibling-navigation"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -122,6 +125,11 @@ function InstrumentDatasetsPage() {
     getName: datasetCollectionName,
     initialCursor: cursor,
     kind: "dataset",
+    label: resourceSiblingSequenceLabel({
+      filters: collectionFilters,
+      kind: "dataset",
+      scope: "instrument",
+    }),
     query: result,
   })
   const siblingCollections = useMemo(

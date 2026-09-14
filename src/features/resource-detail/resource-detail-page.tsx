@@ -189,6 +189,14 @@ export function ResourceWorkspace({
           </BreadcrumbList>
         </Breadcrumb>
         <PageHeader
+          actions={
+            <EntityRefreshAction
+              label={`Refresh ${resource.name}`}
+              presentation="icon"
+              queryKey={resourceOptions.queryKey}
+              refreshedAt={dataUpdatedAt}
+            />
+          }
           icon={
             <ResourceTypeIcon
               className="mt-1 size-6 shrink-0"
@@ -199,19 +207,12 @@ export function ResourceWorkspace({
         />
         <ResourceNavigation
           actions={
-            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-              {siblingNavigation ? (
-                <ResourceSiblingNavigationControls
-                  fromProject={fromProject}
-                  navigation={siblingNavigation}
-                />
-              ) : null}
-              <EntityRefreshAction
-                label={`Refresh ${resource.name}`}
-                queryKey={resourceOptions.queryKey}
-                refreshedAt={dataUpdatedAt}
+            siblingNavigation ? (
+              <ResourceSiblingNavigationControls
+                fromProject={fromProject}
+                navigation={siblingNavigation}
               />
-            </div>
+            ) : null
           }
           fromProject={fromProject}
           resource={resource}

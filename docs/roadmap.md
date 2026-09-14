@@ -50,7 +50,7 @@ The local workspace is complete enough for continued feature work: Home continua
 
 #### Grouped collection browsing
 
-Implemented for local development. Type-specific global Data, Project Data, and Instrument Datasets can switch between the existing list and an API-backed group directory. Facet counts, null buckets, and bucket pagination remain server-owned; selecting one group lazily starts the normal filtered resource cursor chain. Browse state is URL-backed and uses one shared presentation and mapping model across scopes. Cross-device saved views and direct sibling navigation from a deep-linked preview remain deferred to the contracts in [Crucible API handoff](crucible-api-handoff.md).
+Implemented for local development. Type-specific global Data, Project Data, and Instrument Datasets can switch between the existing list and an API-backed group directory. Facet counts, null buckets, and bucket pagination remain server-owned; selecting one group lazily starts the normal filtered resource cursor chain. Browse state is URL-backed and uses one shared presentation and mapping model across scopes. Canonical detail pages expose the originating collection through a compact sibling control and can continue its forward cursor chain. Cross-device saved views and in-place sequence reconfiguration around the current resource remain deferred to the contracts in [Crucible API handoff](crucible-api-handoff.md).
 
 #### Resource inspector slice
 

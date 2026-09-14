@@ -11,11 +11,22 @@ import {
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
 
 import {
+  FilterIcon,
   LoadingMoreIcon,
   NextSiblingIcon,
   PreviousSiblingIcon,
 } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import type {
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
 
 export type ResourceSibling = {
   kind: "dataset" | "sample"
@@ -30,8 +41,28 @@ type ResourceSiblingPage = {
 }
 
 export type ResourceSiblingCollection = ResourceSiblingPage & {
+  label: string
   loadMore: () => Promise<ResourceSiblingPage>
   startsAtBeginning: boolean
+}
+
+type ResourceSiblingSequenceFilters = {
+  dataFormat?: string
+  dataFormatIsNull?: true
+  direction?: SortDirection
+  instrumentMfid?: string
+  instrumentMfidIsNull?: true
+  measurement?: string
+  measurementIsNull?: true
+  ownerId?: string
+  ownerIdIsNull?: true
+  projectMfid?: string
+  projectMfidIsNull?: true
+  sampleType?: string
+  sampleTypeIsNull?: true
+  sessionName?: string
+  sessionNameIsNull?: true
+  sort?: ResourceSort
 }
 
 type ActiveResourceSiblingSession = ResourceSiblingCollection & {
@@ -213,8 +244,8 @@ export function useActiveResourceSiblingNavigation(currentMfid: string) {
     next: session.items.at(index + 1),
     position:
       session.startsAtBeginning && session.total !== null
-        ? `${index + 1} of ${session.total}`
-        : `${index + 1} of ${session.items.length} loaded`,
+        ? `${index + 1} / ${session.total}`
+        : `${index + 1} / ${session.items.length} loaded`,
     previous: index > 0 ? session.items.at(index - 1) : undefined,
   }
 }
@@ -301,51 +332,70 @@ export function ResourceSiblingNavigationControls({
   return (
     <nav
       aria-label="Resources in the originating collection"
-      className="flex min-w-0 flex-wrap items-center justify-end gap-2"
+      className="flex min-w-0 flex-col items-end gap-1"
     >
-      <ResourceSiblingAction
-        direction="previous"
-        disabled={!navigation.previous}
-        fromProject={fromProject}
-        sessionId={navigation.id}
-        target={navigation.previous}
-      />
-      <span className="text-supporting text-muted-foreground">
-        {navigation.position}
-      </span>
-      {navigation.next ? (
+      <ButtonGroup
+        aria-label={`${navigation.label}, ${navigation.position}`}
+        className="max-w-full"
+      >
         <ResourceSiblingAction
-          direction="next"
+          direction="previous"
+          disabled={!navigation.previous}
           fromProject={fromProject}
           sessionId={navigation.id}
-          target={navigation.next}
+          target={navigation.previous}
         />
-      ) : (
-        <Button
-          aria-label="Next item"
-          disabled={!canMoveNext || navigation.isLoading}
-          onClick={() => void moveNext()}
-          size="sm"
-          type="button"
-          variant="outline"
+        <ButtonGroupText
+          className="max-w-resource-sequence min-w-0"
+          title={`${navigation.label}, ${navigation.position}`}
         >
-          Next
-          {navigation.isLoading ? (
-            <LoadingMoreIcon
-              aria-hidden="true"
-              className="animate-spin motion-reduce:animate-none"
-              data-icon="inline-end"
-            />
-          ) : (
-            <NextSiblingIcon aria-hidden="true" data-icon="inline-end" />
-          )}
-        </Button>
-      )}
+          <FilterIcon aria-hidden="true" />
+          <span className="shrink-0">{navigation.position}</span>
+          <span aria-hidden="true" className="text-muted-foreground">
+            ·
+          </span>
+          <span className="truncate text-muted-foreground">
+            {navigation.label}
+          </span>
+        </ButtonGroupText>
+        {navigation.next ? (
+          <ResourceSiblingAction
+            direction="next"
+            fromProject={fromProject}
+            sessionId={navigation.id}
+            target={navigation.next}
+          />
+        ) : (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label="Next item"
+                  disabled={!canMoveNext || navigation.isLoading}
+                  onClick={() => void moveNext()}
+                  size="icon-sm"
+                  type="button"
+                  variant="outline"
+                />
+              }
+            >
+              {navigation.isLoading ? (
+                <LoadingMoreIcon
+                  aria-hidden="true"
+                  className="animate-spin motion-reduce:animate-none"
+                />
+              ) : (
+                <NextSiblingIcon aria-hidden="true" />
+              )}
+            </TooltipTrigger>
+            <TooltipContent>
+              {canMoveNext ? "Load the next items" : "No next item"}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </ButtonGroup>
       {navigation.loadError ? (
-        <p
-          className="basis-full text-right text-supporting text-destructive"
-          role="alert"
-        >
+        <p className="text-supporting text-destructive" role="alert">
           The next items could not be loaded. Try again.
         </p>
       ) : null}
@@ -367,64 +417,124 @@ function ResourceSiblingAction({
   target?: ResourceSibling
 }) {
   const label = direction === "previous" ? "Previous" : "Next"
+  const icon =
+    direction === "previous" ? (
+      <PreviousSiblingIcon aria-hidden="true" />
+    ) : (
+      <NextSiblingIcon aria-hidden="true" />
+    )
   if (!target || disabled) {
     return (
-      <Button disabled size="sm" type="button" variant="outline">
-        {direction === "previous" ? (
-          <PreviousSiblingIcon aria-hidden="true" data-icon="inline-start" />
-        ) : null}
-        {label}
-        {direction === "next" ? (
-          <NextSiblingIcon aria-hidden="true" data-icon="inline-end" />
-        ) : null}
+      <Button
+        aria-label={`${label} item`}
+        disabled
+        size="icon-sm"
+        type="button"
+        variant="outline"
+      >
+        {icon}
       </Button>
     )
   }
 
-  const content = (
-    <>
-      {direction === "previous" ? (
-        <PreviousSiblingIcon aria-hidden="true" data-icon="inline-start" />
-      ) : null}
-      {label}
-      {direction === "next" ? (
-        <NextSiblingIcon aria-hidden="true" data-icon="inline-end" />
-      ) : null}
-    </>
-  )
   const common = {
     "aria-label": `${label} item: ${target.name}`,
-    children: content,
+    children: icon,
     search: { fromProject, preview: undefined },
     state: { resourceSiblingSession: sessionId },
   }
-  return target.kind === "sample" ? (
-    <Button
-      render={
-        <Link
-          {...common}
-          params={{ sampleMfid: target.mfid }}
-          preload={false}
-          to="/samples/$sampleMfid"
-        />
-      }
-      size="sm"
-      variant="outline"
-    />
-  ) : (
-    <Button
-      render={
-        <Link
-          {...common}
-          params={{ datasetMfid: target.mfid }}
-          preload={false}
-          to="/datasets/$datasetMfid"
-        />
-      }
-      size="sm"
-      variant="outline"
-    />
+  const action =
+    target.kind === "sample" ? (
+      <Button
+        render={
+          <Link
+            {...common}
+            params={{ sampleMfid: target.mfid }}
+            preload={false}
+            to="/samples/$sampleMfid"
+          />
+        }
+        size="icon-sm"
+        variant="outline"
+      />
+    ) : (
+      <Button
+        render={
+          <Link
+            {...common}
+            params={{ datasetMfid: target.mfid }}
+            preload={false}
+            to="/datasets/$datasetMfid"
+          />
+        }
+        size="icon-sm"
+        variant="outline"
+      />
+    )
+  return (
+    <Tooltip>
+      <TooltipTrigger render={action} />
+      <TooltipContent>
+        {label}: {target.name}
+      </TooltipContent>
+    </Tooltip>
   )
+}
+
+export function resourceSiblingSequenceLabel({
+  filters,
+  kind,
+  scope,
+}: {
+  filters: ResourceSiblingSequenceFilters
+  kind: "dataset" | "sample"
+  scope?: "instrument" | "project"
+}) {
+  const context =
+    kind === "dataset" && filters.measurement !== undefined
+      ? filters.measurement
+      : kind === "dataset" && filters.measurementIsNull
+        ? "Unspecified measurement"
+        : kind === "sample" && filters.sampleType !== undefined
+          ? filters.sampleType
+          : kind === "sample" && filters.sampleTypeIsNull
+            ? "Unspecified sample type"
+            : scope === "project"
+              ? `Project ${kind}s`
+              : scope === "instrument"
+                ? "Instrument datasets"
+                : hasSequenceFilters(filters)
+                  ? `Filtered ${kind}s`
+                  : `${kind === "dataset" ? "Datasets" : "Samples"}`
+  return `${context} · ${resourceSequenceOrder(filters.sort, filters.direction)}`
+}
+
+function hasSequenceFilters(filters: ResourceSiblingSequenceFilters) {
+  return Boolean(
+    filters.dataFormat !== undefined ||
+    filters.dataFormatIsNull ||
+    filters.instrumentMfid ||
+    filters.instrumentMfidIsNull ||
+    filters.ownerId !== undefined ||
+    filters.ownerIdIsNull ||
+    filters.projectMfid ||
+    filters.projectMfidIsNull ||
+    filters.sessionName !== undefined ||
+    filters.sessionNameIsNull
+  )
+}
+
+function resourceSequenceOrder(
+  sort: ResourceSort | undefined,
+  direction: SortDirection | undefined
+) {
+  if (!sort) return "Default order"
+  const ascending = direction === "asc"
+  if (sort === "name") return ascending ? "Name A-Z" : "Name Z-A"
+  if (sort === "created") {
+    return ascending ? "Created oldest" : "Created newest"
+  }
+  return ascending ? "Updated oldest" : "Updated newest"
 }
 
 function createSiblingSessionId() {
@@ -450,11 +560,13 @@ function isEditingOrOverlayTarget(target: EventTarget | null) {
 }
 
 export function staticResourceSiblingCollection(
-  items: readonly ResourceSibling[]
+  items: readonly ResourceSibling[],
+  label: string
 ): ResourceSiblingCollection {
   const page = { hasNextPage: false, items, total: items.length }
   return {
     ...page,
+    label,
     loadMore: async () => page,
     startsAtBeginning: true,
   }

@@ -104,6 +104,14 @@ function InstrumentPage() {
       </Breadcrumb>
 
       <PageHeader
+        actions={
+          <EntityRefreshAction
+            label={`Refresh ${resource.name}`}
+            presentation="icon"
+            queryKey={resourceOptions.queryKey}
+            refreshedAt={dataUpdatedAt}
+          />
+        }
         eyebrow={resource.instrument_id ?? undefined}
         icon={
           <ResourceTypeIcon
@@ -116,17 +124,10 @@ function InstrumentPage() {
 
       <ResourceSectionNavigation
         actions={
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <ResourceCreationActions
-              instrumentMfid={resource.unique_id}
-              kinds={["dataset"]}
-            />
-            <EntityRefreshAction
-              label={`Refresh ${resource.name}`}
-              queryKey={resourceOptions.queryKey}
-              refreshedAt={dataUpdatedAt}
-            />
-          </div>
+          <ResourceCreationActions
+            instrumentMfid={resource.unique_id}
+            kinds={["dataset"]}
+          />
         }
         label="Instrument sections"
       >

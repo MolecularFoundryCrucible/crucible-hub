@@ -36,7 +36,10 @@ import {
   ResourceUpdatedCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
-import { useRegisterResourceSiblings } from "@/components/crucible/resource-sibling-navigation"
+import {
+  resourceSiblingSequenceLabel,
+  useRegisterResourceSiblings,
+} from "@/components/crucible/resource-sibling-navigation"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -364,6 +367,11 @@ function ProjectSamples({
     getName: sampleCollectionName,
     initialCursor: cursor,
     kind: "sample",
+    label: resourceSiblingSequenceLabel({
+      filters,
+      kind: "sample",
+      scope: "project",
+    }),
     query: result,
   })
   const items = collection.items
@@ -437,6 +445,11 @@ function ProjectDatasets({
     getName: datasetCollectionName,
     initialCursor: cursor,
     kind: "dataset",
+    label: resourceSiblingSequenceLabel({
+      filters,
+      kind: "dataset",
+      scope: "project",
+    }),
     query: result,
   })
   const items = collection.items

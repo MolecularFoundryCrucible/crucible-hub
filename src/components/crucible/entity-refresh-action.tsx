@@ -13,10 +13,12 @@ import { formatLocalDateTime } from "@/lib/format"
 
 export function EntityRefreshAction({
   label,
+  presentation = "default",
   queryKey,
   refreshedAt,
 }: {
   label: string
+  presentation?: "default" | "icon"
   queryKey: QueryKey
   refreshedAt: number
 }) {
@@ -45,25 +47,45 @@ export function EntityRefreshAction({
       <Tooltip>
         <TooltipTrigger render={<span className="inline-flex" />}>
           <Button
-            aria-label={label}
+            aria-label={failed ? `${label}. Refresh failed. Try again.` : label}
             disabled={refreshing}
             onClick={() => void refresh()}
-            size="default"
-            variant="outline"
+            size={presentation === "icon" ? "icon-sm" : "default"}
+            variant={
+              failed
+                ? "destructive"
+                : presentation === "icon"
+                  ? "ghost"
+                  : "outline"
+            }
           >
             <RefreshResourceIcon
               aria-hidden="true"
-              className={refreshing ? "animate-spin" : undefined}
-              data-icon="inline-start"
+              className={
+                refreshing
+                  ? "animate-spin motion-reduce:animate-none"
+                  : undefined
+              }
+              data-icon={
+                presentation === "default" ? "inline-start" : undefined
+              }
             />
-            {refreshing ? "Refreshing" : "Refresh"}
+            {presentation === "default"
+              ? refreshing
+                ? "Refreshing"
+                : "Refresh"
+              : null}
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {timestamp ? `Last refreshed ${timestamp}` : label}
+          {failed
+            ? "Refresh failed. Try again."
+            : timestamp
+              ? `Last refreshed ${timestamp}`
+              : label}
         </TooltipContent>
       </Tooltip>
-      {failed ? (
+      {failed && presentation === "default" ? (
         <p
           className="basis-full text-right text-supporting text-destructive"
           role="alert"

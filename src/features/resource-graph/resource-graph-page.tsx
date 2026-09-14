@@ -91,7 +91,9 @@ export function ResourceGraphPage({
             name: node.name,
           }))
       : []
-    return items.length ? [staticResourceSiblingCollection(items)] : []
+    return items.length
+      ? [staticResourceSiblingCollection(items, "Graph relationships")]
+      : []
   }, [query.data])
   useRegisterResourceSiblings(previewSiblingCollections)
 

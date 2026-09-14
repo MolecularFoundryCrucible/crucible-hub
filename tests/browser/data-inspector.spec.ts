@@ -183,7 +183,7 @@ test("moves through the originating collection from canonical detail", async ({
   })
   await expect(siblings).toBeVisible()
   await expect(
-    siblings.getByRole("button", { name: "Previous", exact: true })
+    siblings.getByRole("button", { name: "Previous item", exact: true })
   ).toBeDisabled()
   await expect(
     siblings.getByRole("link", { name: "Next item: Catalyst sample 52" })
@@ -197,7 +197,8 @@ test("moves through the originating collection from canonical detail", async ({
   await page.keyboard.press("ArrowRight")
   await expect(page).toHaveURL(/\/hub\/samples\/fixture-sample-52/)
   await expect(page.locator("main h1")).toHaveText("Catalyst sample 52")
-  await expect(siblings).toContainText("2 of 50 loaded")
+  await expect(siblings).toContainText("2 / 50 loaded")
+  await expect(siblings).toContainText("Samples · Default order")
 
   await page.reload()
   await expect(
