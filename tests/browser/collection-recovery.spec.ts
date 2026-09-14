@@ -14,7 +14,7 @@ test("keeps samples available when the dataset collection fails", async ({
   await expect(page.getByLabel("Data type filter")).toBeVisible()
 })
 
-test("queries only samples and keeps them visible after a failed refresh", async ({
+test("keeps loaded samples visible after a failed continuation", async ({
   page,
 }) => {
   await page.goto("/hub/data?scenario=dense&kind=samples")
@@ -27,20 +27,8 @@ test("queries only samples and keeps them visible after a failed refresh", async
     }
   })
 
-  const nextPageResponse = page.waitForResponse((response) =>
-    response.url().includes("/hub/_serverFn/")
-  )
-  await page.getByRole("link", { name: "Next samples" }).click()
-  await nextPageResponse
-
-  await expect(page).toHaveURL(/sampleCursor=fixture%3A50/)
-  await expect(page.getByText("Catalyst sample 51")).toBeVisible()
-  expect(collectionRequests).toHaveLength(1)
-
   await page.evaluate(() => {
-    const currentTime = Date.now.bind(Date)
     const browserFetch = globalThis.fetch.bind(globalThis)
-    Date.now = () => currentTime() + 60_000
     globalThis.fetch = (input, init) => {
       const url = input instanceof Request ? input.url : String(input)
       if (url.includes("/hub/_serverFn/")) {
@@ -50,16 +38,21 @@ test("queries only samples and keeps them visible after a failed refresh", async
     }
   })
 
-  await page.goBack()
+  await page.getByRole("button", { name: "Load more samples" }).click()
 
   await expect(page).toHaveURL(/kind=samples/)
   await expect(page).not.toHaveURL(/sampleCursor=/)
-  await expect(page.getByText("Samples could not be refreshed")).toBeVisible()
+  await expect(
+    page.getByText(
+      "More samples could not be loaded. The loaded results remain available."
+    )
+  ).toBeVisible()
   await expect(
     page.getByText(
       "Nickel iron oxide catalyst with a deliberately long preparation identifier"
     )
   ).toBeVisible()
+  expect(collectionRequests).toHaveLength(1)
 })
 
 test("keeps previous search results visible while the query changes", async ({

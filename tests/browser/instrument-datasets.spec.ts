@@ -11,7 +11,7 @@ function isDatasetRequest(url: string) {
   )
 }
 
-test("paginates only the instrument's datasets and restores the cursor after detail", async ({
+test("appends instrument datasets and restores the loaded collection after detail", async ({
   page,
 }) => {
   await page.goto(
@@ -28,18 +28,17 @@ test("paginates only the instrument's datasets and restores the cursor after det
     if (isDatasetRequest(request.url())) datasetRequests.push(request.url())
   })
 
-  await page.getByRole("link", { name: "Next datasets" }).click()
-  await expect(page).toHaveURL(/cursor=fixture%3A50/)
+  await page.getByRole("button", { name: "Load more datasets" }).click()
+  await expect(page).not.toHaveURL(/cursor=/)
   const dataset = page.getByRole("link", {
     name: "Dataset: Measurement dataset 51",
     exact: true,
   })
   await expect(dataset).toBeVisible()
-  await expect(page.getByRole("link", { name: /^Dataset: / })).toHaveCount(4)
+  await expect(page.getByRole("link", { name: /^Dataset: / })).toHaveCount(54)
   await expect(
-    page.getByText("Measurement dataset 55", { exact: true })
+    page.getByRole("button", { name: "Load more datasets" })
   ).toHaveCount(0)
-  await expect(page.getByRole("link", { name: "Next datasets" })).toHaveCount(0)
   expect(datasetRequests).toHaveLength(1)
 
   await dataset.click()
@@ -47,13 +46,9 @@ test("paginates only the instrument's datasets and restores the cursor after det
     "Measurement dataset 51"
   )
   await page.goBack()
-  await expect(page).toHaveURL(/cursor=fixture%3A50/)
+  await expect(page).not.toHaveURL(/cursor=/)
   await expect(dataset).toBeVisible()
   expect(datasetRequests).toHaveLength(1)
-
-  await page.getByRole("link", { name: "First datasets" }).click()
-  await expect(page).not.toHaveURL(/cursor=/)
-  await expect(page.getByRole("link", { name: /^Dataset: / })).toHaveCount(50)
 })
 
 test("shows an empty dataset section for an instrument without acquisitions", async ({

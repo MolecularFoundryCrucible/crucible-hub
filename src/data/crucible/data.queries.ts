@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
@@ -195,23 +195,37 @@ function normalizeProjectFilters(
       : {}
 }
 
+function normalizedSampleContext(filters: CursorFilters) {
+  return {
+    ...normalizeProjectFilters(filters),
+    ...normalizeCollectionFilters(filters),
+    ...normalizeCollectionQueryOptions(filters),
+    ...normalizeSampleFacetFilters(filters),
+  }
+}
+
+function normalizedDatasetContext(filters: DatasetCursorFilters) {
+  const instrumentMfid = normalizeInstrumentMfid(filters.instrumentMfid)
+  return {
+    ...(instrumentMfid ? { instrumentMfid } : {}),
+    ...normalizeProjectFilters(filters),
+    ...normalizeCollectionFilters(filters),
+    ...normalizeCollectionQueryOptions(filters),
+    ...normalizeDatasetFacetFilters(filters),
+  }
+}
+
 export function samplesQueryOptions(
   scope: IdentityScope,
   filters: CursorFilters
 ) {
   const scenario = fixtureScenarioFromScope(scope)
-  const projectFilters = normalizeProjectFilters(filters)
-  const collectionFilters = normalizeCollectionFilters(filters)
-  const collectionQuery = normalizeCollectionQueryOptions(filters)
-  const facetFilters = normalizeSampleFacetFilters(filters)
+  const context = normalizedSampleContext(filters)
   return queryOptions({
     queryKey: crucibleKeys.samples(scope, {
       cursor: filters.cursor ?? null,
       limit: filters.limit,
-      ...projectFilters,
-      ...collectionFilters,
-      ...collectionQuery,
-      ...facetFilters,
+      ...context,
     }),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
@@ -219,10 +233,7 @@ export function samplesQueryOptions(
           data: {
             cursor: filters.cursor,
             limit: filters.limit,
-            ...projectFilters,
-            ...collectionFilters,
-            ...collectionQuery,
-            ...facetFilters,
+            ...context,
             scenario,
           },
           signal,
@@ -232,15 +243,40 @@ export function samplesQueryOptions(
       collectionScopedPreviousData(
         scope,
         "samples",
-        {
-          ...projectFilters,
-          ...collectionFilters,
-          ...collectionQuery,
-          ...facetFilters,
-        },
+        context,
         previousData,
         previousQuery
       ),
+    retry: scenario ? false : undefined,
+  })
+}
+
+export function samplesCursorQueryOptions(
+  scope: IdentityScope,
+  filters: CursorFilters
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  const context = normalizedSampleContext(filters)
+  return infiniteQueryOptions({
+    initialPageParam: filters.cursor,
+    queryKey: crucibleKeys.sampleCursorChain(scope, {
+      initialCursor: filters.cursor ?? null,
+      limit: filters.limit,
+      ...context,
+    }),
+    queryFn: async ({ pageParam, signal }) =>
+      unwrapHubResult(
+        await getWorkspaceSamples({
+          data: {
+            cursor: pageParam,
+            limit: filters.limit,
+            ...context,
+            scenario,
+          },
+          signal,
+        })
+      ),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: scenario ? false : undefined,
   })
 }
@@ -250,19 +286,11 @@ export function datasetsQueryOptions(
   filters: DatasetCursorFilters
 ) {
   const scenario = fixtureScenarioFromScope(scope)
-  const instrumentMfid = normalizeInstrumentMfid(filters.instrumentMfid)
-  const projectFilters = normalizeProjectFilters(filters)
-  const collectionFilters = normalizeCollectionFilters(filters)
-  const collectionQuery = normalizeCollectionQueryOptions(filters)
-  const facetFilters = normalizeDatasetFacetFilters(filters)
+  const context = normalizedDatasetContext(filters)
   const keyFilters = {
     cursor: filters.cursor ?? null,
     limit: filters.limit,
-    ...(instrumentMfid ? { instrumentMfid } : {}),
-    ...projectFilters,
-    ...collectionFilters,
-    ...collectionQuery,
-    ...facetFilters,
+    ...context,
   }
   return queryOptions({
     queryKey: crucibleKeys.datasets(scope, keyFilters),
@@ -272,28 +300,50 @@ export function datasetsQueryOptions(
           data: {
             cursor: filters.cursor,
             limit: filters.limit,
-            ...(instrumentMfid ? { instrumentMfid } : {}),
-            ...projectFilters,
-            ...collectionFilters,
-            ...collectionQuery,
-            ...facetFilters,
+            ...context,
             scenario,
           },
           signal,
         })
       ),
     placeholderData: (previousData, previousQuery) =>
-      datasetInstrumentScopedPreviousData(
+      collectionScopedPreviousData(
         scope,
-        instrumentMfid,
+        "datasets",
+        context,
         previousData,
-        previousQuery,
-        projectFilters.projectMfid,
-        projectFilters.projectScope,
-        collectionFilters,
-        { ...collectionQuery, ...facetFilters },
-        projectFilters.projectMfidIsNull
+        previousQuery
       ),
+    retry: scenario ? false : undefined,
+  })
+}
+
+export function datasetsCursorQueryOptions(
+  scope: IdentityScope,
+  filters: DatasetCursorFilters
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  const context = normalizedDatasetContext(filters)
+  return infiniteQueryOptions({
+    initialPageParam: filters.cursor,
+    queryKey: crucibleKeys.datasetCursorChain(scope, {
+      initialCursor: filters.cursor ?? null,
+      limit: filters.limit,
+      ...context,
+    }),
+    queryFn: async ({ pageParam, signal }) =>
+      unwrapHubResult(
+        await getWorkspaceDatasets({
+          data: {
+            cursor: pageParam,
+            limit: filters.limit,
+            ...context,
+            scenario,
+          },
+          signal,
+        })
+      ),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: scenario ? false : undefined,
   })
 }

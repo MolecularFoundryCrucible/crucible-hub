@@ -7,6 +7,9 @@ import {
   BackPreviewIcon,
   CloseInspectorIcon,
   ExploreGraphFocusIcon,
+  LoadingMoreIcon,
+  NextSiblingIcon,
+  PreviousSiblingIcon,
 } from "@/components/crucible/icons"
 import {
   CollectionRowsPending,
@@ -184,6 +187,9 @@ export function ResourceInspector({
                 presentation="inspector-footer"
               />
             ) : null}
+            {navigation.siblingPosition ? (
+              <ResourceSiblingNavigation navigation={navigation} />
+            ) : null}
           </div>
         </SheetHeader>
         <div ref={body} className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
@@ -205,6 +211,69 @@ export function ResourceInspector({
         ) : null}
       </SheetContent>
     </Sheet>
+  )
+}
+
+function ResourceSiblingNavigation({
+  navigation,
+}: {
+  navigation: ResourcePreviewNavigation
+}) {
+  const canMoveNext = Boolean(
+    navigation.nextSibling || navigation.siblingCanLoadNext
+  )
+  return (
+    <nav
+      aria-label="Resources in this collection"
+      className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-3"
+    >
+      <Button
+        aria-label={
+          navigation.previousSibling
+            ? `Previous item: ${navigation.previousSibling.name}`
+            : "Previous item"
+        }
+        disabled={!navigation.previousSibling}
+        onClick={navigation.moveToPreviousSibling}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        <PreviousSiblingIcon aria-hidden="true" data-icon="inline-start" />
+        Previous
+      </Button>
+      <span className="text-supporting text-muted-foreground">
+        {navigation.siblingPosition}
+      </span>
+      <Button
+        aria-label={
+          navigation.nextSibling
+            ? `Next item: ${navigation.nextSibling.name}`
+            : "Next item"
+        }
+        disabled={!canMoveNext || navigation.siblingIsLoading}
+        onClick={() => void navigation.moveToNextSibling()}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        Next
+        {navigation.siblingIsLoading ? (
+          <LoadingMoreIcon
+            aria-hidden="true"
+            className="animate-spin motion-reduce:animate-none"
+            data-icon="inline-end"
+          />
+        ) : (
+          <NextSiblingIcon aria-hidden="true" data-icon="inline-end" />
+        )}
+      </Button>
+      {navigation.siblingLoadError ? (
+        <p className="basis-full text-supporting text-destructive" role="alert">
+          The next items could not be loaded. Try again.
+        </p>
+      ) : null}
+    </nav>
   )
 }
 

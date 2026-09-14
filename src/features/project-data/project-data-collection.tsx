@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 
 import {
@@ -12,6 +13,12 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import {
+  datasetCollectionName,
+  sampleCollectionName,
+  useCursorResourceCollection,
+} from "@/components/crucible/cursor-resource-collection"
 import {
   collectionBrowseSearchState,
   clearCollectionGroupFilterSearch,
@@ -29,6 +36,7 @@ import {
   ResourceUpdatedCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
+import { useRegisterResourcePreviewSiblings } from "@/components/crucible/resource-preview-navigation"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -48,8 +56,8 @@ import {
 } from "@/components/ui/table"
 import {
   dataPageLimit,
-  datasetsQueryOptions,
-  samplesQueryOptions,
+  datasetsCursorQueryOptions,
+  samplesCursorQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import type {
@@ -342,8 +350,8 @@ function ProjectSamples({
   projectScope: ProjectScope
 }) {
   const scope = useWorkspaceScope()
-  const result = useQuery(
-    samplesQueryOptions(scope, {
+  const result = useInfiniteQuery(
+    samplesCursorQueryOptions(scope, {
       cursor,
       ...filters,
       limit: dataPageLimit,
@@ -351,6 +359,20 @@ function ProjectSamples({
       projectScope,
     })
   )
+
+  const collection = useCursorResourceCollection({
+    getName: sampleCollectionName,
+    initialCursor: cursor,
+    kind: "sample",
+    query: result,
+  })
+  const items = collection.items
+  const total = collection.total
+  const siblingCollections = useMemo(
+    () => [collection.siblingCollection],
+    [collection.siblingCollection]
+  )
+  useRegisterResourcePreviewSiblings(siblingCollections)
 
   if (result.isPending) return <CollectionTablePending label="samples" />
   if (result.isError && !result.data) {
@@ -369,15 +391,20 @@ function ProjectSamples({
     <ProjectDataResult
       cursor={cursor}
       direction={filters.direction ?? "desc"}
-      error={result.isError}
-      items={result.data.items}
+      error={result.isError && !result.isFetchNextPageError}
+      hasNextPage={Boolean(result.hasNextPage)}
+      isPaginationDisabled={result.isFetching && !result.isFetchingNextPage}
+      isLoadingMore={result.isFetchingNextPage}
+      items={items}
       kind="samples"
-      nextCursor={result.data.nextCursor}
+      loadMoreError={result.isFetchNextPageError}
+      onLoadMore={() => void result.fetchNextPage()}
       onSort={onSort}
       projectMfid={projectMfid}
       retry={() => void result.refetch()}
       sort={filters.sort}
-      updating={result.isFetching}
+      total={total}
+      updating={result.isFetching && !result.isFetchingNextPage}
     />
   )
 }
@@ -396,8 +423,8 @@ function ProjectDatasets({
   projectScope: ProjectScope
 }) {
   const scope = useWorkspaceScope()
-  const result = useQuery(
-    datasetsQueryOptions(scope, {
+  const result = useInfiniteQuery(
+    datasetsCursorQueryOptions(scope, {
       cursor,
       ...filters,
       limit: dataPageLimit,
@@ -405,6 +432,20 @@ function ProjectDatasets({
       projectScope,
     })
   )
+
+  const collection = useCursorResourceCollection({
+    getName: datasetCollectionName,
+    initialCursor: cursor,
+    kind: "dataset",
+    query: result,
+  })
+  const items = collection.items
+  const total = collection.total
+  const siblingCollections = useMemo(
+    () => [collection.siblingCollection],
+    [collection.siblingCollection]
+  )
+  useRegisterResourcePreviewSiblings(siblingCollections)
 
   if (result.isPending) return <CollectionTablePending label="datasets" />
   if (result.isError && !result.data) {
@@ -423,15 +464,20 @@ function ProjectDatasets({
     <ProjectDataResult
       cursor={cursor}
       direction={filters.direction ?? "desc"}
-      error={result.isError}
-      items={result.data.items}
+      error={result.isError && !result.isFetchNextPageError}
+      hasNextPage={Boolean(result.hasNextPage)}
+      isPaginationDisabled={result.isFetching && !result.isFetchingNextPage}
+      isLoadingMore={result.isFetchingNextPage}
+      items={items}
       kind="datasets"
-      nextCursor={result.data.nextCursor}
+      loadMoreError={result.isFetchNextPageError}
+      onLoadMore={() => void result.fetchNextPage()}
       onSort={onSort}
       projectMfid={projectMfid}
       retry={() => void result.refetch()}
       sort={filters.sort}
-      updating={result.isFetching}
+      total={total}
+      updating={result.isFetching && !result.isFetchingNextPage}
     />
   )
 }
@@ -440,39 +486,54 @@ function ProjectDataResult({
   cursor,
   direction,
   error,
+  hasNextPage,
+  isPaginationDisabled,
+  isLoadingMore,
   items,
   kind,
-  nextCursor,
+  loadMoreError,
+  onLoadMore,
   onSort,
   projectMfid,
   retry,
   sort,
+  total,
   updating,
 }:
   | {
       cursor: string | undefined
       direction: SortDirection
       error: boolean
+      hasNextPage: boolean
+      isPaginationDisabled: boolean
+      isLoadingMore: boolean
       items: readonly WorkspaceSample[]
       kind: "samples"
-      nextCursor: string | null
+      loadMoreError: boolean
+      onLoadMore: () => void
       onSort: (sort: ResourceSort, direction: SortDirection) => void
       projectMfid: string
       retry: () => void
       sort: ResourceSort | undefined
+      total: number | null
       updating: boolean
     }
   | {
       cursor: string | undefined
       direction: SortDirection
       error: boolean
+      hasNextPage: boolean
+      isPaginationDisabled: boolean
+      isLoadingMore: boolean
       items: readonly WorkspaceDataset[]
       kind: "datasets"
-      nextCursor: string | null
+      loadMoreError: boolean
+      onLoadMore: () => void
       onSort: (sort: ResourceSort, direction: SortDirection) => void
       projectMfid: string
       retry: () => void
       sort: ResourceSort | undefined
+      total: number | null
       updating: boolean
     }) {
   const label = kind === "samples" ? "Samples" : "Datasets"
@@ -516,26 +577,17 @@ function ProjectDataResult({
           </EmptyHeader>
         </Empty>
       )}
-      {!updating && nextCursor ? (
-        <nav className="flex justify-end" aria-label={`Project ${kind} pages`}>
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            from="/projects/$projectMfid"
-            params={{ projectMfid }}
-            search={(previous) => ({
-              ...previous,
-              [kind === "samples" ? "sampleCursor" : "datasetCursor"]:
-                nextCursor,
-              preview: undefined,
-            })}
-            state={{}}
-            to="/projects/$projectMfid"
-          >
-            Next {kind}
-          </Link>
-        </nav>
-      ) : null}
-      {cursor && !nextCursor && !items.length ? (
+      <CollectionPagination
+        disabled={isPaginationDisabled}
+        hasNextPage={hasNextPage}
+        isError={loadMoreError}
+        isLoading={isLoadingMore}
+        label={kind}
+        loaded={items.length}
+        onLoadMore={onLoadMore}
+        total={total}
+      />
+      {cursor && !hasNextPage && !items.length ? (
         <FirstPageLink kind={kind} projectMfid={projectMfid} />
       ) : null}
     </div>

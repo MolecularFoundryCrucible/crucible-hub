@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
   ResourceOpenCell,
   ResourceOwnerCell,
@@ -23,27 +24,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type {
-  WorkspaceCursorPage,
-  WorkspaceDataset,
-} from "@/data/crucible/workspace-source"
+import type { WorkspaceDataset } from "@/data/crucible/workspace-source"
 
 export function InstrumentDatasetCollection({
   cursor,
+  hasNextPage,
   instrumentMfid,
-  page,
+  isPaginationDisabled,
+  isLoadingMore,
+  items,
+  loadMoreError,
+  onLoadMore,
+  total,
   updating,
 }: {
   cursor: string | undefined
+  hasNextPage: boolean
   instrumentMfid: string
-  page: WorkspaceCursorPage<WorkspaceDataset>
+  isPaginationDisabled: boolean
+  isLoadingMore: boolean
+  items: readonly WorkspaceDataset[]
+  loadMoreError: boolean
+  onLoadMore: () => void
+  total: number | null
   updating: boolean
 }) {
   return (
     <>
       <Card aria-busy={updating}>
         <CardContent className="px-0">
-          {page.items.length ? (
+          {items.length ? (
             <Table
               className="resource-collection-table table-fixed"
               aria-label="Instrument datasets"
@@ -71,7 +81,7 @@ export function InstrumentDatasetCollection({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {page.items.map((dataset) => (
+                {items.map((dataset) => (
                   <TableRow key={dataset.unique_id}>
                     <ResourceCollectionNameCell
                       className="resource-collection-name"
@@ -120,38 +130,32 @@ export function InstrumentDatasetCollection({
         </CardContent>
       </Card>
 
-      {!updating && (cursor || page.nextCursor) ? (
+      {cursor ? (
         <nav
           className="flex flex-wrap items-center justify-end gap-2"
           aria-label="Instrument dataset pages"
         >
-          {cursor ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              from="/instruments/$instrumentMfid/datasets"
-              params={{ instrumentMfid }}
-              search={(previous) => ({ ...previous, cursor: undefined })}
-              to="/instruments/$instrumentMfid/datasets"
-            >
-              First datasets
-            </Link>
-          ) : null}
-          {page.nextCursor ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              from="/instruments/$instrumentMfid/datasets"
-              params={{ instrumentMfid }}
-              search={(previous) => ({
-                ...previous,
-                cursor: page.nextCursor ?? undefined,
-              })}
-              to="/instruments/$instrumentMfid/datasets"
-            >
-              Next datasets
-            </Link>
-          ) : null}
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            from="/instruments/$instrumentMfid/datasets"
+            params={{ instrumentMfid }}
+            search={(previous) => ({ ...previous, cursor: undefined })}
+            to="/instruments/$instrumentMfid/datasets"
+          >
+            First datasets
+          </Link>
         </nav>
       ) : null}
+      <CollectionPagination
+        disabled={isPaginationDisabled}
+        hasNextPage={hasNextPage}
+        isError={loadMoreError}
+        isLoading={isLoadingMore}
+        label="datasets"
+        loaded={items.length}
+        onLoadMore={onLoadMore}
+        total={total}
+      />
     </>
   )
 }

@@ -67,6 +67,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Replaced page-replacing sample and dataset continuation with shared cursor-backed Load more results across global, project, and instrument collections, and added collection-scoped Previous and Next navigation to resource previews with on-demand forward-page loading.
+
 - Streamlined global, project, and instrument data collections with one responsive type, filter, and grouping toolbar; replaced separate List and Browse controls with `Group by`, moved filters into a scrollable side sheet with persistent actions, and aligned instrument navigation and header identity with project workspaces.
 
 - Updated the pinned staging API contract and generated client for owned-resource affiliation, explicit totals, project and instrument cursors, preferred owner filtering, and authorization-scoped dataset and sample facets with explicit null buckets.

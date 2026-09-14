@@ -26,8 +26,8 @@ import {
 } from "@/data/crucible/collection-query"
 import {
   dataPageLimit,
-  datasetsQueryOptions,
-  samplesQueryOptions,
+  datasetsCursorQueryOptions,
+  samplesCursorQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 
@@ -123,7 +123,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
               browse.selection
             )
           : resolution.filters
-      const options = samplesQueryOptions(project.scope, {
+      const options = samplesCursorQueryOptions(project.scope, {
         cursor: deps.sampleCursor,
         limit: dataPageLimit,
         projectMfid: project.projectMfid,
@@ -132,7 +132,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
       })
       const hasData =
         context.queryClient.getQueryData(options.queryKey) !== undefined
-      const request = context.queryClient.prefetchQuery(options)
+      const request = context.queryClient.prefetchInfiniteQuery(options)
       if (hasData) {
         void request
         return
@@ -151,7 +151,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
             browse.selection
           )
         : resolution.filters
-    const options = datasetsQueryOptions(project.scope, {
+    const options = datasetsCursorQueryOptions(project.scope, {
       cursor: deps.datasetCursor,
       limit: dataPageLimit,
       projectMfid: project.projectMfid,
@@ -160,7 +160,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     })
     const hasData =
       context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchQuery(options)
+    const request = context.queryClient.prefetchInfiniteQuery(options)
     if (hasData) {
       void request
       return

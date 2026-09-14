@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
 import {
@@ -13,6 +14,12 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import {
+  datasetCollectionName,
+  sampleCollectionName,
+  useCursorResourceCollection,
+} from "@/components/crucible/cursor-resource-collection"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import {
@@ -26,6 +33,7 @@ import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import {
   ResourcePreviewContext,
   resourcePreviewSearchSchema,
+  useRegisterResourcePreviewSiblings,
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
@@ -59,8 +67,8 @@ import type {
 } from "@/features/data/data-filter-state"
 import {
   dataPageLimit,
-  datasetsQueryOptions,
-  samplesQueryOptions,
+  datasetsCursorQueryOptions,
+  samplesCursorQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
 import {
@@ -155,14 +163,14 @@ export const Route = createFileRoute("/_app/data")({
               sampleBrowse.selection
             )
           : baseFilters
-      const options = samplesQueryOptions(source.scope, {
+      const options = samplesCursorQueryOptions(source.scope, {
         cursor: deps.sampleCursor,
         ...filters,
         limit: dataPageLimit,
       })
       const hasData =
         context.queryClient.getQueryData(options.queryKey) !== undefined
-      const request = context.queryClient.prefetchQuery(options)
+      const request = context.queryClient.prefetchInfiniteQuery(options)
       if (!hasData) missing.push(request)
     }
     if (resolution.filters.kind !== "samples" && hasGroupedSelection) {
@@ -174,14 +182,14 @@ export const Route = createFileRoute("/_app/data")({
               datasetBrowse.selection
             )
           : baseFilters
-      const options = datasetsQueryOptions(source.scope, {
+      const options = datasetsCursorQueryOptions(source.scope, {
         cursor: deps.datasetCursor,
         ...filters,
         limit: dataPageLimit,
       })
       const hasData =
         context.queryClient.getQueryData(options.queryKey) !== undefined
-      const request = context.queryClient.prefetchQuery(options)
+      const request = context.queryClient.prefetchInfiniteQuery(options)
       if (!hasData) missing.push(request)
     }
     if (cause !== "stay") await Promise.all(missing)
@@ -299,16 +307,16 @@ function DataResults({
     showDatasets &&
     (datasetBrowse?.view !== "grouped" ||
       datasetBrowse.selection.kind !== "all")
-  const sampleResult = useQuery({
-    ...samplesQueryOptions(scope, {
+  const sampleResult = useInfiniteQuery({
+    ...samplesCursorQueryOptions(scope, {
       cursor: search.sampleCursor,
       ...sampleCollectionFilters,
       limit: dataPageLimit,
     }),
     enabled: loadSamples,
   })
-  const datasetResult = useQuery({
-    ...datasetsQueryOptions(scope, {
+  const datasetResult = useInfiniteQuery({
+    ...datasetsCursorQueryOptions(scope, {
       cursor: search.datasetCursor,
       ...datasetCollectionFilters,
       limit: dataPageLimit,
@@ -316,8 +324,45 @@ function DataResults({
     enabled: loadDatasets,
   })
 
+  const sampleCollection = useCursorResourceCollection({
+    getName: sampleCollectionName,
+    initialCursor: search.sampleCursor,
+    kind: "sample",
+    query: sampleResult,
+  })
+  const datasetCollection = useCursorResourceCollection({
+    getName: datasetCollectionName,
+    initialCursor: search.datasetCursor,
+    kind: "dataset",
+    query: datasetResult,
+  })
+  const sampleItems = sampleCollection.items
+  const datasetItems = datasetCollection.items
   const samplePage = sampleResult.data
+    ? { items: sampleItems, total: sampleCollection.total }
+    : undefined
   const datasetPage = datasetResult.data
+    ? { items: datasetItems, total: datasetCollection.total }
+    : undefined
+  const siblingCollections = useMemo(
+    () => [
+      ...(loadSamples && sampleResult.data
+        ? [sampleCollection.siblingCollection]
+        : []),
+      ...(loadDatasets && datasetResult.data
+        ? [datasetCollection.siblingCollection]
+        : []),
+    ],
+    [
+      datasetCollection.siblingCollection,
+      datasetResult.data,
+      loadDatasets,
+      loadSamples,
+      sampleCollection.siblingCollection,
+      sampleResult.data,
+    ]
+  )
+  useRegisterResourcePreviewSiblings(siblingCollections)
   const samplePending = loadSamples && sampleResult.isPending
   const datasetPending = loadDatasets && datasetResult.isPending
   const hasReadableData = Boolean(
@@ -348,8 +393,12 @@ function DataResults({
     filters.sort
   )
   const updating =
-    (showSamples && sampleResult.isFetching) ||
-    (showDatasets && datasetResult.isFetching)
+    (showSamples &&
+      sampleResult.isFetching &&
+      !sampleResult.isFetchingNextPage) ||
+    (showDatasets &&
+      datasetResult.isFetching &&
+      !datasetResult.isFetchingNextPage)
 
   function retrySelected() {
     if (showSamples) void sampleResult.refetch()
@@ -396,14 +445,18 @@ function DataResults({
           <CollectionLoadError label="Data" retry={retrySelected} />
         ) : (
           <>
-            {showSamples && sampleResult.isError ? (
+            {showSamples &&
+            sampleResult.isError &&
+            !sampleResult.isFetchNextPageError ? (
               <CollectionUpdateError
                 label="Samples"
                 preserved={Boolean(samplePage)}
                 retry={() => void sampleResult.refetch()}
               />
             ) : null}
-            {showDatasets && datasetResult.isError ? (
+            {showDatasets &&
+            datasetResult.isError &&
+            !datasetResult.isFetchNextPageError ? (
               <CollectionUpdateError
                 label="Datasets"
                 preserved={Boolean(datasetPage)}
@@ -565,44 +618,33 @@ function DataResults({
             )}
           </>
         )}
-        {!updating &&
-        ((showSamples && samplePage?.nextCursor) ||
-          (showDatasets && datasetPage?.nextCursor)) ? (
-          <nav
-            className="flex flex-wrap items-center justify-end gap-2"
-            aria-label="Data pages"
-          >
-            {showSamples && samplePage?.nextCursor && (
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                from="/data"
-                search={(previous) => ({
-                  ...previous,
-                  preview: undefined,
-                  sampleCursor: samplePage.nextCursor ?? undefined,
-                })}
-                state={{}}
-                to="/data"
-              >
-                Next samples
-              </Link>
-            )}
-            {showDatasets && datasetPage?.nextCursor && (
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                from="/data"
-                search={(previous) => ({
-                  ...previous,
-                  datasetCursor: datasetPage.nextCursor ?? undefined,
-                  preview: undefined,
-                })}
-                state={{}}
-                to="/data"
-              >
-                Next datasets
-              </Link>
-            )}
-          </nav>
+        {showSamples && samplePage ? (
+          <CollectionPagination
+            disabled={
+              sampleResult.isFetching && !sampleResult.isFetchingNextPage
+            }
+            hasNextPage={Boolean(sampleResult.hasNextPage)}
+            isError={sampleResult.isFetchNextPageError}
+            isLoading={sampleResult.isFetchingNextPage}
+            label="samples"
+            loaded={sampleItems.length}
+            onLoadMore={() => void sampleResult.fetchNextPage()}
+            total={samplePage.total}
+          />
+        ) : null}
+        {showDatasets && datasetPage ? (
+          <CollectionPagination
+            disabled={
+              datasetResult.isFetching && !datasetResult.isFetchingNextPage
+            }
+            hasNextPage={Boolean(datasetResult.hasNextPage)}
+            isError={datasetResult.isFetchNextPageError}
+            isLoading={datasetResult.isFetchingNextPage}
+            label="datasets"
+            loaded={datasetItems.length}
+            onLoadMore={() => void datasetResult.fetchNextPage()}
+            total={datasetPage.total}
+          />
         ) : null}
       </DataBrowseFrame>
     </div>

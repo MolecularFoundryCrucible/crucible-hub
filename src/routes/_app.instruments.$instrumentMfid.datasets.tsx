@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, getRouteApi } from "@tanstack/react-router"
 import { z } from "zod"
 
@@ -26,8 +27,12 @@ import {
 import type { DatasetFacetField, FacetSelection } from "@/data/crucible/facets"
 import {
   dataPageLimit,
-  datasetsQueryOptions,
+  datasetsCursorQueryOptions,
 } from "@/data/crucible/data.queries"
+import {
+  cursorPageTotal,
+  flattenCursorPages,
+} from "@/data/crucible/cursor-pages"
 
 const instrumentDatasetSearchSchema = z.object({
   ...collectionBrowseSearchFields,
@@ -62,14 +67,14 @@ export const Route = createFileRoute(
             browse.selection
           )
         : { instrumentMfid: instrument.instrumentMfid }
-    const options = datasetsQueryOptions(instrument.scope, {
+    const options = datasetsCursorQueryOptions(instrument.scope, {
       cursor: deps.cursor,
       ...filters,
       limit: dataPageLimit,
     })
     const hasData =
       context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchQuery(options)
+    const request = context.queryClient.prefetchInfiniteQuery(options)
     if (cause === "stay" || hasData) {
       void request
       return
@@ -102,8 +107,8 @@ function InstrumentDatasetsPage() {
           browse.selection
         )
       : { instrumentMfid }
-  const result = useQuery({
-    ...datasetsQueryOptions(scope, {
+  const result = useInfiniteQuery({
+    ...datasetsCursorQueryOptions(scope, {
       cursor,
       ...collectionFilters,
       limit: dataPageLimit,
@@ -112,6 +117,11 @@ function InstrumentDatasetsPage() {
       Boolean(instrumentMfid) &&
       (browse.view !== "grouped" || browse.selection.kind !== "all"),
   })
+  const items = useMemo(
+    () => flattenCursorPages(result.data?.pages),
+    [result.data]
+  )
+  const total = cursorPageTotal(result.data?.pages)
 
   if (!instrumentMfid) return null
 
@@ -139,8 +149,11 @@ function InstrumentDatasetsPage() {
     </>
   ) : (
     <>
-      <CollectionUpdateStatus label="datasets" updating={result.isFetching} />
-      {result.isError ? (
+      <CollectionUpdateStatus
+        label="datasets"
+        updating={result.isFetching && !result.isFetchingNextPage}
+      />
+      {result.isError && !result.isFetchNextPageError ? (
         <CollectionUpdateError
           label="Datasets"
           preserved
@@ -149,9 +162,15 @@ function InstrumentDatasetsPage() {
       ) : null}
       <InstrumentDatasetCollection
         cursor={cursor}
+        hasNextPage={Boolean(result.hasNextPage)}
         instrumentMfid={routeInstrumentMfid}
-        page={result.data}
-        updating={result.isFetching}
+        isPaginationDisabled={result.isFetching && !result.isFetchingNextPage}
+        isLoadingMore={result.isFetchingNextPage}
+        items={items}
+        loadMoreError={result.isFetchNextPageError}
+        onLoadMore={() => void result.fetchNextPage()}
+        total={total}
+        updating={result.isFetching && !result.isFetchingNextPage}
       />
     </>
   )

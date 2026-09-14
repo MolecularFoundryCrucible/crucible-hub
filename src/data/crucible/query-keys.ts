@@ -42,11 +42,27 @@ export const crucibleKeys = {
     [...scope, "people", "service-account", reference] as const,
   samples: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "samples", "list", normalizeFilters(filters)] as const,
+  sampleCursorChain: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "samples",
+      "list",
+      "cursor-chain",
+      normalizeFilters(filters),
+    ] as const,
   sampleLists: (scope: IdentityScope) => [...scope, "samples", "list"] as const,
   sampleFacets: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "samples", "list", "facets", normalizeFilters(filters)] as const,
   datasets: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "datasets", "list", normalizeFilters(filters)] as const,
+  datasetCursorChain: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "datasets",
+      "list",
+      "cursor-chain",
+      normalizeFilters(filters),
+    ] as const,
   datasetLists: (scope: IdentityScope) =>
     [...scope, "datasets", "list"] as const,
   datasetFacets: (scope: IdentityScope, filters: ListFilters) =>
