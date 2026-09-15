@@ -195,6 +195,9 @@ export type WorkspaceOwnershipTransfer = Schema<"TransferOwnershipRead">
 
 export type WorkspaceProjectReassignment = Schema<"ReassignProjectRead">
 
+export type WorkspaceDatasetInstrumentAssignment =
+  Schema<"DatasetInstrumentRead">
+
 export type WorkspaceLinkedResource = {
   name: string | null
   relationship: "associated" | "child" | "parent"

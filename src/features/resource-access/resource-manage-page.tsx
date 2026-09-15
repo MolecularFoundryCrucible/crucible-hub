@@ -82,6 +82,7 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
+import { DatasetInstrumentAssignmentCard } from "@/features/dataset-instrument/dataset-instrument-assignment-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 import { ProjectAssignmentCard } from "@/features/resource-project-assignment/project-assignment-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
@@ -144,6 +145,14 @@ export function ResourceManagePage({
           <CardContent className="divide-y px-0">
             {canManageAccess ? (
               <ProjectAssignmentCard
+                mode={mode}
+                presentation="row"
+                resource={resource}
+                scope={scope}
+              />
+            ) : null}
+            {canManageAccess && resource.kind === "dataset" ? (
+              <DatasetInstrumentAssignmentCard
                 mode={mode}
                 presentation="row"
                 resource={resource}

@@ -18,6 +18,7 @@ import {
 import type { FixtureScenario } from "./fixture-scenarios"
 import type {
   WorkspaceDatasetFile,
+  WorkspaceDatasetInstrumentAssignment,
   WorkspaceIngestionRequest,
   WorkspaceIngestionRequestPage,
   WorkspaceDatasetThumbnail,
@@ -1115,6 +1116,57 @@ export async function reassignWorkspaceResourceProject(
     throw new Error(
       "The project assignment response identifies another resource."
     )
+  }
+  return result.data
+}
+
+export async function setWorkspaceDatasetInstrument(
+  datasetMfid: string,
+  instrumentMfid: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceDatasetInstrumentAssignment> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const dataset = await readWorkspaceResource(
+      datasetMfid,
+      scenario,
+      requestSignal
+    )
+    if (!dataset || dataset.kind !== "dataset") {
+      throw new CrucibleResponseError(404)
+    }
+    const instrument = fixtureWorkspace(scenario).instruments.find(
+      (candidate) => candidate.unique_id === instrumentMfid
+    )
+    if (!instrument) throw new CrucibleResponseError(404)
+    return {
+      dataset_mfid: datasetMfid,
+      instrument: {
+        instrument_id: instrument.instrument_id,
+        instrument_name: instrument.instrument_name,
+        unique_id: instrument.unique_id,
+      },
+      previous_instrument: dataset.instrument,
+      previous_instrument_name: dataset.instrument?.instrument_name ?? null,
+    }
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.PUT("/datasets/{dsid}/instrument", {
+    body: { instrument_mfid: instrumentMfid },
+    params: { path: { dsid: datasetMfid } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (
+    result.data.dataset_mfid !== datasetMfid ||
+    result.data.instrument.unique_id !== instrumentMfid
+  ) {
+    throw new Error("The instrument assignment response is invalid.")
   }
   return result.data
 }

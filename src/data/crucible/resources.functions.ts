@@ -10,6 +10,7 @@ import {
   mutateWorkspaceRelationship,
   requestWorkspaceFileIngestion,
   requestWorkspaceResourceDeletion,
+  setWorkspaceDatasetInstrument,
   patchWorkspaceDatasetDescription,
   patchWorkspaceSampleDescription,
   reassignWorkspaceResourceProject,
@@ -388,6 +389,14 @@ const projectReassignmentInputSchema = z
   })
   .strict()
 
+const datasetInstrumentAssignmentInputSchema = z
+  .object({
+    datasetMfid: canonicalResourceMfidSchema,
+    instrumentMfid: canonicalResourceMfidSchema,
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
+
 const relationshipOperationFields = {
   action: z.enum(["link", "unlink"]),
   scenario: fixtureScenarioSchema.optional(),
@@ -723,6 +732,23 @@ export const confirmWorkspaceResourceProjectAssignment = createServerFn({
         data.resourceMfid,
         data.projectMfid,
         true,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const assignWorkspaceDatasetInstrument = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(datasetInstrumentAssignmentInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      setWorkspaceDatasetInstrument(
+        data.datasetMfid,
+        data.instrumentMfid,
         data.scenario,
         context.requestSignal
       )

@@ -84,6 +84,7 @@ type ResourceSiblingNavigationContextValue = {
   active: ActiveResourceSiblingSession | null
   activate: (collection: ResourceSiblingCollection) => void
   candidateId: string
+  clear: () => void
   loadSibling: (
     direction: "next" | "previous",
     sessionId: string,
@@ -141,6 +142,10 @@ export function ResourceSiblingNavigationProvider({
     },
     [start]
   )
+  const clear = useCallback(() => {
+    setActive(null)
+    setCandidateId(createSiblingSessionId())
+  }, [])
   const loadSibling = useCallback(
     async (
       direction: "next" | "previous",
@@ -213,12 +218,22 @@ export function ResourceSiblingNavigationProvider({
       active,
       activate,
       candidateId,
+      clear,
       loadSibling,
       registered,
       register,
       start,
     }),
-    [active, activate, candidateId, loadSibling, register, registered, start]
+    [
+      active,
+      activate,
+      candidateId,
+      clear,
+      loadSibling,
+      register,
+      registered,
+      start,
+    ]
   )
 
   return (
@@ -231,6 +246,10 @@ export function ResourceSiblingNavigationProvider({
 export function useActivateResourceSiblingCollection() {
   const navigation = useContext(ResourceSiblingNavigationContext)
   return navigation?.activate
+}
+
+export function useClearResourceSiblingNavigation() {
+  return useContext(ResourceSiblingNavigationContext)?.clear
 }
 
 export function useRegisterResourceSiblings(

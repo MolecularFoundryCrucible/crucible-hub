@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
+- Added confirmed dataset acquisition-instrument reassignment with canonical instrument selection, API-authoritative identity updates, derived access refresh, dependent collection invalidation, and sibling-navigation reset.
 - Added configurable anchored sibling navigation on canonical sample and dataset pages, with project, subtype, owner, and instrument scopes, API-backed ordering, and independent on-demand continuation in both directions.
 - Added URL-backed, API-grouped browsing for type-specific global Data, Project Data, and Instrument Datasets, with reusable responsive group directories, server-owned counts and null buckets, lazy selected-group loading, paginated group values, compact owner identities, and name-ascending selected results; aligned Instrument Overview with shared Summary, Identity, MFID, QR, timestamp, and metadata patterns.
 - Added route-backed ownership filtering across Data, Projects, and Instruments, API-owned sorting and bounded sample-type, measurement, session, data-format, resolved-owner, and resolved-instrument facets in global and project-scoped type-specific Data views, explicit collection totals, and cursor pagination for project and instrument directories.

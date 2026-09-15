@@ -29,7 +29,7 @@ The local fixture workspace has the Phase 0 scaffold, server boundary, generated
 | Resource management                        | Route-backed Manage pages and local fixture/browser mutation coverage are implemented; not production-exposed.                          |
 | Join requests                              | Deferred pending the API-owned identity, status, capability, and efficient project-state contract.                                      |
 | Instrument management                      | Lifecycle, operators, ownership transfer, and registration are implemented for local development.                                       |
-| Resource assignment and ownership          | Sample and dataset project moves and resource ownership transfer are implemented for local development.                                 |
+| Resource assignment and ownership          | Sample and dataset project moves, dataset instrument assignment, and resource ownership transfer are implemented for local development. |
 | Project, sample, and dataset creation      | Dedicated API-backed creation routes are implemented for local development; file upload remains separate.                               |
 | Uploads, thumbnails, and graphs            | Uploads remain blocked; lazy dataset thumbnail workflows and bounded one-hop resource graph tabs are implemented for local development. |
 
@@ -98,11 +98,11 @@ Join submission and review remain deferred pending the API-owned workflow descri
 
 Implemented for local development. Instrument Manage places capability-gated lifecycle controls in its unified Resource management card using the dedicated status operation and authoritative instrument response. Hub offers active, maintenance, and decommissioned, confirms decommissioning, preserves local failure state, keeps lifecycle separate from descriptive Overview editing, and provides API-filtered directory views for every state. The API's untyped status parameter and response, transition rules, and error outcomes remain documented in [Crucible API handoff](crucible-api-handoff.md).
 
-#### Instrument operators, registration, ownership, and project moves
+#### Instrument operators, registration, ownership, and resource assignment
 
-Implemented and fixture/browser verified for local development. Instrument Manage places operators in Access management and ownership in Resource management on one page. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Project Manage similarly separates member and role controls from ownership transfer and leaving. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Manage offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
+Implemented for local development. Instrument Manage places operators in Access management and ownership in Resource management on one page. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Project Manage similarly separates member and role controls from ownership transfer and leaving. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Manage offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Dataset Manage also offers locally confirmed acquisition-instrument reassignment through the dedicated atomic API operation, updates the canonical instrument identity from the response, and refreshes derived access and dependent collections. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
 
-Dataset instrument reassignment is omitted because the API intentionally freezes the legacy PATCH fields and exposes no dedicated atomic operation. Browser upload orchestration remains blocked by proposed decision 0005 and the API requirements in [Crucible API handoff](crucible-api-handoff.md); Hub does not expose a misleading or insecure upload control.
+Browser upload orchestration remains blocked by proposed decision 0005 and the API requirements in [Crucible API handoff](crucible-api-handoff.md); Hub does not expose a misleading or insecure upload control.
 
 #### Project, sample, and dataset creation
 
