@@ -15,11 +15,15 @@ export function projectsQueryOptions(
   filters: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    includeTotal?: boolean
     limit: number
   }
 ) {
   return queryOptions({
-    queryKey: crucibleKeys.projects(scope, filters),
+    queryKey: crucibleKeys.projects(scope, {
+      ...filters,
+      includeTotal: filters.includeTotal ?? true,
+    }),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceProjects({
@@ -30,7 +34,10 @@ export function projectsQueryOptions(
     placeholderData: (previousData, previousQuery) =>
       collectionScopedPreviousData(
         scope,
-        { affiliation: filters.affiliation },
+        {
+          affiliation: filters.affiliation,
+          includeTotal: filters.includeTotal ?? true,
+        },
         previousData,
         previousQuery
       ),

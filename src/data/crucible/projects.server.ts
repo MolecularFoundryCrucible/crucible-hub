@@ -70,11 +70,13 @@ export async function readWorkspaceProjects(
   {
     affiliation,
     cursor,
+    includeTotal,
     limit,
     scenario,
   }: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    includeTotal?: boolean
     limit: number
     scenario?: FixtureScenario
   },
@@ -94,7 +96,8 @@ export async function readWorkspaceProjects(
             project.lead?.unique_id === source.workspace.account.unique_id
         )
       : source.workspace.projects
-    return fixtureCursorPage(projects, { cursor, limit })
+    const page = fixtureCursorPage(projects, { cursor, limit })
+    return includeTotal === false ? { ...page, total: null } : page
   }
 
   const client = createCrucibleClient(configuration)
@@ -103,7 +106,7 @@ export async function readWorkspaceProjects(
       query: {
         affiliation: affiliation ? [affiliation] : undefined,
         cursor,
-        include_total: true,
+        include_total: includeTotal ?? true,
         limit,
       },
     },

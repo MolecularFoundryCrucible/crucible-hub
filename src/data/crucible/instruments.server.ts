@@ -392,12 +392,16 @@ export async function readWorkspaceInstruments(
   {
     affiliation,
     cursor,
+    includeOwner,
+    includeTotal,
     limit,
     scenario,
     status,
   }: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    includeOwner?: boolean
+    includeTotal?: boolean
     limit: number
     scenario?: FixtureScenario
     status?: WorkspaceInstrumentStatus
@@ -418,7 +422,15 @@ export async function readWorkspaceInstruments(
         (!affiliation ||
           instrument.owner?.unique_id === source.workspace.account.unique_id)
     )
-    return fixtureCursorPage(instruments, { cursor, limit })
+    const page = fixtureCursorPage(instruments, { cursor, limit })
+    return {
+      ...page,
+      items:
+        includeOwner === false
+          ? page.items.map((instrument) => ({ ...instrument, owner: null }))
+          : page.items,
+      total: includeTotal === false ? null : page.total,
+    }
   }
 
   const client = createCrucibleClient(configuration)
@@ -427,8 +439,8 @@ export async function readWorkspaceInstruments(
       query: {
         affiliation: affiliation ? [affiliation] : undefined,
         cursor,
-        include_owner: true,
-        include_total: true,
+        include_owner: includeOwner ?? true,
+        include_total: includeTotal ?? true,
         limit,
         status,
       },

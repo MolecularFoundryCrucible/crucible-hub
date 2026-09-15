@@ -1,6 +1,7 @@
 import { useQueries } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { ArrowRightIcon } from "lucide-react"
+import type { ReactNode } from "react"
 
 import {
   CollectionRowsPending,
@@ -10,7 +11,6 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -24,16 +24,29 @@ import {
   datasetsQueryOptions,
   samplesQueryOptions,
 } from "@/data/crucible/data.queries"
+import { instrumentsQueryOptions } from "@/data/crucible/instruments.queries"
 import { projectsQueryOptions } from "@/data/crucible/projects.queries"
-import type { WorkspaceProject } from "@/data/crucible/workspace-source"
+import type { WorkspaceInstrument } from "@/data/crucible/workspace-source"
 import { selectRecentResources } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { formatDate } from "@/lib/format"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 
-const homeProjectLimit = 5
+const homeOwnershipLimit = 8
 const homeRecentResourceLimit = 5
+const homeProjectQuery = {
+  affiliation: "owner",
+  includeTotal: false,
+  limit: homeOwnershipLimit,
+} as const
+const homeInstrumentQuery = {
+  affiliation: "owner",
+  includeOwner: false,
+  includeTotal: false,
+  limit: homeOwnershipLimit,
+  status: "active",
+} as const
 const homeRecentResourceQuery = {
   direction: "desc",
   includeTotal: false,
@@ -47,7 +60,10 @@ export const Route = createFileRoute("/_app/")({
     if (!source || source.status === "unavailable") return
 
     void context.queryClient.prefetchQuery(
-      projectsQueryOptions(source.scope, { limit: homeProjectLimit })
+      projectsQueryOptions(source.scope, homeProjectQuery)
+    )
+    void context.queryClient.prefetchQuery(
+      instrumentsQueryOptions(source.scope, homeInstrumentQuery)
     )
     void context.queryClient.prefetchQuery(
       samplesQueryOptions(source.scope, homeRecentResourceQuery)
@@ -61,17 +77,24 @@ export const Route = createFileRoute("/_app/")({
 
 function HomePage() {
   const scope = useWorkspaceScope()
-  const [accountResult, projectResult, sampleResult, datasetResult] =
-    useQueries({
-      queries: [
-        accountQueryOptions(scope),
-        projectsQueryOptions(scope, { limit: homeProjectLimit }),
-        samplesQueryOptions(scope, homeRecentResourceQuery),
-        datasetsQueryOptions(scope, homeRecentResourceQuery),
-      ],
-    })
+  const [
+    accountResult,
+    projectResult,
+    instrumentResult,
+    sampleResult,
+    datasetResult,
+  ] = useQueries({
+    queries: [
+      accountQueryOptions(scope),
+      projectsQueryOptions(scope, homeProjectQuery),
+      instrumentsQueryOptions(scope, homeInstrumentQuery),
+      samplesQueryOptions(scope, homeRecentResourceQuery),
+      datasetsQueryOptions(scope, homeRecentResourceQuery),
+    ],
+  })
   const account = accountResult.data
   const projects = projectResult.data?.items ?? []
+  const instruments = instrumentResult.data?.items ?? []
   const recentResources = selectRecentResources(
     sampleResult.data?.items ?? [],
     datasetResult.data?.items ?? [],
@@ -221,58 +244,79 @@ function HomePage() {
           </section>
         </div>
 
-        <section
-          aria-labelledby="home-projects-title"
-          className="min-w-0 xl:col-span-2"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <h2 id="home-projects-title">Your projects</h2>
-              </CardTitle>
-              <CardAction>
-                <Link
-                  className={buttonVariants({ variant: "ghost" })}
-                  search={{ affiliation: undefined, cursor: undefined }}
-                  to="/projects"
-                >
-                  View all
-                  <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
-                </Link>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {projectResult.isPending && (
-                <CollectionRowsPending label="your projects" />
-              )}
-              {!projectResult.isPending &&
-                projectResult.isError &&
-                !projectResult.data && (
-                  <PanelState
-                    description="Recent data and navigation remain available."
-                    retry={() => void projectResult.refetch()}
-                    role="alert"
-                    title="Projects could not be loaded"
+        <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
+          <HomeOwnershipCard
+            emptyDescription="Projects you lead will appear here."
+            emptyTitle="You do not lead any projects yet"
+            error={projectResult.isError && !projectResult.data}
+            label="projects you lead"
+            pending={projectResult.isPending}
+            retry={() => void projectResult.refetch()}
+            title="Projects you lead"
+            viewAll={
+              <Link
+                className={buttonVariants({ variant: "ghost" })}
+                search={{ affiliation: "owner", cursor: undefined }}
+                to="/projects"
+              >
+                View all
+                <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
+              </Link>
+            }
+          >
+            {projects.length > 0 ? (
+              <ul className="flex min-w-0 flex-col gap-2" role="list">
+                {projects.map((project) => (
+                  <OwnershipResourceLink
+                    identifier={project.project_id}
+                    kind="project"
+                    key={project.unique_id}
+                    mfid={project.unique_id}
+                    name={project.title?.trim() || project.project_id}
                   />
-                )}
-              {!projectResult.isPending &&
-                !projectResult.isError &&
-                projects.length === 0 && (
-                  <PanelState
-                    description="Projects shared with your account will appear here."
-                    title="No projects are available yet"
+                ))}
+              </ul>
+            ) : null}
+          </HomeOwnershipCard>
+
+          <HomeOwnershipCard
+            emptyDescription="Active instruments you manage will appear here."
+            emptyTitle="You do not manage any active instruments yet"
+            error={instrumentResult.isError && !instrumentResult.data}
+            label="instruments you manage"
+            pending={instrumentResult.isPending}
+            retry={() => void instrumentResult.refetch()}
+            title="Instruments you manage"
+            viewAll={
+              <Link
+                className={buttonVariants({ variant: "ghost" })}
+                search={{
+                  affiliation: "owner",
+                  cursor: undefined,
+                  status: undefined,
+                }}
+                to="/instruments"
+              >
+                View all
+                <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
+              </Link>
+            }
+          >
+            {instruments.length > 0 ? (
+              <ul className="flex min-w-0 flex-col gap-2" role="list">
+                {instruments.map((instrument) => (
+                  <OwnershipResourceLink
+                    identifier={instrument.instrument_id}
+                    kind="instrument"
+                    key={instrument.unique_id}
+                    mfid={instrument.unique_id}
+                    name={instrumentName(instrument)}
                   />
-                )}
-              {projects.length > 0 && (
-                <ul className="flex min-w-0 flex-col gap-2" role="list">
-                  {projects.map((project) => (
-                    <ProjectLink key={project.unique_id} project={project} />
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+                ))}
+              </ul>
+            ) : null}
+          </HomeOwnershipCard>
+        </div>
       </div>
     </PageLayout>
   )
@@ -375,43 +419,122 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
   )
 }
 
-function ProjectLink({ project }: { project: WorkspaceProject }) {
-  const details = "organization" in project ? project : null
+function HomeOwnershipCard({
+  children,
+  emptyDescription,
+  emptyTitle,
+  error,
+  label,
+  pending,
+  retry,
+  title,
+  viewAll,
+}: {
+  children: ReactNode
+  emptyDescription: string
+  emptyTitle: string
+  error: boolean
+  label: string
+  pending: boolean
+  retry: () => void
+  title: string
+  viewAll: ReactNode
+}) {
+  const titleId = `home-${label.replaceAll(" ", "-")}-title`
+  const hasContent = children !== null
 
   return (
+    <section aria-labelledby={titleId} className="min-w-0">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h2 id={titleId}>{title}</h2>
+          </CardTitle>
+          <CardAction>{viewAll}</CardAction>
+        </CardHeader>
+        <CardContent>
+          {pending ? <CollectionRowsPending label={label} /> : null}
+          {!pending && error ? (
+            <PanelState
+              retry={retry}
+              role="alert"
+              title={`${title} could not be loaded`}
+            />
+          ) : null}
+          {!pending && !error && !hasContent ? (
+            <PanelState description={emptyDescription} title={emptyTitle} />
+          ) : null}
+          {hasContent ? children : null}
+        </CardContent>
+      </Card>
+    </section>
+  )
+}
+
+function OwnershipResourceLink({
+  identifier,
+  kind,
+  mfid,
+  name,
+}: {
+  identifier?: string | null
+  kind: "instrument" | "project"
+  mfid: string
+  name: string
+}) {
+  const content = (
+    <>
+      <ResourceIdentity
+        className="flex-1"
+        context={identifier}
+        interactive
+        kind={kind}
+        name={name}
+        presentation="collection"
+      />
+      <ArrowRightIcon
+        aria-hidden="true"
+        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+      />
+    </>
+  )
+  const className =
+    "group/resource flex min-w-0 items-start gap-2 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+
+  return kind === "project" ? (
     <li>
       <Link
-        className="group/resource flex min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-        params={{ projectMfid: project.unique_id }}
+        aria-label={`Open project: ${name}`}
+        className={className}
+        params={{ projectMfid: mfid }}
         search={{ preview: undefined }}
         state={{}}
         to="/projects/$projectMfid"
       >
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-start gap-2">
-            <ResourceIdentity
-              className="flex-1"
-              context={details?.organization ?? project.project_id}
-              interactive
-              kind="project"
-              name={project.title ?? project.project_id}
-              presentation="collection"
-            />
-            {details?.status && (
-              <Badge variant="outline">{details.status}</Badge>
-            )}
-          </div>
-          {details?.modification_time && (
-            <time
-              className="mt-1 block text-supporting text-muted-foreground"
-              dateTime={details.modification_time}
-            >
-              Updated {formatDate(details.modification_time)}
-            </time>
-          )}
-        </div>
+        {content}
       </Link>
     </li>
+  ) : (
+    <li>
+      <Link
+        aria-label={`Open instrument: ${name}`}
+        className={className}
+        params={{ instrumentMfid: mfid }}
+        search={{}}
+        state={{}}
+        to="/instruments/$instrumentMfid"
+      >
+        {content}
+      </Link>
+    </li>
+  )
+}
+
+function instrumentName(instrument: WorkspaceInstrument) {
+  return (
+    instrument.instrument_name.trim() ||
+    instrument.instrument_id?.trim() ||
+    instrument.unique_id
   )
 }
 

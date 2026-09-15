@@ -63,6 +63,7 @@ export const Route = createFileRoute("/_app/projects/")({
     if (!source || source.status === "unavailable") return
 
     const options = projectsQueryOptions(source.scope, {
+      includeTotal: false,
       limit: projectPageLimit,
       ...deps,
     })
@@ -87,6 +88,7 @@ function ProjectsPage() {
     projectsQueryOptions(scope, {
       affiliation: search.affiliation,
       cursor: search.cursor,
+      includeTotal: false,
       limit: projectPageLimit,
     })
   )
@@ -153,7 +155,6 @@ function ProjectDirectoryFilters({ affiliation }: { affiliation?: "owner" }) {
   const navigate = Route.useNavigate()
   return (
     <CollectionAffiliationFilter
-      id="project-ownership"
       onChange={(nextAffiliation) =>
         void navigate({
           search: { affiliation: nextAffiliation, cursor: undefined },
@@ -161,6 +162,7 @@ function ProjectDirectoryFilters({ affiliation }: { affiliation?: "owner" }) {
           to: "/projects",
         })
       }
+      ownerLabel="Led by me"
       value={affiliation}
     />
   )
@@ -256,7 +258,7 @@ function ProjectCollection({
             <EmptyTitle>No projects found</EmptyTitle>
             <EmptyDescription>
               {affiliation
-                ? "This account does not own any projects."
+                ? "You do not lead any projects."
                 : "No projects are available to this account."}
             </EmptyDescription>
           </EmptyHeader>

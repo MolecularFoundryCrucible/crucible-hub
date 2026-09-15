@@ -42,7 +42,7 @@ Hub provides Home, Projects, Data, Instruments, Search, Activity, Account, and a
 
 The core product surfaces are:
 
-- Home for immediate research continuation through recently added data, accessible projects, and account-isolated resources viewed during the current browser session.
+- Home for immediate research continuation through recently added data, projects the current person leads, active instruments they manage, and account-isolated resources viewed during the current browser session.
 - Data for cross-project sample and dataset discovery, ownership and type-specific facet filtering, API-backed grouped browsing, server-owned sorting, collection preview, and canonical detail navigation.
 - Project and instrument workspaces for scoped list and grouped data browsing, context, and capability-gated management.
 - Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, access, activity, and lifecycle-aware actions.

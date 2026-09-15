@@ -24,6 +24,8 @@ import { fixtureScenarioSchema } from "./fixture-scenarios"
 export const instrumentListInputSchema = z.object({
   affiliation: collectionAffiliationSchema.optional(),
   cursor: collectionCursorSchema,
+  includeOwner: z.boolean().optional(),
+  includeTotal: z.boolean().optional(),
   limit: z.number().int().min(1).max(100),
   scenario: fixtureScenarioSchema.optional(),
   status: z.enum(instrumentStatuses).optional(),

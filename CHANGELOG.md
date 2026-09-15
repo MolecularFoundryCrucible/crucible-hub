@@ -69,6 +69,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Home now separates Projects you lead from active Instruments you manage, and project and instrument directories use visible, route-backed All and ownership scope controls without requesting undisplayed totals.
 - Recently added data on Home now uses API-backed newest-creation ordering across samples and datasets.
 - Kept the resource inspector open when focus follows an underlying resource link, preventing a newly selected preview from immediately closing.
 - Sibling navigation now omits sequence positions and partial loaded-row counts from its compact control.

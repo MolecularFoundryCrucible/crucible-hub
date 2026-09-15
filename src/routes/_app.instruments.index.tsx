@@ -73,6 +73,8 @@ export const Route = createFileRoute("/_app/instruments/")({
     if (!source || source.status === "unavailable") return
 
     const options = instrumentsQueryOptions(source.scope, {
+      includeOwner: true,
+      includeTotal: false,
       limit: instrumentPageLimit,
       ...deps,
     })
@@ -99,6 +101,8 @@ function InstrumentsPage() {
     instrumentsQueryOptions(scope, {
       affiliation: search.affiliation,
       cursor: search.cursor,
+      includeOwner: true,
+      includeTotal: false,
       limit: instrumentPageLimit,
       status,
     })
@@ -107,11 +111,10 @@ function InstrumentsPage() {
   return (
     <PageLayout>
       <InstrumentsPageHeader canRegister={!account.is_service_account} />
-      <InstrumentStatusNavigation
+      <InstrumentDirectoryNavigation
         affiliation={search.affiliation}
         status={status}
       />
-      <InstrumentDirectoryFilters affiliation={search.affiliation} />
       {instrumentResult.isPending ? (
         <CollectionTablePending label="instruments" />
       ) : instrumentResult.isError && !instrumentResult.data ? (
@@ -151,11 +154,10 @@ function InstrumentsRoutePending() {
       <InstrumentsPageHeader
         canRegister={account?.is_service_account === false}
       />
-      <InstrumentStatusNavigation
+      <InstrumentDirectoryNavigation
         affiliation={search.affiliation}
         status={search.status ?? "active"}
       />
-      <InstrumentDirectoryFilters affiliation={search.affiliation} />
       <CollectionTablePending label="instruments" />
     </PageLayout>
   )
@@ -169,7 +171,6 @@ function InstrumentDirectoryFilters({
   const navigate = Route.useNavigate()
   return (
     <CollectionAffiliationFilter
-      id="instrument-ownership"
       onChange={(nextAffiliation) =>
         void navigate({
           search: (previous) => ({
@@ -181,8 +182,24 @@ function InstrumentDirectoryFilters({
           to: "/instruments",
         })
       }
+      ownerLabel="Managed by me"
       value={affiliation}
     />
+  )
+}
+
+function InstrumentDirectoryNavigation({
+  affiliation,
+  status,
+}: {
+  affiliation?: "owner"
+  status: WorkspaceInstrumentStatus
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <InstrumentStatusNavigation affiliation={affiliation} status={status} />
+      <InstrumentDirectoryFilters affiliation={affiliation} />
+    </div>
   )
 }
 
@@ -339,9 +356,9 @@ function InstrumentCollection({
             <EmptyHeader>
               <EmptyTitle>No instruments found</EmptyTitle>
               <EmptyDescription>
-                {affiliation ? "No owned " : "No "}
-                {instrumentStatusLabel(status).toLowerCase()} instruments are
-                available to this account.
+                {affiliation
+                  ? `You do not manage any ${instrumentStatusLabel(status).toLowerCase()} instruments.`
+                  : `No ${instrumentStatusLabel(status).toLowerCase()} instruments are available to this account.`}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>

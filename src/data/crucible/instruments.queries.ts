@@ -18,13 +18,15 @@ function instrumentStatusScopedPreviousData<TData>(
   scope: IdentityScope,
   affiliation: CollectionAffiliation | undefined,
   status: WorkspaceInstrumentStatus,
+  includeOwner: boolean,
+  includeTotal: boolean,
   previousData: TData | undefined,
   previousQuery: { queryKey: readonly unknown[] } | undefined
 ) {
   if (
     collectionScopedPreviousData(
       scope,
-      { affiliation, status },
+      { affiliation, includeOwner, includeTotal, status },
       previousData,
       previousQuery
     ) === undefined
@@ -39,13 +41,19 @@ export function instrumentsQueryOptions(
   filters: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    includeOwner?: boolean
+    includeTotal?: boolean
     limit: number
     status: WorkspaceInstrumentStatus
   }
 ) {
   const scenario = fixtureScenarioFromScope(scope)
   return queryOptions({
-    queryKey: crucibleKeys.instruments(scope, filters),
+    queryKey: crucibleKeys.instruments(scope, {
+      ...filters,
+      includeOwner: filters.includeOwner ?? true,
+      includeTotal: filters.includeTotal ?? true,
+    }),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceInstruments({
@@ -58,6 +66,8 @@ export function instrumentsQueryOptions(
         scope,
         filters.affiliation,
         filters.status,
+        filters.includeOwner ?? true,
+        filters.includeTotal ?? true,
         previousData,
         previousQuery
       ),
