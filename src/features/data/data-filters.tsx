@@ -186,7 +186,7 @@ export function DataFilters({
   }
 
   function clear() {
-    setDraft({ kind: kind === "all" ? undefined : kind })
+    setDraft({ kind: kind === "samples" ? undefined : kind })
     setDraftErrors([])
     setProjectName(undefined)
     void navigate({
@@ -489,17 +489,15 @@ export function DataFilters({
                 }
               />
             ) : null}
-            {kind !== "all" ? (
-              <CollectionOrderFields
-                describedBy={errorDescription}
-                idPrefix="data"
-                invalid={invalid}
-                onChange={(value) =>
-                  setDraft((current) => ({ ...current, ...value }))
-                }
-                value={draft}
-              />
-            ) : null}
+            <CollectionOrderFields
+              describedBy={errorDescription}
+              idPrefix="data"
+              invalid={invalid}
+              onChange={(value) =>
+                setDraft((current) => ({ ...current, ...value }))
+              }
+              value={draft}
+            />
           </FieldGroup>
         </FieldSet>
         {draftErrors.length ? (
@@ -593,7 +591,7 @@ function sortLabel(sort: string) {
 }
 
 function dataKind(kind: string | undefined): DataKindFilter {
-  return kind === "datasets" || kind === "samples" ? kind : "all"
+  return kind === "datasets" ? "datasets" : "samples"
 }
 
 function chooserValue(

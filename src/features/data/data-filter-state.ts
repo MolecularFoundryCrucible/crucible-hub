@@ -67,7 +67,7 @@ export const dataSearchSchema = z.object({
 })
 
 export type DataKind = "datasets" | "samples"
-export type DataKindFilter = "all" | DataKind
+export type DataKindFilter = DataKind
 export type DataSearch = z.infer<typeof dataSearchSchema>
 export type DataFilterSearch = Omit<
   DataSearch,
@@ -106,7 +106,7 @@ export type DataFilterResolution =
   | { filters: DataFilterValues; valid: true }
   | { errors: readonly DataFilterError[]; valid: false }
 
-const dataKindSchema = z.enum(["samples", "datasets"]).optional()
+const dataKindSchema = z.enum(["samples", "datasets"]).default("samples")
 const projectScopeSchema = z.enum(["all", "assigned", "shared"]).optional()
 const mfidSchema = z
   .string()
@@ -170,13 +170,6 @@ const domainFiltersSchema = z
         "Acquisition instrument filters apply only to datasets."
       )
     }
-    if (filters.sort && !filters.kind) {
-      addIssue(
-        context,
-        "sort",
-        "Choose Samples or Datasets before selecting an order."
-      )
-    }
     if (filters.direction && !filters.sort) {
       addIssue(
         context,
@@ -192,16 +185,6 @@ const domainFiltersSchema = z
         context,
         "sampleType",
         "Sample type filters apply only to samples."
-      )
-    }
-    if (
-      !filters.kind &&
-      (filters.ownerId !== undefined || filters.ownerIdIsNull)
-    ) {
-      addIssue(
-        context,
-        "ownerId",
-        "Choose Samples or Datasets before selecting an owner."
       )
     }
     if (
@@ -317,7 +300,7 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
           sessionNameIsNull: domain.data.sessionNameIsNull,
         }
       : {}),
-    kind: domain.data.kind ?? "all",
+    kind: domain.data.kind,
   }
 
   return { filters, valid: true }
@@ -342,7 +325,7 @@ export function applyDataFilters(
       filters.kind === "datasets" ? filters.instrumentMfid : undefined,
     instrumentMfidIsNull:
       filters.kind === "datasets" ? filters.instrumentMfidIsNull : undefined,
-    kind: filters.kind === "all" ? undefined : filters.kind,
+    kind: filters.kind === "samples" ? undefined : filters.kind,
     projectMfid: filters.projectMfid,
     projectScope:
       filters.projectScope === "all" ? undefined : filters.projectScope,
@@ -369,10 +352,7 @@ export function clearDataFilters(
     ownerId: undefined,
     ownerIdIsNull: undefined,
     ownerIdSet: undefined,
-    kind:
-      previous.kind === "datasets" || previous.kind === "samples"
-        ? previous.kind
-        : undefined,
+    kind: previous.kind === "datasets" ? "datasets" : undefined,
     projectMfid: undefined,
     projectScope: undefined,
     preview: undefined,
@@ -390,19 +370,19 @@ export function switchDataKind(
     ...previous,
     ...facetSearchStateForKind(previous, kind),
     datasetCursor: undefined,
-    direction: kind === "all" ? undefined : previous.direction,
+    direction: previous.direction,
     instrumentMfid: kind === "datasets" ? previous.instrumentMfid : undefined,
     instrumentMfidIsNull:
       kind === "datasets" ? previous.instrumentMfidIsNull : undefined,
-    kind: kind === "all" ? undefined : kind,
+    kind: kind === "samples" ? undefined : kind,
     groupBy: undefined,
     groupValue: undefined,
     groupValueIsNull: undefined,
     groupValueSet: undefined,
     preview: undefined,
     sampleCursor: undefined,
-    sort: kind === "all" ? undefined : previous.sort,
-    view: kind === "all" ? undefined : previous.view,
+    sort: previous.sort,
+    view: previous.view,
   }
 }
 

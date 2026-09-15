@@ -69,6 +69,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Global Data now switches directly between separate API-backed Samples and Datasets collections and defaults to Samples, removing the weaker combined All mode that could not support equivalent filtering, sorting, grouping, or pagination.
 - Home now separates Projects you lead from active Instruments you manage, and project and instrument directories use visible, route-backed All and ownership scope controls without requesting undisplayed totals.
 - Recently added data on Home now uses API-backed newest-creation ordering across samples and datasets.
 - Kept the resource inspector open when focus follows an underlying resource link, preventing a newly selected preview from immediately closing.

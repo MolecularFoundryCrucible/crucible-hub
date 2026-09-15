@@ -184,14 +184,6 @@ describe("global data filter state", () => {
     expect(switchDataKind(previous, "samples")).toEqual({
       datasetCursor: undefined,
       instrumentMfid: undefined,
-      kind: "samples",
-      preview: undefined,
-      projectMfid: "project-1",
-      sampleCursor: undefined,
-    })
-    expect(switchDataKind(previous, "all")).toEqual({
-      datasetCursor: undefined,
-      instrumentMfid: undefined,
       kind: undefined,
       preview: undefined,
       projectMfid: "project-1",

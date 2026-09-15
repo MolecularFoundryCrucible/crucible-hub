@@ -275,8 +275,8 @@ function DataResults({
   const scope = useWorkspaceScope()
   const navigate = Route.useNavigate()
   const kind = filters.kind
-  const showSamples = kind === "all" || kind === "samples"
-  const showDatasets = kind === "all" || kind === "datasets"
+  const showSamples = kind === "samples"
+  const showDatasets = kind === "datasets"
   const collectionFilters = collectionQueryFilters(filters)
   const sampleBrowse =
     kind === "samples"
@@ -489,57 +489,39 @@ function DataResults({
                     </colgroup>
                     <TableHeader>
                       <TableRow>
-                        {kind === "all" ? (
-                          <TableHead>Name</TableHead>
-                        ) : (
-                          <SortableTableHead
-                            active={displayedCollectionFilters.sort === "name"}
-                            direction={
-                              displayedCollectionFilters.direction ?? "desc"
-                            }
-                            field="name"
-                            label="Name"
-                            onChange={changeSort}
-                          />
-                        )}
+                        <SortableTableHead
+                          active={displayedCollectionFilters.sort === "name"}
+                          direction={
+                            displayedCollectionFilters.direction ?? "desc"
+                          }
+                          field="name"
+                          label="Name"
+                          onChange={changeSort}
+                        />
                         <TableHead className="hidden xl:table-cell">
                           Type
                         </TableHead>
                         <TableHead>Project</TableHead>
                         <TableHead>Owner</TableHead>
-                        {kind === "all" ? (
-                          <TableHead className="hidden xl:table-cell">
-                            Created
-                          </TableHead>
-                        ) : (
-                          <SortableTableHead
-                            active={
-                              displayedCollectionFilters.sort === "created"
-                            }
-                            className="hidden xl:table-cell"
-                            direction={
-                              displayedCollectionFilters.direction ?? "desc"
-                            }
-                            field="created"
-                            label="Created"
-                            onChange={changeSort}
-                          />
-                        )}
-                        {kind === "all" ? (
-                          <TableHead>Updated</TableHead>
-                        ) : (
-                          <SortableTableHead
-                            active={
-                              displayedCollectionFilters.sort === "updated"
-                            }
-                            direction={
-                              displayedCollectionFilters.direction ?? "desc"
-                            }
-                            field="updated"
-                            label="Updated"
-                            onChange={changeSort}
-                          />
-                        )}
+                        <SortableTableHead
+                          active={displayedCollectionFilters.sort === "created"}
+                          className="hidden xl:table-cell"
+                          direction={
+                            displayedCollectionFilters.direction ?? "desc"
+                          }
+                          field="created"
+                          label="Created"
+                          onChange={changeSort}
+                        />
+                        <SortableTableHead
+                          active={displayedCollectionFilters.sort === "updated"}
+                          direction={
+                            displayedCollectionFilters.direction ?? "desc"
+                          }
+                          field="updated"
+                          label="Updated"
+                          onChange={changeSort}
+                        />
                         <TableHead className="text-center">
                           <span className="sr-only">Open</span>
                         </TableHead>
@@ -637,8 +619,8 @@ function DataResults({
                 <EmptyHeader>
                   <EmptyTitle>
                     {hasActiveFilters
-                      ? `No ${kind === "all" ? "data" : kind} match these filters`
-                      : `No ${kind === "all" ? "data are" : `${kind} are`} available`}
+                      ? `No ${kind} match these filters`
+                      : `No ${kind} are available`}
                   </EmptyTitle>
                   <EmptyDescription>
                     {hasActiveFilters
@@ -837,7 +819,6 @@ function DataTypeFilters({
 }) {
   return (
     <div className="flex flex-wrap gap-2" aria-label="Data type filter">
-      <FilterLink active={kind === "all"} kind="all" label="All data" />
       <FilterLink
         active={kind === "samples"}
         kind="samples"
@@ -858,7 +839,7 @@ function FilterLink({
   label,
 }: {
   active: boolean
-  kind: "all" | "datasets" | "samples"
+  kind: "datasets" | "samples"
   label: string
 }) {
   return (
@@ -877,7 +858,7 @@ function FilterLink({
 }
 
 function dataKind(kind: string | undefined): DataKindFilter {
-  return kind === "datasets" || kind === "samples" ? kind : "all"
+  return kind === "datasets" ? "datasets" : "samples"
 }
 
 type DataCollectionQueryFilters = CollectionFilters &

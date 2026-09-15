@@ -151,7 +151,10 @@ export function ResourceWorkspace({
                         ? { preview: undefined }
                         : {
                             datasetCursor: undefined,
-                            kind: undefined,
+                            kind:
+                              resourceKind === "dataset"
+                                ? "datasets"
+                                : undefined,
                             sampleCursor: undefined,
                           }
                     }
