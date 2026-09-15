@@ -23,6 +23,7 @@ export const collectionBrowseSearchFields = {
     ])
     .optional()
     .catch(undefined),
+  groupOrder: z.enum(["name", "count"]).optional().catch(undefined),
   groupValue: z.string().max(255).optional().catch(undefined),
   groupValueIsNull: z
     .union([z.literal(true), z.literal("true")])
@@ -39,11 +40,14 @@ export const collectionBrowseSearchFields = {
 
 export type CollectionBrowseSearch = {
   groupBy?: string
+  groupOrder?: "name" | "count"
   groupValue?: string
   groupValueIsNull?: true
   groupValueSet?: true
   view?: "grouped"
 }
+
+export type CollectionGroupOrder = "name" | "count"
 
 export type CollectionBrowseOption<TField extends string> = {
   label: string
@@ -100,9 +104,16 @@ export function resolveCollectionBrowse<TField extends string>(
       : { kind: "all" }
   return {
     field,
+    order: search.groupOrder === "count" ? "count" : "name",
     selection,
     view: search.view === "grouped" ? "grouped" : "list",
   } as const
+}
+
+export function facetOrderingForGroupOrder(order: CollectionGroupOrder) {
+  return order === "count"
+    ? ({ direction: "desc", sort: "count" } as const)
+    : ({ direction: "asc", sort: "label" } as const)
 }
 
 export function collectionBrowseSearchState(

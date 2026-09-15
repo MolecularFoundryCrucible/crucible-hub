@@ -201,6 +201,9 @@ export function facetBucketLabel(
     if (field === "project") return "No primary project"
     return "Unspecified"
   }
+  if (bucket.label !== null && bucket.label !== undefined) {
+    return bucket.label === "" ? facetValueLabel(bucket.value) : bucket.label
+  }
   if (field === "owner" && bucket.owner) {
     const name = personDisplayName(bucket.owner)
     const username = bucket.owner.username?.trim().replace(/^@/, "")

@@ -4,6 +4,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 
 import {
   CollectionGroupControl,
+  CollectionGroupOrderControl,
   CollectionToolbar,
   DatasetCollectionBrowser,
   SampleCollectionBrowser,
@@ -84,6 +85,7 @@ import {
   resolveCollectionBrowse,
   sampleFiltersForGroup,
 } from "@/data/crucible/collection-browse"
+import type { CollectionGroupOrder } from "@/data/crucible/collection-browse"
 import type {
   CollectionQueryOptions,
   ResourceSort,
@@ -667,6 +669,7 @@ function DataResults({
 
 type DataBrowseState<TField extends string> = {
   field: TField
+  order: CollectionGroupOrder
   selection: FacetSelection
   view: "grouped" | "list"
 }
@@ -732,6 +735,17 @@ function DataBrowseFrame({
     })
   }
 
+  function changeGroupOrder(order: CollectionGroupOrder) {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        groupOrder: order === "name" ? undefined : order,
+      }),
+      state: {},
+      to: "/data",
+    })
+  }
+
   if (sampleBrowse) {
     return (
       <div className="flex min-w-0 flex-col gap-4">
@@ -746,6 +760,13 @@ function DataBrowseFrame({
                 options={globalSampleBrowseOptions}
                 view={sampleBrowse.view}
               />
+              {sampleBrowse.view === "grouped" ? (
+                <CollectionGroupOrderControl
+                  id="data-sample-group-order"
+                  onChange={changeGroupOrder}
+                  order={sampleBrowse.order}
+                />
+              ) : null}
             </>
           }
           primary={toolbarPrimary}
@@ -754,6 +775,7 @@ function DataBrowseFrame({
           <SampleCollectionBrowser
             field={sampleBrowse.field}
             filters={filters}
+            order={sampleBrowse.order}
             onSelect={selectGroup}
             selection={sampleBrowse.selection}
           >
@@ -781,6 +803,13 @@ function DataBrowseFrame({
               options={globalDatasetBrowseOptions}
               view={datasetBrowse.view}
             />
+            {datasetBrowse.view === "grouped" ? (
+              <CollectionGroupOrderControl
+                id="data-dataset-group-order"
+                onChange={changeGroupOrder}
+                order={datasetBrowse.order}
+              />
+            ) : null}
           </>
         }
         primary={toolbarPrimary}
@@ -789,6 +818,7 @@ function DataBrowseFrame({
         <DatasetCollectionBrowser
           field={datasetBrowse.field}
           filters={filters}
+          order={datasetBrowse.order}
           onSelect={selectGroup}
           selection={datasetBrowse.selection}
         >

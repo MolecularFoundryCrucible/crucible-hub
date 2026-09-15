@@ -5,6 +5,7 @@ import { z } from "zod"
 
 import {
   CollectionGroupControl,
+  CollectionGroupOrderControl,
   CollectionToolbar,
   DatasetCollectionBrowser,
 } from "@/components/crucible/collection-browser"
@@ -38,6 +39,7 @@ import {
   instrumentDatasetBrowseOptions,
   resolveCollectionBrowse,
 } from "@/data/crucible/collection-browse"
+import type { CollectionGroupOrder } from "@/data/crucible/collection-browse"
 import type { DatasetFacetField, FacetSelection } from "@/data/crucible/facets"
 import { collectionFilterFields } from "@/data/crucible/collection-filters"
 import {
@@ -247,6 +249,17 @@ function InstrumentDatasetsPage() {
     })
   }
 
+  function changeGroupOrder(order: CollectionGroupOrder) {
+    void navigate({
+      params: { instrumentMfid: routeInstrumentMfid },
+      search: (previous) => ({
+        ...previous,
+        groupOrder: order === "name" ? undefined : order,
+      }),
+      to: "/instruments/$instrumentMfid/datasets",
+    })
+  }
+
   function changeSort(sort: ResourceSort, direction: SortDirection) {
     updateBrowse({ direction, sort })
   }
@@ -272,6 +285,13 @@ function InstrumentDatasetsPage() {
               options={instrumentDatasetBrowseOptions}
               view={browse.view}
             />
+            {browse.view === "grouped" ? (
+              <CollectionGroupOrderControl
+                id="instrument-dataset-group-order"
+                onChange={changeGroupOrder}
+                order={browse.order}
+              />
+            ) : null}
           </div>
         }
         primary={<h2 className="text-title-section">Datasets</h2>}
@@ -280,6 +300,7 @@ function InstrumentDatasetsPage() {
         <DatasetCollectionBrowser
           field={browse.field}
           filters={baseFilters}
+          order={browse.order}
           onSelect={selectGroup}
           selection={browse.selection}
         >

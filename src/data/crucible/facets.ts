@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import type { SortDirection } from "./collection-query"
 import type {
   WorkspacePerson,
   WorkspaceProjectReference,
@@ -18,9 +19,15 @@ export const datasetFacetFieldSchema = z.enum([
   "instrument",
   "project",
 ])
+export const facetSortSchema = z.enum(["value", "label", "count"])
 
 export type SampleFacetField = z.infer<typeof sampleFacetFieldSchema>
 export type DatasetFacetField = z.infer<typeof datasetFacetFieldSchema>
+export type FacetSort = z.infer<typeof facetSortSchema>
+export type FacetOrdering = {
+  direction: SortDirection
+  sort: FacetSort
+}
 
 export type FacetSelection =
   { kind: "all" } | { kind: "null" } | { kind: "value"; value: string }
@@ -51,6 +58,7 @@ export type WorkspaceFacetBucket = {
     instrument_name: string
     unique_id: string
   } | null
+  label?: string | null
   owner?: WorkspacePerson | null
   project?: WorkspaceProjectReference | null
   value: string | null

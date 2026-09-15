@@ -26,7 +26,11 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { CollectionBrowseOption } from "@/data/crucible/collection-browse"
+import { facetOrderingForGroupOrder } from "@/data/crucible/collection-browse"
+import type {
+  CollectionBrowseOption,
+  CollectionGroupOrder,
+} from "@/data/crucible/collection-browse"
 import {
   datasetFacetQueryOptions,
   sampleFacetQueryOptions,
@@ -104,16 +108,52 @@ export function CollectionGroupControl<TField extends string>({
   )
 }
 
+export function CollectionGroupOrderControl({
+  disabled = false,
+  id,
+  onChange,
+  order,
+}: {
+  disabled?: boolean
+  id: string
+  onChange: (order: CollectionGroupOrder) => void
+  order: CollectionGroupOrder
+}) {
+  return (
+    <Field className="w-auto min-w-0 flex-none" orientation="horizontal">
+      <FieldLabel className="shrink-0 whitespace-nowrap" htmlFor={id}>
+        Order
+      </FieldLabel>
+      <NativeSelect
+        className="w-28 min-w-0"
+        disabled={disabled}
+        id={id}
+        onChange={(event) =>
+          onChange(event.target.value === "count" ? "count" : "name")
+        }
+        value={order}
+      >
+        <NativeSelectOption value="name">Name</NativeSelectOption>
+        <NativeSelectOption value="count">Count</NativeSelectOption>
+      </NativeSelect>
+    </Field>
+  )
+}
+
 export function SampleCollectionBrowser({
   children,
   field,
   filters,
+  order,
   onSelect,
   selection,
 }: CollectionBrowserProps<SampleFacetField>) {
   const scope = useWorkspaceScope()
   const query = useInfiniteQuery(
-    sampleFacetQueryOptions(scope, field, filters, { excludeField: false })
+    sampleFacetQueryOptions(scope, field, filters, {
+      excludeField: false,
+      ordering: facetOrderingForGroupOrder(order),
+    })
   )
   return (
     <CollectionBrowser
@@ -131,12 +171,16 @@ export function DatasetCollectionBrowser({
   children,
   field,
   filters,
+  order,
   onSelect,
   selection,
 }: CollectionBrowserProps<DatasetFacetField>) {
   const scope = useWorkspaceScope()
   const query = useInfiniteQuery(
-    datasetFacetQueryOptions(scope, field, filters, { excludeField: false })
+    datasetFacetQueryOptions(scope, field, filters, {
+      excludeField: false,
+      ordering: facetOrderingForGroupOrder(order),
+    })
   )
   return (
     <CollectionBrowser
@@ -156,6 +200,7 @@ type CollectionBrowserProps<
   children: React.ReactNode
   field: TField
   filters: FacetContext & DatasetFacetFilters & SampleFacetFilters
+  order: CollectionGroupOrder
   onSelect: (selection: FacetSelection) => void
   selection: FacetSelection
 }

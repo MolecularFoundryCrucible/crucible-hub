@@ -1815,6 +1815,18 @@
             "title": "Count",
             "type": "integer"
           },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical display label. Null only for the null bucket.",
+            "title": "Label"
+          },
           "value": {
             "anyOf": [
               {
@@ -1883,6 +1895,15 @@
         ],
         "title": "FacetResponse",
         "type": "object"
+      },
+      "FacetSort": {
+        "enum": [
+          "value",
+          "label",
+          "count"
+        ],
+        "title": "FacetSort",
+        "type": "string"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2158,6 +2179,18 @@
                 "type": "null"
               }
             ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical display label. Null only for the null bucket.",
+            "title": "Label"
           },
           "value": {
             "anyOf": [
@@ -2722,6 +2755,18 @@
           "count": {
             "title": "Count",
             "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical display label. Null only for the null bucket.",
+            "title": "Label"
           },
           "owner": {
             "anyOf": [
@@ -3722,6 +3767,18 @@
           "count": {
             "title": "Count",
             "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical display label. Null only for the null bucket.",
+            "title": "Label"
           },
           "project": {
             "anyOf": [
@@ -7198,6 +7255,28 @@
               ],
               "description": "Inclusive modification-time upper bound.",
               "title": "Modification Time Lte"
+            }
+          },
+          {
+            "description": "Order buckets by raw value, canonical label, or count.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/FacetSort",
+              "default": "value",
+              "description": "Order buckets by raw value, canonical label, or count."
+            }
+          },
+          {
+            "description": "Facet bucket ordering direction.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "asc",
+              "description": "Facet bucket ordering direction."
             }
           },
           {
@@ -14763,6 +14842,28 @@
             }
           },
           {
+            "description": "Order buckets by raw value, canonical label, or count.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/FacetSort",
+              "default": "value",
+              "description": "Order buckets by raw value, canonical label, or count."
+            }
+          },
+          {
+            "description": "Facet bucket ordering direction.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "asc",
+              "description": "Facet bucket ordering direction."
+            }
+          },
+          {
             "description": "Maximum number of facet buckets to return.",
             "in": "query",
             "name": "limit",
@@ -16886,7 +16987,7 @@
   },
   "servers": [
     {
-      "url": "/testapi"
+      "url": "/api/v3"
     }
   ]
 }

@@ -7,7 +7,11 @@ import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
-import type { CollectionQueryOptions, ResourceSort } from "./collection-query"
+import type {
+  CollectionQueryOptions,
+  ResourceSort,
+  SortDirection,
+} from "./collection-query"
 import { normalizeCollectionQueryOptions } from "./collection-query"
 import { fixtureCursorPage, fixtureResourcePageLimit } from "./pagination"
 import {
@@ -17,6 +21,7 @@ import {
 import type {
   DatasetFacetField,
   DatasetFacetFilters,
+  FacetSort,
   SampleFacetField,
   SampleFacetFilters,
   WorkspaceFacetBucket,
@@ -39,13 +44,16 @@ import type {
 
 type ProjectScope = "all" | "assigned" | "shared"
 
+type ProjectFilterInput = {
+  projectMfid?: string
+  projectMfidIsNull?: true
+  projectScope?: ProjectScope
+  scenario?: FixtureScenario
+}
+
 type ProjectScopedInput = CollectionFilters &
-  CollectionQueryOptions & {
-    projectMfid?: string
-    projectMfidIsNull?: true
-    projectScope?: ProjectScope
-    scenario?: FixtureScenario
-  }
+  CollectionQueryOptions &
+  ProjectFilterInput
 
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
@@ -117,7 +125,7 @@ function fixtureWorkspace(scenario?: FixtureScenario) {
   return source.workspace
 }
 
-function normalizedProjectScope(input: ProjectScopedInput) {
+function normalizedProjectScope(input: ProjectFilterInput) {
   if (input.projectScope && !input.projectMfid) {
     throw new Error(
       "A project MFID is required when selecting a project scope."
@@ -279,6 +287,7 @@ function toWorkspaceFacetPage(
       ...("instrument" in item ? { instrument: item.instrument } : {}),
       ...("owner" in item ? { owner: safeOwner(item.owner) } : {}),
       ...("project" in item ? { project: item.project } : {}),
+      label: item.label,
       value: item.value,
     })),
     limit: response.limit,
@@ -288,16 +297,85 @@ function toWorkspaceFacetPage(
 
 function fixtureFacetPage(
   buckets: readonly WorkspaceFacetBucket[],
-  input: { cursor?: string; limit: number },
+  input: {
+    cursor?: string
+    direction?: SortDirection
+    limit: number
+    sort?: FacetSort
+  },
   field: DatasetFacetField | SampleFacetField
 ): WorkspaceFacetPage {
-  const page = fixtureCursorPage(buckets, input)
+  const page = fixtureCursorPage(
+    orderFixtureFacetBuckets(buckets, input, field),
+    input
+  )
   return {
     field,
     items: page.items,
     limit: page.limit,
     nextCursor: page.nextCursor,
   }
+}
+
+function orderFixtureFacetBuckets(
+  buckets: readonly WorkspaceFacetBucket[],
+  input: { direction?: SortDirection; sort?: FacetSort },
+  field: DatasetFacetField | SampleFacetField
+) {
+  const direction = input.direction === "desc" ? -1 : 1
+  const sort = input.sort ?? "value"
+  return buckets
+    .map((bucket) => ({
+      ...bucket,
+      label: fixtureFacetLabel(bucket, field),
+    }))
+    .sort((left, right) => {
+      if (left.value === null && right.value === null) return 0
+      if (left.value === null) return 1
+      if (right.value === null) return -1
+      if (sort === "count" && left.count !== right.count) {
+        return (left.count - right.count) * direction
+      }
+      if (sort === "label") {
+        const labelOrder = (left.label ?? "")
+          .toLocaleLowerCase()
+          .localeCompare((right.label ?? "").toLocaleLowerCase())
+        if (labelOrder !== 0) return labelOrder * direction
+      }
+      return (
+        left.value.localeCompare(right.value) *
+        (sort === "value" ? direction : 1)
+      )
+    })
+}
+
+function fixtureFacetLabel(
+  bucket: WorkspaceFacetBucket,
+  field: DatasetFacetField | SampleFacetField
+) {
+  if (bucket.value === null) return null
+  if (field === "owner" && bucket.owner) {
+    const fullName = [bucket.owner.first_name, bucket.owner.last_name]
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join(" ")
+    return fullName || bucket.owner.username?.trim() || bucket.value
+  }
+  if (field === "project" && bucket.project) {
+    return (
+      bucket.project.title?.trim() ||
+      bucket.project.project_id.trim() ||
+      bucket.value
+    )
+  }
+  if (field === "instrument" && bucket.instrument) {
+    return (
+      bucket.instrument.instrument_name.trim() ||
+      bucket.instrument.instrument_id?.trim() ||
+      bucket.value
+    )
+  }
+  return bucket.value
 }
 
 function sampleFacetQuery(filters: SampleFacetFilters) {
@@ -380,7 +458,7 @@ function fixtureProjectRows<
   },
 >(
   items: readonly TItem[],
-  input: ProjectScopedInput,
+  input: ProjectFilterInput,
   family: "datasets" | "samples",
   projects: readonly {
     project_id: string
@@ -633,10 +711,14 @@ function fixtureAnchorCursor<TItem extends { unique_id: string }>(
   return `fixture:${String(anchorIndex)}`
 }
 
-type FacetContextInput = ProjectScopedInput & {
-  cursor?: string
-  limit: number
-}
+type FacetContextInput = CollectionFilters &
+  Pick<CollectionQueryOptions, "affiliation"> &
+  ProjectFilterInput & {
+    cursor?: string
+    direction?: SortDirection
+    limit: number
+    sort?: FacetSort
+  }
 
 export async function readWorkspaceSampleFacets(
   input: FacetContextInput & SampleFacetFilters & { field: SampleFacetField },
@@ -679,19 +761,20 @@ export async function readWorkspaceSampleFacets(
   }
 
   const filters = normalizeCollectionFilters(input)
-  const query = normalizeCollectionQueryOptions(input)
   const result = await createCrucibleClient(configuration).GET(
     "/samples/facets",
     {
       params: {
         query: {
-          affiliation: query.affiliation ? [query.affiliation] : undefined,
+          affiliation: input.affiliation ? [input.affiliation] : undefined,
           cursor: input.cursor,
+          direction: input.direction,
           field: input.field,
           limit: input.limit,
           project_mfid: input.projectMfid,
           project_mfid_is_null: input.projectMfidIsNull,
           project_scope: normalizedProjectScope(input),
+          sort: input.sort,
           visibility: filters.visibility,
           ...creationTimeBounds(filters),
           ...sampleFacetQuery(input),
@@ -769,20 +852,21 @@ export async function readWorkspaceDatasetFacets(
   }
 
   const filters = normalizeCollectionFilters(input)
-  const query = normalizeCollectionQueryOptions(input)
   const result = await createCrucibleClient(configuration).GET(
     "/datasets/facets",
     {
       params: {
         query: {
-          affiliation: query.affiliation ? [query.affiliation] : undefined,
+          affiliation: input.affiliation ? [input.affiliation] : undefined,
           cursor: input.cursor,
+          direction: input.direction,
           field: input.field,
           instrument_mfid: instrumentMfid,
           limit: input.limit,
           project_mfid: input.projectMfid,
           project_mfid_is_null: input.projectMfidIsNull,
           project_scope: normalizedProjectScope(input),
+          sort: input.sort,
           visibility: filters.visibility,
           ...creationTimeBounds(filters),
           ...datasetFacetQuery(input),

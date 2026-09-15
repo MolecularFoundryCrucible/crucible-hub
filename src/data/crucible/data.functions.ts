@@ -21,7 +21,11 @@ import {
 } from "./data.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
-import { datasetFacetFieldSchema, sampleFacetFieldSchema } from "./facets"
+import {
+  datasetFacetFieldSchema,
+  facetSortSchema,
+  sampleFacetFieldSchema,
+} from "./facets"
 
 export const projectScopeSchema = z.enum(["all", "assigned", "shared"])
 const nullSelector = z.literal(true).optional()
@@ -187,11 +191,13 @@ const facetPageInputFields = {
   ...collectionFilterFields,
   affiliation: collectionAffiliationSchema.optional(),
   cursor: z.string().min(1).max(4096).optional(),
+  direction: sortDirectionSchema.optional(),
   limit: z.number().int().min(1).max(1000),
   projectMfid: z.string().trim().min(1).max(255).optional(),
   projectMfidIsNull: nullSelector,
   projectScope: projectScopeSchema.optional(),
   scenario: fixtureScenarioSchema.optional(),
+  sort: facetSortSchema.optional(),
 }
 
 export const sampleFacetPageInputSchema = z

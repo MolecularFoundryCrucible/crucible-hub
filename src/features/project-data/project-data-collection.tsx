@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router"
 
 import {
   CollectionGroupControl,
+  CollectionGroupOrderControl,
   CollectionToolbar,
   DatasetCollectionBrowser,
   SampleCollectionBrowser,
@@ -28,7 +29,10 @@ import {
   resolveCollectionBrowse,
   sampleFiltersForGroup,
 } from "@/data/crucible/collection-browse"
-import type { CollectionBrowseSearch } from "@/data/crucible/collection-browse"
+import type {
+  CollectionBrowseSearch,
+  CollectionGroupOrder,
+} from "@/data/crucible/collection-browse"
 import {
   ResourceCreatedCell,
   ResourceOpenCell,
@@ -202,6 +206,7 @@ export function ProjectDataCollection({
 
 type ProjectBrowseState<TField extends string> = {
   field: TField
+  order: CollectionGroupOrder
   selection: FacetSelection
   view: "grouped" | "list"
 }
@@ -263,6 +268,18 @@ function ProjectBrowseFrame({
     })
   }
 
+  function changeGroupOrder(order: CollectionGroupOrder) {
+    void navigate({
+      params: { projectMfid },
+      search: (previous) => ({
+        ...previous,
+        groupOrder: order === "name" ? undefined : order,
+      }),
+      state: {},
+      to: "/projects/$projectMfid",
+    })
+  }
+
   const toolbar = (
     <CollectionToolbar
       actions={
@@ -284,6 +301,18 @@ function ProjectBrowseFrame({
             }
             view={browse.view}
           />
+          {browse.view === "grouped" ? (
+            <CollectionGroupOrderControl
+              disabled={!filters}
+              id={
+                sampleBrowse
+                  ? "project-sample-group-order"
+                  : "project-dataset-group-order"
+              }
+              onChange={changeGroupOrder}
+              order={browse.order}
+            />
+          ) : null}
         </>
       }
       primary={toolbarPrimary}
@@ -308,6 +337,7 @@ function ProjectBrowseFrame({
           <SampleCollectionBrowser
             field={sampleBrowse.field}
             filters={facetFilters}
+            order={sampleBrowse.order}
             onSelect={selectGroup}
             selection={sampleBrowse.selection}
           >
@@ -328,6 +358,7 @@ function ProjectBrowseFrame({
         <DatasetCollectionBrowser
           field={datasetBrowse.field}
           filters={facetFilters}
+          order={datasetBrowse.order}
           onSelect={selectGroup}
           selection={datasetBrowse.selection}
         >

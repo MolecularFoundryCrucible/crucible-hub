@@ -3309,6 +3309,11 @@ export interface components {
         FacetBucket: {
             /** Count */
             count: number;
+            /**
+             * Label
+             * @description Canonical display label. Null only for the null bucket.
+             */
+            label?: string | null;
             /** Value */
             value: string | null;
         };
@@ -3323,6 +3328,11 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /**
+         * FacetSort
+         * @enum {string}
+         */
+        FacetSort: "value" | "label" | "count";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -3399,6 +3409,11 @@ export interface components {
             /** Count */
             count: number;
             instrument: components["schemas"]["InstrumentReferenceRead"] | null;
+            /**
+             * Label
+             * @description Canonical display label. Null only for the null bucket.
+             */
+            label?: string | null;
             /** Value */
             value: string | null;
         };
@@ -3567,6 +3582,11 @@ export interface components {
         OwnerFacetBucket: {
             /** Count */
             count: number;
+            /**
+             * Label
+             * @description Canonical display label. Null only for the null bucket.
+             */
+            label?: string | null;
             owner: components["schemas"]["UserPublicRead"] | null;
             /** Value */
             value: string | null;
@@ -3806,6 +3826,11 @@ export interface components {
         ProjectFacetBucket: {
             /** Count */
             count: number;
+            /**
+             * Label
+             * @description Canonical display label. Null only for the null bucket.
+             */
+            label?: string | null;
             project: components["schemas"]["ProjectReferenceRead"] | null;
             /** Value */
             value: string | null;
@@ -5003,6 +5028,10 @@ export interface operations {
                 modification_time_gte?: string | null;
                 /** @description Inclusive modification-time upper bound. */
                 modification_time_lte?: string | null;
+                /** @description Order buckets by raw value, canonical label, or count. */
+                sort?: components["schemas"]["FacetSort"];
+                /** @description Facet bucket ordering direction. */
+                direction?: components["schemas"]["SortDirection"];
                 /** @description Maximum number of facet buckets to return. */
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous facet page. */
@@ -8497,6 +8526,10 @@ export interface operations {
                 modification_time_gte?: string | null;
                 /** @description Inclusive modification-time upper bound. */
                 modification_time_lte?: string | null;
+                /** @description Order buckets by raw value, canonical label, or count. */
+                sort?: components["schemas"]["FacetSort"];
+                /** @description Facet bucket ordering direction. */
+                direction?: components["schemas"]["SortDirection"];
                 /** @description Maximum number of facet buckets to return. */
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous facet page. */

@@ -15,6 +15,7 @@ import {
 import type {
   DatasetFacetField,
   DatasetFacetFilters,
+  FacetOrdering,
   SampleFacetField,
   SampleFacetFilters,
 } from "./facets"
@@ -40,7 +41,7 @@ export function sampleFacetQueryOptions(
   scope: IdentityScope,
   field: SampleFacetField,
   filters: FacetContext & SampleFacetFilters,
-  options: { excludeField?: boolean } = {}
+  options: { excludeField?: boolean; ordering?: FacetOrdering } = {}
 ) {
   const excludeField = options.excludeField ?? true
   const facetFilters = normalizeSampleFacetFilters(filters)
@@ -50,18 +51,26 @@ export function sampleFacetQueryOptions(
       ? withoutSampleFacetField(field, facetFilters)
       : facetFilters),
   }
+  const ordering = options.ordering ?? { direction: "asc", sort: "label" }
   return infiniteQueryOptions({
     initialPageParam: undefined as string | undefined,
-    queryKey: crucibleKeys.sampleFacets(scope, { field, ...context }),
+    queryKey: crucibleKeys.sampleFacets(scope, {
+      facetDirection: ordering.direction,
+      facetSort: ordering.sort,
+      field,
+      ...context,
+    }),
     queryFn: async ({ pageParam, signal }) =>
       unwrapHubResult(
         await getWorkspaceSampleFacets({
           data: {
             ...context,
             cursor: pageParam,
+            direction: ordering.direction,
             field,
             limit: facetPageLimit,
             scenario: fixtureScenarioFromScope(scope),
+            sort: ordering.sort,
           },
           signal,
         })
@@ -74,7 +83,7 @@ export function datasetFacetQueryOptions(
   scope: IdentityScope,
   field: DatasetFacetField,
   filters: FacetContext & DatasetFacetFilters,
-  options: { excludeField?: boolean } = {}
+  options: { excludeField?: boolean; ordering?: FacetOrdering } = {}
 ) {
   const excludeField = options.excludeField ?? true
   const facetFilters = {
@@ -88,18 +97,26 @@ export function datasetFacetQueryOptions(
       ? withoutDatasetFacetField(field, facetFilters)
       : facetFilters),
   }
+  const ordering = options.ordering ?? { direction: "asc", sort: "label" }
   return infiniteQueryOptions({
     initialPageParam: undefined as string | undefined,
-    queryKey: crucibleKeys.datasetFacets(scope, { field, ...context }),
+    queryKey: crucibleKeys.datasetFacets(scope, {
+      facetDirection: ordering.direction,
+      facetSort: ordering.sort,
+      field,
+      ...context,
+    }),
     queryFn: async ({ pageParam, signal }) =>
       unwrapHubResult(
         await getWorkspaceDatasetFacets({
           data: {
             ...context,
             cursor: pageParam,
+            direction: ordering.direction,
             field,
             limit: facetPageLimit,
             scenario: fixtureScenarioFromScope(scope),
+            sort: ordering.sort,
           },
           signal,
         })
