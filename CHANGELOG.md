@@ -68,6 +68,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Kept the resource inspector open when focus follows an underlying resource link, preventing a newly selected preview from immediately closing.
 - Sibling navigation now omits sequence positions and partial loaded-row counts from its compact control.
 - Kept search-result MFIDs and their copy actions separated at desktop widths.
 - Streamlined Graph and picker copy, renamed the project directory to Your projects, refined semantic role badge colors, and added distinct Created and Updated columns with API-backed Created sorting and filtering where supported.

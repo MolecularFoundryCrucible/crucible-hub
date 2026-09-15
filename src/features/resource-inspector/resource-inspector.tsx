@@ -89,6 +89,10 @@ export function ResourceInspector({
       open={open}
       onOpenChange={(nextOpen, eventDetails) => {
         if (!nextOpen) {
+          if (eventDetails.reason === "focus-out") {
+            eventDetails.cancel()
+            return
+          }
           if (eventDetails.reason === "outside-press") {
             restoreFocus.current = false
             if (isInteractiveOutsideTarget(eventDetails.event.target)) {
