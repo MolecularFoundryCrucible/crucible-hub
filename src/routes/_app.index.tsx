@@ -34,6 +34,12 @@ import type { RecentlyViewedResource } from "@/features/recently-viewed/recently
 
 const homeProjectLimit = 5
 const homeRecentResourceLimit = 5
+const homeRecentResourceQuery = {
+  direction: "desc",
+  includeTotal: false,
+  limit: homeRecentResourceLimit,
+  sort: "created",
+} as const
 
 export const Route = createFileRoute("/_app/")({
   loader: async ({ context, parentMatchPromise }) => {
@@ -44,10 +50,10 @@ export const Route = createFileRoute("/_app/")({
       projectsQueryOptions(source.scope, { limit: homeProjectLimit })
     )
     void context.queryClient.prefetchQuery(
-      samplesQueryOptions(source.scope, { limit: homeRecentResourceLimit })
+      samplesQueryOptions(source.scope, homeRecentResourceQuery)
     )
     void context.queryClient.prefetchQuery(
-      datasetsQueryOptions(source.scope, { limit: homeRecentResourceLimit })
+      datasetsQueryOptions(source.scope, homeRecentResourceQuery)
     )
   },
   component: HomePage,
@@ -60,8 +66,8 @@ function HomePage() {
       queries: [
         accountQueryOptions(scope),
         projectsQueryOptions(scope, { limit: homeProjectLimit }),
-        samplesQueryOptions(scope, { limit: homeRecentResourceLimit }),
-        datasetsQueryOptions(scope, { limit: homeRecentResourceLimit }),
+        samplesQueryOptions(scope, homeRecentResourceQuery),
+        datasetsQueryOptions(scope, homeRecentResourceQuery),
       ],
     })
   const account = accountResult.data
