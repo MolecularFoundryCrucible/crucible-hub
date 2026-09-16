@@ -153,7 +153,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Prevented invalid dataset file or ingestion responses from crashing the Processing page by validating them at the server boundary and keeping failures local to the affected panel.
 - Normalized timezone-aware PostgreSQL timestamps with space separators, microseconds, or compact UTC offsets into the shared browser-local date and time presentation.
 - Standardized resource and access-principal icons with shared semantic colors, including cyan-teal person identity in Direct access, colored navigation icons, and field-specific Summary and Identity icons.
-- Presented account profiles read-first behind an explicit Edit profile action and restored readable Add member action contrast in light and dark project settings.
+- Presented account profiles read-first behind an explicit Edit profile action, standardized Crucible IDs on the shared icon and quick-copy treatment across authenticated and public profiles, and restored readable Add member action contrast in light and dark project settings.
 - Improved compact Data readability, creation validation and discard behavior, graph rendering and controls, visible management actions, field error associations, compact creation access, route titles, and fixture browser coverage for creation and consequential mutations.
 - Restored the visible forward arrow inside Data table full-page actions while preserving their accessible labels, tooltips, and fixed geometry.
 - Kept readable collections and dataset detail available during refresh or file-panel failures, limited Data requests to the selected resource types, and added focused retries.

@@ -6,7 +6,7 @@ import { z } from "zod"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
-import { MfidText } from "@/components/crucible/mfid-text"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
 import {
@@ -196,10 +196,7 @@ export function AccountProfileForm({
                   Crucible ID
                 </dt>
                 <dd className="mt-1">
-                  <MfidText
-                    className="break-all sm:break-normal sm:whitespace-nowrap"
-                    value={account.unique_id}
-                  />
+                  <MfidValue value={account.unique_id} />
                 </dd>
               </div>
             </dl>

@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { MfidText } from "@/components/crucible/mfid-text"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import {
   PersonIdentity,
   personDisplayName,
@@ -125,10 +125,7 @@ function PersonPage() {
             <div className="flex flex-col gap-1 sm:col-span-2">
               <dt className="text-label">Crucible ID</dt>
               <dd>
-                <MfidText
-                  className="break-all text-muted-foreground sm:break-normal sm:whitespace-nowrap"
-                  value={person.unique_id}
-                />
+                <MfidValue value={person.unique_id} />
               </dd>
             </div>
           </dl>

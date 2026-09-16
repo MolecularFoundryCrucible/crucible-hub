@@ -80,7 +80,7 @@ Home presents recently added data plus separate bounded ownership sections for P
 
 ### Account
 
-The application-bar avatar opens the account menu and links to My profile. The profile route presents the authenticated account identity in a read-first view. Edit profile opens first name, last name, email, and username controls backed by the self-service account operation. Email remains private to the authenticated account view and profile mutation.
+The application-bar avatar opens the account menu and links to My profile. The profile route presents the authenticated account identity in a read-first view. Authenticated and public person profiles show the shared icon-labelled Crucible ID with its quick-copy action. Edit profile opens first name, last name, email, and username controls backed by the self-service account operation. Email remains private to the authenticated account view and profile mutation.
 
 ### Project
 
