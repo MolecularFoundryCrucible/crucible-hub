@@ -11,6 +11,7 @@ import {
   AccountIcon,
   CollapseSidebarIcon,
   ExpandSidebarIcon,
+  ServiceAccountIcon,
   ThemeIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
@@ -36,6 +37,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -146,6 +148,36 @@ export function AppShell({
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+            {account?.capabilities.can_manage_service_accounts ? (
+              <SidebarGroup>
+                <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={pathname.startsWith(
+                          "/admin/service-accounts"
+                        )}
+                        tooltip="Service accounts"
+                        render={
+                          <Link
+                            aria-current={
+                              pathname.startsWith("/admin/service-accounts")
+                                ? "page"
+                                : undefined
+                            }
+                            to="/admin/service-accounts"
+                          />
+                        }
+                      >
+                        <ServiceAccountIcon aria-hidden="true" />
+                        <span>Service accounts</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ) : null}
           </SidebarContent>
           <SidebarUtilities
             pathname={pathname}
@@ -163,9 +195,7 @@ export function AppShell({
             />
             <QrScannerAction />
             {account ? (
-              <CreateMenu
-                isServiceAccount={Boolean(account.is_service_account)}
-              />
+              <CreateMenu capabilities={account.capabilities} />
             ) : null}
             <div className="ml-auto border-l pl-3">
               {account ? (

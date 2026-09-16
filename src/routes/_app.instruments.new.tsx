@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_app/instruments/new")({
 function NewInstrumentPage() {
   const scope = useWorkspaceScope()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
-  if (account.is_service_account) {
+  if (!account.capabilities.can_register_instrument) {
     return <Navigate replace search={{ cursor: undefined }} to="/instruments" />
   }
   return <InstrumentRegistrationForm scope={scope} />

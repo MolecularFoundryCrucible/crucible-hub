@@ -36,6 +36,7 @@ export function ResourceSearchCombobox({
   onValueChange,
   query,
   scope,
+  serviceAccountsOnly = false,
   value,
 }: {
   disabled?: boolean
@@ -46,13 +47,23 @@ export function ResourceSearchCombobox({
   onValueChange: (value: WorkspaceSearchResult | undefined) => void
   query: string
   scope: IdentityScope
+  serviceAccountsOnly?: boolean
   value: WorkspaceSearchResult | undefined
 }) {
-  const labels = resourceLabels[kind]
+  const labels =
+    kind === "person" && serviceAccountsOnly
+      ? { plural: "service accounts", singular: "Service account" }
+      : resourceLabels[kind]
   const normalizedQuery = query.trim()
   const debouncedQuery = useDebouncedValue(normalizedQuery, 250)
   const search = useQuery({
-    ...searchQueryOptions(scope, debouncedQuery, [kind]),
+    ...searchQueryOptions(
+      scope,
+      debouncedQuery,
+      [kind],
+      undefined,
+      serviceAccountsOnly
+    ),
     enabled: debouncedQuery.length >= 3,
   })
   const excluded = new Set(excludedIds)

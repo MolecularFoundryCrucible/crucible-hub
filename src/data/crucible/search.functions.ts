@@ -22,6 +22,7 @@ export const searchInputSchema = z.object({
   projectMfid: z.string().trim().min(1).max(255).optional(),
   query: z.string().trim().min(3).max(200),
   scenario: fixtureScenarioSchema.optional(),
+  serviceAccountsOnly: z.boolean().optional(),
 })
 
 export const getWorkspaceSearch = createServerFn({ method: "GET" })

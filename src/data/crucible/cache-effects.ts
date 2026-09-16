@@ -4,6 +4,7 @@ import { crucibleKeys } from "./query-keys"
 import type { IdentityScope } from "./query-keys"
 import type {
   WorkspaceAccount,
+  WorkspacePerson,
   WorkspaceResourceDetail,
 } from "./workspace-source"
 
@@ -13,12 +14,20 @@ export function applyAccountProfileUpdate(
   account: WorkspaceAccount
 ) {
   queryClient.setQueryData(crucibleKeys.accountProfile(scope), account)
-  queryClient.setQueryData(crucibleKeys.person(scope, account.unique_id), {
-    first_name: account.first_name,
-    is_service_account: account.is_service_account,
-    last_name: account.last_name,
-    unique_id: account.unique_id,
-    username: account.username,
+  return applyPersonProfileUpdate(queryClient, scope, account)
+}
+
+export function applyPersonProfileUpdate(
+  queryClient: QueryClient,
+  scope: IdentityScope,
+  person: WorkspacePerson
+) {
+  queryClient.setQueryData(crucibleKeys.person(scope, person.unique_id), {
+    first_name: person.first_name,
+    is_service_account: person.is_service_account,
+    last_name: person.last_name,
+    unique_id: person.unique_id,
+    username: person.username,
   })
 
   return Promise.all([

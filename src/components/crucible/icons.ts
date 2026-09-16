@@ -16,6 +16,8 @@ export {
   ArrowRight as OpenFullPageIcon,
   UserRound as PersonIcon,
   Bot as ServiceAccountIcon,
+  KeyRound as CredentialIcon,
+  RotateCw as RotateCredentialIcon,
   ServerCog as SystemPrincipalIcon,
   CircleHelp as UnknownPrincipalIcon,
   UserPlus as AddMemberIcon,

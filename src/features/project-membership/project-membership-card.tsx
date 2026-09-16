@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import {
@@ -88,7 +88,15 @@ export function ProjectMembershipCard({
   const [memberErrors, setMemberErrors] = useState<Record<string, string>>({})
   const [removingMember, setRemovingMember] = useState<ProjectMember>()
   const capabilities = project.capabilities
-  const roles = permittedRoles(capabilities?.max_grant_role)
+  const roles = useMemo(
+    () => permittedRoles(capabilities?.max_grant_role),
+    [capabilities?.max_grant_role]
+  )
+  const selectedRoles = useMemo(
+    () =>
+      permittedTargetRoles(roles, selectedPerson?.is_service_account === true),
+    [roles, selectedPerson?.is_service_account]
+  )
   const canManage = Boolean(
     members !== null && capabilities?.can_manage_access && roles.length
   )
@@ -103,8 +111,10 @@ export function ProjectMembershipCard({
   }, [project.members])
 
   useEffect(() => {
-    if (!roles.includes(selectedRole)) setSelectedRole(roles[0] ?? "viewer")
-  }, [roles, selectedRole])
+    if (!selectedRoles.includes(selectedRole)) {
+      setSelectedRole(selectedRoles[0] ?? "viewer")
+    }
+  }, [selectedRole, selectedRoles])
 
   function closeAddDialog(nextOpen: boolean) {
     if (!nextOpen && mutationPending) return
@@ -276,12 +286,16 @@ export function ProjectMembershipCard({
         ) : (
           <ul className="flex flex-col gap-3" aria-label="Project members">
             {sortProjectMembers(memberList).map((member) => {
+              const memberRoles = permittedTargetRoles(
+                roles,
+                member.is_service_account === true
+              )
               const canChangeRole =
                 canManage &&
                 editingRoles &&
                 member.role !== "owner" &&
                 isGrantRole(member.role) &&
-                roles.includes(member.role)
+                memberRoles.includes(member.role)
               const canRemove =
                 editingRoles &&
                 Boolean(capabilities?.can_transfer) &&
@@ -306,7 +320,7 @@ export function ProjectMembershipCard({
                           size="sm"
                           value={member.role}
                         >
-                          {roles.map((role) => (
+                          {memberRoles.map((role) => (
                             <NativeSelectOption key={role} value={role}>
                               {roleLabel(role)}
                             </NativeSelectOption>
@@ -397,7 +411,7 @@ export function ProjectMembershipCard({
                 }}
                 value={selectedRole}
               >
-                {roles.map((role) => (
+                {selectedRoles.map((role) => (
                   <NativeSelectOption key={role} value={role}>
                     {roleLabel(role)}
                   </NativeSelectOption>
@@ -472,6 +486,15 @@ function MemberIdentity({ member }: { member: ProjectMember }) {
 function permittedRoles(maxRole: GrantRole | null | undefined): GrantRole[] {
   if (!maxRole) return []
   return grantRoles.slice(0, grantRoles.indexOf(maxRole) + 1)
+}
+
+function permittedTargetRoles(
+  roles: readonly GrantRole[],
+  serviceAccount: boolean
+) {
+  return serviceAccount
+    ? roles.filter((role) => role === "viewer" || role === "contributor")
+    : [...roles]
 }
 
 function isGrantRole(role: string): role is GrantRole {

@@ -110,7 +110,9 @@ function InstrumentsPage() {
 
   return (
     <PageLayout>
-      <InstrumentsPageHeader canRegister={!account.is_service_account} />
+      <InstrumentsPageHeader
+        canRegister={account.capabilities.can_register_instrument}
+      />
       <InstrumentDirectoryNavigation
         affiliation={search.affiliation}
         status={status}
@@ -152,7 +154,7 @@ function InstrumentsRoutePending() {
   return (
     <PageLayout>
       <InstrumentsPageHeader
-        canRegister={account?.is_service_account === false}
+        canRegister={account?.capabilities.can_register_instrument === true}
       />
       <InstrumentDirectoryNavigation
         affiliation={search.affiliation}

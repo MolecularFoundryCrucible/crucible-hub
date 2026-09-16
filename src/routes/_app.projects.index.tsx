@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
@@ -20,6 +20,7 @@ import {
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -83,6 +84,7 @@ export const Route = createFileRoute("/_app/projects/")({
 
 function ProjectsPage() {
   const scope = useWorkspaceScope()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const projectResult = useQuery(
     projectsQueryOptions(scope, {
@@ -95,7 +97,7 @@ function ProjectsPage() {
 
   return (
     <PageLayout>
-      <ProjectsPageHeader />
+      <ProjectsPageHeader canCreate={account.capabilities.can_create_project} />
       <ProjectDirectoryFilters affiliation={search.affiliation} />
       {projectResult.isPending ? (
         <CollectionTablePending label="projects" />
@@ -127,23 +129,29 @@ function ProjectsPage() {
 }
 
 function ProjectsRoutePending() {
+  const scope = useWorkspaceScope()
+  const { data: account } = useQuery(accountQueryOptions(scope))
   return (
     <PageLayout>
-      <ProjectsPageHeader />
+      <ProjectsPageHeader
+        canCreate={account?.capabilities.can_create_project === true}
+      />
       <ProjectDirectoryFilters affiliation={Route.useSearch().affiliation} />
       <CollectionTablePending label="projects" />
     </PageLayout>
   )
 }
 
-function ProjectsPageHeader() {
+function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
   return (
     <PageHeader
       actions={
-        <Link className={buttonVariants()} to="/projects/new">
-          <CreateResourceIcon data-icon="inline-start" />
-          Create project
-        </Link>
+        canCreate ? (
+          <Link className={buttonVariants()} to="/projects/new">
+            <CreateResourceIcon data-icon="inline-start" />
+            Create project
+          </Link>
+        ) : null
       }
       eyebrow="Projects"
       title="Your projects"

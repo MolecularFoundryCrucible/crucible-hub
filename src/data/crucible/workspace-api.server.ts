@@ -69,6 +69,7 @@ export async function readWorkspaceFromApi({
     }
 
     const account = {
+      capabilities: accountResult.data.capabilities,
       email: accountResult.data.email,
       unique_id: accountResult.data.unique_id,
       username: accountResult.data.username,

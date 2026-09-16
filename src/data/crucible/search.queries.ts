@@ -16,7 +16,8 @@ export function searchQueryOptions(
   scope: IdentityScope,
   query: string,
   kinds: readonly WorkspaceSearchKind[],
-  projectMfid?: string
+  projectMfid?: string,
+  serviceAccountsOnly = false
 ) {
   const normalizedKinds = [...kinds].sort()
   const scenario = fixtureScenarioFromScope(scope)
@@ -26,6 +27,7 @@ export function searchQueryOptions(
       limit: searchGroupLimit,
       projectMfid: projectMfid ?? null,
       query,
+      serviceAccountsOnly,
     }),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
@@ -36,6 +38,7 @@ export function searchQueryOptions(
             projectMfid,
             query,
             scenario,
+            serviceAccountsOnly,
           },
           signal,
         })

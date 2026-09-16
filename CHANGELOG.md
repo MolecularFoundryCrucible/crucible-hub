@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added capability-gated service-account administration with a searchable directory, profile editing, non-secret credential status, one-time creation keys, confirmed key rotation, service-account autocomplete for instrument operators, and contributor-bounded project roles.
+
 ### Added
 
 - Added URL-backed sortable group headers for sample and dataset directories, with API-provided canonical facet labels, reversible Name and Count ordering, and count columns that remain visible beside truncated long labels.

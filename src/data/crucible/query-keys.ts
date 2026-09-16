@@ -41,8 +41,26 @@ export const crucibleKeys = {
   sampleQueries: (scope: IdentityScope) => [...scope, "samples"] as const,
   person: (scope: IdentityScope, personId: string) =>
     [...scope, "people", "detail", personId] as const,
-  serviceAccount: (scope: IdentityScope, reference: string) =>
-    [...scope, "people", "service-account", reference] as const,
+  serviceAccountAdminQueries: (scope: IdentityScope) =>
+    [...scope, "admin", "service-accounts"] as const,
+  serviceAccountLists: (scope: IdentityScope) =>
+    [...scope, "admin", "service-accounts", "list"] as const,
+  serviceAccounts: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "admin",
+      "service-accounts",
+      "list",
+      normalizeFilters(filters),
+    ] as const,
+  serviceAccountAdmin: (scope: IdentityScope, serviceAccountMfid: string) =>
+    [
+      ...scope,
+      "admin",
+      "service-accounts",
+      "detail",
+      serviceAccountMfid,
+    ] as const,
   samples: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "samples", "list", normalizeFilters(filters)] as const,
   sampleCursorChain: (scope: IdentityScope, filters: ListFilters) =>

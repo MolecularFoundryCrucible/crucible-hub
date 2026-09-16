@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { Navigate, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { PageHeader } from "@/components/crucible/page-header"
@@ -7,6 +8,7 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import type {
@@ -71,7 +73,12 @@ export const Route = createFileRoute("/_app/datasets/new")({
 function NewDatasetPage() {
   const scope = useWorkspaceScope()
   const mode = useWorkspaceMode()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const loaderData = Route.useLoaderData()
+
+  if (!account.capabilities.can_create_dataset) {
+    return <Navigate replace search={{}} to="/data" />
+  }
 
   return (
     <PageLayout>

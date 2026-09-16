@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { Navigate, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 import { SampleCreationForm } from "@/features/resource-creation/sample-creation-form"
@@ -46,6 +48,10 @@ export const Route = createFileRoute("/_app/samples/new")({
 
 function NewSamplePage() {
   const scope = useWorkspaceScope()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const { initialProject } = Route.useLoaderData()
+  if (!account.capabilities.can_create_sample) {
+    return <Navigate replace search={{}} to="/data" />
+  }
   return <SampleCreationForm initialProject={initialProject} scope={scope} />
 }

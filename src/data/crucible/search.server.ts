@@ -32,6 +32,7 @@ type SearchInput = {
   projectMfid?: string
   query: string
   scenario?: FixtureScenario
+  serviceAccountsOnly?: boolean
 }
 
 type MetadataSearchInput = {
@@ -81,6 +82,7 @@ function fixtureItems(
   if (kind === "person") {
     return workspace.people.map((item) => ({
       context: item.username ? `@${item.username}` : null,
+      is_service_account: item.is_service_account,
       kind,
       name: `${item.first_name} ${item.last_name}`,
       projectId: null,
@@ -145,6 +147,10 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
           )
         : undefined
       const matches = fixtureItems(source.workspace, kind)
+        .filter(
+          (item) =>
+            !input.serviceAccountsOnly || item.is_service_account === true
+        )
         .filter((item) => {
           if (!input.projectMfid) return true
           if (!project || (kind !== "sample" && kind !== "dataset")) {
@@ -290,6 +296,7 @@ function projectResult(project: Schema<"ProjectRead">): WorkspaceSearchResult {
 function personResult(person: Schema<"UserPublicRead">): WorkspaceSearchResult {
   return {
     context: person.username ? `@${person.username}` : null,
+    is_service_account: person.is_service_account,
     kind: "person",
     name: `${person.first_name} ${person.last_name}`,
     projectId: null,
@@ -361,7 +368,13 @@ export async function searchWorkspace(
   const requests = input.kinds.map(async (kind) => {
     if (kind === "person") {
       const result = await client.GET("/users/search", {
-        params: { query: { limit: input.limit, q: input.query } },
+        params: {
+          query: {
+            is_service_account: input.serviceAccountsOnly || undefined,
+            limit: input.limit,
+            q: input.query,
+          },
+        },
         signal,
       })
       if (!result.data) throw new Error("people search failed")

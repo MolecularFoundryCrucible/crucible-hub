@@ -57,7 +57,10 @@ export function PersonIdentity({
   const name = personDisplayName(person, nameStyle)
   const username = normalizedUsername(person.username ?? person.context)
   const isServiceAccount = personIsServiceAccount(person)
-  const secondary = [username, isServiceAccount ? "Service account" : null]
+  const secondary = [
+    name === username ? null : username,
+    isServiceAccount ? "Service account" : null,
+  ]
     .filter(Boolean)
     .join(" · ")
 

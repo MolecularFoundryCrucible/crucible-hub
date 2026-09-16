@@ -60,10 +60,12 @@ export async function patchWorkspaceAccount(
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
   }
-  return toWorkspaceAccount(result.data)
+  const account = await readWorkspaceAccount(scenario, requestSignal)
+  return account
 }
 
 function toWorkspaceAccount(account: {
+  capabilities: WorkspaceAccount["capabilities"]
   email?: string | null
   first_name: string
   is_service_account?: boolean | null
@@ -72,6 +74,7 @@ function toWorkspaceAccount(account: {
   username?: string | null
 }): WorkspaceAccount {
   return {
+    capabilities: account.capabilities,
     email: account.email ?? null,
     first_name: account.first_name,
     is_service_account: account.is_service_account ?? false,

@@ -11,7 +11,8 @@ export type WorkspacePerson = Pick<
 
 export type WorkspaceAccount = Omit<
   Pick<
-    Schema<"UserRead">,
+    Schema<"AccountProfileRead">,
+    | "capabilities"
     | "email"
     | "first_name"
     | "is_service_account"
@@ -475,10 +476,31 @@ export type WorkspaceSearchKind =
 
 export type WorkspaceSearchResult = {
   context: string | null
+  is_service_account?: boolean | null
   kind: WorkspaceSearchKind
   name: string
   projectId?: string | null
   unique_id: string
+}
+
+export type WorkspaceServiceAccount = Schema<"ServiceAccountAdminRead">
+
+export type WorkspaceServiceAccountDetail = Schema<"ServiceAccountAdminDetail">
+
+export type WorkspaceServiceAccountCredential = Schema<"ServiceAccountRead">
+
+export type WorkspaceServiceAccountProfileUpdate = {
+  email?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  username?: string
+}
+
+export type WorkspaceServiceAccountPage = {
+  items: readonly WorkspaceServiceAccount[]
+  limit: number
+  offset: number
+  total: number | null
 }
 
 export type WorkspaceSearchGroup = {

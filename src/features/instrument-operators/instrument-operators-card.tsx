@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
@@ -8,12 +8,10 @@ import {
   SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
-import {
-  PersonIdentity,
-  personDisplayName,
-} from "@/components/crucible/person-identity"
+import { personDisplayName } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
+import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,13 +23,10 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import {
   Tooltip,
   TooltipContent,
@@ -42,13 +37,13 @@ import {
   removeWorkspaceInstrumentOperator,
 } from "@/data/crucible/instruments.functions"
 import { instrumentOperatorsQueryOptions } from "@/data/crucible/instruments.queries"
-import { lookupServiceAccountQueryOptions } from "@/data/crucible/people.queries"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceInstrumentOperator,
   WorkspaceResourceDetail,
+  WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
@@ -75,11 +70,12 @@ export function InstrumentOperatorsCard({
   scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
+  const searchInputId = useId()
   const canManage = instrument.capabilities?.can_manage_access === true
   const [managing, setManaging] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
-  const [reference, setReference] = useState("")
-  const [submittedReference, setSubmittedReference] = useState<string>()
+  const [query, setQuery] = useState("")
+  const [candidate, setCandidate] = useState<WorkspaceSearchResult>()
   const [removingOperator, setRemovingOperator] =
     useState<WorkspaceInstrumentOperator>()
   const [error, setError] = useState<string>()
@@ -88,11 +84,6 @@ export function InstrumentOperatorsCard({
   const operatorsQuery = useQuery({
     ...instrumentOperatorsQueryOptions(scope, instrument.unique_id),
     enabled: canManage,
-  })
-  const lookupQuery = useQuery({
-    ...lookupServiceAccountQueryOptions(scope, submittedReference ?? ""),
-    enabled: canManage && submittedReference !== undefined,
-    retry: false,
   })
   const addMutation = useMutation({
     mutationFn: async (serviceAccountId: string) =>
@@ -120,10 +111,6 @@ export function InstrumentOperatorsCard({
   })
 
   const operators = operatorsQuery.data ?? []
-  const candidate = lookupQuery.data
-  const candidateIsOperator = candidate
-    ? operators.some((operator) => operator.unique_id === candidate.unique_id)
-    : false
   const mutationPending = addMutation.isPending || removeMutation.isPending
 
   function replaceOperators(nextOperators: WorkspaceInstrumentOperator[]) {
@@ -137,33 +124,21 @@ export function InstrumentOperatorsCard({
     if (!open && mutationPending) return
     setAddOpen(open)
     if (!open) {
-      setReference("")
-      setSubmittedReference(undefined)
+      setQuery("")
+      setCandidate(undefined)
       setError(undefined)
     }
   }
 
   function resetAddDialog() {
     setAddOpen(false)
-    setReference("")
-    setSubmittedReference(undefined)
+    setQuery("")
+    setCandidate(undefined)
     setError(undefined)
-  }
-
-  function resolveCandidate() {
-    const nextReference = reference.trim()
-    setError(undefined)
-    if (!nextReference) {
-      setSubmittedReference(undefined)
-      setError("Enter an exact username or service-account MFID.")
-      return
-    }
-    setSubmittedReference(nextReference)
   }
 
   async function addOperator() {
-    if (!canManage || !candidate || candidateIsOperator || mutationPending)
-      return
+    if (!canManage || !candidate || mutationPending) return
     setError(undefined)
     try {
       const nextOperators = await addMutation.mutateAsync(candidate.unique_id)
@@ -326,57 +301,23 @@ export function InstrumentOperatorsCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add operator</DialogTitle>
-            <DialogDescription>
-              Resolve an exact service-account username or MFID before assigning
-              it to this instrument.
-            </DialogDescription>
           </DialogHeader>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              resolveCandidate()
+          <ResourceSearchCombobox
+            disabled={mutationPending}
+            excludedIds={operators.map((operator) => operator.unique_id)}
+            id={searchInputId}
+            kind="person"
+            onQueryChange={(nextQuery) => {
+              setQuery(nextQuery)
+              setError(undefined)
             }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="service-account-reference">
-                  Username or MFID
-                </FieldLabel>
-                <Input
-                  autoComplete="off"
-                  id="service-account-reference"
-                  onChange={(event) => {
-                    setReference(event.target.value)
-                    setSubmittedReference(undefined)
-                    setError(undefined)
-                  }}
-                  placeholder="Exact username or MFID"
-                  type="search"
-                  value={reference}
-                />
-              </Field>
-            </FieldGroup>
-            {submittedReference !== undefined && lookupQuery.isPending ? (
-              <p className="mt-4 text-body text-muted-foreground" role="status">
-                Resolving service account…
-              </p>
-            ) : lookupQuery.isError ? (
-              <p className="mt-4 text-body text-destructive" role="alert">
-                Service account could not be resolved.
-              </p>
-            ) : candidate ? (
-              <div className="mt-4 rounded-md border p-3">
-                <PersonIdentity
-                  person={{ ...candidate, is_service_account: true }}
-                  presentation="stacked"
-                />
-                {candidateIsOperator ? (
-                  <p className="mt-2 text-supporting text-muted-foreground">
-                    Already an operator.
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
+            onValueChange={setCandidate}
+            query={query}
+            scope={scope}
+            serviceAccountsOnly
+            value={candidate}
+          />
+          <div>
             {error && addOpen ? (
               <p className="mt-4 text-body text-destructive" role="alert">
                 {error}
@@ -384,50 +325,29 @@ export function InstrumentOperatorsCard({
             ) : null}
             <DialogFooter className="mt-6">
               <Button
-                disabled={mutationPending || lookupQuery.isPending}
+                disabled={mutationPending}
                 onClick={() => openAddDialog(false)}
                 type="button"
                 variant="outline"
               >
                 Cancel
               </Button>
-              {candidate ? (
-                <Button
-                  disabled={mutationPending || candidateIsOperator}
-                  onClick={() => void addOperator()}
-                  type="button"
-                >
-                  {addMutation.isPending ? (
-                    <SavingChangesIcon
-                      aria-hidden="true"
-                      className="motion-safe:animate-spin"
-                      data-icon="inline-start"
-                    />
-                  ) : (
-                    <AddMemberIcon data-icon="inline-start" />
-                  )}
-                  Add operator
-                </Button>
-              ) : (
-                <Button
-                  disabled={mutationPending || lookupQuery.isPending}
-                  onClick={resolveCandidate}
-                  type="submit"
-                >
+              <Button
+                disabled={!candidate || mutationPending}
+                onClick={() => void addOperator()}
+                type="button"
+              >
+                {addMutation.isPending ? (
                   <SavingChangesIcon
                     aria-hidden="true"
-                    className={
-                      lookupQuery.isPending
-                        ? "motion-safe:animate-spin"
-                        : "invisible"
-                    }
+                    className="motion-safe:animate-spin"
                     data-icon="inline-start"
                   />
-                  Resolve
-                </Button>
-              )}
+                ) : null}
+                Add operator
+              </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 

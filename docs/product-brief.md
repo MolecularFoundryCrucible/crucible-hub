@@ -29,12 +29,12 @@ Hub uses stable MFIDs for routes, links, cache identity, and relationships. Edit
 
 ## Users and jobs
 
-| User                   | Primary jobs                                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Researcher             | Find resources, inspect data and provenance, create records, upload files, edit allowed metadata, and recover from incomplete work.        |
-| Project manager        | Understand project data, manage direct members and roles, review future join requests, organize resources, and manage authorized access.   |
-| Instrument manager     | Maintain instrument identity and lifecycle, manage operators, and inspect produced datasets.                                               |
-| Platform administrator | Handle exceptional review and account workflows in a separate administrative area. This is not required for the first user-facing release. |
+| User                   | Primary jobs                                                                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Researcher             | Find resources, inspect data and provenance, create records, upload files, edit allowed metadata, and recover from incomplete work.      |
+| Project manager        | Understand project data, manage direct members and roles, review future join requests, organize resources, and manage authorized access. |
+| Instrument manager     | Maintain instrument identity and lifecycle, manage operators, and inspect produced datasets.                                             |
+| Platform administrator | Manage service-account identity and credentials in a separate capability-gated administrative area.                                      |
 
 ## Product destinations
 
@@ -48,6 +48,7 @@ The core product surfaces are:
 - Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, access, activity, and lifecycle-aware actions.
 - Search, scientific metadata search, direct MFID lookup, and local QR scanning for bounded cross-resource discovery, with project-scoped sample and dataset search available from an active project.
 - Account for reviewing and updating the authenticated person's own name, email, and username from the application-bar profile menu.
+- Administration for capability-gated service-account discovery, creation, profile maintenance, credential status, and credential rotation.
 
 Accessible and owned resources are distinct sets. Hub must not invent a personal-project model or emulate unavailable server-side filtering with incomplete client-side scans.
 
@@ -74,6 +75,8 @@ Relationship management is a separate resource workflow. Canonical sample and da
 Resource management is a separate canonical workflow at `/samples/:sampleMfid/manage` and `/datasets/:datasetMfid/manage`. It provides a persistent resource header with Overview, Graph, and Manage navigation, loads ACL data only on Manage entry, and presents access controls when the exact `can_manage_access` capability allows them. Public controls, bounded user or project grants, atomic primary-project assignment, dataset acquisition-instrument assignment, ownership transfer, and reviewed deletion requests remain distinct actions within Manage and are explicitly confirmed where consequential. Owner, service-account, instrument, system, and unknown grants remain read-only. Management mutations are server-confirmed and never optimistic.
 
 Project and instrument Manage pages use the same unified card structure without nested navigation. Access management contains project members or instrument operators. Resource management contains project ownership and leaving, or instrument lifecycle and ownership. Each section and action remains gated by its exact API capability.
+
+Platform administrators manage service accounts in a separate Administration destination. The directory is searched and paginated by the API. Creation and credential rotation show each new key once in mutation-local memory and never store it in Query state, URLs, or browser persistence. Profile editing is read-first, credential rotation requires explicit confirmation, and unavailable lifecycle actions such as suspension and deletion are not invented by the Hub. Instrument operator and project member assignment remain contextual workflows on those resources and use the shared service-account-aware identity search.
 
 ## Delivery direction
 

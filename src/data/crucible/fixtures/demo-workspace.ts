@@ -6,7 +6,7 @@ type Schema<TSchemaName extends keyof components["schemas"]> =
 type DemoWorkspaceContract = {
   id: "operando-catalyst-study"
   referenceTime: string
-  account: Schema<"UserRead">
+  account: Schema<"AccountProfileRead">
   people: readonly Schema<"UserPublicRead">[]
   projects: readonly (
     | Schema<"ProjectWithLead">
@@ -21,13 +21,21 @@ type DemoWorkspaceContract = {
 }
 
 const account = {
+  capabilities: {
+    can_create_dataset: true,
+    can_create_for_others: true,
+    can_create_project: true,
+    can_create_sample: true,
+    can_manage_service_accounts: true,
+    can_register_instrument: true,
+  },
   unique_id: "0000-0000-0000-000X",
   username: "avery.chen",
   first_name: "Avery",
   last_name: "Chen",
   email: "avery.chen@example.invalid",
   is_service_account: false,
-} satisfies Schema<"UserRead">
+} satisfies Schema<"AccountProfileRead">
 
 const collaborator = {
   unique_id: "0000-0000-0000-0018",
@@ -43,6 +51,14 @@ const prospectiveMember = {
   first_name: "Jamie",
   is_service_account: false,
   last_name: "Patel",
+} satisfies Schema<"UserPublicRead">
+
+const serviceAccount = {
+  unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2ZA",
+  username: "beamline-collector",
+  first_name: "Beamline",
+  is_service_account: true,
+  last_name: "Collector",
 } satisfies Schema<"UserPublicRead">
 
 const projectReference = {
@@ -102,7 +118,7 @@ export const demoWorkspace = {
   id: "operando-catalyst-study",
   referenceTime: "2026-09-01T16:00:00Z",
   account,
-  people: [account, collaborator, prospectiveMember],
+  people: [account, collaborator, prospectiveMember, serviceAccount],
   projects: [
     {
       ...projectReference,
@@ -131,14 +147,7 @@ export const demoWorkspace = {
           is_service_account: false,
           role: "editor",
         },
-        {
-          unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2ZA",
-          username: "beamline-collector",
-          first_name: "Beamline",
-          last_name: "Collector",
-          is_service_account: true,
-          role: "contributor",
-        },
+        { ...serviceAccount, role: "contributor" },
       ],
     },
     {

@@ -18,6 +18,13 @@ const localDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 })
 
+const calendarDateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+  year: "numeric",
+})
+
 function timestampDate(value: string) {
   const match = timestampPattern.exec(value)
   if (!match) return null
@@ -45,6 +52,10 @@ function formatStandardLocalDateTime(value: string) {
 
 export function formatDate(value: string | null | undefined) {
   if (!value) return "Unknown"
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T00:00:00Z`)
+    if (!Number.isNaN(date.getTime())) return calendarDateFormatter.format(date)
+  }
   return formatStandardLocalDateTime(value)
 }
 
