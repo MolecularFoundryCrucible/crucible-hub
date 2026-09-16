@@ -1,7 +1,10 @@
+import { MfidText } from "@/components/crucible/mfid-text"
+import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
 type PersonIdentityPresentation = "avatar" | "inline" | "stacked"
+type PersonIdentityVariant = PersonIdentityPresentation | "tooltip"
 type PersonNameStyle = "abbreviated" | "full"
 type PersonIdentitySize = "default" | "lg" | "sm"
 
@@ -51,7 +54,7 @@ export function PersonIdentity({
   interactive?: boolean
   nameStyle?: PersonNameStyle
   person: PersonIdentityProfile
-  presentation?: PersonIdentityPresentation
+  presentation?: PersonIdentityVariant
   size?: PersonIdentitySize
 }) {
   const name = personDisplayName(person, nameStyle)
@@ -74,6 +77,46 @@ export function PersonIdentity({
         )}
       >
         {name}
+      </span>
+    )
+  }
+
+  const avatar = (
+    <Avatar size={size}>
+      <AvatarFallback
+        className={cn(
+          "ring-2",
+          isServiceAccount
+            ? "bg-muted text-foreground ring-(--resource-service-account)"
+            : "bg-muted text-foreground ring-(--resource-person)"
+        )}
+        data-account-type={isServiceAccount ? "service-account" : "person"}
+      >
+        {personInitials(person)}
+      </AvatarFallback>
+    </Avatar>
+  )
+
+  if (presentation === "tooltip") {
+    return (
+      <span className={cn("flex min-w-0 items-start gap-3", className)}>
+        {avatar}
+        <span className="grid min-w-0 text-left">
+          <span className="truncate text-label">{name}</span>
+          <span className="flex min-w-0 items-center gap-1 text-supporting text-muted-foreground">
+            <span className="truncate">{username || "No username"}</span>
+            <span aria-hidden="true">·</span>
+            <PrincipalTypeIcon
+              className="size-3.5"
+              label={isServiceAccount ? "Service account" : "Person"}
+              type={isServiceAccount ? "service_account" : "user"}
+            />
+          </span>
+          <MfidText
+            className="mt-1 block whitespace-nowrap text-muted-foreground"
+            value={person.unique_id}
+          />
+        </span>
       </span>
     )
   }
@@ -107,19 +150,7 @@ export function PersonIdentity({
         className
       )}
     >
-      <Avatar size={size}>
-        <AvatarFallback
-          className={cn(
-            "ring-2",
-            isServiceAccount
-              ? "bg-muted text-foreground ring-(--resource-service-account)"
-              : "bg-muted text-foreground ring-(--resource-person)"
-          )}
-          data-account-type={isServiceAccount ? "service-account" : "person"}
-        >
-          {personInitials(person)}
-        </AvatarFallback>
-      </Avatar>
+      {avatar}
       {details}
     </span>
   )

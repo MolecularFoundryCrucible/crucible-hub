@@ -27,7 +27,6 @@ export const serviceAccountPlatformRoleSchema = z.enum([
   "admin",
 ])
 const optionalProfileTextSchema = z.string().trim().max(255).nullable()
-const optionalEmailSchema = z.string().trim().email().max(320).nullable()
 
 export const serviceAccountListInputSchema = z
   .object({
@@ -57,7 +56,6 @@ export const serviceAccountUpdateInputSchema = z
   .object({
     changes: z
       .object({
-        email: optionalEmailSchema.optional(),
         first_name: optionalProfileTextSchema.optional(),
         last_name: optionalProfileTextSchema.optional(),
         username: serviceAccountUsernameSchema.optional(),

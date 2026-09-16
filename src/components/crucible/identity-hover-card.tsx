@@ -16,7 +16,9 @@ export function IdentityHoverCard({
   return (
     <HoverCard>
       <HoverCardTrigger render={trigger} />
-      <HoverCardContent>{children}</HoverCardContent>
+      <HoverCardContent className="w-(--spacing-identity-preview)">
+        {children}
+      </HoverCardContent>
     </HoverCard>
   )
 }

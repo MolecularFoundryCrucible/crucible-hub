@@ -6,7 +6,6 @@ import {
   personDisplayName,
   personIsServiceAccount,
 } from "@/components/crucible/person-identity"
-import { MfidText } from "@/components/crucible/mfid-text"
 import type {
   PersonIdentityPresentation,
   PersonIdentityProfile,
@@ -56,11 +55,7 @@ export function PersonLink({
 
   return (
     <IdentityHoverCard trigger={link}>
-      <PersonIdentity person={person} presentation="avatar" />
-      <MfidText
-        className="mt-2 block whitespace-nowrap text-muted-foreground"
-        value={person.unique_id}
-      />
+      <PersonIdentity person={person} presentation="tooltip" />
     </IdentityHoverCard>
   )
 }
