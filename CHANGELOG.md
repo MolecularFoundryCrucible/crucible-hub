@@ -70,6 +70,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Removed obsolete workspace collection hydration and unused transitional cache state so routes hydrate only query entries they can consume.
 - Global Data now switches directly between separate API-backed Samples and Datasets collections and defaults to Samples, removing the weaker combined All mode that could not support equivalent filtering, sorting, grouping, or pagination.
 - Home now separates Projects you lead from active Instruments you manage, and project and instrument directories use visible, route-backed All and ownership scope controls without requesting undisplayed totals.
 - Recently added data on Home now uses API-backed newest-creation ordering across samples and datasets.
@@ -143,6 +144,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Fixed
 
+- Prevented terminal API errors from being retried and bounded retry timing for transient and rate-limited requests.
 - Prevented desktop resource-preview dismissal from racing an underlying link or control navigation, and removed redundant detail requests from preview-link hover and focus.
 - Prevented invalid dataset file or ingestion responses from crashing the Processing page by validating them at the server boundary and keeping failures local to the affected panel.
 - Normalized timezone-aware PostgreSQL timestamps with space separators, microseconds, or compact UTC offsets into the shared browser-local date and time presentation.

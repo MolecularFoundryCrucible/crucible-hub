@@ -37,15 +37,6 @@ describe("Crucible query keys", () => {
     )
   })
 
-  it("scopes the transitional workspace representation by identity", () => {
-    const first = identityScope("staging", "user-a")
-    const second = identityScope("staging", "user-b")
-
-    expect(crucibleKeys.workspace(first)).not.toEqual(
-      crucibleKeys.workspace(second)
-    )
-  })
-
   it("keeps sample and dataset cursor chains independent", () => {
     const scope = identityScope("staging", "user-a")
 

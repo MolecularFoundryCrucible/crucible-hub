@@ -1,6 +1,8 @@
 import { QueryClient } from "@tanstack/react-query"
 import type { Query } from "@tanstack/react-query"
 
+import { HubApiClientError } from "@/data/crucible/result"
+
 const dehydratedQueryFamilies = new Set([
   "account",
   "datasets",
@@ -9,8 +11,27 @@ const dehydratedQueryFamilies = new Set([
   "projects",
   "resources",
   "samples",
-  "workspace",
 ])
+
+const maximumRetryCount = 2
+const maximumRetryDelay = 30_000
+
+export function shouldRetryQuery(failureCount: number, error: unknown) {
+  if (error instanceof HubApiClientError && !error.details.retryable) {
+    return false
+  }
+  return failureCount < maximumRetryCount
+}
+
+export function queryRetryDelay(attemptIndex: number, error: unknown) {
+  if (
+    error instanceof HubApiClientError &&
+    error.details.retryAfterSeconds !== undefined
+  ) {
+    return Math.min(error.details.retryAfterSeconds * 1_000, maximumRetryDelay)
+  }
+  return Math.min(1_000 * 2 ** attemptIndex, maximumRetryDelay)
+}
 
 export function shouldDehydrateCrucibleQuery(query: Query) {
   const [namespace, serverId, accountMfid, family] = query.queryKey
@@ -34,6 +55,8 @@ export function createQueryClient() {
         staleTime: 30_000,
         gcTime: 5 * 60_000,
         refetchOnWindowFocus: false,
+        retry: shouldRetryQuery,
+        retryDelay: queryRetryDelay,
       },
       dehydrate: {
         shouldDehydrateQuery: shouldDehydrateCrucibleQuery,

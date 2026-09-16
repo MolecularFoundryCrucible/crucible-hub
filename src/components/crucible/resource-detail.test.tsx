@@ -51,7 +51,7 @@ function renderFiles() {
   })
   render(
     <QueryClientProvider client={queryClient}>
-      <WorkspaceProvider mode="fixture" scope={scope} workspace={demoWorkspace}>
+      <WorkspaceProvider mode="fixture" scope={scope}>
         <DatasetFiles datasetMfid={datasetMfid} />
       </WorkspaceProvider>
     </QueryClientProvider>
@@ -321,11 +321,7 @@ describe("DatasetFiles", () => {
       .spyOn(HTMLAnchorElement.prototype, "click")
       .mockImplementation(() => {})
     const view = (activeScope: typeof scope) => (
-      <WorkspaceProvider
-        mode="fixture"
-        scope={activeScope}
-        workspace={demoWorkspace}
-      >
+      <WorkspaceProvider mode="fixture" scope={activeScope}>
         <FilesTable files={[file]} />
       </WorkspaceProvider>
     )
@@ -370,11 +366,7 @@ describe("DatasetFiles", () => {
       data: { status: "unavailable" },
     })
     const view = (activeScope: typeof scope) => (
-      <WorkspaceProvider
-        mode="fixture"
-        scope={activeScope}
-        workspace={demoWorkspace}
-      >
+      <WorkspaceProvider mode="fixture" scope={activeScope}>
         <FilesTable files={[file]} />
       </WorkspaceProvider>
     )

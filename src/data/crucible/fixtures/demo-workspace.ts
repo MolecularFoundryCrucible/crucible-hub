@@ -355,5 +355,3 @@ export const demoWorkspace = {
     },
   ],
 } satisfies DemoWorkspaceContract
-
-export type DemoWorkspace = typeof demoWorkspace

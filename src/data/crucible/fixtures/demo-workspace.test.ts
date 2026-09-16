@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import { demoWorkspace } from "./demo-workspace"
-import { workspaceContent } from "../workspace-source"
 
 describe("demoWorkspace", () => {
   it("keeps project and instrument references coherent", () => {
@@ -58,12 +57,5 @@ describe("demoWorkspace", () => {
         expect(resourceMfids.has(link.unique_id)).toBe(true)
       }
     }
-  })
-
-  it("keeps account and projects out of the transitional workspace cache", () => {
-    const content = workspaceContent(demoWorkspace)
-
-    expect(content).not.toHaveProperty("account")
-    expect(content).not.toHaveProperty("projects")
   })
 })

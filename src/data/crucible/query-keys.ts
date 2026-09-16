@@ -27,7 +27,6 @@ export function identityScope(
 }
 
 export const crucibleKeys = {
-  workspace: (scope: IdentityScope) => [...scope, "workspace"] as const,
   accountProfile: (scope: IdentityScope) =>
     [...scope, "account", "profile"] as const,
   projects: (scope: IdentityScope, filters: ListFilters) =>

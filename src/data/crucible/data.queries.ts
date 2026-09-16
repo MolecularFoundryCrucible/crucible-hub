@@ -150,36 +150,6 @@ function collectionScopedPreviousData<TData>(
     : undefined
 }
 
-export function datasetInstrumentScopedPreviousData<TData>(
-  scope: IdentityScope,
-  instrumentMfid: string | undefined,
-  previousData: TData | undefined,
-  previousQuery: { queryKey: readonly unknown[] } | undefined,
-  projectMfid?: string,
-  projectScope?: ProjectScope,
-  collectionFilters: CollectionFilters = {},
-  collectionQuery: CollectionQueryOptions & DatasetFacetFilters = {},
-  projectMfidIsNull?: true
-) {
-  const normalizedCollectionFilters =
-    normalizeCollectionFilters(collectionFilters)
-  return collectionScopedPreviousData(
-    scope,
-    "datasets",
-    {
-      instrumentMfid,
-      projectMfid,
-      projectMfidIsNull,
-      projectScope,
-      ...normalizedCollectionFilters,
-      ...normalizeCollectionQueryOptions(collectionQuery),
-      ...normalizeDatasetFacetFilters(collectionQuery),
-    },
-    previousData,
-    previousQuery
-  )
-}
-
 function normalizeInstrumentMfid(instrumentMfid: string | undefined) {
   if (instrumentMfid === undefined) return undefined
   const normalized = instrumentMfid.trim()

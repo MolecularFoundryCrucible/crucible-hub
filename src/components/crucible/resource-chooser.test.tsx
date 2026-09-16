@@ -11,7 +11,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
 import type { ResourceChooserKind } from "@/components/crucible/resource-chooser"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
-import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
 import { identityScope } from "@/data/crucible/query-keys"
 import { getWorkspaceSearch } from "@/data/crucible/search.functions"
 import type {
@@ -60,7 +59,7 @@ function renderChooser(
   const onChange = vi.fn()
   render(
     <QueryClientProvider client={queryClient}>
-      <WorkspaceProvider mode="fixture" scope={scope} workspace={demoWorkspace}>
+      <WorkspaceProvider mode="fixture" scope={scope}>
         <ResourceChooser
           kind="instrument"
           onChange={onChange}

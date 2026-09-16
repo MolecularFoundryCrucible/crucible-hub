@@ -10,19 +10,13 @@ import { AppShell } from "@/components/crucible/app-shell"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { dataPageLimit } from "@/data/crucible/data.queries"
 import {
   defaultFixtureScenario,
   fixtureScenarioSchema,
   fixtureServerId,
 } from "@/data/crucible/fixture-scenarios"
-import { instrumentPageLimit } from "@/data/crucible/instruments.queries"
-import { fixtureResourcePageLimit } from "@/data/crucible/pagination"
-import { projectPageLimit } from "@/data/crucible/projects.queries"
 import { crucibleKeys, identityScope } from "@/data/crucible/query-keys"
 import { getWorkspace } from "@/data/crucible/workspace.functions"
-import { workspaceQueryOptions } from "@/data/crucible/workspace.queries"
-import { workspaceContent } from "@/data/crucible/workspace-source"
 
 export const Route = createFileRoute("/_app")({
   validateSearch: z.object({
@@ -44,71 +38,11 @@ export const Route = createFileRoute("/_app")({
       source.mode === "fixture" ? fixtureServerId(scenario) : "crucible-hosted",
       source.workspace.account.unique_id
     )
-    const { account, instruments, projects } = source.workspace
+    const { account } = source.workspace
     context.queryClient.setQueryData(
       crucibleKeys.accountProfile(scope),
       account
     )
-    context.queryClient.setQueryData(
-      crucibleKeys.workspace(scope),
-      workspaceContent(source.workspace)
-    )
-    if (source.mode === "fixture") {
-      const resourcePageLimit = Math.min(
-        dataPageLimit,
-        fixtureResourcePageLimit
-      )
-      context.queryClient.setQueryData(
-        crucibleKeys.projects(scope, { limit: projectPageLimit, offset: 0 }),
-        {
-          items: projects.slice(0, projectPageLimit),
-          limit: projectPageLimit,
-          offset: 0,
-          total: projects.length,
-        }
-      )
-      if (scenario !== "degraded") {
-        context.queryClient.setQueryData(
-          crucibleKeys.instruments(scope, {
-            limit: instrumentPageLimit,
-            offset: 0,
-            status: "active",
-          }),
-          {
-            items: instruments.slice(0, instrumentPageLimit),
-            limit: instrumentPageLimit,
-            offset: 0,
-            total: instruments.length,
-          }
-        )
-      }
-      context.queryClient.setQueryData(
-        crucibleKeys.samples(scope, { cursor: null, limit: dataPageLimit }),
-        {
-          items: source.workspace.samples.slice(0, resourcePageLimit),
-          limit: resourcePageLimit,
-          nextCursor:
-            source.workspace.samples.length > resourcePageLimit
-              ? `fixture:${resourcePageLimit}`
-              : null,
-          total: source.workspace.samples.length,
-        }
-      )
-      if (scenario !== "partial") {
-        context.queryClient.setQueryData(
-          crucibleKeys.datasets(scope, { cursor: null, limit: dataPageLimit }),
-          {
-            items: source.workspace.datasets.slice(0, resourcePageLimit),
-            limit: resourcePageLimit,
-            nextCursor:
-              source.workspace.datasets.length > resourcePageLimit
-                ? `fixture:${resourcePageLimit}`
-                : null,
-            total: source.workspace.datasets.length,
-          }
-        )
-      }
-    }
 
     return { status: "ready" as const, mode: source.mode, scope }
   },
@@ -144,11 +78,10 @@ function ReadyWorkspace({
   mode: "api" | "fixture"
   scope: ReturnType<typeof identityScope>
 }) {
-  const { data: workspace } = useSuspenseQuery(workspaceQueryOptions(scope))
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
 
   return (
-    <WorkspaceProvider mode={mode} scope={scope} workspace={workspace}>
+    <WorkspaceProvider mode={mode} scope={scope}>
       <AppShell account={account} scope={scope}>
         <Outlet />
       </AppShell>

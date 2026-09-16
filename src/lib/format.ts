@@ -101,7 +101,3 @@ export function localDateTimeToUtc(value: string) {
   }
   return new Date(value).toISOString()
 }
-
-export function initials(firstName: string, lastName: string) {
-  return `${firstName.at(0) ?? ""}${lastName.at(0) ?? ""}`.toUpperCase()
-}

@@ -459,22 +459,6 @@ export type Workspace = {
   files: readonly Schema<"AssociatedFileRead">[]
 }
 
-export type WorkspaceContent = Omit<
-  Workspace,
-  "account" | "files" | "instruments" | "projects"
->
-
-export function workspaceContent(workspace: Workspace): WorkspaceContent {
-  const {
-    account: _account,
-    files: _files,
-    instruments: _instruments,
-    projects: _projects,
-    ...content
-  } = workspace
-  return content
-}
-
 export type WorkspaceCursorPage<TItem> = {
   items: readonly TItem[]
   limit: number

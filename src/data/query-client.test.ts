@@ -2,7 +2,12 @@ import { dehydrate, hydrate } from "@tanstack/react-query"
 import { describe, expect, it } from "vitest"
 
 import { crucibleKeys, identityScope } from "./crucible/query-keys"
-import { createQueryClient } from "./query-client"
+import { HubApiClientError } from "./crucible/result"
+import {
+  createQueryClient,
+  queryRetryDelay,
+  shouldRetryQuery,
+} from "./query-client"
 
 describe("Crucible Query client", () => {
   it("dehydrates and hydrates only successful identity-scoped queries", async () => {
@@ -82,5 +87,31 @@ describe("Crucible Query client", () => {
       name: "Authoritative detail",
       scientific_metadata: { edge: "Fe K" },
     })
+  })
+
+  it("does not retry terminal API errors", () => {
+    const error = new HubApiClientError({
+      correlationId: "correlation-id",
+      kind: "not-found",
+      message: "The resource was not found.",
+      retryable: false,
+    })
+
+    expect(shouldRetryQuery(0, error)).toBe(false)
+    expect(shouldRetryQuery(1, new Error("Network error"))).toBe(true)
+    expect(shouldRetryQuery(2, new Error("Network error"))).toBe(false)
+  })
+
+  it("honors bounded API retry timing", () => {
+    const error = new HubApiClientError({
+      correlationId: "correlation-id",
+      kind: "rate-limited",
+      message: "Try again shortly.",
+      retryAfterSeconds: 60,
+      retryable: true,
+    })
+
+    expect(queryRetryDelay(0, error)).toBe(30_000)
+    expect(queryRetryDelay(2, new Error("Network error"))).toBe(4_000)
   })
 })
