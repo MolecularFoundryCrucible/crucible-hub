@@ -150,7 +150,7 @@ export interface paths {
         };
         /**
          * Get Account Profile
-         * @description Return the authenticated caller's user profile.
+         * @description Return the authenticated caller's profile and presentation capabilities.
          */
         get: operations["get_account_profile_account_profile_get"];
         put?: never;
@@ -589,6 +589,7 @@ export interface paths {
          * @description Adds a file record to a dataset.
          *     Creates the record if one with the same sha256_hash and dataset does not already exist.
          *     Use POST /datasets/{dsid}/files/{file_id}/ingest to trigger ingestion.
+         *     Requires contributor access. A repeated hash returns the existing record unchanged.
          */
         post: operations["add_associated_file_datasets__dsid__files_post"];
         delete?: never;
@@ -685,6 +686,7 @@ export interface paths {
          * Add Keyword
          * @description Adds a keyword to a dataset. If the keyword exists, it will simply add the existing keyword to the dataset object.
          *     Otherwise, the keyword will be created and then added to the dataset.
+         *     Requires contributor access.
          */
         post: operations["add_keyword_datasets__dsid__keywords_post"];
         delete?: never;
@@ -758,7 +760,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Link Dataset Sample */
+        /**
+         * Link Dataset Sample
+         * @description Links a dataset to a readable sample in the same project with contributor access.
+         *
+         *     Cross-project links retain the editor requirement on both resources.
+         */
         post: operations["link_dataset_sample_datasets__dsid__samples__sample_id__post"];
         /** Unlink Dataset Sample */
         delete: operations["unlink_dataset_sample_datasets__dsid__samples__sample_id__delete"];
@@ -828,6 +835,7 @@ export interface paths {
         /**
          * Complete Resumable Upload
          * @description Finalise a GCS resumable upload.
+         *     Requires contributor access to the dataset and ownership of the upload session.
          *     Verifies the blob landed in GCS, registers it as an AssociatedFile on the dataset,
          *     and deletes the upload session record.
          */
@@ -850,6 +858,7 @@ export interface paths {
         /**
          * Initiate Resumable Upload
          * @description Initiate a GCS resumable upload session for a large file.
+         *     Requires contributor access to the dataset.
          *     Returns an upload_id and a resumable_uri the client uses to PUT chunks directly to GCS
          *     (no API credentials needed for the chunk transfers).
          *     Call POST /datasets/{dsid}/upload/complete when all chunks are uploaded.
@@ -873,6 +882,7 @@ export interface paths {
         /**
          * Initiate Multipart Upload
          * @description Vend a short-lived GCS OAuth2 access token for parallel client-side uploads.
+         *     Requires contributor access to the dataset.
          *     The client uses this token with google-cloud-storage transfer_manager.upload_chunks_concurrently().
          *     Returns upload_id — pass it to POST /datasets/{dsid}/upload/complete after the transfer.
          *     If existing_file is set, the file already exists; skip the upload entirely.
@@ -924,6 +934,9 @@ export interface paths {
          *     is_part_of means "child is_part_of parent". Omit it to leave the kind
          *     unspecified; on a link that already exists, omitting it preserves the
          *     type already stored rather than clearing it.
+         *     Same-project links require contributor access to the parent and read access
+         *     to the child. Cross-project links and relationship-type changes require
+         *     editor access to both datasets.
          */
         post: operations["link_dataset_parent_child_datasets__parent_dataset_id__children__child_dataset_id__post"];
         /** Unlink Dataset Parent Child */
@@ -2116,7 +2129,10 @@ export interface paths {
         /** Read Resource Metadata */
         get: operations["read_resource_metadata_resources__unique_id__metadata_get"];
         put?: never;
-        /** Create Resource Metadata */
+        /**
+         * Create Resource Metadata
+         * @description Creates initial metadata with contributor access. Replacing metadata requires editor access.
+         */
         post: operations["create_resource_metadata_resources__unique_id__metadata_post"];
         delete?: never;
         options?: never;
@@ -2275,6 +2291,9 @@ export interface paths {
          *     is_part_of means "child is_part_of parent". Omit it to leave the kind
          *     unspecified; on a link that already exists, omitting it preserves the
          *     type already stored rather than clearing it.
+         *     Same-project links require contributor access to the parent and read access
+         *     to the child. Cross-project links and relationship-type changes require
+         *     editor access to both samples.
          */
         post: operations["link_sample_parent_child_samples__parent_sample_id__children__child_sample_id__post"];
         /** Unlink Sample Parent Child */
@@ -2401,7 +2420,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Service Accounts
+         * @description List service accounts for platform administration.
+         */
+        get: operations["list_service_accounts_service_accounts_get"];
         put?: never;
         /**
          * Create Service Account
@@ -2411,6 +2434,26 @@ export interface paths {
          *     Admin only.
          */
         post: operations["create_service_account_service_accounts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service_accounts/{unique_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Service Account
+         * @description Return administrator-visible service-account details without a secret.
+         */
+        get: operations["get_service_account_service_accounts__unique_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2834,6 +2877,21 @@ export interface components {
          * @enum {string}
          */
         AccessPrincipalType: "user" | "service_account" | "project" | "instrument" | "public" | "system" | "unknown";
+        /** AccountCapabilities */
+        AccountCapabilities: {
+            /** Can Create Dataset */
+            can_create_dataset: boolean;
+            /** Can Create For Others */
+            can_create_for_others: boolean;
+            /** Can Create Project */
+            can_create_project: boolean;
+            /** Can Create Sample */
+            can_create_sample: boolean;
+            /** Can Manage Service Accounts */
+            can_manage_service_accounts: boolean;
+            /** Can Register Instrument */
+            can_register_instrument: boolean;
+        };
         /** AccountInfo */
         AccountInfo: {
             /** Access Group Ids */
@@ -2841,6 +2899,25 @@ export interface components {
             user_info?: components["schemas"]["UserRead"] | null;
             /** User Unique Id */
             user_unique_id: string;
+        };
+        /** AccountProfileRead */
+        AccountProfileRead: {
+            capabilities: components["schemas"]["AccountCapabilities"];
+            /** Email */
+            email?: string | null;
+            /** First Name */
+            first_name: string;
+            /**
+             * Is Service Account
+             * @default false
+             */
+            is_service_account: boolean | null;
+            /** Last Name */
+            last_name: string;
+            /** Unique Id */
+            unique_id: string;
+            /** Username */
+            username?: string | null;
         };
         /**
          * AccountProfileUpdate
@@ -2898,6 +2975,11 @@ export interface components {
              * @default gcs
              */
             storage_backend: string;
+            /**
+             * Storage Path
+             * @description Backend-specific location for a non-GCS catalog-only file.
+             */
+            storage_path?: string | null;
         };
         /**
          * AssociatedFileRead
@@ -3773,6 +3855,19 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /** PaginatedResponse[ServiceAccountAdminRead] */
+        PaginatedResponse_ServiceAccountAdminRead_: {
+            /** Items */
+            items: components["schemas"]["ServiceAccountAdminRead"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
         /** PaginatedResponse[Union[ProjectWithLead, ProjectMinimalRead]] */
         PaginatedResponse_Union_ProjectWithLead__ProjectMinimalRead__: {
             /** Items */
@@ -3799,6 +3894,11 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /**
+         * PlatformRole
+         * @enum {string}
+         */
+        PlatformRole: "none" | "contributor" | "support" | "admin";
         /**
          * ProjectCreate
          * @description Input schema for creating a project. One of project_lead, project_lead_orcid,
@@ -4191,6 +4291,45 @@ export interface components {
             /** Unique Id */
             unique_id: string;
         };
+        /** ServiceAccountAdminDetail */
+        ServiceAccountAdminDetail: {
+            api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
+            /** Email */
+            email?: string | null;
+            /** First Name */
+            first_name: string;
+            /**
+             * Is Service Account
+             * @default true
+             */
+            is_service_account: boolean;
+            /** Last Name */
+            last_name: string;
+            platform_role: components["schemas"]["PlatformRole"];
+            /** Unique Id */
+            unique_id: string;
+            /** Username */
+            username: string;
+        };
+        /** ServiceAccountAdminRead */
+        ServiceAccountAdminRead: {
+            /** Email */
+            email?: string | null;
+            /** First Name */
+            first_name: string;
+            /**
+             * Is Service Account
+             * @default true
+             */
+            is_service_account: boolean;
+            /** Last Name */
+            last_name: string;
+            platform_role: components["schemas"]["PlatformRole"];
+            /** Unique Id */
+            unique_id: string;
+            /** Username */
+            username: string;
+        };
         /**
          * ServiceAccountCreate
          * @description Request body for POST /service_accounts.
@@ -4202,6 +4341,15 @@ export interface components {
             unique_id?: string | null;
             /** Username */
             username: string;
+        };
+        /** ServiceAccountKeyStatus */
+        ServiceAccountKeyStatus: {
+            /** Created At */
+            created_at: string;
+            /** Expires At */
+            expires_at: string;
+            /** Valid */
+            valid: boolean;
         };
         /**
          * ServiceAccountRead
@@ -4668,7 +4816,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserRead"];
+                    "application/json": components["schemas"]["AccountProfileRead"];
                 };
             };
         };
@@ -4873,9 +5021,9 @@ export interface operations {
     list_datasets_datasets_get: {
         parameters: {
             query?: {
-                /** @description User references whose effective access must all include each result. */
+                /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
                 accessible_to_user?: string[] | null;
-                /** @description Project MFIDs or slugs whose direct access must all include each result. */
+                /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
@@ -5008,7 +5156,9 @@ export interface operations {
     get_dataset_facets_datasets_facets_get: {
         parameters: {
             query: {
+                /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
                 accessible_to_user?: string[] | null;
+                /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
@@ -7367,9 +7517,9 @@ export interface operations {
             query?: {
                 /** @description Exact project slug. */
                 project_id?: string | null;
-                /** @description User references whose effective access must all include each result. */
+                /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
                 accessible_to_user?: string[] | null;
-                /** @description Project MFIDs or slugs whose direct access must all include each result. */
+                /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
@@ -8379,9 +8529,9 @@ export interface operations {
     list_samples_samples_get: {
         parameters: {
             query?: {
-                /** @description User references whose effective access must all include each result. */
+                /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
                 accessible_to_user?: string[] | null;
-                /** @description Project MFIDs or slugs whose direct access must all include each result. */
+                /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
@@ -8506,7 +8656,9 @@ export interface operations {
     get_sample_facets_samples_facets_get: {
         parameters: {
             query: {
+                /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
                 accessible_to_user?: string[] | null;
+                /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
@@ -8919,6 +9071,39 @@ export interface operations {
             };
         };
     };
+    list_service_accounts_service_accounts_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_ServiceAccountAdminRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_service_account_service_accounts_post: {
         parameters: {
             query?: never;
@@ -8939,6 +9124,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceAccountRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_service_account_service_accounts__unique_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unique_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceAccountAdminDetail"];
                 };
             };
             /** @description Validation Error */
@@ -9200,6 +9416,8 @@ export interface operations {
             query: {
                 /** @description Search term matched against username, first name, and last name. Queries may contain at most 200 characters and 10 terms. */
                 q: string;
+                /** @description Restrict results to service accounts or human users. */
+                is_service_account?: boolean | null;
                 limit?: number;
             };
             header?: never;
