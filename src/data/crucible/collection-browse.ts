@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { sortDirectionSchema } from "./collection-query"
 import type { ResourceSort, SortDirection } from "./collection-query"
 import type { ProjectScope } from "./data.queries"
 import type {
@@ -23,6 +24,7 @@ export const collectionBrowseSearchFields = {
     ])
     .optional()
     .catch(undefined),
+  groupDirection: sortDirectionSchema.optional().catch(undefined),
   groupOrder: z.enum(["name", "count"]).optional().catch(undefined),
   groupValue: z.string().max(255).optional().catch(undefined),
   groupValueIsNull: z
@@ -40,6 +42,7 @@ export const collectionBrowseSearchFields = {
 
 export type CollectionBrowseSearch = {
   groupBy?: string
+  groupDirection?: SortDirection
   groupOrder?: "name" | "count"
   groupValue?: string
   groupValueIsNull?: true
@@ -102,18 +105,39 @@ export function resolveCollectionBrowse<TField extends string>(
     : search.groupValueSet
       ? { kind: "value", value: search.groupValue ?? "" }
       : { kind: "all" }
+  const order = search.groupOrder === "count" ? "count" : "name"
   return {
+    direction: search.groupDirection ?? defaultGroupDirection(order),
     field,
-    order: search.groupOrder === "count" ? "count" : "name",
+    order,
     selection,
     view: search.view === "grouped" ? "grouped" : "list",
   } as const
 }
 
-export function facetOrderingForGroupOrder(order: CollectionGroupOrder) {
-  return order === "count"
-    ? ({ direction: "desc", sort: "count" } as const)
-    : ({ direction: "asc", sort: "label" } as const)
+export function collectionGroupOrderSearchState(
+  order: CollectionGroupOrder,
+  direction: SortDirection
+) {
+  return {
+    groupDirection:
+      direction === defaultGroupDirection(order) ? undefined : direction,
+    groupOrder: order === "name" ? undefined : order,
+  }
+}
+
+export function facetOrderingForGroupOrder(
+  order: CollectionGroupOrder,
+  direction: SortDirection
+) {
+  return {
+    direction,
+    sort: order === "count" ? ("count" as const) : ("label" as const),
+  }
+}
+
+function defaultGroupDirection(order: CollectionGroupOrder): SortDirection {
+  return order === "count" ? "desc" : "asc"
 }
 
 export function collectionBrowseSearchState(

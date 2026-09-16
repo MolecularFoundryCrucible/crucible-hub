@@ -5,7 +5,6 @@ import { z } from "zod"
 
 import {
   CollectionGroupControl,
-  CollectionGroupOrderControl,
   CollectionToolbar,
   DatasetCollectionBrowser,
 } from "@/components/crucible/collection-browser"
@@ -35,6 +34,7 @@ import { FieldError, FieldGroup } from "@/components/ui/field"
 import {
   collectionBrowseSearchFields,
   collectionBrowseSearchState,
+  collectionGroupOrderSearchState,
   datasetFiltersForGroup,
   instrumentDatasetBrowseOptions,
   resolveCollectionBrowse,
@@ -249,12 +249,15 @@ function InstrumentDatasetsPage() {
     })
   }
 
-  function changeGroupOrder(order: CollectionGroupOrder) {
+  function changeGroupOrder(
+    order: CollectionGroupOrder,
+    direction: SortDirection
+  ) {
     void navigate({
       params: { instrumentMfid: routeInstrumentMfid },
       search: (previous) => ({
         ...previous,
-        groupOrder: order === "name" ? undefined : order,
+        ...collectionGroupOrderSearchState(order, direction),
       }),
       to: "/instruments/$instrumentMfid/datasets",
     })
@@ -285,21 +288,16 @@ function InstrumentDatasetsPage() {
               options={instrumentDatasetBrowseOptions}
               view={browse.view}
             />
-            {browse.view === "grouped" ? (
-              <CollectionGroupOrderControl
-                id="instrument-dataset-group-order"
-                onChange={changeGroupOrder}
-                order={browse.order}
-              />
-            ) : null}
           </div>
         }
         primary={<h2 className="text-title-section">Datasets</h2>}
       />
       {browse.view === "grouped" ? (
         <DatasetCollectionBrowser
+          direction={browse.direction}
           field={browse.field}
           filters={baseFilters}
+          onOrderChange={changeGroupOrder}
           order={browse.order}
           onSelect={selectGroup}
           selection={browse.selection}

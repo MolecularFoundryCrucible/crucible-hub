@@ -15,6 +15,7 @@ import {
   ResourceTypeIcon,
 } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { SortableHeaderButton } from "@/components/crucible/sortable-header-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -31,6 +32,7 @@ import type {
   CollectionBrowseOption,
   CollectionGroupOrder,
 } from "@/data/crucible/collection-browse"
+import type { SortDirection } from "@/data/crucible/collection-query"
 import {
   datasetFacetQueryOptions,
   sampleFacetQueryOptions,
@@ -108,42 +110,12 @@ export function CollectionGroupControl<TField extends string>({
   )
 }
 
-export function CollectionGroupOrderControl({
-  disabled = false,
-  id,
-  onChange,
-  order,
-}: {
-  disabled?: boolean
-  id: string
-  onChange: (order: CollectionGroupOrder) => void
-  order: CollectionGroupOrder
-}) {
-  return (
-    <Field className="w-auto min-w-0 flex-none" orientation="horizontal">
-      <FieldLabel className="shrink-0 whitespace-nowrap" htmlFor={id}>
-        Order
-      </FieldLabel>
-      <NativeSelect
-        className="w-28 min-w-0"
-        disabled={disabled}
-        id={id}
-        onChange={(event) =>
-          onChange(event.target.value === "count" ? "count" : "name")
-        }
-        value={order}
-      >
-        <NativeSelectOption value="name">Name</NativeSelectOption>
-        <NativeSelectOption value="count">Count</NativeSelectOption>
-      </NativeSelect>
-    </Field>
-  )
-}
-
 export function SampleCollectionBrowser({
   children,
+  direction,
   field,
   filters,
+  onOrderChange,
   order,
   onSelect,
   selection,
@@ -152,13 +124,16 @@ export function SampleCollectionBrowser({
   const query = useInfiniteQuery(
     sampleFacetQueryOptions(scope, field, filters, {
       excludeField: false,
-      ordering: facetOrderingForGroupOrder(order),
+      ordering: facetOrderingForGroupOrder(order, direction),
     })
   )
   return (
     <CollectionBrowser
+      direction={direction}
       field={field}
+      onOrderChange={onOrderChange}
       onSelect={onSelect}
+      order={order}
       query={query}
       selection={selection}
     >
@@ -169,8 +144,10 @@ export function SampleCollectionBrowser({
 
 export function DatasetCollectionBrowser({
   children,
+  direction,
   field,
   filters,
+  onOrderChange,
   order,
   onSelect,
   selection,
@@ -179,13 +156,16 @@ export function DatasetCollectionBrowser({
   const query = useInfiniteQuery(
     datasetFacetQueryOptions(scope, field, filters, {
       excludeField: false,
-      ordering: facetOrderingForGroupOrder(order),
+      ordering: facetOrderingForGroupOrder(order, direction),
     })
   )
   return (
     <CollectionBrowser
+      direction={direction}
       field={field}
+      onOrderChange={onOrderChange}
       onSelect={onSelect}
+      order={order}
       query={query}
       selection={selection}
     >
@@ -198,8 +178,10 @@ type CollectionBrowserProps<
   TField extends DatasetFacetField | SampleFacetField,
 > = {
   children: React.ReactNode
+  direction: SortDirection
   field: TField
   filters: FacetContext & DatasetFacetFilters & SampleFacetFilters
+  onOrderChange: (order: CollectionGroupOrder, direction: SortDirection) => void
   order: CollectionGroupOrder
   onSelect: (selection: FacetSelection) => void
   selection: FacetSelection
@@ -218,14 +200,20 @@ type FacetQuery = {
 
 function CollectionBrowser({
   children,
+  direction,
   field,
+  onOrderChange,
   onSelect,
+  order,
   query,
   selection,
 }: {
   children: React.ReactNode
+  direction: SortDirection
   field: DatasetFacetField | SampleFacetField
+  onOrderChange: (order: CollectionGroupOrder, direction: SortDirection) => void
   onSelect: (selection: FacetSelection) => void
+  order: CollectionGroupOrder
   query: FacetQuery
   selection: FacetSelection
 }) {
@@ -247,6 +235,12 @@ function CollectionBrowser({
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent className="px-2">
+          <CollectionGroupHeaders
+            direction={direction}
+            field={field}
+            onChange={onOrderChange}
+            order={order}
+          />
           {query.isPending ? (
             <div className="grid gap-1" aria-label={`Loading ${title}`}>
               {Array.from({ length: 4 }, (_, index) => (
@@ -281,12 +275,12 @@ function CollectionBrowser({
               {selection.kind !== "all" && !selectedAvailable ? (
                 <Button
                   aria-current="page"
-                  className="w-full justify-between text-left"
+                  className="group-directory-columns grid w-full text-left"
                   onClick={() => onSelect(selection)}
                   type="button"
                   variant="secondary"
                 >
-                  <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2 overflow-hidden">
                     <FacetFieldIcon field={field} />
                     <span className="truncate">
                       {facetBucketLabel(
@@ -299,6 +293,7 @@ function CollectionBrowser({
                       )}
                     </span>
                   </span>
+                  <span aria-hidden="true" />
                 </Button>
               ) : null}
               {items.map((bucket) => {
@@ -310,17 +305,17 @@ function CollectionBrowser({
                 return (
                   <Button
                     aria-current={active ? "page" : undefined}
-                    className="w-full justify-between text-left"
+                    className="group-directory-columns grid w-full text-left"
                     key={bucket.value === null ? "null" : bucket.value}
                     onClick={() => onSelect(bucketSelection)}
                     type="button"
                     variant={active ? "secondary" : "ghost"}
                   >
-                    <span className="flex min-w-0 items-center gap-2">
+                    <span className="flex min-w-0 items-center gap-2 overflow-hidden">
                       <FacetFieldIcon bucket={bucket} field={field} />
                       <FacetBucketName bucket={bucket} field={field} />
                     </span>
-                    <span className="shrink-0 text-supporting text-muted-foreground tabular-nums">
+                    <span className="justify-self-end text-supporting text-muted-foreground tabular-nums">
                       {bucket.count}
                     </span>
                   </Button>
@@ -374,6 +369,39 @@ function CollectionBrowser({
   )
 }
 
+function CollectionGroupHeaders({
+  direction,
+  field,
+  onChange,
+  order,
+}: {
+  direction: SortDirection
+  field: DatasetFacetField | SampleFacetField
+  onChange: (order: CollectionGroupOrder, direction: SortDirection) => void
+  order: CollectionGroupOrder
+}) {
+  return (
+    <div className="group-directory-columns grid items-center pb-1">
+      <SortableHeaderButton
+        active={order === "name"}
+        className="justify-self-start"
+        direction={direction}
+        label={facetFieldColumnLabel(field)}
+        onChange={(nextDirection) => onChange("name", nextDirection)}
+        preferredDirection="asc"
+      />
+      <SortableHeaderButton
+        active={order === "count"}
+        className="justify-self-end"
+        direction={direction}
+        label="Count"
+        onChange={(nextDirection) => onChange("count", nextDirection)}
+        preferredDirection="desc"
+      />
+    </div>
+  )
+}
+
 function FacetBucketName({
   bucket,
   field,
@@ -384,12 +412,14 @@ function FacetBucketName({
   const label = facetBucketLabel(bucket, field)
   if (field === "owner" && bucket.owner) {
     return (
-      <PersonIdentity
-        className="block min-w-0 truncate"
-        nameStyle="abbreviated"
-        person={bucket.owner}
-        presentation="inline"
-      />
+      <span className="min-w-0 truncate" title={label}>
+        <PersonIdentity
+          className="block min-w-0 truncate"
+          nameStyle="abbreviated"
+          person={bucket.owner}
+          presentation="inline"
+        />
+      </span>
     )
   }
   return (
@@ -450,6 +480,16 @@ function facetFieldSelectionLabel(field: DatasetFacetField | SampleFacetField) {
   if (field === "project") return "primary project"
   if (field === "session") return "session"
   return "measurement"
+}
+
+function facetFieldColumnLabel(field: DatasetFacetField | SampleFacetField) {
+  if (field === "sample_type") return "Sample type"
+  if (field === "data_format") return "Data format"
+  if (field === "owner") return "Owner"
+  if (field === "instrument") return "Instrument"
+  if (field === "project") return "Project"
+  if (field === "session") return "Session"
+  return "Measurement"
 }
 
 function indefiniteArticle(value: string) {

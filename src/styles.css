@@ -11,6 +11,10 @@
   max-width: none;
 }
 
+.group-directory-columns {
+  grid-template-columns: minmax(0, 1fr) var(--spacing-group-count-column);
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans:
@@ -28,6 +32,7 @@
   --spacing-page-section: 2rem;
   --spacing-resource-navigation-offset: 1rem;
   --spacing-resource-sequence: 18rem;
+  --spacing-group-count-column: 5rem;
   --spacing-inspector-width: 26rem;
   --spacing-dialog-viewport: calc(100dvh - 1rem);
   --spacing-metadata-editor-height: 20rem;

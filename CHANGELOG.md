@@ -8,7 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
-- Added URL-backed Name and Count ordering for sample and dataset group directories using API-provided canonical facet labels and cursor-safe server ordering.
+- Added URL-backed sortable group headers for sample and dataset directories, with API-provided canonical facet labels, reversible Name and Count ordering, and count columns that remain visible beside truncated long labels.
 - Added confirmed dataset acquisition-instrument reassignment with canonical instrument selection, API-authoritative identity updates, derived access refresh, dependent collection invalidation, and sibling-navigation reset.
 - Added configurable anchored sibling navigation on canonical sample and dataset pages, with project, subtype, owner, and instrument scopes, API-backed ordering, and independent on-demand continuation in both directions.
 - Added URL-backed, API-grouped browsing for type-specific global Data, Project Data, and Instrument Datasets, with reusable responsive group directories, server-owned counts and null buckets, lazy selected-group loading, paginated group values, compact owner identities, and name-ascending selected results; aligned Instrument Overview with shared Summary, Identity, MFID, QR, timestamp, and metadata patterns.
