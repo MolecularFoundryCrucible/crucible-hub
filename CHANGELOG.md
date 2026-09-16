@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Added capability-gated service-account administration with a searchable directory, profile and platform-role editing, non-secret credential status, one-time creation keys, confirmed key rotation, service-account autocomplete for instrument operators, contributor-bounded project roles, and authorized management links from service-account profiles.
+- Added capability-gated service-account administration with a searchable directory, service-account-specific identity and profile fields, platform-role editing, non-secret credential status, one-time creation keys, confirmed key rotation, service-account autocomplete for instrument operators, contributor-bounded project roles, and authorized management links from service-account profiles.
 
 ### Added
 

@@ -66,15 +66,6 @@ import { formatDate } from "@/lib/format"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 
 const serviceAccountProfileSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .max(320, "Use 320 characters or fewer for email.")
-    .refine(
-      (value) =>
-        value.length === 0 || z.string().email().safeParse(value).success,
-      "Enter a valid email address."
-    ),
   first_name: z.string().trim().max(255),
   last_name: z.string().trim().max(255),
   username: serviceAccountUsernameSchema,
@@ -92,7 +83,6 @@ const platformRoleDescriptions = {
 
 function profileValues(account: WorkspaceServiceAccountDetail): ProfileValues {
   return {
-    email: account.email ?? "",
     first_name: account.first_name,
     last_name: account.last_name,
     username: account.username,
@@ -111,8 +101,6 @@ function profileChanges(
       changes[field] = normalized[field]
     }
   }
-  if (normalized.email !== initial.email)
-    changes.email = normalized.email || null
   if (normalized.username !== initial.username) {
     changes.username = normalized.username
   }
@@ -195,7 +183,6 @@ function ServiceAccountIdentityCard({
           }),
         ])
         form.reset({
-          email: updated.email ?? "",
           first_name: updated.first_name,
           last_name: updated.last_name,
           username: updated.username,
@@ -306,25 +293,20 @@ function ServiceAccountIdentityCard({
                 propagate.
               </p>
             ) : null}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <PersonIdentity
-                person={account}
-                presentation="avatar"
-                size="lg"
-              />
-              <PlatformRoleBadge role={account.platform_role} />
-            </div>
+            <PersonIdentity person={account} presentation="avatar" size="lg" />
             <dl className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-label text-muted-foreground">Email</dt>
-                <dd className="mt-1 text-body break-words">
-                  {account.email ?? "Not provided"}
-                </dd>
-              </div>
               <div>
                 <dt className="text-label text-muted-foreground">Username</dt>
                 <dd className="mt-1 text-body break-words">
                   @{account.username}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-label text-muted-foreground">
+                  Platform role
+                </dt>
+                <dd className="mt-1">
+                  <PlatformRoleBadge role={account.platform_role} />
                 </dd>
               </div>
               <div className="sm:col-span-2">
@@ -436,40 +418,35 @@ function ServiceAccountIdentityCard({
           >
             <fieldset disabled={submitting}>
               <FieldGroup>
-                {(
-                  ["first_name", "last_name", "email", "username"] as const
-                ).map((name) => (
-                  <form.Field key={name} name={name}>
-                    {(field) => (
-                      <Field data-invalid={!field.state.meta.isValid}>
-                        <FieldLabel
-                          htmlFor={field.name}
-                          optional={name !== "username"}
-                        >
-                          {profileFieldLabel(name)}
-                        </FieldLabel>
-                        <Input
-                          aria-invalid={!field.state.meta.isValid || undefined}
-                          id={field.name}
-                          maxLength={
-                            name === "email"
-                              ? 320
-                              : name === "username"
-                                ? 255
-                                : 255
-                          }
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          type={name === "email" ? "email" : "text"}
-                          value={field.state.value}
-                        />
-                        <FieldError errors={field.state.meta.errors} />
-                      </Field>
-                    )}
-                  </form.Field>
-                ))}
+                {(["first_name", "last_name", "username"] as const).map(
+                  (name) => (
+                    <form.Field key={name} name={name}>
+                      {(field) => (
+                        <Field data-invalid={!field.state.meta.isValid}>
+                          <FieldLabel
+                            htmlFor={field.name}
+                            optional={name !== "username"}
+                          >
+                            {profileFieldLabel(name)}
+                          </FieldLabel>
+                          <Input
+                            aria-invalid={
+                              !field.state.meta.isValid || undefined
+                            }
+                            id={field.name}
+                            maxLength={255}
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            value={field.state.value}
+                          />
+                          <FieldError errors={field.state.meta.errors} />
+                        </Field>
+                      )}
+                    </form.Field>
+                  )
+                )}
               </FieldGroup>
             </fieldset>
             {error ? (
@@ -618,7 +595,7 @@ function ServiceAccountCredentialCard({
 function profileFieldLabel(field: keyof ProfileValues) {
   if (field === "first_name") return "First name"
   if (field === "last_name") return "Last name"
-  return field === "email" ? "Email" : "Username"
+  return "Username"
 }
 
 function isAssignablePlatformRole(

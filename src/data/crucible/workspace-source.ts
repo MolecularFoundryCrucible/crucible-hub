@@ -490,7 +490,6 @@ export type WorkspaceServiceAccountDetail = Schema<"ServiceAccountAdminDetail">
 export type WorkspaceServiceAccountCredential = Schema<"ServiceAccountRead">
 
 export type WorkspaceServiceAccountProfileUpdate = {
-  email?: string | null
   first_name?: string | null
   last_name?: string | null
   username?: string
