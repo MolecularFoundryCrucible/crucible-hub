@@ -9,6 +9,7 @@ import {
   CredentialIcon,
   EditResourceIcon,
   RotateCredentialIcon,
+  SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonIdentity } from "@/components/crucible/person-identity"
@@ -29,6 +30,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { applyPersonProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -38,11 +48,13 @@ import {
   rotateWorkspaceServiceAccountKey,
   serviceAccountUsernameSchema,
   updateWorkspaceServiceAccount,
+  updateWorkspaceServiceAccountPlatformRole,
 } from "@/data/crucible/service-accounts.functions"
 import type {
   WorkspaceMode,
   WorkspaceServiceAccountCredential,
   WorkspaceServiceAccountDetail,
+  WorkspaceServiceAccountPlatformRole,
   WorkspaceServiceAccountProfileUpdate,
 } from "@/data/crucible/workspace-source"
 import {
@@ -69,6 +81,14 @@ const serviceAccountProfileSchema = z.object({
 })
 
 type ProfileValues = z.infer<typeof serviceAccountProfileSchema>
+
+const assignablePlatformRoles = ["none", "contributor", "admin"] as const
+
+const platformRoleDescriptions = {
+  admin: "Full platform administration.",
+  contributor: "Platform-wide read and create access.",
+  none: "No platform-wide role. Resource-specific access and the API key remain unchanged.",
+} satisfies Record<WorkspaceServiceAccountPlatformRole, string>
 
 function profileValues(account: WorkspaceServiceAccountDetail): ProfileValues {
   return {
@@ -101,16 +121,23 @@ function profileChanges(
 
 export function ServiceAccountDetail({
   account,
+  canChangePlatformRole,
   mode,
   scope,
 }: {
   account: WorkspaceServiceAccountDetail
+  canChangePlatformRole: boolean
   mode: WorkspaceMode
   scope: IdentityScope
 }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-      <ServiceAccountIdentityCard account={account} mode={mode} scope={scope} />
+      <ServiceAccountIdentityCard
+        account={account}
+        canChangePlatformRole={canChangePlatformRole}
+        mode={mode}
+        scope={scope}
+      />
       <ServiceAccountCredentialCard account={account} scope={scope} />
     </div>
   )
@@ -118,16 +145,23 @@ export function ServiceAccountDetail({
 
 function ServiceAccountIdentityCard({
   account,
+  canChangePlatformRole,
   mode,
   scope,
 }: {
   account: WorkspaceServiceAccountDetail
+  canChangePlatformRole: boolean
   mode: WorkspaceMode
   scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string>()
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false)
+  const [roleError, setRoleError] = useState<string>()
+  const [roleUpdated, setRoleUpdated] = useState(false)
+  const [selectedRole, setSelectedRole] =
+    useState<WorkspaceServiceAccountPlatformRole>()
   const mutation = useMutation({
     mutationFn: async (changes: WorkspaceServiceAccountProfileUpdate) =>
       unwrapHubResult(
@@ -176,6 +210,18 @@ function ServiceAccountIdentityCard({
       }
     },
   })
+  const roleMutation = useMutation({
+    mutationFn: async (platformRole: WorkspaceServiceAccountPlatformRole) =>
+      unwrapHubResult(
+        await updateWorkspaceServiceAccountPlatformRole({
+          data: {
+            platformRole,
+            scenario: fixtureScenarioFromScope(scope),
+            serviceAccountMfid: account.unique_id,
+          },
+        })
+      ),
+  })
   const dirty = useStore(form.store, (state) => state.isDirty)
   const submitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(dirty, () => {
@@ -185,45 +231,190 @@ function ServiceAccountIdentityCard({
   })
   const formId = `service-account-profile-${account.unique_id}`
 
+  function openRoleDialog() {
+    setSelectedRole(
+      isAssignablePlatformRole(account.platform_role)
+        ? account.platform_role
+        : undefined
+    )
+    setRoleError(undefined)
+    setRoleUpdated(false)
+    setRoleDialogOpen(true)
+  }
+
+  function changeRoleDialogOpen(open: boolean) {
+    if (!open && roleMutation.isPending) return
+    setRoleDialogOpen(open)
+    if (!open) {
+      setSelectedRole(undefined)
+      setRoleError(undefined)
+    }
+  }
+
+  async function changePlatformRole() {
+    if (!selectedRole || selectedRole === account.platform_role) return
+    setRoleError(undefined)
+    try {
+      const updated = await roleMutation.mutateAsync(selectedRole)
+      queryClient.setQueryData(
+        crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
+        updated
+      )
+      void queryClient.invalidateQueries({
+        queryKey: crucibleKeys.serviceAccountLists(scope),
+        refetchType: mode === "api" ? "active" : "none",
+      })
+      setRoleDialogOpen(false)
+      setSelectedRole(undefined)
+      setRoleUpdated(true)
+    } catch (cause) {
+      setRoleError(
+        cause instanceof HubApiClientError
+          ? cause.message
+          : "The platform role could not be changed."
+      )
+    }
+  }
+
   if (!editing) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Identity</CardTitle>
-          <CardAction>
-            <Button onClick={() => setEditing(true)} variant="outline">
-              <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
-              Edit profile
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <PersonIdentity person={account} presentation="avatar" size="lg" />
-            <PlatformRoleBadge role={account.platform_role} />
-          </div>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-label text-muted-foreground">Email</dt>
-              <dd className="mt-1 text-body break-words">
-                {account.email ?? "Not provided"}
-              </dd>
+      <>
+        <Card>
+          <CardHeader>
+            <CardTitle>Identity</CardTitle>
+            <CardAction>
+              <div className="flex flex-wrap justify-end gap-2">
+                {canChangePlatformRole ? (
+                  <Button onClick={openRoleDialog} variant="outline">
+                    Change role
+                  </Button>
+                ) : null}
+                <Button onClick={() => setEditing(true)} variant="outline">
+                  <EditResourceIcon
+                    aria-hidden="true"
+                    data-icon="inline-start"
+                  />
+                  Edit profile
+                </Button>
+              </div>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-5">
+            {roleUpdated ? (
+              <p aria-live="polite" className="text-body text-success">
+                Platform role updated. Access changes may take about a minute to
+                propagate.
+              </p>
+            ) : null}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <PersonIdentity
+                person={account}
+                presentation="avatar"
+                size="lg"
+              />
+              <PlatformRoleBadge role={account.platform_role} />
             </div>
-            <div>
-              <dt className="text-label text-muted-foreground">Username</dt>
-              <dd className="mt-1 text-body break-words">
-                @{account.username}
-              </dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-label text-muted-foreground">Crucible ID</dt>
-              <dd className="mt-1">
-                <MfidValue value={account.unique_id} />
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-label text-muted-foreground">Email</dt>
+                <dd className="mt-1 text-body break-words">
+                  {account.email ?? "Not provided"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-label text-muted-foreground">Username</dt>
+                <dd className="mt-1 text-body break-words">
+                  @{account.username}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-label text-muted-foreground">
+                  Crucible ID
+                </dt>
+                <dd className="mt-1">
+                  <MfidValue value={account.unique_id} />
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+        <Dialog onOpenChange={changeRoleDialogOpen} open={roleDialogOpen}>
+          <DialogContent showCloseButton={!roleMutation.isPending}>
+            <DialogHeader>
+              <DialogTitle>Change platform role</DialogTitle>
+              <DialogDescription>
+                Access changes may take about a minute to reach every API
+                process.
+              </DialogDescription>
+            </DialogHeader>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="service-account-platform-role">
+                  Platform role
+                </FieldLabel>
+                <NativeSelect
+                  className="w-full"
+                  disabled={roleMutation.isPending}
+                  id="service-account-platform-role"
+                  onChange={(event) => {
+                    if (isAssignablePlatformRole(event.target.value)) {
+                      setSelectedRole(event.target.value)
+                    }
+                  }}
+                  value={selectedRole ?? ""}
+                >
+                  <NativeSelectOption disabled value="">
+                    Select role
+                  </NativeSelectOption>
+                  {assignablePlatformRoles.map((role) => (
+                    <NativeSelectOption key={role} value={role}>
+                      {platformRoleLabel(role)}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </Field>
+              {selectedRole ? (
+                <p className="text-body text-muted-foreground">
+                  {platformRoleDescriptions[selectedRole]}
+                </p>
+              ) : null}
+            </FieldGroup>
+            {roleError ? (
+              <p className="text-body text-destructive" role="alert">
+                {roleError}
+              </p>
+            ) : null}
+            <DialogFooter>
+              <Button
+                disabled={roleMutation.isPending}
+                onClick={() => changeRoleDialogOpen(false)}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={
+                  !selectedRole ||
+                  selectedRole === account.platform_role ||
+                  roleMutation.isPending
+                }
+                onClick={() => void changePlatformRole()}
+                type="button"
+              >
+                {roleMutation.isPending ? (
+                  <SavingChangesIcon
+                    aria-hidden="true"
+                    className="motion-safe:animate-spin"
+                    data-icon="inline-start"
+                  />
+                ) : null}
+                {roleMutation.isPending ? "Changing role" : "Change role"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 
@@ -428,4 +619,15 @@ function profileFieldLabel(field: keyof ProfileValues) {
   if (field === "first_name") return "First name"
   if (field === "last_name") return "Last name"
   return field === "email" ? "Email" : "Username"
+}
+
+function isAssignablePlatformRole(
+  role: string
+): role is WorkspaceServiceAccountPlatformRole {
+  return assignablePlatformRoles.some((candidate) => candidate === role)
+}
+
+function platformRoleLabel(role: WorkspaceServiceAccountPlatformRole) {
+  if (role === "none") return "No platform role"
+  return role === "admin" ? "Admin" : "Contributor"
 }

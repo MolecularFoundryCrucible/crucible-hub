@@ -9,6 +9,7 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import {
   createWorkspaceServiceAccount as createWorkspaceServiceAccountServer,
   patchWorkspaceServiceAccount,
+  patchWorkspaceServiceAccountPlatformRole,
   readWorkspaceServiceAccount,
   readWorkspaceServiceAccounts,
   rotateWorkspaceServiceAccountKey as rotateWorkspaceServiceAccountKeyServer,
@@ -20,6 +21,11 @@ export const serviceAccountUsernameSchema = z
   .trim()
   .min(1, "Enter a username.")
   .max(255, "Use 255 characters or fewer for the username.")
+export const serviceAccountPlatformRoleSchema = z.enum([
+  "none",
+  "contributor",
+  "admin",
+])
 const optionalProfileTextSchema = z.string().trim().max(255).nullable()
 const optionalEmailSchema = z.string().trim().email().max(320).nullable()
 
@@ -61,6 +67,14 @@ export const serviceAccountUpdateInputSchema = z
         (changes) => Object.keys(changes).length > 0,
         "At least one profile change is required."
       ),
+    scenario: fixtureScenarioSchema.optional(),
+    serviceAccountMfid: serviceAccountMfidSchema,
+  })
+  .strict()
+
+export const serviceAccountRoleUpdateInputSchema = z
+  .object({
+    platformRole: serviceAccountPlatformRoleSchema,
     scenario: fixtureScenarioSchema.optional(),
     serviceAccountMfid: serviceAccountMfidSchema,
   })
@@ -113,6 +127,23 @@ export const updateWorkspaceServiceAccount = createServerFn({ method: "POST" })
       patchWorkspaceServiceAccount(
         data.serviceAccountMfid,
         data.changes,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const updateWorkspaceServiceAccountPlatformRole = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(serviceAccountRoleUpdateInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      patchWorkspaceServiceAccountPlatformRole(
+        data.serviceAccountMfid,
+        data.platformRole,
         data.scenario,
         context.requestSignal
       )

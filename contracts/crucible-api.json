@@ -5288,6 +5288,25 @@
         "title": "ServiceAccountKeyStatus",
         "type": "object"
       },
+      "ServiceAccountPlatformRoleUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "platform_role": {
+            "enum": [
+              "none",
+              "contributor",
+              "admin"
+            ],
+            "title": "Platform Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "platform_role"
+        ],
+        "title": "ServiceAccountPlatformRoleUpdate",
+        "type": "object"
+      },
       "ServiceAccountRead": {
         "description": "Response from POST /service_accounts and POST /service_accounts/{id}/rotate_key.\napi_key is only returned once — store it securely.",
         "properties": {
@@ -16313,6 +16332,62 @@
           }
         ],
         "summary": "Get Service Account",
+        "tags": [
+          "service_accounts"
+        ]
+      },
+      "patch": {
+        "description": "Update a service account's platform role.",
+        "operationId": "update_service_account_platform_role_service_accounts__unique_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unique_id",
+            "required": true,
+            "schema": {
+              "title": "Unique Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAccountPlatformRoleUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccountAdminDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Service Account Platform Role",
         "tags": [
           "service_accounts"
         ]

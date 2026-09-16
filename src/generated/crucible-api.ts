@@ -2457,7 +2457,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Service Account Platform Role
+         * @description Update a service account's platform role.
+         */
+        patch: operations["update_service_account_platform_role_service_accounts__unique_id__patch"];
         trace?: never;
     };
     "/service_accounts/{unique_id}/rotate_key": {
@@ -4350,6 +4354,14 @@ export interface components {
             expires_at: string;
             /** Valid */
             valid: boolean;
+        };
+        /** ServiceAccountPlatformRoleUpdate */
+        ServiceAccountPlatformRoleUpdate: {
+            /**
+             * Platform Role
+             * @enum {string}
+             */
+            platform_role: "none" | "contributor" | "admin";
         };
         /**
          * ServiceAccountRead
@@ -9147,6 +9159,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceAccountAdminDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_service_account_platform_role_service_accounts__unique_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unique_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceAccountPlatformRoleUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

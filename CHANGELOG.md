@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Added capability-gated service-account administration with a searchable directory, profile editing, non-secret credential status, one-time creation keys, confirmed key rotation, service-account autocomplete for instrument operators, and contributor-bounded project roles.
+- Added capability-gated service-account administration with a searchable directory, profile and platform-role editing, non-secret credential status, one-time creation keys, confirmed key rotation, service-account autocomplete for instrument operators, contributor-bounded project roles, and authorized management links from service-account profiles.
 
 ### Added
 
@@ -91,7 +91,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Reorganized sample and dataset creation into visible, consistently labelled sections, prefilled new-resource timestamps from browser-local time, standardized inline optional labels across forms, and added shared parent, child, and cross-resource relationship selection with partial-failure recovery.
 - Rebalanced sample and dataset Overview cards so Identity and Thumbnails share a column, Relationships and Scientific metadata share an equal-width row, relationship groups retain a single readable column, and nested metadata renders as an expandable row-based JSON tree with header-level expansion controls and compact empty-collection notation.
 - Distinguished service-account owners on sample and dataset Identity cards with the semantic robot icon while keeping owner names free of trailing type icons.
-- Distinguished service accounts from people across shared identity presentations with an orange avatar border and service-account label, using the public account-type discriminator.
+- Distinguished service accounts from people across shared identity presentations with a violet robot icon and avatar border plus a service-account label, using the public account-type discriminator.
 - Resolved sample and dataset owners in project data tables through the shared person identity presentation, including name fallback when no username is set, profile navigation, and hover details.
 - Standardized person identity links and contextual project and instrument references within sample and dataset workflows on a shared keyboard-accessible hover preview, while keeping project and instrument directories and primary navigation as direct links.
 - Added project ID context to sample and dataset search results alongside sample type or measurement, including autocomplete pickers and direct MFID results when project context is available.

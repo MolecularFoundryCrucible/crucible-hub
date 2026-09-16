@@ -79,10 +79,12 @@ export function ResourceTypeIcon({
 
 export function PrincipalTypeIcon({
   className,
+  "data-icon": dataIcon,
   label,
   type,
 }: {
   className?: string
+  "data-icon"?: "inline-end" | "inline-start"
   label?: string
   type: PrincipalType
 }) {
@@ -92,6 +94,7 @@ export function PrincipalTypeIcon({
       aria-hidden={label ? undefined : true}
       aria-label={label}
       className={cn("size-4 shrink-0", principalIconClasses[type], className)}
+      data-icon={dataIcon}
       data-principal-type={type}
       role={label ? "img" : undefined}
     />

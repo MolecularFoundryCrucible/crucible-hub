@@ -13,6 +13,7 @@ import type {
   WorkspaceServiceAccountCredential,
   WorkspaceServiceAccountDetail,
   WorkspaceServiceAccountPage,
+  WorkspaceServiceAccountPlatformRole,
   WorkspaceServiceAccountProfileUpdate,
 } from "./workspace-source"
 
@@ -200,6 +201,35 @@ export async function patchWorkspaceServiceAccount(
   )
   if (!account) throw new CrucibleResponseError(404)
   return account
+}
+
+export async function patchWorkspaceServiceAccountPlatformRole(
+  serviceAccountMfid: string,
+  platformRole: WorkspaceServiceAccountPlatformRole,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceServiceAccountDetail> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable")
+    throw new Error(configuration.reason)
+  if (configuration.mode === "fixture") {
+    const account = await readWorkspaceServiceAccount(
+      serviceAccountMfid,
+      scenario,
+      requestSignal
+    )
+    if (!account) throw new CrucibleResponseError(404)
+    return { ...account, platform_role: platformRole }
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.PATCH("/service_accounts/{unique_id}", {
+    body: { platform_role: platformRole },
+    params: { path: { unique_id: serviceAccountMfid } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return result.data
 }
 
 export async function rotateWorkspaceServiceAccountKey(

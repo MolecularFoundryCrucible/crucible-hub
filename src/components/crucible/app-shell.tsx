@@ -11,11 +11,13 @@ import {
   AccountIcon,
   CollapseSidebarIcon,
   ExpandSidebarIcon,
-  ServiceAccountIcon,
   ThemeIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  PrincipalTypeIcon,
+  ResourceTypeIcon,
+} from "@/components/crucible/resource-type-icon"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { useTheme } from "@/components/theme-provider"
@@ -170,7 +172,7 @@ export function AppShell({
                           />
                         }
                       >
-                        <ServiceAccountIcon aria-hidden="true" />
+                        <PrincipalTypeIcon type="service_account" />
                         <span>Service accounts</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

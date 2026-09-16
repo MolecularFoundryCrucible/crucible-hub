@@ -8,6 +8,7 @@ import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
+import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import {
@@ -25,6 +26,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { buttonVariants } from "@/components/ui/button"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import { hubPageTitle } from "@/lib/page-title"
 
@@ -49,6 +52,7 @@ export const Route = createFileRoute("/_app/people/$personId")({
 function PersonPage() {
   const { personId } = Route.useParams()
   const scope = useWorkspaceScope()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const { data: person } = useSuspenseQuery(personQueryOptions(scope, personId))
 
   if (!person) {
@@ -84,7 +88,27 @@ function PersonPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <PageHeader eyebrow="Person" title={name} />
+      <PageHeader
+        actions={
+          person.is_service_account &&
+          account.capabilities.can_manage_service_accounts &&
+          !account.is_service_account ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ serviceAccountMfid: person.unique_id }}
+              to="/admin/service-accounts/$serviceAccountMfid"
+            >
+              <PrincipalTypeIcon
+                data-icon="inline-start"
+                type="service_account"
+              />
+              Manage service account
+            </Link>
+          ) : null
+        }
+        eyebrow="Person"
+        title={name}
+      />
 
       <Card className="max-w-2xl">
         <CardHeader>

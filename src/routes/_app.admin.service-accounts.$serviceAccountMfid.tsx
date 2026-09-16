@@ -122,6 +122,7 @@ function ServiceAccountAdminPage() {
       />
       <ServiceAccountDetail
         account={serviceAccount}
+        canChangePlatformRole={!account.is_service_account}
         mode={mode}
         scope={scope}
       />
