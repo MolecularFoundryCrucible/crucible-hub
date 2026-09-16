@@ -1,8 +1,8 @@
 # Crucible Hub API Integration
 
-Status: Phase 0 contract
+Status: Active integration contract
 
-Date: 2026-09-06
+Date: 2026-09-16
 
 ## Authority and generated contract
 

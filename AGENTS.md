@@ -16,7 +16,7 @@ This is the canonical repository guidance for agents and contributors. Tool-spec
 
 ## Repository status and scope
 
-Crucible Hub is a TypeScript and React TanStack Start application for finding, organizing, understanding, sharing, uploading, and managing Crucible resources. The scaffold, desktop design system, generated OpenAPI types, server-only API adapter, Query foundation, local read workspace, controlled descriptive and metadata edits, deletion requests, direct project membership, browser tests, production runtime checks, and CI are implemented. Production authentication remains blocked by the API-owned one-time login exchange and Hub session boundary. No deployment or release process exists.
+Crucible Hub is a TypeScript and React TanStack Start application for finding, organizing, understanding, sharing, uploading, and managing Crucible resources. The local-development workspace includes the responsive application shell and design system, generated OpenAPI client, server-only API adapter, identity-scoped Query state, global and contextual search, paginated and grouped resource browsing, collection previews, sibling navigation, canonical project, instrument, sample, and dataset workspaces, creation and controlled management workflows, graph and processing views, and capability-gated service-account administration. Deterministic fixtures, browser coverage, production runtime checks, and CI are implemented. Production authentication and mutation exposure remain blocked by the API-owned one-time login exchange and Hub session boundary. Browser upload remains blocked by the secure exact-object upload contract. No deployment or release process exists.
 
 Hub owns browser behavior, navigation, responsive presentation, accessibility, design tokens and components, Hub sessions, browser-to-Hub security, Query state, bounded web aggregation, API contract consumption, uploads, tests, and deployment configuration. It does not own API paths or authorization, persistence, scientific ingestion, Python or CLI behavior, mobile-local behavior, existing Explorer behavior before migration, or cross-repository policy.
 
@@ -56,7 +56,7 @@ Use the narrowest authoritative source and do not duplicate its complete content
 - Design tokens, components, accessibility, and responsive behavior: [`docs/design-system.md`](docs/design-system.md)
 - API integration, Query ownership, pagination, and invalidation: [`docs/api-integration.md`](docs/api-integration.md)
 - Work order and gates: [`docs/roadmap.md`](docs/roadmap.md)
-- Current Phase 0 evidence: [`docs/phase-0-evidence.md`](docs/phase-0-evidence.md)
+- Current foundation evidence: [`docs/phase-0-evidence.md`](docs/phase-0-evidence.md)
 - Durable choices: [`decisions/`](decisions/)
 - Skill lifecycle and routing: [`skills/README.md`](skills/README.md)
 - Contributor workflow and commands: [`CONTRIBUTING.md`](CONTRIBUTING.md)

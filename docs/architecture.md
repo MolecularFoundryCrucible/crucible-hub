@@ -1,8 +1,8 @@
 # Crucible Hub Architecture
 
-Status: Phase 0 implementation contract
+Status: Active implementation contract
 
-Date: 2026-09-06
+Date: 2026-09-16
 
 ## Scope and authority
 
@@ -37,7 +37,7 @@ flowchart LR
 - Production sessions use opaque browser IDs and encrypted, shared server-side state supporting expiry, revocation, rotation, and replicas. Process-local or file-backed stores are local-development only.
 - The API owns identities, permissions, mutation truth, and representations. Object-storage capabilities use the smallest supported scope and lifetime. Explorer is a reference, never a runtime authentication or navigation dependency.
 
-The selected stack is TypeScript and React, TanStack Start and Router, TanStack Query, Table, Virtual, and Form, shadcn/ui with Tailwind and Base UI primitives, `openapi-fetch` with generated types, Cytoscape, Vitest, and Playwright. The local runtime and server boundary are verified; production authentication, sessions, uploads, and deployment remain gated separately.
+The selected stack is TypeScript and React, TanStack Start and Router, TanStack Query and Form, shadcn/ui with Tailwind and Base UI primitives, `openapi-fetch` with generated types, Cytoscape, Vitest, and Playwright. Current collections use semantic tables and API-owned pagination without a table or virtualization package. The local runtime and server boundary are verified; production authentication, sessions, uploads, and deployment remain gated separately.
 
 ## Module and execution boundaries
 
@@ -83,7 +83,7 @@ Service-account administration is capability-gated at the route and presentation
 
 Dataset thumbnails are an independent identity-scoped Query representation. Overview starts the read only after browser hydration, and Graph requests first previews only for its bounded dataset-node set. Base64 image payloads do not enter resource detail, collection, loader, URL, persistence, or server-rendered dehydration state. Hub accepts only the API's normalized `image/jpeg` response, bounds returned payloads, applies `no-store`, and renders images through the shared thumbnail component. Add, rename, and delete use a separate server function, exact `can_edit` presentation guidance, API authorization, server-confirmed list replacement, and explicit delete confirmation. Hub never interprets image content or accepts an API-provided MIME type other than normalized JPEG.
 
-Ownership transfers and sample or dataset project moves use API preview before explicit confirmation as defined by decision 0024. Project moves resolve a selected project MFID to its current project ID at the server boundary. Confirmed responses update only represented fields before dependent Query invalidation. Dataset instrument assignment remains read-only because no dedicated operation exists.
+Ownership transfers and sample or dataset project moves use API preview before explicit confirmation as defined by decision 0024. Project moves resolve a selected project MFID to its current project ID at the server boundary. Dataset acquisition-instrument assignment uses the dedicated `PUT /datasets/{dsid}/instrument` operation after local confirmation because the API provides no preview. Confirmed responses update only represented fields before dependent Query invalidation, and none of these operations uses optimistic state.
 
 Resource relationship management is a canonical-page workflow for supported sample and dataset parent-child and cross-type associations. Direction is explicit, add uses a bounded type search in an accessible dialog, and unlink is confirmed without deleting either resource. The source's exact `can_edit` capability guides presentation, but the API authorizes both source and target. After mutation the current adapter rereads authoritative exact source and target relationship representations; Hub applies no optimistic update and replaces only those exact detail caches because lightweight collections do not contain relationships. The inspector remains read-only. Self-links, invalid pairs, duplicates, cycles, and target validation are API-defined errors, not client-invented authorization. Production exposure waits for the relationship-specific capability, error, validation, and typed response contract; local API-key development does not waive the production authentication gate.
 
@@ -101,6 +101,6 @@ The initial deployment is a non-root containerized Node runtime at `/hub`, separ
 
 ## Gates and open questions
 
-`npm run validate` is the canonical static and production-build gate. `npm run format:check`, `npm run docs:check`, `npm run secrets:check`, `npm run boundary:check`, `npm run test:browser`, `npm run test:production`, and `npm run audit` supply focused evidence. Phase 0 accepts TanStack Start only after reliable server-only import protection, per-function authentication, mutation CSRF, shared sessions, safe Query hydration, cancellation and error propagation, container runtime health, `/hub` behavior, direct resumable upload feasibility, and a workable server-function and browser test harness. A blocking failure requires a documented reconsideration and new decision record.
+`npm run validate` is the canonical static and production-build gate. `npm run format:check`, `npm run docs:check`, `npm run secrets:check`, `npm run boundary:check`, `npm run test:browser`, `npm run test:production`, and `npm run audit` supply focused evidence. The local TanStack Start foundation has server-only import protection, safe Query hydration, cancellation and error propagation, container runtime checks, `/hub` behavior, and a server-function and browser test harness. Production readiness additionally requires per-function authentication through the accepted session boundary, mutation CSRF evidence, shared sessions, target deployment validation, and direct resumable upload feasibility before upload is exposed. A blocking architectural failure requires a documented reconsideration and new decision record.
 
 Open questions are the API authorization-code exchange, production session and key management, SSR extent, safe preference storage, API-backed dashboard aggregates, upload browser and file-size support, and release performance, accessibility, and availability budgets.

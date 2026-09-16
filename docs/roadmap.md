@@ -2,11 +2,11 @@
 
 Status: Active
 
-Date: 2026-09-06
+Date: 2026-09-16
 
 ## Purpose
 
-This document owns delivery order, entry and completion gates, current status, and the next action. [Product brief](product-brief.md) owns product intent, [information architecture](information-architecture.md) owns route behavior, [architecture](architecture.md) owns technical boundaries, and [Phase 0 evidence](phase-0-evidence.md) owns current verification detail.
+This document owns delivery order, entry and completion gates, current status, and the next action. [Product brief](product-brief.md) owns product intent, [information architecture](information-architecture.md) owns route behavior, [architecture](architecture.md) owns technical boundaries, and [foundation evidence](phase-0-evidence.md) owns current verification detail.
 
 ## Delivery rules
 
@@ -18,20 +18,18 @@ This document owns delivery order, entry and completion gates, current status, a
 
 ## Current position
 
-The local fixture workspace has the Phase 0 scaffold, server boundary, generated contract consumption, Query foundation, responsive shell, read workspace, dedicated project, sample, and dataset creation, controlled descriptive and scientific metadata editing, reviewed deletion requests, and direct project membership controls. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
+The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, and the first capability-gated service-account administration slice. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
 
-| Area                                       | Status                                                                                                                                  |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Runtime and server-only boundary           | Locally verified; production session gate remains open.                                                                                 |
-| Read workspace                             | Implemented and fixture/browser verified.                                                                                               |
-| Controlled resource and settings mutations | Implemented and fixture/browser verified; not production-exposed.                                                                       |
-| Direct project membership                  | Add, role change, removal, and self-leave are implemented and fixture/browser verified; not production-exposed.                         |
-| Resource management                        | Route-backed Manage pages and local fixture/browser mutation coverage are implemented; not production-exposed.                          |
-| Join requests                              | Deferred pending the API-owned identity, status, capability, and efficient project-state contract.                                      |
-| Instrument management                      | Lifecycle, operators, ownership transfer, and registration are implemented for local development.                                       |
-| Resource assignment and ownership          | Sample and dataset project moves, dataset instrument assignment, and resource ownership transfer are implemented for local development. |
-| Project, sample, and dataset creation      | Dedicated API-backed creation routes are implemented for local development; file upload remains separate.                               |
-| Uploads, thumbnails, and graphs            | Uploads remain blocked; lazy dataset thumbnail workflows and bounded one-hop resource graph tabs are implemented for local development. |
+| Area                                        | Status                                                                                                                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Runtime and server-only boundary            | Locally verified; production authentication and shared-session gates remain open.                                                                                                                |
+| Read and discovery workspace                | Home continuation, global and project search, QR lookup, directory ownership scopes, cursor pagination, facets, grouped browsing, previews, and sibling navigation are implemented locally.      |
+| Resource workspaces                         | Project, instrument, sample, and dataset routes with Overview, Data or Processing, Graph where applicable, and capability-gated Manage surfaces are implemented locally.                         |
+| Controlled mutations                        | Descriptive and metadata edits, creation, relationships, access, membership, assignment, ownership, lifecycle, thumbnails, ingestion requests, and deletion requests are implemented locally.    |
+| Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck. |
+| Broader administration and account activity | Proposed in [administration workspace](administration-workspace.md); review queues, people administration, audit, pins, and account activity await API contracts.                                |
+| Uploads                                     | Browser upload remains blocked by the secure exact-object capability, lifecycle, and CORS contract.                                                                                              |
+| Production exposure                         | Blocked by the API-owned login exchange, shared server sessions, same-origin and CSRF evidence, and deployment decisions.                                                                        |
 
 ## Ordered work packages
 
@@ -42,7 +40,7 @@ The local fixture workspace has the Phase 0 scaffold, server boundary, generated
 3. Complete upload feasibility evidence for the direct object-storage boundary.
 4. Run the production go or no-go review with container, path-prefix, authentication, and operational evidence.
 
-Entry: accepted API login and session contract. Completion: production-shaped authentication, session, security, deployment, and recovery evidence is recorded in [Phase 0 evidence](phase-0-evidence.md).
+Entry: accepted API login and session contract. Completion: production-shaped authentication, session, security, deployment, and recovery evidence is recorded in [foundation evidence](phase-0-evidence.md).
 
 ### P1: useful read workspace
 
@@ -50,7 +48,7 @@ The local workspace is complete enough for continued feature work: Home continua
 
 #### Grouped collection browsing
 
-Implemented for local development. Type-specific global Data, Project Data, and Instrument Datasets can switch between the existing list and an API-backed group directory. Facet counts, null buckets, and bucket pagination remain server-owned; selecting one group lazily starts the normal filtered resource cursor chain. Browse state is URL-backed and uses one shared presentation and mapping model across scopes. Canonical detail pages expose the originating collection through a compact sibling control and can continue its forward cursor chain. Cross-device saved views and in-place sequence reconfiguration around the current resource remain deferred to the contracts in [Crucible API handoff](crucible-api-handoff.md).
+Implemented for local development. Type-specific global Data, Project Data, and Instrument Datasets can switch between the existing list and an API-backed group directory. Facet counts, canonical labels, configurable label or count ordering, null buckets, and bucket pagination remain server-owned; selecting one group lazily starts the normal filtered resource cursor chain. Browse state is URL-backed and uses one shared presentation and mapping model across scopes. Canonical detail pages expose a compact sibling control and can rebuild a two-sided sequence around the current resource by supported scope and sort through anchored API reads. Cross-device saved views remain deferred to the contracts in [Crucible API handoff](crucible-api-handoff.md).
 
 #### Resource inspector slice
 
@@ -108,17 +106,17 @@ Browser upload orchestration remains blocked by proposed decision 0005 and the A
 
 Implemented and fixture/browser verified for local development without file upload. Dedicated routes validate contract fields, use bounded project, instrument, sample, and lead selectors, omit caller-assigned MFIDs, and navigate from API-assigned canonical identities. Confirmed rejections retain correctable drafts. Uncertain sample and dataset creates do not retry without API idempotency and direct the user to check Data before resubmitting. Dataset sample associations begin only after confirmed creation and retry only incomplete links. File attachment remains a later stage until the upload contract is safe for browsers.
 
-#### Next action: resource graph usability verification
+#### Next action: production boundary and administration verification
 
-Complete the user-led local usability pass for sample and dataset graph traversal, then record interaction and contract corrections before adding depth, graph filters, or editing. Production exposure remains blocked by P0.
+Keep the implemented local workspace stable while the API-owned web login exchange and shared-session contract remain the release-critical path. Recheck service-account platform-role mutation against the deployed API revision, then implement broader Administration routes only as their capability, queue, mutation, and audit contracts become available. Browser upload, production mutations, and deployment remain blocked by P0.
 
 ### P3: Explorer convergence
 
 Move advanced graph and data workflows only after the bounded graph prototype demonstrates feature, performance, accessibility, and usage parity. Migrate specialized viewers individually behind stable contracts and accountable ownership. Do not add new runtime handoffs to Explorer.
 
-### P4: high-scale management
+### P4: high-scale management and administration
 
-Add API-backed bulk operations, saved views, exports, richer activity and audit timelines, and administration only with the corresponding API, privacy, and operational contracts.
+The first service-account administration slice is implemented locally. Add broader review queues, people administration, audit, pins, activity, API-backed bulk operations, saved views, and exports only with the corresponding API, privacy, and operational contracts. The proposed route and capability model is in [administration workspace](administration-workspace.md).
 
 ## External dependencies
 

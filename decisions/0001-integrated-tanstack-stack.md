@@ -6,7 +6,7 @@ Date: 2026-09-02
 
 ## Context
 
-Hub needs typed route and URL state, authenticated server execution, server-state caching, large data tables, virtualization, complex forms, SSR for the initial route, and a containerized backend-for-frontend runtime.
+Hub needs typed route and URL state, authenticated server execution, server-state caching, scalable collections, complex forms, SSR for the initial route, and a containerized backend-for-frontend runtime.
 
 The principal candidates were React Router Framework Mode, Next.js, a plain React SPA with a separate backend, and TanStack Start.
 
@@ -17,7 +17,7 @@ Use TypeScript and React with:
 - TanStack Start for the full-stack runtime
 - TanStack Router for routes and schema-validated URL state
 - TanStack Query for browser-side Crucible server state
-- TanStack Table and TanStack Virtual for large collections
+- TanStack Table and TanStack Virtual when client-side table state or rendered collection volume requires them
 - TanStack Form with shared schema validation for complex forms
 
 TanStack Query is the single browser cache owner for Crucible server state. Route loaders prefetch or require Query data and must not create a competing cache for the same representation.
@@ -27,11 +27,12 @@ All credentialed API access occurs through authenticated server functions or exp
 ## Consequences
 
 - Route parameters, filters, sorting, grouping, cursors, tabs, and graph focus can be type-safe and URL-addressable.
-- The application uses a coherent family of data, routing, table, virtualization, and form tools.
+- The application uses a coherent family of routing, server-state, and form tools, with compatible table and virtualization packages available when justified.
+- Current server-paginated collections use semantic HTML tables and do not install Table or Virtual until their state or rendering behavior is needed.
 - Developers must understand TanStack Start's server and browser execution model.
 - Generic TypeScript complexity and compile performance require monitoring as the route tree grows.
-- The framework's current Release Candidate status adds upgrade and defect risk.
-- Phase 0 must validate production build, container deployment, path prefixes, server-only imports, sessions, CSRF, cancellation, and testing.
+- The framework's release cadence requires deliberate dependency upgrades and production validation.
+- Production readiness requires validation of the build, container deployment, path prefixes, server-only imports, sessions, CSRF, cancellation, and testing.
 
 ## Alternatives considered
 
@@ -49,7 +50,7 @@ Simple initial setup, but it requires a separate secure backend, duplicates rout
 
 ## Validation
 
-Acceptance for implementation remains conditional on the Phase 0 go or no-go gate in `docs/architecture.md`. A failed gate requires a new decision record that supersedes this one.
+The local runtime, server-only boundary, Query integration, test harness, container runtime, and `/hub` path behavior have passed their foundation gates. Production authentication, shared sessions, CSRF, target deployment, and direct-upload gates remain open in `docs/architecture.md`. A blocking architectural failure requires a new decision record that supersedes this one.
 
 ## References
 

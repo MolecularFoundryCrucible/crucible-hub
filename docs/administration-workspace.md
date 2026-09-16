@@ -190,7 +190,7 @@ Recommended additions:
 - A bounded list of project and instrument assignments if the API can provide it without reconstructing access from unrelated groups.
 - An immutable audit trail for account creation, role changes, disablement, key rotation, and key revocation without exposing keys.
 
-The observed staging failure for `PATCH /service_accounts/{unique_id}` must be resolved before role editing is considered complete. The deployed route and schema match the pinned Hub request, but the API returned an unmapped upstream failure when changing a role to Contributor. API logs should verify database update and `ServiceAccountAdminDetail` response serialization.
+Platform-role editing is implemented against the pinned API contract from PR #263. It still needs a staging recheck after that deployment because a call made against the preceding deployment returned an unmapped upstream failure when changing a role to Contributor. If the failure remains, API logs should verify the database update and `ServiceAccountAdminDetail` response serialization.
 
 ## People and platform roles
 
@@ -408,7 +408,7 @@ Invalidation must use canonical MFIDs and affected references from the mutation 
 
 | Area                    | Available today                                                                        | Missing for robust Hub support                                                                                                                                                                                             |
 | ----------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Service accounts        | Directory, create, detail, profile edit, platform-role patch, key status, key rotation | Resolve deployed role-patch failure; lifecycle, revoke-only, last use, list-level credential attention, filters, audit                                                                                                     |
+| Service accounts        | Directory, create, detail, profile edit, platform-role patch, key status, key rotation | Recheck the role patch after PR #263 deployment; lifecycle, revoke-only, last use, list-level credential attention, filters, audit                                                                                         |
 | Join requests           | List, detail, approve or reject; project leads can list groups they lead               | Canonical project MFID filter, resolved project and requester references, typed statuses and decisions, available roles, exact capabilities, cancellation, concurrency, authoritative membership result, cursor pagination |
 | Deletion requests       | List, detail, review                                                                   | Exact reviewer capabilities, typed statuses and decisions, expected version, stable project and resource references, impact summary, deletion result or tombstone, cursor pagination, audit semantics                      |
 | Ingestion operations    | Admin-wide or scoped list, detail, generic patch                                       | Typed statuses, safe failures, project and instrument filters, exact capabilities, explicit retry and cancel, progress, concurrency and idempotency, cursor pagination                                                     |

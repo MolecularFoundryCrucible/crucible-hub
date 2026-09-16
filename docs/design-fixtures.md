@@ -1,8 +1,8 @@
 # Crucible Hub Design Fixtures
 
-Status: Phase 0 fixture contract
+Status: Active fixture contract
 
-Date: 2026-09-03
+Date: 2026-09-16
 
 ## Scope and rules
 

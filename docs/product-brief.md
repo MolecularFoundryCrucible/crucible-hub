@@ -1,8 +1,8 @@
 # Crucible Hub Product Brief
 
-Status: Draft 0.1
+Status: Active product contract
 
-Date: 2026-09-06
+Date: 2026-09-16
 
 ## Product statement
 
@@ -38,17 +38,17 @@ Hub uses stable MFIDs for routes, links, cache identity, and relationships. Edit
 
 ## Product destinations
 
-Hub provides Home, Projects, Data, Instruments, Search, Activity, Account, and a capability-gated Admin area. The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
+Hub currently provides Home, Projects, Data, Instruments, Search, Account, and a capability-gated Administration area for service-account management. Activity, broader review queues, people administration, and audit are proposed destinations that require the contracts in [administration workspace](administration-workspace.md) and [Crucible API handoff](crucible-api-handoff.md). The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
 
 The core product surfaces are:
 
 - Home for immediate research continuation through recently added data, projects the current person leads, active instruments they manage, and account-isolated resources viewed during the current browser session.
 - Data for cross-project sample and dataset discovery, ownership and type-specific facet filtering, API-backed grouped browsing, server-owned sorting, collection preview, and canonical detail navigation.
 - Project and instrument workspaces for scoped list and grouped data browsing, context, and capability-gated management.
-- Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, access, activity, and lifecycle-aware actions.
+- Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, processing, access, and lifecycle-aware actions.
 - Search, scientific metadata search, direct MFID lookup, and local QR scanning for bounded cross-resource discovery, with project-scoped sample and dataset search available from an active project.
 - Account for reviewing and updating the authenticated person's own name, email, and username from the application-bar profile menu.
-- Administration for capability-gated service-account discovery, creation, profile maintenance, credential status, and credential rotation.
+- Administration for capability-gated service-account discovery, creation, profile maintenance, platform-role management, credential status, and credential rotation.
 
 Accessible and owned resources are distinct sets. Hub must not invent a personal-project model or emulate unavailable server-side filtering with incomplete client-side scans.
 
@@ -76,13 +76,13 @@ Resource management is a separate canonical workflow at `/samples/:sampleMfid/ma
 
 Project and instrument Manage pages use the same unified card structure without nested navigation. Access management contains project members or instrument operators. Resource management contains project ownership and leaving, or instrument lifecycle and ownership. Each section and action remains gated by its exact API capability.
 
-Platform administrators manage service accounts in a separate Administration destination. The directory is searched and paginated by the API. Creation and credential rotation show each new key once in mutation-local memory and never store it in Query state, URLs, or browser persistence. Profile editing is read-first, platform-role changes require explicit confirmation and disclose delayed authorization propagation, credential rotation requires explicit confirmation, and unavailable lifecycle actions such as suspension and deletion are not invented by the Hub. Instrument operator and project member assignment remain contextual workflows on those resources and use the shared service-account-aware identity search.
+Authorized human administrators manage service accounts in a separate Administration destination. The directory is searched and paginated by the API. Creation and credential rotation show each new key once in mutation-local memory and never store it in Query state, URLs, or browser persistence. Profile editing is read-first, platform-role changes require explicit confirmation and disclose delayed authorization propagation, credential rotation requires explicit confirmation, and unavailable lifecycle actions such as suspension and deletion are not invented by the Hub. Instrument operator and project member assignment remain contextual workflows on those resources and use the shared service-account-aware identity search.
 
 ## Delivery direction
 
-Phase 0 establishes the contract, security, design, and runtime foundation. Phase 1 delivers the useful read workspace. Phase 2 adds controlled self-service management, beginning with safe, independently recoverable operations. Phase 3 migrates generic Explorer workflows only after measured parity. Phase 4 adds high-scale capabilities such as bulk actions, saved views, richer audit history, and administration.
+The runtime, design-system, read-workspace, and controlled-management foundations are implemented for local development. Native collection browsing, graph traversal, dataset processing, account profile management, and the first service-account administration slice now extend that foundation. Production authentication, secure browser upload, API-backed activity and review queues, saved views, broader audit history, and remaining Explorer convergence are still open.
 
-The ordered packages, gates, current implementation status, and next action are authoritative in [roadmap](roadmap.md). Current verification is authoritative in [Phase 0 evidence](phase-0-evidence.md). API-owned needs are maintained only in [Crucible API handoff](crucible-api-handoff.md).
+The ordered packages, gates, current implementation status, and next action are authoritative in [roadmap](roadmap.md). Current verification is authoritative in [foundation evidence](phase-0-evidence.md). API-owned needs are maintained only in [Crucible API handoff](crucible-api-handoff.md).
 
 ## Release requirements
 
