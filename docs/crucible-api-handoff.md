@@ -272,6 +272,8 @@ Review input must constrain the transition to supported enum values. Approval sh
 
 ### Administrative review workspace
 
+The detailed proposed Hub routes, contextual project and instrument surfaces, capability model, API shapes, cache effects, delivery stages, and acceptance criteria are documented in [`administration-workspace.md`](administration-workspace.md).
+
 Admin is a separate capability-gated destination. Its first useful scope should be bounded review work rather than a generic database console:
 
 - Pending deletion requests and deletion audit.

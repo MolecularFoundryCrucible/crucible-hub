@@ -6,7 +6,7 @@ Date: 2026-09-06
 
 ## Purpose and authority
 
-This document owns Hub routes, navigation, shell behavior, page archetypes, and responsive interaction. [Product brief](product-brief.md) owns user intent and workflows; [architecture](architecture.md) owns runtime and data boundaries; [roadmap](roadmap.md) owns delivery order and evidence.
+This document owns Hub routes, navigation, shell behavior, page archetypes, and responsive interaction. [Product brief](product-brief.md) owns user intent and workflows; [architecture](architecture.md) owns runtime and data boundaries; [roadmap](roadmap.md) owns delivery order and evidence. The proposed cross-workspace Administration and contextual project or instrument management expansion is specified in [`administration-workspace.md`](administration-workspace.md).
 
 ## Navigation principles
 
