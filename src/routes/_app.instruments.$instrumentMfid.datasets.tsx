@@ -54,6 +54,7 @@ import {
   dataPageLimit,
   datasetsCursorQueryOptions,
 } from "@/data/crucible/data.queries"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
 const instrumentDatasetSearchSchema = z.object({
   ...collectionBrowseSearchFields,
@@ -104,15 +105,11 @@ export const Route = createFileRoute(
       ...filters,
       limit: dataPageLimit,
     })
-    const hasData =
-      context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchInfiniteQuery(options)
-    if (cause === "stay" || hasData) {
-      void request
-      return
-    }
-
-    await request
+    const request = prefetchInfiniteQueryWithReadableCache(
+      context.queryClient,
+      options
+    )
+    if (cause !== "stay") await request
   },
   pendingComponent: InstrumentDatasetsPending,
   component: InstrumentDatasetsPage,

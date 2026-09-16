@@ -33,19 +33,11 @@ import type {
   CollectionBrowseSearch,
   CollectionGroupOrder,
 } from "@/data/crucible/collection-browse"
-import {
-  ResourceCreatedCell,
-  ResourceOpenCell,
-  ResourceOwnerCell,
-  ResourceProjectCell,
-  ResourceUpdatedCell,
-} from "@/components/crucible/resource-collection-cells"
-import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
+import { ResourceCollectionTable } from "@/components/crucible/resource-collection-table"
 import {
   resourceSiblingSequenceLabel,
   useRegisterResourceSiblings,
 } from "@/components/crucible/resource-sibling-navigation"
-import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -55,13 +47,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import {
   dataPageLimit,
   datasetsCursorQueryOptions,
@@ -586,20 +571,24 @@ function ProjectDataResult({
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             {kind === "samples" ? (
-              <ProjectSampleTable
+              <ResourceCollectionTable
                 direction={direction}
+                fromProject={projectMfid}
                 items={items}
+                kind="sample"
                 onSort={onSort}
-                projectMfid={projectMfid}
                 sort={sort}
+                subtypeVisibility="always"
               />
             ) : (
-              <ProjectDatasetTable
+              <ResourceCollectionTable
                 direction={direction}
+                fromProject={projectMfid}
                 items={items}
+                kind="dataset"
                 onSort={onSort}
-                projectMfid={projectMfid}
                 sort={sort}
+                subtypeVisibility="always"
               />
             )}
           </CardContent>
@@ -630,159 +619,6 @@ function ProjectDataResult({
         <FirstPageLink kind={kind} projectMfid={projectMfid} />
       ) : null}
     </div>
-  )
-}
-
-function ProjectSampleTable({
-  direction,
-  items,
-  onSort,
-  projectMfid,
-  sort,
-}: {
-  direction: SortDirection
-  items: readonly WorkspaceSample[]
-  onSort: (sort: ResourceSort, direction: SortDirection) => void
-  projectMfid: string
-  sort: ResourceSort | undefined
-}) {
-  return (
-    <ProjectTable direction={direction} onSort={onSort} sort={sort}>
-      {items.map((sample) => (
-        <TableRow key={sample.unique_id}>
-          <ResourceCollectionNameCell
-            className="resource-collection-name"
-            kind="sample"
-            mfid={sample.unique_id}
-            name={sample.sample_name}
-            subtype={sample.sample_type ?? "Unspecified sample type"}
-            subtypeVisibility="always"
-          />
-          <ResourceProjectCell
-            project={sample.project}
-            projectId={sample.project_id}
-            relation={sample.project_relation}
-          />
-          <ResourceOwnerCell owner={sample.owner} />
-          <ResourceCreatedCell
-            className="hidden xl:table-cell"
-            value={sample.creation_time}
-          />
-          <ResourceUpdatedCell value={sample.modification_time} />
-          <ResourceOpenCell
-            fromProject={projectMfid}
-            kind="sample"
-            mfid={sample.unique_id}
-            name={sample.sample_name}
-          />
-        </TableRow>
-      ))}
-    </ProjectTable>
-  )
-}
-
-function ProjectDatasetTable({
-  direction,
-  items,
-  onSort,
-  projectMfid,
-  sort,
-}: {
-  direction: SortDirection
-  items: readonly WorkspaceDataset[]
-  onSort: (sort: ResourceSort, direction: SortDirection) => void
-  projectMfid: string
-  sort: ResourceSort | undefined
-}) {
-  return (
-    <ProjectTable direction={direction} onSort={onSort} sort={sort}>
-      {items.map((dataset) => (
-        <TableRow key={dataset.unique_id}>
-          <ResourceCollectionNameCell
-            className="resource-collection-name"
-            kind="dataset"
-            mfid={dataset.unique_id}
-            name={dataset.dataset_name ?? "Untitled dataset"}
-            subtype={dataset.measurement ?? "Unspecified measurement"}
-            subtypeVisibility="always"
-          />
-          <ResourceProjectCell
-            project={dataset.project}
-            projectId={dataset.project_id}
-            relation={dataset.project_relation}
-          />
-          <ResourceOwnerCell owner={dataset.owner} />
-          <ResourceCreatedCell
-            className="hidden xl:table-cell"
-            value={dataset.creation_time}
-          />
-          <ResourceUpdatedCell value={dataset.modification_time} />
-          <ResourceOpenCell
-            fromProject={projectMfid}
-            kind="dataset"
-            mfid={dataset.unique_id}
-            name={dataset.dataset_name ?? "Untitled dataset"}
-          />
-        </TableRow>
-      ))}
-    </ProjectTable>
-  )
-}
-
-function ProjectTable({
-  children,
-  direction,
-  onSort,
-  sort,
-}: {
-  children: React.ReactNode
-  direction: SortDirection
-  onSort: (sort: ResourceSort, direction: SortDirection) => void
-  sort: ResourceSort | undefined
-}) {
-  return (
-    <Table className="resource-collection-table table-fixed">
-      <colgroup>
-        <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
-        <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
-        <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
-        <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
-        <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
-        <col className="w-data-action-column" />
-      </colgroup>
-      <TableHeader>
-        <TableRow>
-          <SortableTableHead
-            active={sort === "name"}
-            direction={direction}
-            field="name"
-            label="Name"
-            onChange={onSort}
-          />
-          <TableHead>Project</TableHead>
-          <TableHead>Owner</TableHead>
-          <SortableTableHead
-            active={sort === "created"}
-            className="hidden xl:table-cell"
-            direction={direction}
-            field="created"
-            label="Created"
-            onChange={onSort}
-          />
-          <SortableTableHead
-            active={sort === "updated"}
-            direction={direction}
-            field="updated"
-            label="Updated"
-            onChange={onSort}
-          />
-          <TableHead className="text-center">
-            <span className="sr-only">Open</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>{children}</TableBody>
-    </Table>
   )
 }
 

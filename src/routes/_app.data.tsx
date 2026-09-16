@@ -22,15 +22,7 @@ import {
 } from "@/components/crucible/cursor-resource-collection"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import {
-  ResourceCreatedCell,
-  ResourceOpenCell,
-  ResourceOwnerCell,
-  ResourceProjectCell,
-  ResourceUpdatedCell,
-} from "@/components/crucible/resource-collection-cells"
-import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
-import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { ResourceCollectionTable } from "@/components/crucible/resource-collection-table"
 import {
   ResourcePreviewContext,
   resourcePreviewSearchSchema,
@@ -50,14 +42,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { DataFilters } from "@/features/data/data-filters"
 import {
   dataSearchSchema,
@@ -75,6 +59,7 @@ import {
   samplesCursorQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import {
   collectionBrowseSearchState,
   collectionGroupOrderSearchState,
@@ -174,10 +159,11 @@ export const Route = createFileRoute("/_app/data")({
         ...filters,
         limit: dataPageLimit,
       })
-      const hasData =
-        context.queryClient.getQueryData(options.queryKey) !== undefined
-      const request = context.queryClient.prefetchInfiniteQuery(options)
-      if (!hasData) missing.push(request)
+      const request = prefetchInfiniteQueryWithReadableCache(
+        context.queryClient,
+        options
+      )
+      if (request) missing.push(request)
     }
     if (resolution.filters.kind !== "samples" && hasGroupedSelection) {
       const filters =
@@ -193,10 +179,11 @@ export const Route = createFileRoute("/_app/data")({
         ...filters,
         limit: dataPageLimit,
       })
-      const hasData =
-        context.queryClient.getQueryData(options.queryKey) !== undefined
-      const request = context.queryClient.prefetchInfiniteQuery(options)
-      if (!hasData) missing.push(request)
+      const request = prefetchInfiniteQueryWithReadableCache(
+        context.queryClient,
+        options
+      )
+      if (request) missing.push(request)
     }
     if (cause !== "stay") await Promise.all(missing)
   },
@@ -479,141 +466,30 @@ function DataResults({
             {hasRows ? (
               <Card aria-busy={updating}>
                 <CardContent className="px-0">
-                  <Table className="resource-collection-table table-fixed">
-                    <colgroup>
-                      <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
-                      <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
-                      <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
-                      <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
-                      <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
-                      <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
-                      <col className="w-data-action-column" />
-                    </colgroup>
-                    <TableHeader>
-                      <TableRow>
-                        <SortableTableHead
-                          active={displayedCollectionFilters.sort === "name"}
-                          direction={
-                            displayedCollectionFilters.direction ?? "desc"
-                          }
-                          field="name"
-                          label="Name"
-                          onChange={changeSort}
-                        />
-                        <TableHead className="hidden xl:table-cell">
-                          Type
-                        </TableHead>
-                        <TableHead>Project</TableHead>
-                        <TableHead>Owner</TableHead>
-                        <SortableTableHead
-                          active={displayedCollectionFilters.sort === "created"}
-                          className="hidden xl:table-cell"
-                          direction={
-                            displayedCollectionFilters.direction ?? "desc"
-                          }
-                          field="created"
-                          label="Created"
-                          onChange={changeSort}
-                        />
-                        <SortableTableHead
-                          active={displayedCollectionFilters.sort === "updated"}
-                          direction={
-                            displayedCollectionFilters.direction ?? "desc"
-                          }
-                          field="updated"
-                          label="Updated"
-                          onChange={changeSort}
-                        />
-                        <TableHead className="text-center">
-                          <span className="sr-only">Open</span>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {showSamples &&
-                        samplePage?.items.map((sample) => (
-                          <TableRow key={sample.unique_id}>
-                            <ResourceCollectionNameCell
-                              className="resource-collection-name"
-                              kind="sample"
-                              mfid={sample.unique_id}
-                              name={sample.sample_name}
-                              subtype={
-                                sample.sample_type ?? "Unspecified sample type"
-                              }
-                              subtypeVisibility="compact"
-                            />
-                            <TableCell className="resource-collection-type hidden xl:table-cell">
-                              <span
-                                className="block truncate"
-                                title={sample.sample_type ?? undefined}
-                              >
-                                {sample.sample_type ?? "Unspecified"}
-                              </span>
-                            </TableCell>
-                            <ResourceProjectCell
-                              project={sample.project}
-                              projectId={sample.project_id}
-                              relation={sample.project_relation}
-                            />
-                            <ResourceOwnerCell owner={sample.owner} />
-                            <ResourceCreatedCell
-                              className="hidden xl:table-cell"
-                              value={sample.creation_time}
-                            />
-                            <ResourceUpdatedCell
-                              value={sample.modification_time}
-                            />
-                            <ResourceOpenCell
-                              kind="sample"
-                              mfid={sample.unique_id}
-                              name={sample.sample_name}
-                            />
-                          </TableRow>
-                        ))}
-                      {showDatasets &&
-                        datasetPage?.items.map((dataset) => (
-                          <TableRow key={dataset.unique_id}>
-                            <ResourceCollectionNameCell
-                              className="resource-collection-name"
-                              kind="dataset"
-                              mfid={dataset.unique_id}
-                              name={dataset.dataset_name ?? "Untitled dataset"}
-                              subtype={
-                                dataset.measurement ?? "Unspecified measurement"
-                              }
-                              subtypeVisibility="compact"
-                            />
-                            <TableCell className="resource-collection-type hidden xl:table-cell">
-                              <span
-                                className="block truncate"
-                                title={dataset.measurement ?? undefined}
-                              >
-                                {dataset.measurement ?? "Unspecified"}
-                              </span>
-                            </TableCell>
-                            <ResourceProjectCell
-                              project={dataset.project}
-                              projectId={dataset.project_id}
-                              relation={dataset.project_relation}
-                            />
-                            <ResourceOwnerCell owner={dataset.owner} />
-                            <ResourceCreatedCell
-                              className="hidden xl:table-cell"
-                              value={dataset.creation_time}
-                            />
-                            <ResourceUpdatedCell
-                              value={dataset.modification_time}
-                            />
-                            <ResourceOpenCell
-                              kind="dataset"
-                              mfid={dataset.unique_id}
-                              name={dataset.dataset_name ?? "Untitled dataset"}
-                            />
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
+                  {showSamples && samplePage ? (
+                    <ResourceCollectionTable
+                      direction={displayedCollectionFilters.direction ?? "desc"}
+                      items={samplePage.items}
+                      kind="sample"
+                      onSort={changeSort}
+                      showSubtypeColumn
+                      sort={displayedCollectionFilters.sort}
+                      subtypeLabel="Type"
+                      subtypeVisibility="compact"
+                    />
+                  ) : null}
+                  {showDatasets && datasetPage ? (
+                    <ResourceCollectionTable
+                      direction={displayedCollectionFilters.direction ?? "desc"}
+                      items={datasetPage.items}
+                      kind="dataset"
+                      onSort={changeSort}
+                      showSubtypeColumn
+                      sort={displayedCollectionFilters.sort}
+                      subtypeLabel="Type"
+                      subtypeVisibility="compact"
+                    />
+                  ) : null}
                 </CardContent>
               </Card>
             ) : (

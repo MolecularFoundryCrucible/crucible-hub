@@ -30,9 +30,10 @@ import {
   samplesCursorQueryOptions,
 } from "@/data/crucible/data.queries"
 import type { ProjectScope } from "@/data/crucible/data.queries"
+import { facetFilterSearchFields } from "@/data/crucible/facet-filter-search"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
 const filterSearchValue = z.string().max(255).optional().catch("")
-const facetSearchValue = z.string().max(255).optional().catch(undefined)
 const selectedFacetSchema = z
   .union([z.literal(true), z.literal("true")])
   .transform(() => true as const)
@@ -40,30 +41,16 @@ const selectedFacetSchema = z
   .catch(undefined)
 const projectDataSearchSchema = resourcePreviewSearchSchema.extend({
   ...collectionBrowseSearchFields,
+  ...facetFilterSearchFields,
   createdFrom: filterSearchValue,
   createdTo: filterSearchValue,
-  dataFormat: facetSearchValue,
-  dataFormatIsNull: selectedFacetSchema,
-  dataFormatSet: selectedFacetSchema,
   direction: sortDirectionSchema.optional().catch(undefined),
   instrumentMfid: filterSearchValue,
   instrumentMfidIsNull: selectedFacetSchema,
   kind: z.enum(["samples", "datasets"]).optional().catch(undefined),
-  measurement: facetSearchValue,
-  measurementIsNull: selectedFacetSchema,
-  measurementSet: selectedFacetSchema,
-  ownerId: facetSearchValue,
-  ownerIdIsNull: selectedFacetSchema,
-  ownerIdSet: selectedFacetSchema,
   scope: z.enum(["all", "assigned", "shared"]).optional().catch(undefined),
   sampleCursor: collectionCursorSchema,
   datasetCursor: collectionCursorSchema,
-  sampleType: facetSearchValue,
-  sampleTypeIsNull: selectedFacetSchema,
-  sampleTypeSet: selectedFacetSchema,
-  sessionName: facetSearchValue,
-  sessionNameIsNull: selectedFacetSchema,
-  sessionNameSet: selectedFacetSchema,
   sort: resourceSortSchema.optional().catch(undefined),
   visibility: filterSearchValue,
 })
@@ -130,14 +117,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
         projectScope: deps.projectScope,
         ...filters,
       })
-      const hasData =
-        context.queryClient.getQueryData(options.queryKey) !== undefined
-      const request = context.queryClient.prefetchInfiniteQuery(options)
-      if (hasData) {
-        void request
-        return
-      }
-      await request
+      await prefetchInfiniteQueryWithReadableCache(context.queryClient, options)
       return
     }
 
@@ -158,14 +138,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
       projectScope: deps.projectScope,
       ...filters,
     })
-    const hasData =
-      context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchInfiniteQuery(options)
-    if (hasData) {
-      void request
-      return
-    }
-    await request
+    await prefetchInfiniteQueryWithReadableCache(context.queryClient, options)
   },
   pendingComponent: ProjectDataPending,
   component: ProjectDataPage,

@@ -17,6 +17,7 @@ import type {
   DatasetFacetFilters,
   SampleFacetFilters,
 } from "@/data/crucible/facets"
+import { selectedFacetValue } from "@/data/crucible/facet-filter-search"
 
 const instrumentMfidSchema = z
   .string()
@@ -230,12 +231,4 @@ export function resolveProjectDataFilters(
     },
     valid: true,
   }
-}
-
-function selectedFacetValue(
-  value: string | undefined,
-  selected: true | undefined,
-  isNull: true | undefined
-) {
-  return !isNull && selected ? (value ?? "") : undefined
 }

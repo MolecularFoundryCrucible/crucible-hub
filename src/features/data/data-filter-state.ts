@@ -25,9 +25,12 @@ import type {
   DatasetFacetFilters,
   SampleFacetFilters,
 } from "@/data/crucible/facets"
+import {
+  facetFilterSearchFields,
+  selectedFacetValue,
+} from "@/data/crucible/facet-filter-search"
 
 const filterSearchValue = z.string().max(255).optional().catch("")
-const facetSearchValue = z.string().max(255).optional().catch(undefined)
 const selectedFacetSchema = z
   .union([z.literal(true), z.literal("true")])
   .transform(() => true as const)
@@ -36,32 +39,18 @@ const selectedFacetSchema = z
 
 export const dataSearchSchema = z.object({
   ...collectionBrowseSearchFields,
+  ...facetFilterSearchFields,
   affiliation: filterSearchValue,
   createdFrom: filterSearchValue,
   createdTo: filterSearchValue,
-  dataFormat: facetSearchValue,
-  dataFormatIsNull: selectedFacetSchema,
-  dataFormatSet: selectedFacetSchema,
   datasetCursor: collectionCursorSchema,
   direction: filterSearchValue,
   instrumentMfid: filterSearchValue,
   instrumentMfidIsNull: selectedFacetSchema,
   kind: filterSearchValue,
-  measurement: facetSearchValue,
-  measurementIsNull: selectedFacetSchema,
-  measurementSet: selectedFacetSchema,
-  ownerId: facetSearchValue,
-  ownerIdIsNull: selectedFacetSchema,
-  ownerIdSet: selectedFacetSchema,
   projectMfid: filterSearchValue,
   projectScope: filterSearchValue,
   sampleCursor: collectionCursorSchema,
-  sampleType: facetSearchValue,
-  sampleTypeIsNull: selectedFacetSchema,
-  sampleTypeSet: selectedFacetSchema,
-  sessionName: facetSearchValue,
-  sessionNameIsNull: selectedFacetSchema,
-  sessionNameSet: selectedFacetSchema,
   sort: filterSearchValue,
   visibility: filterSearchValue,
 })
@@ -396,14 +385,6 @@ export function setDataFilterProject(
     projectMfid: normalized,
     projectScope: normalized ? filters.projectScope : undefined,
   }
-}
-
-function selectedFacetValue(
-  value: string | undefined,
-  selected: true | undefined,
-  isNull: true | undefined
-) {
-  return !isNull && selected ? (value ?? "") : undefined
 }
 
 function facetSearchState(filters: DataFilterValues) {
