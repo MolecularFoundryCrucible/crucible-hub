@@ -29,12 +29,16 @@ export function identityScope(
 export const crucibleKeys = {
   accountProfile: (scope: IdentityScope) =>
     [...scope, "account", "profile"] as const,
+  projectQueries: (scope: IdentityScope) => [...scope, "projects"] as const,
   projects: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "projects", "list", normalizeFilters(filters)] as const,
   projectLists: (scope: IdentityScope) =>
     [...scope, "projects", "list"] as const,
   project: (scope: IdentityScope, projectMfid: string) =>
     [...scope, "projects", "detail", projectMfid] as const,
+  projectSummary: (scope: IdentityScope, projectMfid: string) =>
+    [...scope, "projects", "detail", projectMfid, "summary"] as const,
+  sampleQueries: (scope: IdentityScope) => [...scope, "samples"] as const,
   person: (scope: IdentityScope, personId: string) =>
     [...scope, "people", "detail", personId] as const,
   serviceAccount: (scope: IdentityScope, reference: string) =>
@@ -82,12 +86,20 @@ export const crucibleKeys = {
       "facets",
       normalizeFilters(filters),
     ] as const,
+  datasetQueries: (scope: IdentityScope) => [...scope, "datasets"] as const,
+  instrumentQueries: (scope: IdentityScope) =>
+    [...scope, "instruments"] as const,
   instruments: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "instruments", "list", normalizeFilters(filters)] as const,
   instrumentLists: (scope: IdentityScope) =>
     [...scope, "instruments", "list"] as const,
   instrumentOperators: (scope: IdentityScope, instrumentMfid: string) =>
     [...scope, "instruments", "operators", instrumentMfid] as const,
+  resourceQueries: (scope: IdentityScope) => [...scope, "resources"] as const,
+  resourceDetails: (scope: IdentityScope, resourceMfid?: string) =>
+    resourceMfid
+      ? ([...scope, "resources", "detail", resourceMfid] as const)
+      : ([...scope, "resources", "detail"] as const),
   resource: (scope: IdentityScope, resourceMfid: string, detailShape: string) =>
     [...scope, "resources", "detail", resourceMfid, detailShape] as const,
   resourceGraph: (scope: IdentityScope, resourceMfid: string) =>

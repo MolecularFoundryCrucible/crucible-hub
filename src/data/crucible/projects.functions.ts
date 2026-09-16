@@ -29,6 +29,7 @@ export const projectListInputSchema = z.object({
 
 export const projectDetailInputSchema = z.object({
   projectMfid: z.string().trim().min(1).max(255),
+  projection: z.enum(["overview", "summary"]),
   scenario: fixtureScenarioSchema.optional(),
 })
 
@@ -120,7 +121,8 @@ export const getWorkspaceProject = createServerFn({ method: "GET" })
       readWorkspaceProject(
         data.projectMfid,
         data.scenario,
-        context.requestSignal
+        context.requestSignal,
+        data.projection
       )
     )
   })

@@ -24,7 +24,7 @@ import {
   initiateFileDownload,
 } from "@/features/dataset-files/dataset-files-card"
 
-import { preloadResourceDetail } from "../../features/resource-detail/resource-detail-page"
+import { preloadResourceShell } from "../../features/resource-detail/resource-detail-page"
 
 vi.mock("@/data/crucible/resources.functions", () => ({
   DATASET_DATA_FORMAT_MAX_LENGTH: 255,
@@ -100,7 +100,7 @@ describe("DatasetFiles", () => {
     })
 
     await expect(
-      preloadResourceDetail(queryClient, scope, datasetMfid)
+      preloadResourceShell(queryClient, scope, datasetMfid)
     ).resolves.toEqual(resource)
     expect(getWorkspaceDatasetFiles).not.toHaveBeenCalled()
     expect(

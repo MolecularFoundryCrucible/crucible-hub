@@ -358,7 +358,8 @@ function fixtureWorkspace(scenario?: FixtureScenario) {
 export async function readWorkspaceResource(
   resourceMfid: string,
   scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
+  requestSignal?: AbortSignal,
+  projection: "overview" | "summary" = "overview"
 ): Promise<WorkspaceResourceDetail | null> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
@@ -420,8 +421,8 @@ export async function readWorkspaceResource(
       path: { resource_id: resourceMfid },
       query: {
         include_datasets: false,
-        include_links: true,
-        include_metadata: true,
+        include_links: projection === "overview",
+        include_metadata: projection === "overview",
         include_owner: true,
       },
     },

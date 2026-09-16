@@ -27,7 +27,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { crucibleKeys } from "@/data/crucible/query-keys"
+import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import { hubPageTitle } from "@/lib/page-title"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
     if (!source || source.status === "unavailable") return
 
     const resource = await context.queryClient.ensureQueryData(
-      resourceQueryOptions(source.scope, params.instrumentMfid)
+      resourceSummaryQueryOptions(source.scope, params.instrumentMfid)
     )
     if (!resource || resource.kind !== "instrument") {
       return { isInstrument: false, scope: source.scope }
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
 function InstrumentPage() {
   const { instrumentMfid } = Route.useParams()
   const scope = useWorkspaceScope()
-  const resourceOptions = resourceQueryOptions(scope, instrumentMfid)
+  const resourceOptions = resourceSummaryQueryOptions(scope, instrumentMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
   useRememberRecentlyViewed(
     resource?.kind === "instrument"
@@ -106,9 +107,10 @@ function InstrumentPage() {
       <PageHeader
         actions={
           <EntityRefreshAction
+            exact={false}
             label={`Refresh ${resource.name}`}
             presentation="icon"
-            queryKey={resourceOptions.queryKey}
+            queryKey={crucibleKeys.resourceDetails(scope, instrumentMfid)}
             refreshedAt={dataUpdatedAt}
           />
         }

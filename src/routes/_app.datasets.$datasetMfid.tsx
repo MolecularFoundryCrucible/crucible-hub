@@ -5,7 +5,7 @@ import { RouteContentPending } from "@/components/crucible/route-content-pending
 import { hubPageTitle } from "@/lib/page-title"
 import {
   ResourceWorkspace,
-  preloadResourceDetail,
+  preloadResourceShell,
 } from "@/features/resource-detail/resource-detail-page"
 
 export const Route = createFileRoute("/_app/datasets/$datasetMfid")({
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app/datasets/$datasetMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const resource = await preloadResourceDetail(
+    const resource = await preloadResourceShell(
       context.queryClient,
       source.scope,
       params.datasetMfid

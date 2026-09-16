@@ -24,9 +24,9 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { projectQueryOptions } from "@/data/crucible/projects.queries"
+import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import { personQueryOptions } from "@/data/crucible/people.queries"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 import {
   applyDataFilters,
@@ -70,11 +70,11 @@ export function DataFilters({
     ? resolution.filters.ownerId
     : undefined
   const projectResult = useQuery({
-    ...projectQueryOptions(scope, activeProjectMfid ?? ""),
+    ...projectSummaryQueryOptions(scope, activeProjectMfid ?? ""),
     enabled: Boolean(activeProjectMfid),
   })
   const instrumentResult = useQuery({
-    ...resourceQueryOptions(scope, activeInstrumentMfid ?? ""),
+    ...resourceSummaryQueryOptions(scope, activeInstrumentMfid ?? ""),
     enabled: Boolean(activeInstrumentMfid),
   })
   const ownerResult = useQuery({

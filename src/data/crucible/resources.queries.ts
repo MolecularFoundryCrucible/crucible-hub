@@ -13,8 +13,10 @@ import {
 } from "./resources.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { unwrapHubResult } from "./result"
+import type { WorkspaceResourceDetail } from "./workspace-source"
 
 export const resourceDetailShape = "overview-with-metadata-links-owner"
+export const resourceSummaryShape = "summary-with-owner"
 
 export function resourceQueryOptions(
   scope: IdentityScope,
@@ -25,10 +27,39 @@ export function resourceQueryOptions(
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceResource({
-          data: { resourceMfid, scenario: fixtureScenarioFromScope(scope) },
+          data: {
+            projection: "overview",
+            resourceMfid,
+            scenario: fixtureScenarioFromScope(scope),
+          },
           signal,
         })
       ),
+  })
+}
+
+export function resourceSummaryQueryOptions(
+  scope: IdentityScope,
+  resourceMfid: string
+) {
+  return queryOptions({
+    queryKey: crucibleKeys.resource(scope, resourceMfid, resourceSummaryShape),
+    queryFn: async ({ client, signal }) => {
+      const cachedDetail = client.getQueryData<WorkspaceResourceDetail | null>(
+        crucibleKeys.resource(scope, resourceMfid, resourceDetailShape)
+      )
+      if (cachedDetail !== undefined) return cachedDetail
+      return unwrapHubResult(
+        await getWorkspaceResource({
+          data: {
+            projection: "summary",
+            resourceMfid,
+            scenario: fixtureScenarioFromScope(scope),
+          },
+          signal,
+        })
+      )
+    },
   })
 }
 

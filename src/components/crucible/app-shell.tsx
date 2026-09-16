@@ -48,7 +48,10 @@ import {
 } from "@/components/ui/sidebar"
 import type { Workspace } from "@/data/crucible/workspace-source"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { projectQueryOptions } from "@/data/crucible/projects.queries"
+import {
+  projectQueryOptions,
+  projectSummaryQueryOptions,
+} from "@/data/crucible/projects.queries"
 import { RecentlyViewedProvider } from "@/features/recently-viewed/recently-viewed"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
@@ -153,7 +156,11 @@ export function AppShell({
         <SidebarInset>
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
             <SidebarTrigger className="md:hidden" />
-            <AppSearch projectMfid={projectMfid} scope={scope} />
+            <AppSearch
+              preferFullProject={pathname.startsWith("/projects/")}
+              projectMfid={projectMfid}
+              scope={scope}
+            />
             <QrScannerAction />
             {account ? (
               <CreateMenu
@@ -210,17 +217,41 @@ export function AppShell({
 }
 
 function AppSearch({
+  preferFullProject,
   projectMfid,
   scope,
 }: {
+  preferFullProject: boolean
   projectMfid?: string
   scope?: IdentityScope
 }) {
   if (!projectMfid || !scope) return <GlobalSearch />
-  return <ProjectContextSearch projectMfid={projectMfid} scope={scope} />
+  return (
+    <ProjectContextSearch
+      preferFullProject={preferFullProject}
+      projectMfid={projectMfid}
+      scope={scope}
+    />
+  )
 }
 
 function ProjectContextSearch({
+  preferFullProject,
+  projectMfid,
+  scope,
+}: {
+  preferFullProject: boolean
+  projectMfid: string
+  scope: IdentityScope
+}) {
+  return preferFullProject ? (
+    <ProjectContextSearchOverview projectMfid={projectMfid} scope={scope} />
+  ) : (
+    <ProjectContextSearchSummary projectMfid={projectMfid} scope={scope} />
+  )
+}
+
+function ProjectContextSearchOverview({
   projectMfid,
   scope,
 }: {
@@ -228,6 +259,29 @@ function ProjectContextSearch({
   scope: IdentityScope
 }) {
   const { data: project } = useQuery(projectQueryOptions(scope, projectMfid))
+  return <ProjectSearchAction project={project} projectMfid={projectMfid} />
+}
+
+function ProjectContextSearchSummary({
+  projectMfid,
+  scope,
+}: {
+  projectMfid: string
+  scope: IdentityScope
+}) {
+  const { data: project } = useQuery(
+    projectSummaryQueryOptions(scope, projectMfid)
+  )
+  return <ProjectSearchAction project={project} projectMfid={projectMfid} />
+}
+
+function ProjectSearchAction({
+  project,
+  projectMfid,
+}: {
+  project?: { project_id: string; title?: string | null } | null
+  projectMfid: string
+}) {
   return (
     <GlobalSearch
       projectMfid={projectMfid}

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { projectQueryOptions } from "@/data/crucible/projects.queries"
+import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 import { SampleCreationForm } from "@/features/resource-creation/sample-creation-form"
 
@@ -27,7 +27,9 @@ export const Route = createFileRoute("/_app/samples/new")({
       return { initialProject: undefined }
     }
     const project = await context.queryClient
-      .ensureQueryData(projectQueryOptions(source.scope, deps.projectMfid))
+      .ensureQueryData(
+        projectSummaryQueryOptions(source.scope, deps.projectMfid)
+      )
       .catch(() => null)
     if (!project) return { initialProject: undefined }
     return {

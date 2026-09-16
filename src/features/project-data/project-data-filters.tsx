@@ -25,7 +25,7 @@ import {
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import { personQueryOptions } from "@/data/crucible/people.queries"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 
 import type { ProjectDataKind } from "./project-data-collection"
 import { resolveProjectDataFilters } from "./project-data-filter-state"
@@ -69,7 +69,7 @@ export function ProjectDataFilters({
     : undefined
   const scope = useWorkspaceScope()
   const instrumentResult = useQuery({
-    ...resourceQueryOptions(scope, activeInstrumentMfid ?? ""),
+    ...resourceSummaryQueryOptions(scope, activeInstrumentMfid ?? ""),
     enabled: Boolean(activeInstrumentMfid),
   })
   const ownerResult = useQuery({

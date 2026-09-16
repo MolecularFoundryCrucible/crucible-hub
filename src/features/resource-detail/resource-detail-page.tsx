@@ -49,7 +49,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import {
+  resourceQueryOptions,
+  resourceSummaryQueryOptions,
+} from "@/data/crucible/resources.queries"
+import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 import { formatDate } from "@/lib/format"
@@ -61,13 +65,13 @@ import { ScientificMetadataEditor } from "@/features/resource-metadata/scientifi
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
 
-export async function preloadResourceDetail(
+export async function preloadResourceShell(
   queryClient: QueryClient,
   scope: IdentityScope,
   resourceMfid: string,
   forceApiResolution = false
 ) {
-  const options = resourceQueryOptions(scope, resourceMfid)
+  const options = resourceSummaryQueryOptions(scope, resourceMfid)
   if (forceApiResolution) {
     await queryClient.invalidateQueries({
       exact: true,
@@ -110,7 +114,7 @@ export function ResourceWorkspace({
     preview,
   })
   const scope = useWorkspaceScope()
-  const resourceOptions = resourceQueryOptions(scope, resourceMfid)
+  const resourceOptions = resourceSummaryQueryOptions(scope, resourceMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
   const siblingNavigation = useActiveResourceSiblingNavigation(resourceMfid)
   useRememberRecentlyViewed(
@@ -195,9 +199,10 @@ export function ResourceWorkspace({
         <PageHeader
           actions={
             <EntityRefreshAction
+              exact={false}
               label={`Refresh ${resource.name}`}
               presentation="icon"
-              queryKey={resourceOptions.queryKey}
+              queryKey={crucibleKeys.resourceDetails(scope, resourceMfid)}
               refreshedAt={dataUpdatedAt}
             />
           }

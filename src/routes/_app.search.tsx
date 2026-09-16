@@ -42,7 +42,7 @@ import {
   metadataSearchQueryOptions,
   searchQueryOptions,
 } from "@/data/crucible/search.queries"
-import { projectQueryOptions } from "@/data/crucible/projects.queries"
+import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import type {
   WorkspaceSearchKind,
   WorkspaceSearchResult,
@@ -76,7 +76,7 @@ function SearchPage() {
   const scope = useWorkspaceScope()
   const [query, setQuery] = useState(search.q ?? "")
   const projectResult = useQuery({
-    ...projectQueryOptions(scope, search.projectMfid ?? ""),
+    ...projectSummaryQueryOptions(scope, search.projectMfid ?? ""),
     enabled: Boolean(search.projectMfid),
   })
   const project = projectResult.data

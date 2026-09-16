@@ -37,6 +37,10 @@ export const resourceMfidInputSchema = z.object({
   scenario: fixtureScenarioSchema.optional(),
 })
 
+const resourceReadInputSchema = resourceMfidInputSchema.extend({
+  projection: z.enum(["overview", "summary"]),
+})
+
 export const datasetFilesInputSchema = z.object({
   datasetMfid: z.string().trim().min(1).max(255),
   scenario: fixtureScenarioSchema.optional(),
@@ -457,14 +461,15 @@ export const workspaceRelationshipOperationInputSchema = z
 
 export const getWorkspaceResource = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])
-  .validator(resourceMfidInputSchema)
+  .validator(resourceReadInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceResource(
         data.resourceMfid,
         data.scenario,
-        context.requestSignal
+        context.requestSignal,
+        data.projection
       )
     )
   })

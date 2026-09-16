@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { updateWorkspaceAccount } from "@/data/crucible/account.functions"
+import { applyAccountProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type {
@@ -136,7 +136,7 @@ export function AccountProfileForm({
       if (Object.keys(changes).length === 0) return
       try {
         const update = await mutation.mutateAsync(changes)
-        queryClient.setQueryData(crucibleKeys.accountProfile(scope), update)
+        void applyAccountProfileUpdate(queryClient, scope, update)
         form.reset(profileValues(update))
         setSaved(true)
         setEditing(false)

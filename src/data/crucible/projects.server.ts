@@ -127,7 +127,8 @@ export async function readWorkspaceProjects(
 export async function readWorkspaceProject(
   projectMfid: string,
   scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
+  requestSignal?: AbortSignal,
+  projection: "overview" | "summary" = "overview"
 ): Promise<WorkspaceProject | null> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
@@ -147,7 +148,10 @@ export async function readWorkspaceProject(
   const result = await client.GET("/projects/{project_ref}", {
     params: {
       path: { project_ref: projectMfid },
-      query: { include_members: true, include_metadata: true },
+      query: {
+        include_members: projection === "overview",
+        include_metadata: projection === "overview",
+      },
     },
     signal: crucibleRequestSignal(requestSignal),
   })

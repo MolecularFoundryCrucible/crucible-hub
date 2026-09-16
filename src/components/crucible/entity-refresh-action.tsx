@@ -12,11 +12,13 @@ import {
 import { formatLocalDateTime } from "@/lib/format"
 
 export function EntityRefreshAction({
+  exact = true,
   label,
   presentation = "default",
   queryKey,
   refreshedAt,
 }: {
+  exact?: boolean
   label: string
   presentation?: "default" | "icon"
   queryKey: QueryKey
@@ -24,7 +26,7 @@ export function EntityRefreshAction({
 }) {
   const queryClient = useQueryClient()
   const refreshing =
-    useIsFetching({ exact: true, queryKey, fetchStatus: "fetching" }) > 0
+    useIsFetching({ exact, queryKey, fetchStatus: "fetching" }) > 0
   const [failed, setFailed] = useState(false)
   const timestamp = refreshedAt
     ? formatLocalDateTime(new Date(refreshedAt).toISOString())
@@ -34,7 +36,7 @@ export function EntityRefreshAction({
     setFailed(false)
     try {
       await queryClient.refetchQueries(
-        { exact: true, queryKey },
+        { exact, queryKey },
         { throwOnError: true }
       )
     } catch {

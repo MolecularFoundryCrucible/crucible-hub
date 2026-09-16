@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { invalidateResourceMutationQueries } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
   DiscardChangesDialog,
@@ -31,10 +32,8 @@ import {
   updateWorkspaceInstrument,
 } from "@/data/crucible/instruments.functions"
 import { updateWorkspaceProject } from "@/data/crucible/projects.functions"
-import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceInstrument,
@@ -200,7 +199,7 @@ export function mergeInstrumentSettingsUpdate(
     location: update.location,
     manufacturer: update.manufacturer,
     model: update.model,
-    modification_time: update.modification_time,
+    modification_time: update.modification_time ?? resource.modification_time,
     name: update.instrument_name,
     other_id: update.other_id,
     other_id_source: update.other_id_source,
@@ -243,10 +242,13 @@ export function ProjectSettingsForm({
       if (Object.keys(changes).length === 0) return
       try {
         const update = await mutation.mutateAsync(changes)
-        const detailQuery = projectQueryOptions(scope, project.unique_id)
-        queryClient.setQueryData<WorkspaceProject>(
-          detailQuery.queryKey,
+        queryClient.setQueriesData<WorkspaceProject>(
+          { queryKey: crucibleKeys.project(scope, project.unique_id) },
           (current) => mergeProjectSettingsUpdate(current, update)
+        )
+        queryClient.setQueriesData<WorkspaceResourceDetail | null>(
+          { queryKey: crucibleKeys.resourceDetails(scope, project.unique_id) },
+          (current) => mergeProjectResourceSettingsUpdate(current, update)
         )
         if (mode === "fixture") {
           queryClient.setQueriesData<WorkspaceProjectPage>(
@@ -254,16 +256,12 @@ export function ProjectSettingsForm({
             (page) => mergeProjectListUpdate(page, update)
           )
         } else {
-          void queryClient.invalidateQueries({
-            exact: true,
-            queryKey: detailQuery.queryKey,
-          })
-          void queryClient.invalidateQueries({
-            queryKey: crucibleKeys.projectLists(scope),
-          })
-          void queryClient.invalidateQueries({
-            queryKey: crucibleKeys.searches(scope),
-          })
+          void invalidateResourceMutationQueries(
+            queryClient,
+            scope,
+            "project",
+            project.unique_id
+          )
         }
         form.reset(projectValues(update))
         onSaved?.()
@@ -380,9 +378,11 @@ export function InstrumentSettingsForm({
       if (Object.keys(changes).length === 0) return
       try {
         const update = await mutation.mutateAsync(changes)
-        const detailQuery = resourceQueryOptions(scope, instrument.unique_id)
-        queryClient.setQueryData(detailQuery.queryKey, (current) =>
-          mergeInstrumentSettingsUpdate(current, update)
+        queryClient.setQueriesData<WorkspaceResourceDetail | null>(
+          {
+            queryKey: crucibleKeys.resourceDetails(scope, instrument.unique_id),
+          },
+          (current) => mergeInstrumentSettingsUpdate(current, update)
         )
         if (mode === "fixture") {
           queryClient.setQueriesData<WorkspaceInstrumentPage>(
@@ -390,16 +390,12 @@ export function InstrumentSettingsForm({
             (page) => mergeInstrumentListUpdate(page, update)
           )
         } else {
-          void queryClient.invalidateQueries({
-            exact: true,
-            queryKey: detailQuery.queryKey,
-          })
-          void queryClient.invalidateQueries({
-            queryKey: crucibleKeys.instrumentLists(scope),
-          })
-          void queryClient.invalidateQueries({
-            queryKey: crucibleKeys.searches(scope),
-          })
+          void invalidateResourceMutationQueries(
+            queryClient,
+            scope,
+            "instrument",
+            instrument.unique_id
+          )
         }
         const next = mergeInstrumentSettingsUpdate(instrument, update)
         if (next?.kind === "instrument") form.reset(instrumentValues(next))
@@ -690,6 +686,22 @@ function mergeProjectSettingsUpdate(
     ...(update.members === undefined && project.members !== undefined
       ? { members: project.members }
       : {}),
+  }
+}
+
+function mergeProjectResourceSettingsUpdate(
+  resource: WorkspaceResourceDetail | null | undefined,
+  update: WorkspaceProject
+): WorkspaceResourceDetail | null | undefined {
+  if (!resource || resource.kind !== "project" || !("organization" in update)) {
+    return resource
+  }
+  return {
+    ...resource,
+    modification_time: update.modification_time ?? resource.modification_time,
+    name: update.title ?? update.project_id,
+    organization: update.organization,
+    project_id: update.project_id,
   }
 }
 

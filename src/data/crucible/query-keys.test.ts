@@ -26,6 +26,9 @@ describe("Crucible query keys", () => {
     expect(crucibleKeys.projects(scope, {})).not.toEqual(
       crucibleKeys.project(scope, "project-mfid")
     )
+    expect(crucibleKeys.project(scope, "project-mfid")).not.toEqual(
+      crucibleKeys.projectSummary(scope, "project-mfid")
+    )
   })
 
   it("scopes public person detail by server and account", () => {

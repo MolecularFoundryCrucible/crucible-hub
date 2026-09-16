@@ -2,7 +2,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
 import {
   ResourceWorkspace,
-  preloadResourceDetail,
+  preloadResourceShell,
 } from "@/features/resource-detail/resource-detail-page"
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app/samples/$sampleMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const resource = await preloadResourceDetail(
+    const resource = await preloadResourceShell(
       context.queryClient,
       source.scope,
       params.sampleMfid

@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { invalidateResourceMutationQueries } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -20,7 +21,6 @@ import {
   confirmWorkspaceResourceOwnership,
   previewWorkspaceResourceOwnership,
 } from "@/data/crucible/resources.functions"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceOwnershipTransfer,
@@ -88,8 +88,8 @@ export function OwnershipTransferCard({
     setError(undefined)
     try {
       const result = await confirmMutation.mutateAsync()
-      queryClient.setQueryData<WorkspaceResourceDetail | null>(
-        resourceQueryOptions(scope, resource.unique_id).queryKey,
+      queryClient.setQueriesData<WorkspaceResourceDetail | null>(
+        { queryKey: crucibleKeys.resourceDetails(scope, resource.unique_id) },
         (current) =>
           current
             ? {
@@ -102,8 +102,8 @@ export function OwnershipTransferCard({
             : current
       )
       if (resource.kind === "project") {
-        queryClient.setQueryData<WorkspaceProject>(
-          crucibleKeys.project(scope, resource.unique_id),
+        queryClient.setQueriesData<WorkspaceProject>(
+          { queryKey: crucibleKeys.project(scope, resource.unique_id) },
           (current) =>
             current && "organization" in current
               ? {
@@ -127,22 +127,12 @@ export function OwnershipTransferCard({
 
   function invalidateOwnershipQueries() {
     if (mode !== "api") return
-    void queryClient.invalidateQueries({
-      exact: true,
-      queryKey: resourceQueryOptions(scope, resource.unique_id).queryKey,
-    })
-    void queryClient.invalidateQueries({
-      queryKey: resourceListKey(resource.kind, scope),
-    })
-    if (resource.kind === "project") {
-      void queryClient.invalidateQueries({
-        exact: true,
-        queryKey: crucibleKeys.project(scope, resource.unique_id),
-      })
-    }
-    void queryClient.invalidateQueries({
-      queryKey: crucibleKeys.searches(scope),
-    })
+    void invalidateResourceMutationQueries(
+      queryClient,
+      scope,
+      resource.kind,
+      resource.unique_id
+    )
   }
 
   function closeChooser(nextOpen: boolean) {
@@ -226,16 +216,6 @@ export function OwnershipTransferCard({
 
 function personName(person: WorkspaceOwnershipTransfer["new_owner"]) {
   return personDisplayName(person)
-}
-
-function resourceListKey(
-  kind: WorkspaceResourceDetail["kind"],
-  scope: IdentityScope
-) {
-  if (kind === "sample") return crucibleKeys.sampleLists(scope)
-  if (kind === "dataset") return crucibleKeys.datasetLists(scope)
-  if (kind === "instrument") return crucibleKeys.instrumentLists(scope)
-  return crucibleKeys.projectLists(scope)
 }
 
 function operationError(error: unknown, action: string) {

@@ -7,8 +7,8 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import { projectQueryOptions } from "@/data/crucible/projects.queries"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
+import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import type {
   WorkspaceProject,
   WorkspaceResourceDetail,
@@ -45,14 +45,14 @@ export const Route = createFileRoute("/_app/datasets/new")({
       deps.projectMfid
         ? context.queryClient
             .ensureQueryData(
-              projectQueryOptions(source.scope, deps.projectMfid)
+              projectSummaryQueryOptions(source.scope, deps.projectMfid)
             )
             .catch(() => null)
         : null,
       deps.instrumentMfid
         ? context.queryClient
             .ensureQueryData(
-              resourceQueryOptions(source.scope, deps.instrumentMfid)
+              resourceSummaryQueryOptions(source.scope, deps.instrumentMfid)
             )
             .catch(() => null)
         : null,

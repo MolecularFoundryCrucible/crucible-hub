@@ -1,7 +1,7 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
-import { preloadResourceDetail } from "@/features/resource-detail/resource-detail-page"
+import { preloadResourceShell } from "@/features/resource-detail/resource-detail-page"
 
 declare module "@tanstack/react-router" {
   interface HistoryState {
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app/resources/$resourceMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const resource = await preloadResourceDetail(
+    const resource = await preloadResourceShell(
       context.queryClient,
       source.scope,
       params.resourceMfid,
