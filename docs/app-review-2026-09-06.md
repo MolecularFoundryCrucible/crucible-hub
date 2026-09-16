@@ -33,7 +33,7 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 ### F1. Priority 1: the compact Data table is technically contained but practically unreadable
 
-**Evidence:** At `/hub/data` with a 320-pixel viewport, resource names collapse to approximately one or two visible characters, project and owner values become short fragments, and dates visually compete with the full-page action. The page does not overflow horizontally, but users cannot identify the records reliably. See the [captured compact Data screen](../output/playwright/review-data-compact-dark.png).
+**Evidence:** At `/hub/data` with a 320-pixel viewport, resource names collapse to approximately one or two visible characters, project and owner values become short fragments, and dates visually compete with the full-page action. The page does not overflow horizontally, but users cannot identify the records reliably. The local review artifact was captured as `output/playwright/review-data-compact-dark.png`.
 
 **Cause:** The [Data route](../src/routes/_app.data.tsx), around line 246, retains Name, Project, Owner, Updated, and the action column in a fixed-layout table at compact widths. The [column tokens](../src/styles.css), around line 43, reserve a fixed action width and divide the remainder between several columns. Hiding only the separate Type column is insufficient.
 
@@ -41,7 +41,7 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 ### F2. Priority 1: graph colors do not reach Cytoscape
 
-**Evidence:** Opening a populated sample or dataset Graph tab produces repeated warnings such as `The style property background-color: oklch(1 0 0) is invalid`. Nodes render with gray fills and black borders/text in both themes, instead of the intended sample/dataset colors and theme-specific surfaces. See [light graph](../output/playwright/review-graph-desktop.png) and [dark graph](../output/playwright/review-graph-dark.png).
+**Evidence:** Opening a populated sample or dataset Graph tab produces repeated warnings such as `The style property background-color: oklch(1 0 0) is invalid`. Nodes render with gray fills and black borders/text in both themes, instead of the intended sample/dataset colors and theme-specific surfaces. The local review artifacts were captured as `output/playwright/review-graph-desktop.png` and `output/playwright/review-graph-dark.png`.
 
 **Cause:** `graphStyles()` in the [graph page](../src/features/resource-graph/resource-graph-page.tsx), around line 291, passes raw CSS custom-property values to Cytoscape. The installed Cytoscape color parser accepts arrays, named colors, hex, RGB, and HSL, but does not parse these OKLCH strings. CSS custom-property lookup returns the original token syntax rather than a renderer-compatible color.
 
@@ -151,6 +151,6 @@ The external dependency details should continue to live in the [API handoff](cru
 
 ## Evidence files and review impact
 
-Screenshots from this review are local artifacts under `output/playwright/`; they are not new accepted visual baselines. Useful examples are [Home](../output/playwright/review-home-desktop.png), [resource Overview](../output/playwright/review-detail-desktop.png), [compact Data](../output/playwright/review-data-compact-dark.png), [graph in dark theme](../output/playwright/review-graph-dark.png), [compact graph](../output/playwright/review-graph-compact-dark.png), [dataset creation](../output/playwright/review-create-desktop.png), [Access](../output/playwright/review-access-dark.png), and [Settings](../output/playwright/review-settings-dark.png). Keep the report’s written reproductions when sharing it without these ignored local artifacts.
+Screenshots from this review are ignored local artifacts under `output/playwright/`; they are not new accepted visual baselines and may be absent from a checkout. Their names were `review-home-desktop.png`, `review-detail-desktop.png`, `review-data-compact-dark.png`, `review-graph-dark.png`, `review-graph-compact-dark.png`, `review-create-desktop.png`, `review-access-dark.png`, and `review-settings-dark.png`. Keep the report's written reproductions when sharing it without those artifacts.
 
 Changelog impact: none. This task adds a review report and local evidence only; existing changelog edits were preserved. Cross-repository consequence: no changes were made elsewhere. Authentication, upload, graph, and several mutation/scale requirements depend on `crucible-api` and the session/storage infrastructure as described above.
