@@ -1,5 +1,6 @@
 export {
   CircleUserRound as AccountIcon,
+  LibraryBig as DataIcon,
   Database as DatasetIcon,
   Download as DownloadFileIcon,
   FileX2 as DownloadUnavailableIcon,

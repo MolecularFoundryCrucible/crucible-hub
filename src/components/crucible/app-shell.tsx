@@ -15,6 +15,7 @@ import {
   WorkspaceIcon,
 } from "@/components/crucible/icons"
 import {
+  DataCollectionIcon,
   PrincipalTypeIcon,
   ResourceTypeIcon,
 } from "@/components/crucible/resource-type-icon"
@@ -71,8 +72,7 @@ const primaryItems = [
   {
     label: "Data",
     to: "/data",
-    kind: "resource",
-    resourceType: "dataset",
+    kind: "data",
   },
   {
     label: "Instruments",
@@ -81,7 +81,7 @@ const primaryItems = [
     resourceType: "instrument",
   },
 ] satisfies ReadonlyArray<{
-  kind: "home" | "resource"
+  kind: "data" | "home" | "resource"
   label: string
   resourceType?: ResourceType
   to: NavPath
@@ -139,6 +139,8 @@ export function AppShell({
                         >
                           {item.kind === "resource" ? (
                             <ResourceTypeIcon type={item.resourceType} />
+                          ) : item.kind === "data" ? (
+                            <DataCollectionIcon />
                           ) : (
                             <WorkspaceIcon aria-hidden="true" />
                           )}

@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Distinguished combined Data navigation from individual datasets and samples with a dedicated indigo collection icon and semantic theme token.
 - Split lightweight project and resource identity reads from metadata, relationship, and membership-heavy overview projections, and centralized mutation cache invalidation across every cached detail shape.
 - Removed obsolete workspace collection hydration and unused transitional cache state so routes hydrate only query entries they can consume.
 - Global Data now switches directly between separate API-backed Samples and Datasets collections and defaults to Samples, removing the weaker combined All mode that could not support equivalent filtering, sorting, grouping, or pagination.

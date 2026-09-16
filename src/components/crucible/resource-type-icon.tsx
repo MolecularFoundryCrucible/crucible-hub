@@ -1,4 +1,5 @@
 import {
+  DataIcon,
   DatasetIcon,
   InstrumentIcon,
   PersonIcon,
@@ -56,6 +57,16 @@ const principalIconClasses = {
   unknown: "text-muted-foreground",
   user: iconClasses.person,
 } satisfies Record<PrincipalType, string>
+
+export function DataCollectionIcon({ className }: { className?: string }) {
+  return (
+    <DataIcon
+      aria-hidden="true"
+      className={cn("text-(--resource-data)", className)}
+      data-resource-collection="data"
+    />
+  )
+}
 
 export function ResourceTypeIcon({
   className,
