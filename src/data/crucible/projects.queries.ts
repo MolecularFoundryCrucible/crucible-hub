@@ -72,7 +72,9 @@ export function projectSummaryQueryOptions(
       const cachedDetail = client.getQueryData<WorkspaceProject | null>(
         crucibleKeys.project(scope, projectMfid)
       )
-      if (cachedDetail !== undefined) return cachedDetail
+      if (cachedDetail !== undefined) {
+        return client.fetchQuery(projectQueryOptions(scope, projectMfid))
+      }
       return unwrapHubResult(
         await getWorkspaceProject({
           data: {

@@ -20,6 +20,13 @@ export function shouldRetryQuery(failureCount: number, error: unknown) {
   if (error instanceof HubApiClientError && !error.details.retryable) {
     return false
   }
+  if (
+    error instanceof HubApiClientError &&
+    error.details.retryAfterSeconds !== undefined &&
+    error.details.retryAfterSeconds * 1_000 > maximumRetryDelay
+  ) {
+    return false
+  }
   return failureCount < maximumRetryCount
 }
 

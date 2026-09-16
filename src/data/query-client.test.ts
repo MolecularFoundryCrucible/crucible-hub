@@ -111,6 +111,7 @@ describe("Crucible Query client", () => {
       retryable: true,
     })
 
+    expect(shouldRetryQuery(0, error)).toBe(false)
     expect(queryRetryDelay(0, error)).toBe(30_000)
     expect(queryRetryDelay(2, new Error("Network error"))).toBe(4_000)
   })

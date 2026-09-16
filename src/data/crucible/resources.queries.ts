@@ -48,7 +48,9 @@ export function resourceSummaryQueryOptions(
       const cachedDetail = client.getQueryData<WorkspaceResourceDetail | null>(
         crucibleKeys.resource(scope, resourceMfid, resourceDetailShape)
       )
-      if (cachedDetail !== undefined) return cachedDetail
+      if (cachedDetail !== undefined) {
+        return client.fetchQuery(resourceQueryOptions(scope, resourceMfid))
+      }
       return unwrapHubResult(
         await getWorkspaceResource({
           data: {
