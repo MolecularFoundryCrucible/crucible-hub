@@ -18,7 +18,9 @@ Add route-backed Graph tabs at `/samples/:sampleMfid/graph` and `/datasets/:data
 
 The prototype temporarily interprets same-type edges as directed parent-child lineage and sample-to-dataset edges as undirected association. This inference is isolated in the server adapter and must be replaced by API-provided relationship semantics. The graph does not claim completeness and does not expose recursion, depth controls, or editing.
 
-Cytoscape renders a deterministic rightward layout in a route-specific bundle. Selecting a node opens the existing right-side overlay inspector above the unchanged graph. The inspector's existing Open action navigates to canonical detail, while Explore from here navigates to that resource's Graph route. A native relationship table follows the canvas and provides equivalent identity, type, relationship, inspection, and navigation behavior for keyboard and non-visual use. Relationship mutation remains on Overview under decision 0022.
+Cytoscape renders a deterministic semantic layout in a route-specific bundle. The selected resource remains centered, parents appear to its left, children to its right, associated samples above, and associated datasets below. Node type uses a consistent shape with distinct semantic color, while the current resource has a separate orange boundary and text label. Hovering a node emphasizes its immediate neighborhood. Selecting a related node opens the existing right-side overlay inspector above the unchanged graph. The inspector's existing Open action navigates to canonical detail, while Explore from here navigates to that resource's Graph route. A native relationship table follows the canvas and provides equivalent identity, type, relationship, inspection, and navigation behavior for keyboard and non-visual use. Relationship mutation remains on Overview under decision 0022.
+
+The deterministic preset layout is appropriate for the current one-hop contract. A future bounded multi-hop graph may use `cytoscape-elk` with ELK Layered after the API supplies typed edge semantics, depth, limits, truncation, and stable identities. The API remains responsible for domain topology and authorization, while Hub remains responsible for coordinates, visual grouping, viewport behavior, and accessibility.
 
 ## Privacy and data boundaries
 
@@ -29,9 +31,11 @@ Graph routes expose only the root MFID in the canonical path and an optional ins
 - Scientists can switch between resource detail, graph traversal, and access management without replacing the Hub shell.
 - The overlay inspector becomes the shared inspection mechanism for lists, relationship rows, and graph nodes.
 - The graph library and its styles remain code-split from ordinary resource detail routes.
+- Layout remains a Hub presentation concern and is not encoded in the API response.
 - The accessible table is a first-class representation rather than a fallback generated from screen coordinates.
 - Multi-hop traversal currently requires explicit rerooting and another bounded request.
 - A typed, bounded, permission-aware API graph contract remains required before richer depth, filtering, completeness indicators, or graph editing.
+- The detailed graph contract and ELK support requirements are recorded in [resource graph API handoff](../docs/resource-graph-api-handoff.md).
 
 ## Validation
 

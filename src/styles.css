@@ -334,11 +334,17 @@
   --resource-sample: oklch(0.58 0.15 315);
   --graph-card: #ffffff;
   --graph-foreground: #0a0a0a;
-  --graph-muted-foreground: #696969;
-  --graph-accent: #f5f5f5;
   --graph-ring: #a1a1a1;
+  --graph-current: #cc5200;
+  --graph-edge: #737373;
+  --graph-highlight: #031e2d;
+  --graph-grid: #e5e7eb;
+  --graph-grid-dot: 1px;
+  --graph-grid-size: 20px;
   --graph-resource-dataset: #009a60;
+  --graph-resource-dataset-surface: #eef9f4;
   --graph-resource-sample: #9b5bb6;
+  --graph-resource-sample-surface: #f8f1fb;
   --sidebar-width: 16rem;
   --sidebar-width-icon: 3rem;
   --sidebar-width-mobile: 18rem;
@@ -346,20 +352,33 @@
   --focus-width: 0.1875rem;
   --focus-offset: 0.125rem;
   --layer-route-progress: 50;
+  --layer-graph-overlay: 1;
   --route-progress-height: 0.1875rem;
-  --graph-node-width: 168;
-  --graph-node-height: 60;
+  --graph-node-width: 184;
+  --graph-node-height: 68;
+  --graph-root-node-width: 200;
+  --graph-root-node-height: 76;
   --graph-node-border: 2;
   --graph-root-border: 4;
-  --graph-root-overlay-opacity: 0.12;
-  --graph-root-overlay-padding: 7;
+  --graph-root-overlay-opacity: 0.1;
+  --graph-root-overlay-padding: 8;
+  --graph-selected-overlay-opacity: 0.14;
+  --graph-selected-overlay-padding: 7;
   --graph-edge-width: 2;
-  --graph-font-size: 13;
-  --graph-label-width: 144;
-  --graph-layout-spacing: 1.75;
-  --graph-fit-padding: 32;
+  --graph-highlighted-edge-width: 3;
+  --graph-font-size: 12;
+  --graph-label-width: 160;
+  --graph-layout-column-gap: 320;
+  --graph-layout-row-gap: 112;
+  --graph-layout-association-gap: 184;
+  --graph-layout-association-column-gap: 224;
+  --graph-layout-association-row-gap: 112;
+  --graph-fit-padding: 52;
   --graph-min-zoom: 0.35;
   --graph-max-zoom: 2.5;
+  --graph-muted-opacity: 0.24;
+  --graph-hover-overlay-opacity: 0.1;
+  --graph-hover-overlay-padding: 6;
 }
 
 .dark {
@@ -426,11 +445,15 @@
   --resource-sample: oklch(0.73 0.13 315);
   --graph-card: #171717;
   --graph-foreground: #fafafa;
-  --graph-muted-foreground: #a1a1a1;
-  --graph-accent: #262626;
   --graph-ring: #737373;
+  --graph-current: #ff8533;
+  --graph-edge: #a1a1a1;
+  --graph-highlight: #a8c4cd;
+  --graph-grid: #2f2f2f;
   --graph-resource-dataset: #3fbf86;
+  --graph-resource-dataset-surface: #182d23;
   --graph-resource-sample: #c68ee0;
+  --graph-resource-sample-surface: #2d2232;
 }
 
 @layer base {
@@ -501,15 +524,105 @@ body {
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
-.resource-graph-canvas {
+.resource-graph-canvas,
+.resource-graph-surface {
   height: var(--spacing-graph-canvas);
+}
+
+.resource-graph-canvas {
+  background-image: radial-gradient(
+    var(--graph-grid) var(--graph-grid-dot),
+    transparent var(--graph-grid-dot)
+  );
+  background-size: var(--graph-grid-size) var(--graph-grid-size);
 }
 
 .resource-graph-canvas[data-node-hover] {
   cursor: pointer;
 }
 
+.resource-graph-summary,
+.resource-graph-controls,
+.resource-graph-legend {
+  z-index: var(--layer-graph-overlay);
+}
+
+.resource-graph-summary .badge,
+.resource-graph-controls button,
+.resource-graph-legend {
+  background-color: color-mix(in oklch, var(--card) 92%, transparent);
+  backdrop-filter: blur(0.375rem);
+}
+
+.resource-graph-legend {
+  max-width: calc(100% - var(--spacing-6));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.resource-graph-edge-key {
+  display: inline-block;
+  width: var(--spacing-6);
+  border-top: 2px solid var(--graph-edge);
+}
+
+.resource-graph-edge-key[data-relationship="associated"] {
+  border-top-style: dashed;
+}
+
 @media (max-width: 47.999rem) {
+  .resource-graph-canvas {
+    --graph-layout-column-gap: 248;
+    --graph-layout-row-gap: 104;
+    --graph-layout-association-gap: 172;
+    --graph-layout-association-column-gap: 192;
+    --graph-layout-association-row-gap: 104;
+    --graph-fit-padding: 32;
+  }
+
+  .resource-graph-summary {
+    top: calc(var(--spacing) * 12);
+  }
+
+  .resource-graph-table,
+  .resource-graph-table tbody {
+    display: block;
+  }
+
+  .resource-graph-table thead,
+  .resource-graph-table colgroup {
+    display: none;
+  }
+
+  .resource-graph-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 3);
+  }
+
+  .resource-graph-table td {
+    display: block;
+    padding: 0;
+    white-space: normal;
+  }
+
+  .resource-graph-table .resource-graph-resource {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .resource-graph-table .resource-graph-relationship {
+    grid-column: 1;
+  }
+
+  .resource-graph-table .resource-graph-action {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+
   .resource-directory-table,
   .resource-directory-table tbody {
     display: block;

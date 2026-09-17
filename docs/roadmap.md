@@ -68,7 +68,7 @@ Implemented and fixture/browser verified. Links are generated only after activat
 
 #### Resource graph traversal
 
-Implemented for local development. Canonical sample and dataset Graph tabs load an identity-scoped one-hop graph only on entry, provide Cytoscape traversal with the existing overlay inspector, support canonical rerooting through Explore from here, and retain an equivalent relationship table with bounded first-thumbnail previews for dataset nodes. The prototype uses the untyped CTE endpoint behind strict Hub validation; a typed, bounded API graph contract remains an external dependency. See decision 0026 and [Crucible API handoff](crucible-api-handoff.md).
+Implemented for local development. Canonical sample and dataset Graph tabs load an identity-scoped one-hop graph only on entry, use Cytoscape with a centered semantic parent, child, and association layout, provide neighborhood emphasis and overlay controls, retain the existing inspector and canonical rerooting, and provide an equivalent accessible relationship card with bounded first-thumbnail previews for dataset nodes. The prototype uses the untyped CTE endpoint behind strict Hub validation. A typed, bounded API graph contract remains an external dependency before multi-hop traversal or `cytoscape-elk` adoption. See decision 0026, [Crucible API handoff](crucible-api-handoff.md), and [resource graph API handoff](resource-graph-api-handoff.md).
 
 #### Dataset thumbnails
 

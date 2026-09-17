@@ -4,6 +4,7 @@ import cytoscape from "cytoscape"
 import type { Core, ElementDefinition, StylesheetJson } from "cytoscape"
 
 import {
+  ExploreGraphFocusIcon,
   FitGraphIcon,
   ResourceGraphIcon,
   ZoomInGraphIcon,
@@ -23,6 +24,13 @@ import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
@@ -55,6 +63,8 @@ import type {
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
+import { buildResourceGraphLayout } from "./resource-graph-layout"
+import type { ResourceGraphLayoutMetrics } from "./resource-graph-layout"
 
 export function ResourceGraphPage({
   resourceKind,
@@ -130,68 +140,6 @@ export function ResourceGraphPage({
       aria-label="Resource graph"
       className="flex min-w-0 flex-col gap-4"
     >
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Badge variant="outline">{query.data.nodes.length} resources</Badge>
-        <Badge variant="outline">
-          {query.data.edges.length}{" "}
-          {query.data.edges.length === 1 ? "relationship" : "relationships"}
-        </Badge>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                aria-label="Zoom graph out"
-                onClick={() => {
-                  const instance = graph.current
-                  if (instance) instance.zoom(instance.zoom() / 1.25)
-                }}
-                size="icon-sm"
-                type="button"
-                variant="outline"
-              />
-            }
-          >
-            <ZoomOutGraphIcon aria-hidden="true" />
-          </TooltipTrigger>
-          <TooltipContent>Zoom graph out</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                aria-label="Zoom graph in"
-                onClick={() => {
-                  const instance = graph.current
-                  if (instance) instance.zoom(instance.zoom() * 1.25)
-                }}
-                size="icon-sm"
-                type="button"
-                variant="outline"
-              />
-            }
-          >
-            <ZoomInGraphIcon aria-hidden="true" />
-          </TooltipTrigger>
-          <TooltipContent>Zoom graph in</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                aria-label="Fit graph to view"
-                onClick={() => graph.current?.fit()}
-                size="icon-sm"
-                type="button"
-                variant="outline"
-              />
-            }
-          >
-            <FitGraphIcon aria-hidden="true" />
-          </TooltipTrigger>
-          <TooltipContent>Fit graph to view</TooltipContent>
-        </Tooltip>
-      </div>
-
       {query.isError ? (
         <div
           className="flex flex-wrap items-center justify-between gap-3"
@@ -241,11 +189,6 @@ export function ResourceGraphPage({
         />
       )}
 
-      <p className="text-supporting text-muted-foreground">
-        Solid arrows show parent and child lineage. Dashed lines show sample and
-        dataset associations.
-      </p>
-
       {thumbnailQuery.isError ? (
         <p className="text-body text-muted-foreground" role="alert">
           Thumbnail previews could not be loaded. The graph remains available.
@@ -285,36 +228,53 @@ function ResourceGraphCanvas({
   useEffect(() => {
     const element = container.current
     if (!element) return
+    const layout = buildResourceGraphLayout(graph, graphLayoutMetrics(element))
     const instance = cytoscape({
       boxSelectionEnabled: false,
       container: element,
-      elements: graphElements(graph),
+      elements: graphElements(graph, layout.positions),
       layout: {
         animate: false,
-        circle: false,
-        directed: true,
-        direction: "rightward",
-        fit: true,
-        name: "breadthfirst",
-        padding: graphNumberToken(element, "--graph-fit-padding"),
-        spacingFactor: graphNumberToken(element, "--graph-layout-spacing"),
+        fit: false,
+        name: "preset",
       },
       maxZoom: graphNumberToken(element, "--graph-max-zoom"),
       minZoom: graphNumberToken(element, "--graph-min-zoom"),
       style: graphStyles(element),
     })
     instanceRef.current = instance
+    instance.scratch("resourceGraphViewportChanged", false)
     instance.on("tap", "node", (event) => {
       const mfid = event.target.data("id")
-      if (typeof mfid === "string") inspect.current(mfid, element)
+      if (typeof mfid === "string" && mfid !== graph.rootMfid) {
+        inspect.current(mfid, element)
+      }
     })
-    instance.on("mouseover", "node", () => {
+    instance.on("mouseover", "node", (event) => {
       element.dataset.nodeHover = ""
+      const focus = event.target.closedNeighborhood()
+      instance.elements().addClass("graph-muted")
+      focus.removeClass("graph-muted")
+      event.target.addClass("graph-hovered")
+      focus.edges().addClass("graph-highlighted")
     })
-    instance.on("mouseout", "node", () => {
+    instance.on("mouseout", "node", (event) => {
       delete element.dataset.nodeHover
+      event.target.removeClass("graph-hovered")
+      instance.elements().removeClass("graph-muted graph-highlighted")
     })
-    const resizeObserver = new ResizeObserver(() => instance.resize())
+    instance.on("dragpan scrollzoom pinchzoom", () => {
+      instance.scratch("resourceGraphViewportChanged", true)
+    })
+    const animationFrame = requestAnimationFrame(() => {
+      centerCurrentResource(instance)
+    })
+    const resizeObserver = new ResizeObserver(() => {
+      instance.resize()
+      if (!instance.scratch("resourceGraphViewportChanged")) {
+        centerCurrentResource(instance)
+      }
+    })
     resizeObserver.observe(element)
     const themeObserver = new MutationObserver(() => {
       instance.style(graphStyles(element))
@@ -324,6 +284,7 @@ function ResourceGraphCanvas({
       attributes: true,
     })
     return () => {
+      cancelAnimationFrame(animationFrame)
       resizeObserver.disconnect()
       themeObserver.disconnect()
       instance.destroy()
@@ -332,33 +293,149 @@ function ResourceGraphCanvas({
   }, [graph, instanceRef])
 
   return (
+    <div className="resource-graph-surface relative overflow-hidden rounded-xl border bg-card">
+      <div className="resource-graph-summary absolute top-3 left-3 flex flex-wrap gap-2">
+        <Badge variant="outline">{graph.nodes.length} resources</Badge>
+        <Badge variant="outline">
+          {graph.edges.length}{" "}
+          {graph.edges.length === 1 ? "relationship" : "relationships"}
+        </Badge>
+      </div>
+      <div className="resource-graph-controls absolute top-3 right-3 flex gap-1">
+        <GraphControl
+          label="Zoom graph out"
+          onClick={() => zoomGraph(instanceRef.current, 1 / 1.25)}
+        >
+          <ZoomOutGraphIcon aria-hidden="true" />
+        </GraphControl>
+        <GraphControl
+          label="Zoom graph in"
+          onClick={() => zoomGraph(instanceRef.current, 1.25)}
+        >
+          <ZoomInGraphIcon aria-hidden="true" />
+        </GraphControl>
+        <GraphControl
+          label="Center current resource"
+          onClick={() => {
+            const instance = instanceRef.current
+            if (instance) centerCurrentResource(instance)
+          }}
+        >
+          <ExploreGraphFocusIcon aria-hidden="true" />
+        </GraphControl>
+        <GraphControl
+          label="Fit all resources"
+          onClick={() => {
+            const instance = instanceRef.current
+            if (!instance) return
+            const element = instance.container()
+            if (!element) return
+            instance.scratch("resourceGraphViewportChanged", true)
+            instance.fit(
+              instance.elements(),
+              graphNumberToken(element, "--graph-fit-padding")
+            )
+          }}
+        >
+          <FitGraphIcon aria-hidden="true" />
+        </GraphControl>
+      </div>
+      <div
+        aria-describedby="resource-graph-instructions"
+        aria-label={`Graph of ${graph.nodes.length} resources and ${graph.edges.length} relationships`}
+        className="resource-graph-canvas"
+        data-resource-preview-trigger=""
+        ref={container}
+        role="img"
+        tabIndex={-1}
+      >
+        <span className="sr-only" id="resource-graph-instructions">
+          The current resource is centered. Parents are placed to its left,
+          children to its right, associated samples above, and associated
+          datasets below. The relationship table following the graph provides
+          the same resources with keyboard-accessible inspection and navigation.
+        </span>
+      </div>
+      <ResourceGraphLegend />
+    </div>
+  )
+}
+
+function GraphControl({
+  children,
+  label,
+  onClick,
+}: {
+  children: React.ReactNode
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={label}
+            onClick={onClick}
+            size="icon-sm"
+            type="button"
+            variant="outline"
+          />
+        }
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function ResourceGraphLegend() {
+  return (
     <div
-      aria-describedby="resource-graph-instructions"
-      aria-label={`Graph of ${graph.nodes.length} resources and ${graph.edges.length} relationships`}
-      className="resource-graph-canvas overflow-hidden rounded-xl border bg-card"
-      data-resource-preview-trigger=""
-      ref={container}
-      role="img"
-      tabIndex={-1}
+      aria-label="Graph legend"
+      className="resource-graph-legend absolute bottom-3 left-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-supporting text-muted-foreground"
     >
-      <span className="sr-only" id="resource-graph-instructions">
-        The relationship table following the graph provides the same resources
-        with keyboard-accessible inspection and navigation.
+      <span className="flex items-center gap-1.5">
+        <ResourceTypeIcon type="sample" /> Sample
+      </span>
+      <span className="flex items-center gap-1.5">
+        <ResourceTypeIcon type="dataset" /> Dataset
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span
+          aria-hidden="true"
+          className="resource-graph-edge-key"
+          data-relationship="lineage"
+        />
+        Parent to child
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span
+          aria-hidden="true"
+          className="resource-graph-edge-key"
+          data-relationship="associated"
+        />
+        Associated
       </span>
     </div>
   )
 }
 
-function graphElements(graph: WorkspaceResourceGraph): ElementDefinition[] {
+function graphElements(
+  graph: WorkspaceResourceGraph,
+  positions: Readonly<Record<string, { x: number; y: number }>>
+): ElementDefinition[] {
   return [
     ...graph.nodes.map((node) => ({
       data: {
         id: node.unique_id,
         isRoot: node.unique_id === graph.rootMfid,
         kind: node.kind,
-        label: `${node.kind === "sample" ? "Sample" : "Dataset"}\n${node.name}`,
+        label: graphNodeLabel(node, node.unique_id === graph.rootMfid),
       },
       group: "nodes" as const,
+      position: positions[node.unique_id],
     })),
     ...graph.edges.map((edge, index) => ({
       data: {
@@ -380,15 +457,18 @@ function graphStyles(element: HTMLElement): StylesheetJson {
       selector: "node",
       style: {
         "background-color": token("--graph-card"),
-        "border-color": token("--graph-muted-foreground"),
+        "border-color": token("--graph-edge"),
         "border-width": graphNumberToken(element, "--graph-node-border"),
         color: token("--graph-foreground"),
         "font-family": token("--font-sans"),
         "font-size": graphNumberToken(element, "--graph-font-size"),
+        "font-weight": 500,
         height: graphNumberToken(element, "--graph-node-height"),
         label: "data(label)",
+        "line-height": 1.25,
         shape: "round-rectangle",
         "text-max-width": `${graphNumberToken(element, "--graph-label-width")}px`,
+        "text-overflow-wrap": "anywhere",
         "text-valign": "center",
         "text-wrap": "wrap",
         width: graphNumberToken(element, "--graph-node-width"),
@@ -396,17 +476,26 @@ function graphStyles(element: HTMLElement): StylesheetJson {
     },
     {
       selector: 'node[kind = "sample"]',
-      style: { "border-color": token("--graph-resource-sample") },
+      style: {
+        "background-color": token("--graph-resource-sample-surface"),
+        "border-color": token("--graph-resource-sample"),
+      },
     },
     {
       selector: 'node[kind = "dataset"]',
-      style: { "border-color": token("--graph-resource-dataset") },
+      style: {
+        "background-color": token("--graph-resource-dataset-surface"),
+        "border-color": token("--graph-resource-dataset"),
+      },
     },
     {
       selector: "node[?isRoot]",
       style: {
+        "border-color": token("--graph-current"),
         "border-width": graphNumberToken(element, "--graph-root-border"),
-        "overlay-color": token("--graph-ring"),
+        "font-weight": 600,
+        height: graphNumberToken(element, "--graph-root-node-height"),
+        "overlay-color": token("--graph-current"),
         "overlay-opacity": graphNumberToken(
           element,
           "--graph-root-overlay-opacity"
@@ -415,23 +504,45 @@ function graphStyles(element: HTMLElement): StylesheetJson {
           element,
           "--graph-root-overlay-padding"
         ),
+        width: graphNumberToken(element, "--graph-root-node-width"),
       },
     },
     {
       selector: "node:selected",
       style: {
-        "background-color": token("--graph-accent"),
         "border-color": token("--graph-ring"),
+        "overlay-color": token("--graph-ring"),
+        "overlay-opacity": graphNumberToken(
+          element,
+          "--graph-selected-overlay-opacity"
+        ),
+        "overlay-padding": graphNumberToken(
+          element,
+          "--graph-selected-overlay-padding"
+        ),
+      },
+    },
+    {
+      selector: "node.graph-hovered",
+      style: {
+        "overlay-color": token("--graph-ring"),
+        "overlay-opacity": graphNumberToken(
+          element,
+          "--graph-hover-overlay-opacity"
+        ),
+        "overlay-padding": graphNumberToken(
+          element,
+          "--graph-hover-overlay-padding"
+        ),
       },
     },
     {
       selector: "edge",
       style: {
-        "curve-style": "taxi",
-        "line-color": token("--graph-muted-foreground"),
-        "target-arrow-color": token("--graph-muted-foreground"),
+        "curve-style": "straight",
+        "line-color": token("--graph-edge"),
+        "target-arrow-color": token("--graph-edge"),
         "target-arrow-shape": "triangle",
-        "taxi-direction": "rightward",
         width: graphNumberToken(element, "--graph-edge-width"),
       },
     },
@@ -442,7 +553,93 @@ function graphStyles(element: HTMLElement): StylesheetJson {
         "target-arrow-shape": "none",
       },
     },
+    {
+      selector: ".graph-muted",
+      style: {
+        opacity: graphNumberToken(element, "--graph-muted-opacity"),
+      },
+    },
+    {
+      selector: "edge.graph-highlighted",
+      style: {
+        "line-color": token("--graph-highlight"),
+        "target-arrow-color": token("--graph-highlight"),
+        width: graphNumberToken(element, "--graph-highlighted-edge-width"),
+      },
+    },
   ]
+}
+
+function graphLayoutMetrics(element: HTMLElement): ResourceGraphLayoutMetrics {
+  return {
+    associationColumnGap: graphNumberToken(
+      element,
+      "--graph-layout-association-column-gap"
+    ),
+    associationGap: graphNumberToken(element, "--graph-layout-association-gap"),
+    associationRowGap: graphNumberToken(
+      element,
+      "--graph-layout-association-row-gap"
+    ),
+    columnGap: graphNumberToken(element, "--graph-layout-column-gap"),
+    rowGap: graphNumberToken(element, "--graph-layout-row-gap"),
+  }
+}
+
+function graphNodeLabel(node: WorkspaceResourceGraphNode, isRoot: boolean) {
+  const kind = node.kind === "sample" ? "sample" : "dataset"
+  const prefix = isRoot ? `Current ${kind}` : kind
+  return `${prefix}\n${breakGraphLabel(truncateGraphLabel(node.name))}`
+}
+
+function truncateGraphLabel(value: string) {
+  const characters = Array.from(value)
+  return characters.length > 52 ? `${characters.slice(0, 51).join("")}…` : value
+}
+
+function breakGraphLabel(value: string) {
+  return value.replace(/([_+/.-])/g, "$1\u200b")
+}
+
+function zoomGraph(instance: Core | null, factor: number) {
+  if (!instance) return
+  const root = instance.$("node[?isRoot]")
+  instance.scratch("resourceGraphViewportChanged", true)
+  instance.zoom({
+    level: instance.zoom() * factor,
+    renderedPosition: root.renderedPosition(),
+  })
+}
+
+function centerCurrentResource(instance: Core) {
+  const root = instance.$("node[?isRoot]")
+  if (!root.length) return
+  const container = instance.container()
+  if (!container) return
+  const padding = graphNumberToken(container, "--graph-fit-padding")
+  const bounds = instance.elements().boundingBox({
+    includeLabels: true,
+    includeOverlays: true,
+  })
+  const rootPosition = root.position()
+  const horizontalExtent = Math.max(
+    rootPosition.x - bounds.x1,
+    bounds.x2 - rootPosition.x
+  )
+  const verticalExtent = Math.max(
+    rootPosition.y - bounds.y1,
+    bounds.y2 - rootPosition.y
+  )
+  const availableWidth = Math.max(container.clientWidth - padding * 2, 1)
+  const availableHeight = Math.max(container.clientHeight - padding * 2, 1)
+  const zoom = Math.min(
+    availableWidth / Math.max(horizontalExtent * 2, 1),
+    availableHeight / Math.max(verticalExtent * 2, 1),
+    instance.maxZoom()
+  )
+  instance.scratch("resourceGraphViewportChanged", false)
+  instance.zoom(Math.max(zoom, instance.minZoom()))
+  instance.center(root)
 }
 
 function graphNumberToken(element: HTMLElement, name: string) {
@@ -461,74 +658,89 @@ function ResourceGraphTable({
   thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
   return (
-    <details className="rounded-xl border bg-card" open>
-      <summary className="cursor-pointer px-4 py-3 text-label">
-        Relationship list ({nodes.length})
-      </summary>
-      {nodes.length === 0 ? (
-        <p className="border-t px-4 py-3 text-body text-muted-foreground">
-          No immediate relationships are recorded.
-        </p>
-      ) : (
-        <div className="overflow-x-auto border-t">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Relationship</TableHead>
-                <TableHead>Resource</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>
-                  <span className="sr-only">Open</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {nodes.map((node) => {
-                const thumbnail = thumbnails[node.unique_id]
-                return (
-                  <TableRow key={node.unique_id}>
-                    <TableCell>{relationshipLabel(graph, node)}</TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-3">
-                        {thumbnail ? (
-                          <DatasetThumbnailImage
-                            alt=""
-                            className="size-10 shrink-0 rounded-md border bg-card object-contain"
-                            thumbnail={thumbnail}
-                          />
-                        ) : null}
-                        <ResourcePreviewLink
-                          className="text-label hover:underline"
+    <Card>
+      <CardHeader actionLayout="inline">
+        <CardTitle>Relationships</CardTitle>
+        <CardAction>
+          <Badge variant="outline">{nodes.length}</Badge>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-0">
+        {nodes.length === 0 ? (
+          <p className="border-t px-4 pt-4 text-body text-muted-foreground">
+            No immediate relationships are recorded.
+          </p>
+        ) : (
+          <div className="border-t">
+            <Table className="resource-graph-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Relationship</TableHead>
+                  <TableHead>Resource</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Open</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {nodes.map((node) => {
+                  const thumbnail = thumbnails[node.unique_id]
+                  return (
+                    <TableRow key={node.unique_id}>
+                      <TableCell
+                        className="resource-graph-relationship"
+                        data-label="Relationship"
+                      >
+                        <Badge variant="outline">
+                          {relationshipLabel(graph, node)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="resource-graph-resource">
+                        <span className="flex min-w-0 items-center gap-3">
+                          {thumbnail ? (
+                            <DatasetThumbnailImage
+                              alt=""
+                              className="size-10 shrink-0 rounded-md border bg-card object-contain"
+                              thumbnail={thumbnail}
+                            />
+                          ) : null}
+                          <span className="flex min-w-0 items-center gap-2">
+                            <ResourceTypeIcon
+                              className="size-5 shrink-0"
+                              type={node.kind}
+                            />
+                            <span className="sr-only">
+                              {node.kind === "sample" ? "Sample" : "Dataset"}
+                              {": "}
+                            </span>
+                            <ResourcePreviewLink
+                              className="min-w-0 text-label break-words hover:underline"
+                              mfid={node.unique_id}
+                              resourceKind={node.kind}
+                              resourceName={node.name}
+                            >
+                              {node.name}
+                            </ResourcePreviewLink>
+                          </span>
+                        </span>
+                      </TableCell>
+                      <TableCell className="resource-graph-action text-right">
+                        <ResourceFullPageLink
+                          kind={node.kind}
                           mfid={node.unique_id}
-                          resourceKind={node.kind}
-                          resourceName={node.name}
-                        >
-                          {node.name}
-                        </ResourcePreviewLink>
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-2">
-                        <ResourceTypeIcon type={node.kind} />
-                        {node.kind === "sample" ? "Sample" : "Dataset"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <ResourceFullPageLink
-                        kind={node.kind}
-                        mfid={node.unique_id}
-                        name={node.name}
-                        presentation="table"
-                      />
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </details>
+                          name={node.name}
+                          presentation="table"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -538,7 +750,10 @@ function relationshipLabel(
 ) {
   const edge = graph.edges.find(
     (candidate) =>
-      candidate.source === node.unique_id || candidate.target === node.unique_id
+      (candidate.source === node.unique_id &&
+        candidate.target === graph.rootMfid) ||
+      (candidate.source === graph.rootMfid &&
+        candidate.target === node.unique_id)
   )
   if (!edge) return "Connected"
   if (edge.relationship === "associated") return "Associated"
