@@ -1,11 +1,33 @@
+import { createLucideIcon } from "lucide-react"
+import type { IconNode } from "lucide-react"
+
+export const DatasetIconNode = [
+  ["ellipse", { cx: "12", cy: "5", key: "msslwz", rx: "9", ry: "3" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }],
+] satisfies IconNode
+
+export const SampleIconNode = [
+  [
+    "path",
+    {
+      d: "M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2",
+      key: "18mbvz",
+    },
+  ],
+  ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
+  ["path", { d: "M8.5 2h7", key: "csnxdl" }],
+] satisfies IconNode
+
+export const DatasetIcon = createLucideIcon("Dataset", DatasetIconNode)
+export const SampleIcon = createLucideIcon("Sample", SampleIconNode)
+
 export {
   CircleUserRound as AccountIcon,
   LibraryBig as DataIcon,
-  Database as DatasetIcon,
   Download as DownloadFileIcon,
   FileX2 as DownloadUnavailableIcon,
   FileInput as RequestIngestionIcon,
-  FlaskConical as SampleIcon,
   FolderKanban as ProjectIcon,
   House as WorkspaceIcon,
   Microscope as InstrumentIcon,

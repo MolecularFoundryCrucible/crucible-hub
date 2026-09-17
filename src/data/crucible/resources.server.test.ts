@@ -66,10 +66,16 @@ describe("workspace resource sources", () => {
           multigraph: false,
           graph: {},
           nodes: [
-            { id: "sample-1", entity_type: "sample", name: "Sample one" },
+            {
+              id: "sample-1",
+              entity_type: "sample",
+              name: "Sample one",
+              sample_type: "Powder",
+            },
             {
               id: "dataset-1",
               entity_type: "dataset",
+              measurement: "XRD",
               name: "Dataset one",
             },
           ],
@@ -81,8 +87,18 @@ describe("workspace resource sources", () => {
     await expect(readWorkspaceResourceGraph("sample-1")).resolves.toEqual({
       rootMfid: "sample-1",
       nodes: [
-        { unique_id: "sample-1", kind: "sample", name: "Sample one" },
-        { unique_id: "dataset-1", kind: "dataset", name: "Dataset one" },
+        {
+          context: "Powder",
+          unique_id: "sample-1",
+          kind: "sample",
+          name: "Sample one",
+        },
+        {
+          context: "XRD",
+          unique_id: "dataset-1",
+          kind: "dataset",
+          name: "Dataset one",
+        },
       ],
       edges: [
         {

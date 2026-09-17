@@ -20,7 +20,10 @@ import {
   staticResourceSiblingCollection,
   useRegisterResourceSiblings,
 } from "@/components/crucible/resource-sibling-navigation"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  ResourceTypeIcon,
+  resourceTypeGraphIconDataUri,
+} from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -65,6 +68,12 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { buildResourceGraphLayout } from "./resource-graph-layout"
 import type { ResourceGraphLayoutMetrics } from "./resource-graph-layout"
+import { useResourceWorkspaceResource } from "@/features/resource-detail/resource-detail-page"
+
+type GraphLabelMetrics = {
+  maxWidth: number
+  measure: (value: string) => number
+}
 
 export function ResourceGraphPage({
   resourceKind,
@@ -75,6 +84,7 @@ export function ResourceGraphPage({
 }) {
   const scope = useWorkspaceScope()
   const navigation = useResourcePreviewContext()
+  const resource = useResourceWorkspaceResource()
   const graph = useRef<Core | null>(null)
   const query = useQuery(resourceGraphQueryOptions(scope, resourceMfid))
   const datasetMfids = query.data
@@ -176,6 +186,11 @@ export function ResourceGraphPage({
         <ResourceGraphCanvas
           graph={query.data}
           instanceRef={graph}
+          rootContext={
+            resource.kind === "sample"
+              ? resource.sample_type
+              : resource.measurement
+          }
           onInspect={(mfid, trigger) => {
             const node = relatedNodes.find(
               (candidate) => candidate.unique_id === mfid
@@ -216,10 +231,12 @@ function ResourceGraphCanvas({
   graph,
   instanceRef,
   onInspect,
+  rootContext,
 }: {
   graph: WorkspaceResourceGraph
   instanceRef: React.MutableRefObject<Core | null>
   onInspect: (mfid: string, trigger: HTMLElement) => void
+  rootContext: string | null
 }) {
   const container = useRef<HTMLDivElement>(null)
   const inspect = useRef(onInspect)
@@ -229,10 +246,16 @@ function ResourceGraphCanvas({
     const element = container.current
     if (!element) return
     const layout = buildResourceGraphLayout(graph, graphLayoutMetrics(element))
+    const labelMetrics = graphLabelMetrics(element)
     const instance = cytoscape({
       boxSelectionEnabled: false,
       container: element,
-      elements: graphElements(graph, layout.positions),
+      elements: graphElements(
+        graph,
+        layout.positions,
+        rootContext,
+        labelMetrics
+      ),
       layout: {
         animate: false,
         fit: false,
@@ -290,7 +313,7 @@ function ResourceGraphCanvas({
       instance.destroy()
       if (instanceRef.current === instance) instanceRef.current = null
     }
-  }, [graph, instanceRef])
+  }, [graph, instanceRef, rootContext])
 
   return (
     <div className="resource-graph-surface relative overflow-hidden rounded-xl border bg-card">
@@ -424,7 +447,9 @@ function ResourceGraphLegend() {
 
 function graphElements(
   graph: WorkspaceResourceGraph,
-  positions: Readonly<Record<string, { x: number; y: number }>>
+  positions: Readonly<Record<string, { x: number; y: number }>>,
+  rootContext: string | null,
+  labelMetrics: GraphLabelMetrics
 ): ElementDefinition[] {
   return [
     ...graph.nodes.map((node) => ({
@@ -432,7 +457,11 @@ function graphElements(
         id: node.unique_id,
         isRoot: node.unique_id === graph.rootMfid,
         kind: node.kind,
-        label: graphNodeLabel(node, node.unique_id === graph.rootMfid),
+        label: graphNodeLabel(
+          node,
+          node.unique_id === graph.rootMfid ? rootContext : null,
+          labelMetrics
+        ),
       },
       group: "nodes" as const,
       position: positions[node.unique_id],
@@ -457,6 +486,18 @@ function graphStyles(element: HTMLElement): StylesheetJson {
       selector: "node",
       style: {
         "background-color": token("--graph-card"),
+        "background-fit": "none",
+        "background-height": graphNumberToken(element, "--graph-icon-size"),
+        "background-position-x": graphNumberToken(
+          element,
+          "--graph-icon-position-x"
+        ),
+        "background-position-y": graphNumberToken(
+          element,
+          "--graph-icon-position-y"
+        ),
+        "background-repeat": "no-repeat",
+        "background-width": graphNumberToken(element, "--graph-icon-size"),
         "border-color": token("--graph-edge"),
         "border-width": graphNumberToken(element, "--graph-node-border"),
         color: token("--graph-foreground"),
@@ -468,6 +509,9 @@ function graphStyles(element: HTMLElement): StylesheetJson {
         "line-height": 1.25,
         shape: "round-rectangle",
         "text-max-width": `${graphNumberToken(element, "--graph-label-width")}px`,
+        "text-halign": "left-inside",
+        "text-justification": "left",
+        "text-margin-x": graphNumberToken(element, "--graph-label-offset-x"),
         "text-overflow-wrap": "anywhere",
         "text-valign": "center",
         "text-wrap": "wrap",
@@ -478,6 +522,10 @@ function graphStyles(element: HTMLElement): StylesheetJson {
       selector: 'node[kind = "sample"]',
       style: {
         "background-color": token("--graph-resource-sample-surface"),
+        "background-image": resourceTypeGraphIconDataUri(
+          "sample",
+          token("--graph-resource-sample")
+        ),
         "border-color": token("--graph-resource-sample"),
       },
     },
@@ -485,6 +533,10 @@ function graphStyles(element: HTMLElement): StylesheetJson {
       selector: 'node[kind = "dataset"]',
       style: {
         "background-color": token("--graph-resource-dataset-surface"),
+        "background-image": resourceTypeGraphIconDataUri(
+          "dataset",
+          token("--graph-resource-dataset")
+        ),
         "border-color": token("--graph-resource-dataset"),
       },
     },
@@ -591,19 +643,83 @@ function graphLayoutMetrics(element: HTMLElement): ResourceGraphLayoutMetrics {
   }
 }
 
-function graphNodeLabel(node: WorkspaceResourceGraphNode, isRoot: boolean) {
-  const kind = node.kind === "sample" ? "sample" : "dataset"
-  const prefix = isRoot ? `Current ${kind}` : kind
-  return `${prefix}\n${breakGraphLabel(truncateGraphLabel(node.name))}`
+function graphNodeLabel(
+  node: WorkspaceResourceGraphNode,
+  rootContext: string | null,
+  metrics: GraphLabelMetrics
+) {
+  const context = rootContext ?? node.context
+  return [
+    ...wrapGraphNodeName(node.name, metrics),
+    ...(context ? [fitGraphLabelLine(context, metrics)] : []),
+  ].join("\n")
 }
 
-function truncateGraphLabel(value: string) {
-  const characters = Array.from(value)
-  return characters.length > 52 ? `${characters.slice(0, 51).join("")}…` : value
+function wrapGraphNodeName(value: string, metrics: GraphLabelMetrics) {
+  const characters = Array.from(value.trim() || "Unnamed resource")
+  if (metrics.measure(characters.join("")) <= metrics.maxWidth) {
+    return [characters.join("")]
+  }
+  const fittedCharacters = graphFittedCharacterCount(characters, metrics)
+  const firstBreak = graphLineBreak(characters, fittedCharacters)
+  if (firstBreak === characters.length) return [characters.join("")]
+  const firstLine = characters.slice(0, firstBreak).join("").trimEnd()
+  const remaining = characters.slice(firstBreak).join("").trimStart()
+  return [firstLine, fitGraphLabelLine(remaining, metrics)]
 }
 
-function breakGraphLabel(value: string) {
-  return value.replace(/([_+/.-])/g, "$1\u200b")
+function graphLineBreak(characters: readonly string[], limit: number) {
+  if (characters.length <= limit) return characters.length
+  const minimumPreferredBreak = Math.ceil(limit * 0.55)
+  for (let index = limit; index >= minimumPreferredBreak; index -= 1) {
+    if (/\s|[_+/.-]/.test(characters[index - 1] ?? "")) return index
+  }
+  return limit
+}
+
+function fitGraphLabelLine(value: string, metrics: GraphLabelMetrics) {
+  const characters = Array.from(value.trim())
+  if (metrics.measure(characters.join("")) <= metrics.maxWidth) {
+    return characters.join("")
+  }
+  const ellipsis = "…"
+  while (
+    characters.length > 0 &&
+    metrics.measure(`${characters.join("").trimEnd()}${ellipsis}`) >
+      metrics.maxWidth
+  ) {
+    characters.pop()
+  }
+  return `${characters.join("").trimEnd()}${ellipsis}`
+}
+
+function graphFittedCharacterCount(
+  characters: readonly string[],
+  metrics: GraphLabelMetrics
+) {
+  let fitted = 1
+  while (
+    fitted < characters.length &&
+    metrics.measure(characters.slice(0, fitted + 1).join("")) <=
+      metrics.maxWidth
+  ) {
+    fitted += 1
+  }
+  return fitted
+}
+
+function graphLabelMetrics(element: HTMLElement): GraphLabelMetrics {
+  const context = document.createElement("canvas").getContext("2d")
+  const style = getComputedStyle(element)
+  const fontSize = graphNumberToken(element, "--graph-font-size")
+  if (context) {
+    context.font = `600 ${fontSize}px ${style.getPropertyValue("--font-sans").trim()}`
+  }
+  return {
+    maxWidth: graphNumberToken(element, "--graph-label-width"),
+    measure: (value) =>
+      context?.measureText(value).width ?? value.length * fontSize,
+  }
 }
 
 function zoomGraph(instance: Core | null, factor: number) {

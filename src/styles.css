@@ -354,10 +354,10 @@
   --layer-route-progress: 50;
   --layer-graph-overlay: 1;
   --route-progress-height: 0.1875rem;
-  --graph-node-width: 184;
-  --graph-node-height: 68;
-  --graph-root-node-width: 200;
-  --graph-root-node-height: 76;
+  --graph-node-width: 220;
+  --graph-node-height: 88;
+  --graph-root-node-width: 236;
+  --graph-root-node-height: 96;
   --graph-node-border: 2;
   --graph-root-border: 4;
   --graph-root-overlay-opacity: 0.1;
@@ -367,7 +367,11 @@
   --graph-edge-width: 2;
   --graph-highlighted-edge-width: 3;
   --graph-font-size: 12;
-  --graph-label-width: 160;
+  --graph-icon-size: 18;
+  --graph-icon-position-x: 14;
+  --graph-icon-position-y: 22;
+  --graph-label-width: 164;
+  --graph-label-offset-x: 42;
   --graph-layout-column-gap: 320;
   --graph-layout-node-gap: 32;
   --graph-layout-row-gap: 112;

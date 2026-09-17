@@ -12,7 +12,7 @@ The next layout candidate is `cytoscape-elk` using ELK Layered. ELK can calculat
 
 ## Current limitation
 
-Hub currently reads `GET /entity_graph_cte/{entity_id}` with `recursive=false`, validates the opaque response at its server boundary, and infers relationship meaning from node types and edge orientation. The public operation name exposes a persistence implementation detail. OpenAPI does not provide a typed graph response with stable relationship semantics, depth, completeness, or limit information.
+Hub currently reads `GET /entity_graph_cte/{entity_id}` with `recursive=false`, validates the opaque response at its server boundary, and infers relationship meaning from node types and edge orientation. The public operation name exposes a persistence implementation detail. OpenAPI does not provide a typed graph response with stable relationship semantics, depth, completeness, limit information, sample type, or dataset measurement.
 
 The current one-hop view remains valid while this contract is unavailable. Hub must not expose recursive traversal or imply graph completeness from the existing response.
 
@@ -74,7 +74,7 @@ The exact schema names belong to the API, but the OpenAPI response should provid
 }
 ```
 
-Required node fields are stable MFID, resource type, and display name. Compact sample type, dataset measurement, and project identity are useful because they let Hub label and group nodes without issuing one detail request per node. A missing optional display value should be represented as `null`, not by omitting the node.
+Required node fields are stable MFID, resource type, display name, and the resource-specific nullable context field: `sample_type` for a sample or `measurement` for a dataset. These context fields let Hub render the standard graph node without issuing one detail request per node. Compact project and instrument identity remain useful for optional grouping. A missing optional display value should be represented as `null`, not by omitting the node.
 
 Required edge fields are a stable edge identity or a documented stable composite identity, source MFID, target MFID, typed relationship kind, and explicit direction. Persisted relationship labels or types should be returned directly rather than reconstructed by Hub.
 

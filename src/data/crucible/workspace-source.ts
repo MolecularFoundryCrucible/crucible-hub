@@ -208,6 +208,7 @@ export type WorkspaceLinkedResource = {
 }
 
 export type WorkspaceResourceGraphNode = {
+  context: string | null
   kind: "dataset" | "sample"
   name: string
   unique_id: string

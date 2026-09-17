@@ -1,3 +1,4 @@
+import { createContext, useContext } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
@@ -64,6 +65,22 @@ import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-v
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
+
+type ResourceWorkspaceResource = Extract<
+  WorkspaceResourceDetail,
+  { kind: "dataset" | "sample" }
+>
+
+const ResourceWorkspaceResourceContext =
+  createContext<ResourceWorkspaceResource | null>(null)
+
+export function useResourceWorkspaceResource() {
+  const resource = useContext(ResourceWorkspaceResourceContext)
+  if (!resource) {
+    throw new Error("Resource workspace context is unavailable.")
+  }
+  return resource
+}
 
 export async function preloadResourceShell(
   queryClient: QueryClient,
@@ -142,101 +159,103 @@ export function ResourceWorkspace({
   }
 
   return (
-    <ResourcePreviewContext.Provider value={navigation}>
-      <PageLayout>
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                render={
-                  <Link
-                    search={
-                      resource.project
-                        ? { preview: undefined }
-                        : {
-                            datasetCursor: undefined,
-                            kind:
-                              resourceKind === "dataset"
-                                ? "datasets"
-                                : undefined,
-                            sampleCursor: undefined,
-                          }
-                    }
-                    to={resource.project ? "/projects" : "/data"}
+    <ResourceWorkspaceResourceContext.Provider value={resource}>
+      <ResourcePreviewContext.Provider value={navigation}>
+        <PageLayout>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  render={
+                    <Link
+                      search={
+                        resource.project
+                          ? { preview: undefined }
+                          : {
+                              datasetCursor: undefined,
+                              kind:
+                                resourceKind === "dataset"
+                                  ? "datasets"
+                                  : undefined,
+                              sampleCursor: undefined,
+                            }
+                      }
+                      to={resource.project ? "/projects" : "/data"}
+                    />
+                  }
+                >
+                  {resource.project ? "Projects" : "Data"}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              {resource.project ? (
+                <>
+                  <BreadcrumbItem className="min-w-0">
+                    <BreadcrumbLink
+                      className="break-words"
+                      render={
+                        <Link
+                          params={{ projectMfid: resource.project.unique_id }}
+                          search={{ preview: undefined }}
+                          to="/projects/$projectMfid"
+                        />
+                      }
+                    >
+                      {resource.project.title ?? resource.project.project_id}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
+              ) : null}
+              <BreadcrumbItem className="min-w-0">
+                <BreadcrumbPage className="break-words">
+                  {resource.name}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <PageHeader
+            actionLayout="inline"
+            actions={
+              <EntityRefreshAction
+                exact={false}
+                label={`Refresh ${resource.name}`}
+                presentation="icon"
+                queryKey={crucibleKeys.resourceDetails(scope, resourceMfid)}
+                refreshedAt={dataUpdatedAt}
+              />
+            }
+            icon={
+              <ResourceTypeIcon
+                className="mt-1 size-6 shrink-0"
+                type={resource.kind}
+              />
+            }
+            title={resource.name}
+          />
+          <ResourceNavigation
+            actions={
+              <ResourceSiblingNavigationControls
+                configurationAction={
+                  <ResourceSiblingConfigurationAction
+                    navigation={siblingNavigation}
+                    resource={resource}
+                    scope={scope}
                   />
                 }
-              >
-                {resource.project ? "Projects" : "Data"}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            {resource.project ? (
-              <>
-                <BreadcrumbItem className="min-w-0">
-                  <BreadcrumbLink
-                    className="break-words"
-                    render={
-                      <Link
-                        params={{ projectMfid: resource.project.unique_id }}
-                        search={{ preview: undefined }}
-                        to="/projects/$projectMfid"
-                      />
-                    }
-                  >
-                    {resource.project.title ?? resource.project.project_id}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-              </>
-            ) : null}
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="break-words">
-                {resource.name}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <PageHeader
-          actionLayout="inline"
-          actions={
-            <EntityRefreshAction
-              exact={false}
-              label={`Refresh ${resource.name}`}
-              presentation="icon"
-              queryKey={crucibleKeys.resourceDetails(scope, resourceMfid)}
-              refreshedAt={dataUpdatedAt}
-            />
-          }
-          icon={
-            <ResourceTypeIcon
-              className="mt-1 size-6 shrink-0"
-              type={resource.kind}
-            />
-          }
-          title={resource.name}
-        />
-        <ResourceNavigation
-          actions={
-            <ResourceSiblingNavigationControls
-              configurationAction={
-                <ResourceSiblingConfigurationAction
-                  navigation={siblingNavigation}
-                  resource={resource}
-                  scope={scope}
-                />
-              }
-              fromProject={fromProject}
-              navigation={siblingNavigation}
-            />
-          }
-          fromProject={fromProject}
-          resource={resource}
-          siblingSessionId={siblingNavigation?.id}
-        />
-        <Outlet />
-      </PageLayout>
-      <ResourceInspector navigation={navigation} />
-    </ResourcePreviewContext.Provider>
+                fromProject={fromProject}
+                navigation={siblingNavigation}
+              />
+            }
+            fromProject={fromProject}
+            resource={resource}
+            siblingSessionId={siblingNavigation?.id}
+          />
+          <Outlet />
+        </PageLayout>
+        <ResourceInspector navigation={navigation} />
+      </ResourcePreviewContext.Provider>
+    </ResourceWorkspaceResourceContext.Provider>
   )
 }
 

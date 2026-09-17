@@ -1,16 +1,19 @@
 import {
   DataIcon,
   DatasetIcon,
+  DatasetIconNode,
   InstrumentIcon,
   PersonIcon,
   ProjectIcon,
   PublicAccessIcon,
   SampleIcon,
+  SampleIconNode,
   ServiceAccountIcon,
   SystemPrincipalIcon,
   UnknownPrincipalIcon,
 } from "@/components/crucible/icons"
 import { cn } from "@/lib/utils"
+import type { IconNode } from "lucide-react"
 
 type ResourceType = "dataset" | "instrument" | "person" | "project" | "sample"
 type PrincipalType =
@@ -57,6 +60,11 @@ const principalIconClasses = {
   unknown: "text-muted-foreground",
   user: iconClasses.person,
 } satisfies Record<PrincipalType, string>
+
+const graphIconNodes = {
+  dataset: DatasetIconNode,
+  sample: SampleIconNode,
+} satisfies Record<"dataset" | "sample", IconNode>
 
 export function DataCollectionIcon({ className }: { className?: string }) {
   return (
@@ -110,6 +118,23 @@ export function PrincipalTypeIcon({
       role={label ? "img" : undefined}
     />
   )
+}
+
+export function resourceTypeGraphIconDataUri(
+  type: "dataset" | "sample",
+  color: string
+) {
+  const content = graphIconNodes[type]
+    .map(([element, attributes]) => {
+      const serializedAttributes = Object.entries(attributes)
+        .filter(([name]) => name !== "key")
+        .map(([name, value]) => `${name}="${String(value)}"`)
+        .join(" ")
+      return `<${element} ${serializedAttributes}/>`
+    })
+    .join("")
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${content}</svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }
 
 export type { PrincipalType, ResourceType }

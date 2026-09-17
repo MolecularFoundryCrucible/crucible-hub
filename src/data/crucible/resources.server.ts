@@ -117,7 +117,9 @@ const apiResourceGraphSchema = z
           .object({
             entity_type: z.enum(["dataset", "sample"]),
             id: z.string().min(1).max(255),
+            measurement: z.string().max(255).nullable().optional(),
             name: z.string().nullable().optional(),
+            sample_type: z.string().max(255).nullable().optional(),
           })
           .passthrough()
       )
@@ -852,6 +854,10 @@ function fixtureResourceGraph(
     [
       resource.unique_id,
       {
+        context:
+          resource.kind === "sample"
+            ? resource.sample_type
+            : resource.measurement,
         kind: resource.kind,
         name: resource.name,
         unique_id: resource.unique_id,
@@ -864,6 +870,7 @@ function fixtureResourceGraph(
         return []
       }
       nodes.set(link.unique_id, {
+        context: null,
         kind: link.resource_type,
         name: link.name || link.unique_id,
         unique_id: link.unique_id,
@@ -912,6 +919,10 @@ function normalizeApiResourceGraph(
     result.data.nodes.map((node) => [
       node.id,
       {
+        context:
+          node.entity_type === "sample"
+            ? (node.sample_type ?? null)
+            : (node.measurement ?? null),
         kind: node.entity_type,
         name: node.name || node.id,
         unique_id: node.id,
