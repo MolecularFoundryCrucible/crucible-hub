@@ -47,7 +47,7 @@ The core product surfaces are:
 - Project and instrument workspaces for scoped list and grouped data browsing, context, and capability-gated management.
 - Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, processing, access, and lifecycle-aware actions.
 - Search, scientific metadata search, direct MFID lookup, and local QR scanning for bounded cross-resource discovery, with project-scoped sample and dataset search available from an active project.
-- Account for reviewing and updating the authenticated person's own name, email, and username from the application-bar profile menu.
+- Account for reviewing and updating the authenticated person's own name, email, and username, inspecting non-secret API credential status, and understanding currently advertised account capabilities from the application-bar profile menu.
 - Administration for capability-gated service-account discovery, creation, profile maintenance, platform-role management, credential status, and credential rotation.
 
 Accessible and owned resources are distinct sets. Hub must not invent a personal-project model or emulate unavailable server-side filtering with incomplete client-side scans.

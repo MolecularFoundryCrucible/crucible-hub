@@ -3,7 +3,6 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import { ContentBoundary } from "@/components/crucible/content-layout"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
@@ -161,134 +160,128 @@ export function AccountProfileForm({
 
   if (!editing) {
     return (
-      <ContentBoundary width="reading">
-        <Card>
-          <CardHeader>
-            <PersonIdentity person={account} presentation="avatar" size="lg" />
-            <CardAction>
-              <Button
-                onClick={() => {
-                  setSaved(false)
-                  setEditing(true)
-                }}
-                variant="outline"
-              >
-                <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
-                Edit profile
-              </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-label text-muted-foreground">Email</dt>
-                <dd className="mt-1 text-body break-words">
-                  {account.email ?? "Not provided"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-label text-muted-foreground">Username</dt>
-                <dd className="mt-1 text-body break-words">
-                  {account.username ?? "Not provided"}
-                </dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-label text-muted-foreground">
-                  Crucible ID
-                </dt>
-                <dd className="mt-1">
-                  <MfidValue value={account.unique_id} />
-                </dd>
-              </div>
-            </dl>
-            <p aria-live="polite" className="mt-4 text-body text-success">
-              {saved ? "Profile saved." : null}
-            </p>
-          </CardContent>
-        </Card>
-      </ContentBoundary>
+      <Card>
+        <CardHeader>
+          <PersonIdentity person={account} presentation="avatar" size="lg" />
+          <CardAction>
+            <Button
+              onClick={() => {
+                setSaved(false)
+                setEditing(true)
+              }}
+              variant="outline"
+            >
+              <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
+              Edit profile
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-label text-muted-foreground">Email</dt>
+              <dd className="mt-1 text-body break-words">
+                {account.email ?? "Not provided"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-label text-muted-foreground">Username</dt>
+              <dd className="mt-1 text-body break-words">
+                {account.username ?? "Not provided"}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-label text-muted-foreground">Crucible ID</dt>
+              <dd className="mt-1">
+                <MfidValue value={account.unique_id} />
+              </dd>
+            </div>
+          </dl>
+          <p aria-live="polite" className="mt-4 text-body text-success">
+            {saved ? "Profile saved." : null}
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
     <>
-      <ContentBoundary width="reading">
-        <Card aria-busy={isSubmitting}>
-          <CardHeader>
-            <CardTitle>Edit profile</CardTitle>
-            <CardDescription>
-              Manage the name and contact details associated with your Crucible
-              account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form
-              id={formId}
-              noValidate
-              onSubmit={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                void form.handleSubmit()
-              }}
-            >
-              <fieldset disabled={isSubmitting}>
-                <FieldGroup>
-                  <form.Field name="first_name">
-                    {(field) => (
-                      <ProfileField field={field} label="First name" required />
-                    )}
-                  </form.Field>
-                  <form.Field name="last_name">
-                    {(field) => (
-                      <ProfileField field={field} label="Last name" required />
-                    )}
-                  </form.Field>
-                  <form.Field name="email">
-                    {(field) => (
-                      <ProfileField field={field} label="Email" type="email" />
-                    )}
-                  </form.Field>
-                  <form.Field name="username">
-                    {(field) => (
-                      <ProfileField
-                        description="3 to 24 lowercase characters. Dots, hyphens, and underscores may separate letters or numbers."
-                        field={field}
-                        label="Username"
-                        maxLength={24}
-                      />
-                    )}
-                  </form.Field>
-                </FieldGroup>
-              </fieldset>
-              {saveError ? (
-                <p className="mt-4 text-body text-destructive" role="alert">
-                  {saveError}
-                </p>
-              ) : null}
-              <p aria-live="polite" className="mt-4 text-body text-success">
-                {saved ? "Profile saved." : null}
-              </p>
-            </form>
-          </CardContent>
-          <form.Subscribe
-            selector={(state) => [
-              state.canSubmit,
-              state.isDirty,
-              state.isSubmitting,
-            ]}
+      <Card aria-busy={isSubmitting}>
+        <CardHeader>
+          <CardTitle>Edit profile</CardTitle>
+          <CardDescription>
+            Manage the name and contact details associated with your Crucible
+            account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            id={formId}
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              void form.handleSubmit()
+            }}
           >
-            {([canSubmit, dirty, submitting]) => (
-              <EditableCardActions
-                canSubmit={canSubmit}
-                dirty={dirty}
-                formId={formId}
-                onCancel={discard.requestCancel}
-                pending={submitting}
-              />
-            )}
-          </form.Subscribe>
-        </Card>
-      </ContentBoundary>
+            <fieldset disabled={isSubmitting}>
+              <FieldGroup>
+                <form.Field name="first_name">
+                  {(field) => (
+                    <ProfileField field={field} label="First name" required />
+                  )}
+                </form.Field>
+                <form.Field name="last_name">
+                  {(field) => (
+                    <ProfileField field={field} label="Last name" required />
+                  )}
+                </form.Field>
+                <form.Field name="email">
+                  {(field) => (
+                    <ProfileField field={field} label="Email" type="email" />
+                  )}
+                </form.Field>
+                <form.Field name="username">
+                  {(field) => (
+                    <ProfileField
+                      description="3 to 24 lowercase characters. Dots, hyphens, and underscores may separate letters or numbers."
+                      field={field}
+                      label="Username"
+                      maxLength={24}
+                    />
+                  )}
+                </form.Field>
+              </FieldGroup>
+            </fieldset>
+            {saveError ? (
+              <p className="mt-4 text-body text-destructive" role="alert">
+                {saveError}
+              </p>
+            ) : null}
+            <p aria-live="polite" className="mt-4 text-body text-success">
+              {saved ? "Profile saved." : null}
+            </p>
+          </form>
+        </CardContent>
+        <form.Subscribe
+          selector={(state) => [
+            state.canSubmit,
+            state.isDirty,
+            state.isSubmitting,
+          ]}
+        >
+          {([canSubmit, dirty, submitting]) => (
+            <EditableCardActions
+              canSubmit={canSubmit}
+              dirty={dirty}
+              formId={formId}
+              onCancel={discard.requestCancel}
+              pending={submitting}
+            />
+          )}
+        </form.Subscribe>
+      </Card>
       <DiscardChangesDialog {...discard.dialog} />
     </>
   )

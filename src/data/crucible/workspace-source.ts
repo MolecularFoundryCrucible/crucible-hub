@@ -32,6 +32,11 @@ export type WorkspaceAccountProfileUpdate = {
   username?: string | null
 }
 
+export type WorkspaceApiCredentialStatus = Pick<
+  Schema<"ApiKeyVerify">,
+  "created_at" | "expires_at" | "valid"
+>
+
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 
 export type WorkspaceProject =

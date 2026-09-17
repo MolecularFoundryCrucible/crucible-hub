@@ -9,6 +9,7 @@ import { readWorkspaceFixture } from "./workspace-fixture.server"
 import type {
   WorkspaceAccount,
   WorkspaceAccountProfileUpdate,
+  WorkspaceApiCredentialStatus,
 } from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
 
@@ -35,6 +36,34 @@ export async function readWorkspaceAccount(
   }
 
   return toWorkspaceAccount(result.data)
+}
+
+export async function readWorkspaceAccountCredentialStatus(
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceApiCredentialStatus> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario)
+    if (source.status === "unavailable") throw new Error(source.reason)
+    return {
+      created_at: source.workspace.referenceTime,
+      expires_at: "2027-09-01T16:00:00Z",
+      valid: true,
+    }
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/account/verify", {
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response.status)
+  }
+  return result.data
 }
 
 export async function patchWorkspaceAccount(

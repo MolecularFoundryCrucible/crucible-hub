@@ -4,9 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import {
-  CredentialIcon,
   EditResourceIcon,
   RotateCredentialIcon,
   SavingChangesIcon,
@@ -14,7 +14,6 @@ import {
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -61,8 +60,6 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
-import { formatDate } from "@/lib/format"
-
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 
 const serviceAccountProfileSchema = z.object({
@@ -519,53 +516,15 @@ function ServiceAccountCredentialCard({
 
   return (
     <>
-      <Card>
-        <CardHeader actionLayout="inline">
-          <CardTitle className="flex items-center gap-2">
-            <CredentialIcon aria-hidden="true" />
-            API credential
-          </CardTitle>
-          <CardAction>
-            <Button onClick={() => setConfirming(true)} variant="destructive">
-              <RotateCredentialIcon
-                aria-hidden="true"
-                data-icon="inline-start"
-              />
-              Rotate key
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          {status ? (
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-label text-muted-foreground">Status</dt>
-                <dd className="mt-1">
-                  <Badge variant={status.valid ? "secondary" : "destructive"}>
-                    {status.valid ? "Valid" : "Invalid"}
-                  </Badge>
-                </dd>
-              </div>
-              <div>
-                <dt className="text-label text-muted-foreground">Created</dt>
-                <dd className="mt-1 text-body">
-                  {formatDate(status.created_at)}
-                </dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-label text-muted-foreground">Expires</dt>
-                <dd className="mt-1 text-body">
-                  {formatDate(status.expires_at)}
-                </dd>
-              </div>
-            </dl>
-          ) : (
-            <p className="text-body text-muted-foreground">
-              No API key status is available.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      <ApiCredentialCard
+        action={
+          <Button onClick={() => setConfirming(true)} variant="destructive">
+            <RotateCredentialIcon aria-hidden="true" data-icon="inline-start" />
+            Rotate key
+          </Button>
+        }
+        status={status}
+      />
       <ConfirmationAlertDialog
         confirmLabel="Rotate key"
         description="The current key will stop working immediately. Existing integrations must be updated with the replacement key."

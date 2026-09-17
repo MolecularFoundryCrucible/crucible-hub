@@ -5,7 +5,11 @@ import { z } from "zod"
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import { fixtureScenarioSchema } from "./fixture-scenarios"
-import { patchWorkspaceAccount, readWorkspaceAccount } from "./account.server"
+import {
+  patchWorkspaceAccount,
+  readWorkspaceAccount,
+  readWorkspaceAccountCredentialStatus,
+} from "./account.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 
 const profileNameSchema = z.string().trim().min(1).max(255)
@@ -43,6 +47,18 @@ export const getWorkspaceAccount = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceAccount(data.scenario, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceAccountCredentialStatus = createServerFn({
+  method: "GET",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(z.object({ scenario: fixtureScenarioSchema.optional() }))
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceAccountCredentialStatus(data.scenario, context.requestSignal)
     )
   })
 

@@ -2,7 +2,10 @@ import { queryOptions } from "@tanstack/react-query"
 
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
-import { getWorkspaceAccount } from "./account.functions"
+import {
+  getWorkspaceAccount,
+  getWorkspaceAccountCredentialStatus,
+} from "./account.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { unwrapHubResult } from "./result"
 
@@ -21,5 +24,18 @@ export function accountQueryOptions(scope: IdentityScope) {
       }
       return account
     },
+  })
+}
+
+export function accountCredentialStatusQueryOptions(scope: IdentityScope) {
+  return queryOptions({
+    queryKey: crucibleKeys.accountCredentialStatus(scope),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceAccountCredentialStatus({
+          data: { scenario: fixtureScenarioFromScope(scope) },
+          signal,
+        })
+      ),
   })
 }
