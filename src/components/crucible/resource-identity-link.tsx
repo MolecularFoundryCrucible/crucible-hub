@@ -21,6 +21,7 @@ export function ResourceIdentityLink({
   mfid,
   name,
   presentation = "collection",
+  showTypeIcon = true,
   triggerContext = context,
 }: {
   children?: ReactNode
@@ -31,6 +32,7 @@ export function ResourceIdentityLink({
   mfid: string
   name: string
   presentation?: ResourceIdentityPresentation
+  showTypeIcon?: boolean
   triggerContext?: string | null
 }) {
   const identity = (
@@ -40,6 +42,7 @@ export function ResourceIdentityLink({
       kind={kind}
       name={name}
       presentation={presentation}
+      showTypeIcon={showTypeIcon}
       showTruncationTitle={false}
     />
   )

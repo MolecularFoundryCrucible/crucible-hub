@@ -118,6 +118,7 @@ export function ResourceProjectCell({
           kind="project"
           mfid={project.unique_id}
           name={project.title ?? project.project_id}
+          showTypeIcon={false}
           triggerContext={null}
         />
       ) : (

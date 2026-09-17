@@ -16,6 +16,7 @@ export function ResourceIdentity({
   name,
   presentation = "stacked",
   projectId,
+  showTypeIcon = true,
   showTruncationTitle = true,
 }: {
   className?: string
@@ -26,13 +27,16 @@ export function ResourceIdentity({
   name: string
   presentation?: ResourceIdentityPresentation
   projectId?: string | null
+  showTypeIcon?: boolean
   showTruncationTitle?: boolean
 }) {
   const truncate = presentation === "collection"
 
   return (
     <span className={cn("flex min-w-0 items-start gap-2", className)}>
-      <ResourceTypeIcon className="mt-0.5 shrink-0" type={kind} />
+      {showTypeIcon ? (
+        <ResourceTypeIcon className="mt-0.5 shrink-0" type={kind} />
+      ) : null}
       <span className="min-w-0 flex-1 text-left">
         <span
           className={cn(
