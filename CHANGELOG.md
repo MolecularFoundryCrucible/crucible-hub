@@ -78,7 +78,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Upgraded Cytoscape and redesigned sample and dataset graphs around a centered current resource, collision-safe directional placement, shared type icons, two-line names, type-specific context, neighborhood emphasis, in-canvas controls and legend, and a responsive accessible relationship card.
 - Kept graph-node resource previews open by treating the interactive graph canvas as a preview trigger during outside-interaction dismissal.
 - Improved compact layouts with inline utility actions and field labels, contained full-label resource tabs, natural scientific-name wrapping, single-line MFID identity where space permits, touch-sized directory navigation, and stable administration hydration.
-- Made the service-account directory and search controls reflow cleanly on compact screens, standardized collection page navigation, and unified browser-safe API mutation error formatting with retained request references.
+- Made the service-account directory and search controls reflow cleanly on compact screens while retaining natural desktop column spacing, aligned credential creation and expiration dates, standardized collection page navigation, and unified browser-safe API mutation error formatting with retained request references.
 - Replaced person-type prose in shared stacked and avatar identities with accessible person or service-account icons across service-account directories, search results, member lists, pickers, and account presentations.
 
 - Distinguished combined Data navigation from individual datasets and samples with a dedicated indigo collection icon and semantic theme token.

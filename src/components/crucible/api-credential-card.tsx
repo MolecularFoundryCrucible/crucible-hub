@@ -72,7 +72,7 @@ function CredentialStatus({
 }) {
   return (
     <dl className="grid gap-4 sm:grid-cols-2">
-      <div>
+      <div className="sm:col-span-2">
         <dt className="text-label text-muted-foreground">Status</dt>
         <dd className="mt-1">
           <Badge variant={status.valid ? "success" : "destructive"}>
@@ -84,7 +84,7 @@ function CredentialStatus({
         <dt className="text-label text-muted-foreground">Created</dt>
         <dd className="mt-1 text-body">{formatDate(status.created_at)}</dd>
       </div>
-      <div className="sm:col-span-2">
+      <div>
         <dt className="text-label text-muted-foreground">Expires</dt>
         <dd className="mt-1 text-body">{formatDate(status.expires_at)}</dd>
       </div>
@@ -100,7 +100,7 @@ function CredentialStatusSkeleton() {
       role="status"
     >
       {Array.from({ length: 3 }, (_, index) => (
-        <div className={index === 2 ? "sm:col-span-2" : undefined} key={index}>
+        <div className={index === 0 ? "sm:col-span-2" : undefined} key={index}>
           <Skeleton className="h-4 w-16" />
           <Skeleton className="mt-2 h-5 w-28" />
         </div>

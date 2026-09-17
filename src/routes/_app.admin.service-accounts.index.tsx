@@ -293,14 +293,8 @@ function ServiceAccountCollection({
           <CardContent className="px-0">
             <Table
               aria-label="Service accounts"
-              className="identity-directory-table table-fixed"
+              className="identity-directory-table"
             >
-              <colgroup>
-                <col className="identity-directory-account-column" />
-                <col className="identity-directory-mfid-column" />
-                <col className="identity-directory-role-column" />
-                <col className="identity-directory-action-column" />
-              </colgroup>
               <TableHeader>
                 <TableRow>
                   <TableHead>Account</TableHead>
