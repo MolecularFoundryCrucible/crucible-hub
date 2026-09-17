@@ -598,7 +598,15 @@ body {
   .resource-collection-table .resource-collection-project,
   .resource-collection-table .resource-collection-owner,
   .resource-collection-table .resource-collection-date {
+    align-items: flex-start;
+    column-gap: calc(var(--spacing) * 1);
+    display: flex;
     grid-column: 1;
+    min-width: 0;
+  }
+
+  .resource-collection-table .resource-collection-project > *,
+  .resource-collection-table .resource-collection-owner > * {
     min-width: 0;
   }
 
@@ -607,6 +615,7 @@ body {
   .resource-collection-table .resource-collection-date::before {
     color: var(--muted-foreground);
     content: attr(data-label) ": ";
+    flex: none;
   }
 
   .resource-collection-table .resource-collection-action {

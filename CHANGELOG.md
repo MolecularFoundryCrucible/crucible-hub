@@ -72,7 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Improved compact layouts with inline utility actions, contained full-label resource tabs, natural scientific-name wrapping, single-line MFID identity where space permits, touch-sized directory navigation, and stable administration hydration.
+- Improved compact layouts with inline utility actions and field labels, contained full-label resource tabs, natural scientific-name wrapping, single-line MFID identity where space permits, touch-sized directory navigation, and stable administration hydration.
 - Made the service-account directory and search controls reflow cleanly on compact screens, standardized collection page navigation, and unified browser-safe API mutation error formatting with retained request references.
 - Replaced person-type prose in shared stacked and avatar identities with accessible person or service-account icons across service-account directories, search results, member lists, pickers, and account presentations.
 
