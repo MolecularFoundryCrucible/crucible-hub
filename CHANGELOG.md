@@ -73,7 +73,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 ### Changed
 
 - Expanded My profile with API credential validity and dates, advertised account capabilities, and the shared credential-status presentation used by service-account administration, while standardizing success, warning, and destructive badge colors.
-- Removed repeated project icons from the Project column in global and project-scoped sample and dataset collections.
+- Simplified sample and dataset collections by keeping a text-only Project column in global Data and replacing the redundant project-scoped column with Sample type or Measurement on wide screens.
 - Unified project-scoped search and collection ownership switches with the shared segmented-control presentation.
 - Upgraded Cytoscape and redesigned sample and dataset graphs around a centered current resource, collision-safe directional placement, shared type icons, two-line names, type-specific context, neighborhood emphasis, in-canvas controls and legend, and a responsive accessible relationship card.
 - Kept graph-node resource previews open by treating the interactive graph canvas as a preview trigger during outside-interaction dismissal.

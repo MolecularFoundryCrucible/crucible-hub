@@ -577,8 +577,10 @@ function ProjectDataResult({
                 items={items}
                 kind="sample"
                 onSort={onSort}
+                showProjectColumn={false}
+                showSubtypeColumn
                 sort={sort}
-                subtypeVisibility="always"
+                subtypeVisibility="compact"
               />
             ) : (
               <ResourceCollectionTable
@@ -587,8 +589,10 @@ function ProjectDataResult({
                 items={items}
                 kind="dataset"
                 onSort={onSort}
+                showProjectColumn={false}
+                showSubtypeColumn
                 sort={sort}
-                subtypeVisibility="always"
+                subtypeVisibility="compact"
               />
             )}
           </CardContent>

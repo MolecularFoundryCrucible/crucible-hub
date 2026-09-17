@@ -29,6 +29,7 @@ type SharedProps = {
   direction: SortDirection
   fromProject?: string
   onSort: (sort: ResourceSort, direction: SortDirection) => void
+  showProjectColumn?: boolean
   showSubtypeColumn?: boolean
   sort?: ResourceSort
   subtypeLabel?: string
@@ -48,6 +49,7 @@ export function ResourceCollectionTable({
   items,
   kind,
   onSort,
+  showProjectColumn = true,
   showSubtypeColumn = false,
   sort,
   subtypeLabel = kind === "dataset" ? "Measurement" : "Sample type",
@@ -63,7 +65,9 @@ export function ResourceCollectionTable({
         {showSubtypeColumn ? (
           <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
         ) : null}
-        <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
+        {showProjectColumn ? (
+          <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
+        ) : null}
         <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
         <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
         <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
@@ -83,7 +87,7 @@ export function ResourceCollectionTable({
               {subtypeLabel}
             </TableHead>
           ) : null}
-          <TableHead>Project</TableHead>
+          {showProjectColumn ? <TableHead>Project</TableHead> : null}
           <TableHead>Owner</TableHead>
           <SortableTableHead
             active={sort === "created"}
@@ -120,11 +124,13 @@ export function ResourceCollectionTable({
                 {showSubtypeColumn ? (
                   <SubtypeCell value={sample.sample_type} />
                 ) : null}
-                <ResourceProjectCell
-                  project={sample.project}
-                  projectId={sample.project_id}
-                  relation={sample.project_relation}
-                />
+                {showProjectColumn ? (
+                  <ResourceProjectCell
+                    project={sample.project}
+                    projectId={sample.project_id}
+                    relation={sample.project_relation}
+                  />
+                ) : null}
                 <ResourceOwnerCell owner={sample.owner} />
                 <ResourceCreatedCell
                   className="hidden xl:table-cell"
@@ -152,11 +158,13 @@ export function ResourceCollectionTable({
                 {showSubtypeColumn ? (
                   <SubtypeCell value={dataset.measurement} />
                 ) : null}
-                <ResourceProjectCell
-                  project={dataset.project}
-                  projectId={dataset.project_id}
-                  relation={dataset.project_relation}
-                />
+                {showProjectColumn ? (
+                  <ResourceProjectCell
+                    project={dataset.project}
+                    projectId={dataset.project_id}
+                    relation={dataset.project_relation}
+                  />
+                ) : null}
                 <ResourceOwnerCell owner={dataset.owner} />
                 <ResourceCreatedCell
                   className="hidden xl:table-cell"
