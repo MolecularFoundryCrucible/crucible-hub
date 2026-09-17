@@ -336,6 +336,7 @@ function ResourceGraphCanvas({
       aria-describedby="resource-graph-instructions"
       aria-label={`Graph of ${graph.nodes.length} resources and ${graph.edges.length} relationships`}
       className="resource-graph-canvas overflow-hidden rounded-xl border bg-card"
+      data-resource-preview-trigger=""
       ref={container}
       role="img"
       tabIndex={-1}

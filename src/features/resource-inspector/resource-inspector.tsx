@@ -234,7 +234,7 @@ function isInteractiveOutsideTarget(target: EventTarget | null) {
     target instanceof Element &&
     Boolean(
       target.closest(
-        "a[href], button, input, select, textarea, [contenteditable='true'], [role='button'], [role='link']"
+        "a[href], button, input, select, textarea, [contenteditable='true'], [role='button'], [role='link'], [data-resource-preview-trigger]"
       )
     )
   )
