@@ -34,7 +34,7 @@ import { createWorkspaceInstrument } from "@/data/crucible/instruments.functions
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 
 const instrumentIdPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
 
@@ -83,8 +83,10 @@ function optionalValue(value: string) {
 }
 
 function registrationError(error: unknown) {
-  if (error instanceof HubApiClientError) return error.message
-  return "The instrument could not be registered. Your entries are still here."
+  return hubErrorMessage(
+    error,
+    "The instrument could not be registered. Your entries are still here."
+  )
 }
 
 export function InstrumentRegistrationForm({

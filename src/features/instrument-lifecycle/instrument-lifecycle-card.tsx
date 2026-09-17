@@ -26,7 +26,7 @@ import { updateWorkspaceInstrumentStatus } from "@/data/crucible/instruments.fun
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceInstrument,
   WorkspaceInstrumentLifecycleUpdate,
@@ -144,9 +144,10 @@ export function InstrumentLifecycleCard({
       setConfirmingDecommission(false)
     } catch (cause) {
       setError(
-        cause instanceof HubApiClientError
-          ? cause.message
-          : "The instrument status could not be changed. Your selection is still here."
+        hubErrorMessage(
+          cause,
+          "The instrument status could not be changed. Your selection is still here."
+        )
       )
     }
   }

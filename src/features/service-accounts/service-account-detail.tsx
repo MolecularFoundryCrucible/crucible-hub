@@ -43,7 +43,7 @@ import { applyPersonProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import {
   rotateWorkspaceServiceAccountKey,
   serviceAccountUsernameSchema,
@@ -190,9 +190,10 @@ function ServiceAccountIdentityCard({
         setEditing(false)
       } catch (cause) {
         setError(
-          cause instanceof HubApiClientError
-            ? cause.message
-            : "The service-account profile could not be saved."
+          hubErrorMessage(
+            cause,
+            "The service-account profile could not be saved."
+          )
         )
       }
     },
@@ -256,9 +257,7 @@ function ServiceAccountIdentityCard({
       setRoleUpdated(true)
     } catch (cause) {
       setRoleError(
-        cause instanceof HubApiClientError
-          ? cause.message
-          : "The platform role could not be changed."
+        hubErrorMessage(cause, "The platform role could not be changed.")
       )
     }
   }
@@ -514,11 +513,7 @@ function ServiceAccountCredentialCard({
         queryKey: crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
       })
     } catch (cause) {
-      setError(
-        cause instanceof HubApiClientError
-          ? cause.message
-          : "The API key could not be rotated."
-      )
+      setError(hubErrorMessage(cause, "The API key could not be rotated."))
     }
   }
 

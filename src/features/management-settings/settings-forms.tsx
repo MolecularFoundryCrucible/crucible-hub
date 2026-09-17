@@ -34,7 +34,7 @@ import {
 import { updateWorkspaceProject } from "@/data/crucible/projects.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceInstrument,
   WorkspaceInstrumentDescriptiveUpdate,
@@ -740,6 +740,8 @@ function mergeInstrumentListItem(
 }
 
 function saveErrorMessage(error: unknown, kind: "instrument" | "project") {
-  if (error instanceof HubApiClientError) return error.message
-  return `The ${kind} could not be saved. Your changes are still here.`
+  return hubErrorMessage(
+    error,
+    `The ${kind} could not be saved. Your changes are still here.`
+  )
 }

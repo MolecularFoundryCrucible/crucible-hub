@@ -28,7 +28,7 @@ import {
   createWorkspaceServiceAccount,
   serviceAccountUsernameSchema,
 } from "@/data/crucible/service-accounts.functions"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
 
 const createServiceAccountSchema = z.object({
@@ -78,9 +78,7 @@ export function ServiceAccountCreateDialog({
         onCreated(credential)
       } catch (cause) {
         setError(
-          cause instanceof HubApiClientError
-            ? cause.message
-            : "The service account could not be created."
+          hubErrorMessage(cause, "The service account could not be created.")
         )
       }
     },

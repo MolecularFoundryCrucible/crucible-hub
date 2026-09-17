@@ -13,6 +13,10 @@ export class HubApiClientError extends Error {
   }
 }
 
+export function hubErrorMessage(error: unknown, fallback: string) {
+  return error instanceof HubApiClientError ? error.message : fallback
+}
+
 export function unwrapHubResult<T>(result: HubResult<T>): T {
   if (result.status === "ok") return result.data
   throw new HubApiClientError(result.error)

@@ -21,7 +21,7 @@ import {
   previewWorkspaceResourceProjectAssignment,
 } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceProjectReassignment,
   WorkspaceResourceAccessGrant,
@@ -259,6 +259,5 @@ export function ProjectAssignmentCard({
 }
 
 function operationError(error: unknown, action: string) {
-  if (error instanceof HubApiClientError) return error.message
-  return `Could not ${action}. Try again.`
+  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }

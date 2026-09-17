@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
+import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -272,20 +273,20 @@ function ProjectCollection({
           </EmptyHeader>
         </Empty>
       )}
-      {!updating && projectPage.nextCursor && (
-        <nav
-          className="flex items-center justify-end gap-2"
-          aria-label="Project pages"
-        >
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            search={{ affiliation, cursor: projectPage.nextCursor }}
-            to="/projects"
-          >
-            Next
-          </Link>
-        </nav>
-      )}
+      {!updating && projectPage.nextCursor ? (
+        <CollectionPageNavigation
+          label="Project pages"
+          next={
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              search={{ affiliation, cursor: projectPage.nextCursor }}
+              to="/projects"
+            >
+              Next
+            </Link>
+          }
+        />
+      ) : null}
     </>
   )
 }

@@ -96,6 +96,8 @@
       var(--spacing-directory-project-person-column)
   );
   --spacing-directory-project-person-column: 14rem;
+  --spacing-identity-directory-mfid-column: 14rem;
+  --spacing-identity-directory-role-column: 9rem;
   --spacing-access-role-control: 6rem;
   --spacing-data-name-column-with-action: calc(
     (
@@ -597,6 +599,52 @@ body {
     grid-column: 2;
     grid-row: 2 / 6;
   }
+
+  .identity-directory-table,
+  .identity-directory-table tbody {
+    display: block;
+  }
+
+  .identity-directory-table thead,
+  .identity-directory-table colgroup {
+    display: none;
+  }
+
+  .identity-directory-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 3);
+  }
+
+  .identity-directory-table td {
+    display: block;
+    padding: 0;
+    white-space: normal;
+  }
+
+  .identity-directory-table .identity-directory-account {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .identity-directory-table .identity-directory-mfid,
+  .identity-directory-table .identity-directory-role {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .identity-directory-table .identity-directory-mfid::before,
+  .identity-directory-table .identity-directory-role::before {
+    color: var(--muted-foreground);
+    content: attr(data-label) ": ";
+  }
+
+  .identity-directory-table .identity-directory-action {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 
 .resource-directory-table .resource-directory-action-column {
@@ -625,6 +673,26 @@ body {
 
 .resource-directory-instrument-table .resource-directory-person-column {
   width: var(--spacing-directory-instrument-person-column);
+}
+
+.identity-directory-table .identity-directory-account-column {
+  width: calc(
+    100% - var(--spacing-identity-directory-mfid-column) -
+      var(--spacing-identity-directory-role-column) -
+      var(--spacing-directory-action-column)
+  );
+}
+
+.identity-directory-table .identity-directory-mfid-column {
+  width: var(--spacing-identity-directory-mfid-column);
+}
+
+.identity-directory-table .identity-directory-role-column {
+  width: var(--spacing-identity-directory-role-column);
+}
+
+.identity-directory-table .identity-directory-action-column {
+  width: var(--spacing-directory-action-column);
 }
 
 .route-progress {

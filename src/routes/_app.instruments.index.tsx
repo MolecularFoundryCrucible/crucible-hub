@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
+import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -366,24 +367,24 @@ function InstrumentCollection({
           </Empty>
         </section>
       )}
-      {!updating && instrumentPage.nextCursor && (
-        <nav
-          className="flex items-center justify-end gap-2"
-          aria-label="Instrument pages"
-        >
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            search={{
-              affiliation,
-              cursor: instrumentPage.nextCursor,
-              status: status === "active" ? undefined : status,
-            }}
-            to="/instruments"
-          >
-            Next
-          </Link>
-        </nav>
-      )}
+      {!updating && instrumentPage.nextCursor ? (
+        <CollectionPageNavigation
+          label="Instrument pages"
+          next={
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              search={{
+                affiliation,
+                cursor: instrumentPage.nextCursor,
+                status: status === "active" ? undefined : status,
+              }}
+              to="/instruments"
+            >
+              Next
+            </Link>
+          }
+        />
+      ) : null}
     </>
   )
 }

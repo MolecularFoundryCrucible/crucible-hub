@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Made the service-account directory and search controls reflow cleanly on compact screens, standardized collection page navigation, and unified browser-safe API mutation error formatting with retained request references.
 - Replaced person-type prose in shared stacked and avatar identities with accessible person or service-account icons across service-account directories, search results, member lists, pickers, and account presentations.
 
 - Distinguished combined Data navigation from individual datasets and samples with a dedicated indigo collection icon and semantic theme token.

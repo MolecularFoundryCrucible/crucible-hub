@@ -52,7 +52,7 @@ import {
   updateWorkspaceDatasetDescription,
   updateWorkspaceSampleDescription,
 } from "@/data/crucible/resources.functions"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceCursorPage,
   WorkspaceDataset,
@@ -855,8 +855,10 @@ function SaveError({ message }: { message?: string }) {
 }
 
 function saveErrorMessage(error: unknown, kind: "dataset" | "sample") {
-  if (error instanceof HubApiClientError) return error.message
-  return `The ${kind} could not be saved. Your changes are still here.`
+  return hubErrorMessage(
+    error,
+    `The ${kind} could not be saved. Your changes are still here.`
+  )
 }
 
 function mergeSampleListUpdate(

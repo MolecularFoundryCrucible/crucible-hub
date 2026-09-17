@@ -29,7 +29,7 @@ import { updateWorkspaceAccount } from "@/data/crucible/account.functions"
 import { applyAccountProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceAccount,
   WorkspaceAccountProfileUpdate,
@@ -142,9 +142,10 @@ export function AccountProfileForm({
         setEditing(false)
       } catch (error) {
         setSaveError(
-          error instanceof HubApiClientError
-            ? error.message
-            : "Your profile could not be saved. Your changes are still here."
+          hubErrorMessage(
+            error,
+            "Your profile could not be saved. Your changes are still here."
+          )
         )
       }
     },

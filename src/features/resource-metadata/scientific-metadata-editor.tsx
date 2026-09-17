@@ -48,7 +48,7 @@ import {
   scientificMetadataValidationError,
   updateWorkspaceResourceMetadata,
 } from "@/data/crucible/resources.functions"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceMetadataValue,
   WorkspaceResourceDetail,
@@ -486,6 +486,8 @@ function SaveError({ message }: { message?: string }) {
 }
 
 function scientificMetadataSaveError(error: unknown) {
-  if (error instanceof HubApiClientError) return error.message
-  return "Scientific metadata could not be saved. Your changes are still here."
+  return hubErrorMessage(
+    error,
+    "Scientific metadata could not be saved. Your changes are still here."
+  )
 }

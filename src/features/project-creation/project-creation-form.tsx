@@ -40,7 +40,7 @@ import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceAccount,
   WorkspaceSearchResult,
@@ -89,8 +89,10 @@ function accountAsSearchResult(
 }
 
 function projectCreationError(error: unknown) {
-  if (error instanceof HubApiClientError) return error.message
-  return "The project could not be created. Your entries are still here."
+  return hubErrorMessage(
+    error,
+    "The project could not be created. Your entries are still here."
+  )
 }
 
 export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {

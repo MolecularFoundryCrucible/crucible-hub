@@ -19,6 +19,7 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import {
   datasetCollectionName,
   useCursorResourceCollection,
@@ -177,19 +178,22 @@ function InstrumentDatasetsPage() {
         label="Datasets"
         retry={() => void result.refetch()}
       />
-      {cursor ? (
-        <nav className="flex justify-end" aria-label="Instrument dataset pages">
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            from="/instruments/$instrumentMfid/datasets"
-            params={{ instrumentMfid: routeInstrumentMfid }}
-            search={(previous) => ({ ...previous, cursor: undefined })}
-            to="/instruments/$instrumentMfid/datasets"
-          >
-            First datasets
-          </Link>
-        </nav>
-      ) : null}
+      <CollectionPageNavigation
+        label="Instrument dataset pages"
+        previous={
+          cursor ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              from="/instruments/$instrumentMfid/datasets"
+              params={{ instrumentMfid: routeInstrumentMfid }}
+              search={(previous) => ({ ...previous, cursor: undefined })}
+              to="/instruments/$instrumentMfid/datasets"
+            >
+              First datasets
+            </Link>
+          ) : undefined
+        }
+      />
     </>
   ) : (
     <>

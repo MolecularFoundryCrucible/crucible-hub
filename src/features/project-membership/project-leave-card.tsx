@@ -10,7 +10,7 @@ import { removeWorkspaceProjectMember } from "@/data/crucible/projects.functions
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 import { projectMembershipActions } from "./project-membership-access"
 import type { MembershipProject } from "./project-membership-card"
@@ -75,9 +75,7 @@ export function ProjectLeaveCard({
       onSuccess?.()
     } catch (caught) {
       setError(
-        caught instanceof HubApiClientError
-          ? caught.message
-          : "Could not leave this project. Try again."
+        hubErrorMessage(caught, "Could not leave this project. Try again.")
       )
     } finally {
       setPending(false)

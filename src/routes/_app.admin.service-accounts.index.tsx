@@ -45,6 +45,7 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
+import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import {
@@ -182,7 +183,7 @@ function ServiceAccountsPage() {
       />
       <form className="max-w-reading" onSubmit={submitSearch}>
         <FieldGroup>
-          <Field orientation="horizontal">
+          <Field orientation="responsive">
             <FieldLabel className="sr-only" htmlFor="service-account-search">
               Search service accounts
             </FieldLabel>
@@ -290,11 +291,20 @@ function ServiceAccountCollection({
       {page.items.length > 0 ? (
         <Card aria-busy={updating}>
           <CardContent className="px-0">
-            <Table aria-label="Service accounts">
+            <Table
+              aria-label="Service accounts"
+              className="identity-directory-table table-fixed"
+            >
+              <colgroup>
+                <col className="identity-directory-account-column" />
+                <col className="identity-directory-mfid-column" />
+                <col className="identity-directory-role-column" />
+                <col className="identity-directory-action-column" />
+              </colgroup>
               <TableHeader>
                 <TableRow>
                   <TableHead>Account</TableHead>
-                  <TableHead>MFID</TableHead>
+                  <TableHead>Crucible ID</TableHead>
                   <TableHead>Platform role</TableHead>
                   <TableHead className="text-center">
                     <span className="sr-only">Open</span>
@@ -304,7 +314,7 @@ function ServiceAccountCollection({
               <TableBody>
                 {page.items.map((serviceAccount) => (
                   <TableRow key={serviceAccount.unique_id}>
-                    <TableCell>
+                    <TableCell className="identity-directory-account">
                       <Link
                         className="block min-w-48"
                         params={{
@@ -320,13 +330,19 @@ function ServiceAccountCollection({
                         />
                       </Link>
                     </TableCell>
-                    <TableCell>
+                    <TableCell
+                      className="identity-directory-mfid"
+                      data-label="Crucible ID"
+                    >
                       <MfidText value={serviceAccount.unique_id} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell
+                      className="identity-directory-role"
+                      data-label="Platform role"
+                    >
                       <PlatformRoleBadge role={serviceAccount.platform_role} />
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="identity-directory-action text-center">
                       <Link
                         aria-label={`Open @${serviceAccount.username}`}
                         className={buttonVariants({
@@ -359,12 +375,10 @@ function ServiceAccountCollection({
           </EmptyHeader>
         </Empty>
       )}
-      {hasPrevious || hasNext ? (
-        <nav
-          aria-label="Service-account pages"
-          className="flex items-center justify-end gap-2"
-        >
-          {hasPrevious ? (
+      <CollectionPageNavigation
+        label="Service-account pages"
+        previous={
+          hasPrevious ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
               search={{
@@ -375,8 +389,10 @@ function ServiceAccountCollection({
             >
               Previous
             </Link>
-          ) : null}
-          {hasNext ? (
+          ) : undefined
+        }
+        next={
+          hasNext ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
               search={{ offset: page.offset + page.limit, q: query }}
@@ -384,9 +400,9 @@ function ServiceAccountCollection({
             >
               Next
             </Link>
-          ) : null}
-        </nav>
-      ) : null}
+          ) : undefined
+        }
+      />
     </>
   )
 }

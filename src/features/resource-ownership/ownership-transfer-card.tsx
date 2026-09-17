@@ -21,7 +21,7 @@ import {
   confirmWorkspaceResourceOwnership,
   previewWorkspaceResourceOwnership,
 } from "@/data/crucible/resources.functions"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceOwnershipTransfer,
   WorkspaceProject,
@@ -219,6 +219,5 @@ function personName(person: WorkspaceOwnershipTransfer["new_owner"]) {
 }
 
 function operationError(error: unknown, action: string) {
-  if (error instanceof HubApiClientError) return error.message
-  return `Could not ${action}. Try again.`
+  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }

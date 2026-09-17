@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 
+import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { ResourceCollectionTable } from "@/components/crucible/resource-collection-table"
 import { buttonVariants } from "@/components/ui/button"
@@ -73,22 +74,22 @@ export function InstrumentDatasetCollection({
         </CardContent>
       </Card>
 
-      {cursor ? (
-        <nav
-          className="flex flex-wrap items-center justify-end gap-2"
-          aria-label="Instrument dataset pages"
-        >
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            from="/instruments/$instrumentMfid/datasets"
-            params={{ instrumentMfid }}
-            search={(previous) => ({ ...previous, cursor: undefined })}
-            to="/instruments/$instrumentMfid/datasets"
-          >
-            First datasets
-          </Link>
-        </nav>
-      ) : null}
+      <CollectionPageNavigation
+        label="Instrument dataset pages"
+        previous={
+          cursor ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              from="/instruments/$instrumentMfid/datasets"
+              params={{ instrumentMfid }}
+              search={(previous) => ({ ...previous, cursor: undefined })}
+              to="/instruments/$instrumentMfid/datasets"
+            >
+              First datasets
+            </Link>
+          ) : undefined
+        }
+      />
       <CollectionPagination
         disabled={isPaginationDisabled}
         hasNextPage={hasNextPage}

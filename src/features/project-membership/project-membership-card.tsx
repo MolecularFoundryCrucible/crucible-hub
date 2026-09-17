@@ -47,7 +47,7 @@ import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type { components } from "@/generated/crucible-api"
 import type {
   WorkspaceProject,
@@ -515,6 +515,5 @@ function withoutMemberError(errors: Record<string, string>, memberId: string) {
 }
 
 function membershipErrorMessage(error: unknown, action: string) {
-  if (error instanceof HubApiClientError) return error.message
-  return `Could not ${action}. Try again.`
+  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }

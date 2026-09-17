@@ -71,7 +71,7 @@ import { resourceAccessQueryOptions } from "@/data/crucible/access.queries"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceResourceAccessGrant,
   WorkspaceResourceAccessPrincipalKind,
@@ -901,6 +901,5 @@ function PrincipalName({ grant }: { grant: WorkspaceResourceAccessGrant }) {
 }
 
 function accessError(error: unknown, action: string) {
-  if (error instanceof HubApiClientError) return error.message
-  return `Could not ${action}. Try again.`
+  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }
