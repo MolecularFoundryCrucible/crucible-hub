@@ -81,7 +81,7 @@ export function ResourceOpenCell({
   name: string
 }) {
   return (
-    <TableCell className="resource-collection-action text-center">
+    <TableCell className="resource-collection-action resource-directory-action text-center">
       <ResourceFullPageLink
         fromProject={fromProject}
         kind={kind}

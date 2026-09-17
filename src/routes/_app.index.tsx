@@ -122,7 +122,7 @@ function HomePage() {
         <div className="flex min-w-0 flex-col gap-6 xl:col-span-3">
           <section aria-labelledby="recent-research-title" className="min-w-0">
             <Card>
-              <CardHeader>
+              <CardHeader actionLayout="inline">
                 <CardTitle>
                   <h2 id="recent-research-title">Recently added data</h2>
                 </CardTitle>
@@ -446,7 +446,7 @@ function HomeOwnershipCard({
   return (
     <section aria-labelledby={titleId} className="min-w-0">
       <Card>
-        <CardHeader>
+        <CardHeader actionLayout="inline">
           <CardTitle>
             <h2 id={titleId}>{title}</h2>
           </CardTitle>

@@ -110,6 +110,7 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
+        actionLayout="inline"
         actions={
           <EntityRefreshAction
             label={`Refresh ${project.title ?? project.project_id}`}

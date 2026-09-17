@@ -43,7 +43,7 @@ export function MfidValue({
       <span
         className={cn("flex min-w-0 items-center gap-2 text-body", className)}
       >
-        <IdentityFieldIcon type="mfid" />
+        <IdentityFieldIcon className="mfid-value-icon" type="mfid" />
         <MfidText
           className="min-w-0 break-all sm:break-normal sm:whitespace-nowrap"
           value={value}

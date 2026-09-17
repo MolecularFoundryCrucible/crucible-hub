@@ -197,6 +197,7 @@ export function ResourceWorkspace({
           </BreadcrumbList>
         </Breadcrumb>
         <PageHeader
+          actionLayout="inline"
           actions={
             <EntityRefreshAction
               exact={false}
@@ -449,8 +450,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               )}
             </dl>
           </div>
-          <MfidQrCode value={resource.unique_id} />
-          <dl className="col-span-2 grid gap-4 sm:grid-cols-2">
+          <dl className="content-grid-identity-timestamps grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-label text-muted-foreground">Created</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
@@ -466,6 +466,9 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               </dd>
             </div>
           </dl>
+          <div className="content-grid-identity-qr">
+            <MfidQrCode value={resource.unique_id} />
+          </div>
         </ContentGrid>
       </CardContent>
     </Card>

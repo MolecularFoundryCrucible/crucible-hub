@@ -105,7 +105,7 @@ function InstrumentSummary({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader actionLayout="inline">
         <CardTitle>Summary</CardTitle>
         {onEdit ? (
           <CardAction>
@@ -221,7 +221,7 @@ function InstrumentMetadata({
   const expansion = useScientificMetadataExpansion(metadata, true)
   return (
     <Card>
-      <CardHeader>
+      <CardHeader actionLayout="inline">
         <CardTitle>Scientific metadata</CardTitle>
         {expansion.canExpand ? (
           <CardAction>

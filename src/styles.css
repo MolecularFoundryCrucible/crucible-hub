@@ -477,6 +477,21 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.content-grid-identity-qr {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.content-grid-identity-timestamps {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.page-header-inline {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .metadata-disclosure[open] > summary > .metadata-disclosure-icon {
   transform: rotate(90deg);
 }
@@ -644,6 +659,26 @@ body {
     align-self: center;
     grid-column: 2;
     grid-row: 1;
+  }
+}
+
+@media (max-width: 29.999rem) {
+  .content-grid-identity {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content-grid-identity-qr,
+  .content-grid-identity-timestamps {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .content-grid-identity-qr {
+    justify-self: center;
+  }
+
+  .mfid-value-icon {
+    display: none;
   }
 }
 

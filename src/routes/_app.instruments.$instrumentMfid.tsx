@@ -105,6 +105,7 @@ function InstrumentPage() {
       </Breadcrumb>
 
       <PageHeader
+        actionLayout="inline"
         actions={
           <EntityRefreshAction
             exact={false}

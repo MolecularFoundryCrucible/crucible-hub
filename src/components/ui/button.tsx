@@ -37,7 +37,7 @@ const buttonVariantClasses = cva(
         selection:
           "h-auto w-full justify-start gap-1.5 px-2.5 py-2 whitespace-normal has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         "table-action":
-          "size-7 rounded-[min(var(--radius-md),12px)] max-md:w-auto max-md:gap-1.5 max-md:px-3",
+          "size-7 rounded-[min(var(--radius-md),12px)] max-md:size-9",
       },
     },
     defaultVariants: {

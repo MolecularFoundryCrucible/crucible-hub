@@ -1,5 +1,5 @@
 export const resourceSectionLinkClassName =
-  "relative flex min-h-10 items-center rounded-md px-3 text-label text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+  "relative flex min-h-10 shrink-0 items-center rounded-md px-1.5 text-label text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
 
 export const resourceSectionActiveProps = {
   className:
@@ -17,7 +17,10 @@ export function ResourceSectionNavigation({
 }) {
   return (
     <div className="-mt-(--spacing-resource-navigation-offset) flex min-w-0 flex-wrap items-end justify-between gap-x-4 gap-y-3">
-      <nav aria-label={label} className="flex min-w-0 gap-1">
+      <nav
+        aria-label={label}
+        className="flex max-w-full min-w-0 gap-0 overflow-x-auto sm:gap-1"
+      >
         {children}
       </nav>
       {actions ? (

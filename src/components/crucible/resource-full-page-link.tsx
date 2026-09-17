@@ -44,10 +44,7 @@ export function ResourceFullPageLink({
         <OpenFullPageIcon aria-hidden="true" data-icon="inline-end" />
       </>
     ) : (
-      <>
-        <OpenFullPageIcon aria-hidden="true" data-icon="inline-start" />
-        <span className="hidden max-md:inline">Open</span>
-      </>
+      <OpenFullPageIcon aria-hidden="true" />
     )
   const common = {
     "aria-label": actionLabel,

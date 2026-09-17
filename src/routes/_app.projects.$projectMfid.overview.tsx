@@ -78,7 +78,7 @@ function ProjectOverviewPage() {
           />
         ) : (
           <Card>
-            <CardHeader>
+            <CardHeader actionLayout="inline">
               <CardTitle>Project details</CardTitle>
               {project.capabilities?.can_edit === true ? (
                 <CardAction>

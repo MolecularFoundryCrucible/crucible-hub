@@ -70,7 +70,7 @@ export function DatasetThumbnailsCard({
 
   return (
     <Card aria-busy={query.isFetching}>
-      <CardHeader>
+      <CardHeader actionLayout="inline">
         <CardTitle>Thumbnails</CardTitle>
         {canEdit && query.data ? (
           <CardAction>

@@ -520,7 +520,7 @@ function ServiceAccountCredentialCard({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader actionLayout="inline">
           <CardTitle className="flex items-center gap-2">
             <CredentialIcon aria-hidden="true" />
             API credential

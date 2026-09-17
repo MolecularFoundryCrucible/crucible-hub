@@ -366,7 +366,7 @@ function ManagedResourceAccess({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader actionLayout="inline">
           <CardTitle>Access management</CardTitle>
           <CardAction>
             <div className="flex flex-wrap justify-end gap-2">

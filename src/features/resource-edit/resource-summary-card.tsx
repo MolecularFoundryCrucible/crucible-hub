@@ -414,7 +414,7 @@ function SummaryCard({
 }) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader actionLayout="inline">
         <CardTitle>Summary</CardTitle>
         {action ? <CardAction>{action}</CardAction> : null}
       </CardHeader>
@@ -519,7 +519,7 @@ function SampleSummaryForm({
   return (
     <>
       <Card aria-busy={isSubmitting}>
-        <CardHeader>
+        <CardHeader actionLayout="inline">
           <CardTitle>Summary</CardTitle>
           <CardAction>
             <Badge variant="secondary">Editing</Badge>
@@ -741,7 +741,7 @@ function DatasetSummaryForm({
   return (
     <>
       <Card aria-busy={isSubmitting}>
-        <CardHeader>
+        <CardHeader actionLayout="inline">
           <CardTitle>Summary</CardTitle>
           <CardAction>
             <Badge variant="secondary">Editing</Badge>

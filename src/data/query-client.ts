@@ -5,6 +5,7 @@ import { HubApiClientError } from "@/data/crucible/result"
 
 const dehydratedQueryFamilies = new Set([
   "account",
+  "admin",
   "datasets",
   "instruments",
   "people",

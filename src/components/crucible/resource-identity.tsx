@@ -1,3 +1,4 @@
+import { BreakableText } from "@/components/crucible/breakable-text"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -42,7 +43,7 @@ export function ResourceIdentity({
           title={truncate && showTruncationTitle ? name : undefined}
           data-directory-name
         >
-          {name}
+          {truncate ? name : <BreakableText value={name} />}
         </span>
         {context || projectId ? (
           <span
@@ -59,7 +60,7 @@ export function ResourceIdentity({
                     truncate && showTruncationTitle ? projectId : undefined
                   }
                 >
-                  {projectId}
+                  {truncate ? projectId : <BreakableText value={projectId} />}
                 </span>
               </>
             ) : null}
@@ -73,7 +74,7 @@ export function ResourceIdentity({
                 className={cn("min-w-0", truncate && "truncate")}
                 title={truncate && showTruncationTitle ? context : undefined}
               >
-                {context}
+                {truncate ? context : <BreakableText value={context} />}
               </span>
             ) : null}
           </span>

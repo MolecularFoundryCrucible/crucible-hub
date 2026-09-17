@@ -220,7 +220,7 @@ function ProjectCollection({
                 {projectPage.items.map((project) => {
                   const complete = "status" in project
                   const title = project.title?.trim()
-                  const name = title || project.project_id
+                  const name = title || project.project_id || project.unique_id
                   return (
                     <TableRow key={project.unique_id}>
                       <ResourceDirectoryNameCell

@@ -223,7 +223,7 @@ export function ScientificMetadataEditor({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader actionLayout="inline">
         <CardTitle>Scientific metadata</CardTitle>
         {expansion.canExpand || resource.capabilities?.can_edit === true ? (
           <CardAction>
@@ -365,7 +365,7 @@ function ScientificMetadataForm({
   return (
     <>
       <Card aria-busy={isSubmitting}>
-        <CardHeader>
+        <CardHeader actionLayout="inline">
           <CardTitle>Scientific metadata</CardTitle>
           <CardAction>
             <Badge variant="secondary">Editing</Badge>
