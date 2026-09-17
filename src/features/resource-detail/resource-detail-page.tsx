@@ -215,16 +215,6 @@ export function ResourceWorkspace({
             </BreadcrumbList>
           </Breadcrumb>
           <PageHeader
-            actionLayout="inline"
-            actions={
-              <EntityRefreshAction
-                exact={false}
-                label={`Refresh ${resource.name}`}
-                presentation="icon"
-                queryKey={crucibleKeys.resourceDetails(scope, resourceMfid)}
-                refreshedAt={dataUpdatedAt}
-              />
-            }
             icon={
               <ResourceTypeIcon
                 className="mt-1 size-6 shrink-0"
@@ -235,17 +225,30 @@ export function ResourceWorkspace({
           />
           <ResourceNavigation
             actions={
-              <ResourceSiblingNavigationControls
-                configurationAction={
-                  <ResourceSiblingConfigurationAction
-                    navigation={siblingNavigation}
-                    resource={resource}
-                    scope={scope}
-                  />
-                }
-                fromProject={fromProject}
-                navigation={siblingNavigation}
-              />
+              <>
+                <ResourceSiblingNavigationControls
+                  configurationAction={
+                    <ResourceSiblingConfigurationAction
+                      navigation={siblingNavigation}
+                      resource={resource}
+                      scope={scope}
+                    />
+                  }
+                  fromProject={fromProject}
+                  navigation={siblingNavigation}
+                />
+                <EntityRefreshAction
+                  exact={false}
+                  label={`Refresh details for ${resource.name}`}
+                  queryKey={crucibleKeys.resourceDetails(scope, resourceMfid)}
+                  refreshedAt={dataUpdatedAt}
+                  subject={
+                    resource.kind === "sample"
+                      ? "Sample details"
+                      : "Dataset details"
+                  }
+                />
+              </>
             }
             fromProject={fromProject}
             resource={resource}

@@ -3,6 +3,7 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import type { QueryKey } from "@tanstack/react-query"
 
 import { RefreshResourceIcon } from "@/components/crucible/icons"
+import { notifySuccess } from "@/components/crucible/notifications"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -14,15 +15,15 @@ import { formatLocalDateTime } from "@/lib/format"
 export function EntityRefreshAction({
   exact = true,
   label,
-  presentation = "default",
   queryKey,
   refreshedAt,
+  subject,
 }: {
   exact?: boolean
   label: string
-  presentation?: "default" | "icon"
   queryKey: QueryKey
   refreshedAt: number
+  subject: string
 }) {
   const queryClient = useQueryClient()
   const refreshing =
@@ -39,6 +40,7 @@ export function EntityRefreshAction({
         { exact, queryKey },
         { throwOnError: true }
       )
+      notifySuccess(`${subject} refreshed`)
     } catch {
       setFailed(true)
     }
@@ -52,14 +54,7 @@ export function EntityRefreshAction({
             aria-label={failed ? `${label}. Refresh failed. Try again.` : label}
             disabled={refreshing}
             onClick={() => void refresh()}
-            size={presentation === "icon" ? "icon-sm" : "default"}
-            variant={
-              failed
-                ? "destructive"
-                : presentation === "icon"
-                  ? "ghost"
-                  : "outline"
-            }
+            variant={failed ? "destructive" : "outline"}
           >
             <RefreshResourceIcon
               aria-hidden="true"
@@ -68,31 +63,25 @@ export function EntityRefreshAction({
                   ? "animate-spin motion-reduce:animate-none"
                   : undefined
               }
-              data-icon={
-                presentation === "default" ? "inline-start" : undefined
-              }
+              data-icon="inline-start"
             />
-            {presentation === "default"
-              ? refreshing
-                ? "Refreshing"
-                : "Refresh"
-              : null}
+            {refreshing ? "Refreshing details" : "Refresh details"}
           </Button>
         </TooltipTrigger>
         <TooltipContent>
           {failed
-            ? "Refresh failed. Try again."
+            ? `${subject} could not be refreshed. Try again.`
             : timestamp
-              ? `Last refreshed ${timestamp}`
+              ? `${subject} last refreshed ${timestamp}`
               : label}
         </TooltipContent>
       </Tooltip>
-      {failed && presentation === "default" ? (
+      {failed ? (
         <p
           className="basis-full text-right text-supporting text-destructive"
           role="alert"
         >
-          Refresh failed. Existing details are still shown.
+          {subject} could not be refreshed. Existing details are still shown.
         </p>
       ) : null}
     </div>

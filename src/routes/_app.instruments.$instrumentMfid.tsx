@@ -105,16 +105,6 @@ function InstrumentPage() {
       </Breadcrumb>
 
       <PageHeader
-        actionLayout="inline"
-        actions={
-          <EntityRefreshAction
-            exact={false}
-            label={`Refresh ${resource.name}`}
-            presentation="icon"
-            queryKey={crucibleKeys.resourceDetails(scope, instrumentMfid)}
-            refreshedAt={dataUpdatedAt}
-          />
-        }
         eyebrow={resource.instrument_id ?? undefined}
         icon={
           <ResourceTypeIcon
@@ -127,10 +117,19 @@ function InstrumentPage() {
 
       <ResourceSectionNavigation
         actions={
-          <ResourceCreationActions
-            instrumentMfid={resource.unique_id}
-            kinds={["dataset"]}
-          />
+          <>
+            <ResourceCreationActions
+              instrumentMfid={resource.unique_id}
+              kinds={["dataset"]}
+            />
+            <EntityRefreshAction
+              exact={false}
+              label={`Refresh details for ${resource.name}`}
+              queryKey={crucibleKeys.resourceDetails(scope, instrumentMfid)}
+              refreshedAt={dataUpdatedAt}
+              subject="Instrument details"
+            />
+          </>
         }
         label="Instrument sections"
       >
