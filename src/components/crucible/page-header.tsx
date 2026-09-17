@@ -39,7 +39,11 @@ export function PageHeader({
           }
         >
           {icon}
-          <h1 className="min-w-0 text-title-page break-words">
+          <h1
+            className="min-w-0 scroll-mt-20 text-title-page break-words"
+            data-page-top
+            tabIndex={-1}
+          >
             <BreakableText value={title} />
           </h1>
         </div>

@@ -6,6 +6,7 @@ import { z } from "zod"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
+import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
 import {
@@ -112,7 +113,6 @@ export function AccountProfileForm({
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [saveError, setSaveError] = useState<string>()
-  const [saved, setSaved] = useState(false)
   const mutation = useMutation({
     mutationFn: async (changes: WorkspaceAccountProfileUpdate) =>
       unwrapHubResult(
@@ -129,14 +129,13 @@ export function AccountProfileForm({
     validators: { onChange: accountProfileSchema },
     onSubmit: async ({ value }) => {
       setSaveError(undefined)
-      setSaved(false)
       const changes = accountProfileChanges(account, value)
       if (Object.keys(changes).length === 0) return
       try {
         const update = await mutation.mutateAsync(changes)
         void applyAccountProfileUpdate(queryClient, scope, update)
         form.reset(profileValues(update))
-        setSaved(true)
+        notifySuccess("Profile saved")
         setEditing(false)
       } catch (error) {
         setSaveError(
@@ -163,13 +162,7 @@ export function AccountProfileForm({
         <CardHeader>
           <PersonIdentity person={account} presentation="avatar" size="lg" />
           <CardAction>
-            <Button
-              onClick={() => {
-                setSaved(false)
-                setEditing(true)
-              }}
-              variant="outline"
-            >
+            <Button onClick={() => setEditing(true)} variant="outline">
               <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
               Edit profile
             </Button>
@@ -196,9 +189,6 @@ export function AccountProfileForm({
               </dd>
             </div>
           </dl>
-          <p aria-live="polite" className="mt-4 text-body text-success">
-            {saved ? "Profile saved." : null}
-          </p>
         </CardContent>
       </Card>
     )
@@ -254,9 +244,6 @@ export function AccountProfileForm({
                 {saveError}
               </p>
             ) : null}
-            <p aria-live="polite" className="mt-4 text-body text-success">
-              {saved ? "Profile saved." : null}
-            </p>
           </form>
         </CardContent>
         <form.Subscribe

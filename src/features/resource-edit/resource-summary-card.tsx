@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
+import { notifySuccess } from "@/components/crucible/notifications"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import type { SummaryFieldType } from "@/components/crucible/summary-field-icon"
@@ -505,6 +506,7 @@ function SampleSummaryForm({
           sample_type: update.sample_type ?? "",
           timestamp: timestampToLocalInput(update.timestamp),
         })
+        notifySuccess("Sample summary saved")
         onSaved()
       } catch (error) {
         setSaveError(saveErrorMessage(error, "sample"))
@@ -727,6 +729,7 @@ function DatasetSummaryForm({
           session_name: update.session_name ?? "",
           timestamp: timestampToLocalInput(update.timestamp),
         })
+        notifySuccess("Dataset summary saved")
         onSaved()
       } catch (error) {
         setSaveError(saveErrorMessage(error, "dataset"))

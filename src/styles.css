@@ -351,6 +351,7 @@
   --focus-width: 0.1875rem;
   --focus-offset: 0.125rem;
   --layer-route-progress: 50;
+  --layer-floating-utility: 10;
   --layer-graph-overlay: 1;
   --route-progress-height: 0.1875rem;
   --graph-node-width: 220;

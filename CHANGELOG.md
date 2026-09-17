@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Added a focus-restoring Back to top control to long cursor-backed resource collections and standardized short successful edit confirmations as polite application toasts while retaining actionable feedback inline.
 - Expanded My profile with API credential validity and dates, advertised account capabilities, and the shared credential-status presentation used by service-account administration, while standardizing success, warning, and destructive badge colors.
 - Simplified sample and dataset collections by keeping a text-only Project column in global Data and replacing the redundant project-scoped column with Sample type or Measurement on wide screens.
 - Unified project-scoped search and collection ownership switches with the shared segmented-control presentation.

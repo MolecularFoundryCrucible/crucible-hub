@@ -11,6 +11,7 @@ import { RouteProgress } from "@/components/route-progress"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { Toaster } from "@/components/ui/toast"
 import type { RouterContext } from "@/router-context"
 
 import appCss from "../styles.css?url"
@@ -66,6 +67,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <TooltipProvider>
             <RouteProgress />
             {children}
+            <Toaster limit={3} timeout={5000} />
           </TooltipProvider>
         </ThemeProvider>
         <Scripts />

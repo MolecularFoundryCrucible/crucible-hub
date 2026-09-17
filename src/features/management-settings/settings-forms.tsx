@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
+import { notifySuccess } from "@/components/crucible/notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
@@ -264,6 +265,7 @@ export function ProjectSettingsForm({
           )
         }
         form.reset(projectValues(update))
+        notifySuccess("Project settings saved")
         onSaved?.()
       } catch (error) {
         setSaveError(saveErrorMessage(error, "project"))
@@ -399,6 +401,7 @@ export function InstrumentSettingsForm({
         }
         const next = mergeInstrumentSettingsUpdate(instrument, update)
         if (next?.kind === "instrument") form.reset(instrumentValues(next))
+        notifySuccess("Instrument settings saved")
         onSaved?.()
       } catch (error) {
         setSaveError(saveErrorMessage(error, "instrument"))

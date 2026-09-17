@@ -5,6 +5,7 @@ import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditScientificMetadataIcon } from "@/components/crucible/icons"
+import { notifySuccess } from "@/components/crucible/notifications"
 import {
   ScientificMetadata,
   ScientificMetadataExpansionAction,
@@ -356,6 +357,7 @@ function ScientificMetadataForm({
       form.reset({
         metadata: prettyScientificMetadata(confirmed.scientific_metadata),
       })
+      notifySuccess("Scientific metadata saved")
       onSaved()
     } catch (error) {
       setSaveError(scientificMetadataSaveError(error))

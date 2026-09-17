@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef } from "react"
 
+import { BackToTop } from "@/components/crucible/back-to-top"
 import { LoadingMoreIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
 
@@ -62,40 +63,44 @@ export function CollectionPagination({
         ? `${loaded} ${label} loaded`
         : `All ${loaded} ${label} shown`
   return (
-    <div
-      className="flex flex-wrap items-center justify-between gap-3"
-      ref={loadMoreTarget}
-    >
-      <p className="text-supporting text-muted-foreground" role="status">
-        {progress}
-      </p>
-      {hasNextPage ? (
-        <Button
-          aria-describedby={isError ? `${label}-load-more-error` : undefined}
-          disabled={disabled || isLoading}
-          onClick={onLoadMore}
-          type="button"
-          variant="outline"
-        >
-          {isLoading ? (
-            <LoadingMoreIcon
-              aria-hidden="true"
-              className="animate-spin motion-reduce:animate-none"
-              data-icon="inline-start"
-            />
-          ) : null}
-          {isError ? `Retry loading ${label}` : `Load more ${label}`}
-        </Button>
-      ) : null}
-      {isError ? (
-        <p
-          className="basis-full text-supporting text-destructive"
-          id={`${label}-load-more-error`}
-          role="alert"
-        >
-          More {label} could not be loaded. The loaded results remain available.
+    <>
+      <div
+        className="flex flex-wrap items-center justify-between gap-3"
+        ref={loadMoreTarget}
+      >
+        <p className="text-supporting text-muted-foreground" role="status">
+          {progress}
         </p>
-      ) : null}
-    </div>
+        {hasNextPage ? (
+          <Button
+            aria-describedby={isError ? `${label}-load-more-error` : undefined}
+            disabled={disabled || isLoading}
+            onClick={onLoadMore}
+            type="button"
+            variant="outline"
+          >
+            {isLoading ? (
+              <LoadingMoreIcon
+                aria-hidden="true"
+                className="animate-spin motion-reduce:animate-none"
+                data-icon="inline-start"
+              />
+            ) : null}
+            {isError ? `Retry loading ${label}` : `Load more ${label}`}
+          </Button>
+        ) : null}
+        {isError ? (
+          <p
+            className="basis-full text-supporting text-destructive"
+            id={`${label}-load-more-error`}
+            role="alert"
+          >
+            More {label} could not be loaded. The loaded results remain
+            available.
+          </p>
+        ) : null}
+      </div>
+      <BackToTop />
+    </>
   )
 }

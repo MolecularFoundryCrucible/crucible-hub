@@ -111,6 +111,7 @@ export {
   CalendarClock as UpdatedFieldIcon,
   ListFilter as FilterIcon,
   ArrowUp as SortAscendingIcon,
+  ArrowUp as BackToTopIcon,
   ArrowDown as SortDescendingIcon,
   ChevronsUpDown as SortUnselectedIcon,
   ChevronDown as DisclosureIcon,
