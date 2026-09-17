@@ -65,7 +65,7 @@ export function EntityRefreshAction({
               }
               data-icon="inline-start"
             />
-            {refreshing ? "Refreshing details" : "Refresh details"}
+            {refreshing ? "Refreshing" : "Refresh"}
           </Button>
         </TooltipTrigger>
         <TooltipContent>
