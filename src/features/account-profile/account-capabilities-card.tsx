@@ -2,11 +2,14 @@ import {
   PrincipalTypeIcon,
   ResourceTypeIcon,
 } from "@/components/crucible/resource-type-icon"
+import {
+  CapabilityAvailableIcon,
+  CapabilityUnavailableIcon,
+} from "@/components/crucible/icons"
 import type {
   PrincipalType,
   ResourceType,
 } from "@/components/crucible/resource-type-icon"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { WorkspaceAccount } from "@/data/crucible/workspace-source"
 
@@ -56,9 +59,23 @@ export function AccountCapabilitiesCard({
                   )}
                   <span className="break-words">{label}</span>
                 </span>
-                <Badge variant={available ? "success" : "outline"}>
-                  {available ? "Available" : "Not available"}
-                </Badge>
+                <span
+                  aria-label={available ? "Available" : "Not available"}
+                  className="inline-flex shrink-0"
+                  role="img"
+                >
+                  {available ? (
+                    <CapabilityAvailableIcon
+                      aria-hidden="true"
+                      className="size-5 text-success"
+                    />
+                  ) : (
+                    <CapabilityUnavailableIcon
+                      aria-hidden="true"
+                      className="size-5 text-destructive"
+                    />
+                  )}
+                </span>
               </li>
             )
           })}

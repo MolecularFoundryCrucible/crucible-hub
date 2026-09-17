@@ -68,6 +68,8 @@ export {
   LoaderCircle as SavingChangesIcon,
   X as CancelChangesIcon,
   Check as CopySuccessIcon,
+  CircleCheck as CapabilityAvailableIcon,
+  CircleX as CapabilityUnavailableIcon,
   Copy as CopyIcon,
   ChevronRight as MetadataDisclosureIcon,
   Clock3 as DeletionRequestedIcon,
