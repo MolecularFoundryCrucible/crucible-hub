@@ -72,7 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
-- Upgraded Cytoscape and redesigned sample and dataset graphs around a centered current resource, directional parent and child placement, type-separated associations, neighborhood emphasis, in-canvas controls and legend, and a responsive accessible relationship card.
+- Upgraded Cytoscape and redesigned sample and dataset graphs around a centered current resource, collision-safe directional parent and child placement, type-separated associations, neighborhood emphasis, in-canvas controls and legend, and a responsive accessible relationship card.
 - Kept graph-node resource previews open by treating the interactive graph canvas as a preview trigger during outside-interaction dismissal.
 - Improved compact layouts with inline utility actions and field labels, contained full-label resource tabs, natural scientific-name wrapping, single-line MFID identity where space permits, touch-sized directory navigation, and stable administration hydration.
 - Made the service-account directory and search controls reflow cleanly on compact screens, standardized collection page navigation, and unified browser-safe API mutation error formatting with retained request references.

@@ -8,7 +8,12 @@ export type ResourceGraphLayoutMetrics = {
   associationGap: number
   associationRowGap: number
   columnGap: number
+  nodeGap: number
+  nodeHeight: number
+  nodeWidth: number
   rowGap: number
+  rootNodeHeight: number
+  rootNodeWidth: number
 }
 
 export type ResourceGraphNodeGroup =
@@ -31,18 +36,47 @@ export function buildResourceGraphLayout(
   metrics: ResourceGraphLayoutMetrics
 ): ResourceGraphLayout {
   const groups = groupResourceGraphNodes(graph)
+  const spacing = collisionSafeSpacing(metrics)
   const positions: Record<string, { x: number; y: number }> = {
     [graph.rootMfid]: { x: 0, y: 0 },
   }
 
-  placeVertical(groups.parent, -metrics.columnGap, metrics.rowGap, positions)
-  placeVertical(groups.child, metrics.columnGap, metrics.rowGap, positions)
-  placeAssociationGrid(groups["associated-sample"], -1, metrics, positions, 0)
-  placeAssociationGrid(groups["associated-dataset"], 1, metrics, positions, 0)
+  placeVertical(groups.parent, -spacing.columnGap, spacing.rowGap, positions)
+  placeVertical(groups.child, spacing.columnGap, spacing.rowGap, positions)
+  const lineageHalfHeight = Math.max(
+    metrics.rootNodeHeight / 2,
+    verticalHalfExtent(
+      groups.parent.length,
+      spacing.rowGap,
+      metrics.nodeHeight
+    ),
+    verticalHalfExtent(groups.child.length, spacing.rowGap, metrics.nodeHeight)
+  )
+  const associationGap = Math.max(
+    metrics.associationGap,
+    lineageHalfHeight + metrics.nodeHeight / 2 + metrics.nodeGap
+  )
+  placeAssociationGrid(
+    groups["associated-sample"],
+    -1,
+    spacing,
+    associationGap,
+    positions,
+    0
+  )
+  placeAssociationGrid(
+    groups["associated-dataset"],
+    1,
+    spacing,
+    associationGap,
+    positions,
+    0
+  )
   placeAssociationGrid(
     groups.related,
     1,
-    metrics,
+    spacing,
+    associationGap,
     positions,
     Math.ceil(groups["associated-dataset"].length / associationColumns)
   )
@@ -118,7 +152,11 @@ function placeVertical(
 function placeAssociationGrid(
   nodes: readonly WorkspaceResourceGraphNode[],
   direction: -1 | 1,
-  metrics: ResourceGraphLayoutMetrics,
+  metrics: Pick<
+    ResourceGraphLayoutMetrics,
+    "associationColumnGap" | "associationRowGap"
+  >,
+  associationGap: number,
   positions: Record<string, { x: number; y: number }>,
   rowOffset: number
 ) {
@@ -130,9 +168,32 @@ function placeAssociationGrid(
     const column = index - rowStart
     positions[node.unique_id] = {
       x: centeredOffset(column, rowLength, metrics.associationColumnGap),
-      y: direction * (metrics.associationGap + row * metrics.associationRowGap),
+      y: direction * (associationGap + row * metrics.associationRowGap),
     }
   })
+}
+
+function collisionSafeSpacing(metrics: ResourceGraphLayoutMetrics) {
+  return {
+    associationColumnGap: Math.max(
+      metrics.associationColumnGap,
+      metrics.nodeWidth + metrics.nodeGap
+    ),
+    associationRowGap: Math.max(
+      metrics.associationRowGap,
+      metrics.nodeHeight + metrics.nodeGap
+    ),
+    columnGap: Math.max(
+      metrics.columnGap,
+      metrics.rootNodeWidth / 2 + metrics.nodeWidth / 2 + metrics.nodeGap
+    ),
+    rowGap: Math.max(metrics.rowGap, metrics.nodeHeight + metrics.nodeGap),
+  }
+}
+
+function verticalHalfExtent(count: number, rowGap: number, nodeHeight: number) {
+  if (count === 0) return 0
+  return ((count - 1) / 2) * rowGap + nodeHeight / 2
 }
 
 function centeredOffset(index: number, count: number, gap: number) {

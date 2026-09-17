@@ -369,6 +369,7 @@
   --graph-font-size: 12;
   --graph-label-width: 160;
   --graph-layout-column-gap: 320;
+  --graph-layout-node-gap: 32;
   --graph-layout-row-gap: 112;
   --graph-layout-association-gap: 184;
   --graph-layout-association-column-gap: 224;

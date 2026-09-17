@@ -582,7 +582,12 @@ function graphLayoutMetrics(element: HTMLElement): ResourceGraphLayoutMetrics {
       "--graph-layout-association-row-gap"
     ),
     columnGap: graphNumberToken(element, "--graph-layout-column-gap"),
+    nodeGap: graphNumberToken(element, "--graph-layout-node-gap"),
+    nodeHeight: graphNumberToken(element, "--graph-node-height"),
+    nodeWidth: graphNumberToken(element, "--graph-node-width"),
     rowGap: graphNumberToken(element, "--graph-layout-row-gap"),
+    rootNodeHeight: graphNumberToken(element, "--graph-root-node-height"),
+    rootNodeWidth: graphNumberToken(element, "--graph-root-node-width"),
   }
 }
 
