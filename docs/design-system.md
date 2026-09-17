@@ -49,6 +49,8 @@ Themes use calibrated OKLCH values and foreground/background pairs for backgroun
 
 Badges use semantic variants rather than feature-level color classes. Successful or healthy states such as Valid, Complete, and Active use success green. In-progress or attention states such as Pending, Processing, and Maintenance use warning orange. Failed, invalid, and decommissioned states use destructive red. Neutral metadata, roles, counts, visibility, and editing context use default, secondary, outline, or their dedicated domain variants because they do not express severity.
 
+Small mutually exclusive view and scope choices use the shared `SegmentedControl` built on the shadcn Toggle Group primitive. A muted group surface contains compact text labels, and the selected option uses the standard action surface and border. Search scope and collection ownership scope use this same control without decorative icons.
+
 Light, dark, and system preferences share these roles. Resolve theme before first paint, set `color-scheme`, react to system changes only in system mode, and persist only the preference, never derived colors. Any browser preference must be account-neutral and safely cleared or recomputed on identity change. Validate every semantic pair in both modes.
 
 ## Primitives and components

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import type { CollectionAffiliation } from "@/data/crucible/collection-query"
 
 export function CollectionAffiliationFilter({
@@ -10,30 +10,19 @@ export function CollectionAffiliationFilter({
   ownerLabel: string
   value?: CollectionAffiliation
 }) {
+  const options = [
+    { label: "All", value: "all" },
+    { label: ownerLabel, value: "owner" },
+  ] as const
+
   return (
-    <div
-      aria-label="Ownership scope"
-      className="flex w-fit items-center gap-1 rounded-lg bg-muted p-1"
-      role="group"
-    >
-      <Button
-        aria-pressed={!value}
-        onClick={() => onChange(undefined)}
-        size="sm"
-        type="button"
-        variant={!value ? "outline" : "ghost"}
-      >
-        All
-      </Button>
-      <Button
-        aria-pressed={value === "owner"}
-        onClick={() => onChange("owner")}
-        size="sm"
-        type="button"
-        variant={value === "owner" ? "outline" : "ghost"}
-      >
-        {ownerLabel}
-      </Button>
-    </div>
+    <SegmentedControl
+      ariaLabel="Ownership scope"
+      onValueChange={(nextValue) =>
+        onChange(nextValue === "owner" ? "owner" : undefined)
+      }
+      options={options}
+      value={value ?? "all"}
+    />
   )
 }

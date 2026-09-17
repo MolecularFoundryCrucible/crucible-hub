@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
 import { SearchIcon } from "@/components/crucible/icons"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,6 +12,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+
+const searchScopeOptions = [
+  { label: "This project", value: "project" },
+  { label: "All Crucible", value: "global" },
+] as const
 
 export function GlobalSearch({
   projectMfid,
@@ -96,32 +101,12 @@ export function GlobalSearch({
           </DialogTitle>
         </DialogHeader>
         {projectMfid ? (
-          <div
-            aria-label="Search scope"
-            className="flex w-fit gap-1 rounded-lg border bg-muted p-1"
-            role="group"
-          >
-            <Button
-              aria-pressed={searchScope === "project"}
-              onClick={() => setSearchScope("project")}
-              size="sm"
-              type="button"
-              variant={searchScope === "project" ? "secondary" : "ghost"}
-            >
-              <ResourceTypeIcon aria-hidden="true" type="project" />
-              This project
-            </Button>
-            <Button
-              aria-pressed={searchScope === "global"}
-              onClick={() => setSearchScope("global")}
-              size="sm"
-              type="button"
-              variant={searchScope === "global" ? "secondary" : "ghost"}
-            >
-              <SearchIcon aria-hidden="true" />
-              All Crucible
-            </Button>
-          </div>
+          <SegmentedControl
+            ariaLabel="Search scope"
+            onValueChange={setSearchScope}
+            options={searchScopeOptions}
+            value={searchScope}
+          />
         ) : null}
         <form className="flex gap-2" onSubmit={submit}>
           <label className="sr-only" htmlFor="global-search-query">
