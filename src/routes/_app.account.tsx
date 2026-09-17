@@ -25,12 +25,14 @@ function AccountPage() {
   return (
     <PageLayout>
       <PageHeader eyebrow="Account" title="My profile" />
-      <ContentBoundary className="flex flex-col gap-4">
+      <ContentBoundary>
         <ContentGrid variant="split">
-          <AccountProfileForm account={account} scope={scope} />
-          <AccountCredentialCard scope={scope} />
+          <div className="flex min-w-0 flex-col gap-page-section">
+            <AccountProfileForm account={account} scope={scope} />
+            <AccountCredentialCard scope={scope} />
+          </div>
+          <AccountCapabilitiesCard account={account} />
         </ContentGrid>
-        <AccountCapabilitiesCard account={account} />
       </ContentBoundary>
     </PageLayout>
   )

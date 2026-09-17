@@ -71,8 +71,8 @@ function CredentialStatus({
   status: WorkspaceApiCredentialStatus
 }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-2">
-      <div className="sm:col-span-2">
+    <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="sm:col-span-2 xl:col-span-1">
         <dt className="text-label text-muted-foreground">Status</dt>
         <dd className="mt-1">
           <Badge variant={status.valid ? "success" : "destructive"}>
@@ -96,11 +96,14 @@ function CredentialStatusSkeleton() {
   return (
     <div
       aria-label="Loading API credential status"
-      className="grid gap-4 sm:grid-cols-2"
+      className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
       role="status"
     >
       {Array.from({ length: 3 }, (_, index) => (
-        <div className={index === 0 ? "sm:col-span-2" : undefined} key={index}>
+        <div
+          className={index === 0 ? "sm:col-span-2 xl:col-span-1" : undefined}
+          key={index}
+        >
           <Skeleton className="h-4 w-16" />
           <Skeleton className="mt-2 h-5 w-28" />
         </div>
