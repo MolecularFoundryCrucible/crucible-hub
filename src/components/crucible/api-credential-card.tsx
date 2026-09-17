@@ -75,7 +75,7 @@ function CredentialStatus({
       <div>
         <dt className="text-label text-muted-foreground">Status</dt>
         <dd className="mt-1">
-          <Badge variant={status.valid ? "secondary" : "destructive"}>
+          <Badge variant={status.valid ? "success" : "destructive"}>
             {status.valid ? "Valid" : "Invalid"}
           </Badge>
         </dd>

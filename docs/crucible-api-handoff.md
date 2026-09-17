@@ -207,6 +207,8 @@ This section groups the API additions that would let Hub expose Pinned, Activity
 
 Self-service key rotation needs an authenticated server-to-server operation with a typed one-time result, explicit revocation timing, and defined session consequences. The Hub must replace its encrypted upstream authority and rotate the Hub session identifier before another request uses the old credential, then replace the active Query client. The API contract must also decide whether the replacement key may be returned once for external clients or remains exclusively server-held. The local environment-key bridge cannot support rotation because it must not acquire credential persistence or session behavior.
 
+A suitable operation would be `POST /account/apikey/rotate`, authorized for the current account through the server-to-server Hub authority rather than an API-origin browser cookie. Its typed success response should contain the replacement `api_key` exactly once and the new `valid`, `created_at`, and `expires_at` status. The contract must state when the old key becomes invalid, whether the Hub login authority is independent from that key, and how a caller can recover from an uncertain response without rotating repeatedly. If the Hub authority uses the same key, the Hub session update and session-ID rotation requirements above remain mandatory before the response is exposed to the browser.
+
 ### Account capabilities and navigation
 
 Extend the existing authenticated account capabilities with exact operation-specific guidance for the broader Administration proposal. A preferred shape is:

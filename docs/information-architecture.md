@@ -80,7 +80,7 @@ Home presents recently added data plus separate bounded ownership sections for P
 
 ### Account
 
-The application-bar avatar opens the account menu and links to My profile. The profile route presents the authenticated account identity in a read-first view. Authenticated and public person profiles show the shared icon-labelled Crucible ID with its quick-copy action. Edit profile opens first name, last name, email, and username controls backed by the self-service account operation. Email remains private to the authenticated account view and profile mutation. Separate cards show the current API credential's non-secret validity and dates and the account capabilities advertised by the API. Credential rotation remains unavailable until it can replace the server-held upstream authority and active Hub session safely.
+The application-bar avatar opens the account menu and links to My profile. The profile route presents the authenticated account identity in a read-first view. Authenticated and public person profiles show the shared icon-labelled Crucible ID with its quick-copy action. Edit profile opens first name, last name, email, and username controls backed by the self-service account operation. Email remains private to the authenticated account view and profile mutation. At wide widths, Identity and API credential status share one row, with advertised account capabilities below; compact layouts stack the same cards. Credential rotation remains unavailable until it can replace the server-held upstream authority and active Hub session safely.
 
 ### Project
 

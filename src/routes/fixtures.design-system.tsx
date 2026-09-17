@@ -164,8 +164,10 @@ function DesignSystemFixtures() {
               <Button disabled>Unavailable</Button>
             </CardContent>
             <CardFooter className="flex-wrap gap-2">
-              <Badge>Active</Badge>
+              <Badge variant="success">Active</Badge>
               <Badge variant="secondary">Member</Badge>
+              <Badge variant="success">Complete</Badge>
+              <Badge variant="warning">Pending</Badge>
               <Badge variant="outline">Limited details</Badge>
               <Badge variant="destructive">Failed</Badge>
             </CardFooter>

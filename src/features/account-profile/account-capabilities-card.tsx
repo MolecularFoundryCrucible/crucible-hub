@@ -38,19 +38,19 @@ export function AccountCapabilitiesCard({
         <CardTitle>Account access</CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="divide-y">
+        <ul className="grid gap-4 md:grid-cols-2">
           {capabilityDefinitions.map(([capability, label, Icon]) => {
             const available = account.capabilities[capability]
             return (
               <li
-                className="flex min-w-0 items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                className="flex min-w-0 items-center justify-between gap-3"
                 key={capability}
               >
                 <span className="flex min-w-0 items-center gap-2 text-body">
                   <Icon aria-hidden="true" className="size-4 shrink-0" />
                   <span className="break-words">{label}</span>
                 </span>
-                <Badge variant={available ? "secondary" : "outline"}>
+                <Badge variant={available ? "success" : "outline"}>
                   {available ? "Available" : "Not available"}
                 </Badge>
               </li>

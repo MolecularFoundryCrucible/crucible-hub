@@ -1,7 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { ContentBoundary } from "@/components/crucible/content-layout"
+import {
+  ContentBoundary,
+  ContentGrid,
+} from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -21,14 +24,12 @@ function AccountPage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        description="Manage your Crucible identity and review account access."
-        eyebrow="Account"
-        title="My profile"
-      />
-      <ContentBoundary className="flex flex-col gap-4" width="reading">
-        <AccountProfileForm account={account} scope={scope} />
-        <AccountCredentialCard scope={scope} />
+      <PageHeader eyebrow="Account" title="My profile" />
+      <ContentBoundary className="flex flex-col gap-4">
+        <ContentGrid variant="split">
+          <AccountProfileForm account={account} scope={scope} />
+          <AccountCredentialCard scope={scope} />
+        </ContentGrid>
         <AccountCapabilitiesCard account={account} />
       </ContentBoundary>
     </PageLayout>

@@ -12,7 +12,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -210,10 +209,6 @@ export function AccountProfileForm({
       <Card aria-busy={isSubmitting}>
         <CardHeader>
           <CardTitle>Edit profile</CardTitle>
-          <CardDescription>
-            Manage the name and contact details associated with your Crucible
-            account.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <form
