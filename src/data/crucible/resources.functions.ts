@@ -29,6 +29,7 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import type {
   WorkspaceDatasetThumbnailOperation,
   WorkspaceRelationshipOperation,
+  WorkspaceResourceGraphRequest,
   WorkspaceScientificMetadata,
 } from "./workspace-source"
 
@@ -36,6 +37,34 @@ export const resourceMfidInputSchema = z.object({
   resourceMfid: z.string().trim().min(1).max(255),
   scenario: fixtureScenarioSchema.optional(),
 })
+
+export const resourceGraphInputSchema = resourceMfidInputSchema
+  .extend({
+    depth: z.number().int().min(0).max(3).default(1),
+    direction: z.enum(["both", "upstream", "downstream"]).default("both"),
+    relationshipKinds: z
+      .array(z.enum(["lineage", "association"]))
+      .max(2)
+      .optional(),
+    relationshipTypes: z
+      .array(z.enum(["is_derived_from", "is_part_of", "unspecified"]))
+      .max(3)
+      .optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      value.relationshipTypes?.length &&
+      value.relationshipKinds &&
+      !value.relationshipKinds.includes("lineage")
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Relationship types require lineage relationships.",
+        path: ["relationshipTypes"],
+      })
+    }
+  })
 
 const resourceReadInputSchema = resourceMfidInputSchema.extend({
   projection: z.enum(["overview", "summary"]),
@@ -576,12 +605,19 @@ export const mutateWorkspaceDatasetThumbnail = createServerFn({
 
 export const getWorkspaceResourceGraph = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])
-  .validator(resourceMfidInputSchema)
+  .validator(resourceGraphInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
+    const graphRequest = {
+      depth: data.depth,
+      direction: data.direction,
+      relationshipKinds: data.relationshipKinds,
+      relationshipTypes: data.relationshipTypes,
+    } satisfies WorkspaceResourceGraphRequest
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceResourceGraph(
         data.resourceMfid,
+        graphRequest,
         data.scenario,
         context.requestSignal
       )

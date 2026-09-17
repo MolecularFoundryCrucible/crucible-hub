@@ -35,6 +35,7 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceResourceGraph,
   WorkspaceResourceGraphEdge,
+  WorkspaceResourceGraphRequest,
   WorkspaceSampleDescriptiveUpdate,
   WorkspaceScientificMetadataUpdate,
   WorkspaceScientificMetadataWrite,
@@ -98,32 +99,84 @@ const apiIngestionRequestPageSchema = z
   })
   .passthrough()
 
+const apiProjectReferenceSchema = z
+  .object({
+    project_id: z.string().max(10_000),
+    title: z.string().max(10_000).nullable().optional(),
+    unique_id: z.string().min(1).max(255),
+  })
+  .passthrough()
+
+const apiInstrumentReferenceSchema = z
+  .object({
+    instrument_id: z.string().max(10_000).nullable().optional(),
+    instrument_name: z.string().max(10_000),
+    unique_id: z.string().min(1).max(255),
+  })
+  .passthrough()
+
+const apiResourceGraphNodeBase = {
+  has_more_relationships: z.boolean().nullable(),
+  mfid: z.string().min(1).max(255),
+  name: z.string().max(10_000).nullable(),
+  project: apiProjectReferenceSchema.nullable(),
+  traversal_depth: z.number().int().min(0).max(3),
+}
+
+const apiResourceGraphNodeSchema = z.discriminatedUnion("resource_type", [
+  z
+    .object({
+      ...apiResourceGraphNodeBase,
+      resource_type: z.literal("sample"),
+      sample_type: z.string().max(10_000).nullable(),
+    })
+    .passthrough(),
+  z
+    .object({
+      ...apiResourceGraphNodeBase,
+      data_format: z.string().max(10_000).nullable(),
+      instrument: apiInstrumentReferenceSchema.nullable(),
+      measurement: z.string().max(10_000).nullable(),
+      resource_type: z.literal("dataset"),
+    })
+    .passthrough(),
+])
+
+const apiResourceGraphEdgeSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      directed: z.literal(true),
+      id: z.string().min(1).max(1_000),
+      kind: z.literal("lineage"),
+      relationship_type: z.enum(["is_derived_from", "is_part_of"]).nullable(),
+      source_mfid: z.string().min(1).max(255),
+      target_mfid: z.string().min(1).max(255),
+    })
+    .passthrough(),
+  z
+    .object({
+      directed: z.literal(false),
+      id: z.string().min(1).max(1_000),
+      kind: z.literal("association"),
+      relationship_type: z.null(),
+      source_mfid: z.string().min(1).max(255),
+      target_mfid: z.string().min(1).max(255),
+    })
+    .passthrough(),
+])
+
 const apiResourceGraphSchema = z
   .object({
-    directed: z.literal(true),
-    edges: z
-      .array(
-        z
-          .object({
-            source: z.string().min(1).max(255),
-            target: z.string().min(1).max(255),
-          })
-          .passthrough()
-      )
-      .max(5_000),
-    nodes: z
-      .array(
-        z
-          .object({
-            entity_type: z.enum(["dataset", "sample"]),
-            id: z.string().min(1).max(255),
-            measurement: z.string().max(255).nullable().optional(),
-            name: z.string().nullable().optional(),
-            sample_type: z.string().max(255).nullable().optional(),
-          })
-          .passthrough()
-      )
-      .max(1_000),
+    edge_limit: z.number().int().positive().max(5_000),
+    edges: z.array(apiResourceGraphEdgeSchema).max(5_000),
+    has_more: z.boolean(),
+    node_limit: z.number().int().positive().max(1_000),
+    nodes: z.array(apiResourceGraphNodeSchema).max(1_000),
+    requested_depth: z.number().int().min(0).max(3),
+    returned_depth: z.number().int().min(0).max(3),
+    root_mfid: z.string().min(1).max(255),
+    truncated: z.boolean(),
+    truncation_reasons: z.array(z.enum(["node_limit", "edge_limit"])).max(2),
   })
   .passthrough()
 
@@ -858,8 +911,13 @@ function fixtureResourceGraph(
           resource.kind === "sample"
             ? resource.sample_type
             : resource.measurement,
+        dataFormat: resource.kind === "dataset" ? resource.data_format : null,
+        hasMoreRelationships: false,
+        instrument: resource.kind === "dataset" ? resource.instrument : null,
         kind: resource.kind,
         name: resource.name,
+        project: resource.project,
+        traversalDepth: 0,
         unique_id: resource.unique_id,
       },
     ],
@@ -871,14 +929,26 @@ function fixtureResourceGraph(
       }
       nodes.set(link.unique_id, {
         context: null,
+        dataFormat: null,
+        hasMoreRelationships: false,
+        instrument: null,
         kind: link.resource_type,
         name: link.name || link.unique_id,
+        project: null,
+        traversalDepth: 1,
         unique_id: link.unique_id,
       })
       if (link.relationship === "parent") {
         return [
           {
+            directed: true,
+            id: `fixture:lineage:${link.unique_id}:${resource.unique_id}`,
             relationship: "parent" as const,
+            relationshipType:
+              link.relationship_type === "is_derived_from" ||
+              link.relationship_type === "is_part_of"
+                ? link.relationship_type
+                : null,
             source: link.unique_id,
             target: resource.unique_id,
           },
@@ -887,7 +957,14 @@ function fixtureResourceGraph(
       if (link.relationship === "child") {
         return [
           {
+            directed: true,
+            id: `fixture:lineage:${resource.unique_id}:${link.unique_id}`,
             relationship: "parent" as const,
+            relationshipType:
+              link.relationship_type === "is_derived_from" ||
+              link.relationship_type === "is_part_of"
+                ? link.relationship_type
+                : null,
             source: resource.unique_id,
             target: link.unique_id,
           },
@@ -895,7 +972,14 @@ function fixtureResourceGraph(
       }
       return [
         {
+          directed: false,
+          id: `fixture:association:${
+            resource.kind === "sample" ? resource.unique_id : link.unique_id
+          }:${
+            resource.kind === "sample" ? link.unique_id : resource.unique_id
+          }`,
           relationship: "associated" as const,
+          relationshipType: null,
           source:
             resource.kind === "sample" ? resource.unique_id : link.unique_id,
           target:
@@ -904,70 +988,116 @@ function fixtureResourceGraph(
       ]
     }
   )
-  return { edges, nodes: [...nodes.values()], rootMfid: resource.unique_id }
+  return {
+    edgeLimit: 1_000,
+    edges,
+    hasMore: false,
+    nodeLimit: 500,
+    nodes: [...nodes.values()],
+    requestedDepth: 1,
+    returnedDepth: edges.length > 0 ? 1 : 0,
+    rootMfid: resource.unique_id,
+    truncated: false,
+    truncationReasons: [],
+  }
 }
 
 function normalizeApiResourceGraph(
   value: unknown,
-  rootMfid: string
+  rootMfid: string,
+  requestedDepth: number
 ): WorkspaceResourceGraph {
   const result = apiResourceGraphSchema.safeParse(value)
   if (!result.success) {
     throw new Error("The resource graph response is invalid.")
   }
+  if (
+    result.data.root_mfid !== rootMfid ||
+    result.data.requested_depth !== requestedDepth ||
+    result.data.returned_depth > result.data.requested_depth ||
+    result.data.truncated !== result.data.truncation_reasons.length > 0 ||
+    (!result.data.truncated &&
+      result.data.nodes.some((node) => node.has_more_relationships === null)) ||
+    (!result.data.has_more &&
+      result.data.nodes.some((node) => node.has_more_relationships === true))
+  ) {
+    throw new Error("The resource graph response has invalid bounds.")
+  }
   const nodes = new Map(
     result.data.nodes.map((node) => [
-      node.id,
+      node.mfid,
       {
         context:
-          node.entity_type === "sample"
-            ? (node.sample_type ?? null)
-            : (node.measurement ?? null),
-        kind: node.entity_type,
-        name: node.name || node.id,
-        unique_id: node.id,
+          node.resource_type === "sample" ? node.sample_type : node.measurement,
+        dataFormat: node.resource_type === "dataset" ? node.data_format : null,
+        hasMoreRelationships: node.has_more_relationships,
+        instrument: node.resource_type === "dataset" ? node.instrument : null,
+        kind: node.resource_type,
+        name: node.name || node.mfid,
+        project: node.project,
+        traversalDepth: node.traversal_depth,
+        unique_id: node.mfid,
       },
     ])
   )
-  if (nodes.size !== result.data.nodes.length || !nodes.has(rootMfid)) {
+  const root = nodes.get(rootMfid)
+  if (
+    nodes.size !== result.data.nodes.length ||
+    !root ||
+    root.traversalDepth !== 0 ||
+    Math.max(...[...nodes.values()].map((node) => node.traversalDepth)) !==
+      result.data.returned_depth
+  ) {
     throw new Error("The resource graph response has invalid nodes.")
   }
+  const edgeIds = new Set<string>()
   const edgeKeys = new Set<string>()
   const edges = result.data.edges.map((edge) => {
-    const source = nodes.get(edge.source)
-    const target = nodes.get(edge.target)
-    if (!source || !target) {
+    const source = nodes.get(edge.source_mfid)
+    const target = nodes.get(edge.target_mfid)
+    if (
+      !source ||
+      !target ||
+      edge.source_mfid === edge.target_mfid ||
+      (edge.kind === "association" &&
+        (source.kind !== "sample" || target.kind !== "dataset")) ||
+      (edge.kind === "lineage" && source.kind !== target.kind)
+    ) {
       throw new Error("The resource graph response has an invalid edge.")
     }
-    const edgeKey = `${edge.source}\u0000${edge.target}`
-    if (edgeKeys.has(edgeKey)) {
+    const edgeKey = `${edge.kind}\u0000${edge.source_mfid}\u0000${edge.target_mfid}`
+    if (edgeIds.has(edge.id) || edgeKeys.has(edgeKey)) {
       throw new Error("The resource graph response has duplicate edges.")
     }
+    edgeIds.add(edge.id)
     edgeKeys.add(edgeKey)
     return {
+      directed: edge.directed,
+      id: edge.id,
       relationship:
-        source.kind === target.kind
-          ? ("parent" as const)
-          : ("associated" as const),
-      source: edge.source,
-      target: edge.target,
+        edge.kind === "lineage" ? ("parent" as const) : ("associated" as const),
+      relationshipType: edge.relationship_type,
+      source: edge.source_mfid,
+      target: edge.target_mfid,
     }
   })
-  const orderedNodes = [...nodes.values()].sort((left, right) => {
-    if (left.unique_id === rootMfid) return -1
-    if (right.unique_id === rootMfid) return 1
-    return left.name.localeCompare(right.name)
-  })
-  edges.sort(
-    (left, right) =>
-      left.source.localeCompare(right.source) ||
-      left.target.localeCompare(right.target)
-  )
-  return { edges, nodes: orderedNodes, rootMfid }
+  return {
+    edgeLimit: result.data.edge_limit,
+    edges,
+    hasMore: result.data.has_more,
+    nodeLimit: result.data.node_limit,
+    nodes: [...nodes.values()],
+    requestedDepth: result.data.requested_depth,
+    returnedDepth: result.data.returned_depth,
+    rootMfid,
+    truncated: result.data.truncated,
+    truncationReasons: result.data.truncation_reasons,
+  }
 }
 
 export async function readWorkspaceResourceGraph(
   resourceMfid: string,
+  graphRequest: WorkspaceResourceGraphRequest = {},
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal
 ): Promise<WorkspaceResourceGraph> {
@@ -991,15 +1121,28 @@ export async function readWorkspaceResourceGraph(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.GET("/entity_graph_cte/{entity_id}", {
+  const result = await client.GET("/resources/{resource_mfid}/graph", {
     params: {
-      path: { entity_id: resourceMfid },
-      query: { recursive: false },
+      path: { resource_mfid: resourceMfid },
+      query: {
+        depth: graphRequest.depth ?? 1,
+        direction: graphRequest.direction ?? "both",
+        relationship_kind: graphRequest.relationshipKinds
+          ? [...graphRequest.relationshipKinds]
+          : undefined,
+        relationship_type: graphRequest.relationshipTypes
+          ? [...graphRequest.relationshipTypes]
+          : undefined,
+      },
     },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
-  return normalizeApiResourceGraph(result.data, resourceMfid)
+  return normalizeApiResourceGraph(
+    result.data,
+    resourceMfid,
+    graphRequest.depth ?? 1
+  )
 }
 
 function fixtureOwner(

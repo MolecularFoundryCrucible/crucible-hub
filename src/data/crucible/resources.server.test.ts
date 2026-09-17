@@ -51,7 +51,7 @@ describe("workspace resource sources", () => {
     })
   })
 
-  it("uses the one-hop CTE graph endpoint and validates its opaque response", async () => {
+  it("uses the typed resource graph endpoint and preserves graph semantics", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -62,54 +62,97 @@ describe("workspace resource sources", () => {
       vi.fn(async (request: Request) => {
         requests.push(request)
         return Response.json({
-          directed: true,
-          multigraph: false,
-          graph: {},
+          edge_limit: 1_000,
+          has_more: true,
+          node_limit: 500,
+          requested_depth: 1,
+          returned_depth: 1,
+          root_mfid: "sample-1",
+          truncated: false,
+          truncation_reasons: [],
           nodes: [
             {
-              id: "sample-1",
-              entity_type: "sample",
+              has_more_relationships: false,
+              mfid: "sample-1",
               name: "Sample one",
+              project: null,
+              resource_type: "sample",
               sample_type: "Powder",
+              traversal_depth: 0,
             },
             {
-              id: "dataset-1",
-              entity_type: "dataset",
+              data_format: "nexus",
+              has_more_relationships: true,
+              instrument: null,
+              mfid: "dataset-1",
               measurement: "XRD",
               name: "Dataset one",
+              project: null,
+              resource_type: "dataset",
+              traversal_depth: 1,
             },
           ],
-          edges: [{ source: "sample-1", target: "dataset-1" }],
+          edges: [
+            {
+              directed: false,
+              id: "association:sample:sample-1:dataset:dataset-1",
+              kind: "association",
+              relationship_type: null,
+              source_mfid: "sample-1",
+              target_mfid: "dataset-1",
+            },
+          ],
         })
       })
     )
 
     await expect(readWorkspaceResourceGraph("sample-1")).resolves.toEqual({
+      edgeLimit: 1_000,
+      hasMore: true,
+      nodeLimit: 500,
+      requestedDepth: 1,
+      returnedDepth: 1,
       rootMfid: "sample-1",
+      truncated: false,
+      truncationReasons: [],
       nodes: [
         {
           context: "Powder",
-          unique_id: "sample-1",
+          dataFormat: null,
+          hasMoreRelationships: false,
+          instrument: null,
           kind: "sample",
           name: "Sample one",
+          project: null,
+          traversalDepth: 0,
+          unique_id: "sample-1",
         },
         {
           context: "XRD",
-          unique_id: "dataset-1",
+          dataFormat: "nexus",
+          hasMoreRelationships: true,
+          instrument: null,
           kind: "dataset",
           name: "Dataset one",
+          project: null,
+          traversalDepth: 1,
+          unique_id: "dataset-1",
         },
       ],
       edges: [
         {
+          directed: false,
+          id: "association:sample:sample-1:dataset:dataset-1",
           relationship: "associated",
+          relationshipType: null,
           source: "sample-1",
           target: "dataset-1",
         },
       ],
     })
-    expect(new URL(requests[0].url).pathname).toBe("/entity_graph_cte/sample-1")
-    expect(new URL(requests[0].url).searchParams.get("recursive")).toBe("false")
+    expect(new URL(requests[0].url).pathname).toBe("/resources/sample-1/graph")
+    expect(new URL(requests[0].url).searchParams.get("depth")).toBe("1")
+    expect(new URL(requests[0].url).searchParams.get("direction")).toBe("both")
 
     vi.stubGlobal(
       "fetch",
@@ -120,7 +163,7 @@ describe("workspace resource sources", () => {
     )
   })
 
-  it("rejects duplicate edges in an opaque graph response", async () => {
+  it("rejects duplicate stable edge identities", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -129,14 +172,53 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async () =>
         Response.json({
-          directed: true,
+          edge_limit: 1_000,
+          has_more: false,
+          node_limit: 500,
+          requested_depth: 1,
+          returned_depth: 1,
+          root_mfid: "sample-1",
+          truncated: false,
+          truncation_reasons: [],
           nodes: [
-            { id: "sample-1", entity_type: "sample" },
-            { id: "dataset-1", entity_type: "dataset" },
+            {
+              has_more_relationships: false,
+              mfid: "sample-1",
+              name: null,
+              project: null,
+              resource_type: "sample",
+              sample_type: null,
+              traversal_depth: 0,
+            },
+            {
+              data_format: null,
+              has_more_relationships: false,
+              instrument: null,
+              measurement: null,
+              mfid: "dataset-1",
+              name: null,
+              project: null,
+              resource_type: "dataset",
+              traversal_depth: 1,
+            },
           ],
           edges: [
-            { source: "sample-1", target: "dataset-1" },
-            { source: "sample-1", target: "dataset-1" },
+            {
+              directed: false,
+              id: "same-edge",
+              kind: "association",
+              relationship_type: null,
+              source_mfid: "sample-1",
+              target_mfid: "dataset-1",
+            },
+            {
+              directed: false,
+              id: "same-edge",
+              kind: "association",
+              relationship_type: null,
+              source_mfid: "sample-1",
+              target_mfid: "dataset-1",
+            },
           ],
         })
       )

@@ -122,8 +122,19 @@ export const crucibleKeys = {
       : ([...scope, "resources", "detail"] as const),
   resource: (scope: IdentityScope, resourceMfid: string, detailShape: string) =>
     [...scope, "resources", "detail", resourceMfid, detailShape] as const,
-  resourceGraph: (scope: IdentityScope, resourceMfid: string) =>
-    [...scope, "resources", "graph", resourceMfid, "one-hop"] as const,
+  resourceGraphs: (scope: IdentityScope, resourceMfid?: string) =>
+    resourceMfid
+      ? ([...scope, "resources", "graph", resourceMfid] as const)
+      : ([...scope, "resources", "graph"] as const),
+  resourceGraph: (
+    scope: IdentityScope,
+    resourceMfid: string,
+    request: ListFilters = {}
+  ) =>
+    [
+      ...crucibleKeys.resourceGraphs(scope, resourceMfid),
+      normalizeFilters(request),
+    ] as const,
   resourceAccess: (scope: IdentityScope, resourceMfid: string) =>
     [...scope, "resources", "access", resourceMfid] as const,
   datasetFiles: (scope: IdentityScope, datasetMfid: string) =>

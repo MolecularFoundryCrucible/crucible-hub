@@ -583,6 +583,46 @@
         "title": "AssociatedFileUpdate",
         "type": "object"
       },
+      "AssociationGraphEdge": {
+        "properties": {
+          "directed": {
+            "const": false,
+            "title": "Directed",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "association",
+            "title": "Kind",
+            "type": "string"
+          },
+          "relationship_type": {
+            "title": "Relationship Type",
+            "type": "null"
+          },
+          "source_mfid": {
+            "title": "Source Mfid",
+            "type": "string"
+          },
+          "target_mfid": {
+            "title": "Target Mfid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_mfid",
+          "target_mfid",
+          "kind",
+          "directed",
+          "relationship_type"
+        ],
+        "title": "AssociationGraphEdge",
+        "type": "object"
+      },
       "Body_create_user_users_post": {
         "properties": {
           "project_ids": {
@@ -915,6 +955,100 @@
         ],
         "title": "DatasetFacetField",
         "type": "string"
+      },
+      "DatasetGraphNode": {
+        "properties": {
+          "data_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Format"
+          },
+          "has_more_relationships": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has More Relationships"
+          },
+          "instrument": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InstrumentReferenceRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "measurement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Measurement"
+          },
+          "mfid": {
+            "title": "Mfid",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectReferenceRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resource_type": {
+            "const": "dataset",
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "traversal_depth": {
+            "title": "Traversal Depth",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mfid",
+          "name",
+          "traversal_depth",
+          "has_more_relationships",
+          "project",
+          "resource_type",
+          "measurement",
+          "data_format",
+          "instrument"
+        ],
+        "title": "DatasetGraphNode",
+        "type": "object"
       },
       "DatasetInstrumentAssign": {
         "additionalProperties": false,
@@ -2016,6 +2150,40 @@
         "title": "FacetSort",
         "type": "string"
       },
+      "GraphDirection": {
+        "enum": [
+          "both",
+          "upstream",
+          "downstream"
+        ],
+        "title": "GraphDirection",
+        "type": "string"
+      },
+      "GraphRelationshipKind": {
+        "enum": [
+          "lineage",
+          "association"
+        ],
+        "title": "GraphRelationshipKind",
+        "type": "string"
+      },
+      "GraphRelationshipTypeFilter": {
+        "enum": [
+          "is_derived_from",
+          "is_part_of",
+          "unspecified"
+        ],
+        "title": "GraphRelationshipTypeFilter",
+        "type": "string"
+      },
+      "GraphTruncationReason": {
+        "enum": [
+          "node_limit",
+          "edge_limit"
+        ],
+        "title": "GraphTruncationReason",
+        "type": "string"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2795,6 +2963,60 @@
         ],
         "title": "Keyword",
         "type": "object"
+      },
+      "LineageGraphEdge": {
+        "properties": {
+          "directed": {
+            "const": true,
+            "title": "Directed",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "lineage",
+            "title": "Kind",
+            "type": "string"
+          },
+          "relationship_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LinkRelationshipType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_mfid": {
+            "title": "Source Mfid",
+            "type": "string"
+          },
+          "target_mfid": {
+            "title": "Target Mfid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_mfid",
+          "target_mfid",
+          "kind",
+          "directed",
+          "relationship_type"
+        ],
+        "title": "LineageGraphEdge",
+        "type": "object"
+      },
+      "LinkRelationshipType": {
+        "enum": [
+          "is_derived_from",
+          "is_part_of"
+        ],
+        "title": "LinkRelationshipType",
+        "type": "string"
       },
       "LinkedResource": {
         "properties": {
@@ -4489,6 +4711,101 @@
         "title": "ResourceCapabilities",
         "type": "object"
       },
+      "ResourceGraphResponse": {
+        "properties": {
+          "edge_limit": {
+            "title": "Edge Limit",
+            "type": "integer"
+          },
+          "edges": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "association": "#/components/schemas/AssociationGraphEdge",
+                  "lineage": "#/components/schemas/LineageGraphEdge"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/LineageGraphEdge"
+                },
+                {
+                  "$ref": "#/components/schemas/AssociationGraphEdge"
+                }
+              ]
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "node_limit": {
+            "title": "Node Limit",
+            "type": "integer"
+          },
+          "nodes": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "dataset": "#/components/schemas/DatasetGraphNode",
+                  "sample": "#/components/schemas/SampleGraphNode"
+                },
+                "propertyName": "resource_type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SampleGraphNode"
+                },
+                {
+                  "$ref": "#/components/schemas/DatasetGraphNode"
+                }
+              ]
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "requested_depth": {
+            "title": "Requested Depth",
+            "type": "integer"
+          },
+          "returned_depth": {
+            "title": "Returned Depth",
+            "type": "integer"
+          },
+          "root_mfid": {
+            "title": "Root Mfid",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "truncation_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/GraphTruncationReason"
+            },
+            "title": "Truncation Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "root_mfid",
+          "nodes",
+          "edges",
+          "requested_depth",
+          "returned_depth",
+          "has_more",
+          "truncated",
+          "truncation_reasons",
+          "node_limit",
+          "edge_limit"
+        ],
+        "title": "ResourceGraphResponse",
+        "type": "object"
+      },
       "ResourceSearchResult": {
         "description": "Unified search result compatible across all search endpoints.\nscientific_metadata is populated by GET /resources/metadata/search; null on name-based endpoints.",
         "properties": {
@@ -4709,6 +5026,77 @@
         ],
         "title": "SampleFacetField",
         "type": "string"
+      },
+      "SampleGraphNode": {
+        "properties": {
+          "has_more_relationships": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has More Relationships"
+          },
+          "mfid": {
+            "title": "Mfid",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectReferenceRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resource_type": {
+            "const": "sample",
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "sample_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Type"
+          },
+          "traversal_depth": {
+            "title": "Traversal Depth",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mfid",
+          "name",
+          "traversal_depth",
+          "has_more_relationships",
+          "project",
+          "resource_type",
+          "sample_type"
+        ],
+        "title": "SampleGraphNode",
+        "type": "object"
       },
       "SampleLink": {
         "properties": {
@@ -14105,6 +14493,119 @@
           }
         ],
         "summary": "Get Resource Links",
+        "tags": [
+          "resources"
+        ]
+      }
+    },
+    "/resources/{resource_mfid}/graph": {
+      "get": {
+        "description": "Return a bounded, authorization-filtered sample and dataset graph.",
+        "operationId": "read_resource_graph_resources__resource_mfid__graph_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_mfid",
+            "required": true,
+            "schema": {
+              "title": "Resource Mfid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum selected-edge distance from the root resource.",
+            "in": "query",
+            "name": "depth",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "Maximum selected-edge distance from the root resource.",
+              "maximum": 3,
+              "minimum": 0,
+              "title": "Depth",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Lineage traversal direction. Associations remain undirected.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/GraphDirection",
+              "default": "both",
+              "description": "Lineage traversal direction. Associations remain undirected."
+            }
+          },
+          {
+            "description": "Repeatable relationship kinds used for traversal and returned edges.",
+            "in": "query",
+            "name": "relationship_kind",
+            "required": false,
+            "schema": {
+              "description": "Repeatable relationship kinds used for traversal and returned edges.",
+              "items": {
+                "$ref": "#/components/schemas/GraphRelationshipKind"
+              },
+              "minItems": 1,
+              "title": "Relationship Kind",
+              "type": "array"
+            }
+          },
+          {
+            "description": "Repeatable lineage relationship types. Use unspecified for stored null values. Associations are unaffected.",
+            "in": "query",
+            "name": "relationship_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/GraphRelationshipTypeFilter"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeatable lineage relationship types. Use unspecified for stored null values. Associations are unaffected.",
+              "title": "Relationship Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceGraphResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Root resource is missing, deleted, inaccessible, or not a sample or dataset."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read Resource Graph",
         "tags": [
           "resources"
         ]

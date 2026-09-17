@@ -1,44 +1,44 @@
 # Resource graph API handoff
 
-Status: Proposed API-owned contract
+Status: Implemented API contract and Hub integration
 
 Date: 2026-09-17
 
 ## Purpose
 
-This document defines the API support needed for dependable multi-hop resource graphs in Crucible Hub. The current Hub graph is intentionally limited to the selected sample or dataset and its immediate readable relationships. It uses a deterministic Cytoscape preset layout and does not require API-generated coordinates.
+This document records the typed API boundary used for dependable bounded resource graphs in Crucible Hub. The Hub starts with the selected sample or dataset and its immediate readable relationships, then can merge explicit depth-one expansions without requesting resource details. It uses a deterministic Cytoscape preset layout and does not require API-generated coordinates.
 
-The next layout candidate is `cytoscape-elk` using ELK Layered. ELK can calculate positions in the browser, but it cannot repair missing relationship semantics, ambiguous direction, incomplete traversal, or undisclosed truncation. A typed and bounded graph response is therefore the prerequisite for adopting that extension.
+The next layout candidate is `cytoscape-elk` using ELK Layered. ELK can calculate positions in the browser, while the implemented typed response supplies the relationship semantics, direction, completeness, and truncation facts needed to evaluate that extension safely.
 
-## Current limitation
+## Implemented boundary
 
-Hub currently reads `GET /entity_graph_cte/{entity_id}` with `recursive=false`, validates the opaque response at its server boundary, and infers relationship meaning from node types and edge orientation. The public operation name exposes a persistence implementation detail. OpenAPI does not provide a typed graph response with stable relationship semantics, depth, completeness, limit information, sample type, or dataset measurement.
+API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d` provides `GET /resources/{resource_mfid}/graph`, and the Hub pins its checked-in OpenAPI artifact. The Hub validates the generated response at its server boundary and consumes API-provided node types, stable edge identities, relationship meaning, direction, traversal depth, completeness, limits, sample type, dataset measurement, and compact project and instrument references.
 
-The current one-hop view remains valid while this contract is unavailable. Hub must not expose recursive traversal or imply graph completeness from the existing response.
+The Hub defaults interactive reads to depth one. A node with `has_more_relationships=true` offers expansion, false is complete within the selected direction and filters, and null remains unknown because a server limit prevented a definitive result. Expansions reroot another depth-one request and merge by node MFID and edge ID. The Hub reports truncation and never implies unlimited export.
 
-## Required operation
+## Operation
 
-Provide one canonical resource graph read, using an API-selected route such as:
+The canonical resource graph read is:
 
 ```http
 GET /resources/{resource_mfid}/graph
 ```
 
-The operation should accept:
+The operation accepts:
 
-- `depth`, with a documented default and maximum.
+- `depth=0..3`, defaulting to one.
 - `direction=both|upstream|downstream` for lineage traversal.
-- Repeatable or array-based relationship-kind filtering when more than lineage and association exist.
-- Optional resource-type filtering when it can be applied before traversal limits without changing the stated semantics.
-- Explicit node and edge limits, or documented server-owned limits when callers cannot select them.
+- Repeatable `relationship_kind=lineage|association` filtering.
+- Repeatable `relationship_type=is_derived_from|is_part_of|unspecified` filtering for lineage edges.
+- Documented server-owned node and edge limits.
 
-The route identifier must be a canonical sample or dataset MFID. Slugs and internal database IDs should not be graph identities.
+The route identifier is a canonical sample or dataset MFID. Slugs and internal database IDs are not graph identities.
 
-`depth=0` should return only the root. `depth=1` should return the root and its immediate readable neighbours. The contract must state whether associations consume traversal depth and whether traversal continues through association edges.
+`depth=0` returns only the root. `depth=1` returns the root and its immediate readable neighbours. Every selected edge consumes one depth. Direction applies only to lineage, while associations remain undirected and can be traversed from either endpoint.
 
 ## Typed response
 
-The exact schema names belong to the API, but the OpenAPI response should provide equivalent information:
+The OpenAPI response provides:
 
 ```json
 {
@@ -49,8 +49,11 @@ The exact schema names belong to the API, but the OpenAPI response should provid
       "resource_type": "sample",
       "name": "Example sample",
       "sample_type": "powder",
-      "measurement": null,
-      "project_mfid": "...",
+      "project": {
+        "unique_id": "...",
+        "project_id": "example-project",
+        "title": "Example project"
+      },
       "traversal_depth": 0,
       "has_more_relationships": false
     }
@@ -67,14 +70,15 @@ The exact schema names belong to the API, but the OpenAPI response should provid
   ],
   "requested_depth": 2,
   "returned_depth": 2,
+  "has_more": false,
   "truncated": false,
-  "truncation_reason": null,
+  "truncation_reasons": [],
   "node_limit": 500,
   "edge_limit": 1000
 }
 ```
 
-Required node fields are stable MFID, resource type, display name, and the resource-specific nullable context field: `sample_type` for a sample or `measurement` for a dataset. These context fields let Hub render the standard graph node without issuing one detail request per node. Compact project and instrument identity remain useful for optional grouping. A missing optional display value should be represented as `null`, not by omitting the node.
+Required node fields are stable MFID, resource type, nullable display name, traversal depth, nullable per-node completeness, nullable compact project identity, and the resource-specific nullable context field: `sample_type` for a sample or `measurement` for a dataset. Dataset nodes also provide nullable data format and compact instrument identity. These fields let Hub render the standard graph node without issuing one detail request per node. A missing optional display value is represented as `null`, not by omitting the node.
 
 Required edge fields are a stable edge identity or a documented stable composite identity, source MFID, target MFID, typed relationship kind, and explicit direction. Persisted relationship labels or types should be returned directly rather than reconstructed by Hub.
 
@@ -88,24 +92,24 @@ Required edge fields are a stable edge identity or a documented stable composite
 
 ## Authorization and privacy
 
-The API must authorize the root and every returned node and edge. It must omit relationships whose other endpoint is unreadable without revealing that endpoint's identity, label, type, or count.
+The API authorizes the root and every returned node and edge. It omits relationships whose other endpoint is unreadable without revealing that endpoint's identity, label, type, or count.
 
-Completeness metadata must describe configured traversal boundaries and server limits only. It must not reveal that hidden nodes or edges exist. If `has_more_relationships` cannot be exposed without leaking unreadable topology, omit it or define it only over relationships the caller may read.
+Completeness metadata describes configured traversal boundaries, readable topology, and server limits only. It does not reveal that hidden nodes or edges exist. `has_more_relationships` is defined only over relationships the caller may read.
 
-A missing, deleted, wrong-type, or inaccessible root should follow the API's established resource-read behavior. Hub should not need to distinguish hidden from nonexistent resources.
+A missing, deleted, wrong-type, or inaccessible root returns 404, so the Hub does not distinguish hidden from nonexistent resources.
 
 ## Bounds and completeness
 
-The response must distinguish these cases:
+The response distinguishes these cases:
 
 - The requested depth was fully evaluated.
 - The response stopped at the requested depth and readable relationships may continue beyond it.
 - A node limit or edge limit truncated the requested traversal.
-- A server policy refused an excessive request.
+- A node or edge limit prevented a definitive per-node completeness result.
 
-Return explicit `truncated` and `truncation_reason` values such as `node_limit`, `edge_limit`, or `server_limit`. `returned_depth` alone is not sufficient because a result can reach the requested depth and still be truncated within that layer.
+The response returns explicit `truncated` and `truncation_reasons` values using `node_limit`, `edge_limit`, or both. `returned_depth` alone is not sufficient because a result can reach the requested depth and still be truncated within that layer.
 
-If the API supports incremental expansion, return opaque continuation or frontier tokens that preserve the original authorization scope, filters, direction, and traversal semantics. Hub must be able to merge an expansion without duplicating nodes or edges. If safe continuation cannot be guaranteed, rerooting with another bounded graph request is preferable.
+Incremental expansion reroots another bounded request at a visible node. The Hub resends the same direction and relationship filters and merges nodes by MFID and edges by stable ID. This first contract has no continuation token and is not an unlimited export API.
 
 ## Useful support for `cytoscape-elk`
 
@@ -120,7 +124,7 @@ ELK Layered benefits from reliable topology and grouping, not server-generated p
 - Safe per-node expandability when more readable relationships exist outside the returned boundary.
 - Deterministic ordering for stable results when equally valid layouts exist.
 
-The API should not return Cytoscape or ELK configuration, node coordinates, dimensions, ports, colors, CSS classes, or rank values. Those are Hub presentation concerns and depend on viewport size, typography, theme, and accessibility settings. The API may return domain grouping and ordering facts only when they are meaningful outside this client.
+The API does not return Cytoscape or ELK configuration, node coordinates, dimensions, ports, colors, CSS classes, or rank values. Those are Hub presentation concerns and depend on viewport size, typography, theme, and accessibility settings. The API may return domain grouping and ordering facts only when they are meaningful outside this client.
 
 ## Caching and errors
 
@@ -128,7 +132,7 @@ An ETag or graph revision would let Hub avoid replacing an unchanged graph and c
 
 Document stable outcomes for invalid depth or filters, missing or inaccessible roots, exceeded hard limits, and unavailable graph computation. If large requests are rejected instead of returned with truncation, use one documented structured error that lets Hub advise the user to reduce depth or scope.
 
-The operation, parameters, enums, response models, and error models must be present in the checked-in OpenAPI artifact so Hub can regenerate its pinned client without handwritten API types.
+The operation, parameters, enums, response models, and error models are present in the checked-in OpenAPI artifact, so the Hub regenerates its pinned client without handwritten API types.
 
 ## Acceptance criteria
 
@@ -142,11 +146,6 @@ The operation, parameters, enums, response models, and error models must be pres
 - Hub can render useful labels and grouping without an N+1 sequence of detail requests.
 - The OpenAPI artifact is sufficient to generate all request and response types.
 
-## Hub adoption sequence
+## Hub adoption status
 
-1. Pin the OpenAPI artifact and regenerate the TypeScript client.
-2. Replace the CTE-specific server adapter with the canonical typed operation while retaining runtime validation and bounds.
-3. Remove relationship inference and consume API-provided kinds and direction.
-4. Expose bounded depth or expansion only after completeness and authorization behavior are verified.
-5. Evaluate `cytoscape-elk` with ELK Layered against dense, mixed-type, compact, and reduced-motion fixtures.
-6. Keep the accessible relationship table and canonical node navigation regardless of the layout engine.
+The Hub pins API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d`, generates the TypeScript client, calls the canonical operation, validates the typed boundary, consumes API relationship semantics, defaults to depth one, and offers rerooted expansion for additional or unknown readable topology. It keeps the accessible relationship table and canonical node navigation. Evaluating `cytoscape-elk` with ELK Layered against dense, mixed-type, compact, and reduced-motion fixtures remains future Hub work.

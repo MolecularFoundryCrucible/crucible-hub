@@ -214,21 +214,51 @@ export type WorkspaceLinkedResource = {
 
 export type WorkspaceResourceGraphNode = {
   context: string | null
+  dataFormat: string | null
+  hasMoreRelationships: boolean | null
+  instrument: Schema<"InstrumentReferenceRead"> | null
   kind: "dataset" | "sample"
   name: string
+  project: Schema<"ProjectReferenceRead"> | null
+  traversalDepth: number
   unique_id: string
 }
 
 export type WorkspaceResourceGraphEdge = {
+  directed: boolean
+  id: string
   relationship: "associated" | "parent"
+  relationshipType: Schema<"LinkRelationshipType"> | null
   source: string
   target: string
 }
 
 export type WorkspaceResourceGraph = {
+  edgeLimit: number
   edges: readonly WorkspaceResourceGraphEdge[]
+  hasMore: boolean
+  nodeLimit: number
   nodes: readonly WorkspaceResourceGraphNode[]
+  requestedDepth: number
+  returnedDepth: number
   rootMfid: string
+  truncated: boolean
+  truncationReasons: readonly Schema<"GraphTruncationReason">[]
+}
+
+export type WorkspaceResourceGraphDirection = Schema<"GraphDirection">
+
+export type WorkspaceResourceGraphRelationshipKind =
+  Schema<"GraphRelationshipKind">
+
+export type WorkspaceResourceGraphRelationshipType =
+  Schema<"GraphRelationshipTypeFilter">
+
+export type WorkspaceResourceGraphRequest = {
+  depth?: number
+  direction?: WorkspaceResourceGraphDirection
+  relationshipKinds?: readonly WorkspaceResourceGraphRelationshipKind[]
+  relationshipTypes?: readonly WorkspaceResourceGraphRelationshipType[]
 }
 
 export type WorkspaceResourceAccessGrant = Schema<"AccessGrantRead">

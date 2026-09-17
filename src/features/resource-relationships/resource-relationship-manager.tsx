@@ -117,7 +117,7 @@ export function ResourceRelationshipManager({
         detail
       )
       void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.resourceGraph(scope, detail.unique_id),
+        queryKey: crucibleKeys.resourceGraphs(scope, detail.unique_id),
       })
     }
     if (

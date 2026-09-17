@@ -13,7 +13,10 @@ import {
 } from "./resources.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { unwrapHubResult } from "./result"
-import type { WorkspaceResourceDetail } from "./workspace-source"
+import type {
+  WorkspaceResourceDetail,
+  WorkspaceResourceGraphRequest,
+} from "./workspace-source"
 
 export const resourceDetailShape = "overview-with-metadata-links-owner"
 export const resourceSummaryShape = "summary-with-owner"
@@ -148,14 +151,34 @@ export function datasetThumbnailPreviewsQueryOptions(
 
 export function resourceGraphQueryOptions(
   scope: IdentityScope,
-  resourceMfid: string
+  resourceMfid: string,
+  request: WorkspaceResourceGraphRequest = {}
 ) {
+  const normalizedRequest = {
+    depth: request.depth ?? 1,
+    direction: request.direction ?? "both",
+    relationshipKinds: request.relationshipKinds?.length
+      ? [...new Set(request.relationshipKinds)].sort()
+      : undefined,
+    relationshipTypes: request.relationshipTypes?.length
+      ? [...new Set(request.relationshipTypes)].sort()
+      : undefined,
+  } satisfies WorkspaceResourceGraphRequest
   return queryOptions({
-    queryKey: crucibleKeys.resourceGraph(scope, resourceMfid),
+    queryKey: crucibleKeys.resourceGraph(scope, resourceMfid, {
+      depth: normalizedRequest.depth,
+      direction: normalizedRequest.direction,
+      relationshipKinds: normalizedRequest.relationshipKinds,
+      relationshipTypes: normalizedRequest.relationshipTypes,
+    }),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceResourceGraph({
-          data: { resourceMfid, scenario: fixtureScenarioFromScope(scope) },
+          data: {
+            ...normalizedRequest,
+            resourceMfid,
+            scenario: fixtureScenarioFromScope(scope),
+          },
           signal,
         })
       ),

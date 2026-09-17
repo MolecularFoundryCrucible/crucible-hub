@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useQueries, useQuery } from "@tanstack/react-query"
 import cytoscape from "cytoscape"
 import type { Core, ElementDefinition, StylesheetJson } from "cytoscape"
 
 import {
   ExploreGraphFocusIcon,
+  ExpandGraphNodeIcon,
   FitGraphIcon,
+  LoadingMoreIcon,
   ResourceGraphIcon,
   ZoomInGraphIcon,
   ZoomOutGraphIcon,
@@ -61,6 +63,7 @@ import {
   resourceGraphQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
+import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
 import type {
   WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
@@ -68,11 +71,41 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { buildResourceGraphLayout } from "./resource-graph-layout"
 import type { ResourceGraphLayoutMetrics } from "./resource-graph-layout"
+import { mergeResourceGraphs } from "./resource-graph-merge"
 import { useResourceWorkspaceResource } from "@/features/resource-detail/resource-detail-page"
 
 type GraphLabelMetrics = {
   maxWidth: number
   measure: (value: string) => number
+}
+
+type GraphExpansionQueryResult = {
+  data?: WorkspaceResourceGraph
+  isError: boolean
+  isFetching: boolean
+  isPending: boolean
+  isSuccess: boolean
+  refetch: () => Promise<unknown>
+}
+
+type GraphExpansionState = Pick<
+  GraphExpansionQueryResult,
+  "isError" | "isPending" | "isSuccess" | "refetch"
+>
+
+function combineResourceGraphExpansionQueries(
+  results: readonly GraphExpansionQueryResult[]
+) {
+  return {
+    graphs: results.flatMap((result) => (result.data ? [result.data] : [])),
+    isFetching: results.some((result) => result.isFetching),
+    states: results.map((result) => ({
+      isError: result.isError,
+      isPending: result.isPending,
+      isSuccess: result.isSuccess,
+      refetch: result.refetch,
+    })),
+  }
 }
 
 export function ResourceGraphPage({
@@ -86,12 +119,35 @@ export function ResourceGraphPage({
   const navigation = useResourcePreviewContext()
   const resource = useResourceWorkspaceResource()
   const graph = useRef<Core | null>(null)
+  const [expansion, setExpansion] = useState({
+    resourceMfid,
+    roots: [] as string[],
+  })
+  const expansionRoots =
+    expansion.resourceMfid === resourceMfid ? expansion.roots : []
   const query = useQuery(resourceGraphQueryOptions(scope, resourceMfid))
-  const datasetMfids = query.data
-    ? query.data.nodes
+  const expansions = useQueries({
+    queries: expansionRoots.map((rootMfid) =>
+      resourceGraphQueryOptions(scope, rootMfid)
+    ),
+    combine: combineResourceGraphExpansionQueries,
+  })
+  const displayedGraph = useMemo(() => {
+    if (!query.data) return undefined
+    return mergeResourceGraphs(query.data, expansions.graphs)
+  }, [expansions.graphs, query.data])
+  const expansionStates = new Map<string, GraphExpansionState>(
+    expansionRoots.map((rootMfid, index) => [
+      rootMfid,
+      expansions.states[index],
+    ])
+  )
+  const datasetMfids = displayedGraph
+    ? displayedGraph.nodes
         .filter(
           (node) =>
-            node.kind === "dataset" && node.unique_id !== query.data.rootMfid
+            node.kind === "dataset" &&
+            node.unique_id !== displayedGraph.rootMfid
         )
         .slice(0, THUMBNAIL_PREVIEW_BATCH_MAX)
         .map((node) => node.unique_id)
@@ -101,7 +157,7 @@ export function ResourceGraphPage({
     enabled: query.isSuccess && datasetMfids.length > 0,
   })
   const previewSiblingCollections = useMemo(() => {
-    const graphData = query.data
+    const graphData = displayedGraph
     const items = graphData
       ? graphData.nodes
           .filter((node) => node.unique_id !== graphData.rootMfid)
@@ -114,11 +170,11 @@ export function ResourceGraphPage({
     return items.length
       ? [staticResourceSiblingCollection(items, "Graph relationships")]
       : []
-  }, [query.data])
+  }, [displayedGraph])
   useRegisterResourceSiblings(previewSiblingCollections)
 
   if (query.isPending) return <ResourceGraphPending />
-  if (!query.data) {
+  if (!displayedGraph) {
     return (
       <Empty className="min-h-graph-canvas border">
         <EmptyHeader>
@@ -140,13 +196,14 @@ export function ResourceGraphPage({
     )
   }
 
-  const relatedNodes = query.data.nodes.filter(
-    (node) => node.unique_id !== query.data.rootMfid
+  const relatedNodes = displayedGraph.nodes.filter(
+    (node) => node.unique_id !== displayedGraph.rootMfid
   )
+  const isExpanding = expansions.isFetching
 
   return (
     <section
-      aria-busy={query.isFetching}
+      aria-busy={query.isFetching || isExpanding}
       aria-label="Resource graph"
       className="flex min-w-0 flex-col gap-4"
     >
@@ -169,6 +226,15 @@ export function ResourceGraphPage({
         </div>
       ) : null}
 
+      {displayedGraph.truncated ? (
+        <div className="flex flex-wrap items-center gap-2" role="status">
+          <Badge variant="warning">Limited graph</Badge>
+          <p className="text-body text-muted-foreground">
+            The server limit omitted some readable relationships.
+          </p>
+        </div>
+      ) : null}
+
       {relatedNodes.length === 0 ? (
         <Empty className="min-h-graph-canvas border">
           <EmptyHeader>
@@ -184,7 +250,7 @@ export function ResourceGraphPage({
         </Empty>
       ) : (
         <ResourceGraphCanvas
-          graph={query.data}
+          graph={displayedGraph}
           instanceRef={graph}
           rootContext={
             resource.kind === "sample"
@@ -210,9 +276,33 @@ export function ResourceGraphPage({
         </p>
       ) : null}
 
+      {expansions.states.some((state) => state.isError) ? (
+        <p className="text-body text-destructive" role="alert">
+          The graph could not be expanded. Use the retry action beside the
+          affected resource.
+        </p>
+      ) : null}
+
       <ResourceGraphTable
-        graph={query.data}
+        expansionStates={expansionStates}
+        graph={displayedGraph}
         nodes={relatedNodes}
+        onExpand={(nodeMfid) => {
+          const state = expansionStates.get(nodeMfid)
+          if (state?.isError) {
+            void state.refetch()
+            return
+          }
+          setExpansion((current) => {
+            const roots =
+              current.resourceMfid === resourceMfid ? current.roots : []
+            if (roots.includes(nodeMfid)) return current
+            return {
+              resourceMfid,
+              roots: [...roots, nodeMfid],
+            }
+          })
+        }}
         thumbnails={thumbnailQuery.data ?? {}}
       />
     </section>
@@ -466,10 +556,11 @@ function graphElements(
       group: "nodes" as const,
       position: positions[node.unique_id],
     })),
-    ...graph.edges.map((edge, index) => ({
+    ...graph.edges.map((edge) => ({
       data: {
-        id: `${edge.source}:${edge.target}:${edge.relationship}:${index}`,
+        id: edge.id,
         relationship: edge.relationship,
+        relationshipType: edge.relationshipType,
         source: edge.source,
         target: edge.target,
       },
@@ -770,12 +861,16 @@ function graphNumberToken(element: HTMLElement, name: string) {
 }
 
 function ResourceGraphTable({
+  expansionStates,
   graph,
   nodes,
+  onExpand,
   thumbnails,
 }: {
+  expansionStates: ReadonlyMap<string, GraphExpansionState>
   graph: WorkspaceResourceGraph
   nodes: readonly WorkspaceResourceGraphNode[]
+  onExpand: (nodeMfid: string) => void
   thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
   return (
@@ -799,13 +894,14 @@ function ResourceGraphTable({
                   <TableHead>Relationship</TableHead>
                   <TableHead>Resource</TableHead>
                   <TableHead>
-                    <span className="sr-only">Open</span>
+                    <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {nodes.map((node) => {
                   const thumbnail = thumbnails[node.unique_id]
+                  const typeLabel = relationshipTypeLabel(graph, node)
                   return (
                     <TableRow key={node.unique_id}>
                       <TableCell
@@ -815,6 +911,11 @@ function ResourceGraphTable({
                         <Badge variant="outline">
                           {relationshipLabel(graph, node)}
                         </Badge>
+                        {typeLabel ? (
+                          <span className="mt-1 block text-supporting text-muted-foreground">
+                            {typeLabel}
+                          </span>
+                        ) : null}
                       </TableCell>
                       <TableCell className="resource-graph-resource">
                         <span className="flex min-w-0 items-center gap-3">
@@ -845,13 +946,20 @@ function ResourceGraphTable({
                           </span>
                         </span>
                       </TableCell>
-                      <TableCell className="resource-graph-action text-right">
-                        <ResourceFullPageLink
-                          kind={node.kind}
-                          mfid={node.unique_id}
-                          name={node.name}
-                          presentation="table"
-                        />
+                      <TableCell className="resource-graph-action">
+                        <span className="flex justify-end gap-1">
+                          <GraphExpansionAction
+                            node={node}
+                            onExpand={onExpand}
+                            state={expansionStates.get(node.unique_id)}
+                          />
+                          <ResourceFullPageLink
+                            kind={node.kind}
+                            mfid={node.unique_id}
+                            name={node.name}
+                            presentation="table"
+                          />
+                        </span>
                       </TableCell>
                     </TableRow>
                   )
@@ -862,6 +970,51 @@ function ResourceGraphTable({
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function GraphExpansionAction({
+  node,
+  onExpand,
+  state,
+}: {
+  node: WorkspaceResourceGraphNode
+  onExpand: (nodeMfid: string) => void
+  state?: GraphExpansionState
+}) {
+  if (state?.isSuccess || (node.hasMoreRelationships === false && !state)) {
+    return null
+  }
+  const label = state?.isPending
+    ? `Expanding graph from ${node.name}`
+    : state?.isError
+      ? `Retry expanding graph from ${node.name}`
+      : node.hasMoreRelationships === null
+        ? `Check for more relationships around ${node.name}`
+        : `Expand graph from ${node.name}`
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={label}
+            disabled={state?.isPending}
+            onClick={() => onExpand(node.unique_id)}
+            size="table-action"
+            type="button"
+            variant="outline"
+          />
+        }
+      >
+        {state?.isPending ? (
+          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+        ) : (
+          <ExpandGraphNodeIcon aria-hidden="true" />
+        )}
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -876,11 +1029,31 @@ function relationshipLabel(
       (candidate.source === graph.rootMfid &&
         candidate.target === node.unique_id)
   )
-  if (!edge) return "Connected"
+  if (!edge) return "Related"
   if (edge.relationship === "associated") return "Associated"
   if (edge.target === graph.rootMfid) return "Parent"
   if (edge.source === graph.rootMfid) return "Child"
   return "Lineage"
+}
+
+function relationshipTypeLabel(
+  graph: WorkspaceResourceGraph,
+  node: WorkspaceResourceGraphNode
+) {
+  const edge = graph.edges.find(
+    (candidate) =>
+      candidate.relationship === "parent" &&
+      ((candidate.source === node.unique_id &&
+        candidate.target === graph.rootMfid) ||
+        (candidate.source === graph.rootMfid &&
+          candidate.target === node.unique_id))
+  )
+  if (!edge?.relationshipType) return null
+  const relationship = edge.target === graph.rootMfid ? "parent" : "child"
+  return workspaceRelationshipTypeLabel({
+    relationship,
+    relationship_type: edge.relationshipType,
+  })
 }
 
 function graphErrorMessage(error: Error | null) {

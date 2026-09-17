@@ -92,6 +92,7 @@ export {
   ImagePlus as AddThumbnailIcon,
   Trash2 as RemoveThumbnailIcon,
   GitFork as ResourceGraphIcon,
+  Network as ExpandGraphNodeIcon,
   LocateFixed as ExploreGraphFocusIcon,
   Scan as FitGraphIcon,
   ZoomIn as ZoomInGraphIcon,

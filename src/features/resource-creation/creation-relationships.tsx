@@ -362,7 +362,7 @@ function cacheRelationshipResult(
       resource
     )
     void queryClient.invalidateQueries({
-      queryKey: crucibleKeys.resourceGraph(scope, resource.unique_id),
+      queryKey: crucibleKeys.resourceGraphs(scope, resource.unique_id),
     })
   }
   void queryClient.invalidateQueries({

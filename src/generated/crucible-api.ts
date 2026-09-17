@@ -2119,6 +2119,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/resources/{resource_mfid}/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Resource Graph
+         * @description Return a bounded, authorization-filtered sample and dataset graph.
+         */
+        get: operations["read_resource_graph_resources__resource_mfid__graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/resources/{unique_id}/metadata": {
         parameters: {
             query?: never;
@@ -3027,6 +3047,27 @@ export interface components {
             /** Storage Path */
             storage_path?: string | null;
         };
+        /** AssociationGraphEdge */
+        AssociationGraphEdge: {
+            /**
+             * Directed
+             * @constant
+             */
+            directed: false;
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "association";
+            /** Relationship Type */
+            relationship_type: null;
+            /** Source Mfid */
+            source_mfid: string;
+            /** Target Mfid */
+            target_mfid: string;
+        };
         /** Body_create_user_users_post */
         Body_create_user_users_post: {
             /** Project Ids */
@@ -3123,6 +3164,28 @@ export interface components {
          * @enum {string}
          */
         DatasetFacetField: "session" | "measurement" | "data_format" | "owner" | "instrument" | "project";
+        /** DatasetGraphNode */
+        DatasetGraphNode: {
+            /** Data Format */
+            data_format: string | null;
+            /** Has More Relationships */
+            has_more_relationships: boolean | null;
+            instrument: components["schemas"]["InstrumentReferenceRead"] | null;
+            /** Measurement */
+            measurement: string | null;
+            /** Mfid */
+            mfid: string;
+            /** Name */
+            name: string | null;
+            project: components["schemas"]["ProjectReferenceRead"] | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            resource_type: "dataset";
+            /** Traversal Depth */
+            traversal_depth: number;
+        };
         /**
          * DatasetInstrumentAssign
          * @description Body for PUT /datasets/{dataset_mfid}/instrument.
@@ -3419,6 +3482,26 @@ export interface components {
          * @enum {string}
          */
         FacetSort: "value" | "label" | "count";
+        /**
+         * GraphDirection
+         * @enum {string}
+         */
+        GraphDirection: "both" | "upstream" | "downstream";
+        /**
+         * GraphRelationshipKind
+         * @enum {string}
+         */
+        GraphRelationshipKind: "lineage" | "association";
+        /**
+         * GraphRelationshipTypeFilter
+         * @enum {string}
+         */
+        GraphRelationshipTypeFilter: "is_derived_from" | "is_part_of" | "unspecified";
+        /**
+         * GraphTruncationReason
+         * @enum {string}
+         */
+        GraphTruncationReason: "node_limit" | "edge_limit";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -3640,6 +3723,31 @@ export interface components {
             /** Num Datasets */
             num_datasets: number | null;
         };
+        /** LineageGraphEdge */
+        LineageGraphEdge: {
+            /**
+             * Directed
+             * @constant
+             */
+            directed: true;
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "lineage";
+            relationship_type: components["schemas"]["LinkRelationshipType"] | null;
+            /** Source Mfid */
+            source_mfid: string;
+            /** Target Mfid */
+            target_mfid: string;
+        };
+        /**
+         * LinkRelationshipType
+         * @enum {string}
+         */
+        LinkRelationshipType: "is_derived_from" | "is_part_of";
         /** LinkedResource */
         LinkedResource: {
             /**
@@ -4106,6 +4214,29 @@ export interface components {
             /** Max Grant Role */
             max_grant_role?: ("viewer" | "contributor" | "editor" | "admin") | null;
         };
+        /** ResourceGraphResponse */
+        ResourceGraphResponse: {
+            /** Edge Limit */
+            edge_limit: number;
+            /** Edges */
+            edges: (components["schemas"]["LineageGraphEdge"] | components["schemas"]["AssociationGraphEdge"])[];
+            /** Has More */
+            has_more: boolean;
+            /** Node Limit */
+            node_limit: number;
+            /** Nodes */
+            nodes: (components["schemas"]["SampleGraphNode"] | components["schemas"]["DatasetGraphNode"])[];
+            /** Requested Depth */
+            requested_depth: number;
+            /** Returned Depth */
+            returned_depth: number;
+            /** Root Mfid */
+            root_mfid: string;
+            /** Truncated */
+            truncated: boolean;
+            /** Truncation Reasons */
+            truncation_reasons: components["schemas"]["GraphTruncationReason"][];
+        };
         /**
          * ResourceSearchResult
          * @description Unified search result compatible across all search endpoints.
@@ -4178,6 +4309,25 @@ export interface components {
          * @enum {string}
          */
         SampleFacetField: "sample_type" | "owner" | "project";
+        /** SampleGraphNode */
+        SampleGraphNode: {
+            /** Has More Relationships */
+            has_more_relationships: boolean | null;
+            /** Mfid */
+            mfid: string;
+            /** Name */
+            name: string | null;
+            project: components["schemas"]["ProjectReferenceRead"] | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            resource_type: "sample";
+            /** Sample Type */
+            sample_type: string | null;
+            /** Traversal Depth */
+            traversal_depth: number;
+        };
         /** SampleLink */
         SampleLink: {
             /** Parent Sample Id */
@@ -8419,6 +8569,53 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LinkedResource"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_resource_graph_resources__resource_mfid__graph_get: {
+        parameters: {
+            query?: {
+                /** @description Maximum selected-edge distance from the root resource. */
+                depth?: number;
+                /** @description Lineage traversal direction. Associations remain undirected. */
+                direction?: components["schemas"]["GraphDirection"];
+                /** @description Repeatable relationship kinds used for traversal and returned edges. */
+                relationship_kind?: components["schemas"]["GraphRelationshipKind"][];
+                /** @description Repeatable lineage relationship types. Use unspecified for stored null values. Associations are unaffected. */
+                relationship_type?: components["schemas"]["GraphRelationshipTypeFilter"][] | null;
+            };
+            header?: never;
+            path: {
+                resource_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceGraphResponse"];
+                };
+            };
+            /** @description Root resource is missing, deleted, inaccessible, or not a sample or dataset. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
