@@ -60,12 +60,6 @@ export function PersonIdentity({
   const name = personDisplayName(person, nameStyle)
   const username = normalizedUsername(person.username ?? person.context)
   const isServiceAccount = personIsServiceAccount(person)
-  const secondary = [
-    name === username ? null : username,
-    isServiceAccount ? "Service account" : null,
-  ]
-    .filter(Boolean)
-    .join(" · ")
 
   if (presentation === "inline") {
     return (
@@ -103,15 +97,10 @@ export function PersonIdentity({
         {avatar}
         <span className="grid min-w-0 text-left">
           <span className="truncate text-label">{name}</span>
-          <span className="flex min-w-0 items-center gap-1 text-supporting text-muted-foreground">
-            <span className="truncate">{username || "No username"}</span>
-            <span aria-hidden="true">·</span>
-            <PrincipalTypeIcon
-              className="size-3.5"
-              label={isServiceAccount ? "Service account" : "Person"}
-              type={isServiceAccount ? "service_account" : "user"}
-            />
-          </span>
+          <PersonSecondaryLine
+            isServiceAccount={isServiceAccount}
+            username={username}
+          />
           <MfidText
             className="mt-1 block whitespace-nowrap text-muted-foreground"
             value={person.unique_id}
@@ -132,9 +121,13 @@ export function PersonIdentity({
       >
         {name}
       </span>
-      <span className="truncate text-supporting text-muted-foreground">
-        {secondary || "No username"}
-      </span>
+      <PersonSecondaryLine
+        hideUsername={
+          !isServiceAccount && name === username && Boolean(username)
+        }
+        isServiceAccount={isServiceAccount}
+        username={username}
+      />
     </span>
   )
 
@@ -152,6 +145,33 @@ export function PersonIdentity({
     >
       {avatar}
       {details}
+    </span>
+  )
+}
+
+function PersonSecondaryLine({
+  hideUsername = false,
+  isServiceAccount,
+  username,
+}: {
+  hideUsername?: boolean
+  isServiceAccount: boolean
+  username: string
+}) {
+  const showUsername = !hideUsername
+  return (
+    <span className="flex min-w-0 items-center gap-1 text-supporting text-muted-foreground">
+      {showUsername ? (
+        <>
+          <span className="truncate">{username || "No username"}</span>
+          <span aria-hidden="true">·</span>
+        </>
+      ) : null}
+      <PrincipalTypeIcon
+        className="size-3.5"
+        label={isServiceAccount ? "Service account" : "Person"}
+        type={isServiceAccount ? "service_account" : "user"}
+      />
     </span>
   )
 }

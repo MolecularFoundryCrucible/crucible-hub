@@ -94,7 +94,7 @@ describe("ProjectMembers", () => {
     ])
   })
 
-  it("renders public member detail, role text, and service-account indication", () => {
+  it("renders public member detail, role text, and principal-type indication", () => {
     render(<ProjectMembers members={members} />)
 
     expect(
@@ -113,9 +113,9 @@ describe("ProjectMembers", () => {
     expect(screen.getByText("Viewer").className).toContain(
       "bg-access-role-viewer"
     )
-    expect(
-      screen.getByText("@beamline-collector · Service account")
-    ).toBeTruthy()
+    expect(screen.getByText("@beamline-collector")).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Service account" })).toBeTruthy()
+    expect(screen.getAllByRole("img", { name: "Person" })).toHaveLength(4)
     expect(
       screen.getByRole("link", {
         name: "Beamline Collector, Service account",
