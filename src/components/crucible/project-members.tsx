@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router"
-import { UsersIcon } from "lucide-react"
 
 import {
   AccessRoleBadge,
   accessRoleRank,
 } from "@/components/crucible/access-role-badge"
+import { MembersIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -88,7 +88,7 @@ export function ProjectMembers({
           )
         ) : (
           <div className="flex items-center gap-2 text-body text-muted-foreground">
-            <UsersIcon aria-hidden="true" />
+            <MembersIcon aria-hidden="true" />
             Detailed membership is not available.
           </div>
         )}

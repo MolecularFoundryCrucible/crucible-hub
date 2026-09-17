@@ -10,6 +10,8 @@ import {
 import { RequestIngestionIcon } from "@/components/crucible/icons"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { MfidValue } from "@/components/crucible/mfid-value"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -261,15 +263,13 @@ function ProcessingFilesTable({
           return (
             <TableRow key={file.mfid}>
               <TableCell>
-                <span
-                  className="block max-w-64 truncate text-label"
-                  title={file.filename}
-                >
-                  {file.filename}
-                </span>
-                <span className="text-supporting text-muted-foreground">
-                  {file.storage_backend} · {formatBytes(file.size)}
-                </span>
+                <ResourceIdentity
+                  className="max-w-64"
+                  context={`${file.storage_backend} · ${formatBytes(file.size)}`}
+                  kind="file"
+                  name={file.filename}
+                  presentation="collection"
+                />
               </TableCell>
               <TableCell>
                 <MfidValue value={file.mfid} />
@@ -537,14 +537,20 @@ function IngestionRequestDialog({
                           }
                         />
                         <FieldLabel htmlFor={id}>
-                          <FieldContent>
-                            <FieldTitle>{file.filename}</FieldTitle>
-                            <span className="flex flex-wrap gap-x-2 text-supporting text-muted-foreground">
-                              <MfidText value={file.mfid} />
-                              <span>{formatBytes(file.size)}</span>
-                              {!eligible ? <span>Unavailable</span> : null}
-                            </span>
-                          </FieldContent>
+                          <span className="flex min-w-0 items-start gap-2">
+                            <ResourceTypeIcon
+                              className="mt-0.5 shrink-0"
+                              type="file"
+                            />
+                            <FieldContent>
+                              <FieldTitle>{file.filename}</FieldTitle>
+                              <span className="flex flex-wrap gap-x-2 text-supporting text-muted-foreground">
+                                <MfidText value={file.mfid} />
+                                <span>{formatBytes(file.size)}</span>
+                                {!eligible ? <span>Unavailable</span> : null}
+                              </span>
+                            </FieldContent>
+                          </span>
                         </FieldLabel>
                       </Field>
                     )

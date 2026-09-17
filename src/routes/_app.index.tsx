@@ -1,12 +1,12 @@
 import { useQueries } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import { ArrowRightIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
 import {
   CollectionRowsPending,
   PanelState,
 } from "@/components/crucible/collection-state"
+import { ForwardNavigationIcon } from "@/components/crucible/icons"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
@@ -133,7 +133,10 @@ function HomePage() {
                     to="/data"
                   >
                     View all
-                    <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
+                    <ForwardNavigationIcon
+                      aria-hidden="true"
+                      data-icon="inline-end"
+                    />
                   </Link>
                 </CardAction>
               </CardHeader>
@@ -260,7 +263,10 @@ function HomePage() {
                 to="/projects"
               >
                 View all
-                <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
+                <ForwardNavigationIcon
+                  aria-hidden="true"
+                  data-icon="inline-end"
+                />
               </Link>
             }
           >
@@ -298,7 +304,10 @@ function HomePage() {
                 to="/instruments"
               >
                 View all
-                <ArrowRightIcon aria-hidden="true" data-icon="inline-end" />
+                <ForwardNavigationIcon
+                  aria-hidden="true"
+                  data-icon="inline-end"
+                />
               </Link>
             }
           >
@@ -492,7 +501,7 @@ function OwnershipResourceLink({
         name={name}
         presentation="collection"
       />
-      <ArrowRightIcon
+      <ForwardNavigationIcon
         aria-hidden="true"
         className="mt-0.5 size-4 shrink-0 text-muted-foreground"
       />

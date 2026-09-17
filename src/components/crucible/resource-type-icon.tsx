@@ -2,6 +2,7 @@ import {
   DataIcon,
   DatasetIcon,
   DatasetIconNode,
+  FileIcon,
   InstrumentIcon,
   PersonIcon,
   ProjectIcon,
@@ -12,10 +13,11 @@ import {
   SystemPrincipalIcon,
   UnknownPrincipalIcon,
 } from "@/components/crucible/icons"
+import type { IconNode } from "@/components/crucible/icons"
 import { cn } from "@/lib/utils"
-import type { IconNode } from "lucide-react"
 
-type ResourceType = "dataset" | "instrument" | "person" | "project" | "sample"
+type ResourceType =
+  "dataset" | "file" | "instrument" | "person" | "project" | "sample"
 type PrincipalType =
   | "instrument"
   | "project"
@@ -27,6 +29,7 @@ type PrincipalType =
 
 const icons = {
   dataset: DatasetIcon,
+  file: FileIcon,
   instrument: InstrumentIcon,
   person: PersonIcon,
   project: ProjectIcon,
@@ -35,6 +38,7 @@ const icons = {
 
 const iconClasses = {
   dataset: "text-(--resource-dataset)",
+  file: "text-(--resource-file)",
   instrument: "text-(--resource-instrument)",
   person: "text-(--resource-person)",
   project: "text-(--resource-project)",

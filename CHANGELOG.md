@@ -81,7 +81,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Made the service-account directory and search controls reflow cleanly on compact screens while retaining natural desktop column spacing, aligned credential creation and expiration dates, standardized collection page navigation, and unified browser-safe API mutation error formatting with retained request references.
 - Replaced person-type prose in shared stacked and avatar identities with accessible person or service-account icons across service-account directories, search results, member lists, pickers, and account presentations.
 
-- Distinguished combined Data navigation from individual datasets and samples with a dedicated indigo collection icon and semantic theme token.
+- Standardized semantic icon colors with Crucible brand blue for combined Data, a slate-blue file identity used in file workflows, stronger light-theme instrument contrast, colored capability identities, complete design fixtures, and an enforced feature-level icon catalog boundary.
 - Split lightweight project and resource identity reads from metadata, relationship, and membership-heavy overview projections, and centralized mutation cache invalidation across every cached detail shape.
 - Removed obsolete workspace collection hydration and unused transitional cache state so routes hydrate only query entries they can consume.
 - Global Data now switches directly between separate API-backed Samples and Datasets collections and defaults to Samples, removing the weaker combined All mode that could not support equivalent filtering, sorting, grouping, or pagination.

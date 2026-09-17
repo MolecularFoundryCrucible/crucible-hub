@@ -28,6 +28,7 @@ export {
   Download as DownloadFileIcon,
   FileX2 as DownloadUnavailableIcon,
   FileInput as RequestIngestionIcon,
+  File as FileIcon,
   FolderKanban as ProjectIcon,
   House as WorkspaceIcon,
   Microscope as InstrumentIcon,
@@ -37,6 +38,7 @@ export {
   X as CloseInspectorIcon,
   ArrowLeft as BackToProjectIcon,
   ArrowRight as OpenFullPageIcon,
+  ArrowRight as ForwardNavigationIcon,
   UserRound as PersonIcon,
   Bot as ServiceAccountIcon,
   KeyRound as CredentialIcon,
@@ -47,6 +49,7 @@ export {
   UserMinus as RemoveMemberIcon,
   LogOut as LeaveProjectIcon,
   UsersRound as EditMembersIcon,
+  UsersRound as MembersIcon,
   Search as SearchIcon,
   ScanQrCode as ScanQrCodeIcon,
   RefreshCw as RetryQrScanIcon,
@@ -107,5 +110,10 @@ export {
   Fingerprint as MfidFieldIcon,
   CalendarClock as UpdatedFieldIcon,
   ListFilter as FilterIcon,
+  ArrowUp as SortAscendingIcon,
+  ArrowDown as SortDescendingIcon,
+  ChevronsUpDown as SortUnselectedIcon,
   ChevronDown as DisclosureIcon,
 } from "lucide-react"
+
+export type { IconNode } from "lucide-react"

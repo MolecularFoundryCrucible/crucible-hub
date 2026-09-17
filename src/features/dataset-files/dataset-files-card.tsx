@@ -12,6 +12,7 @@ import {
   PreparingDownloadIcon,
   RetryDownloadIcon,
 } from "@/components/crucible/icons"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -110,9 +111,11 @@ export function FilesTable({
         {files.map((file) => (
           <TableRow key={file.mfid}>
             <TableCell>
-              <span className="block truncate" title={file.filename}>
-                {file.filename}
-              </span>
+              <ResourceIdentity
+                kind="file"
+                name={file.filename}
+                presentation="collection"
+              />
             </TableCell>
             <TableCell className="text-center">
               {file.storage_backend}

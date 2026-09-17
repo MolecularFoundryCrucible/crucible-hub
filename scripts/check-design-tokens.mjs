@@ -127,6 +127,14 @@ function scan(directory) {
     if (allowedPrefixes.some((prefix) => localPath.startsWith(prefix))) continue
     const content = readFileSync(path, "utf8")
     if (
+      localPath !== "components/crucible/icons.ts" &&
+      /from ["']lucide-react["']/.test(content)
+    ) {
+      violations.push(
+        `${localPath}: imports Lucide directly instead of using the semantic icon catalog`
+      )
+    }
+    if (
       localPath.startsWith("features/") &&
       content.includes('from "@/components/ui/alert-dialog"')
     ) {

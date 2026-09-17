@@ -1,5 +1,8 @@
-import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from "lucide-react"
-
+import {
+  SortAscendingIcon,
+  SortDescendingIcon,
+  SortUnselectedIcon,
+} from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
 import type { SortDirection } from "@/data/crucible/collection-query"
 
@@ -25,9 +28,9 @@ export function SortableHeaderButton({
     : preferredDirection
   const Icon = active
     ? direction === "asc"
-      ? ArrowUpIcon
-      : ArrowDownIcon
-    : ChevronsUpDownIcon
+      ? SortAscendingIcon
+      : SortDescendingIcon
+    : SortUnselectedIcon
 
   return (
     <Button

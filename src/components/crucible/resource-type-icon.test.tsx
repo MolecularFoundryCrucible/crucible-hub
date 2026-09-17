@@ -9,6 +9,7 @@ describe("semantic type icons", () => {
   it.each([
     ["project", "text-(--resource-project)"],
     ["instrument", "text-(--resource-instrument)"],
+    ["file", "text-(--resource-file)"],
     ["person", "text-(--resource-person)"],
     ["sample", "text-(--resource-sample)"],
     ["dataset", "text-(--resource-dataset)"],

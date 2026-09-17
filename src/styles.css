@@ -326,9 +326,10 @@
   --resource-project: oklch(0.58 0.17 251);
   --resource-person: oklch(0.55 0.14 210);
   --resource-service-account: oklch(0.54 0.19 285);
-  --resource-data: oklch(0.54 0.18 270);
+  --resource-data: var(--brand-crucible-dark-blue);
   --resource-dataset: oklch(0.6 0.15 160);
-  --resource-instrument: oklch(0.62 0.16 65);
+  --resource-file: oklch(0.52 0.04 240);
+  --resource-instrument: oklch(0.6 0.16 65);
   --resource-sample: oklch(0.58 0.15 315);
   --graph-card: #ffffff;
   --graph-foreground: #0a0a0a;
@@ -442,8 +443,9 @@
   --resource-project: oklch(0.72 0.14 251);
   --resource-person: oklch(0.76 0.12 210);
   --resource-service-account: oklch(0.74 0.15 285);
-  --resource-data: oklch(0.73 0.14 270);
+  --resource-data: var(--brand-crucible-light-blue);
   --resource-dataset: oklch(0.72 0.14 160);
+  --resource-file: oklch(0.72 0.04 240);
   --resource-instrument: oklch(0.76 0.14 65);
   --resource-sample: oklch(0.73 0.13 315);
   --graph-card: #171717;

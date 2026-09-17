@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router"
 
 import { PersonIdentity } from "@/components/crucible/person-identity"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  DataCollectionIcon,
+  PrincipalTypeIcon,
+  ResourceTypeIcon,
+} from "@/components/crucible/resource-type-icon"
 import { ThemeSelect } from "@/components/theme-select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -58,6 +62,7 @@ const resourceTypes = [
   "project",
   "sample",
   "dataset",
+  "file",
   "instrument",
   "person",
 ] as const
@@ -67,6 +72,14 @@ const fixturePerson = {
   last_name: "Raman",
   unique_id: "01PERSONIDENTITY000000000001",
   username: "araman",
+}
+
+const fixtureServiceAccount = {
+  first_name: "Beamline",
+  is_service_account: true,
+  last_name: "Collector",
+  unique_id: "01SERVICEACCOUNT00000000001",
+  username: "beamline-collector",
 }
 
 function DesignSystemFixtures() {
@@ -193,9 +206,33 @@ function DesignSystemFixtures() {
                   <Badge variant="outline">{type}</Badge>
                 </div>
               ))}
+              <div className="flex items-center gap-3">
+                <DataCollectionIcon />
+                <div className="min-w-0 flex-1">
+                  <p className="text-label">Data collection</p>
+                  <p className="text-supporting text-muted-foreground">
+                    Samples and datasets
+                  </p>
+                </div>
+                <Badge variant="outline">Data</Badge>
+              </div>
+              <div className="flex items-center gap-3">
+                <PrincipalTypeIcon type="service_account" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-label">Service account</p>
+                  <p className="text-supporting text-muted-foreground">
+                    Automated principal
+                  </p>
+                </div>
+                <Badge variant="outline">Account</Badge>
+              </div>
               <Separator />
               <div className="grid gap-3">
                 <PersonIdentity person={fixturePerson} presentation="avatar" />
+                <PersonIdentity
+                  person={fixtureServiceAccount}
+                  presentation="avatar"
+                />
                 <PersonIdentity person={fixturePerson} presentation="stacked" />
                 <PersonIdentity
                   nameStyle="abbreviated"

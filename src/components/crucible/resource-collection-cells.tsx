@@ -76,7 +76,7 @@ export function ResourceOpenCell({
   name,
 }: {
   fromProject?: string
-  kind: Exclude<ResourceType, "person">
+  kind: Exclude<ResourceType, "file" | "person">
   mfid: string
   name: string
 }) {
