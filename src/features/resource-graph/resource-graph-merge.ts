@@ -88,8 +88,7 @@ function graphTraversalDepths(
 
   const depths = new Map([[rootMfid, 0]])
   const pending = [rootMfid]
-  while (pending.length > 0) {
-    const current = pending.shift()
+  for (const current of pending) {
     if (!current) continue
     const nextDepth = (depths.get(current) ?? 0) + 1
     for (const neighbour of neighbours.get(current) ?? []) {

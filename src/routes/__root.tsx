@@ -5,6 +5,8 @@ import {
   createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router"
+import { isCancelledError } from "@tanstack/react-query"
+import { useEffect } from "react"
 
 import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg"
 import { RouteProgress } from "@/components/route-progress"
@@ -78,7 +80,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
-function RootError({ error, info }: ErrorComponentProps) {
+function RootError({ error, info, reset }: ErrorComponentProps) {
+  if (isCancelledError(error)) {
+    return <CancelledRoute reset={reset} />
+  }
+
+  return <ReportedRootError error={error} info={info} reset={reset} />
+}
+
+function ReportedRootError({ error, info }: ErrorComponentProps) {
   const router = useRouter()
   const report = useRouteErrorReport({ error, info, scope: "root-route" })
   return (
@@ -105,4 +115,9 @@ function RootError({ error, info }: ErrorComponentProps) {
       </Button>
     </main>
   )
+}
+
+function CancelledRoute({ reset }: { reset: () => void }) {
+  useEffect(() => reset(), [reset])
+  return null
 }

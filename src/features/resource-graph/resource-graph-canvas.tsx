@@ -1,5 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import ELK from "elkjs/lib/elk.bundled.js"
+import ELK from "elkjs/lib/elk-api.js"
+import ELKWorker from "elkjs/lib/elk-worker.min.js?worker"
+import type { ELK as ELKInstance } from "elkjs/lib/elk-api.js"
 import {
   Background,
   BackgroundVariant,
@@ -11,7 +13,14 @@ import {
   useNodesState,
   useReactFlow,
 } from "@xyflow/react"
-import type { Edge, Node, NodeProps, ReactFlowInstance } from "@xyflow/react"
+import type {
+  Edge,
+  Node,
+  NodeMouseHandler,
+  NodeProps,
+  OnNodeDrag,
+  ReactFlowInstance,
+} from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 
 import {
@@ -79,9 +88,16 @@ type LayoutPosition = {
   y: number
 }
 
-const elk = new ELK()
+const GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD = 100
+const reactFlowProOptions = { hideAttribution: true }
+let elk: ELKInstance | undefined
 
-export function ResourceGraphCanvas({
+function resourceGraphLayoutEngine() {
+  elk ??= new ELK({ workerFactory: () => new ELKWorker() })
+  return elk
+}
+
+export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   expansionStates,
   expansionModesByNode,
   graph,
@@ -111,7 +127,7 @@ export function ResourceGraphCanvas({
       />
     </ReactFlowProvider>
   )
-}
+})
 
 function ResourceGraphFlow({
   expansionStates,
@@ -133,10 +149,13 @@ function ResourceGraphFlow({
   const surface = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
   const lastPositions = useRef(new Map<string, LayoutPosition>())
-  const layoutGraph = useRef(graph)
-  const layoutSignature = resourceGraphLayoutSignature(graph)
-  if (resourceGraphLayoutSignature(layoutGraph.current) !== layoutSignature) {
-    layoutGraph.current = graph
+  const layoutSignature = useMemo(
+    () => resourceGraphLayoutSignature(graph),
+    [graph]
+  )
+  const layoutGraph = useRef({ graph, signature: layoutSignature })
+  if (layoutGraph.current.signature !== layoutSignature) {
+    layoutGraph.current = { graph, signature: layoutSignature }
   }
   const layoutGeneration = useRef(0)
   const resetLayoutRequested = useRef(false)
@@ -144,6 +163,7 @@ function ResourceGraphFlow({
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
   const [layoutDirection, setLayoutDirection] =
     useState<LayoutDirection | null>(null)
+  const [zoomRange, setZoomRange] = useState({ max: 2.5, min: 0.35 })
   const [layoutPending, setLayoutPending] = useState(true)
   const [layoutRevision, setLayoutRevision] = useState(0)
   const [layoutPositions, setLayoutPositions] = useState(
@@ -159,6 +179,15 @@ function ResourceGraphFlow({
     const updateDirection = () => {
       const direction = graphStringToken(element, "--graph-layout-direction")
       setLayoutDirection(direction === "DOWN" ? "DOWN" : "RIGHT")
+      const nextZoomRange = {
+        max: graphNumberToken(element, "--graph-max-zoom"),
+        min: graphNumberToken(element, "--graph-min-zoom"),
+      }
+      setZoomRange((current) =>
+        current.max === nextZoomRange.max && current.min === nextZoomRange.min
+          ? current
+          : nextZoomRange
+      )
     }
     updateDirection()
     const resizeObserver = new ResizeObserver(updateDirection)
@@ -185,7 +214,7 @@ function ResourceGraphFlow({
   useEffect(() => {
     const element = surface.current
     if (!element || !flowReady || !layoutDirection) return
-    const currentGraph = layoutGraph.current
+    const currentGraph = layoutGraph.current.graph
     const resetLayout = resetLayoutRequested.current
     resetLayoutRequested.current = false
     const generation = layoutGeneration.current + 1
@@ -254,17 +283,17 @@ function ResourceGraphFlow({
     )
   }, [flow, flowReady, layoutDirection, layoutRevision, layoutSignature])
 
-  const neighbours = useMemo(() => {
-    if (!hoveredNode) return null
-    return new Set([
-      hoveredNode,
-      ...graph.edges.flatMap((edge) => {
-        if (edge.source === hoveredNode) return [edge.target]
-        if (edge.target === hoveredNode) return [edge.source]
-        return []
-      }),
-    ])
-  }, [graph.edges, hoveredNode])
+  const neighboursByNode = useMemo(() => {
+    const neighbours = new Map<string, Set<string>>()
+    for (const node of graph.nodes) {
+      neighbours.set(node.unique_id, new Set([node.unique_id]))
+    }
+    for (const edge of graph.edges) {
+      neighbours.get(edge.source)?.add(edge.target)
+      neighbours.get(edge.target)?.add(edge.source)
+    }
+    return neighbours
+  }, [graph.edges, graph.nodes])
 
   const resetLayout = useCallback(() => {
     resetLayoutRequested.current = true
@@ -303,7 +332,7 @@ function ResourceGraphFlow({
             data: {
               context:
                 node.unique_id === graph.rootMfid ? rootContext : node.context,
-              dimmed: Boolean(neighbours && !neighbours.has(node.unique_id)),
+              dimmed: false,
               expansionStates,
               expansionModes: expansionModesByNode.get(node.unique_id) ?? [],
               isRoot: node.unique_id === graph.rootMfid,
@@ -332,7 +361,6 @@ function ResourceGraphFlow({
       graph.rootMfid,
       layoutDirection,
       layoutPositions,
-      neighbours,
       onExpand,
       rootContext,
     ]
@@ -341,8 +369,24 @@ function ResourceGraphFlow({
     useNodesState<ResourceFlowNode>(calculatedNodes)
 
   useEffect(() => {
+    setHoveredNode(null)
     setFlowNodes(calculatedNodes)
   }, [calculatedNodes, setFlowNodes])
+
+  const setHoveredResource = useCallback(
+    (nodeMfid: string | null) => {
+      const neighbours = nodeMfid ? neighboursByNode.get(nodeMfid) : undefined
+      setHoveredNode(nodeMfid)
+      setFlowNodes((current) =>
+        current.map((node) => {
+          const dimmed = Boolean(neighbours && !neighbours.has(node.id))
+          if (node.data.dimmed === dimmed) return node
+          return { ...node, data: { ...node.data, dimmed } }
+        })
+      )
+    },
+    [neighboursByNode, setFlowNodes]
+  )
 
   const persistNodePosition = useCallback((node: ResourceFlowNode) => {
     setLayoutPositions((current) => {
@@ -354,6 +398,29 @@ function ResourceGraphFlow({
       return next
     })
   }, [])
+
+  const handleInit = useCallback(() => setFlowReady(true), [])
+  const handleNodeClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
+    (event, node) => {
+      if (node.id === graph.rootMfid) return
+      if (event.currentTarget instanceof HTMLElement) {
+        onInspect(node.id, event.currentTarget)
+      }
+    },
+    [graph.rootMfid, onInspect]
+  )
+  const handleNodeDragStop = useCallback<OnNodeDrag<ResourceFlowNode>>(
+    (_event, node) => persistNodePosition(node),
+    [persistNodePosition]
+  )
+  const handleNodeMouseEnter = useCallback<NodeMouseHandler<ResourceFlowNode>>(
+    (_event, node) => setHoveredResource(node.id),
+    [setHoveredResource]
+  )
+  const handleNodeMouseLeave = useCallback<NodeMouseHandler<ResourceFlowNode>>(
+    () => setHoveredResource(null),
+    [setHoveredResource]
+  )
 
   const flowEdges = useMemo<ResourceFlowEdge[]>(
     () =>
@@ -433,27 +500,24 @@ function ResourceGraphFlow({
         edges={flowEdges}
         edgesFocusable={false}
         elementsSelectable={false}
-        maxZoom={graphNumberToken(surface.current, "--graph-max-zoom", 2.5)}
-        minZoom={graphNumberToken(surface.current, "--graph-min-zoom", 0.35)}
+        maxZoom={zoomRange.max}
+        minZoom={zoomRange.min}
         nodeTypes={nodeTypes}
         nodes={flowNodes}
         nodesConnectable={false}
         nodesDraggable
-        onInit={() => setFlowReady(true)}
-        onNodeDragStop={(_, node) => persistNodePosition(node)}
+        onInit={handleInit}
+        onNodeDragStop={handleNodeDragStop}
         onNodesChange={handleNodesChange}
-        onNodeClick={(event, node) => {
-          if (node.id === graph.rootMfid) return
-          if (event.currentTarget instanceof HTMLElement) {
-            onInspect(node.id, event.currentTarget)
-          }
-        }}
-        onNodeMouseEnter={(_, node) => setHoveredNode(node.id)}
-        onNodeMouseLeave={() => setHoveredNode(null)}
-        onlyRenderVisibleElements
+        onNodeClick={handleNodeClick}
+        onNodeMouseEnter={handleNodeMouseEnter}
+        onNodeMouseLeave={handleNodeMouseLeave}
+        onlyRenderVisibleElements={
+          graph.nodes.length >= GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD
+        }
         panOnScroll
         preventScrolling={false}
-        proOptions={{ hideAttribution: true }}
+        proOptions={reactFlowProOptions}
         zoomOnDoubleClick={false}
       >
         <Background
@@ -474,14 +538,14 @@ function ResourceGraphFlow({
       </span>
       {fullscreenError ? (
         <div
-          className="resource-graph-layout-status absolute right-3 bottom-3 rounded-lg border border-destructive/40 bg-card/95 px-2 py-1 text-label-compact text-destructive shadow-sm backdrop-blur-sm"
+          className="resource-graph-layout-status absolute right-3 bottom-3 rounded-lg border border-destructive/40 bg-card px-2 py-1 text-label-compact text-destructive shadow-sm"
           role="alert"
         >
           Fullscreen is unavailable.
         </div>
       ) : loading || layoutPending ? (
         <div
-          className="resource-graph-layout-status absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border bg-card/95 px-2 py-1 text-label-compact shadow-sm backdrop-blur-sm"
+          className="resource-graph-layout-status absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border bg-card px-2 py-1 text-label-compact shadow-sm"
           role="status"
         >
           <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
@@ -763,7 +827,7 @@ async function layoutResourceGraph(
   const nodeHeight = graphNumberToken(element, "--graph-node-height")
   const rootWidth = graphNumberToken(element, "--graph-root-node-width")
   const rootHeight = graphNumberToken(element, "--graph-root-node-height")
-  const layout = await elk.layout({
+  const layout = await resourceGraphLayoutEngine().layout({
     children: graph.nodes.map((node) => ({
       height: node.unique_id === graph.rootMfid ? rootHeight : nodeHeight,
       id: node.unique_id,

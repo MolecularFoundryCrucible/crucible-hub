@@ -6,7 +6,7 @@ Date: 2026-09-18
 
 ## Purpose
 
-This document records the typed API boundary used for dependable bounded resource graphs in Crucible Hub. The Hub starts with the selected sample or dataset and its immediate readable relationships, then can merge explicit depth-one expansions without requesting resource details. React Flow with ELK Layered calculates collision-free positions in the browser, while the implemented typed response supplies relationship semantics, direction, completeness, and truncation facts. The Hub does not require API-generated coordinates.
+This document records the typed API boundary used for dependable bounded resource graphs in Crucible Hub. The Hub starts with the selected sample or dataset and its immediate readable relationships, then can merge explicit depth-one expansions without requesting resource details. React Flow with ELK Layered calculates collision-free positions in a dedicated browser worker, while the implemented typed response supplies relationship semantics, direction, completeness, and truncation facts. The Hub does not require API-generated coordinates.
 
 ## Implemented boundary
 

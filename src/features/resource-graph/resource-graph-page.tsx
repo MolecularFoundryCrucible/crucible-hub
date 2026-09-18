@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { RefObject } from "react"
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query"
 
 import {
@@ -65,9 +66,9 @@ import {
   resourceGraphQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
+import type { IdentityScope } from "@/data/crucible/query-keys"
 import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
 import type {
-  WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
@@ -99,6 +100,7 @@ type GraphExpansionQueryResult = {
 }
 
 const initialLineageDepth = 3
+const GRAPH_TABLE_ROW_BATCH = 50
 
 function combineResourceGraphExpansionQueries(
   results: readonly GraphExpansionQueryResult[]
@@ -164,9 +166,14 @@ export function ResourceGraphPage({
     combine: combineResourceGraphExpansionQueries,
   })
   const rootGraph = useMemo(() => {
-    if (descendantQuery.isPlaceholderData) {
-      return query.data ?? descendantQuery.data
-    }
+    if (
+      query.isPending ||
+      query.isPlaceholderData ||
+      descendantQuery.isPending ||
+      descendantQuery.isPlaceholderData ||
+      associationQuery.isPending
+    )
+      return undefined
     const graphs = [
       query.data,
       descendantQuery.data,
@@ -182,17 +189,25 @@ export function ResourceGraphPage({
     associationQuery.data,
     descendantQuery.data,
     descendantQuery.isPlaceholderData,
+    descendantQuery.isPending,
     query.data,
+    query.isPlaceholderData,
+    query.isPending,
+    associationQuery.isPending,
   ])
   const displayedGraph = useMemo(() => {
     if (!rootGraph) return undefined
     return mergeResourceGraphs(rootGraph, expansions.graphs)
   }, [expansions.graphs, rootGraph])
-  const expansionStates = new Map<string, GraphExpansionState>(
-    expansionRequests.map((request, index) => [
-      graphExpansionKey(request.nodeMfid, request.mode),
-      expansions.states[index],
-    ])
+  const expansionStates = useMemo(
+    () =>
+      new Map<string, GraphExpansionState>(
+        expansionRequests.map((request, index) => [
+          graphExpansionKey(request.nodeMfid, request.mode),
+          expansions.states[index],
+        ])
+      ),
+    [expansionRequests, expansions.states]
   )
   const expansionModesByNode = useMemo(
     () =>
@@ -201,20 +216,23 @@ export function ResourceGraphPage({
         : new Map<string, readonly GraphExpansionMode[]>(),
     [displayedGraph]
   )
-  const datasetMfids = displayedGraph
-    ? displayedGraph.nodes
-        .filter(
-          (node) =>
-            node.kind === "dataset" &&
-            node.unique_id !== displayedGraph.rootMfid
-        )
-        .slice(0, THUMBNAIL_PREVIEW_BATCH_MAX)
-        .map((node) => node.unique_id)
-    : []
-  const thumbnailQuery = useQuery({
-    ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
-    enabled: Boolean(displayedGraph) && datasetMfids.length > 0,
-  })
+  const relatedNodes = useMemo(
+    () =>
+      displayedGraph?.nodes.filter(
+        (node) => node.unique_id !== displayedGraph.rootMfid
+      ) ?? [],
+    [displayedGraph]
+  )
+  const nodesByMfid = useMemo(
+    () =>
+      new Map(
+        displayedGraph?.nodes.map((node) => [node.unique_id, node]) ?? []
+      ),
+    [displayedGraph]
+  )
+  const rootContext = displayedGraph
+    ? (nodesByMfid.get(displayedGraph.rootMfid)?.context ?? null)
+    : null
   const previewSiblingCollections = useMemo(() => {
     const graphData = displayedGraph
     const items = graphData
@@ -231,6 +249,43 @@ export function ResourceGraphPage({
       : []
   }, [displayedGraph])
   useRegisterResourceSiblings(previewSiblingCollections)
+
+  const expandNode = useCallback(
+    (nodeMfid: string, mode: GraphExpansionMode) => {
+      const state = expansionStates.get(graphExpansionKey(nodeMfid, mode))
+      if (state?.isError) {
+        void state.refetch()
+        return
+      }
+      setExpansion((current) => {
+        const requests =
+          current.resourceMfid === resourceMfid ? current.requests : []
+        if (
+          requests.some(
+            (request) => request.nodeMfid === nodeMfid && request.mode === mode
+          )
+        ) {
+          return current
+        }
+        return {
+          resourceMfid,
+          requests: [...requests, { mode, nodeMfid }],
+        }
+      })
+    },
+    [expansionStates, resourceMfid]
+  )
+  const inspectNode = useCallback(
+    (mfid: string, trigger: HTMLElement) => {
+      const node = nodesByMfid.get(mfid)
+      navigation.open(
+        mfid,
+        trigger,
+        node ? { kind: node.kind, mfid, name: node.name } : undefined
+      )
+    },
+    [navigation, nodesByMfid]
+  )
 
   if (
     !displayedGraph &&
@@ -268,32 +323,7 @@ export function ResourceGraphPage({
     )
   }
 
-  const relatedNodes = displayedGraph.nodes.filter(
-    (node) => node.unique_id !== displayedGraph.rootMfid
-  )
   const isExpanding = expansions.isFetching
-  const expandNode = (nodeMfid: string, mode: GraphExpansionMode) => {
-    const state = expansionStates.get(graphExpansionKey(nodeMfid, mode))
-    if (state?.isError) {
-      void state.refetch()
-      return
-    }
-    setExpansion((current) => {
-      const requests =
-        current.resourceMfid === resourceMfid ? current.requests : []
-      if (
-        requests.some(
-          (request) => request.nodeMfid === nodeMfid && request.mode === mode
-        )
-      ) {
-        return current
-      }
-      return {
-        resourceMfid,
-        requests: [...requests, { mode, nodeMfid }],
-      }
-    })
-  }
 
   return (
     <section
@@ -383,29 +413,10 @@ export function ResourceGraphPage({
             isExpanding
           }
           onExpand={expandNode}
-          rootContext={
-            displayedGraph.nodes.find(
-              (node) => node.unique_id === displayedGraph.rootMfid
-            )?.context ?? null
-          }
-          onInspect={(mfid, trigger) => {
-            const node = relatedNodes.find(
-              (candidate) => candidate.unique_id === mfid
-            )
-            navigation.open(
-              mfid,
-              trigger,
-              node ? { kind: node.kind, mfid, name: node.name } : undefined
-            )
-          }}
+          rootContext={rootContext}
+          onInspect={inspectNode}
         />
       )}
-
-      {thumbnailQuery.isError ? (
-        <p className="text-body text-muted-foreground" role="alert">
-          Thumbnail previews could not be loaded. The graph remains available.
-        </p>
-      ) : null}
 
       {expansions.states.some((state) => state.isError) ? (
         <p className="text-body text-destructive" role="alert">
@@ -420,7 +431,7 @@ export function ResourceGraphPage({
         graph={displayedGraph}
         nodes={relatedNodes}
         onExpand={expandNode}
-        thumbnails={thumbnailQuery.data ?? {}}
+        scope={scope}
       />
     </section>
   )
@@ -497,17 +508,49 @@ function ResourceGraphTable({
   graph,
   nodes,
   onExpand,
-  thumbnails,
+  scope,
 }: {
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   graph: WorkspaceResourceGraph
   nodes: readonly WorkspaceResourceGraphNode[]
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
+  scope: IdentityScope
 }) {
+  const container = useRef<HTMLDivElement>(null)
+  const nearViewport = useNearViewport(container)
+  const [visibleCount, setVisibleCount] = useState(
+    Math.min(nodes.length, GRAPH_TABLE_ROW_BATCH)
+  )
+  useEffect(() => {
+    setVisibleCount((current) =>
+      Math.min(nodes.length, Math.max(current, GRAPH_TABLE_ROW_BATCH))
+    )
+  }, [nodes.length])
+  const visibleNodes = useMemo(
+    () => nodes.slice(0, visibleCount),
+    [nodes, visibleCount]
+  )
+  const datasetMfids = useMemo(
+    () =>
+      visibleNodes
+        .filter((node) => node.kind === "dataset")
+        .slice(0, THUMBNAIL_PREVIEW_BATCH_MAX)
+        .map((node) => node.unique_id),
+    [visibleNodes]
+  )
+  const thumbnailQuery = useQuery({
+    ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
+    enabled: nearViewport && datasetMfids.length > 0,
+  })
+  const relationships = useMemo(
+    () => graphRelationshipPresentations(graph),
+    [graph]
+  )
+  const hasMoreRows = visibleCount < nodes.length
+
   return (
-    <Card>
+    <Card ref={container}>
       <CardHeader actionLayout="inline">
         <CardTitle>Relationships</CardTitle>
         <CardAction>
@@ -532,9 +575,9 @@ function ResourceGraphTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {nodes.map((node) => {
-                  const thumbnail = thumbnails[node.unique_id]
-                  const typeLabel = relationshipTypeLabel(graph, node)
+                {visibleNodes.map((node) => {
+                  const thumbnail = thumbnailQuery.data?.[node.unique_id]
+                  const relationship = relationships.get(node.unique_id)
                   return (
                     <TableRow key={node.unique_id}>
                       <TableCell
@@ -542,11 +585,11 @@ function ResourceGraphTable({
                         data-label="Relationship"
                       >
                         <Badge variant="outline">
-                          {relationshipLabel(graph, node)}
+                          {relationship?.label ?? "Related"}
                         </Badge>
-                        {typeLabel ? (
+                        {relationship?.typeLabel ? (
                           <span className="mt-1 block text-supporting text-muted-foreground">
-                            {typeLabel}
+                            {relationship.typeLabel}
                           </span>
                         ) : null}
                       </TableCell>
@@ -556,6 +599,8 @@ function ResourceGraphTable({
                             <DatasetThumbnailImage
                               alt=""
                               className="size-10 shrink-0 rounded-md border bg-card object-contain"
+                              decoding="async"
+                              loading="lazy"
                               thumbnail={thumbnail}
                             />
                           ) : null}
@@ -602,9 +647,33 @@ function ResourceGraphTable({
                 })}
               </TableBody>
             </Table>
+            {hasMoreRows ? (
+              <div className="flex justify-center border-t p-3">
+                <Button
+                  onClick={() =>
+                    setVisibleCount((current) =>
+                      Math.min(nodes.length, current + GRAPH_TABLE_ROW_BATCH)
+                    )
+                  }
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Show more
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
       </CardContent>
+      {thumbnailQuery.isError ? (
+        <p
+          className="border-t px-4 py-3 text-body text-muted-foreground"
+          role="alert"
+        >
+          Thumbnail previews could not be loaded.
+        </p>
+      ) : null}
     </Card>
   )
 }
@@ -671,42 +740,61 @@ function GraphExpansionAction({
   )
 }
 
-function relationshipLabel(
-  graph: WorkspaceResourceGraph,
-  node: WorkspaceResourceGraphNode
-) {
-  const edge = graph.edges.find(
-    (candidate) =>
-      (candidate.source === node.unique_id &&
-        candidate.target === graph.rootMfid) ||
-      (candidate.source === graph.rootMfid &&
-        candidate.target === node.unique_id)
-  )
-  if (!edge) return "Related"
-  if (edge.relationship === "associated") return "Associated"
-  if (edge.target === graph.rootMfid) return "Parent"
-  if (edge.source === graph.rootMfid) return "Child"
-  return "Lineage"
+function graphRelationshipPresentations(graph: WorkspaceResourceGraph) {
+  const relationships = new Map<
+    string,
+    { label: string; typeLabel: string | null }
+  >()
+  for (const edge of graph.edges) {
+    const relatedMfid =
+      edge.source === graph.rootMfid
+        ? edge.target
+        : edge.target === graph.rootMfid
+          ? edge.source
+          : undefined
+    if (!relatedMfid) continue
+    const label =
+      edge.relationship === "associated"
+        ? "Associated"
+        : edge.target === graph.rootMfid
+          ? "Parent"
+          : "Child"
+    const relationship = edge.target === graph.rootMfid ? "parent" : "child"
+    relationships.set(relatedMfid, {
+      label,
+      typeLabel:
+        edge.relationship === "parent" && edge.relationshipType
+          ? workspaceRelationshipTypeLabel({
+              relationship,
+              relationship_type: edge.relationshipType,
+            })
+          : null,
+    })
+  }
+  return relationships
 }
 
-function relationshipTypeLabel(
-  graph: WorkspaceResourceGraph,
-  node: WorkspaceResourceGraphNode
-) {
-  const edge = graph.edges.find(
-    (candidate) =>
-      candidate.relationship === "parent" &&
-      ((candidate.source === node.unique_id &&
-        candidate.target === graph.rootMfid) ||
-        (candidate.source === graph.rootMfid &&
-          candidate.target === node.unique_id))
-  )
-  if (!edge?.relationshipType) return null
-  const relationship = edge.target === graph.rootMfid ? "parent" : "child"
-  return workspaceRelationshipTypeLabel({
-    relationship,
-    relationship_type: edge.relationshipType,
-  })
+function useNearViewport(element: RefObject<HTMLElement | null>) {
+  const [nearViewport, setNearViewport] = useState(false)
+  useEffect(() => {
+    const current = element.current
+    if (!current || nearViewport) return
+    if (typeof IntersectionObserver === "undefined") {
+      setNearViewport(true)
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        setNearViewport(true)
+        observer.disconnect()
+      },
+      { rootMargin: "320px" }
+    )
+    observer.observe(current)
+    return () => observer.disconnect()
+  }, [element, nearViewport])
+  return nearViewport
 }
 
 function graphErrorMessage(error: Error | null) {

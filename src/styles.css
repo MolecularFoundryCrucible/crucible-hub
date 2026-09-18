@@ -640,6 +640,7 @@ body {
 
 .react-flow__node-resource.dragging {
   cursor: grabbing;
+  transition: none;
 }
 
 .react-flow__node-resource:focus-visible .resource-graph-flow-node,
@@ -722,8 +723,7 @@ body {
 
 .resource-graph-controls button,
 .resource-graph-legend {
-  background-color: color-mix(in oklch, var(--card) 92%, transparent);
-  backdrop-filter: blur(0.375rem);
+  background-color: var(--card);
 }
 
 .resource-graph-legend {
