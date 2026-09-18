@@ -481,6 +481,7 @@ function ResourceGraphFlow({
     <div
       className="resource-graph-surface relative overflow-hidden rounded-xl border bg-card"
       data-density={graphDensity(graph.nodes.length)}
+      data-resource-preview-trigger=""
       ref={surface}
     >
       <GraphViewportControls
