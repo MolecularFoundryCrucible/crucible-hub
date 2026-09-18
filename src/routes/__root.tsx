@@ -8,11 +8,13 @@ import {
 
 import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg"
 import { RouteProgress } from "@/components/route-progress"
+import { useRouteErrorReport } from "@/components/crucible/route-error-report"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/toast"
 import type { RouterContext } from "@/router-context"
+import type { ErrorComponentProps } from "@tanstack/react-router"
 
 import appCss from "../styles.css?url"
 
@@ -76,18 +78,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
-function RootError() {
+function RootError({ error, info }: ErrorComponentProps) {
   const router = useRouter()
+  const report = useRouteErrorReport({ error, info, scope: "root-route" })
   return (
     <main className="mx-auto flex min-h-svh max-w-reading flex-col items-start justify-center gap-4 p-page-gutter-wide">
       <p className="text-overline text-muted-foreground uppercase">
         Unable to load this page
       </p>
       <h1 className="text-title-page">
-        Crucible Hub encountered an unexpected error.
+        Crucible Hub could not load this page.
       </h1>
       <p className="text-body-prominent text-muted-foreground">
-        Your existing Crucible data has not been changed.
+        {report.message} Reference: {report.reference}
       </p>
       <Button onClick={() => router.invalidate()}>Try again</Button>
     </main>

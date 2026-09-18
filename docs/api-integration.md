@@ -41,6 +41,8 @@ type HubApiError = {
 
 Hub creates a correlation ID for every document, server-function, and server-route request, places it in request context and `X-Correlation-ID`, and never trusts a browser value. Server functions return serializable `HubResult<T>` unions. The adapter maps validated failures to the envelope: 401, 403, 404, 409, 422, and 429 map to their named kinds; other HTTP failures are `upstream`; transport causes distinguish cancellation, timeout, and unexpected failure. It never exposes headers, cookies, authorization data, signed URLs, raw bodies, stack traces, or internal network details. Hub-to-API correlation propagation remains pending until the API publishes a supported header.
 
+Failed server operations emit one structured diagnostic containing the Hub correlation ID, stable operation name, status, error type, and response-contract issue paths and codes when applicable. Logs exclude upstream response values and bodies, request values, credentials, complete URLs, and personal or scientific content. Cancellation is expected control flow and is not logged as a failure.
+
 ## Query ownership, representations, and hydration
 
 TanStack Query is the sole browser owner of Crucible server data. Loaders use `ensureQueryData` or prefetch the exact options consumed by components, never a second representation. Every authenticated key begins with immutable identity scope:

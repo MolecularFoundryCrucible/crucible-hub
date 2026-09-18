@@ -6,8 +6,10 @@ import {
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import { PanelState } from "@/components/crucible/collection-state"
+import { useRouteErrorReport } from "@/components/crucible/route-error-report"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import type { ErrorComponentProps } from "@tanstack/react-router"
 
 type ResourceOverviewKind = "dataset" | "instrument" | "sample"
 
@@ -65,12 +67,17 @@ export function ResourceManagementPending() {
   )
 }
 
-export function ResourceTabLoadError() {
+export function ResourceTabLoadError({ error, info }: ErrorComponentProps) {
   const router = useRouter()
+  const report = useRouteErrorReport({
+    error,
+    info,
+    scope: "resource-tab",
+  })
   return (
     <ContentBoundary width="reading">
       <PanelState
-        description="The resource header and navigation remain available."
+        description={`${report.message} Reference: ${report.reference}`}
         retry={() => void router.invalidate()}
         role="alert"
         title="This section could not be loaded"

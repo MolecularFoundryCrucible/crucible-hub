@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Kept dataset Processing failures inside the resource workspace and added correlation-safe browser and server diagnostics for route, API, and response-contract failures.
 - Kept resource identity headers and section navigation mounted while Overview and Manage load, added shape-matched tab skeletons and local recovery, and retained the readable graph while its bounded topology refreshes.
 - Adopted ELK Layered for collision-free resource graphs, made deeper automatic traversal lineage-focused with only the current resource's direct associations, and added node-local expansion with retained content, loading and arrangement feedback, and reduced-motion-aware animated updates.
 - Replaced the legacy inferred resource graph adapter with the typed bounded resource graph operation, preserving stable edge identity, explicit lineage and association semantics, relationship types, completeness and truncation metadata, and independently cached depth-one node expansion.

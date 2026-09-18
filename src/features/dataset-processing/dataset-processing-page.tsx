@@ -56,7 +56,11 @@ import {
   datasetIngestionRequestsQueryOptions,
   ingestionClassesQueryOptions,
 } from "@/data/crucible/resources.queries"
-import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
+import {
+  HubApiClientError,
+  hubErrorMessage,
+  unwrapHubResult,
+} from "@/data/crucible/result"
 import type {
   WorkspaceDatasetFile,
   WorkspaceIngestionRequest,
@@ -140,7 +144,10 @@ function FilesAndIngestionCard({
               {filesResult.isError || requestsResult.isError ? (
                 <div className="mb-4 px-4 sm:px-6">
                   <PanelUpdateError
-                    description="Some processing information could not be refreshed."
+                    description={hubErrorMessage(
+                      filesResult.error ?? requestsResult.error,
+                      "Some processing information could not be refreshed."
+                    )}
                     retry={() => {
                       void filesResult.refetch()
                       void requestsResult.refetch()
@@ -162,6 +169,10 @@ function FilesAndIngestionCard({
             </>
           ) : (
             <PanelState
+              description={hubErrorMessage(
+                filesResult.error ?? requestsResult.error,
+                "Try again or share the request reference if the problem continues."
+              )}
               retry={() => {
                 void filesResult.refetch()
                 void requestsResult.refetch()
@@ -206,6 +217,10 @@ function FilesAndIngestionCard({
           ) : (
             <div className="px-4 sm:px-6">
               <PanelState
+                description={hubErrorMessage(
+                  requestsResult.error,
+                  "Try again or share the request reference if the problem continues."
+                )}
                 retry={() => void requestsResult.refetch()}
                 role="alert"
                 title="Request history could not be loaded"

@@ -508,12 +508,15 @@ export const getWorkspaceDatasetFiles = createServerFn({ method: "GET" })
   .validator(datasetFilesInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      readWorkspaceDatasetFiles(
-        data.datasetMfid,
-        data.scenario,
-        context.requestSignal
-      )
+    return safeCrucibleCall(
+      context.correlationId,
+      () =>
+        readWorkspaceDatasetFiles(
+          data.datasetMfid,
+          data.scenario,
+          context.requestSignal
+        ),
+      { operation: "read-dataset-files" }
     )
   })
 
@@ -524,12 +527,15 @@ export const getWorkspaceDatasetIngestionRequests = createServerFn({
   .validator(datasetFilesInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      readWorkspaceDatasetIngestionRequests(
-        data.datasetMfid,
-        data.scenario,
-        context.requestSignal
-      )
+    return safeCrucibleCall(
+      context.correlationId,
+      () =>
+        readWorkspaceDatasetIngestionRequests(
+          data.datasetMfid,
+          data.scenario,
+          context.requestSignal
+        ),
+      { operation: "read-dataset-ingestion-requests" }
     )
   })
 

@@ -4,7 +4,10 @@ import { z } from "zod"
 
 import type { components } from "@/generated/crucible-api"
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
-import { CrucibleResponseError } from "@/server/crucible/request-error.server"
+import {
+  CrucibleContractError,
+  CrucibleResponseError,
+} from "@/server/crucible/request-error.server"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -524,7 +527,7 @@ export async function readWorkspaceDatasetFiles(
   }
   const files = apiDatasetFilesSchema.safeParse(result.data)
   if (!files.success) {
-    throw new Error("The dataset files response is invalid.")
+    throw new CrucibleContractError("dataset-files", files.error.issues)
   }
   return files.data
 }
@@ -581,7 +584,10 @@ export async function readWorkspaceDatasetIngestionRequests(
   }
   const page = apiIngestionRequestPageSchema.safeParse(result.data)
   if (!page.success) {
-    throw new Error("The ingestion requests response is invalid.")
+    throw new CrucibleContractError(
+      "dataset-ingestion-requests",
+      page.error.issues
+    )
   }
   return {
     items: page.data.items.map(workspaceIngestionRequest),
