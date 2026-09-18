@@ -548,6 +548,7 @@ function ResourceSiblingAction({
   const action =
     target.kind === "sample" ? (
       <Button
+        nativeButton={false}
         render={
           <Link
             {...common}
@@ -561,6 +562,7 @@ function ResourceSiblingAction({
       />
     ) : (
       <Button
+        nativeButton={false}
         render={
           <Link
             {...common}

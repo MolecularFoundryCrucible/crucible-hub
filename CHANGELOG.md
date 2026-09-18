@@ -95,6 +95,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Sample and dataset browsing now defaults to newest creation time across global, project, instrument, grouped, paginated, and sibling-navigation contexts.
 - Resource graphs now derive root labels from graph data so route refreshes cannot detach the graph from its workspace context.
 - Browser-local timestamps now hydrate from a stable UTC fallback before switching to local time, preventing server and client timezone mismatches across collections and detail views.
+- Sibling navigation links now declare anchor semantics to Base UI, removing the native-button accessibility warning.
 - Home now separates Projects you lead from active Instruments you manage, and project and instrument directories use visible, route-backed All and ownership scope controls without requesting undisplayed totals.
 - Recently added data on Home now uses API-backed newest-creation ordering across samples and datasets.
 - Kept the resource inspector open when focus follows an underlying resource link, preventing a newly selected preview from immediately closing.
