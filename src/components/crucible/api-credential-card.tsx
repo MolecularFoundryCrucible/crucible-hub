@@ -1,4 +1,5 @@
 import { CredentialIcon } from "@/components/crucible/icons"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,7 +11,6 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { WorkspaceApiCredentialStatus } from "@/data/crucible/workspace-source"
-import { formatDate } from "@/lib/format"
 
 export function ApiCredentialCard({
   action,
@@ -82,11 +82,15 @@ function CredentialStatus({
       </div>
       <div>
         <dt className="text-label text-muted-foreground">Created</dt>
-        <dd className="mt-1 text-body">{formatDate(status.created_at)}</dd>
+        <dd className="mt-1 text-body">
+          <LocalDateTime value={status.created_at} />
+        </dd>
       </div>
       <div>
         <dt className="text-label text-muted-foreground">Expires</dt>
-        <dd className="mt-1 text-body">{formatDate(status.expires_at)}</dd>
+        <dd className="mt-1 text-body">
+          <LocalDateTime value={status.expires_at} />
+        </dd>
       </div>
     </dl>
   )

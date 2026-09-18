@@ -18,6 +18,16 @@ const localDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 })
 
+const utcDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  hour: "2-digit",
+  hourCycle: "h23",
+  minute: "2-digit",
+  month: "short",
+  timeZone: "UTC",
+  year: "numeric",
+})
+
 const calendarDateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",
@@ -45,9 +55,9 @@ function timestampDate(value: string) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-function formatStandardLocalDateTime(value: string) {
+function formatStandardDateTime(value: string, formatter: Intl.DateTimeFormat) {
   const date = timestampDate(value)
-  return date ? localDateTimeFormatter.format(date) : value
+  return date ? formatter.format(date) : value
 }
 
 export function formatDate(value: string | null | undefined) {
@@ -56,12 +66,21 @@ export function formatDate(value: string | null | undefined) {
     const date = new Date(`${value}T00:00:00Z`)
     if (!Number.isNaN(date.getTime())) return calendarDateFormatter.format(date)
   }
-  return formatStandardLocalDateTime(value)
+  return formatStandardDateTime(value, localDateTimeFormatter)
 }
 
 export function formatLocalDateTime(value: string | null | undefined) {
   if (!value) return null
-  return formatStandardLocalDateTime(value)
+  return formatStandardDateTime(value, localDateTimeFormatter)
+}
+
+export function formatUtcDateTime(value: string | null | undefined) {
+  if (!value) return null
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T00:00:00Z`)
+    if (!Number.isNaN(date.getTime())) return calendarDateFormatter.format(date)
+  }
+  return formatStandardDateTime(value, utcDateTimeFormatter)
 }
 
 function padDateTimePart(value: number) {

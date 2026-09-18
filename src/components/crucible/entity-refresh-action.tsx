@@ -3,6 +3,7 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import type { QueryKey } from "@tanstack/react-query"
 
 import { RefreshResourceIcon } from "@/components/crucible/icons"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,7 +11,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { formatLocalDateTime } from "@/lib/format"
 
 export function EntityRefreshAction({
   exact = true,
@@ -29,9 +29,7 @@ export function EntityRefreshAction({
   const refreshing =
     useIsFetching({ exact, queryKey, fetchStatus: "fetching" }) > 0
   const [failed, setFailed] = useState(false)
-  const timestamp = refreshedAt
-    ? formatLocalDateTime(new Date(refreshedAt).toISOString())
-    : null
+  const timestamp = refreshedAt ? new Date(refreshedAt).toISOString() : null
 
   async function refresh() {
     setFailed(false)
@@ -69,11 +67,15 @@ export function EntityRefreshAction({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {failed
-            ? `${subject} could not be refreshed. Try again.`
-            : timestamp
-              ? `${subject} last refreshed ${timestamp}`
-              : label}
+          {failed ? (
+            `${subject} could not be refreshed. Try again.`
+          ) : timestamp ? (
+            <>
+              {subject} last refreshed <LocalDateTime value={timestamp} />
+            </>
+          ) : (
+            label
+          )}
         </TooltipContent>
       </Tooltip>
       {failed ? (

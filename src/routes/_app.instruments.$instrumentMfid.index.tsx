@@ -8,6 +8,7 @@ import {
 } from "@/components/crucible/resource-tab-state"
 import { EditResourceIcon } from "@/components/crucible/icons"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -44,7 +45,6 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceScientificMetadata,
 } from "@/data/crucible/workspace-source"
-import { formatLocalDateTime } from "@/lib/format"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 
@@ -214,14 +214,17 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
               <dt className="text-label text-muted-foreground">Created</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="created" />
-                {formatLocalDateTime(instrument.creation_time) ?? "-"}
+                <LocalDateTime fallback="-" value={instrument.creation_time} />
               </dd>
             </div>
             <div>
               <dt className="text-label text-muted-foreground">Updated</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="updated" />
-                {formatLocalDateTime(instrument.modification_time) ?? "-"}
+                <LocalDateTime
+                  fallback="-"
+                  value={instrument.modification_time}
+                />
               </dd>
             </div>
           </dl>

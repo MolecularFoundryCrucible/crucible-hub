@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query"
 import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
 
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import {
   ContentGrid,
   ContentGridItem,
@@ -56,7 +57,6 @@ import {
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
-import { formatDate } from "@/lib/format"
 import { ResourceSummaryCard } from "@/features/resource-edit/resource-summary-card"
 import { DatasetThumbnailsCard } from "@/features/dataset-thumbnails/dataset-thumbnails-card"
 import { DatasetFiles } from "@/features/dataset-files/dataset-files-card"
@@ -458,14 +458,14 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               <dt className="text-label text-muted-foreground">Created</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="created" />
-                {formatDate(resource.creation_time)}
+                <LocalDateTime value={resource.creation_time} />
               </dd>
             </div>
             <div>
               <dt className="text-label text-muted-foreground">Updated</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="updated" />
-                {formatDate(resource.modification_time)}
+                <LocalDateTime value={resource.modification_time} />
               </dd>
             </div>
           </dl>

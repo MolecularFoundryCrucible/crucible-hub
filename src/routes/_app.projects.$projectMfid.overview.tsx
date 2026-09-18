@@ -1,4 +1,5 @@
 import { useState } from "react"
+import type { ReactNode } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
@@ -8,6 +9,7 @@ import {
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import {
   useWorkspaceMode,
@@ -28,7 +30,6 @@ import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 import { ProjectSettingsForm } from "@/features/management-settings/settings-forms"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
-import { formatLocalDateTime } from "@/lib/format"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/overview")({
   component: ProjectOverviewPage,
@@ -97,11 +98,18 @@ function ProjectOverviewPage() {
                 <ProjectMfid project={project} />
                 <Field
                   label="Created"
-                  value={formatLocalDateTime(project.creation_time)}
+                  value={
+                    <LocalDateTime fallback="-" value={project.creation_time} />
+                  }
                 />
                 <Field
                   label="Updated"
-                  value={formatLocalDateTime(project.modification_time)}
+                  value={
+                    <LocalDateTime
+                      fallback="-"
+                      value={project.modification_time}
+                    />
+                  }
                 />
               </dl>
             </CardContent>
@@ -164,7 +172,7 @@ function ProjectMfid({ project }: { project: WorkspaceProject }) {
   )
 }
 
-function Field({ label, value }: { label: string; value: string | null }) {
+function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="min-w-0">
       <dt className="text-supporting text-muted-foreground">{label}</dt>

@@ -8,6 +8,7 @@ import {
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
 import { RequestIngestionIcon } from "@/components/crucible/icons"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
@@ -67,7 +68,7 @@ import type {
   WorkspaceIngestionRequestPage,
 } from "@/data/crucible/workspace-source"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
-import { formatBytes, formatLocalDateTime } from "@/lib/format"
+import { formatBytes } from "@/lib/format"
 
 export function DatasetProcessingPage({
   datasetMfid,
@@ -299,9 +300,10 @@ function ProcessingFilesTable({
               </TableCell>
               <TableCell>{request?.ingestionClass ?? "Auto-detect"}</TableCell>
               <TableCell className="text-right tabular-nums">
-                {formatLocalDateTime(
-                  request?.timeCompleted ?? request?.timeCreated
-                ) ?? "-"}
+                <LocalDateTime
+                  fallback="-"
+                  value={request?.timeCompleted ?? request?.timeCreated}
+                />
               </TableCell>
               <TableCell className="text-right">
                 <FileDownloadAction
@@ -366,10 +368,10 @@ function IngestionRequestHistory({
                 ) : null}
               </TableCell>
               <TableCell>
-                {formatLocalDateTime(request.timeCreated) ?? "-"}
+                <LocalDateTime fallback="-" value={request.timeCreated} />
               </TableCell>
               <TableCell>
-                {formatLocalDateTime(request.timeCompleted) ?? "-"}
+                <LocalDateTime fallback="-" value={request.timeCompleted} />
               </TableCell>
             </TableRow>
           ))}

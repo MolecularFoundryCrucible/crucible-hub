@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
@@ -63,7 +64,6 @@ import type {
   WorkspaceSampleDescriptiveUpdate,
 } from "@/data/crucible/workspace-source"
 import {
-  formatLocalDateTime,
   isValidLocalDateTime,
   localDateTimeToUtc,
   timestampToLocalInput,
@@ -916,7 +916,11 @@ function summaryFields(
       ["Data type", resource.data_type, "data-type"],
       ["Session", resource.session_name, "session"],
       ...contextFields(resource),
-      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
+      [
+        "Timestamp",
+        <LocalDateTime fallback="-" value={resource.timestamp} />,
+        "timestamp",
+      ],
     ]
   }
   if (resource.kind === "sample") {
@@ -924,7 +928,11 @@ function summaryFields(
       ["Description", resource.description, "description"],
       ["Sample type", resource.sample_type, "type"],
       ...contextFields(resource),
-      ["Timestamp", formatLocalDateTime(resource.timestamp), "timestamp"],
+      [
+        "Timestamp",
+        <LocalDateTime fallback="-" value={resource.timestamp} />,
+        "timestamp",
+      ],
     ]
   }
   if (resource.kind === "instrument") {

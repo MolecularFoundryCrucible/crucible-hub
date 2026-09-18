@@ -1,10 +1,10 @@
 import type { PersonIdentityProfile } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { TableCell } from "@/components/ui/table"
-import { formatDate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 export function ResourceCreatedCell({
@@ -64,7 +64,7 @@ function ResourceDateCell({
       )}
       data-label={label}
     >
-      {value ? formatDate(value) : empty}
+      <LocalDateTime fallback={empty} value={value} />
     </TableCell>
   )
 }

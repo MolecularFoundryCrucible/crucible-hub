@@ -7,6 +7,7 @@ import {
   PanelState,
 } from "@/components/crucible/collection-state"
 import { ForwardNavigationIcon } from "@/components/crucible/icons"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
@@ -29,7 +30,6 @@ import { projectsQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceInstrument } from "@/data/crucible/workspace-source"
 import { selectRecentResources } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
-import { formatDate } from "@/lib/format"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 
@@ -355,13 +355,10 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
         projectId={item.projectId}
       />
       {item.timestamp ? (
-        <time
-          className="shrink-0 text-supporting text-muted-foreground sm:text-right"
-          dateTime={item.timestamp.value}
-        >
+        <div className="shrink-0 text-supporting text-muted-foreground sm:text-right">
           <span className="block">{item.timestamp.label}</span>
-          <span className="block">{formatDate(item.timestamp.value)}</span>
-        </time>
+          <LocalDateTime className="block" value={item.timestamp.value} />
+        </div>
       ) : null}
     </>
   )
