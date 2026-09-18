@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Kept resource identity headers and section navigation mounted while Overview and Manage load, added shape-matched tab skeletons and local recovery, and retained the readable graph while a new lineage depth loads.
 - Adopted ELK Layered for collision-free resource graphs, made deeper automatic traversal lineage-focused with only the current resource's direct associations, and added node-local expansion with retained content, loading and arrangement feedback, and reduced-motion-aware animated updates.
 - Replaced the legacy inferred resource graph adapter with the typed bounded resource graph operation, preserving stable edge identity, explicit lineage and association semantics, relationship types, completeness and truncation metadata, and independently cached depth-one node expansion.
 - Added a focus-restoring Back to top control to long cursor-backed resource collections and standardized short successful edit confirmations as polite application toasts while retaining actionable feedback inline.

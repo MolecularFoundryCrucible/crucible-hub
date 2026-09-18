@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query"
+import type { QueryClient } from "@tanstack/react-query"
 
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
@@ -39,6 +40,14 @@ export function resourceQueryOptions(
         })
       ),
   })
+}
+
+export function preloadResourceDetail(
+  queryClient: QueryClient,
+  scope: IdentityScope,
+  resourceMfid: string
+) {
+  return queryClient.ensureQueryData(resourceQueryOptions(scope, resourceMfid))
 }
 
 export function resourceSummaryQueryOptions(

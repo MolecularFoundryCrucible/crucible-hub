@@ -1,13 +1,20 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
+import {
+  ResourceManagementPending,
+  ResourceTabLoadError,
+} from "@/components/crucible/resource-tab-state"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import {
+  preloadResourceDetail,
+  resourceQueryOptions,
+} from "@/data/crucible/resources.queries"
 import { InstrumentLifecycleCard } from "@/features/instrument-lifecycle/instrument-lifecycle-card"
 import { InstrumentOperatorsCard } from "@/features/instrument-operators/instrument-operators-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
@@ -15,6 +22,17 @@ import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-t
 export const Route = createFileRoute(
   "/_app/instruments/$instrumentMfid/settings/"
 )({
+  loader: async ({ context, parentMatchPromise }) => {
+    const parent = (await parentMatchPromise).loaderData
+    if (!parent?.instrumentMfid) return
+    await preloadResourceDetail(
+      context.queryClient,
+      parent.scope,
+      parent.instrumentMfid
+    )
+  },
+  pendingComponent: ResourceManagementPending,
+  errorComponent: ResourceTabLoadError,
   component: InstrumentManagePage,
 })
 

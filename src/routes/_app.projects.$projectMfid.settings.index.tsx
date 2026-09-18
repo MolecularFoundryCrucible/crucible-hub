@@ -1,6 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 
+import {
+  ResourceManagementPending,
+  ResourceTabLoadError,
+} from "@/components/crucible/resource-tab-state"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   useWorkspaceMode,
@@ -9,13 +13,27 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import {
+  preloadResourceDetail,
+  resourceQueryOptions,
+} from "@/data/crucible/resources.queries"
 import { ProjectLeaveCard } from "@/features/project-membership/project-leave-card"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 import { ProjectMembershipCard } from "@/features/project-membership/project-membership-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/settings/")({
+  loader: async ({ context, parentMatchPromise }) => {
+    const parent = (await parentMatchPromise).loaderData
+    if (!parent?.projectMfid) return
+    await preloadResourceDetail(
+      context.queryClient,
+      parent.scope,
+      parent.projectMfid
+    )
+  },
+  pendingComponent: ResourceManagementPending,
+  errorComponent: ResourceTabLoadError,
   component: ProjectManagePage,
 })
 

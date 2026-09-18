@@ -158,6 +158,7 @@ export function ResourceGraphPage({
       direction: depth === 1 ? "both" : "upstream",
       relationshipKinds: depth === 1 ? undefined : ["lineage"],
     }),
+    placeholderData: keepPreviousData,
   })
   const descendantQuery = useQuery({
     ...resourceGraphQueryOptions(scope, resourceMfid, {
@@ -257,8 +258,9 @@ export function ResourceGraphPage({
   useRegisterResourceSiblings(previewSiblingCollections)
 
   if (
-    query.isPending ||
-    (depth > 1 && (descendantQuery.isPending || associationQuery.isPending))
+    !displayedGraph &&
+    (query.isPending ||
+      (depth > 1 && (descendantQuery.isPending || associationQuery.isPending)))
   ) {
     return <ResourceGraphPending />
   }
@@ -468,8 +470,22 @@ export function ResourceGraphPage({
 
 function ResourceGraphPending() {
   return (
-    <div aria-label="Loading resource graph" role="status">
+    <div
+      aria-label="Loading resource graph"
+      className="flex flex-col gap-4"
+      role="status"
+    >
       <Skeleton className="min-h-graph-canvas w-full" />
+      <Card aria-busy="true">
+        <CardHeader>
+          <CardTitle>Relationships</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 border-t pt-4">
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-5 w-4/5" />
+          <Skeleton className="h-5 w-2/3" />
+        </CardContent>
+      </Card>
     </div>
   )
 }

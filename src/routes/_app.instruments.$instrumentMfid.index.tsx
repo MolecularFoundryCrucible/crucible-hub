@@ -2,6 +2,10 @@ import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
+import {
+  ResourceOverviewPending,
+  ResourceTabLoadError,
+} from "@/components/crucible/resource-tab-state"
 import { EditResourceIcon } from "@/components/crucible/icons"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
@@ -31,7 +35,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import {
+  preloadResourceDetail,
+  resourceQueryOptions,
+} from "@/data/crucible/resources.queries"
 import { InstrumentSettingsForm } from "@/features/management-settings/settings-forms"
 import type {
   WorkspaceResourceDetail,
@@ -42,6 +49,17 @@ import { formatLocalDateTime } from "@/lib/format"
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 
 export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
+  loader: async ({ context, parentMatchPromise }) => {
+    const parent = (await parentMatchPromise).loaderData
+    if (!parent?.instrumentMfid) return
+    await preloadResourceDetail(
+      context.queryClient,
+      parent.scope,
+      parent.instrumentMfid
+    )
+  },
+  pendingComponent: () => <ResourceOverviewPending resourceKind="instrument" />,
+  errorComponent: ResourceTabLoadError,
   component: InstrumentOverviewPage,
 })
 
