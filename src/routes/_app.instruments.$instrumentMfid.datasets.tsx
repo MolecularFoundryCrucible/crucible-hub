@@ -44,6 +44,8 @@ import type { CollectionGroupOrder } from "@/data/crucible/collection-browse"
 import type { DatasetFacetField, FacetSelection } from "@/data/crucible/facets"
 import { collectionFilterFields } from "@/data/crucible/collection-filters"
 import {
+  collectionOrderingSearchState,
+  normalizeCollectionQueryOptions,
   resourceSortSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
@@ -93,9 +95,11 @@ export const Route = createFileRoute(
     const baseFilters = {
       createdFrom: deps.createdFrom,
       createdTo: deps.createdTo,
-      direction: deps.direction,
       instrumentMfid: instrument.instrumentMfid,
-      sort: deps.sort,
+      ...normalizeCollectionQueryOptions({
+        direction: deps.direction,
+        sort: deps.sort,
+      }),
     }
     const filters =
       browse.view === "grouped"
@@ -132,9 +136,11 @@ function InstrumentDatasetsPage() {
   const baseFilters = {
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
-    direction: search.direction,
     instrumentMfid,
-    sort: search.sort,
+    ...normalizeCollectionQueryOptions({
+      direction: search.direction,
+      sort: search.sort,
+    }),
   }
   const collectionFilters =
     browse.view === "grouped"
@@ -210,7 +216,7 @@ function InstrumentDatasetsPage() {
       ) : null}
       <InstrumentDatasetCollection
         cursor={cursor}
-        direction={search.direction ?? "desc"}
+        direction={collectionFilters.direction}
         hasNextPage={Boolean(result.hasNextPage)}
         instrumentMfid={routeInstrumentMfid}
         isPaginationDisabled={result.isFetching && !result.isFetchingNextPage}
@@ -219,7 +225,7 @@ function InstrumentDatasetsPage() {
         loadMoreError={result.isFetchNextPageError}
         onLoadMore={() => void result.fetchNextPage()}
         onSort={changeSort}
-        sort={search.sort}
+        sort={collectionFilters.sort}
         total={total}
         updating={result.isFetching && !result.isFetchingNextPage}
       />
@@ -265,7 +271,7 @@ function InstrumentDatasetsPage() {
   }
 
   function changeSort(sort: ResourceSort, direction: SortDirection) {
-    updateBrowse({ direction, sort })
+    updateBrowse(collectionOrderingSearchState(sort, direction))
   }
 
   return (
@@ -274,7 +280,16 @@ function InstrumentDatasetsPage() {
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <InstrumentDatasetFilters
-              onApply={(values) => updateBrowse(values)}
+              onApply={(values) =>
+                updateBrowse({
+                  createdFrom: values.createdFrom,
+                  createdTo: values.createdTo,
+                  ...collectionOrderingSearchState(
+                    values.sort,
+                    values.direction
+                  ),
+                })
+              }
               values={{
                 createdFrom: search.createdFrom,
                 createdTo: search.createdTo,
@@ -312,22 +327,19 @@ function InstrumentDatasetsPage() {
   )
 }
 
+type InstrumentDatasetFilterValues = {
+  createdFrom?: string
+  createdTo?: string
+  direction?: SortDirection
+  sort?: ResourceSort
+}
+
 function InstrumentDatasetFilters({
   onApply,
   values,
 }: {
-  onApply: (values: {
-    createdFrom?: string
-    createdTo?: string
-    direction?: string
-    sort?: string
-  }) => void
-  values: {
-    createdFrom?: string
-    createdTo?: string
-    direction?: string
-    sort?: string
-  }
+  onApply: (values: InstrumentDatasetFilterValues) => void
+  values: InstrumentDatasetFilterValues
 }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(values)

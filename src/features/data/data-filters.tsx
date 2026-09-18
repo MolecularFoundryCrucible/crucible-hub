@@ -151,7 +151,7 @@ export function DataFilters({
           : activeInstrumentMfid
             ? `Instrument: ${resolvedInstrumentName ?? activeInstrumentMfid}`
             : undefined,
-        resolution.filters.sort
+        values.sort
           ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
           : undefined,
       ].filter((value): value is string => Boolean(value))

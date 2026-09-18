@@ -76,6 +76,7 @@ import type {
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
+import { collectionOrderingSearchState } from "@/data/crucible/collection-query"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import type {
   DatasetFacetFilters,
@@ -388,8 +389,7 @@ function DataResults({
     filters.sessionName !== undefined ||
     filters.sessionNameIsNull ||
     filters.visibility ||
-    filters.affiliation ||
-    filters.sort
+    filters.affiliation
   )
   const updating =
     (showSamples &&
@@ -405,14 +405,15 @@ function DataResults({
   }
 
   function changeSort(sort: ResourceSort, direction: SortDirection) {
+    const ordering = collectionOrderingSearchState(sort, direction)
     void navigate({
       search: (previous) => ({
         ...previous,
         datasetCursor: undefined,
-        direction,
+        direction: ordering.direction,
         preview: undefined,
         sampleCursor: undefined,
-        sort,
+        sort: ordering.sort,
       }),
       state: {},
       to: "/data",

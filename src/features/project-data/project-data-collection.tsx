@@ -62,6 +62,7 @@ import type {
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
+import { collectionOrderingSearchState } from "@/data/crucible/collection-query"
 import { HubApiClientError } from "@/data/crucible/result"
 import type {
   WorkspaceDataset,
@@ -103,20 +104,22 @@ export function ProjectDataCollection({
     kind === "datasets"
       ? resolveCollectionBrowse(browseSearch, projectDatasetBrowseOptions)
       : undefined
-  const onSort = (sort: ResourceSort, direction: SortDirection) =>
+  const onSort = (sort: ResourceSort, direction: SortDirection) => {
+    const ordering = collectionOrderingSearchState(sort, direction)
     void navigate({
       params: { projectMfid },
       search: (previous) => ({
         ...previous,
         datasetCursor: undefined,
-        direction,
+        direction: ordering.direction,
         preview: undefined,
         sampleCursor: undefined,
-        sort,
+        sort: ordering.sort,
       }),
       state: {},
       to: "/projects/$projectMfid",
     })
+  }
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <ProjectBrowseFrame
@@ -410,7 +413,7 @@ function ProjectSamples({
   return (
     <ProjectDataResult
       cursor={cursor}
-      direction={filters.direction ?? "desc"}
+      direction={filters.direction}
       error={result.isError && !result.isFetchNextPageError}
       hasNextPage={Boolean(result.hasNextPage)}
       isPaginationDisabled={result.isFetching && !result.isFetchingNextPage}
@@ -487,7 +490,7 @@ function ProjectDatasets({
   return (
     <ProjectDataResult
       cursor={cursor}
-      direction={filters.direction ?? "desc"}
+      direction={filters.direction}
       error={result.isError && !result.isFetchNextPageError}
       hasNextPage={Boolean(result.hasNextPage)}
       isPaginationDisabled={result.isFetching && !result.isFetchingNextPage}

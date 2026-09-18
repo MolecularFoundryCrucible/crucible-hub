@@ -420,11 +420,6 @@ function fixtureQueryRows<
   const affiliated = options.affiliation
     ? items.filter((item) => item.owner?.unique_id === accountMfid)
     : items
-  if (!options.sort) {
-    return [...affiliated].sort((left, right) =>
-      right.unique_id.localeCompare(left.unique_id)
-    )
-  }
   const sort = options.sort
   const direction = options.direction === "asc" ? 1 : -1
   return [...affiliated].sort((left, right) => {

@@ -20,13 +20,45 @@ export type CollectionQueryOptions = {
   sort?: ResourceSort
 }
 
+export const defaultCollectionOrdering = {
+  direction: "desc",
+  sort: "created",
+} as const satisfies {
+  direction: SortDirection
+  sort: ResourceSort
+}
+
+export type NormalizedCollectionQueryOptions = CollectionQueryOptions & {
+  direction: SortDirection
+  sort: ResourceSort
+}
+
 export function normalizeCollectionQueryOptions(
   options: CollectionQueryOptions
-): CollectionQueryOptions {
+): NormalizedCollectionQueryOptions {
+  const hasExplicitSort = Boolean(options.sort)
   return {
     ...(options.affiliation ? { affiliation: options.affiliation } : {}),
-    ...(options.sort
-      ? { direction: options.direction ?? "desc", sort: options.sort }
-      : {}),
+    direction: hasExplicitSort
+      ? (options.direction ?? defaultCollectionOrdering.direction)
+      : defaultCollectionOrdering.direction,
+    sort: options.sort ?? defaultCollectionOrdering.sort,
+  }
+}
+
+export function collectionOrderingSearchState(
+  sort: ResourceSort | undefined,
+  direction: SortDirection | undefined
+) {
+  const normalized = normalizeCollectionQueryOptions({ direction, sort })
+  if (
+    normalized.sort === defaultCollectionOrdering.sort &&
+    normalized.direction === defaultCollectionOrdering.direction
+  ) {
+    return { direction: undefined, sort: undefined }
+  }
+  return {
+    direction: normalized.direction,
+    sort: normalized.sort,
   }
 }

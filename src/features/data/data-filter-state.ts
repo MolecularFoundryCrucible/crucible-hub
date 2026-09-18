@@ -6,15 +6,16 @@ import {
 } from "@/data/crucible/collection-filters"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
 import {
+  collectionOrderingSearchState,
   collectionAffiliationSchema,
   collectionCursorSchema,
+  normalizeCollectionQueryOptions,
   resourceSortSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import type {
   CollectionAffiliation,
-  ResourceSort,
-  SortDirection,
+  NormalizedCollectionQueryOptions,
 } from "@/data/crucible/collection-query"
 import {
   collectionBrowseSearchFields,
@@ -75,13 +76,12 @@ type ProjectSelection =
 
 export type DataFilterValues = CollectionFilters &
   DatasetFacetFilters &
+  Pick<NormalizedCollectionQueryOptions, "direction" | "sort"> &
   ProjectSelection &
   SampleFacetFilters & {
     affiliation?: CollectionAffiliation
-    direction?: SortDirection
     instrumentMfid?: string
     kind: DataKindFilter
-    sort?: ResourceSort
   }
 
 export type DataFilterField = keyof DataFilterSearch
@@ -261,12 +261,10 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
     ...(domain.data.affiliation
       ? { affiliation: domain.data.affiliation }
       : {}),
-    ...(domain.data.sort
-      ? {
-          direction: domain.data.direction ?? "desc",
-          sort: domain.data.sort,
-        }
-      : {}),
+    ...normalizeCollectionQueryOptions({
+      direction: domain.data.direction,
+      sort: domain.data.sort,
+    }),
     ...(domain.data.kind === "samples"
       ? {
           ownerId: domain.data.ownerId,
@@ -299,6 +297,10 @@ export function applyDataFilters(
   previous: Readonly<Record<string, unknown> & DataSearch>,
   filters: DataFilterValues
 ) {
+  const ordering = collectionOrderingSearchState(
+    filters.sort,
+    filters.direction
+  )
   return {
     ...previous,
     ...(previous.view === "grouped"
@@ -309,7 +311,7 @@ export function applyDataFilters(
     createdTo: filters.createdTo,
     ...facetSearchState(filters),
     datasetCursor: undefined,
-    direction: filters.direction,
+    direction: ordering.direction,
     instrumentMfid:
       filters.kind === "datasets" ? filters.instrumentMfid : undefined,
     instrumentMfidIsNull:
@@ -320,7 +322,7 @@ export function applyDataFilters(
       filters.projectScope === "all" ? undefined : filters.projectScope,
     preview: undefined,
     sampleCursor: undefined,
-    sort: filters.sort,
+    sort: ordering.sort,
     visibility: filters.visibility,
   }
 }

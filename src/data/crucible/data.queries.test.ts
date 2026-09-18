@@ -13,7 +13,7 @@ describe("dataset query options", () => {
       "account-a",
       "datasets",
       "list",
-      { limit: 50 },
+      { direction: "desc", limit: 50, sort: "created" },
     ])
     expect(
       datasetsQueryOptions(scope, {
@@ -26,7 +26,12 @@ describe("dataset query options", () => {
       "account-a",
       "datasets",
       "list",
-      { instrumentMfid: "fixture-instrument-1", limit: 50 },
+      {
+        direction: "desc",
+        instrumentMfid: "fixture-instrument-1",
+        limit: 50,
+        sort: "created",
+      },
     ])
   })
 
@@ -37,9 +42,11 @@ describe("dataset query options", () => {
         projectMfid: " fixture-project-1 ",
       }).queryKey[5]
     ).toEqual({
+      direction: "desc",
       limit: 50,
       projectMfid: "fixture-project-1",
       projectScope: "all",
+      sort: "created",
     })
     expect(
       datasetsQueryOptions(scope, {
@@ -48,9 +55,11 @@ describe("dataset query options", () => {
         projectScope: "shared",
       }).queryKey[5]
     ).toEqual({
+      direction: "desc",
       limit: 50,
       projectMfid: "fixture-project-1",
       projectScope: "shared",
+      sort: "created",
     })
   })
 
@@ -77,7 +86,9 @@ describe("dataset query options", () => {
     ).toEqual({
       createdFrom: "2026-08-27",
       createdTo: "2026-08-29",
+      direction: "desc",
       limit: 50,
+      sort: "created",
       visibility: "private",
     })
   })

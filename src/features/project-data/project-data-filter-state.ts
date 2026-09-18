@@ -6,13 +6,11 @@ import {
 } from "@/data/crucible/collection-filters"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
 import {
+  normalizeCollectionQueryOptions,
   resourceSortSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
-import type {
-  ResourceSort,
-  SortDirection,
-} from "@/data/crucible/collection-query"
+import type { NormalizedCollectionQueryOptions } from "@/data/crucible/collection-query"
 import type {
   DatasetFacetFilters,
   SampleFacetFilters,
@@ -58,10 +56,9 @@ export type ProjectDataFilterSearch = {
 
 export type ProjectDataCollectionFilters = CollectionFilters &
   DatasetFacetFilters &
+  Pick<NormalizedCollectionQueryOptions, "direction" | "sort"> &
   SampleFacetFilters & {
-    direction?: SortDirection
     instrumentMfid?: string
-    sort?: ResourceSort
   }
 
 export type ProjectDataFilterError = {
@@ -203,12 +200,10 @@ export function resolveProjectDataFilters(
   return {
     filters: {
       ...normalizeCollectionFilters(collection.data),
-      ...(domain.data.sort
-        ? {
-            direction: domain.data.direction ?? "desc",
-            sort: domain.data.sort,
-          }
-        : {}),
+      ...normalizeCollectionQueryOptions({
+        direction: domain.data.direction,
+        sort: domain.data.sort,
+      }),
       ...(kind === "samples"
         ? {
             sampleType: domain.data.sampleType,

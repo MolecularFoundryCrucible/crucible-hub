@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { ProjectScope } from "@/data/crucible/data.queries"
+import { collectionOrderingSearchState } from "@/data/crucible/collection-query"
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 
@@ -145,7 +146,7 @@ export function ProjectDataFilters({
           resolution.filters.dataFormatIsNull
         )
       : undefined,
-    resolution.valid && resolution.filters.sort
+    resolution.valid && values.sort
       ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
       : undefined,
   ].filter((value): value is string => Boolean(value))
@@ -164,6 +165,10 @@ export function ProjectDataFilters({
     }
     setDraftErrors([])
     setFiltersOpen(false)
+    const ordering = collectionOrderingSearchState(
+      next.filters.sort,
+      next.filters.direction
+    )
     void navigate({
       params: { projectMfid },
       search: (previous) => ({
@@ -177,7 +182,7 @@ export function ProjectDataFilters({
         dataFormatIsNull: next.filters.dataFormatIsNull,
         dataFormatSet: next.filters.dataFormat !== undefined || undefined,
         datasetCursor: undefined,
-        direction: next.filters.direction,
+        direction: ordering.direction,
         instrumentMfid:
           kind === "datasets" ? next.filters.instrumentMfid : undefined,
         instrumentMfidIsNull:
@@ -197,7 +202,7 @@ export function ProjectDataFilters({
         sessionName: next.filters.sessionName,
         sessionNameIsNull: next.filters.sessionNameIsNull,
         sessionNameSet: next.filters.sessionName !== undefined || undefined,
-        sort: next.filters.sort,
+        sort: ordering.sort,
         visibility: next.filters.visibility,
       }),
       state: {},

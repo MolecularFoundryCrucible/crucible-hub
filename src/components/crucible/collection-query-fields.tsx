@@ -1,6 +1,10 @@
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import type {
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
 
 type CreatedRange = {
   createdFrom?: string
@@ -57,6 +61,11 @@ export function CollectionCreatedRangeFields({
 }
 
 type CollectionOrder = {
+  direction?: SortDirection
+  sort?: ResourceSort
+}
+
+type CollectionOrderValue = {
   direction?: string
   sort?: string
 }
@@ -74,7 +83,7 @@ export function CollectionOrderFields({
   idPrefix: string
   invalid?: (field: keyof CollectionOrder) => boolean
   onChange: (value: CollectionOrder) => void
-  value: CollectionOrder
+  value: CollectionOrderValue
 }) {
   return (
     <>
@@ -85,18 +94,21 @@ export function CollectionOrderFields({
           aria-invalid={invalid("sort") || undefined}
           className="w-full"
           id={`${idPrefix}-sort`}
-          onChange={(event) =>
+          onChange={(event) => {
+            const sort = resourceSort(event.target.value)
             onChange({
-              direction: event.target.value
-                ? (value.direction ?? "desc")
+              direction: sort
+                ? (sortDirection(value.direction ?? "") ?? "desc")
                 : undefined,
-              sort: event.target.value || undefined,
+              sort,
             })
-          }
+          }}
           value={value.sort ?? ""}
         >
           {allowDefault ? (
-            <NativeSelectOption value="">Default</NativeSelectOption>
+            <NativeSelectOption value="">
+              Default (newest created)
+            </NativeSelectOption>
           ) : null}
           <NativeSelectOption value="name">Name</NativeSelectOption>
           <NativeSelectOption value="created">Created</NativeSelectOption>
@@ -111,9 +123,12 @@ export function CollectionOrderFields({
             aria-invalid={invalid("direction") || undefined}
             className="w-full"
             id={`${idPrefix}-direction`}
-            onChange={(event) =>
-              onChange({ ...value, direction: event.target.value })
-            }
+            onChange={(event) => {
+              const direction = sortDirection(event.target.value)
+              if (direction) {
+                onChange({ direction, sort: resourceSort(value.sort ?? "") })
+              }
+            }}
             value={value.direction ?? "desc"}
           >
             <NativeSelectOption value="asc">Ascending</NativeSelectOption>
@@ -123,4 +138,14 @@ export function CollectionOrderFields({
       ) : null}
     </>
   )
+}
+
+function resourceSort(value: string): ResourceSort | undefined {
+  return value === "created" || value === "name" || value === "updated"
+    ? value
+    : undefined
+}
+
+function sortDirection(value: string): SortDirection | undefined {
+  return value === "asc" || value === "desc" ? value : undefined
 }
