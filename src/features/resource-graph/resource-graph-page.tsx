@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import cytoscape from "cytoscape"
 import type { Core, ElementDefinition, StylesheetJson } from "cytoscape"
+import { z } from "zod"
 
 import {
   ExploreGraphFocusIcon,
@@ -30,6 +31,14 @@ import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Card,
   CardAction,
   CardContent,
@@ -43,6 +52,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -93,6 +103,15 @@ type GraphExpansionState = Pick<
   "isError" | "isPending" | "isSuccess" | "refetch"
 >
 
+export const resourceGraphSearchSchema = z.object({
+  depth: z
+    .union([z.literal(1), z.literal(2), z.literal(3)])
+    .optional()
+    .catch(undefined),
+})
+
+export type ResourceGraphDepth = 1 | 2 | 3
+
 function combineResourceGraphExpansionQueries(
   results: readonly GraphExpansionQueryResult[]
 ) {
@@ -109,9 +128,13 @@ function combineResourceGraphExpansionQueries(
 }
 
 export function ResourceGraphPage({
+  depth,
+  onDepthChange,
   resourceKind,
   resourceMfid,
 }: {
+  depth: ResourceGraphDepth
+  onDepthChange: (depth: ResourceGraphDepth) => void
   resourceKind: "dataset" | "sample"
   resourceMfid: string
 }) {
@@ -120,12 +143,17 @@ export function ResourceGraphPage({
   const resource = useResourceWorkspaceResource()
   const graph = useRef<Core | null>(null)
   const [expansion, setExpansion] = useState({
+    depth,
     resourceMfid,
     roots: [] as string[],
   })
   const expansionRoots =
-    expansion.resourceMfid === resourceMfid ? expansion.roots : []
-  const query = useQuery(resourceGraphQueryOptions(scope, resourceMfid))
+    expansion.resourceMfid === resourceMfid && expansion.depth === depth
+      ? expansion.roots
+      : []
+  const query = useQuery(
+    resourceGraphQueryOptions(scope, resourceMfid, { depth })
+  )
   const expansions = useQueries({
     queries: expansionRoots.map((rootMfid) =>
       resourceGraphQueryOptions(scope, rootMfid)
@@ -200,6 +228,25 @@ export function ResourceGraphPage({
     (node) => node.unique_id !== displayedGraph.rootMfid
   )
   const isExpanding = expansions.isFetching
+  const expandNode = (nodeMfid: string) => {
+    const state = expansionStates.get(nodeMfid)
+    if (state?.isError) {
+      void state.refetch()
+      return
+    }
+    setExpansion((current) => {
+      const roots =
+        current.resourceMfid === resourceMfid && current.depth === depth
+          ? current.roots
+          : []
+      if (roots.includes(nodeMfid)) return current
+      return {
+        depth,
+        resourceMfid,
+        roots: [...roots, nodeMfid],
+      }
+    })
+  }
 
   return (
     <section
@@ -250,8 +297,13 @@ export function ResourceGraphPage({
         </Empty>
       ) : (
         <ResourceGraphCanvas
+          depth={depth}
+          expansionStates={expansionStates}
           graph={displayedGraph}
           instanceRef={graph}
+          nodes={relatedNodes}
+          onDepthChange={onDepthChange}
+          onExpand={expandNode}
           rootContext={
             resource.kind === "sample"
               ? resource.sample_type
@@ -287,22 +339,7 @@ export function ResourceGraphPage({
         expansionStates={expansionStates}
         graph={displayedGraph}
         nodes={relatedNodes}
-        onExpand={(nodeMfid) => {
-          const state = expansionStates.get(nodeMfid)
-          if (state?.isError) {
-            void state.refetch()
-            return
-          }
-          setExpansion((current) => {
-            const roots =
-              current.resourceMfid === resourceMfid ? current.roots : []
-            if (roots.includes(nodeMfid)) return current
-            return {
-              resourceMfid,
-              roots: [...roots, nodeMfid],
-            }
-          })
-        }}
+        onExpand={expandNode}
         thumbnails={thumbnailQuery.data ?? {}}
       />
     </section>
@@ -318,13 +355,23 @@ function ResourceGraphPending() {
 }
 
 function ResourceGraphCanvas({
+  depth,
+  expansionStates,
   graph,
   instanceRef,
+  nodes,
+  onDepthChange,
+  onExpand,
   onInspect,
   rootContext,
 }: {
+  depth: ResourceGraphDepth
+  expansionStates: ReadonlyMap<string, GraphExpansionState>
   graph: WorkspaceResourceGraph
   instanceRef: React.MutableRefObject<Core | null>
+  nodes: readonly WorkspaceResourceGraphNode[]
+  onDepthChange: (depth: ResourceGraphDepth) => void
+  onExpand: (nodeMfid: string) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
   rootContext: string | null
 }) {
@@ -407,12 +454,30 @@ function ResourceGraphCanvas({
 
   return (
     <div className="resource-graph-surface relative overflow-hidden rounded-xl border bg-card">
-      <div className="resource-graph-summary absolute top-3 left-3 flex flex-wrap gap-2">
-        <Badge variant="outline">{graph.nodes.length} resources</Badge>
-        <Badge variant="outline">
-          {graph.edges.length}{" "}
-          {graph.edges.length === 1 ? "relationship" : "relationships"}
-        </Badge>
+      <div className="resource-graph-options absolute top-3 left-3 flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 text-label">
+          <span>Depth</span>
+          <NativeSelect
+            aria-label="Graph depth"
+            onChange={(event) => {
+              const nextDepth = Number(event.currentTarget.value)
+              if (nextDepth === 1 || nextDepth === 2 || nextDepth === 3) {
+                onDepthChange(nextDepth)
+              }
+            }}
+            size="sm"
+            value={depth}
+          >
+            <NativeSelectOption value={1}>1</NativeSelectOption>
+            <NativeSelectOption value={2}>2</NativeSelectOption>
+            <NativeSelectOption value={3}>3</NativeSelectOption>
+          </NativeSelect>
+        </label>
+        <GraphExpansionMenu
+          expansionStates={expansionStates}
+          nodes={nodes}
+          onExpand={onExpand}
+        />
       </div>
       <div className="resource-graph-controls absolute top-3 right-3 flex gap-1">
         <GraphControl
@@ -515,23 +580,70 @@ function ResourceGraphLegend() {
       <span className="flex items-center gap-1.5">
         <ResourceTypeIcon type="dataset" /> Dataset
       </span>
-      <span className="flex items-center gap-1.5">
-        <span
-          aria-hidden="true"
-          className="resource-graph-edge-key"
-          data-relationship="lineage"
-        />
-        Parent to child
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span
-          aria-hidden="true"
-          className="resource-graph-edge-key"
-          data-relationship="associated"
-        />
-        Associated
-      </span>
     </div>
+  )
+}
+
+function GraphExpansionMenu({
+  expansionStates,
+  nodes,
+  onExpand,
+}: {
+  expansionStates: ReadonlyMap<string, GraphExpansionState>
+  nodes: readonly WorkspaceResourceGraphNode[]
+  onExpand: (nodeMfid: string) => void
+}) {
+  const expandableNodes = nodes.filter((node) => {
+    const state = expansionStates.get(node.unique_id)
+    return !state?.isSuccess && (state || node.hasMoreRelationships !== false)
+  })
+  if (expandableNodes.length === 0) return null
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button size="sm" type="button" variant="outline">
+            <ExpandGraphNodeIcon aria-hidden="true" />
+            Expand
+          </Button>
+        }
+      />
+      <DropdownMenuContent className="max-w-72 min-w-64">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Expand from</DropdownMenuLabel>
+          {expandableNodes.map((node) => {
+            const state = expansionStates.get(node.unique_id)
+            return (
+              <DropdownMenuItem
+                disabled={state?.isPending}
+                key={node.unique_id}
+                onClick={() => onExpand(node.unique_id)}
+              >
+                {state?.isPending ? (
+                  <LoadingMoreIcon
+                    aria-hidden="true"
+                    className="animate-spin"
+                  />
+                ) : (
+                  <ResourceTypeIcon type={node.kind} />
+                )}
+                <span className="min-w-0 flex-1 truncate">{node.name}</span>
+                {state?.isError ? (
+                  <span className="text-supporting text-destructive">
+                    Retry
+                  </span>
+                ) : node.hasMoreRelationships === null ? (
+                  <span className="text-supporting text-muted-foreground">
+                    Check
+                  </span>
+                ) : null}
+              </DropdownMenuItem>
+            )
+          })}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

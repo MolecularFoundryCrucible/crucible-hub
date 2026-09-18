@@ -547,13 +547,14 @@ body {
   cursor: pointer;
 }
 
-.resource-graph-summary,
+.resource-graph-options,
 .resource-graph-controls,
 .resource-graph-legend {
   z-index: var(--layer-graph-overlay);
 }
 
-.resource-graph-summary .badge,
+.resource-graph-options [data-slot="button"],
+.resource-graph-options [data-slot="native-select"],
 .resource-graph-controls button,
 .resource-graph-legend {
   background-color: color-mix(in oklch, var(--card) 92%, transparent);
@@ -567,16 +568,6 @@ body {
   padding: var(--spacing-2) var(--spacing-3);
 }
 
-.resource-graph-edge-key {
-  display: inline-block;
-  width: var(--spacing-6);
-  border-top: 2px solid var(--graph-edge);
-}
-
-.resource-graph-edge-key[data-relationship="associated"] {
-  border-top-style: dashed;
-}
-
 @media (max-width: 47.999rem) {
   .resource-graph-canvas {
     --graph-layout-column-gap: 248;
@@ -585,10 +576,6 @@ body {
     --graph-layout-association-column-gap: 192;
     --graph-layout-association-row-gap: 104;
     --graph-fit-padding: 32;
-  }
-
-  .resource-graph-summary {
-    top: calc(var(--spacing) * 12);
   }
 
   .resource-graph-table,

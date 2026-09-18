@@ -901,7 +901,8 @@ export async function mutateWorkspaceDatasetThumbnails(
 }
 
 function fixtureResourceGraph(
-  resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
+  resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>,
+  requestedDepth: number
 ): WorkspaceResourceGraph {
   const nodes = new Map([
     [
@@ -922,7 +923,7 @@ function fixtureResourceGraph(
       },
     ],
   ])
-  const edges = (resource.links ?? []).flatMap(
+  const edges = (requestedDepth === 0 ? [] : (resource.links ?? [])).flatMap(
     (link): WorkspaceResourceGraphEdge[] => {
       if (link.resource_type !== "dataset" && link.resource_type !== "sample") {
         return []
@@ -994,7 +995,7 @@ function fixtureResourceGraph(
     hasMore: false,
     nodeLimit: 500,
     nodes: [...nodes.values()],
-    requestedDepth: 1,
+    requestedDepth,
     returnedDepth: edges.length > 0 ? 1 : 0,
     rootMfid: resource.unique_id,
     truncated: false,
@@ -1117,7 +1118,7 @@ export async function readWorkspaceResourceGraph(
     ) {
       throw new CrucibleResponseError(404)
     }
-    return fixtureResourceGraph(resource)
+    return fixtureResourceGraph(resource, graphRequest.depth ?? 1)
   }
 
   const client = createCrucibleClient(configuration)
