@@ -18,7 +18,6 @@ import {
   ExploreGraphFocusIcon,
   EnterGraphFullscreenIcon,
   ExitGraphFullscreenIcon,
-  ExpandGraphNodeIcon,
   FitGraphIcon,
   GraphAncestorsIcon,
   GraphAssociationsIcon,
@@ -31,7 +30,6 @@ import {
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Tooltip,
   TooltipContent,
@@ -46,16 +44,13 @@ import {
   graphExpansionModesForNode,
   graphExpansionPending,
   graphExpansionState,
-  graphNodeCanExpand,
 } from "./resource-graph-expansion"
 import type {
   GraphExpansionMode,
   GraphExpansionState,
-  ResourceGraphDepth,
 } from "./resource-graph-expansion"
 
 type ResourceFlowNodeData = {
-  activeExpansion: boolean
   context: string | null
   dimmed: boolean
   expansionStates: ReadonlyMap<string, GraphExpansionState>
@@ -64,7 +59,6 @@ type ResourceFlowNodeData = {
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  onToggleExpansion: (nodeMfid: string) => void
 }
 
 type ResourceFlowNode = Node<ResourceFlowNodeData, "resource">
@@ -88,24 +82,18 @@ type LayoutPosition = {
 const elk = new ELK()
 
 export function ResourceGraphCanvas({
-  depth,
-  expansionMenu,
   expansionStates,
   expansionModesByNode,
   graph,
   loading,
-  onDepthChange,
   onExpand,
   onInspect,
   rootContext,
 }: {
-  depth: ResourceGraphDepth
-  expansionMenu: React.ReactNode
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   graph: WorkspaceResourceGraph
   loading: boolean
-  onDepthChange: (depth: ResourceGraphDepth) => void
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
   rootContext: string | null
@@ -113,13 +101,10 @@ export function ResourceGraphCanvas({
   return (
     <ReactFlowProvider>
       <ResourceGraphFlow
-        depth={depth}
-        expansionMenu={expansionMenu}
         expansionStates={expansionStates}
         expansionModesByNode={expansionModesByNode}
         graph={graph}
         loading={loading}
-        onDepthChange={onDepthChange}
         onExpand={onExpand}
         onInspect={onInspect}
         rootContext={rootContext}
@@ -129,24 +114,18 @@ export function ResourceGraphCanvas({
 }
 
 function ResourceGraphFlow({
-  depth,
-  expansionMenu,
   expansionStates,
   expansionModesByNode,
   graph,
   loading,
-  onDepthChange,
   onExpand,
   onInspect,
   rootContext,
 }: {
-  depth: ResourceGraphDepth
-  expansionMenu: React.ReactNode
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   graph: WorkspaceResourceGraph
   loading: boolean
-  onDepthChange: (depth: ResourceGraphDepth) => void
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
   rootContext: string | null
@@ -162,9 +141,6 @@ function ResourceGraphFlow({
   const layoutGeneration = useRef(0)
   const resetLayoutRequested = useRef(false)
   const flow = useReactFlow<ResourceFlowNode, ResourceFlowEdge>()
-  const [activeExpansionNode, setActiveExpansionNode] = useState<string | null>(
-    null
-  )
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
   const [layoutDirection, setLayoutDirection] =
     useState<LayoutDirection | null>(null)
@@ -290,15 +266,8 @@ function ResourceGraphFlow({
     ])
   }, [graph.edges, hoveredNode])
 
-  const toggleExpansion = useCallback((nodeMfid: string) => {
-    setActiveExpansionNode((current) =>
-      current === nodeMfid ? null : nodeMfid
-    )
-  }, [])
-
   const resetLayout = useCallback(() => {
     resetLayoutRequested.current = true
-    setActiveExpansionNode(null)
     setHoveredNode(null)
     setLayoutRevision((current) => current + 1)
   }, [])
@@ -332,7 +301,6 @@ function ResourceGraphFlow({
             ariaLabel: `${node.kind === "sample" ? "Sample" : "Dataset"}: ${node.name}`,
             connectable: false,
             data: {
-              activeExpansion: activeExpansionNode === node.unique_id,
               context:
                 node.unique_id === graph.rootMfid ? rootContext : node.context,
               dimmed: Boolean(neighbours && !neighbours.has(node.unique_id)),
@@ -342,7 +310,6 @@ function ResourceGraphFlow({
               layoutDirection: layoutDirection ?? "RIGHT",
               node,
               onExpand,
-              onToggleExpansion: toggleExpansion,
             },
             deletable: false,
             draggable: true,
@@ -359,7 +326,6 @@ function ResourceGraphFlow({
         ]
       }),
     [
-      activeExpansionNode,
       expansionStates,
       expansionModesByNode,
       graph.nodes,
@@ -369,7 +335,6 @@ function ResourceGraphFlow({
       neighbours,
       onExpand,
       rootContext,
-      toggleExpansion,
     ]
   )
   const [flowNodes, setFlowNodes, handleNodesChange] =
@@ -451,27 +416,6 @@ function ResourceGraphFlow({
       data-density={graphDensity(graph.nodes.length)}
       ref={surface}
     >
-      <div className="resource-graph-options absolute top-3 left-3 flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 text-label">
-          <span>Lineage depth</span>
-          <NativeSelect
-            aria-label="Lineage depth"
-            onChange={(event) => {
-              const nextDepth = Number(event.currentTarget.value)
-              if (nextDepth === 1 || nextDepth === 2 || nextDepth === 3) {
-                onDepthChange(nextDepth)
-              }
-            }}
-            size="sm"
-            value={depth}
-          >
-            <NativeSelectOption value={1}>1</NativeSelectOption>
-            <NativeSelectOption value={2}>2</NativeSelectOption>
-            <NativeSelectOption value={3}>3</NativeSelectOption>
-          </NativeSelect>
-        </label>
-        {expansionMenu}
-      </div>
       <GraphViewportControls
         flow={flow}
         fullscreen={fullscreen}
@@ -497,7 +441,6 @@ function ResourceGraphFlow({
         nodesDraggable
         onInit={() => setFlowReady(true)}
         onNodeDragStop={(_, node) => persistNodePosition(node)}
-        onNodeDragStart={() => setActiveExpansionNode(null)}
         onNodesChange={handleNodesChange}
         onNodeClick={(event, node) => {
           if (node.id === graph.rootMfid) return
@@ -507,7 +450,6 @@ function ResourceGraphFlow({
         }}
         onNodeMouseEnter={(_, node) => setHoveredNode(node.id)}
         onNodeMouseLeave={() => setHoveredNode(null)}
-        onPaneClick={() => setActiveExpansionNode(null)}
         onlyRenderVisibleElements
         panOnScroll
         preventScrolling={false}
@@ -554,7 +496,7 @@ function ResourceGraphFlow({
 const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
   data,
 }: NodeProps<ResourceFlowNode>) {
-  const expandable = graphNodeCanExpand(
+  const expansionModes = graphExpansionModesForNode(
     data.node,
     data.expansionStates,
     data.expansionModes
@@ -601,14 +543,12 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       {data.context ? (
         <span className="resource-graph-flow-node-context">{data.context}</span>
       ) : null}
-      {expandable ? (
+      {expansionModes.length > 0 ? (
         <GraphNodeExpansionControls
-          active={data.activeExpansion}
-          availableModes={data.expansionModes}
+          modes={expansionModes}
           expansionStates={data.expansionStates}
           node={data.node}
           onExpand={data.onExpand}
-          onToggle={data.onToggleExpansion}
         />
       ) : null}
     </div>
@@ -618,64 +558,27 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
 const nodeTypes = { resource: ResourceGraphNode }
 
 function GraphNodeExpansionControls({
-  active,
-  availableModes,
+  modes,
   expansionStates,
   node,
   onExpand,
-  onToggle,
 }: {
-  active: boolean
-  availableModes: readonly GraphExpansionMode[]
+  modes: readonly GraphExpansionMode[]
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  onToggle: (nodeMfid: string) => void
 }) {
   return (
     <>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              aria-expanded={active}
-              aria-label={`Choose graph expansion from ${node.name}`}
-              className="nodrag nopan resource-graph-expansion-trigger"
-              onClick={(event) => {
-                event.stopPropagation()
-                onToggle(node.unique_id)
-              }}
-              size="icon-xs"
-              type="button"
-              variant="outline"
-            />
-          }
-        >
-          <ExpandGraphNodeIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>Expand from this resource</TooltipContent>
-      </Tooltip>
-      {active
-        ? graphExpansionModesForNode(node, expansionStates, availableModes).map(
-            (mode) => {
-              const state = graphExpansionState(
-                expansionStates,
-                node.unique_id,
-                mode
-              )
-              if (state?.isSuccess) return null
-              return (
-                <GraphNodeExpansionAction
-                  key={mode}
-                  mode={mode}
-                  node={node}
-                  onExpand={onExpand}
-                  state={state}
-                />
-              )
-            }
-          )
-        : null}
+      {modes.map((mode) => (
+        <GraphNodeExpansionAction
+          key={mode}
+          mode={mode}
+          node={node}
+          onExpand={onExpand}
+          state={graphExpansionState(expansionStates, node.unique_id, mode)}
+        />
+      ))}
     </>
   )
 }
@@ -703,7 +606,7 @@ function GraphNodeExpansionAction({
         render={
           <Button
             aria-label={label}
-            className={`nodrag nopan resource-graph-expansion-action resource-graph-expansion-${mode}`}
+            className={`nodrag nopan resource-graph-expansion-action resource-graph-expansion-${mode} rounded-full shadow-sm`}
             disabled={pending}
             onClick={(event) => {
               event.stopPropagation()

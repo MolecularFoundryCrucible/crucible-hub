@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query"
-import { z } from "zod"
 
 import {
   ExpandGraphNodeIcon,
@@ -30,9 +29,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -91,7 +87,6 @@ import type {
   GraphExpansionMode,
   GraphExpansionRequest,
   GraphExpansionState,
-  ResourceGraphDepth,
 } from "./resource-graph-expansion"
 import { mergeResourceGraphs } from "./resource-graph-merge"
 
@@ -104,14 +99,7 @@ type GraphExpansionQueryResult = {
   refetch: () => Promise<unknown>
 }
 
-export const resourceGraphSearchSchema = z.object({
-  depth: z
-    .union([z.literal(1), z.literal(2), z.literal(3)])
-    .optional()
-    .catch(undefined),
-})
-
-export type { ResourceGraphDepth } from "./resource-graph-expansion"
+const initialLineageDepth = 3
 
 function combineResourceGraphExpansionQueries(
   results: readonly GraphExpansionQueryResult[]
@@ -130,13 +118,9 @@ function combineResourceGraphExpansionQueries(
 }
 
 export function ResourceGraphPage({
-  depth,
-  onDepthChange,
   resourceKind,
   resourceMfid,
 }: {
-  depth: ResourceGraphDepth
-  onDepthChange: (depth: ResourceGraphDepth) => void
   resourceKind: "dataset" | "sample"
   resourceMfid: string
 }) {
@@ -144,29 +128,25 @@ export function ResourceGraphPage({
   const navigation = useResourcePreviewContext()
   const resource = useResourceWorkspaceResource()
   const [expansion, setExpansion] = useState({
-    depth,
     resourceMfid,
     requests: [] as GraphExpansionRequest[],
   })
   const expansionRequests =
-    expansion.resourceMfid === resourceMfid && expansion.depth === depth
-      ? expansion.requests
-      : []
+    expansion.resourceMfid === resourceMfid ? expansion.requests : []
   const query = useQuery({
     ...resourceGraphQueryOptions(scope, resourceMfid, {
-      depth,
-      direction: depth === 1 ? "both" : "upstream",
-      relationshipKinds: depth === 1 ? undefined : ["lineage"],
+      depth: initialLineageDepth,
+      direction: "upstream",
+      relationshipKinds: ["lineage"],
     }),
     placeholderData: keepPreviousData,
   })
   const descendantQuery = useQuery({
     ...resourceGraphQueryOptions(scope, resourceMfid, {
-      depth,
+      depth: initialLineageDepth,
       direction: "downstream",
       relationshipKinds: ["lineage"],
     }),
-    enabled: depth > 1,
     placeholderData: keepPreviousData,
   })
   const associationQuery = useQuery({
@@ -174,7 +154,6 @@ export function ResourceGraphPage({
       depth: 1,
       relationshipKinds: ["association"],
     }),
-    enabled: depth > 1,
   })
   const expansions = useQueries({
     queries: expansionRequests.map((request) =>
@@ -187,7 +166,6 @@ export function ResourceGraphPage({
     combine: combineResourceGraphExpansionQueries,
   })
   const rootGraph = useMemo(() => {
-    if (depth === 1) return query.data
     if (descendantQuery.isPlaceholderData) {
       return query.data ?? descendantQuery.data
     }
@@ -204,7 +182,6 @@ export function ResourceGraphPage({
     return mergeResourceGraphs(baseGraph, additionalGraphs)
   }, [
     associationQuery.data,
-    depth,
     descendantQuery.data,
     descendantQuery.isPlaceholderData,
     query.data,
@@ -259,8 +236,7 @@ export function ResourceGraphPage({
 
   if (
     !displayedGraph &&
-    (query.isPending ||
-      (depth > 1 && (descendantQuery.isPending || associationQuery.isPending)))
+    (query.isPending || descendantQuery.isPending || associationQuery.isPending)
   ) {
     return <ResourceGraphPending />
   }
@@ -281,10 +257,8 @@ export function ResourceGraphPage({
         <Button
           onClick={() => {
             void query.refetch()
-            if (depth > 1) {
-              void descendantQuery.refetch()
-              void associationQuery.refetch()
-            }
+            void descendantQuery.refetch()
+            void associationQuery.refetch()
           }}
           size="sm"
           type="button"
@@ -308,9 +282,7 @@ export function ResourceGraphPage({
     }
     setExpansion((current) => {
       const requests =
-        current.resourceMfid === resourceMfid && current.depth === depth
-          ? current.requests
-          : []
+        current.resourceMfid === resourceMfid ? current.requests : []
       if (
         requests.some(
           (request) => request.nodeMfid === nodeMfid && request.mode === mode
@@ -319,7 +291,6 @@ export function ResourceGraphPage({
         return current
       }
       return {
-        depth,
         resourceMfid,
         requests: [...requests, { mode, nodeMfid }],
       }
@@ -337,15 +308,14 @@ export function ResourceGraphPage({
       aria-label="Resource graph"
       className="flex min-w-0 flex-col gap-4"
     >
-      {query.isError || (depth > 1 && descendantQuery.isError) ? (
+      {query.isError || descendantQuery.isError ? (
         <div
           className="flex flex-wrap items-center justify-between gap-3"
           role="alert"
         >
           <p className="text-body text-muted-foreground">
-            {depth > 1
-              ? "Some lineage directions could not be refreshed. Showing the available paths."
-              : "The graph could not be refreshed. Showing the last available data."}
+            Some lineage directions could not be refreshed. Showing the
+            available paths.
           </p>
           <Button
             onClick={() => {
@@ -361,7 +331,7 @@ export function ResourceGraphPage({
         </div>
       ) : null}
 
-      {depth > 1 && associationQuery.isError ? (
+      {associationQuery.isError ? (
         <div
           className="flex flex-wrap items-center justify-between gap-3"
           role="alert"
@@ -405,15 +375,6 @@ export function ResourceGraphPage({
         </Empty>
       ) : (
         <ResourceGraphCanvas
-          depth={depth}
-          expansionMenu={
-            <GraphExpansionMenu
-              expansionModesByNode={expansionModesByNode}
-              expansionStates={expansionStates}
-              nodes={relatedNodes}
-              onExpand={expandNode}
-            />
-          }
           expansionStates={expansionStates}
           expansionModesByNode={expansionModesByNode}
           graph={displayedGraph}
@@ -423,7 +384,6 @@ export function ResourceGraphPage({
             associationQuery.isFetching ||
             isExpanding
           }
-          onDepthChange={onDepthChange}
           onExpand={expandNode}
           rootContext={
             resource.kind === "sample"
@@ -487,61 +447,6 @@ function ResourceGraphPending() {
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function GraphExpansionMenu({
-  expansionModesByNode,
-  expansionStates,
-  nodes,
-  onExpand,
-}: {
-  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  nodes: readonly WorkspaceResourceGraphNode[]
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-}) {
-  const expandableNodes = nodes.filter((node) =>
-    graphNodeCanExpand(
-      node,
-      expansionStates,
-      expansionModesByNode.get(node.unique_id)
-    )
-  )
-  if (expandableNodes.length === 0) return null
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button size="sm" type="button" variant="outline">
-            <ExpandGraphNodeIcon aria-hidden="true" />
-            Expand
-          </Button>
-        }
-      />
-      <DropdownMenuContent className="max-w-72 min-w-64">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Expand from</DropdownMenuLabel>
-          {expandableNodes.map((node) => (
-            <DropdownMenuSub key={node.unique_id}>
-              <DropdownMenuSubTrigger>
-                <ResourceTypeIcon type={node.kind} />
-                <span className="min-w-0 flex-1 truncate">{node.name}</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="min-w-40">
-                <GraphExpansionModeItems
-                  availableModes={expansionModesByNode.get(node.unique_id)}
-                  expansionStates={expansionStates}
-                  node={node}
-                  onExpand={onExpand}
-                />
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }
 

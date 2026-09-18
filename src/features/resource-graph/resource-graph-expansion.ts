@@ -6,8 +6,6 @@ import type {
 
 export type GraphExpansionMode = "ancestors" | "associations" | "descendants"
 
-export type ResourceGraphDepth = 1 | 2 | 3
-
 export type GraphExpansionRequest = {
   mode: GraphExpansionMode
   nodeMfid: string

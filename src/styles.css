@@ -556,7 +556,6 @@ body {
   border-radius: 0;
 }
 
-.resource-graph-options,
 .resource-graph-controls,
 .resource-graph-layout-status,
 .resource-graph-legend {
@@ -648,17 +647,9 @@ body {
   box-shadow: 0 0 0 calc(var(--focus-width)) var(--graph-ring);
 }
 
-.resource-graph-expansion-trigger,
 .resource-graph-expansion-action {
   position: absolute;
   z-index: 2;
-  background: var(--graph-card);
-}
-
-.resource-graph-expansion-trigger {
-  top: 0;
-  right: 0;
-  transform: translate(50%, -50%);
 }
 
 .resource-graph-expansion-ancestors {
@@ -729,8 +720,6 @@ body {
   }
 }
 
-.resource-graph-options [data-slot="button"],
-.resource-graph-options [data-slot="native-select"],
 .resource-graph-controls button,
 .resource-graph-legend {
   background-color: color-mix(in oklch, var(--card) 92%, transparent);
