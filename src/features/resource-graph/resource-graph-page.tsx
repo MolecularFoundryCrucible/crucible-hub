@@ -80,6 +80,7 @@ import { ResourceGraphCanvas } from "./resource-graph-canvas"
 import {
   graphExpansionKey,
   graphExpansionModeLabel,
+  graphExpansionModesByNode,
   graphExpansionModesForNode,
   graphExpansionPending,
   graphExpansionQuery,
@@ -216,6 +217,13 @@ export function ResourceGraphPage({
       graphExpansionKey(request.nodeMfid, request.mode),
       expansions.states[index],
     ])
+  )
+  const expansionModesByNode = useMemo(
+    () =>
+      displayedGraph
+        ? graphExpansionModesByNode(displayedGraph)
+        : new Map<string, readonly GraphExpansionMode[]>(),
+    [displayedGraph]
   )
   const datasetMfids = displayedGraph
     ? displayedGraph.nodes
@@ -398,12 +406,14 @@ export function ResourceGraphPage({
           depth={depth}
           expansionMenu={
             <GraphExpansionMenu
+              expansionModesByNode={expansionModesByNode}
               expansionStates={expansionStates}
               nodes={relatedNodes}
               onExpand={expandNode}
             />
           }
           expansionStates={expansionStates}
+          expansionModesByNode={expansionModesByNode}
           graph={displayedGraph}
           loading={
             query.isFetching ||
@@ -445,6 +455,7 @@ export function ResourceGraphPage({
       ) : null}
 
       <ResourceGraphTable
+        expansionModesByNode={expansionModesByNode}
         expansionStates={expansionStates}
         graph={displayedGraph}
         nodes={relatedNodes}
@@ -464,16 +475,22 @@ function ResourceGraphPending() {
 }
 
 function GraphExpansionMenu({
+  expansionModesByNode,
   expansionStates,
   nodes,
   onExpand,
 }: {
+  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   nodes: readonly WorkspaceResourceGraphNode[]
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
   const expandableNodes = nodes.filter((node) =>
-    graphNodeCanExpand(node, expansionStates)
+    graphNodeCanExpand(
+      node,
+      expansionStates,
+      expansionModesByNode.get(node.unique_id)
+    )
   )
   if (expandableNodes.length === 0) return null
 
@@ -498,6 +515,7 @@ function GraphExpansionMenu({
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="min-w-40">
                 <GraphExpansionModeItems
+                  availableModes={expansionModesByNode.get(node.unique_id)}
                   expansionStates={expansionStates}
                   node={node}
                   onExpand={onExpand}
@@ -512,36 +530,40 @@ function GraphExpansionMenu({
 }
 
 function GraphExpansionModeItems({
+  availableModes,
   expansionStates,
   node,
   onExpand,
 }: {
+  availableModes?: readonly GraphExpansionMode[]
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
-  return graphExpansionModesForNode(node, expansionStates).map((mode) => {
-    const state = graphExpansionState(expansionStates, node.unique_id, mode)
-    const pending = graphExpansionPending(state)
-    const Icon = graphExpansionModeIcon(mode)
-    return (
-      <DropdownMenuItem
-        disabled={pending}
-        key={mode}
-        onClick={() => onExpand(node.unique_id, mode)}
-      >
-        {pending ? (
-          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
-        ) : (
-          <Icon aria-hidden="true" />
-        )}
-        <span className="flex-1">{graphExpansionModeLabel(mode)}</span>
-        {state?.isError ? (
-          <span className="text-supporting text-destructive">Retry</span>
-        ) : null}
-      </DropdownMenuItem>
-    )
-  })
+  return graphExpansionModesForNode(node, expansionStates, availableModes).map(
+    (mode) => {
+      const state = graphExpansionState(expansionStates, node.unique_id, mode)
+      const pending = graphExpansionPending(state)
+      const Icon = graphExpansionModeIcon(mode)
+      return (
+        <DropdownMenuItem
+          disabled={pending}
+          key={mode}
+          onClick={() => onExpand(node.unique_id, mode)}
+        >
+          {pending ? (
+            <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+          ) : (
+            <Icon aria-hidden="true" />
+          )}
+          <span className="flex-1">{graphExpansionModeLabel(mode)}</span>
+          {state?.isError ? (
+            <span className="text-supporting text-destructive">Retry</span>
+          ) : null}
+        </DropdownMenuItem>
+      )
+    }
+  )
 }
 
 function graphExpansionModeIcon(mode: GraphExpansionMode) {
@@ -551,12 +573,14 @@ function graphExpansionModeIcon(mode: GraphExpansionMode) {
 }
 
 function ResourceGraphTable({
+  expansionModesByNode,
   expansionStates,
   graph,
   nodes,
   onExpand,
   thumbnails,
 }: {
+  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   graph: WorkspaceResourceGraph
   nodes: readonly WorkspaceResourceGraphNode[]
@@ -639,6 +663,9 @@ function ResourceGraphTable({
                       <TableCell className="resource-graph-action">
                         <span className="flex justify-end gap-1">
                           <GraphExpansionAction
+                            availableModes={expansionModesByNode.get(
+                              node.unique_id
+                            )}
                             expansionStates={expansionStates}
                             node={node}
                             onExpand={onExpand}
@@ -664,20 +691,25 @@ function ResourceGraphTable({
 }
 
 function GraphExpansionAction({
+  availableModes,
   expansionStates,
   node,
   onExpand,
 }: {
+  availableModes?: readonly GraphExpansionMode[]
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
-  if (!graphNodeCanExpand(node, expansionStates)) return null
-  const pending = graphExpansionModesForNode(node, expansionStates).some(
-    (mode) =>
-      graphExpansionPending(
-        graphExpansionState(expansionStates, node.unique_id, mode)
-      )
+  if (!graphNodeCanExpand(node, expansionStates, availableModes)) return null
+  const pending = graphExpansionModesForNode(
+    node,
+    expansionStates,
+    availableModes
+  ).some((mode) =>
+    graphExpansionPending(
+      graphExpansionState(expansionStates, node.unique_id, mode)
+    )
   )
 
   return (
@@ -709,6 +741,7 @@ function GraphExpansionAction({
         <DropdownMenuGroup>
           <DropdownMenuLabel>Expand from {node.name}</DropdownMenuLabel>
           <GraphExpansionModeItems
+            availableModes={availableModes}
             expansionStates={expansionStates}
             node={node}
             onExpand={onExpand}

@@ -59,6 +59,7 @@ type ResourceFlowNodeData = {
   context: string | null
   dimmed: boolean
   expansionStates: ReadonlyMap<string, GraphExpansionState>
+  expansionModes: readonly GraphExpansionMode[]
   isRoot: boolean
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
@@ -90,6 +91,7 @@ export function ResourceGraphCanvas({
   depth,
   expansionMenu,
   expansionStates,
+  expansionModesByNode,
   graph,
   loading,
   onDepthChange,
@@ -100,6 +102,7 @@ export function ResourceGraphCanvas({
   depth: ResourceGraphDepth
   expansionMenu: React.ReactNode
   expansionStates: ReadonlyMap<string, GraphExpansionState>
+  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   graph: WorkspaceResourceGraph
   loading: boolean
   onDepthChange: (depth: ResourceGraphDepth) => void
@@ -113,6 +116,7 @@ export function ResourceGraphCanvas({
         depth={depth}
         expansionMenu={expansionMenu}
         expansionStates={expansionStates}
+        expansionModesByNode={expansionModesByNode}
         graph={graph}
         loading={loading}
         onDepthChange={onDepthChange}
@@ -128,6 +132,7 @@ function ResourceGraphFlow({
   depth,
   expansionMenu,
   expansionStates,
+  expansionModesByNode,
   graph,
   loading,
   onDepthChange,
@@ -138,6 +143,7 @@ function ResourceGraphFlow({
   depth: ResourceGraphDepth
   expansionMenu: React.ReactNode
   expansionStates: ReadonlyMap<string, GraphExpansionState>
+  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   graph: WorkspaceResourceGraph
   loading: boolean
   onDepthChange: (depth: ResourceGraphDepth) => void
@@ -331,6 +337,7 @@ function ResourceGraphFlow({
                 node.unique_id === graph.rootMfid ? rootContext : node.context,
               dimmed: Boolean(neighbours && !neighbours.has(node.unique_id)),
               expansionStates,
+              expansionModes: expansionModesByNode.get(node.unique_id) ?? [],
               isRoot: node.unique_id === graph.rootMfid,
               layoutDirection: layoutDirection ?? "RIGHT",
               node,
@@ -354,6 +361,7 @@ function ResourceGraphFlow({
     [
       activeExpansionNode,
       expansionStates,
+      expansionModesByNode,
       graph.nodes,
       graph.rootMfid,
       layoutDirection,
@@ -546,7 +554,11 @@ function ResourceGraphFlow({
 const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
   data,
 }: NodeProps<ResourceFlowNode>) {
-  const expandable = graphNodeCanExpand(data.node, data.expansionStates)
+  const expandable = graphNodeCanExpand(
+    data.node,
+    data.expansionStates,
+    data.expansionModes
+  )
   return (
     <div
       className="resource-graph-flow-node"
@@ -592,6 +604,7 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       {expandable ? (
         <GraphNodeExpansionControls
           active={data.activeExpansion}
+          availableModes={data.expansionModes}
           expansionStates={data.expansionStates}
           node={data.node}
           onExpand={data.onExpand}
@@ -606,12 +619,14 @@ const nodeTypes = { resource: ResourceGraphNode }
 
 function GraphNodeExpansionControls({
   active,
+  availableModes,
   expansionStates,
   node,
   onExpand,
   onToggle,
 }: {
   active: boolean
+  availableModes: readonly GraphExpansionMode[]
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
@@ -641,23 +656,25 @@ function GraphNodeExpansionControls({
         <TooltipContent>Expand from this resource</TooltipContent>
       </Tooltip>
       {active
-        ? graphExpansionModesForNode(node, expansionStates).map((mode) => {
-            const state = graphExpansionState(
-              expansionStates,
-              node.unique_id,
-              mode
-            )
-            if (state?.isSuccess) return null
-            return (
-              <GraphNodeExpansionAction
-                key={mode}
-                mode={mode}
-                node={node}
-                onExpand={onExpand}
-                state={state}
-              />
-            )
-          })
+        ? graphExpansionModesForNode(node, expansionStates, availableModes).map(
+            (mode) => {
+              const state = graphExpansionState(
+                expansionStates,
+                node.unique_id,
+                mode
+              )
+              if (state?.isSuccess) return null
+              return (
+                <GraphNodeExpansionAction
+                  key={mode}
+                  mode={mode}
+                  node={node}
+                  onExpand={onExpand}
+                  state={state}
+                />
+              )
+            }
+          )
         : null}
     </>
   )
