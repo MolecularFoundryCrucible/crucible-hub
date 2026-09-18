@@ -80,7 +80,7 @@ import { ResourceGraphCanvas } from "./resource-graph-canvas"
 import {
   graphExpansionKey,
   graphExpansionModeLabel,
-  graphExpansionModes,
+  graphExpansionModesForNode,
   graphExpansionPending,
   graphExpansionQuery,
   graphExpansionState,
@@ -469,13 +469,13 @@ function GraphExpansionModeItems({
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
-  return graphExpansionModes.map((mode) => {
+  return graphExpansionModesForNode(node, expansionStates).map((mode) => {
     const state = graphExpansionState(expansionStates, node.unique_id, mode)
     const pending = graphExpansionPending(state)
     const Icon = graphExpansionModeIcon(mode)
     return (
       <DropdownMenuItem
-        disabled={pending || state?.isSuccess}
+        disabled={pending}
         key={mode}
         onClick={() => onExpand(node.unique_id, mode)}
       >
@@ -487,8 +487,6 @@ function GraphExpansionModeItems({
         <span className="flex-1">{graphExpansionModeLabel(mode)}</span>
         {state?.isError ? (
           <span className="text-supporting text-destructive">Retry</span>
-        ) : state?.isSuccess ? (
-          <span className="text-supporting text-muted-foreground">Loaded</span>
         ) : null}
       </DropdownMenuItem>
     )
@@ -624,10 +622,11 @@ function GraphExpansionAction({
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
   if (!graphNodeCanExpand(node, expansionStates)) return null
-  const pending = graphExpansionModes.some((mode) =>
-    graphExpansionPending(
-      graphExpansionState(expansionStates, node.unique_id, mode)
-    )
+  const pending = graphExpansionModesForNode(node, expansionStates).some(
+    (mode) =>
+      graphExpansionPending(
+        graphExpansionState(expansionStates, node.unique_id, mode)
+      )
   )
 
   return (

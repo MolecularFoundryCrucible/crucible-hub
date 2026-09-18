@@ -548,6 +548,14 @@ body {
   height: var(--spacing-graph-canvas-dense);
 }
 
+.resource-graph-surface:fullscreen,
+.resource-graph-surface:fullscreen .resource-graph-canvas {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
 .resource-graph-options,
 .resource-graph-controls,
 .resource-graph-layout-status,
@@ -627,8 +635,12 @@ body {
 }
 
 .react-flow__node-resource {
-  cursor: pointer;
+  cursor: grab;
   transition: transform calc(var(--graph-layout-duration) * 1ms) ease-out;
+}
+
+.react-flow__node-resource.dragging {
+  cursor: grabbing;
 }
 
 .react-flow__node-resource:focus-visible .resource-graph-flow-node,

@@ -76,10 +76,19 @@ export function graphNodeCanExpand(
   node: WorkspaceResourceGraphNode,
   states: ReadonlyMap<string, GraphExpansionState>
 ) {
+  return graphExpansionModesForNode(node, states).length > 0
+}
+
+export function graphExpansionModesForNode(
+  node: WorkspaceResourceGraphNode,
+  states: ReadonlyMap<string, GraphExpansionState>
+) {
   const modeStates = graphExpansionModes.map((mode) =>
     graphExpansionState(states, node.unique_id, mode)
   )
-  if (modeStates.some((state) => state && !state.isSuccess)) return true
-  if (modeStates.some(Boolean)) return modeStates.some((state) => !state)
-  return node.hasMoreRelationships !== false
+  if (!modeStates.some(Boolean) && node.hasMoreRelationships === false)
+    return []
+  return graphExpansionModes.filter(
+    (mode) => !graphExpansionState(states, node.unique_id, mode)?.isSuccess
+  )
 }

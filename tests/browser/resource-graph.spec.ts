@@ -44,9 +44,9 @@ test("explores immediate resource relationships without replacing the Hub shell"
   await expect(
     page.getByRole("img", { name: /Graph of 2 resources/ })
   ).toBeVisible()
-  await expect(page.getByRole("combobox", { name: "Graph depth" })).toHaveValue(
-    "1"
-  )
+  await expect(
+    page.getByRole("combobox", { name: "Lineage depth" })
+  ).toHaveValue("3")
   await expect(page.getByText("Sample", { exact: true })).toBeVisible()
   await expect(page.getByText("Dataset", { exact: true })).toBeVisible()
   await expect(page.getByText("Parent to child", { exact: true })).toHaveCount(

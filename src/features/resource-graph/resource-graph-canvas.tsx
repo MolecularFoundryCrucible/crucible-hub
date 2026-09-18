@@ -10,17 +10,26 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react"
-import type { Edge, Node, NodeProps, ReactFlowInstance } from "@xyflow/react"
+import type {
+  Edge,
+  Node,
+  NodeChange,
+  NodeProps,
+  ReactFlowInstance,
+} from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 
 import {
   ExploreGraphFocusIcon,
+  EnterGraphFullscreenIcon,
+  ExitGraphFullscreenIcon,
   ExpandGraphNodeIcon,
   FitGraphIcon,
   GraphAncestorsIcon,
   GraphAssociationsIcon,
   GraphDescendantsIcon,
   LoadingMoreIcon,
+  ResetGraphLayoutIcon,
   ZoomInGraphIcon,
   ZoomOutGraphIcon,
 } from "@/components/crucible/icons"
@@ -39,7 +48,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import {
   graphExpansionModeLabel,
-  graphExpansionModes,
+  graphExpansionModesForNode,
   graphExpansionPending,
   graphExpansionState,
   graphNodeCanExpand,
@@ -150,6 +159,7 @@ function ResourceGraphFlow({
     layoutGraph.current = graph
   }
   const layoutGeneration = useRef(0)
+  const resetLayoutRequested = useRef(false)
   const flow = useReactFlow<ResourceFlowNode, ResourceFlowEdge>()
   const [activeExpansionNode, setActiveExpansionNode] = useState<string | null>(
     null
@@ -158,10 +168,13 @@ function ResourceGraphFlow({
   const [layoutDirection, setLayoutDirection] =
     useState<LayoutDirection | null>(null)
   const [layoutPending, setLayoutPending] = useState(true)
+  const [layoutRevision, setLayoutRevision] = useState(0)
   const [layoutPositions, setLayoutPositions] = useState(
     new Map<string, LayoutPosition>()
   )
   const [flowReady, setFlowReady] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [fullscreenError, setFullscreenError] = useState(false)
 
   useEffect(() => {
     const element = surface.current
@@ -177,12 +190,32 @@ function ResourceGraphFlow({
   }, [])
 
   useEffect(() => {
+    const updateFullscreen = () => {
+      setFullscreen(document.fullscreenElement === surface.current)
+      setFullscreenError(false)
+      requestAnimationFrame(() => {
+        void flow.fitView({
+          ...graphViewportOptions(surface.current),
+          padding: 0.16,
+        })
+      })
+    }
+    document.addEventListener("fullscreenchange", updateFullscreen)
+    return () =>
+      document.removeEventListener("fullscreenchange", updateFullscreen)
+  }, [flow])
+
+  useEffect(() => {
     const element = surface.current
     if (!element || !flowReady || !layoutDirection) return
     const currentGraph = layoutGraph.current
+    const resetLayout = resetLayoutRequested.current
+    resetLayoutRequested.current = false
     const generation = layoutGeneration.current + 1
     layoutGeneration.current = generation
-    const previousRoot = lastPositions.current.get(currentGraph.rootMfid)
+    const previousRoot = resetLayout
+      ? undefined
+      : lastPositions.current.get(currentGraph.rootMfid)
     const previousViewport = flow.getViewport()
     const previousRootScreen = previousRoot
       ? {
@@ -242,7 +275,7 @@ function ResourceGraphFlow({
         setLayoutPending(false)
       }
     )
-  }, [flow, flowReady, layoutDirection, layoutSignature])
+  }, [flow, flowReady, layoutDirection, layoutRevision, layoutSignature])
 
   const neighbours = useMemo(() => {
     if (!hoveredNode) return null
@@ -260,6 +293,50 @@ function ResourceGraphFlow({
     setActiveExpansionNode((current) =>
       current === nodeMfid ? null : nodeMfid
     )
+  }, [])
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<ResourceFlowNode>[]) => {
+      setLayoutPositions((current) => {
+        let next = current
+        for (const change of changes) {
+          if (change.type !== "position" || !change.position) continue
+          const previous = next.get(change.id)
+          if (!previous) continue
+          if (next === current) next = new Map(current)
+          next.set(change.id, { ...previous, ...change.position })
+        }
+        if (next !== current) lastPositions.current = next
+        return next
+      })
+    },
+    []
+  )
+
+  const resetLayout = useCallback(() => {
+    resetLayoutRequested.current = true
+    setActiveExpansionNode(null)
+    setHoveredNode(null)
+    setLayoutRevision((current) => current + 1)
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    const element = surface.current
+    if (!element) return
+    setFullscreenError(false)
+    if (document.fullscreenElement === element) {
+      if (typeof document.exitFullscreen !== "function") {
+        setFullscreenError(true)
+        return
+      }
+      void document.exitFullscreen().catch(() => setFullscreenError(true))
+      return
+    }
+    if (typeof element.requestFullscreen !== "function") {
+      setFullscreenError(true)
+      return
+    }
+    void element.requestFullscreen().catch(() => setFullscreenError(true))
   }, [])
 
   const flowNodes = useMemo<ResourceFlowNode[]>(
@@ -284,7 +361,7 @@ function ResourceGraphFlow({
               onToggleExpansion: toggleExpansion,
             },
             deletable: false,
-            draggable: false,
+            draggable: true,
             focusable: node.unique_id !== graph.rootMfid,
             id: node.unique_id,
             position,
@@ -374,9 +451,9 @@ function ResourceGraphFlow({
     >
       <div className="resource-graph-options absolute top-3 left-3 flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-label">
-          <span>Depth</span>
+          <span>Lineage depth</span>
           <NativeSelect
-            aria-label="Graph depth"
+            aria-label="Lineage depth"
             onChange={(event) => {
               const nextDepth = Number(event.currentTarget.value)
               if (nextDepth === 1 || nextDepth === 2 || nextDepth === 3) {
@@ -395,7 +472,10 @@ function ResourceGraphFlow({
       </div>
       <GraphViewportControls
         flow={flow}
+        fullscreen={fullscreen}
         graph={graph}
+        onResetLayout={resetLayout}
+        onToggleFullscreen={toggleFullscreen}
         positions={layoutPositions}
         surface={surface}
       />
@@ -412,8 +492,10 @@ function ResourceGraphFlow({
         nodeTypes={nodeTypes}
         nodes={flowNodes}
         nodesConnectable={false}
-        nodesDraggable={false}
+        nodesDraggable
         onInit={() => setFlowReady(true)}
+        onNodeDragStart={() => setActiveExpansionNode(null)}
+        onNodesChange={handleNodesChange}
         onNodeClick={(event, node) => {
           if (node.id === graph.rootMfid) return
           if (event.currentTarget instanceof HTMLElement) {
@@ -440,11 +522,19 @@ function ResourceGraphFlow({
         The current resource is centered. Lineage flows from parent to child
         from left to right on wider screens and top to bottom on compact
         screens. Dashed edges show sample and dataset associations. Expansion
-        controls load ancestors, descendants, or associated resources. The
-        relationship table following the graph provides the same resources with
-        keyboard-accessible inspection and navigation.
+        controls load ancestors, descendants, or associated resources. Nodes can
+        be repositioned by dragging, and Reset layout restores the ELK
+        arrangement. The relationship table following the graph provides the
+        same resources with keyboard-accessible inspection and navigation.
       </span>
-      {loading || layoutPending ? (
+      {fullscreenError ? (
+        <div
+          className="resource-graph-layout-status absolute right-3 bottom-3 rounded-lg border border-destructive/40 bg-card/95 px-2 py-1 text-label-compact text-destructive shadow-sm backdrop-blur-sm"
+          role="alert"
+        >
+          Fullscreen is unavailable.
+        </div>
+      ) : loading || layoutPending ? (
         <div
           className="resource-graph-layout-status absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border bg-card/95 px-2 py-1 text-label-compact shadow-sm backdrop-blur-sm"
           role="status"
@@ -556,7 +646,7 @@ function GraphNodeExpansionControls({
         <TooltipContent>Expand from this resource</TooltipContent>
       </Tooltip>
       {active
-        ? graphExpansionModes.map((mode) => {
+        ? graphExpansionModesForNode(node, expansionStates).map((mode) => {
             const state = graphExpansionState(
               expansionStates,
               node.unique_id,
@@ -632,12 +722,18 @@ function graphExpansionIcon(mode: GraphExpansionMode) {
 
 function GraphViewportControls({
   flow,
+  fullscreen,
   graph,
+  onResetLayout,
+  onToggleFullscreen,
   positions,
   surface,
 }: {
   flow: ReactFlowInstance<ResourceFlowNode, ResourceFlowEdge>
+  fullscreen: boolean
   graph: WorkspaceResourceGraph
+  onResetLayout: () => void
+  onToggleFullscreen: () => void
   positions: ReadonlyMap<string, LayoutPosition>
   surface: React.RefObject<HTMLDivElement | null>
 }) {
@@ -677,6 +773,20 @@ function GraphViewportControls({
       >
         <FitGraphIcon aria-hidden="true" />
       </GraphControl>
+      <GraphControl label="Reset graph layout" onClick={onResetLayout}>
+        <ResetGraphLayoutIcon aria-hidden="true" />
+      </GraphControl>
+      <GraphControl
+        label={fullscreen ? "Exit fullscreen graph" : "View graph fullscreen"}
+        onClick={onToggleFullscreen}
+        pressed={fullscreen}
+      >
+        {fullscreen ? (
+          <ExitGraphFullscreenIcon aria-hidden="true" />
+        ) : (
+          <EnterGraphFullscreenIcon aria-hidden="true" />
+        )}
+      </GraphControl>
     </div>
   )
 }
@@ -685,10 +795,12 @@ function GraphControl({
   children,
   label,
   onClick,
+  pressed,
 }: {
   children: React.ReactNode
   label: string
   onClick: () => void
+  pressed?: boolean
 }) {
   return (
     <Tooltip>
@@ -696,6 +808,7 @@ function GraphControl({
         render={
           <Button
             aria-label={label}
+            aria-pressed={pressed}
             onClick={onClick}
             size="icon-sm"
             type="button"
@@ -792,8 +905,7 @@ function fallbackResourceGraphLayout(
     graph.nodes.map((node, index) => {
       const offset = index - Math.max(rootIndex, 0)
       const width = node.unique_id === graph.rootMfid ? rootWidth : nodeWidth
-      const height =
-        node.unique_id === graph.rootMfid ? rootHeight : nodeHeight
+      const height = node.unique_id === graph.rootMfid ? rootHeight : nodeHeight
       return [
         node.unique_id,
         {

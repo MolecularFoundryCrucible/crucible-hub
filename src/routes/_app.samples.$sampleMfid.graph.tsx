@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_app/samples/$sampleMfid/graph")({
 
 function SampleGraphPage() {
   const { sampleMfid } = Route.useParams()
-  const { depth = 1 } = Route.useSearch()
+  const { depth = 3 } = Route.useSearch()
   const navigate = Route.useNavigate()
   return (
     <ResourceGraphPage
@@ -22,7 +22,7 @@ function SampleGraphPage() {
           replace: true,
           search: (previous) => ({
             ...previous,
-            depth: nextDepth === 1 ? undefined : nextDepth,
+            depth: nextDepth === 3 ? undefined : nextDepth,
           }),
         })
       }}
