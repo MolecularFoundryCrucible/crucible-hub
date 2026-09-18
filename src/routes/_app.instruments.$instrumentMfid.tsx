@@ -105,12 +105,16 @@ function InstrumentPage() {
       </Breadcrumb>
 
       <PageHeader
-        eyebrow={resource.instrument_id ?? undefined}
         icon={
           <ResourceTypeIcon
             className="mt-1 size-6 shrink-0"
             type="instrument"
           />
+        }
+        identifier={
+          resource.instrument_id && resource.instrument_id !== resource.name
+            ? resource.instrument_id
+            : undefined
         }
         title={resource.name}
       />

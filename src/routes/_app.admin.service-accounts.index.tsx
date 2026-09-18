@@ -178,7 +178,6 @@ function ServiceAccountsPage() {
             Create service account
           </Button>
         }
-        eyebrow="Administration"
         title="Service accounts"
       />
       <form className="max-w-reading" onSubmit={submitSearch}>
@@ -264,7 +263,7 @@ function ServiceAccountsPage() {
 function ServiceAccountsPending() {
   return (
     <PageLayout>
-      <PageHeader eyebrow="Administration" title="Service accounts" />
+      <PageHeader title="Service accounts" />
       <CollectionTablePending label="service accounts" />
     </PageLayout>
   )

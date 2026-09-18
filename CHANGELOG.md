@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Simplified page headers by removing redundant section eyebrows, retaining distinct project and instrument IDs as secondary metadata, and using the correct person or service-account icon on public profiles.
 - Moved ELK graph layout to a browser worker, reduced graph rerenders and repeated initial arrangements, made dragging immediate, deferred relationship thumbnails until near the viewport, preserved in-place node-to-node inspector switching, and recovered routine Query cancellation without replacing navigation with an error page.
 - Recovered stale lazy-loaded application modules with Vite's native preload-error event and a full-page error-boundary fallback.
 - Kept dataset Processing failures inside the resource workspace and added correlation-safe browser and server diagnostics for route, API, and response-contract failures.

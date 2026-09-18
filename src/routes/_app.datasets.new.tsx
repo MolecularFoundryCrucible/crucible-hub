@@ -82,7 +82,7 @@ function NewDatasetPage() {
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Data" title="Create dataset" />
+      <PageHeader title="Create dataset" />
       <DatasetCreationForm
         initialInstrument={loaderData?.initialInstrument}
         initialProject={loaderData?.initialProject}

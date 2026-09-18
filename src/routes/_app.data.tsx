@@ -224,7 +224,6 @@ function DataPageHeader() {
   return (
     <PageHeader
       actions={<ResourceCreationActions />}
-      eyebrow="Data"
       title="Samples and datasets"
     />
   )

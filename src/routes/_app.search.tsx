@@ -160,7 +160,6 @@ function SearchPage() {
             ? `Samples and datasets related to ${project ? (project.title ?? project.project_id) : search.projectMfid}.`
             : undefined
         }
-        eyebrow={search.projectMfid ? "Project search" : "Search"}
         title={
           search.projectMfid
             ? "Find data in this project"

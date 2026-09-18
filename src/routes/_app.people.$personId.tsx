@@ -106,7 +106,12 @@ function PersonPage() {
             </Link>
           ) : null
         }
-        eyebrow="Person"
+        icon={
+          <PrincipalTypeIcon
+            className="mt-1 size-6 shrink-0"
+            type={person.is_service_account ? "service_account" : "user"}
+          />
+        }
         title={name}
       />
 

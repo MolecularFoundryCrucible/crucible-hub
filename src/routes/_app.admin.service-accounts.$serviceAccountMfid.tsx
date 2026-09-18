@@ -114,7 +114,6 @@ function ServiceAccountAdminPage() {
         </BreadcrumbList>
       </Breadcrumb>
       <PageHeader
-        eyebrow="Administration"
         icon={
           <PrincipalTypeIcon className="mt-1 size-6" type="service_account" />
         }

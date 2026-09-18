@@ -153,7 +153,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Projects" title="Create project" />
+      <PageHeader title="Create project" />
       <ContentBoundary width="reading">
         <Card aria-busy={isSubmitting}>
           <CardHeader>

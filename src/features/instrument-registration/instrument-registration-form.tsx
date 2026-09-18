@@ -154,7 +154,7 @@ export function InstrumentRegistrationForm({
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Instruments" title="Register instrument" />
+      <PageHeader title="Register instrument" />
       <ContentBoundary width="reading">
         <Card aria-busy={isSubmitting}>
           <CardHeader>

@@ -217,7 +217,6 @@ function InstrumentsPageHeader({ canRegister }: { canRegister: boolean }) {
           </Link>
         ) : null
       }
-      eyebrow="Instruments"
       title="Instrument directory"
     />
   )

@@ -5,15 +5,15 @@ export function PageHeader({
   actionLayout = "stacked",
   actions,
   description,
-  eyebrow,
   icon,
+  identifier,
   title,
 }: {
   actionLayout?: "inline" | "stacked"
   actions?: React.ReactNode
   description?: string
-  eyebrow?: React.ReactNode
   icon?: React.ReactNode
+  identifier?: string
   title: string
 }) {
   return (
@@ -26,26 +26,22 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0 flex-1">
-        {eyebrow ? (
-          <div className="flex items-center gap-2 text-overline text-muted-foreground uppercase">
-            {eyebrow}
-          </div>
-        ) : null}
-        <div
-          className={
-            eyebrow
-              ? "mt-2 flex min-w-0 items-start gap-2"
-              : "flex min-w-0 items-start gap-2"
-          }
-        >
+        <div className="flex min-w-0 items-start gap-2">
           {icon}
-          <h1
-            className="min-w-0 scroll-mt-20 text-title-page break-words"
-            data-page-top
-            tabIndex={-1}
-          >
-            <BreakableText value={title} />
-          </h1>
+          <div className="min-w-0">
+            <h1
+              className="min-w-0 scroll-mt-20 text-title-page break-words"
+              data-page-top
+              tabIndex={-1}
+            >
+              <BreakableText value={title} />
+            </h1>
+            {identifier ? (
+              <p className="mt-1 text-identifier text-muted-foreground">
+                <BreakableText value={identifier} />
+              </p>
+            ) : null}
+          </div>
         </div>
         {description ? (
           <p className="mt-2 max-w-reading text-body-prominent text-muted-foreground">

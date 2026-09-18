@@ -207,7 +207,7 @@ export function SampleCreationForm({
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Samples" title="Create sample" />
+      <PageHeader title="Create sample" />
       <ContentBoundary width="reading">
         <Card aria-busy={busy}>
           <CardHeader>

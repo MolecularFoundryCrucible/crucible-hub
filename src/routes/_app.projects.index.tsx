@@ -154,7 +154,6 @@ function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
           </Link>
         ) : null
       }
-      eyebrow="Projects"
       title="Your projects"
     />
   )

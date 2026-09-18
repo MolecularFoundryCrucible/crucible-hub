@@ -24,7 +24,7 @@ function AccountPage() {
 
   return (
     <PageLayout>
-      <PageHeader eyebrow="Account" title="My profile" />
+      <PageHeader title="My profile" />
       <ContentBoundary>
         <ContentGrid variant="split">
           <div className="flex min-w-0 flex-col gap-page-section">

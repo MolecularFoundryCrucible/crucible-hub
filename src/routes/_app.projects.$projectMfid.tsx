@@ -110,9 +110,13 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
-        eyebrow={project.project_id}
         icon={
           <ResourceTypeIcon className="mt-1 size-6 shrink-0" type="project" />
+        }
+        identifier={
+          project.title && project.title !== project.project_id
+            ? project.project_id
+            : undefined
         }
         title={project.title ?? project.project_id}
       />

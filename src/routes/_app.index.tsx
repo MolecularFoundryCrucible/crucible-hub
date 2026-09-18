@@ -114,7 +114,6 @@ function HomePage() {
   return (
     <PageLayout>
       <PageHeader
-        eyebrow="Research workspace"
         title={`Welcome back, ${account?.first_name ?? "researcher"}`}
       />
 
