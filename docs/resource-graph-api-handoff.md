@@ -6,9 +6,7 @@ Date: 2026-09-17
 
 ## Purpose
 
-This document records the typed API boundary used for dependable bounded resource graphs in Crucible Hub. The Hub starts with the selected sample or dataset and its immediate readable relationships, then can merge explicit depth-one expansions without requesting resource details. It uses a deterministic Cytoscape preset layout and does not require API-generated coordinates.
-
-The next layout candidate is `cytoscape-elk` using ELK Layered. ELK can calculate positions in the browser, while the implemented typed response supplies the relationship semantics, direction, completeness, and truncation facts needed to evaluate that extension safely.
+This document records the typed API boundary used for dependable bounded resource graphs in Crucible Hub. The Hub starts with the selected sample or dataset and its immediate readable relationships, then can merge explicit depth-one expansions without requesting resource details. Cytoscape with ELK Layered calculates collision-free positions in the browser, while the implemented typed response supplies relationship semantics, direction, completeness, and truncation facts. The Hub does not require API-generated coordinates.
 
 ## Implemented boundary
 
@@ -109,9 +107,9 @@ The response distinguishes these cases:
 
 The response returns explicit `truncated` and `truncation_reasons` values using `node_limit`, `edge_limit`, or both. `returned_depth` alone is not sufficient because a result can reach the requested depth and still be truncated within that layer.
 
-Incremental expansion reroots another bounded request at a visible node. The Hub resends the same direction and relationship filters and merges nodes by MFID and edges by stable ID. This first contract has no continuation token and is not an unlimited export API.
+Incremental expansion reroots a depth-one request at a visible node with both relationship kinds, then merges nodes by MFID and edges by stable ID. This lets an explicit action reveal that node's immediate lineage and associations even when the current root's selected depth follows lineage only. This first contract has no continuation token and is not an unlimited export API.
 
-## Useful support for `cytoscape-elk`
+## ELK integration boundary
 
 ELK Layered benefits from reliable topology and grouping, not server-generated positions. Useful API fields are:
 
@@ -148,4 +146,4 @@ The operation, parameters, enums, response models, and error models are present 
 
 ## Hub adoption status
 
-The Hub pins API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d`, generates the TypeScript client, calls the canonical operation, validates the typed boundary, consumes API relationship semantics, defaults to depth one, and exposes URL-backed depth selection through three levels. It offers rerooted expansion for additional or unknown readable topology from both the canvas and relationship card, while keeping the accessible relationship table and canonical node navigation. Evaluating `cytoscape-elk` with ELK Layered against dense, mixed-type, compact, and reduced-motion fixtures remains future Hub work.
+The Hub pins API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d`, generates the TypeScript client, calls the canonical operation, validates the typed boundary, consumes API relationship semantics, defaults to depth one, and exposes URL-backed depth selection through three levels. At greater depth, it requests lineage separately and merges the root's depth-one associations so automatic traversal does not recursively fan through sample-dataset links. It offers rerooted depth-one expansion for additional or unknown readable topology directly from nodes, a canvas menu, and the relationship card, while keeping the accessible relationship table and canonical node navigation. Cytoscape with ELK Layered calculates the browser-side layout, prevents node overlap, and animates supported updates with reduced-motion handling. No additional graph API fields are required for this layout.

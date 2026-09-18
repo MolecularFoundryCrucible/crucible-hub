@@ -38,6 +38,8 @@
   --spacing-dialog-viewport: calc(100dvh - 1rem);
   --spacing-metadata-editor-height: 20rem;
   --spacing-graph-canvas: 30rem;
+  --spacing-graph-canvas-dense: 36rem;
+  --spacing-graph-canvas-sparse: 24rem;
   --spacing-pill-height: 1.5rem;
   --spacing-pill-inline: 0.625rem;
   --spacing-pill-icon-inline: 0.5rem;
@@ -337,7 +339,7 @@
   --graph-current: #cc5200;
   --graph-edge: #737373;
   --graph-highlight: #031e2d;
-  --graph-grid: #e5e7eb;
+  --graph-grid: #edf0f2;
   --graph-grid-dot: 1px;
   --graph-grid-size: 20px;
   --graph-resource-dataset: #009a60;
@@ -358,29 +360,30 @@
   --graph-node-height: 88;
   --graph-root-node-width: 236;
   --graph-root-node-height: 96;
-  --graph-node-border: 2;
-  --graph-root-border: 4;
+  --graph-node-border: 1.5;
+  --graph-root-border: 3;
   --graph-root-overlay-opacity: 0.1;
   --graph-root-overlay-padding: 8;
   --graph-selected-overlay-opacity: 0.14;
   --graph-selected-overlay-padding: 7;
-  --graph-edge-width: 2;
-  --graph-highlighted-edge-width: 3;
-  --graph-font-size: 12;
+  --graph-edge-width: 1.5;
+  --graph-fallback-spacing: 1.4;
+  --graph-highlighted-edge-width: 2.5;
+  --graph-font-size: 13;
   --graph-icon-size: 18;
   --graph-icon-position-x: 14;
   --graph-icon-position-y: 22;
   --graph-label-width: 164;
   --graph-label-offset-x: 42;
-  --graph-layout-column-gap: 320;
-  --graph-layout-node-gap: 32;
-  --graph-layout-row-gap: 112;
-  --graph-layout-association-gap: 184;
-  --graph-layout-association-column-gap: 224;
-  --graph-layout-association-row-gap: 112;
+  --graph-layout-duration: 360;
+  --graph-layout-direction: RIGHT;
+  --graph-layout-layer-gap: 96;
+  --graph-layout-node-gap: 40;
   --graph-fit-padding: 52;
+  --graph-center-offset-y: 0;
   --graph-min-zoom: 0.35;
   --graph-max-zoom: 2.5;
+  --graph-readable-zoom: 0.62;
   --graph-muted-opacity: 0.24;
   --graph-hover-overlay-opacity: 0.1;
   --graph-hover-overlay-padding: 6;
@@ -455,7 +458,7 @@
   --graph-current: #ff8533;
   --graph-edge: #a1a1a1;
   --graph-highlight: #a8c4cd;
-  --graph-grid: #2f2f2f;
+  --graph-grid: #242424;
   --graph-resource-dataset: #3fbf86;
   --graph-resource-dataset-surface: #182d23;
   --graph-resource-sample: #c68ee0;
@@ -535,6 +538,16 @@ body {
   height: var(--spacing-graph-canvas);
 }
 
+.resource-graph-surface[data-density="sparse"],
+.resource-graph-surface[data-density="sparse"] .resource-graph-canvas {
+  height: var(--spacing-graph-canvas-sparse);
+}
+
+.resource-graph-surface[data-density="dense"],
+.resource-graph-surface[data-density="dense"] .resource-graph-canvas {
+  height: var(--spacing-graph-canvas-dense);
+}
+
 .resource-graph-canvas {
   background-image: radial-gradient(
     var(--graph-grid) var(--graph-grid-dot),
@@ -549,8 +562,14 @@ body {
 
 .resource-graph-options,
 .resource-graph-controls,
+.resource-graph-layout-status,
+.resource-graph-node-actions,
 .resource-graph-legend {
   z-index: var(--layer-graph-overlay);
+}
+
+.resource-graph-node-action {
+  transform: translate(-50%, -50%);
 }
 
 .resource-graph-options [data-slot="button"],
@@ -570,12 +589,19 @@ body {
 
 @media (max-width: 47.999rem) {
   .resource-graph-canvas {
-    --graph-layout-column-gap: 248;
-    --graph-layout-row-gap: 104;
-    --graph-layout-association-gap: 172;
-    --graph-layout-association-column-gap: 192;
-    --graph-layout-association-row-gap: 104;
+    --graph-center-offset-y: -48;
+    --graph-layout-direction: DOWN;
+    --graph-layout-layer-gap: 72;
+    --graph-layout-node-gap: 32;
     --graph-fit-padding: 32;
+    --graph-readable-zoom: 0.75;
+  }
+
+  .resource-graph-surface[data-density="dense"],
+  .resource-graph-surface[data-density="dense"] .resource-graph-canvas,
+  .resource-graph-surface[data-density="sparse"],
+  .resource-graph-surface[data-density="sparse"] .resource-graph-canvas {
+    height: var(--spacing-graph-canvas);
   }
 
   .resource-graph-table,

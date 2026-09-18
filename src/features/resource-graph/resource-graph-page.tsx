@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query"
 import cytoscape from "cytoscape"
 import type { Core, ElementDefinition, StylesheetJson } from "cytoscape"
 import { z } from "zod"
@@ -79,10 +79,17 @@ import type {
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
-import { buildResourceGraphLayout } from "./resource-graph-layout"
-import type { ResourceGraphLayoutMetrics } from "./resource-graph-layout"
 import { mergeResourceGraphs } from "./resource-graph-merge"
 import { useResourceWorkspaceResource } from "@/features/resource-detail/resource-detail-page"
+
+let elkRegistration: Promise<void> | undefined
+
+function ensureElkRegistered() {
+  elkRegistration ??= import("cytoscape-elk").then(({ default: register }) => {
+    cytoscape.use(register)
+  })
+  return elkRegistration
+}
 
 type GraphLabelMetrics = {
   maxWidth: number
@@ -102,6 +109,12 @@ type GraphExpansionState = Pick<
   GraphExpansionQueryResult,
   "isError" | "isPending" | "isSuccess" | "refetch"
 >
+
+type GraphExpansionAnchor = {
+  mfid: string
+  x: number
+  y: number
+}
 
 export const resourceGraphSearchSchema = z.object({
   depth: z
@@ -151,19 +164,37 @@ export function ResourceGraphPage({
     expansion.resourceMfid === resourceMfid && expansion.depth === depth
       ? expansion.roots
       : []
-  const query = useQuery(
-    resourceGraphQueryOptions(scope, resourceMfid, { depth })
-  )
+  const query = useQuery({
+    ...resourceGraphQueryOptions(scope, resourceMfid, {
+      depth,
+      relationshipKinds: depth === 1 ? undefined : ["lineage"],
+    }),
+    placeholderData: keepPreviousData,
+  })
+  const associationQuery = useQuery({
+    ...resourceGraphQueryOptions(scope, resourceMfid, {
+      depth: 1,
+      relationshipKinds: ["association"],
+    }),
+    enabled: depth > 1,
+  })
   const expansions = useQueries({
     queries: expansionRoots.map((rootMfid) =>
       resourceGraphQueryOptions(scope, rootMfid)
     ),
     combine: combineResourceGraphExpansionQueries,
   })
-  const displayedGraph = useMemo(() => {
+  const rootGraph = useMemo(() => {
     if (!query.data) return undefined
-    return mergeResourceGraphs(query.data, expansions.graphs)
-  }, [expansions.graphs, query.data])
+    if (depth === 1 || query.isPlaceholderData || !associationQuery.data) {
+      return query.data
+    }
+    return mergeResourceGraphs(query.data, [associationQuery.data])
+  }, [associationQuery.data, depth, query.data, query.isPlaceholderData])
+  const displayedGraph = useMemo(() => {
+    if (!rootGraph) return undefined
+    return mergeResourceGraphs(rootGraph, expansions.graphs)
+  }, [expansions.graphs, rootGraph])
   const expansionStates = new Map<string, GraphExpansionState>(
     expansionRoots.map((rootMfid, index) => [
       rootMfid,
@@ -182,7 +213,7 @@ export function ResourceGraphPage({
     : []
   const thumbnailQuery = useQuery({
     ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
-    enabled: query.isSuccess && datasetMfids.length > 0,
+    enabled: Boolean(displayedGraph) && datasetMfids.length > 0,
   })
   const previewSiblingCollections = useMemo(() => {
     const graphData = displayedGraph
@@ -201,7 +232,9 @@ export function ResourceGraphPage({
   }, [displayedGraph])
   useRegisterResourceSiblings(previewSiblingCollections)
 
-  if (query.isPending) return <ResourceGraphPending />
+  if (query.isPending || (depth > 1 && associationQuery.isPending)) {
+    return <ResourceGraphPending />
+  }
   if (!displayedGraph) {
     return (
       <Empty className="min-h-graph-canvas border">
@@ -250,7 +283,7 @@ export function ResourceGraphPage({
 
   return (
     <section
-      aria-busy={query.isFetching || isExpanding}
+      aria-busy={query.isFetching || associationQuery.isFetching || isExpanding}
       aria-label="Resource graph"
       className="flex min-w-0 flex-col gap-4"
     >
@@ -264,6 +297,26 @@ export function ResourceGraphPage({
           </p>
           <Button
             onClick={() => void query.refetch()}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Try again
+          </Button>
+        </div>
+      ) : null}
+
+      {depth > 1 && associationQuery.isError ? (
+        <div
+          className="flex flex-wrap items-center justify-between gap-3"
+          role="alert"
+        >
+          <p className="text-body text-muted-foreground">
+            Immediate associations could not be loaded. Lineage remains
+            available.
+          </p>
+          <Button
+            onClick={() => void associationQuery.refetch()}
             size="sm"
             type="button"
             variant="outline"
@@ -301,6 +354,9 @@ export function ResourceGraphPage({
           expansionStates={expansionStates}
           graph={displayedGraph}
           instanceRef={graph}
+          loading={
+            query.isFetching || associationQuery.isFetching || isExpanding
+          }
           nodes={relatedNodes}
           onDepthChange={onDepthChange}
           onExpand={expandNode}
@@ -359,6 +415,7 @@ function ResourceGraphCanvas({
   expansionStates,
   graph,
   instanceRef,
+  loading,
   nodes,
   onDepthChange,
   onExpand,
@@ -369,6 +426,7 @@ function ResourceGraphCanvas({
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   graph: WorkspaceResourceGraph
   instanceRef: React.MutableRefObject<Core | null>
+  loading: boolean
   nodes: readonly WorkspaceResourceGraphNode[]
   onDepthChange: (depth: ResourceGraphDepth) => void
   onExpand: (nodeMfid: string) => void
@@ -377,22 +435,40 @@ function ResourceGraphCanvas({
 }) {
   const container = useRef<HTMLDivElement>(null)
   const inspect = useRef(onInspect)
+  const rootMfid = useRef(graph.rootMfid)
+  const layoutGeneration = useRef(0)
+  const [expansionAnchors, setExpansionAnchors] = useState<
+    GraphExpansionAnchor[]
+  >([])
+  const [layoutEngine, setLayoutEngine] = useState<
+    "loading" | "elk" | "fallback"
+  >("loading")
+  const [layoutPending, setLayoutPending] = useState(true)
   inspect.current = onInspect
+  rootMfid.current = graph.rootMfid
+
+  useEffect(() => {
+    let active = true
+    void ensureElkRegistered().then(
+      () => {
+        if (active) setLayoutEngine("elk")
+      },
+      () => {
+        if (active) setLayoutEngine("fallback")
+      }
+    )
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     const element = container.current
     if (!element) return
-    const layout = buildResourceGraphLayout(graph, graphLayoutMetrics(element))
-    const labelMetrics = graphLabelMetrics(element)
     const instance = cytoscape({
       boxSelectionEnabled: false,
       container: element,
-      elements: graphElements(
-        graph,
-        layout.positions,
-        rootContext,
-        labelMetrics
-      ),
+      elements: [],
       layout: {
         animate: false,
         fit: false,
@@ -406,7 +482,7 @@ function ResourceGraphCanvas({
     instance.scratch("resourceGraphViewportChanged", false)
     instance.on("tap", "node", (event) => {
       const mfid = event.target.data("id")
-      if (typeof mfid === "string" && mfid !== graph.rootMfid) {
+      if (typeof mfid === "string" && mfid !== rootMfid.current) {
         inspect.current(mfid, element)
       }
     })
@@ -426,14 +502,39 @@ function ResourceGraphCanvas({
     instance.on("dragpan scrollzoom pinchzoom", () => {
       instance.scratch("resourceGraphViewportChanged", true)
     })
-    const animationFrame = requestAnimationFrame(() => {
-      centerCurrentResource(instance)
-    })
+    let anchorFrame = 0
+    const updateExpansionAnchors = () => {
+      cancelAnimationFrame(anchorFrame)
+      anchorFrame = requestAnimationFrame(() => {
+        if (instance.destroyed()) return
+        setExpansionAnchors(
+          instance
+            .nodes("[?expandable]")
+            .map((node) => {
+              const bounds = node.renderedBoundingBox({
+                includeLabels: false,
+                includeOverlays: true,
+              })
+              return {
+                mfid: node.id(),
+                x: bounds.x2,
+                y: bounds.y1,
+              }
+            })
+            .filter(
+              (anchor) => Number.isFinite(anchor.x) && Number.isFinite(anchor.y)
+            )
+        )
+      })
+    }
+    instance.scratch("resourceGraphUpdateAnchors", updateExpansionAnchors)
+    instance.on("pan zoom render", updateExpansionAnchors)
     const resizeObserver = new ResizeObserver(() => {
       instance.resize()
       if (!instance.scratch("resourceGraphViewportChanged")) {
         centerCurrentResource(instance)
       }
+      updateExpansionAnchors()
     })
     resizeObserver.observe(element)
     const themeObserver = new MutationObserver(() => {
@@ -444,16 +545,105 @@ function ResourceGraphCanvas({
       attributes: true,
     })
     return () => {
-      cancelAnimationFrame(animationFrame)
+      cancelAnimationFrame(anchorFrame)
       resizeObserver.disconnect()
       themeObserver.disconnect()
-      instance.destroy()
+      if (instance.scratch("resourceGraphLayoutPending")) {
+        instance.one("layoutstop", () => instance.destroy())
+      } else {
+        instance.destroy()
+      }
       if (instanceRef.current === instance) instanceRef.current = null
     }
-  }, [graph, instanceRef, rootContext])
+  }, [instanceRef])
+
+  useEffect(() => {
+    const element = container.current
+    const instance = instanceRef.current
+    if (!element || !instance || layoutEngine === "loading") return
+    const generation = layoutGeneration.current + 1
+    layoutGeneration.current = generation
+    const labelMetrics = graphLabelMetrics(element)
+    const definitions = graphElements(graph, rootContext, labelMetrics)
+    const previousRoot = instance.$id(graph.rootMfid)
+    const previousRootPosition = previousRoot.length
+      ? previousRoot.renderedPosition()
+      : undefined
+    const previousNodeIds = new Set(instance.nodes().map((node) => node.id()))
+    updateGraphElements(instance, definitions, graph)
+    instance.style(graphStyles(element))
+    const animate =
+      previousNodeIds.size > 0 &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    setLayoutPending(true)
+    let layout: ReturnType<Core["layout"]> | undefined
+    const handleLayoutStop = () => {
+      instance.scratch("resourceGraphLayoutPending", false)
+      if (layoutGeneration.current !== generation || instance.destroyed())
+        return
+      if (previousRootPosition) {
+        const nextRoot = instance.$id(graph.rootMfid)
+        if (nextRoot.length) {
+          const nextPosition = nextRoot.renderedPosition()
+          instance.panBy({
+            x: previousRootPosition.x - nextPosition.x,
+            y: previousRootPosition.y - nextPosition.y,
+          })
+        }
+      } else {
+        centerCurrentResource(instance)
+      }
+      const updateAnchors = instance.scratch("resourceGraphUpdateAnchors")
+      if (typeof updateAnchors === "function") updateAnchors()
+      setLayoutPending(false)
+    }
+    instance.one("layoutstop", handleLayoutStop)
+    const startFrame = requestAnimationFrame(() => {
+      if (instance.destroyed()) return
+      instance.scratch("resourceGraphLayoutPending", true)
+      layout = instance.layout(
+        layoutEngine === "elk"
+          ? graphElkLayout(element, animate)
+          : graphFallbackLayout(element)
+      )
+      layout.run()
+    })
+    return () => {
+      cancelAnimationFrame(startFrame)
+      instance.off("layoutstop", handleLayoutStop)
+      layout?.stop()
+    }
+  }, [graph, instanceRef, layoutEngine, rootContext])
+
+  const expansionSignature = nodes
+    .map((node) => {
+      const state = expansionStates.get(node.unique_id)
+      return `${node.unique_id}:${state?.isPending ? "pending" : state?.isError ? "error" : state?.isSuccess ? "complete" : node.hasMoreRelationships}`
+    })
+    .join("|")
+
+  useEffect(() => {
+    const instance = instanceRef.current
+    if (!instance) return
+    for (const node of nodes) {
+      const state = expansionStates.get(node.unique_id)
+      instance
+        .$id(node.unique_id)
+        .data(
+          "expandable",
+          !state?.isSuccess &&
+            Boolean(state || node.hasMoreRelationships !== false)
+        )
+    }
+    const updateAnchors = instance.scratch("resourceGraphUpdateAnchors")
+    if (typeof updateAnchors === "function") updateAnchors()
+  }, [expansionSignature, expansionStates, instanceRef, layoutEngine, nodes])
 
   return (
-    <div className="resource-graph-surface relative overflow-hidden rounded-xl border bg-card">
+    <div
+      className="resource-graph-surface relative overflow-hidden rounded-xl border bg-card"
+      data-density={graphDensity(graph.nodes.length)}
+    >
       <div className="resource-graph-options absolute top-3 left-3 flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-label">
           <span>Depth</span>
@@ -528,14 +718,96 @@ function ResourceGraphCanvas({
         tabIndex={-1}
       >
         <span className="sr-only" id="resource-graph-instructions">
-          The current resource is centered. Parents are placed to its left,
-          children to its right, associated samples above, and associated
-          datasets below. The relationship table following the graph provides
-          the same resources with keyboard-accessible inspection and navigation.
+          The current resource is centered. Lineage flows from parent to child
+          from left to right on wider screens and top to bottom on compact
+          screens. Dashed edges show sample and dataset associations. Expand
+          controls load immediate relationships from a connected resource. The
+          relationship table following the graph provides the same resources
+          with keyboard-accessible inspection and navigation.
         </span>
       </div>
+      <div className="resource-graph-node-actions pointer-events-none absolute inset-0">
+        {expansionAnchors.map((anchor) => {
+          const node = nodes.find(
+            (candidate) => candidate.unique_id === anchor.mfid
+          )
+          if (!node) return null
+          return (
+            <GraphNodeExpansionAction
+              anchor={anchor}
+              key={anchor.mfid}
+              node={node}
+              onExpand={onExpand}
+              state={expansionStates.get(anchor.mfid)}
+            />
+          )
+        })}
+      </div>
+      {loading || layoutPending || layoutEngine === "fallback" ? (
+        <div
+          className="resource-graph-layout-status absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border bg-card/95 px-2 py-1 text-label-compact shadow-sm backdrop-blur-sm"
+          role="status"
+        >
+          {loading || layoutPending ? (
+            <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+          ) : (
+            <ResourceGraphIcon aria-hidden="true" />
+          )}
+          {loading
+            ? "Loading"
+            : layoutEngine === "fallback"
+              ? "Simplified layout"
+              : "Arranging"}
+        </div>
+      ) : null}
       <ResourceGraphLegend />
     </div>
+  )
+}
+
+function GraphNodeExpansionAction({
+  anchor,
+  node,
+  onExpand,
+  state,
+}: {
+  anchor: GraphExpansionAnchor
+  node: WorkspaceResourceGraphNode
+  onExpand: (nodeMfid: string) => void
+  state?: GraphExpansionState
+}) {
+  const action = useRef<HTMLButtonElement>(null)
+  const label = graphExpansionLabel(node, state)
+  useEffect(() => {
+    const element = action.current
+    if (!element) return
+    element.style.left = `${anchor.x}px`
+    element.style.top = `${anchor.y}px`
+  }, [anchor.x, anchor.y])
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={label}
+            className="resource-graph-node-action pointer-events-auto absolute"
+            disabled={state?.isPending}
+            onClick={() => onExpand(anchor.mfid)}
+            ref={action}
+            size="icon-xs"
+            type="button"
+            variant={state?.isError ? "destructive" : "outline"}
+          />
+        }
+      >
+        {state?.isPending ? (
+          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+        ) : (
+          <ExpandGraphNodeIcon aria-hidden="true" />
+        )}
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -649,7 +921,6 @@ function GraphExpansionMenu({
 
 function graphElements(
   graph: WorkspaceResourceGraph,
-  positions: Readonly<Record<string, { x: number; y: number }>>,
   rootContext: string | null,
   labelMetrics: GraphLabelMetrics
 ): ElementDefinition[] {
@@ -666,7 +937,6 @@ function graphElements(
         ),
       },
       group: "nodes" as const,
-      position: positions[node.unique_id],
     })),
     ...graph.edges.map((edge) => ({
       data: {
@@ -679,6 +949,99 @@ function graphElements(
       group: "edges" as const,
     })),
   ]
+}
+
+function updateGraphElements(
+  instance: Core,
+  definitions: readonly ElementDefinition[],
+  graph: WorkspaceResourceGraph
+) {
+  const nodeDefinitions = definitions.filter(
+    (definition) => definition.group === "nodes"
+  )
+  const edgeDefinitions = definitions.filter(
+    (definition) => definition.group === "edges"
+  )
+  const nextIds = new Set(
+    definitions.flatMap((definition) =>
+      typeof definition.data.id === "string" ? [definition.data.id] : []
+    )
+  )
+  const previousNodeIds = new Set(instance.nodes().map((node) => node.id()))
+  instance.batch(() => {
+    instance
+      .elements()
+      .filter((element) => !nextIds.has(element.id()))
+      .remove()
+    for (const definition of nodeDefinitions) {
+      const id = definition.data.id
+      if (typeof id !== "string") continue
+      const existing = instance.$id(id)
+      if (existing.length) {
+        existing.data(definition.data)
+        continue
+      }
+      const added = instance.add(definition)
+      const neighbour = graph.edges
+        .filter((edge) => edge.source === id || edge.target === id)
+        .map((edge) => (edge.source === id ? edge.target : edge.source))
+        .find((candidate) => previousNodeIds.has(candidate))
+      if (neighbour) added.position(instance.$id(neighbour).position())
+    }
+    for (const definition of edgeDefinitions) {
+      const id = definition.data.id
+      if (typeof id !== "string") continue
+      const existing = instance.$id(id)
+      if (existing.length) existing.data(definition.data)
+      else instance.add(definition)
+    }
+  })
+}
+
+function graphElkLayout(element: HTMLElement, animate: boolean) {
+  return {
+    name: "elk",
+    animate,
+    animationDuration: graphNumberToken(element, "--graph-layout-duration"),
+    animationEasing: "ease-out-cubic",
+    fit: false,
+    nodeDimensionsIncludeLabels: false,
+    padding: graphNumberToken(element, "--graph-fit-padding"),
+    elk: {
+      algorithm: "layered",
+      "elk.direction": graphStringToken(element, "--graph-layout-direction"),
+      "elk.edgeRouting": "ORTHOGONAL",
+      "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+      "elk.layered.nodePlacement.favorStraightEdges": true,
+      "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
+      "elk.layered.spacing.nodeNodeBetweenLayers": graphNumberToken(
+        element,
+        "--graph-layout-layer-gap"
+      ),
+      "elk.spacing.nodeNode": graphNumberToken(
+        element,
+        "--graph-layout-node-gap"
+      ),
+    },
+  }
+}
+
+function graphFallbackLayout(element: HTMLElement) {
+  return {
+    name: "breadthfirst",
+    animate: false,
+    circle: false,
+    directed: true,
+    fit: false,
+    padding: graphNumberToken(element, "--graph-fit-padding"),
+    spacingFactor: graphNumberToken(element, "--graph-fallback-spacing"),
+  }
+}
+
+function graphDensity(nodeCount: number) {
+  if (nodeCount <= 3) return "sparse"
+  if (nodeCount >= 12) return "dense"
+  return "standard"
 }
 
 function graphStyles(element: HTMLElement): StylesheetJson {
@@ -794,8 +1157,11 @@ function graphStyles(element: HTMLElement): StylesheetJson {
     {
       selector: "edge",
       style: {
-        "curve-style": "straight",
+        "curve-style": "taxi",
         "line-color": token("--graph-edge"),
+        "taxi-direction": "horizontal",
+        "taxi-turn": "50%",
+        "taxi-turn-min-distance": 16,
         "target-arrow-color": token("--graph-edge"),
         "target-arrow-shape": "triangle",
         width: graphNumberToken(element, "--graph-edge-width"),
@@ -804,6 +1170,7 @@ function graphStyles(element: HTMLElement): StylesheetJson {
     {
       selector: 'edge[relationship = "associated"]',
       style: {
+        "curve-style": "bezier",
         "line-style": "dashed",
         "target-arrow-shape": "none",
       },
@@ -823,27 +1190,6 @@ function graphStyles(element: HTMLElement): StylesheetJson {
       },
     },
   ]
-}
-
-function graphLayoutMetrics(element: HTMLElement): ResourceGraphLayoutMetrics {
-  return {
-    associationColumnGap: graphNumberToken(
-      element,
-      "--graph-layout-association-column-gap"
-    ),
-    associationGap: graphNumberToken(element, "--graph-layout-association-gap"),
-    associationRowGap: graphNumberToken(
-      element,
-      "--graph-layout-association-row-gap"
-    ),
-    columnGap: graphNumberToken(element, "--graph-layout-column-gap"),
-    nodeGap: graphNumberToken(element, "--graph-layout-node-gap"),
-    nodeHeight: graphNumberToken(element, "--graph-node-height"),
-    nodeWidth: graphNumberToken(element, "--graph-node-width"),
-    rowGap: graphNumberToken(element, "--graph-layout-row-gap"),
-    rootNodeHeight: graphNumberToken(element, "--graph-root-node-height"),
-    rootNodeWidth: graphNumberToken(element, "--graph-root-node-width"),
-  }
 }
 
 function graphNodeLabel(
@@ -961,14 +1307,25 @@ function centerCurrentResource(instance: Core) {
     availableHeight / Math.max(verticalExtent * 2, 1),
     instance.maxZoom()
   )
+  const readableZoom = graphNumberToken(container, "--graph-readable-zoom")
   instance.scratch("resourceGraphViewportChanged", false)
-  instance.zoom(Math.max(zoom, instance.minZoom()))
+  instance.zoom(Math.max(zoom, readableZoom, instance.minZoom()))
   instance.center(root)
+  instance.panBy({
+    x: 0,
+    y: graphNumberToken(container, "--graph-center-offset-y"),
+  })
 }
 
 function graphNumberToken(element: HTMLElement, name: string) {
   const value = Number(getComputedStyle(element).getPropertyValue(name))
   if (!Number.isFinite(value)) throw new Error(`Invalid graph token: ${name}`)
+  return value
+}
+
+function graphStringToken(element: HTMLElement, name: string) {
+  const value = getComputedStyle(element).getPropertyValue(name).trim()
+  if (!value) throw new Error(`Invalid graph token: ${name}`)
   return value
 }
 
@@ -1097,13 +1454,7 @@ function GraphExpansionAction({
   if (state?.isSuccess || (node.hasMoreRelationships === false && !state)) {
     return null
   }
-  const label = state?.isPending
-    ? `Expanding graph from ${node.name}`
-    : state?.isError
-      ? `Retry expanding graph from ${node.name}`
-      : node.hasMoreRelationships === null
-        ? `Check for more relationships around ${node.name}`
-        : `Expand graph from ${node.name}`
+  const label = graphExpansionLabel(node, state)
 
   return (
     <Tooltip>
@@ -1128,6 +1479,18 @@ function GraphExpansionAction({
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   )
+}
+
+function graphExpansionLabel(
+  node: WorkspaceResourceGraphNode,
+  state?: GraphExpansionState
+) {
+  if (state?.isPending) return `Expanding graph from ${node.name}`
+  if (state?.isError) return `Retry expanding graph from ${node.name}`
+  if (node.hasMoreRelationships === null) {
+    return `Check for more relationships around ${node.name}`
+  }
+  return `Expand graph from ${node.name}`
 }
 
 function relationshipLabel(
