@@ -1,4 +1,4 @@
-import { useEffect, useId } from "react"
+import { useEffect, useId, useRef } from "react"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 
 import { HubApiClientError } from "@/data/crucible/result"
@@ -8,6 +8,7 @@ export function useRouteErrorReport({
   info,
   scope,
 }: Pick<ErrorComponentProps, "error" | "info"> & { scope: string }) {
+  const reportedError = useRef<unknown>(undefined)
   const localId = useId().replaceAll(":", "")
   const reference =
     error instanceof HubApiClientError
@@ -17,8 +18,11 @@ export function useRouteErrorReport({
     error instanceof HubApiClientError
       ? error.details.message
       : "An unexpected interface error occurred."
+  const reloadRequired = isModuleLoadError(error)
 
   useEffect(() => {
+    if (reportedError.current === error) return
+    reportedError.current = error
     const diagnostic = {
       componentStack: info?.componentStack,
       errorMessage:
@@ -32,7 +36,14 @@ export function useRouteErrorReport({
     console.error("[Crucible Hub] Route error", diagnostic)
   }, [error, info?.componentStack, reference, scope])
 
-  return { message, reference }
+  return { message, reference, reloadRequired }
+}
+
+function isModuleLoadError(error: unknown) {
+  return (
+    error instanceof TypeError &&
+    /(dynamically imported module|module script)/i.test(error.message)
+  )
 }
 
 function sanitizedDiagnosticMessage(message: string) {

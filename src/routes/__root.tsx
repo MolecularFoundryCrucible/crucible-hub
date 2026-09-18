@@ -92,7 +92,17 @@ function RootError({ error, info }: ErrorComponentProps) {
       <p className="text-body-prominent text-muted-foreground">
         {report.message} Reference: {report.reference}
       </p>
-      <Button onClick={() => router.invalidate()}>Try again</Button>
+      <Button
+        onClick={() => {
+          if (report.reloadRequired) {
+            window.location.reload()
+            return
+          }
+          void router.invalidate()
+        }}
+      >
+        {report.reloadRequired ? "Reload page" : "Try again"}
+      </Button>
     </main>
   )
 }

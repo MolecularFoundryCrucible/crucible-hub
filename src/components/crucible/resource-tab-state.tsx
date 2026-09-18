@@ -78,7 +78,14 @@ export function ResourceTabLoadError({ error, info }: ErrorComponentProps) {
     <ContentBoundary width="reading">
       <PanelState
         description={`${report.message} Reference: ${report.reference}`}
-        retry={() => void router.invalidate()}
+        retry={() => {
+          if (report.reloadRequired) {
+            window.location.reload()
+            return
+          }
+          void router.invalidate()
+        }}
+        retryLabel={report.reloadRequired ? "Reload page" : "Try again"}
         role="alert"
         title="This section could not be loaded"
       />

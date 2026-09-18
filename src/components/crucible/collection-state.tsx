@@ -121,11 +121,13 @@ export function CollectionUpdateError({
 export function PanelState({
   description,
   retry,
+  retryLabel = "Try again",
   role,
   title,
 }: {
   description?: string
   retry?: () => void
+  retryLabel?: string
   role?: "alert" | "status"
   title: string
 }) {
@@ -139,7 +141,7 @@ export function PanelState({
       </EmptyHeader>
       {retry ? (
         <Button onClick={retry} size="sm" variant="outline">
-          Try again
+          {retryLabel}
         </Button>
       ) : null}
     </Empty>
