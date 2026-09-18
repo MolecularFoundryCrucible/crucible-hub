@@ -71,7 +71,6 @@ import type {
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
-import { useResourceWorkspaceResource } from "@/features/resource-detail/resource-detail-page"
 import { ResourceGraphCanvas } from "./resource-graph-canvas"
 import {
   graphExpansionKey,
@@ -126,7 +125,6 @@ export function ResourceGraphPage({
 }) {
   const scope = useWorkspaceScope()
   const navigation = useResourcePreviewContext()
-  const resource = useResourceWorkspaceResource()
   const [expansion, setExpansion] = useState({
     resourceMfid,
     requests: [] as GraphExpansionRequest[],
@@ -386,9 +384,9 @@ export function ResourceGraphPage({
           }
           onExpand={expandNode}
           rootContext={
-            resource.kind === "sample"
-              ? resource.sample_type
-              : resource.measurement
+            displayedGraph.nodes.find(
+              (node) => node.unique_id === displayedGraph.rootMfid
+            )?.context ?? null
           }
           onInspect={(mfid, trigger) => {
             const node = relatedNodes.find(

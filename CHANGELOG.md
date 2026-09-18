@@ -93,6 +93,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Removed obsolete workspace collection hydration and unused transitional cache state so routes hydrate only query entries they can consume.
 - Global Data now switches directly between separate API-backed Samples and Datasets collections and defaults to Samples, removing the weaker combined All mode that could not support equivalent filtering, sorting, grouping, or pagination.
 - Sample and dataset browsing now defaults to newest creation time across global, project, instrument, grouped, paginated, and sibling-navigation contexts.
+- Resource graphs now derive root labels from graph data so route refreshes cannot detach the graph from its workspace context.
 - Home now separates Projects you lead from active Instruments you manage, and project and instrument directories use visible, route-backed All and ownership scope controls without requesting undisplayed totals.
 - Recently added data on Home now uses API-backed newest-creation ordering across samples and datasets.
 - Kept the resource inspector open when focus follows an underlying resource link, preventing a newly selected preview from immediately closing.
