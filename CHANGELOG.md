@@ -78,7 +78,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 - Expanded My profile with API credential validity and dates, icon-labelled account capabilities, a wide-screen Profile and Account access row with the matching-width credential card directly beneath Profile, and the shared credential-status presentation used by service-account administration, while standardizing success, warning, and destructive badge colors.
 - Simplified sample and dataset collections by keeping a text-only Project column in global Data and replacing the redundant project-scoped column with Sample type or Measurement on wide screens.
 - Unified project-scoped search and collection ownership switches with the shared segmented-control presentation.
-- Upgraded Cytoscape and redesigned sample and dataset graphs around a centered current resource, collision-safe directional placement, shared type icons, two-line names, type-specific context, neighborhood emphasis, in-canvas controls and legend, and a responsive accessible relationship card.
+- Redesigned sample and dataset graphs around React Flow and ELK with a centered current resource, collision-safe directional placement, shared type icons, two-line names, type-specific context, neighborhood emphasis, graph controls and legend, and a responsive accessible relationship card.
 - Kept graph-node resource previews open by treating the interactive graph canvas as a preview trigger during outside-interaction dismissal.
 - Improved compact layouts with inline utility actions and field labels, contained full-label resource tabs, natural scientific-name wrapping, single-line MFID identity where space permits, touch-sized directory navigation, and stable administration hydration.
 - Made the service-account directory and search controls reflow cleanly on compact screens while retaining natural desktop column spacing, aligned credential creation and expiration dates, standardized collection page navigation, and unified browser-safe API mutation error formatting with retained request references.
@@ -160,7 +160,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Fixed
 
-- Replaced lagging resource-graph HTML expansion overlays with Cytoscape-rendered controls and separate ancestor, descendant, and association expansion choices with equivalent accessible menus.
+- Replaced lagging resource-graph expansion overlays with React node controls aligned to the resource edges and separate ancestor, descendant, and association expansion choices with equivalent accessible menus.
 
 - Kept public identity references and generic project resource details consistent after profile, ownership, and descriptive updates.
 - Prevented terminal API errors from being retried and bounded retry timing for transient and rate-limited requests.

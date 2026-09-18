@@ -346,11 +346,6 @@
   --graph-resource-dataset-surface: #eef9f4;
   --graph-resource-sample: #9b5bb6;
   --graph-resource-sample-surface: #f8f1fb;
-  --graph-action-surface: #ffffff;
-  --graph-action-foreground: #0a0a0a;
-  --graph-action-border: #a1a1a1;
-  --graph-action-accent: #cc5200;
-  --graph-action-error: #b91c1c;
   --sidebar-width: 16rem;
   --sidebar-width-icon: 3rem;
   --sidebar-width-mobile: 18rem;
@@ -392,15 +387,6 @@
   --graph-muted-opacity: 0.24;
   --graph-hover-overlay-opacity: 0.1;
   --graph-hover-overlay-padding: 6;
-  --graph-action-width: 92;
-  --graph-action-height: 30;
-  --graph-action-gap: 8;
-  --graph-action-trigger-gap: 6;
-  --graph-action-trigger-size: 26;
-  --graph-action-trigger-font-size: 18;
-  --graph-action-font-size: 12;
-  --graph-action-border-width: 1.5;
-  --graph-action-pending-opacity: 0.55;
 }
 
 .dark {
@@ -477,11 +463,6 @@
   --graph-resource-dataset-surface: #182d23;
   --graph-resource-sample: #c68ee0;
   --graph-resource-sample-surface: #2d2232;
-  --graph-action-surface: #171717;
-  --graph-action-foreground: #fafafa;
-  --graph-action-border: #737373;
-  --graph-action-accent: #ff8533;
-  --graph-action-error: #f87171;
 }
 
 @layer base {
@@ -567,24 +548,173 @@ body {
   height: var(--spacing-graph-canvas-dense);
 }
 
-.resource-graph-canvas {
-  background-image: radial-gradient(
-    var(--graph-grid) var(--graph-grid-dot),
-    transparent var(--graph-grid-dot)
-  );
-  background-size: var(--graph-grid-size) var(--graph-grid-size);
-}
-
-.resource-graph-canvas[data-node-action],
-.resource-graph-canvas[data-node-hover] {
-  cursor: pointer;
-}
-
 .resource-graph-options,
 .resource-graph-controls,
 .resource-graph-layout-status,
 .resource-graph-legend {
   z-index: var(--layer-graph-overlay);
+}
+
+.resource-graph-flow-node {
+  position: relative;
+  display: flex;
+  width: calc(var(--graph-node-width) * 1px);
+  height: calc(var(--graph-node-height) * 1px);
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-1);
+  border: calc(var(--graph-node-border) * 1px) solid var(--graph-edge);
+  border-radius: var(--radius-xl);
+  background: var(--graph-card);
+  color: var(--graph-foreground);
+  padding: var(--spacing-3) var(--spacing-4);
+  box-shadow: var(--shadow-xs);
+  transition:
+    opacity var(--motion-fast),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+
+.resource-graph-flow-node[data-kind="sample"] {
+  border-color: var(--graph-resource-sample);
+  background: var(--graph-resource-sample-surface);
+}
+
+.resource-graph-flow-node[data-kind="dataset"] {
+  border-color: var(--graph-resource-dataset);
+  background: var(--graph-resource-dataset-surface);
+}
+
+.resource-graph-flow-node[data-root] {
+  width: calc(var(--graph-root-node-width) * 1px);
+  height: calc(var(--graph-root-node-height) * 1px);
+  border-width: calc(var(--graph-root-border) * 1px);
+  border-color: var(--graph-current);
+  box-shadow: 0 0 0 calc(var(--graph-root-overlay-padding) * 1px)
+    color-mix(in srgb, var(--graph-current) 10%, transparent);
+}
+
+.resource-graph-flow-node[data-dimmed] {
+  opacity: var(--graph-muted-opacity);
+}
+
+.resource-graph-flow-node-name {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  font-size: calc(var(--graph-font-size) * 1px);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.resource-graph-flow-node-name > span {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.resource-graph-flow-node-context {
+  overflow: hidden;
+  padding-left: calc(var(--graph-icon-size) * 1px + var(--spacing-2));
+  color: color-mix(in srgb, var(--graph-foreground) 68%, transparent);
+  font-size: var(--text-supporting);
+  line-height: var(--text-supporting--line-height);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.react-flow__node-resource {
+  cursor: pointer;
+  transition: transform calc(var(--graph-layout-duration) * 1ms) ease-out;
+}
+
+.react-flow__node-resource:focus-visible .resource-graph-flow-node,
+.react-flow__node-resource:hover .resource-graph-flow-node {
+  box-shadow: 0 0 0 calc(var(--focus-width)) var(--graph-ring);
+}
+
+.resource-graph-expansion-trigger,
+.resource-graph-expansion-action {
+  position: absolute;
+  z-index: 2;
+  background: var(--graph-card);
+}
+
+.resource-graph-expansion-trigger {
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.resource-graph-expansion-ancestors {
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.resource-graph-expansion-descendants {
+  top: 50%;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.resource-graph-expansion-associations {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+
+.resource-graph-handle {
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.resource-graph-handle-association-source {
+  left: 46%;
+}
+
+.resource-graph-handle-association-target {
+  left: 54%;
+}
+
+.resource-graph-surface .react-flow__edge-path {
+  stroke: var(--graph-edge);
+  stroke-width: var(--graph-edge-width);
+  transition:
+    opacity var(--motion-fast),
+    stroke var(--motion-fast),
+    stroke-width var(--motion-fast);
+}
+
+.resource-graph-surface .resource-graph-edge-associated .react-flow__edge-path {
+  stroke-dasharray: 6 5;
+}
+
+.resource-graph-surface
+  .resource-graph-edge-highlighted
+  .react-flow__edge-path {
+  stroke: var(--graph-highlight);
+  stroke-width: var(--graph-highlighted-edge-width);
+}
+
+.resource-graph-surface .resource-graph-edge-dimmed {
+  opacity: var(--graph-muted-opacity);
+}
+
+.resource-graph-surface .react-flow__attribution {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__node-resource {
+    transition: none;
+  }
 }
 
 .resource-graph-options [data-slot="button"],

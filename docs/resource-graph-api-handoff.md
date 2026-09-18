@@ -6,7 +6,7 @@ Date: 2026-09-17
 
 ## Purpose
 
-This document records the typed API boundary used for dependable bounded resource graphs in Crucible Hub. The Hub starts with the selected sample or dataset and its immediate readable relationships, then can merge explicit depth-one expansions without requesting resource details. Cytoscape with ELK Layered calculates collision-free positions in the browser, while the implemented typed response supplies relationship semantics, direction, completeness, and truncation facts. The Hub does not require API-generated coordinates.
+This document records the typed API boundary used for dependable bounded resource graphs in Crucible Hub. The Hub starts with the selected sample or dataset and its immediate readable relationships, then can merge explicit depth-one expansions without requesting resource details. React Flow with ELK Layered calculates collision-free positions in the browser, while the implemented typed response supplies relationship semantics, direction, completeness, and truncation facts. The Hub does not require API-generated coordinates.
 
 ## Implemented boundary
 
@@ -122,7 +122,7 @@ ELK Layered benefits from reliable topology and grouping, not server-generated p
 - Safe per-node expandability when more readable relationships exist outside the returned boundary.
 - Deterministic ordering for stable results when equally valid layouts exist.
 
-The API does not return Cytoscape or ELK configuration, node coordinates, dimensions, ports, colors, CSS classes, or rank values. Those are Hub presentation concerns and depend on viewport size, typography, theme, and accessibility settings. The API may return domain grouping and ordering facts only when they are meaningful outside this client.
+The API does not return React Flow or ELK configuration, node coordinates, dimensions, ports, colors, CSS classes, or rank values. Those are Hub presentation concerns and depend on viewport size, typography, theme, and accessibility settings. The API may return domain grouping and ordering facts only when they are meaningful outside this client.
 
 ## Caching and errors
 
@@ -146,4 +146,4 @@ The operation, parameters, enums, response models, and error models are present 
 
 ## Hub adoption status
 
-The Hub pins API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d`, generates the TypeScript client, calls the canonical operation, validates the typed boundary, consumes API relationship semantics, defaults to depth one, and exposes URL-backed depth selection through three levels. At greater depth, it requests lineage separately and merges the root's depth-one associations so automatic traversal does not recursively fan through sample-dataset links. It offers rerooted depth-one expansion for additional or unknown readable topology directly from nodes, a canvas menu, and the relationship card, while keeping the accessible relationship table and canonical node navigation. Cytoscape with ELK Layered calculates the browser-side layout, prevents node overlap, and animates supported updates with reduced-motion handling. No additional graph API fields are required for this layout.
+The Hub pins API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d`, generates the TypeScript client, calls the canonical operation, validates the typed boundary, consumes API relationship semantics, defaults to depth one, and exposes URL-backed depth selection through three levels. At greater depth, it requests lineage separately and merges the root's depth-one associations so automatic traversal does not recursively fan through sample-dataset links. It offers rerooted depth-one expansion for additional or unknown readable topology directly from nodes, a graph menu, and the relationship card, while keeping the accessible relationship table and canonical node navigation. React Flow renders the browser-side graph from ELK Layered positions, prevents node overlap, and animates supported updates with reduced-motion handling. No additional graph API fields are required for this layout.

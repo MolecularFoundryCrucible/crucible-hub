@@ -37,7 +37,7 @@ flowchart LR
 - Production sessions use opaque browser IDs and encrypted, shared server-side state supporting expiry, revocation, rotation, and replicas. Process-local or file-backed stores are local-development only.
 - The API owns identities, permissions, mutation truth, and representations. Object-storage capabilities use the smallest supported scope and lifetime. Explorer is a reference, never a runtime authentication or navigation dependency.
 
-The selected stack is TypeScript and React, TanStack Start and Router, TanStack Query and Form, shadcn/ui with Tailwind and Base UI primitives, `openapi-fetch` with generated types, Cytoscape, Vitest, and Playwright. Current collections use semantic tables and API-owned pagination without a table or virtualization package. The local runtime and server boundary are verified; production authentication, sessions, uploads, and deployment remain gated separately.
+The selected stack is TypeScript and React, TanStack Start and Router, TanStack Query and Form, shadcn/ui with Tailwind and Base UI primitives, `openapi-fetch` with generated types, React Flow with ELK, Vitest, and Playwright. Current collections use semantic tables and API-owned pagination without a table or virtualization package. The local runtime and server boundary are verified; production authentication, sessions, uploads, and deployment remain gated separately.
 
 ## Module and execution boundaries
 
