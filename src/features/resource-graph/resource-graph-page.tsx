@@ -1658,14 +1658,9 @@ function syncGraphExpansionControls(
     const actionHeight = graphNumberToken(container, "--graph-action-height")
     const actionWidth = graphNumberToken(container, "--graph-action-width")
     const actionGap = graphNumberToken(container, "--graph-action-gap")
-    const actionX =
-      triggerPosition.x + triggerSize / 2 + actionGap + actionWidth / 2
-    const availableModes = graphExpansionModes.filter(
-      (mode) =>
-        !graphExpansionState(expansionStates, node.unique_id, mode)?.isSuccess
-    )
-    availableModes.forEach((mode, index) => {
+    graphExpansionModes.forEach((mode) => {
       const state = graphExpansionState(expansionStates, node.unique_id, mode)
+      if (state?.isSuccess) return
       actionNodes.push({
         data: {
           actionError: Boolean(state?.isError),
@@ -1680,13 +1675,14 @@ function syncGraphExpansionControls(
         grabbable: false,
         group: "nodes",
         locked: true,
-        position: {
-          x: actionX,
-          y:
-            position.y +
-            (index - (availableModes.length - 1) / 2) *
-              (actionHeight + actionGap),
-        },
+        position: graphExpansionControlPosition(
+          mode,
+          position,
+          bounds,
+          actionWidth,
+          actionHeight,
+          actionGap
+        ),
         selectable: false,
       })
     })
@@ -1695,6 +1691,32 @@ function syncGraphExpansionControls(
     instance.nodes("[?graphAction]").remove()
     if (actionNodes.length) instance.add(actionNodes)
   })
+}
+
+function graphExpansionControlPosition(
+  mode: GraphExpansionMode,
+  nodePosition: { x: number; y: number },
+  nodeBounds: { x1: number; x2: number; y2: number },
+  actionWidth: number,
+  actionHeight: number,
+  actionGap: number
+) {
+  if (mode === "ancestors") {
+    return {
+      x: nodeBounds.x1 - actionGap - actionWidth / 2,
+      y: nodePosition.y,
+    }
+  }
+  if (mode === "descendants") {
+    return {
+      x: nodeBounds.x2 + actionGap + actionWidth / 2,
+      y: nodePosition.y,
+    }
+  }
+  return {
+    x: nodePosition.x,
+    y: nodeBounds.y2 + actionGap + actionHeight / 2,
+  }
 }
 
 function graphExpansionControlId(
