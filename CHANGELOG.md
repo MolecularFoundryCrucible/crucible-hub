@@ -161,6 +161,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 ### Fixed
 
 - Replaced lagging resource-graph expansion overlays with React node controls aligned to the resource edges and separate ancestor, descendant, and association expansion choices with equivalent accessible menus.
+- Fixed draggable graph nodes disappearing by using React Flow's native node-change state and persisting positions only after a drag completes.
 
 - Kept public identity references and generic project resource details consistent after profile, ownership, and descriptive updates.
 - Prevented terminal API errors from being retried and bounded retry timing for transient and rate-limited requests.

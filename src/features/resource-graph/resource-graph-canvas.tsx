@@ -8,15 +8,10 @@ import {
   Position,
   ReactFlow,
   ReactFlowProvider,
+  useNodesState,
   useReactFlow,
 } from "@xyflow/react"
-import type {
-  Edge,
-  Node,
-  NodeChange,
-  NodeProps,
-  ReactFlowInstance,
-} from "@xyflow/react"
+import type { Edge, Node, NodeProps, ReactFlowInstance } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 
 import {
@@ -295,24 +290,6 @@ function ResourceGraphFlow({
     )
   }, [])
 
-  const handleNodesChange = useCallback(
-    (changes: NodeChange<ResourceFlowNode>[]) => {
-      setLayoutPositions((current) => {
-        let next = current
-        for (const change of changes) {
-          if (change.type !== "position" || !change.position) continue
-          const previous = next.get(change.id)
-          if (!previous) continue
-          if (next === current) next = new Map(current)
-          next.set(change.id, { ...previous, ...change.position })
-        }
-        if (next !== current) lastPositions.current = next
-        return next
-      })
-    },
-    []
-  )
-
   const resetLayout = useCallback(() => {
     resetLayoutRequested.current = true
     setActiveExpansionNode(null)
@@ -339,7 +316,7 @@ function ResourceGraphFlow({
     void element.requestFullscreen().catch(() => setFullscreenError(true))
   }, [])
 
-  const flowNodes = useMemo<ResourceFlowNode[]>(
+  const calculatedNodes = useMemo<ResourceFlowNode[]>(
     () =>
       graph.nodes.flatMap((node) => {
         const position = layoutPositions.get(node.unique_id)
@@ -387,6 +364,23 @@ function ResourceGraphFlow({
       toggleExpansion,
     ]
   )
+  const [flowNodes, setFlowNodes, handleNodesChange] =
+    useNodesState<ResourceFlowNode>(calculatedNodes)
+
+  useEffect(() => {
+    setFlowNodes(calculatedNodes)
+  }, [calculatedNodes, setFlowNodes])
+
+  const persistNodePosition = useCallback((node: ResourceFlowNode) => {
+    setLayoutPositions((current) => {
+      const previous = current.get(node.id)
+      if (!previous) return current
+      const next = new Map(current)
+      next.set(node.id, { ...previous, ...node.position })
+      lastPositions.current = next
+      return next
+    })
+  }, [])
 
   const flowEdges = useMemo<ResourceFlowEdge[]>(
     () =>
@@ -494,6 +488,7 @@ function ResourceGraphFlow({
         nodesConnectable={false}
         nodesDraggable
         onInit={() => setFlowReady(true)}
+        onNodeDragStop={(_, node) => persistNodePosition(node)}
         onNodeDragStart={() => setActiveExpansionNode(null)}
         onNodesChange={handleNodesChange}
         onNodeClick={(event, node) => {
