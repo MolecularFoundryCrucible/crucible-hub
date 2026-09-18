@@ -154,8 +154,17 @@ export function ResourceGraphPage({
   const query = useQuery({
     ...resourceGraphQueryOptions(scope, resourceMfid, {
       depth,
+      direction: depth === 1 ? "both" : "upstream",
       relationshipKinds: depth === 1 ? undefined : ["lineage"],
     }),
+  })
+  const descendantQuery = useQuery({
+    ...resourceGraphQueryOptions(scope, resourceMfid, {
+      depth,
+      direction: "downstream",
+      relationshipKinds: ["lineage"],
+    }),
+    enabled: depth > 1,
     placeholderData: keepPreviousData,
   })
   const associationQuery = useQuery({
@@ -176,12 +185,28 @@ export function ResourceGraphPage({
     combine: combineResourceGraphExpansionQueries,
   })
   const rootGraph = useMemo(() => {
-    if (!query.data) return undefined
-    if (depth === 1 || query.isPlaceholderData || !associationQuery.data) {
-      return query.data
+    if (depth === 1) return query.data
+    if (descendantQuery.isPlaceholderData) {
+      return query.data ?? descendantQuery.data
     }
-    return mergeResourceGraphs(query.data, [associationQuery.data])
-  }, [associationQuery.data, depth, query.data, query.isPlaceholderData])
+    const graphs = [
+      query.data,
+      descendantQuery.data,
+      associationQuery.data,
+    ].flatMap((graph) => (graph ? [graph] : []))
+    if (graphs.length === 0) return undefined
+    const [baseGraph, ...additionalGraphs] = graphs
+    if (additionalGraphs.length === 0) {
+      return baseGraph
+    }
+    return mergeResourceGraphs(baseGraph, additionalGraphs)
+  }, [
+    associationQuery.data,
+    depth,
+    descendantQuery.data,
+    descendantQuery.isPlaceholderData,
+    query.data,
+  ])
   const displayedGraph = useMemo(() => {
     if (!rootGraph) return undefined
     return mergeResourceGraphs(rootGraph, expansions.graphs)
@@ -223,7 +248,10 @@ export function ResourceGraphPage({
   }, [displayedGraph])
   useRegisterResourceSiblings(previewSiblingCollections)
 
-  if (query.isPending || (depth > 1 && associationQuery.isPending)) {
+  if (
+    query.isPending ||
+    (depth > 1 && (descendantQuery.isPending || associationQuery.isPending))
+  ) {
     return <ResourceGraphPending />
   }
   if (!displayedGraph) {
@@ -234,10 +262,20 @@ export function ResourceGraphPage({
             <ResourceGraphIcon aria-hidden="true" />
           </EmptyMedia>
           <EmptyTitle>Graph unavailable</EmptyTitle>
-          <EmptyDescription>{graphErrorMessage(query.error)}</EmptyDescription>
+          <EmptyDescription>
+            {graphErrorMessage(
+              query.error ?? descendantQuery.error ?? associationQuery.error
+            )}
+          </EmptyDescription>
         </EmptyHeader>
         <Button
-          onClick={() => void query.refetch()}
+          onClick={() => {
+            void query.refetch()
+            if (depth > 1) {
+              void descendantQuery.refetch()
+              void associationQuery.refetch()
+            }
+          }}
           size="sm"
           type="button"
           variant="outline"
@@ -280,20 +318,30 @@ export function ResourceGraphPage({
 
   return (
     <section
-      aria-busy={query.isFetching || associationQuery.isFetching || isExpanding}
+      aria-busy={
+        query.isFetching ||
+        descendantQuery.isFetching ||
+        associationQuery.isFetching ||
+        isExpanding
+      }
       aria-label="Resource graph"
       className="flex min-w-0 flex-col gap-4"
     >
-      {query.isError ? (
+      {query.isError || (depth > 1 && descendantQuery.isError) ? (
         <div
           className="flex flex-wrap items-center justify-between gap-3"
           role="alert"
         >
           <p className="text-body text-muted-foreground">
-            The graph could not be refreshed. Showing the last available data.
+            {depth > 1
+              ? "Some lineage directions could not be refreshed. Showing the available paths."
+              : "The graph could not be refreshed. Showing the last available data."}
           </p>
           <Button
-            onClick={() => void query.refetch()}
+            onClick={() => {
+              if (query.isError) void query.refetch()
+              if (descendantQuery.isError) void descendantQuery.refetch()
+            }}
             size="sm"
             type="button"
             variant="outline"
@@ -358,7 +406,10 @@ export function ResourceGraphPage({
           expansionStates={expansionStates}
           graph={displayedGraph}
           loading={
-            query.isFetching || associationQuery.isFetching || isExpanding
+            query.isFetching ||
+            descendantQuery.isFetching ||
+            associationQuery.isFetching ||
+            isExpanding
           }
           onDepthChange={onDepthChange}
           onExpand={expandNode}
