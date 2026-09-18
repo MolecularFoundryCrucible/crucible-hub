@@ -72,6 +72,11 @@ describe("workspace resource sources", () => {
           truncation_reasons: [],
           nodes: [
             {
+              expansion_availability: {
+                associations: false,
+                downstream_lineage: false,
+                upstream_lineage: false,
+              },
               has_more_relationships: false,
               mfid: "sample-1",
               name: "Sample one",
@@ -82,6 +87,11 @@ describe("workspace resource sources", () => {
             },
             {
               data_format: "nexus",
+              expansion_availability: {
+                associations: true,
+                downstream_lineage: true,
+                upstream_lineage: true,
+              },
               has_more_relationships: true,
               instrument: null,
               mfid: "dataset-1",
@@ -119,6 +129,11 @@ describe("workspace resource sources", () => {
         {
           context: "Powder",
           dataFormat: null,
+          expansionAvailability: {
+            ancestors: false,
+            associations: false,
+            descendants: false,
+          },
           hasMoreRelationships: false,
           instrument: null,
           kind: "sample",
@@ -130,6 +145,11 @@ describe("workspace resource sources", () => {
         {
           context: "XRD",
           dataFormat: "nexus",
+          expansionAvailability: {
+            ancestors: true,
+            associations: true,
+            descendants: true,
+          },
           hasMoreRelationships: true,
           instrument: null,
           kind: "dataset",
@@ -182,6 +202,11 @@ describe("workspace resource sources", () => {
           truncation_reasons: [],
           nodes: [
             {
+              expansion_availability: {
+                associations: false,
+                downstream_lineage: false,
+                upstream_lineage: false,
+              },
               has_more_relationships: false,
               mfid: "sample-1",
               name: null,
@@ -192,6 +217,11 @@ describe("workspace resource sources", () => {
             },
             {
               data_format: null,
+              expansion_availability: {
+                associations: false,
+                downstream_lineage: false,
+                upstream_lineage: false,
+              },
               has_more_relationships: false,
               instrument: null,
               measurement: null,

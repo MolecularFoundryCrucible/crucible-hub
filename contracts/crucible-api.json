@@ -969,6 +969,9 @@
             ],
             "title": "Data Format"
           },
+          "expansion_availability": {
+            "$ref": "#/components/schemas/GraphExpansionAvailability"
+          },
           "has_more_relationships": {
             "anyOf": [
               {
@@ -1041,6 +1044,7 @@
           "name",
           "traversal_depth",
           "has_more_relationships",
+          "expansion_availability",
           "project",
           "resource_type",
           "measurement",
@@ -2158,6 +2162,29 @@
         ],
         "title": "GraphDirection",
         "type": "string"
+      },
+      "GraphExpansionAvailability": {
+        "properties": {
+          "associations": {
+            "title": "Associations",
+            "type": "boolean"
+          },
+          "downstream_lineage": {
+            "title": "Downstream Lineage",
+            "type": "boolean"
+          },
+          "upstream_lineage": {
+            "title": "Upstream Lineage",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "upstream_lineage",
+          "downstream_lineage",
+          "associations"
+        ],
+        "title": "GraphExpansionAvailability",
+        "type": "object"
       },
       "GraphRelationshipKind": {
         "enum": [
@@ -5029,6 +5056,9 @@
       },
       "SampleGraphNode": {
         "properties": {
+          "expansion_availability": {
+            "$ref": "#/components/schemas/GraphExpansionAvailability"
+          },
           "has_more_relationships": {
             "anyOf": [
               {
@@ -5091,6 +5121,7 @@
           "name",
           "traversal_depth",
           "has_more_relationships",
+          "expansion_availability",
           "project",
           "resource_type",
           "sample_type"

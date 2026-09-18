@@ -88,9 +88,7 @@ export function graphExpansionModesForNode(
 ) {
   const candidates = availableModes
     ? new Set(availableModes)
-    : node.hasMoreRelationships === false
-      ? new Set<GraphExpansionMode>()
-      : new Set(graphExpansionModes)
+    : new Set(graphExpansionModesByAvailability(node))
   return graphExpansionModes.filter(
     (mode) =>
       (candidates.has(mode) ||
@@ -100,71 +98,18 @@ export function graphExpansionModesForNode(
 }
 
 export function graphExpansionModesByNode(graph: WorkspaceResourceGraph) {
-  const ancestors = graphDirectionalReachability(graph, "ancestors")
-  const descendants = graphDirectionalReachability(graph, "descendants")
-  const associated = new Set(
-    graph.edges
-      .filter((edge) => edge.relationship === "associated")
-      .flatMap((edge) => [edge.source, edge.target])
-  )
   return new Map(
-    graph.nodes.map((node) => {
-      const modes = new Set<GraphExpansionMode>()
-      if (ancestors.has(node.unique_id)) {
-        modes.add("descendants")
-        modes.add("associations")
-        if (node.hasMoreRelationships !== false) modes.add("ancestors")
-      }
-      if (descendants.has(node.unique_id)) {
-        modes.add("ancestors")
-        modes.add("associations")
-        if (node.hasMoreRelationships !== false) modes.add("descendants")
-      }
-      if (
-        node.unique_id !== graph.rootMfid &&
-        associated.has(node.unique_id) &&
-        !ancestors.has(node.unique_id) &&
-        !descendants.has(node.unique_id)
-      ) {
-        modes.add("ancestors")
-        modes.add("descendants")
-        if (node.hasMoreRelationships !== false) modes.add("associations")
-      }
-      if (
-        node.unique_id === graph.rootMfid &&
-        node.hasMoreRelationships !== false
-      ) {
-        graphExpansionModes.forEach((mode) => modes.add(mode))
-      }
-      return [
-        node.unique_id,
-        graphExpansionModes.filter((mode) => modes.has(mode)),
-      ] as const
-    })
+    graph.nodes.map(
+      (node) =>
+        [node.unique_id, graphExpansionModesByAvailability(node)] as const
+    )
   )
 }
 
-function graphDirectionalReachability(
-  graph: WorkspaceResourceGraph,
-  direction: "ancestors" | "descendants"
-) {
-  const reached = new Set<string>()
-  const pending = [graph.rootMfid]
-  while (pending.length > 0) {
-    const current = pending.shift()
-    if (!current) continue
-    for (const edge of graph.edges) {
-      if (edge.relationship !== "parent") continue
-      const next =
-        direction === "ancestors" && edge.target === current
-          ? edge.source
-          : direction === "descendants" && edge.source === current
-            ? edge.target
-            : undefined
-      if (!next || reached.has(next) || next === graph.rootMfid) continue
-      reached.add(next)
-      pending.push(next)
-    }
-  }
-  return reached
+function graphExpansionModesByAvailability(node: WorkspaceResourceGraphNode) {
+  return graphExpansionModes.filter((mode) => {
+    if (mode === "ancestors") return node.expansionAvailability.ancestors
+    if (mode === "descendants") return node.expansionAvailability.descendants
+    return node.expansionAvailability.associations
+  })
 }

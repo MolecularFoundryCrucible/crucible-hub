@@ -115,7 +115,16 @@ const apiInstrumentReferenceSchema = z
   })
   .passthrough()
 
+const apiGraphExpansionAvailabilitySchema = z
+  .object({
+    associations: z.boolean(),
+    downstream_lineage: z.boolean(),
+    upstream_lineage: z.boolean(),
+  })
+  .passthrough()
+
 const apiResourceGraphNodeBase = {
+  expansion_availability: apiGraphExpansionAvailabilitySchema,
   has_more_relationships: z.boolean().nullable(),
   mfid: z.string().min(1).max(255),
   name: z.string().max(10_000).nullable(),
@@ -913,6 +922,11 @@ function fixtureResourceGraph(
             ? resource.sample_type
             : resource.measurement,
         dataFormat: resource.kind === "dataset" ? resource.data_format : null,
+        expansionAvailability: {
+          ancestors: false,
+          associations: false,
+          descendants: false,
+        },
         hasMoreRelationships: false,
         instrument: resource.kind === "dataset" ? resource.instrument : null,
         kind: resource.kind,
@@ -931,6 +945,11 @@ function fixtureResourceGraph(
       nodes.set(link.unique_id, {
         context: null,
         dataFormat: null,
+        expansionAvailability: {
+          ancestors: false,
+          associations: false,
+          descendants: false,
+        },
         hasMoreRelationships: false,
         instrument: null,
         kind: link.resource_type,
@@ -1031,6 +1050,11 @@ function normalizeApiResourceGraph(
         context:
           node.resource_type === "sample" ? node.sample_type : node.measurement,
         dataFormat: node.resource_type === "dataset" ? node.data_format : null,
+        expansionAvailability: {
+          ancestors: node.expansion_availability.upstream_lineage,
+          associations: node.expansion_availability.associations,
+          descendants: node.expansion_availability.downstream_lineage,
+        },
         hasMoreRelationships: node.has_more_relationships,
         instrument: node.resource_type === "dataset" ? node.instrument : null,
         kind: node.resource_type,

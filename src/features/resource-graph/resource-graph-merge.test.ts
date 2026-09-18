@@ -42,6 +42,14 @@ describe("resource graph expansion merge", () => {
         ?.hasMoreRelationships
     ).toBe(false)
     expect(
+      result.nodes.find((candidate) => candidate.unique_id === "sample-b")
+        ?.expansionAvailability
+    ).toEqual({
+      ancestors: false,
+      associations: false,
+      descendants: false,
+    })
+    expect(
       result.nodes.find((candidate) => candidate.unique_id === "sample-c")
         ?.traversalDepth
     ).toBe(2)
@@ -56,6 +64,11 @@ function node(
   return {
     context: null,
     dataFormat: null,
+    expansionAvailability: {
+      ancestors: hasMoreRelationships,
+      associations: hasMoreRelationships,
+      descendants: hasMoreRelationships,
+    },
     hasMoreRelationships,
     instrument: null,
     kind: "sample",

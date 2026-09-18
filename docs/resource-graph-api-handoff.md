@@ -2,7 +2,7 @@
 
 Status: Implemented API contract and Hub integration
 
-Date: 2026-09-17
+Date: 2026-09-18
 
 ## Purpose
 
@@ -10,9 +10,9 @@ This document records the typed API boundary used for dependable bounded resourc
 
 ## Implemented boundary
 
-API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d` provides `GET /resources/{resource_mfid}/graph`, and the Hub pins its checked-in OpenAPI artifact. The Hub validates the generated response at its server boundary and consumes API-provided node types, stable edge identities, relationship meaning, direction, traversal depth, completeness, limits, sample type, dataset measurement, and compact project and instrument references.
+API revision `a74d3922e0d093878c35666852ff0099e79b2912` provides `GET /resources/{resource_mfid}/graph` with per-node expansion availability, and the Hub pins its checked-in OpenAPI artifact. The Hub validates the generated response at its server boundary and consumes API-provided node types, stable edge identities, relationship meaning, direction, traversal depth, completeness, limits, sample type, dataset measurement, and compact project and instrument references.
 
-The Hub defaults interactive reads to separate depth-three upstream and downstream lineage requests merged with depth-one associations rooted at the selected resource. The separate lineage requests prevent a traversal from changing direction after reaching an ancestor or descendant, so sibling branches remain excluded until explicit expansion. A node with `has_more_relationships=true` offers expansion, false is complete within the selected direction and filters, and null remains unknown because a server limit prevented a definitive result. Expansion offers separate depth-one requests for upstream lineage, downstream lineage, and associations, then merges results by node MFID and edge ID. Each filtered request has independent Query identity and completion state. A successful filtered request removes that direction from the corresponding node's actions. The current node model does not advertise per-direction completeness before those requests run, so Hub retains untried directions when topology is additional or unknown. The Hub reports truncation and never implies unlimited export.
+The Hub defaults interactive reads to separate depth-three upstream and downstream lineage requests merged with depth-one associations rooted at the selected resource. The separate lineage requests prevent a traversal from changing direction after reaching an ancestor or descendant, so sibling branches remain excluded until explicit expansion. Each node's required `expansion_availability` object determines whether the Hub offers upstream lineage, downstream lineage, or association expansion. Expansion starts a separate depth-one request for the selected channel, then merges results by node MFID and edge ID. Each filtered request has independent Query identity and completion state, and a successful request removes that channel from the corresponding node's actions. The compatibility field `has_more_relationships` remains scoped to the request direction and filters. The Hub reports truncation and never implies unlimited export.
 
 ## Operation
 
@@ -53,6 +53,11 @@ The OpenAPI response provides:
         "title": "Example project"
       },
       "traversal_depth": 0,
+      "expansion_availability": {
+        "upstream_lineage": false,
+        "downstream_lineage": true,
+        "associations": false
+      },
       "has_more_relationships": false
     }
   ],
@@ -76,7 +81,7 @@ The OpenAPI response provides:
 }
 ```
 
-Required node fields are stable MFID, resource type, nullable display name, traversal depth, nullable per-node completeness, nullable compact project identity, and the resource-specific nullable context field: `sample_type` for a sample or `measurement` for a dataset. Dataset nodes also provide nullable data format and compact instrument identity. These fields let Hub render the standard graph node without issuing one detail request per node. A missing optional display value is represented as `null`, not by omitting the node.
+Required node fields are stable MFID, resource type, nullable display name, traversal depth, nullable request-scoped completeness, expansion availability, nullable compact project identity, and the resource-specific nullable context field: `sample_type` for a sample or `measurement` for a dataset. Dataset nodes also provide nullable data format and compact instrument identity. These fields let Hub render the standard graph node without issuing one detail request per node. A missing optional display value is represented as `null`, not by omitting the node.
 
 Required edge fields are a stable edge identity or a documented stable composite identity, source MFID, target MFID, typed relationship kind, and explicit direction. Persisted relationship labels or types should be returned directly rather than reconstructed by Hub.
 
@@ -109,9 +114,7 @@ The response returns explicit `truncated` and `truncation_reasons` values using 
 
 Incremental expansion reroots a depth-one request at a visible node with both relationship kinds, then merges nodes by MFID and edges by stable ID. This lets an explicit action reveal that node's immediate lineage and associations even when the current root's selected depth follows lineage only. This first contract has no continuation token and is not an unlimited export API.
 
-The current `has_more_relationships` field is scoped to the request's direction and relationship filters. It cannot tell the Hub whether another expansion channel has readable results. The Hub therefore derives safe candidate actions from the visible topology, keeps untried channels available, and removes a channel after its explicit request succeeds.
-
-A future response should expose tri-state node-level expansion availability for `upstream_lineage`, `downstream_lineage`, and `associations`. Each value should be `true` when that channel has an authorized relationship outside the returned graph, `false` when the API evaluated that channel and found none, and `null` when a server bound prevented a definitive result. The calculation must remain authorization-filtered and should be performed as a bounded set operation rather than an N+1 query. This is more useful than adding only a graph-level truncation type because different channels on the same node can have different completeness. The existing field can remain for compatibility.
+The `has_more_relationships` field remains scoped to the request's direction and relationship filters. The required `expansion_availability` object separately reports `upstream_lineage`, `downstream_lineage`, and `associations`. A channel is true when at least one authorized, non-deleted relationship matching the relationship-type filter is absent from that response. The API calculates all returned nodes through one grouped query. When Hub merges multiple graph responses, false is dominant for the same node and channel because one response proving the channel complete also proves that no additional edge remains outside the combined graph. A successful explicit expansion removes that channel for the active view.
 
 ## ELK integration boundary
 
@@ -150,4 +153,4 @@ The operation, parameters, enums, response models, and error models are present 
 
 ## Hub adoption status
 
-The Hub pins API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d`, generates the TypeScript client, calls the canonical operation, validates the typed boundary, consumes API relationship semantics, defaults to separate upstream and downstream lineage depth-three requests, and exposes URL-backed lineage-depth selection through three levels. It merges those directional results with the root's depth-one associations so automatic traversal neither changes lineage direction nor recursively fans through sample-dataset links. It offers rerooted depth-one expansion for additional or unknown readable topology directly from nodes, a graph menu, and the relationship card, while keeping the accessible relationship table and canonical node navigation. React Flow renders draggable browser-side nodes from ELK Layered positions, supports native fullscreen, restores automatic placement on reset, prevents node overlap in automatic layouts, and animates supported updates with reduced-motion handling. No additional graph API fields are required for this layout. Node-level per-channel availability would let Hub omit untried empty expansion actions, but it is an optional presentation improvement rather than a blocker.
+The Hub pins API revision `a74d3922e0d093878c35666852ff0099e79b2912`, generates the TypeScript client, calls the canonical operation, validates the typed boundary, consumes API relationship semantics and expansion availability, defaults to separate upstream and downstream lineage depth-three requests, and exposes URL-backed lineage-depth selection through three levels. It merges those directional results with the root's depth-one associations so automatic traversal neither changes lineage direction nor recursively fans through sample-dataset links. It offers only API-confirmed rerooted depth-one expansion directly from nodes, a graph menu, and the relationship card, while keeping the accessible relationship table and canonical node navigation. React Flow renders draggable browser-side nodes from ELK Layered positions, supports native fullscreen, restores automatic placement on reset, prevents node overlap in automatic layouts, and animates supported updates with reduced-motion handling.

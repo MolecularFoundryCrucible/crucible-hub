@@ -9,6 +9,7 @@ export function mergeResourceGraphs(
 ): WorkspaceResourceGraph {
   const graphs = [rootGraph, ...expansionGraphs]
   const nodes = new Map<string, WorkspaceResourceGraphNode>()
+  const nodeRepresentations = new Map<string, WorkspaceResourceGraphNode[]>()
   const edges = new Map(
     graphs.flatMap((graph) =>
       graph.edges.map((edge) => [edge.id, edge] as const)
@@ -16,7 +17,12 @@ export function mergeResourceGraphs(
   )
 
   for (const graph of graphs) {
-    for (const node of graph.nodes) nodes.set(node.unique_id, node)
+    for (const node of graph.nodes) {
+      nodes.set(node.unique_id, node)
+      const representations = nodeRepresentations.get(node.unique_id) ?? []
+      representations.push(node)
+      nodeRepresentations.set(node.unique_id, representations)
+    }
   }
   for (const graph of graphs) {
     const expandedRoot = graph.nodes.find(
@@ -30,10 +36,24 @@ export function mergeResourceGraphs(
   ])
   const mergedNodes = [...nodes.values()]
     .filter((node) => traversalDepths.has(node.unique_id))
-    .map((node) => ({
-      ...node,
-      traversalDepth: traversalDepths.get(node.unique_id) ?? 0,
-    }))
+    .map((node) => {
+      const representations = nodeRepresentations.get(node.unique_id) ?? [node]
+      return {
+        ...node,
+        expansionAvailability: {
+          ancestors: representations.every(
+            (candidate) => candidate.expansionAvailability.ancestors
+          ),
+          associations: representations.every(
+            (candidate) => candidate.expansionAvailability.associations
+          ),
+          descendants: representations.every(
+            (candidate) => candidate.expansionAvailability.descendants
+          ),
+        },
+        traversalDepth: traversalDepths.get(node.unique_id) ?? 0,
+      }
+    })
   const mergedEdges = [...edges.values()].filter(
     (edge) =>
       traversalDepths.has(edge.source) && traversalDepths.has(edge.target)

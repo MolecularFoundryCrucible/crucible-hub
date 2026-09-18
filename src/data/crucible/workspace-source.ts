@@ -215,6 +215,11 @@ export type WorkspaceLinkedResource = {
 export type WorkspaceResourceGraphNode = {
   context: string | null
   dataFormat: string | null
+  expansionAvailability: {
+    ancestors: boolean
+    associations: boolean
+    descendants: boolean
+  }
   hasMoreRelationships: boolean | null
   instrument: Schema<"InstrumentReferenceRead"> | null
   kind: "dataset" | "sample"

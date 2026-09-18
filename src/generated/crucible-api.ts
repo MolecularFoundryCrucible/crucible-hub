@@ -3168,6 +3168,7 @@ export interface components {
         DatasetGraphNode: {
             /** Data Format */
             data_format: string | null;
+            expansion_availability: components["schemas"]["GraphExpansionAvailability"];
             /** Has More Relationships */
             has_more_relationships: boolean | null;
             instrument: components["schemas"]["InstrumentReferenceRead"] | null;
@@ -3487,6 +3488,15 @@ export interface components {
          * @enum {string}
          */
         GraphDirection: "both" | "upstream" | "downstream";
+        /** GraphExpansionAvailability */
+        GraphExpansionAvailability: {
+            /** Associations */
+            associations: boolean;
+            /** Downstream Lineage */
+            downstream_lineage: boolean;
+            /** Upstream Lineage */
+            upstream_lineage: boolean;
+        };
         /**
          * GraphRelationshipKind
          * @enum {string}
@@ -4311,6 +4321,7 @@ export interface components {
         SampleFacetField: "sample_type" | "owner" | "project";
         /** SampleGraphNode */
         SampleGraphNode: {
+            expansion_availability: components["schemas"]["GraphExpansionAvailability"];
             /** Has More Relationships */
             has_more_relationships: boolean | null;
             /** Mfid */
