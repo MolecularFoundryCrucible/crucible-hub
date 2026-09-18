@@ -160,6 +160,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Fixed
 
+- Replaced lagging resource-graph HTML expansion overlays with Cytoscape-rendered controls and separate ancestor, descendant, and association expansion choices with equivalent accessible menus.
+
 - Kept public identity references and generic project resource details consistent after profile, ownership, and descriptive updates.
 - Prevented terminal API errors from being retried and bounded retry timing for transient and rate-limited requests.
 - Prevented desktop resource-preview dismissal from racing an underlying link or control navigation, and removed redundant detail requests from preview-link hover and focus.

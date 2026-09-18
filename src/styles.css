@@ -346,6 +346,11 @@
   --graph-resource-dataset-surface: #eef9f4;
   --graph-resource-sample: #9b5bb6;
   --graph-resource-sample-surface: #f8f1fb;
+  --graph-action-surface: #ffffff;
+  --graph-action-foreground: #0a0a0a;
+  --graph-action-border: #a1a1a1;
+  --graph-action-accent: #cc5200;
+  --graph-action-error: #b91c1c;
   --sidebar-width: 16rem;
   --sidebar-width-icon: 3rem;
   --sidebar-width-mobile: 18rem;
@@ -387,6 +392,15 @@
   --graph-muted-opacity: 0.24;
   --graph-hover-overlay-opacity: 0.1;
   --graph-hover-overlay-padding: 6;
+  --graph-action-width: 92;
+  --graph-action-height: 30;
+  --graph-action-gap: 8;
+  --graph-action-trigger-gap: 6;
+  --graph-action-trigger-size: 26;
+  --graph-action-trigger-font-size: 18;
+  --graph-action-font-size: 12;
+  --graph-action-border-width: 1.5;
+  --graph-action-pending-opacity: 0.55;
 }
 
 .dark {
@@ -463,6 +477,11 @@
   --graph-resource-dataset-surface: #182d23;
   --graph-resource-sample: #c68ee0;
   --graph-resource-sample-surface: #2d2232;
+  --graph-action-surface: #171717;
+  --graph-action-foreground: #fafafa;
+  --graph-action-border: #737373;
+  --graph-action-accent: #ff8533;
+  --graph-action-error: #f87171;
 }
 
 @layer base {
@@ -556,6 +575,7 @@ body {
   background-size: var(--graph-grid-size) var(--graph-grid-size);
 }
 
+.resource-graph-canvas[data-node-action],
 .resource-graph-canvas[data-node-hover] {
   cursor: pointer;
 }
@@ -563,13 +583,8 @@ body {
 .resource-graph-options,
 .resource-graph-controls,
 .resource-graph-layout-status,
-.resource-graph-node-actions,
 .resource-graph-legend {
   z-index: var(--layer-graph-overlay);
-}
-
-.resource-graph-node-action {
-  transform: translate(-50%, -50%);
 }
 
 .resource-graph-options [data-slot="button"],

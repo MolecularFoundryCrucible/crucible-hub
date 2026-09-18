@@ -8,6 +8,9 @@ import {
   ExploreGraphFocusIcon,
   ExpandGraphNodeIcon,
   FitGraphIcon,
+  GraphAncestorsIcon,
+  GraphAssociationsIcon,
+  GraphDescendantsIcon,
   LoadingMoreIcon,
   ResourceGraphIcon,
   ZoomInGraphIcon,
@@ -36,6 +39,9 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -107,14 +113,21 @@ type GraphExpansionQueryResult = {
 
 type GraphExpansionState = Pick<
   GraphExpansionQueryResult,
-  "isError" | "isPending" | "isSuccess" | "refetch"
+  "isError" | "isFetching" | "isPending" | "isSuccess" | "refetch"
 >
 
-type GraphExpansionAnchor = {
-  mfid: string
-  x: number
-  y: number
+type GraphExpansionMode = "ancestors" | "associations" | "descendants"
+
+type GraphExpansionRequest = {
+  mode: GraphExpansionMode
+  nodeMfid: string
 }
+
+const graphExpansionModes: readonly GraphExpansionMode[] = [
+  "ancestors",
+  "descendants",
+  "associations",
+]
 
 export const resourceGraphSearchSchema = z.object({
   depth: z
@@ -133,11 +146,68 @@ function combineResourceGraphExpansionQueries(
     isFetching: results.some((result) => result.isFetching),
     states: results.map((result) => ({
       isError: result.isError,
+      isFetching: result.isFetching,
       isPending: result.isPending,
       isSuccess: result.isSuccess,
       refetch: result.refetch,
     })),
   }
+}
+
+function graphExpansionKey(nodeMfid: string, mode: GraphExpansionMode) {
+  return `${nodeMfid}:${mode}`
+}
+
+function graphExpansionQuery(mode: GraphExpansionMode) {
+  if (mode === "ancestors") {
+    return {
+      depth: 1,
+      direction: "upstream" as const,
+      relationshipKinds: ["lineage" as const],
+    }
+  }
+  if (mode === "descendants") {
+    return {
+      depth: 1,
+      direction: "downstream" as const,
+      relationshipKinds: ["lineage" as const],
+    }
+  }
+  return {
+    depth: 1,
+    direction: "both" as const,
+    relationshipKinds: ["association" as const],
+  }
+}
+
+function graphExpansionModeLabel(mode: GraphExpansionMode) {
+  if (mode === "ancestors") return "Ancestors"
+  if (mode === "descendants") return "Descendants"
+  return "Associated"
+}
+
+function graphExpansionState(
+  states: ReadonlyMap<string, GraphExpansionState>,
+  nodeMfid: string,
+  mode: GraphExpansionMode
+) {
+  return states.get(graphExpansionKey(nodeMfid, mode))
+}
+
+function graphExpansionPending(state?: GraphExpansionState) {
+  return Boolean(state?.isPending || state?.isFetching)
+}
+
+function graphNodeCanExpand(
+  node: WorkspaceResourceGraphNode,
+  states: ReadonlyMap<string, GraphExpansionState>
+) {
+  const modeStates = graphExpansionModes.map((mode) =>
+    graphExpansionState(states, node.unique_id, mode)
+  )
+  if (modeStates.some((state) => state && !state.isSuccess)) return true
+  if (modeStates.some(Boolean)) return modeStates.some((state) => !state)
+  return node.hasMoreRelationships !== false
 }
 
 export function ResourceGraphPage({
@@ -158,11 +228,11 @@ export function ResourceGraphPage({
   const [expansion, setExpansion] = useState({
     depth,
     resourceMfid,
-    roots: [] as string[],
+    requests: [] as GraphExpansionRequest[],
   })
-  const expansionRoots =
+  const expansionRequests =
     expansion.resourceMfid === resourceMfid && expansion.depth === depth
-      ? expansion.roots
+      ? expansion.requests
       : []
   const query = useQuery({
     ...resourceGraphQueryOptions(scope, resourceMfid, {
@@ -179,8 +249,12 @@ export function ResourceGraphPage({
     enabled: depth > 1,
   })
   const expansions = useQueries({
-    queries: expansionRoots.map((rootMfid) =>
-      resourceGraphQueryOptions(scope, rootMfid)
+    queries: expansionRequests.map((request) =>
+      resourceGraphQueryOptions(
+        scope,
+        request.nodeMfid,
+        graphExpansionQuery(request.mode)
+      )
     ),
     combine: combineResourceGraphExpansionQueries,
   })
@@ -196,8 +270,8 @@ export function ResourceGraphPage({
     return mergeResourceGraphs(rootGraph, expansions.graphs)
   }, [expansions.graphs, rootGraph])
   const expansionStates = new Map<string, GraphExpansionState>(
-    expansionRoots.map((rootMfid, index) => [
-      rootMfid,
+    expansionRequests.map((request, index) => [
+      graphExpansionKey(request.nodeMfid, request.mode),
       expansions.states[index],
     ])
   )
@@ -261,22 +335,28 @@ export function ResourceGraphPage({
     (node) => node.unique_id !== displayedGraph.rootMfid
   )
   const isExpanding = expansions.isFetching
-  const expandNode = (nodeMfid: string) => {
-    const state = expansionStates.get(nodeMfid)
+  const expandNode = (nodeMfid: string, mode: GraphExpansionMode) => {
+    const state = expansionStates.get(graphExpansionKey(nodeMfid, mode))
     if (state?.isError) {
       void state.refetch()
       return
     }
     setExpansion((current) => {
-      const roots =
+      const requests =
         current.resourceMfid === resourceMfid && current.depth === depth
-          ? current.roots
+          ? current.requests
           : []
-      if (roots.includes(nodeMfid)) return current
+      if (
+        requests.some(
+          (request) => request.nodeMfid === nodeMfid && request.mode === mode
+        )
+      ) {
+        return current
+      }
       return {
         depth,
         resourceMfid,
-        roots: [...roots, nodeMfid],
+        requests: [...requests, { mode, nodeMfid }],
       }
     })
   }
@@ -429,21 +509,23 @@ function ResourceGraphCanvas({
   loading: boolean
   nodes: readonly WorkspaceResourceGraphNode[]
   onDepthChange: (depth: ResourceGraphDepth) => void
-  onExpand: (nodeMfid: string) => void
+  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
   rootContext: string | null
 }) {
   const container = useRef<HTMLDivElement>(null)
+  const expand = useRef(onExpand)
   const inspect = useRef(onInspect)
   const rootMfid = useRef(graph.rootMfid)
   const layoutGeneration = useRef(0)
-  const [expansionAnchors, setExpansionAnchors] = useState<
-    GraphExpansionAnchor[]
-  >([])
+  const [activeExpansionNode, setActiveExpansionNode] = useState<string | null>(
+    null
+  )
   const [layoutEngine, setLayoutEngine] = useState<
     "loading" | "elk" | "fallback"
   >("loading")
   const [layoutPending, setLayoutPending] = useState(true)
+  expand.current = onExpand
   inspect.current = onInspect
   rootMfid.current = graph.rootMfid
 
@@ -480,61 +562,54 @@ function ResourceGraphCanvas({
     })
     instanceRef.current = instance
     instance.scratch("resourceGraphViewportChanged", false)
-    instance.on("tap", "node", (event) => {
+    instance.on("tap", "node[?graphAction]", (event) => {
+      const nodeMfid = event.target.data("actionTarget")
+      const mode = event.target.data("expansionMode")
+      if (typeof nodeMfid !== "string") return
+      if (isGraphExpansionMode(mode)) {
+        expand.current(nodeMfid, mode)
+        return
+      }
+      setActiveExpansionNode((current) =>
+        current === nodeMfid ? null : nodeMfid
+      )
+    })
+    instance.on("tap", "node[!graphAction]", (event) => {
       const mfid = event.target.data("id")
       if (typeof mfid === "string" && mfid !== rootMfid.current) {
         inspect.current(mfid, element)
       }
     })
-    instance.on("mouseover", "node", (event) => {
+    instance.on("tap", (event) => {
+      if (event.target === instance) setActiveExpansionNode(null)
+    })
+    instance.on("mouseover", "node[!graphAction]", (event) => {
       element.dataset.nodeHover = ""
       const focus = event.target.closedNeighborhood()
-      instance.elements().addClass("graph-muted")
+      instance.elements("node[!graphAction], edge").addClass("graph-muted")
       focus.removeClass("graph-muted")
       event.target.addClass("graph-hovered")
       focus.edges().addClass("graph-highlighted")
     })
-    instance.on("mouseout", "node", (event) => {
+    instance.on("mouseout", "node[!graphAction]", (event) => {
       delete element.dataset.nodeHover
       event.target.removeClass("graph-hovered")
       instance.elements().removeClass("graph-muted graph-highlighted")
     })
+    instance.on("mouseover", "node[?graphAction]", () => {
+      element.dataset.nodeAction = ""
+    })
+    instance.on("mouseout", "node[?graphAction]", () => {
+      delete element.dataset.nodeAction
+    })
     instance.on("dragpan scrollzoom pinchzoom", () => {
       instance.scratch("resourceGraphViewportChanged", true)
     })
-    let anchorFrame = 0
-    const updateExpansionAnchors = () => {
-      cancelAnimationFrame(anchorFrame)
-      anchorFrame = requestAnimationFrame(() => {
-        if (instance.destroyed()) return
-        setExpansionAnchors(
-          instance
-            .nodes("[?expandable]")
-            .map((node) => {
-              const bounds = node.renderedBoundingBox({
-                includeLabels: false,
-                includeOverlays: true,
-              })
-              return {
-                mfid: node.id(),
-                x: bounds.x2,
-                y: bounds.y1,
-              }
-            })
-            .filter(
-              (anchor) => Number.isFinite(anchor.x) && Number.isFinite(anchor.y)
-            )
-        )
-      })
-    }
-    instance.scratch("resourceGraphUpdateAnchors", updateExpansionAnchors)
-    instance.on("pan zoom render", updateExpansionAnchors)
     const resizeObserver = new ResizeObserver(() => {
       instance.resize()
       if (!instance.scratch("resourceGraphViewportChanged")) {
         centerCurrentResource(instance)
       }
-      updateExpansionAnchors()
     })
     resizeObserver.observe(element)
     const themeObserver = new MutationObserver(() => {
@@ -545,7 +620,6 @@ function ResourceGraphCanvas({
       attributes: true,
     })
     return () => {
-      cancelAnimationFrame(anchorFrame)
       resizeObserver.disconnect()
       themeObserver.disconnect()
       if (instance.scratch("resourceGraphLayoutPending")) {
@@ -593,8 +667,6 @@ function ResourceGraphCanvas({
       } else {
         centerCurrentResource(instance)
       }
-      const updateAnchors = instance.scratch("resourceGraphUpdateAnchors")
-      if (typeof updateAnchors === "function") updateAnchors()
       setLayoutPending(false)
     }
     instance.one("layoutstop", handleLayoutStop)
@@ -617,27 +689,38 @@ function ResourceGraphCanvas({
 
   const expansionSignature = nodes
     .map((node) => {
-      const state = expansionStates.get(node.unique_id)
-      return `${node.unique_id}:${state?.isPending ? "pending" : state?.isError ? "error" : state?.isSuccess ? "complete" : node.hasMoreRelationships}`
+      const states = graphExpansionModes.map((mode) => {
+        const state = graphExpansionState(expansionStates, node.unique_id, mode)
+        return state?.isPending || state?.isFetching
+          ? "pending"
+          : state?.isError
+            ? "error"
+            : state?.isSuccess
+              ? "complete"
+              : "available"
+      })
+      return `${node.unique_id}:${node.hasMoreRelationships}:${states.join(",")}`
     })
     .join("|")
 
   useEffect(() => {
     const instance = instanceRef.current
-    if (!instance) return
-    for (const node of nodes) {
-      const state = expansionStates.get(node.unique_id)
-      instance
-        .$id(node.unique_id)
-        .data(
-          "expandable",
-          !state?.isSuccess &&
-            Boolean(state || node.hasMoreRelationships !== false)
-        )
-    }
-    const updateAnchors = instance.scratch("resourceGraphUpdateAnchors")
-    if (typeof updateAnchors === "function") updateAnchors()
-  }, [expansionSignature, expansionStates, instanceRef, layoutEngine, nodes])
+    if (!instance || layoutPending) return
+    syncGraphExpansionControls(
+      instance,
+      nodes,
+      expansionStates,
+      activeExpansionNode
+    )
+  }, [
+    activeExpansionNode,
+    expansionSignature,
+    expansionStates,
+    instanceRef,
+    layoutEngine,
+    layoutPending,
+    nodes,
+  ])
 
   return (
     <div
@@ -700,7 +783,7 @@ function ResourceGraphCanvas({
             if (!element) return
             instance.scratch("resourceGraphViewportChanged", true)
             instance.fit(
-              instance.elements(),
+              graphContentElements(instance),
               graphNumberToken(element, "--graph-fit-padding")
             )
           }}
@@ -726,23 +809,6 @@ function ResourceGraphCanvas({
           with keyboard-accessible inspection and navigation.
         </span>
       </div>
-      <div className="resource-graph-node-actions pointer-events-none absolute inset-0">
-        {expansionAnchors.map((anchor) => {
-          const node = nodes.find(
-            (candidate) => candidate.unique_id === anchor.mfid
-          )
-          if (!node) return null
-          return (
-            <GraphNodeExpansionAction
-              anchor={anchor}
-              key={anchor.mfid}
-              node={node}
-              onExpand={onExpand}
-              state={expansionStates.get(anchor.mfid)}
-            />
-          )
-        })}
-      </div>
       {loading || layoutPending || layoutEngine === "fallback" ? (
         <div
           className="resource-graph-layout-status absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border bg-card/95 px-2 py-1 text-label-compact shadow-sm backdrop-blur-sm"
@@ -762,52 +828,6 @@ function ResourceGraphCanvas({
       ) : null}
       <ResourceGraphLegend />
     </div>
-  )
-}
-
-function GraphNodeExpansionAction({
-  anchor,
-  node,
-  onExpand,
-  state,
-}: {
-  anchor: GraphExpansionAnchor
-  node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string) => void
-  state?: GraphExpansionState
-}) {
-  const action = useRef<HTMLButtonElement>(null)
-  const label = graphExpansionLabel(node, state)
-  useEffect(() => {
-    const element = action.current
-    if (!element) return
-    element.style.left = `${anchor.x}px`
-    element.style.top = `${anchor.y}px`
-  }, [anchor.x, anchor.y])
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            className="resource-graph-node-action pointer-events-auto absolute"
-            disabled={state?.isPending}
-            onClick={() => onExpand(anchor.mfid)}
-            ref={action}
-            size="icon-xs"
-            type="button"
-            variant={state?.isError ? "destructive" : "outline"}
-          />
-        }
-      >
-        {state?.isPending ? (
-          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
-        ) : (
-          <ExpandGraphNodeIcon aria-hidden="true" />
-        )}
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
   )
 }
 
@@ -863,12 +883,11 @@ function GraphExpansionMenu({
 }: {
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   nodes: readonly WorkspaceResourceGraphNode[]
-  onExpand: (nodeMfid: string) => void
+  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
-  const expandableNodes = nodes.filter((node) => {
-    const state = expansionStates.get(node.unique_id)
-    return !state?.isSuccess && (state || node.hasMoreRelationships !== false)
-  })
+  const expandableNodes = nodes.filter((node) =>
+    graphNodeCanExpand(node, expansionStates)
+  )
   if (expandableNodes.length === 0) return null
 
   return (
@@ -884,39 +903,66 @@ function GraphExpansionMenu({
       <DropdownMenuContent className="max-w-72 min-w-64">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Expand from</DropdownMenuLabel>
-          {expandableNodes.map((node) => {
-            const state = expansionStates.get(node.unique_id)
-            return (
-              <DropdownMenuItem
-                disabled={state?.isPending}
-                key={node.unique_id}
-                onClick={() => onExpand(node.unique_id)}
-              >
-                {state?.isPending ? (
-                  <LoadingMoreIcon
-                    aria-hidden="true"
-                    className="animate-spin"
-                  />
-                ) : (
-                  <ResourceTypeIcon type={node.kind} />
-                )}
+          {expandableNodes.map((node) => (
+            <DropdownMenuSub key={node.unique_id}>
+              <DropdownMenuSubTrigger>
+                <ResourceTypeIcon type={node.kind} />
                 <span className="min-w-0 flex-1 truncate">{node.name}</span>
-                {state?.isError ? (
-                  <span className="text-supporting text-destructive">
-                    Retry
-                  </span>
-                ) : node.hasMoreRelationships === null ? (
-                  <span className="text-supporting text-muted-foreground">
-                    Check
-                  </span>
-                ) : null}
-              </DropdownMenuItem>
-            )
-          })}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="min-w-40">
+                <GraphExpansionModeItems
+                  expansionStates={expansionStates}
+                  node={node}
+                  onExpand={onExpand}
+                />
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          ))}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )
+}
+
+function GraphExpansionModeItems({
+  expansionStates,
+  node,
+  onExpand,
+}: {
+  expansionStates: ReadonlyMap<string, GraphExpansionState>
+  node: WorkspaceResourceGraphNode
+  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+}) {
+  return graphExpansionModes.map((mode) => {
+    const state = graphExpansionState(expansionStates, node.unique_id, mode)
+    const pending = graphExpansionPending(state)
+    const Icon = graphExpansionModeIcon(mode)
+    return (
+      <DropdownMenuItem
+        disabled={pending || state?.isSuccess}
+        key={mode}
+        onClick={() => onExpand(node.unique_id, mode)}
+      >
+        {pending ? (
+          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+        ) : (
+          <Icon aria-hidden="true" />
+        )}
+        <span className="flex-1">{graphExpansionModeLabel(mode)}</span>
+        {state?.isError ? (
+          <span className="text-supporting text-destructive">Retry</span>
+        ) : state?.isSuccess ? (
+          <span className="text-supporting text-muted-foreground">Loaded</span>
+        ) : null}
+      </DropdownMenuItem>
+    )
+  })
+}
+
+function graphExpansionModeIcon(mode: GraphExpansionMode) {
+  if (mode === "ancestors") return GraphAncestorsIcon
+  if (mode === "descendants") return GraphDescendantsIcon
+  return GraphAssociationsIcon
 }
 
 function graphElements(
@@ -967,7 +1013,9 @@ function updateGraphElements(
       typeof definition.data.id === "string" ? [definition.data.id] : []
     )
   )
-  const previousNodeIds = new Set(instance.nodes().map((node) => node.id()))
+  const previousNodeIds = new Set(
+    instance.nodes("[!graphAction]").map((node) => node.id())
+  )
   instance.batch(() => {
     instance
       .elements()
@@ -1104,6 +1152,56 @@ function graphStyles(element: HTMLElement): StylesheetJson {
           token("--graph-resource-dataset")
         ),
         "border-color": token("--graph-resource-dataset"),
+      },
+    },
+    {
+      selector: "node[?graphAction]",
+      style: {
+        "background-color": token("--graph-action-surface"),
+        "background-image": "none",
+        "border-color": token("--graph-action-border"),
+        "border-width": graphNumberToken(
+          element,
+          "--graph-action-border-width"
+        ),
+        color: token("--graph-action-foreground"),
+        "font-size": graphNumberToken(element, "--graph-action-font-size"),
+        "font-weight": 600,
+        height: graphNumberToken(element, "--graph-action-height"),
+        label: "data(label)",
+        "overlay-opacity": 0,
+        shape: "round-rectangle",
+        "text-halign": "center",
+        "text-margin-x": 0,
+        "text-valign": "center",
+        "text-wrap": "none",
+        width: graphNumberToken(element, "--graph-action-width"),
+      },
+    },
+    {
+      selector: 'node[actionKind = "trigger"]',
+      style: {
+        "border-color": token("--graph-action-accent"),
+        "font-size": graphNumberToken(
+          element,
+          "--graph-action-trigger-font-size"
+        ),
+        height: graphNumberToken(element, "--graph-action-trigger-size"),
+        shape: "ellipse",
+        width: graphNumberToken(element, "--graph-action-trigger-size"),
+      },
+    },
+    {
+      selector: "node[?actionPending]",
+      style: {
+        opacity: graphNumberToken(element, "--graph-action-pending-opacity"),
+      },
+    },
+    {
+      selector: "node[?actionError]",
+      style: {
+        "border-color": token("--graph-action-error"),
+        color: token("--graph-action-error"),
       },
     },
     {
@@ -1287,7 +1385,7 @@ function centerCurrentResource(instance: Core) {
   const container = instance.container()
   if (!container) return
   const padding = graphNumberToken(container, "--graph-fit-padding")
-  const bounds = instance.elements().boundingBox({
+  const bounds = graphContentElements(instance).boundingBox({
     includeLabels: true,
     includeOverlays: true,
   })
@@ -1317,6 +1415,10 @@ function centerCurrentResource(instance: Core) {
   })
 }
 
+function graphContentElements(instance: Core) {
+  return instance.elements("node[!graphAction], edge")
+}
+
 function graphNumberToken(element: HTMLElement, name: string) {
   const value = Number(getComputedStyle(element).getPropertyValue(name))
   if (!Number.isFinite(value)) throw new Error(`Invalid graph token: ${name}`)
@@ -1339,7 +1441,7 @@ function ResourceGraphTable({
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   graph: WorkspaceResourceGraph
   nodes: readonly WorkspaceResourceGraphNode[]
-  onExpand: (nodeMfid: string) => void
+  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
   return (
@@ -1418,9 +1520,9 @@ function ResourceGraphTable({
                       <TableCell className="resource-graph-action">
                         <span className="flex justify-end gap-1">
                           <GraphExpansionAction
+                            expansionStates={expansionStates}
                             node={node}
                             onExpand={onExpand}
-                            state={expansionStates.get(node.unique_id)}
                           />
                           <ResourceFullPageLink
                             kind={node.kind}
@@ -1443,54 +1545,163 @@ function ResourceGraphTable({
 }
 
 function GraphExpansionAction({
+  expansionStates,
   node,
   onExpand,
-  state,
 }: {
+  expansionStates: ReadonlyMap<string, GraphExpansionState>
   node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string) => void
-  state?: GraphExpansionState
+  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
-  if (state?.isSuccess || (node.hasMoreRelationships === false && !state)) {
-    return null
-  }
-  const label = graphExpansionLabel(node, state)
+  if (!graphNodeCanExpand(node, expansionStates)) return null
+  const pending = graphExpansionModes.some((mode) =>
+    graphExpansionPending(
+      graphExpansionState(expansionStates, node.unique_id, mode)
+    )
+  )
 
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            disabled={state?.isPending}
-            onClick={() => onExpand(node.unique_id)}
-            size="table-action"
-            type="button"
-            variant="outline"
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label={`Expand graph from ${node.name}`}
+                  size="table-action"
+                  type="button"
+                  variant="outline"
+                />
+              }
+            />
+          }
+        >
+          {pending ? (
+            <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+          ) : (
+            <ExpandGraphNodeIcon aria-hidden="true" />
+          )}
+        </TooltipTrigger>
+        <TooltipContent>Expand graph</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="end" className="min-w-44">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Expand from {node.name}</DropdownMenuLabel>
+          <GraphExpansionModeItems
+            expansionStates={expansionStates}
+            node={node}
+            onExpand={onExpand}
           />
-        }
-      >
-        {state?.isPending ? (
-          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
-        ) : (
-          <ExpandGraphNodeIcon aria-hidden="true" />
-        )}
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
-function graphExpansionLabel(
-  node: WorkspaceResourceGraphNode,
+function isGraphExpansionMode(value: unknown): value is GraphExpansionMode {
+  return graphExpansionModes.some((mode) => mode === value)
+}
+
+function graphExpansionControlLabel(
+  mode: GraphExpansionMode,
   state?: GraphExpansionState
 ) {
-  if (state?.isPending) return `Expanding graph from ${node.name}`
-  if (state?.isError) return `Retry expanding graph from ${node.name}`
-  if (node.hasMoreRelationships === null) {
-    return `Check for more relationships around ${node.name}`
+  const label = graphExpansionModeLabel(mode).toLowerCase()
+  if (graphExpansionPending(state)) return `Loading ${label}`
+  if (state?.isError) return `Retry ${label}`
+  return graphExpansionModeLabel(mode)
+}
+
+function syncGraphExpansionControls(
+  instance: Core,
+  nodes: readonly WorkspaceResourceGraphNode[],
+  expansionStates: ReadonlyMap<string, GraphExpansionState>,
+  activeNodeMfid: string | null
+) {
+  const container = instance.container()
+  if (!container || instance.destroyed()) return
+  const actionNodes: ElementDefinition[] = []
+  for (const node of nodes) {
+    if (!graphNodeCanExpand(node, expansionStates)) continue
+    const resourceNode = instance.getElementById(node.unique_id)
+    if (!resourceNode.length) continue
+    const position = resourceNode.position()
+    const bounds = resourceNode.boundingBox({
+      includeLabels: false,
+      includeOverlays: false,
+    })
+    const triggerGap = graphNumberToken(container, "--graph-action-trigger-gap")
+    const triggerSize = graphNumberToken(
+      container,
+      "--graph-action-trigger-size"
+    )
+    const triggerPosition = {
+      x: bounds.x2 + triggerGap + triggerSize / 2,
+      y: bounds.y1 + triggerSize / 2,
+    }
+    actionNodes.push({
+      data: {
+        actionKind: "trigger",
+        actionTarget: node.unique_id,
+        graphAction: true,
+        id: graphExpansionControlId(node.unique_id, "trigger"),
+        label: "+",
+      },
+      grabbable: false,
+      group: "nodes",
+      locked: true,
+      position: triggerPosition,
+      selectable: false,
+    })
+    if (activeNodeMfid !== node.unique_id) continue
+    const actionHeight = graphNumberToken(container, "--graph-action-height")
+    const actionWidth = graphNumberToken(container, "--graph-action-width")
+    const actionGap = graphNumberToken(container, "--graph-action-gap")
+    const actionX =
+      triggerPosition.x + triggerSize / 2 + actionGap + actionWidth / 2
+    const availableModes = graphExpansionModes.filter(
+      (mode) =>
+        !graphExpansionState(expansionStates, node.unique_id, mode)?.isSuccess
+    )
+    availableModes.forEach((mode, index) => {
+      const state = graphExpansionState(expansionStates, node.unique_id, mode)
+      actionNodes.push({
+        data: {
+          actionError: Boolean(state?.isError),
+          actionKind: "mode",
+          actionPending: graphExpansionPending(state),
+          actionTarget: node.unique_id,
+          expansionMode: mode,
+          graphAction: true,
+          id: graphExpansionControlId(node.unique_id, mode),
+          label: graphExpansionControlLabel(mode, state),
+        },
+        grabbable: false,
+        group: "nodes",
+        locked: true,
+        position: {
+          x: actionX,
+          y:
+            position.y +
+            (index - (availableModes.length - 1) / 2) *
+              (actionHeight + actionGap),
+        },
+        selectable: false,
+      })
+    })
   }
-  return `Expand graph from ${node.name}`
+  instance.batch(() => {
+    instance.nodes("[?graphAction]").remove()
+    if (actionNodes.length) instance.add(actionNodes)
+  })
+}
+
+function graphExpansionControlId(
+  nodeMfid: string,
+  action: GraphExpansionMode | "trigger"
+) {
+  return `graph-action:${nodeMfid}:${action}`
 }
 
 function relationshipLabel(

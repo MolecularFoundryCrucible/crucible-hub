@@ -12,7 +12,7 @@ This document records the typed API boundary used for dependable bounded resourc
 
 API revision `82b65ec4a4bf51b7df6b09d43bb81b819f64435d` provides `GET /resources/{resource_mfid}/graph`, and the Hub pins its checked-in OpenAPI artifact. The Hub validates the generated response at its server boundary and consumes API-provided node types, stable edge identities, relationship meaning, direction, traversal depth, completeness, limits, sample type, dataset measurement, and compact project and instrument references.
 
-The Hub defaults interactive reads to depth one. A node with `has_more_relationships=true` offers expansion, false is complete within the selected direction and filters, and null remains unknown because a server limit prevented a definitive result. Expansions reroot another depth-one request and merge by node MFID and edge ID. The Hub reports truncation and never implies unlimited export.
+The Hub defaults interactive reads to depth one. A node with `has_more_relationships=true` offers expansion, false is complete within the selected direction and filters, and null remains unknown because a server limit prevented a definitive result. Expansion offers separate depth-one requests for upstream lineage, downstream lineage, and associations, then merges results by node MFID and edge ID. Each filtered request has independent Query identity and completion state. The Hub reports truncation and never implies unlimited export.
 
 ## Operation
 
