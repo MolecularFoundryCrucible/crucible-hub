@@ -57,19 +57,12 @@ import type { CreationRelationshipDraft } from "./creation-relationships"
 import {
   CreationFormSection,
   useCreationTimestampDefault,
+  workspaceSelectionOf,
 } from "./creation-form"
 import {
   creationFailureMessage,
   isUncertainCreationError,
 } from "./creation-error"
-
-const selectedProjectSchema = z.custom<WorkspaceSearchResult | null>(
-  (value) =>
-    value !== null &&
-    typeof value === "object" &&
-    (value as WorkspaceSearchResult).kind === "project",
-  "Choose a project."
-)
 
 const sampleSchema = z.object({
   description: z
@@ -79,7 +72,7 @@ const sampleSchema = z.object({
       SAMPLE_DESCRIPTION_MAX_LENGTH,
       `Use ${SAMPLE_DESCRIPTION_MAX_LENGTH.toLocaleString()} characters or fewer.`
     ),
-  project: selectedProjectSchema,
+  project: workspaceSelectionOf("project").nullable(),
   relationships: z.array(creationRelationshipDraftSchema).max(10),
   sample_name: z
     .string()
@@ -128,7 +121,7 @@ export function SampleCreationForm({
           data: {
             sample: {
               description: optionalValue(value.description),
-              projectMfid: value.project?.unique_id ?? "",
+              projectMfid: value.project?.unique_id ?? null,
               public: value.visibility === "public",
               sample_name: value.sample_name,
               sample_type: optionalValue(value.sample_type),
@@ -239,8 +232,8 @@ export function SampleCreationForm({
                       const errorId = `${field.name}-error`
                       return (
                         <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            Project <span aria-hidden="true">*</span>
+                          <FieldLabel htmlFor={field.name} optional>
+                            Project
                           </FieldLabel>
                           <ResourceChooser
                             describedBy={errorId}

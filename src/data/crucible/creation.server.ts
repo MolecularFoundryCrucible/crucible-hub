@@ -29,9 +29,10 @@ function fixtureWorkspace(scenario?: FixtureScenario) {
 }
 
 function projectReference(
-  projectMfid: string,
+  projectMfid: string | null,
   scenario?: FixtureScenario
-): Schema<"ProjectReferenceRead"> {
+): Schema<"ProjectReferenceRead"> | null {
+  if (!projectMfid) return null
   const project = fixtureWorkspace(scenario).projects.find(
     (candidate) => candidate.unique_id === projectMfid
   )
@@ -112,7 +113,7 @@ export async function createWorkspaceSampleResource(
       owner: workspace.account,
       owner_orcid: workspace.account.unique_id,
       project,
-      project_id: project.project_id,
+      project_id: project?.project_id ?? null,
       resource_type: "sample",
       scientific_metadata: null,
       unique_id: `fixture-sample-${crypto.randomUUID()}`,
@@ -123,7 +124,7 @@ export async function createWorkspaceSampleResource(
   const result = await client.POST("/samples", {
     body: {
       description: sample.description,
-      project_mfid: sample.projectMfid,
+      ...(sample.projectMfid ? { project_mfid: sample.projectMfid } : {}),
       public: sample.public,
       sample_name: sample.sample_name,
       sample_type: sample.sample_type,
@@ -173,7 +174,7 @@ export async function createWorkspaceDatasetResource(
       owner: workspace.account,
       owner_orcid: workspace.account.unique_id,
       project,
-      project_id: project.project_id,
+      project_id: project?.project_id ?? null,
       public: dataset.public,
       resource_type: "dataset",
       scientific_metadata: null,
@@ -191,7 +192,7 @@ export async function createWorkspaceDatasetResource(
         ? { instrument_mfid: dataset.instrumentMfid }
         : {}),
       measurement: dataset.measurement,
-      project_mfid: dataset.projectMfid,
+      ...(dataset.projectMfid ? { project_mfid: dataset.projectMfid } : {}),
       public: dataset.public,
       session_name: dataset.session_name,
       timestamp: dataset.timestamp,

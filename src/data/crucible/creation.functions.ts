@@ -66,7 +66,7 @@ export const sampleCreateInputSchema = z
     sample: z
       .object({
         description: nullableTextSchema(SAMPLE_DESCRIPTION_MAX_LENGTH),
-        projectMfid: selectedResourceMfidSchema,
+        projectMfid: selectedResourceMfidSchema.nullable(),
         public: z.boolean(),
         sample_name: z.string().trim().min(1).max(SAMPLE_NAME_MAX_LENGTH),
         sample_type: nullableTextSchema(SAMPLE_TYPE_MAX_LENGTH),
@@ -86,7 +86,7 @@ export const datasetCreateInputSchema = z
         dataset_name: z.string().trim().min(1).max(DATASET_NAME_MAX_LENGTH),
         instrumentMfid: selectedResourceMfidSchema.nullable(),
         measurement: nullableTextSchema(DATASET_MEASUREMENT_MAX_LENGTH),
-        projectMfid: selectedResourceMfidSchema,
+        projectMfid: selectedResourceMfidSchema.nullable(),
         public: z.boolean(),
         session_name: nullableTextSchema(DATASET_SESSION_NAME_MAX_LENGTH),
         timestamp: timestampSchema,

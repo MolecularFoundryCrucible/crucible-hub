@@ -56,22 +56,12 @@ import type { CreationRelationshipDraft } from "./creation-relationships"
 import {
   CreationFormSection,
   useCreationTimestampDefault,
+  workspaceSelectionOf,
 } from "./creation-form"
 import {
   creationFailureMessage,
   isUncertainCreationError,
 } from "./creation-error"
-
-const selectionSchema = z.object({
-  context: z.string().nullable(),
-  kind: z.enum(["dataset", "instrument", "person", "project", "sample"]),
-  name: z.string(),
-  unique_id: z.string(),
-})
-
-function selectionOf(kind: WorkspaceSearchResult["kind"]) {
-  return selectionSchema.refine((value) => value.kind === kind)
-}
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -84,11 +74,9 @@ const datasetFormSchema = z.object({
       DATASET_NAME_MAX_LENGTH,
       `Use ${DATASET_NAME_MAX_LENGTH.toLocaleString()} characters or fewer.`
     ),
-  instrument: selectionOf("instrument").optional(),
+  instrument: workspaceSelectionOf("instrument").optional(),
   measurement: optionalText(DATASET_MEASUREMENT_MAX_LENGTH, "measurement"),
-  project: selectionOf("project")
-    .optional()
-    .refine((value) => Boolean(value), "Choose a project."),
+  project: workspaceSelectionOf("project").optional(),
   public: z.boolean(),
   relationships: z.array(creationRelationshipDraftSchema).max(10),
   session_name: optionalText(DATASET_SESSION_NAME_MAX_LENGTH, "session name"),
@@ -117,9 +105,8 @@ export function DatasetCreationForm({
   const [createdDataset, setCreatedDataset] = useState<DatasetResource>()
   const [saveError, setSaveError] = useState<string>()
   const createMutation = useMutation({
-    mutationFn: async (value: DatasetFormValues) => {
-      if (!value.project) throw new Error("Choose a project before creating.")
-      return unwrapHubResult(
+    mutationFn: async (value: DatasetFormValues) =>
+      unwrapHubResult(
         await createWorkspaceDataset({
           data: {
             dataset: {
@@ -128,7 +115,7 @@ export function DatasetCreationForm({
               dataset_name: value.dataset_name.trim(),
               instrumentMfid: value.instrument?.unique_id ?? null,
               measurement: optionalValue(value.measurement),
-              projectMfid: value.project.unique_id,
+              projectMfid: value.project?.unique_id ?? null,
               public: value.public,
               session_name: optionalValue(value.session_name),
               timestamp: value.timestamp
@@ -138,8 +125,7 @@ export function DatasetCreationForm({
             scenario: fixtureScenarioFromScope(scope),
           },
         })
-      )
-    },
+      ),
   })
   const relationships = useCreationRelationshipSubmission({
     onApplied: (resource) => {
@@ -293,8 +279,11 @@ export function DatasetCreationForm({
                           data-invalid={invalid}
                           data-disabled={Boolean(createdDataset)}
                         >
-                          <FieldLabel htmlFor="dataset-project-trigger">
-                            Project <span aria-hidden="true">*</span>
+                          <FieldLabel
+                            htmlFor="dataset-project-trigger"
+                            optional
+                          >
+                            Project
                           </FieldLabel>
                           <ResourceChooser
                             describedBy="dataset-project-error"

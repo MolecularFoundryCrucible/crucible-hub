@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Made project assignment optional when creating samples and datasets while retaining project-context preselection.
 - Marked primary-project access grants as structural read-only entries and preserved unrelated project grants while project reassignment refreshes authoritative access.
 - Simplified page headers by removing redundant section eyebrows, retaining distinct project and instrument IDs as secondary metadata, and using the correct person or service-account icon on public profiles.
 - Moved ELK graph layout to a browser worker, reduced graph rerenders and repeated initial arrangements, made dragging immediate, deferred relationship thumbnails until near the viewport, preserved in-place node-to-node inspector switching, and recovered routine Query cancellation without replacing navigation with an error page.

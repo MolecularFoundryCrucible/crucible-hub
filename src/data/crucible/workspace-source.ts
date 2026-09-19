@@ -178,7 +178,7 @@ export type WorkspaceInstrumentCreate = Pick<
 
 export type WorkspaceSampleCreate = {
   description: string | null
-  projectMfid: string
+  projectMfid: string | null
   public: boolean
   sample_name: string
   sample_type: string | null
@@ -191,7 +191,7 @@ export type WorkspaceDatasetCreate = {
   dataset_name: string
   instrumentMfid: string | null
   measurement: string | null
-  projectMfid: string
+  projectMfid: string | null
   public: boolean
   session_name: string | null
   timestamp: string | null
