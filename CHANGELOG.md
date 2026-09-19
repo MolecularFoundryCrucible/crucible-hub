@@ -10,6 +10,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
+- Added the four most recently viewed resources as bounded sidebar shortcuts, with a single collapsed history menu that remains separate from capability-gated Administration.
 - Added URL-backed sortable group headers for sample and dataset directories, with API-provided canonical facet labels, reversible Name and Count ordering, and count columns that remain visible beside truncated long labels.
 - Added confirmed dataset acquisition-instrument reassignment with canonical instrument selection, API-authoritative identity updates, derived access refresh, dependent collection invalidation, and sibling-navigation reset.
 - Added configurable anchored sibling navigation on canonical sample and dataset pages, with project, subtype, owner, and instrument scopes, API-backed ordering, and independent on-demand continuation in both directions.

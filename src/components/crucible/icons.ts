@@ -56,6 +56,7 @@ export {
   SwitchCamera as SwitchCameraIcon,
   ArrowLeft as BackToSearchIcon,
   CircleQuestionMark as KeyboardShortcutsIcon,
+  History as RecentResourcesIcon,
   SunMoon as ThemeIcon,
   PanelLeftClose as CollapseSidebarIcon,
   PanelLeftOpen as ExpandSidebarIcon,

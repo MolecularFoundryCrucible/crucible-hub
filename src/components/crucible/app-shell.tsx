@@ -11,6 +11,7 @@ import {
   AccountIcon,
   CollapseSidebarIcon,
   ExpandSidebarIcon,
+  RecentResourcesIcon,
   ThemeIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
@@ -57,9 +58,14 @@ import {
   projectQueryOptions,
   projectSummaryQueryOptions,
 } from "@/data/crucible/projects.queries"
-import { RecentlyViewedProvider } from "@/features/recently-viewed/recently-viewed"
+import {
+  RecentlyViewedProvider,
+  useRecentlyViewed,
+} from "@/features/recently-viewed/recently-viewed"
+import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
+const sidebarRecentLimit = 4
 
 const primaryItems = [
   { label: "Home", to: "/", kind: "home" },
@@ -152,6 +158,7 @@ export function AppShell({
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+            <SidebarRecentResources />
             {account?.capabilities.can_manage_service_accounts ? (
               <SidebarGroup>
                 <SidebarGroupLabel>Administration</SidebarGroupLabel>
@@ -247,6 +254,121 @@ export function AppShell({
         </SidebarInset>
       </SidebarProvider>
     </RecentlyViewedProvider>
+  )
+}
+
+function SidebarRecentResources() {
+  const items = useRecentlyViewed().slice(0, sidebarRecentLimit)
+  const { isMobile, state } = useSidebar()
+
+  if (items.length === 0) return null
+
+  const collapsed = !isMobile && state === "collapsed"
+  if (collapsed) {
+    return (
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <SidebarMenuButton
+                      aria-label="Recently viewed"
+                      tooltip="Recently viewed"
+                    />
+                  }
+                >
+                  <RecentResourcesIcon aria-hidden="true" />
+                  <span>Recent</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-(--sidebar-width)"
+                  side="right"
+                >
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Recently viewed</DropdownMenuLabel>
+                    {items.map((item) => (
+                      <DropdownMenuItem
+                        key={`${item.kind}:${item.uniqueId}`}
+                        render={recentResourceLink(item)}
+                      >
+                        <ResourceTypeIcon type={item.kind} />
+                        <span className="truncate">{item.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    )
+  }
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>Recent</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={`${item.kind}:${item.uniqueId}`}>
+              <SidebarMenuButton
+                render={recentResourceLink(item)}
+                tooltip={item.name}
+              >
+                <ResourceTypeIcon type={item.kind} />
+                <span>{item.name}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+}
+
+function recentResourceLink(item: RecentlyViewedResource) {
+  const ariaLabel = `Open ${item.kind}: ${item.name}`
+  if (item.kind === "project") {
+    return (
+      <Link
+        aria-label={ariaLabel}
+        params={{ projectMfid: item.uniqueId }}
+        search={{ preview: undefined }}
+        state={{}}
+        to="/projects/$projectMfid"
+      />
+    )
+  }
+  if (item.kind === "instrument") {
+    return (
+      <Link
+        aria-label={ariaLabel}
+        params={{ instrumentMfid: item.uniqueId }}
+        search={{}}
+        state={{}}
+        to="/instruments/$instrumentMfid"
+      />
+    )
+  }
+  if (item.kind === "sample") {
+    return (
+      <Link
+        aria-label={ariaLabel}
+        params={{ sampleMfid: item.uniqueId }}
+        to="/samples/$sampleMfid"
+      />
+    )
+  }
+  return (
+    <Link
+      aria-label={ariaLabel}
+      params={{ datasetMfid: item.uniqueId }}
+      to="/datasets/$datasetMfid"
+    />
   )
 }
 
