@@ -101,7 +101,7 @@ function ProjectWorkspace() {
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem>
+          <BreadcrumbItem className="min-w-0 flex-1 shrink">
             <BreadcrumbPage>
               {project.title ?? project.project_id}
             </BreadcrumbPage>

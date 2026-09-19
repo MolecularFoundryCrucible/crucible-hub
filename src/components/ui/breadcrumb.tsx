@@ -10,7 +10,7 @@ function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
     <nav
       aria-label="breadcrumb"
       data-slot="breadcrumb"
-      className={cn(className)}
+      className={cn("max-w-full min-w-0", className)}
       {...props}
     />
   )
@@ -21,7 +21,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        "flex flex-wrap items-center gap-1.5 text-body wrap-break-word text-muted-foreground",
+        "flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden text-body whitespace-nowrap text-muted-foreground",
         className
       )}
       {...props}
@@ -34,7 +34,7 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
     <li
       data-slot="breadcrumb-item"
       className={cn(
-        "inline-flex max-w-full min-w-0 items-center gap-1",
+        "inline-flex max-w-full min-w-0 shrink-0 items-center gap-1",
         className
       )}
       {...props}
@@ -52,7 +52,7 @@ function BreadcrumbLink({
     props: mergeProps<"a">(
       {
         className: cn(
-          "max-w-full min-w-0 truncate transition-colors hover:text-foreground",
+          "block max-w-full min-w-0 truncate transition-colors hover:text-foreground",
           className
         ),
       },
@@ -73,7 +73,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
       aria-disabled="true"
       aria-current="page"
       className={cn(
-        "max-w-full min-w-0 truncate text-body text-foreground",
+        "block max-w-full min-w-0 truncate text-body text-foreground",
         className
       )}
       {...props}
@@ -91,7 +91,7 @@ function BreadcrumbSeparator({
       data-slot="breadcrumb-separator"
       role="presentation"
       aria-hidden="true"
-      className={cn("[&>svg]:size-3.5", className)}
+      className={cn("shrink-0 [&>svg]:size-3.5", className)}
       {...props}
     >
       {children ?? <ChevronRightIcon />}

@@ -172,9 +172,8 @@ export function ResourceWorkspace({
             <BreadcrumbSeparator />
             {resource.project ? (
               <>
-                <BreadcrumbItem className="min-w-0">
+                <BreadcrumbItem className="max-w-breadcrumb-ancestor min-w-0 flex-1 shrink">
                   <BreadcrumbLink
-                    className="break-words"
                     render={
                       <Link
                         params={{ projectMfid: resource.project.unique_id }}
@@ -189,10 +188,8 @@ export function ResourceWorkspace({
                 <BreadcrumbSeparator />
               </>
             ) : null}
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="break-words">
-                {resource.name}
-              </BreadcrumbPage>
+            <BreadcrumbItem className="min-w-0 flex-1 shrink">
+              <BreadcrumbPage>{resource.name}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
