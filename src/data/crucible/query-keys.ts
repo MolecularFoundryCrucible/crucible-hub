@@ -34,6 +34,14 @@ export const crucibleKeys = {
   projectQueries: (scope: IdentityScope) => [...scope, "projects"] as const,
   projects: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "projects", "list", normalizeFilters(filters)] as const,
+  projectCursorChain: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "projects",
+      "list",
+      "cursor-chain",
+      normalizeFilters(filters),
+    ] as const,
   projectLists: (scope: IdentityScope) =>
     [...scope, "projects", "list"] as const,
   project: (scope: IdentityScope, projectMfid: string) =>
@@ -111,6 +119,14 @@ export const crucibleKeys = {
     [...scope, "instruments"] as const,
   instruments: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "instruments", "list", normalizeFilters(filters)] as const,
+  instrumentCursorChain: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "instruments",
+      "list",
+      "cursor-chain",
+      normalizeFilters(filters),
+    ] as const,
   instrumentLists: (scope: IdentityScope) =>
     [...scope, "instruments", "list"] as const,
   instrumentOperators: (scope: IdentityScope, instrumentMfid: string) =>

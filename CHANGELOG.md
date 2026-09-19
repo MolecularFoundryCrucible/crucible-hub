@@ -72,6 +72,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Unified project and instrument directories with 100-row cursor pages, appended automatic continuation, explicit Load more recovery, loaded progress, and Back to top.
 - Kept breadcrumbs to one line with bounded project labels and predictable truncation for long project and resource names.
 - Made project assignment optional when creating samples and datasets while retaining project-context preselection.
 - Marked primary-project access grants as structural read-only entries and preserved unrelated project grants while project reassignment refreshes authoritative access.

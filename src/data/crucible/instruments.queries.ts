@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import {
   getWorkspaceInstrumentOperators,
@@ -12,7 +12,7 @@ import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
 import type { WorkspaceInstrumentStatus } from "./workspace-source"
 
-export const instrumentPageLimit = 20
+export const instrumentPageLimit = 100
 
 function instrumentStatusScopedPreviousData<TData>(
   scope: IdentityScope,
@@ -71,6 +71,48 @@ export function instrumentsQueryOptions(
         previousData,
         previousQuery
       ),
+    retry: scenario ? false : undefined,
+  })
+}
+
+export function instrumentsCursorQueryOptions(
+  scope: IdentityScope,
+  filters: {
+    affiliation?: CollectionAffiliation
+    cursor?: string
+    includeOwner?: boolean
+    includeTotal?: boolean
+    limit: number
+    status: WorkspaceInstrumentStatus
+  }
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  return infiniteQueryOptions({
+    initialPageParam: filters.cursor,
+    queryKey: crucibleKeys.instrumentCursorChain(scope, {
+      affiliation: filters.affiliation,
+      includeOwner: filters.includeOwner ?? true,
+      includeTotal: filters.includeTotal ?? true,
+      initialCursor: filters.cursor ?? null,
+      limit: filters.limit,
+      status: filters.status,
+    }),
+    queryFn: async ({ pageParam, signal }) =>
+      unwrapHubResult(
+        await getWorkspaceInstruments({
+          data: {
+            affiliation: filters.affiliation,
+            cursor: pageParam,
+            includeOwner: filters.includeOwner,
+            includeTotal: filters.includeTotal,
+            limit: filters.limit,
+            scenario,
+            status: filters.status,
+          },
+          signal,
+        })
+      ),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: scenario ? false : undefined,
   })
 }

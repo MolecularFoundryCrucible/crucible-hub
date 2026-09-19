@@ -1,9 +1,14 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
+import {
+  useInfiniteQuery,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
-import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -40,13 +45,18 @@ import {
 } from "@/components/ui/table"
 import {
   projectPageLimit,
-  projectsQueryOptions,
+  projectsCursorQueryOptions,
 } from "@/data/crucible/projects.queries"
 import {
   collectionAffiliationSchema,
   collectionCursorSchema,
 } from "@/data/crucible/collection-query"
-import type { WorkspaceProjectPage } from "@/data/crucible/workspace-source"
+import {
+  cursorPageTotal,
+  flattenCursorPages,
+} from "@/data/crucible/cursor-pages"
+import type { WorkspaceProject } from "@/data/crucible/workspace-source"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
 const projectSearchSchema = z.object({
   affiliation: collectionAffiliationSchema.optional().catch(undefined),
@@ -64,22 +74,19 @@ export const Route = createFileRoute("/_app/projects/")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const options = projectsQueryOptions(source.scope, {
-      includeTotal: false,
+    const options = projectsCursorQueryOptions(source.scope, {
+      includeTotal: true,
       limit: projectPageLimit,
       ...deps,
     })
-    const hasData =
-      context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchQuery(options)
-    if (cause === "stay" || hasData) {
-      void request
-      return
-    }
-
-    await request
+    const request = prefetchInfiniteQueryWithReadableCache(
+      context.queryClient,
+      options
+    )
+    if (cause !== "stay" && request) await request
   },
   pendingComponent: ProjectsRoutePending,
+  staleTime: Infinity,
   component: ProjectsPage,
 })
 
@@ -87,14 +94,20 @@ function ProjectsPage() {
   const scope = useWorkspaceScope()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
-  const projectResult = useQuery(
-    projectsQueryOptions(scope, {
+  const projectResult = useInfiniteQuery(
+    projectsCursorQueryOptions(scope, {
       affiliation: search.affiliation,
       cursor: search.cursor,
-      includeTotal: false,
+      includeTotal: true,
       limit: projectPageLimit,
     })
   )
+  const projects = useMemo(
+    () => flattenCursorPages(projectResult.data?.pages),
+    [projectResult.data]
+  )
+  const total = cursorPageTotal(projectResult.data?.pages)
+  const updating = projectResult.isFetching && !projectResult.isFetchingNextPage
 
   return (
     <PageLayout>
@@ -111,7 +124,7 @@ function ProjectsPage() {
         </>
       ) : (
         <>
-          {projectResult.isError ? (
+          {projectResult.isError && !projectResult.isFetchNextPageError ? (
             <CollectionUpdateError
               label="Projects"
               preserved
@@ -120,8 +133,13 @@ function ProjectsPage() {
           ) : null}
           <ProjectCollection
             affiliation={search.affiliation}
-            projectPage={projectResult.data}
-            updating={projectResult.isFetching}
+            hasNextPage={Boolean(projectResult.hasNextPage)}
+            isLoadingMore={projectResult.isFetchingNextPage}
+            loadMoreError={projectResult.isFetchNextPageError}
+            onLoadMore={() => void projectResult.fetchNextPage()}
+            projects={projects}
+            total={total}
+            updating={updating}
           />
         </>
       )}
@@ -178,17 +196,27 @@ function ProjectDirectoryFilters({ affiliation }: { affiliation?: "owner" }) {
 
 function ProjectCollection({
   affiliation,
-  projectPage,
+  hasNextPage,
+  isLoadingMore,
+  loadMoreError,
+  onLoadMore,
+  projects,
+  total,
   updating,
 }: {
   affiliation?: "owner"
-  projectPage: WorkspaceProjectPage
+  hasNextPage: boolean
+  isLoadingMore: boolean
+  loadMoreError: boolean
+  onLoadMore: () => void
+  projects: readonly WorkspaceProject[]
+  total: number | null
   updating: boolean
 }) {
   return (
     <>
       <CollectionUpdateStatus label="projects" updating={updating} />
-      {projectPage.items.length > 0 ? (
+      {projects.length > 0 ? (
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             <Table
@@ -216,7 +244,7 @@ function ProjectCollection({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {projectPage.items.map((project) => {
+                {projects.map((project) => {
                   const complete = "status" in project
                   const title = project.title?.trim()
                   const name = title || project.project_id || project.unique_id
@@ -272,18 +300,16 @@ function ProjectCollection({
           </EmptyHeader>
         </Empty>
       )}
-      {!updating && projectPage.nextCursor ? (
-        <CollectionPageNavigation
-          label="Project pages"
-          next={
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{ affiliation, cursor: projectPage.nextCursor }}
-              to="/projects"
-            >
-              Next
-            </Link>
-          }
+      {projects.length ? (
+        <CollectionPagination
+          disabled={updating}
+          hasNextPage={hasNextPage}
+          isError={loadMoreError}
+          isLoading={isLoadingMore}
+          label="projects"
+          loaded={projects.length}
+          onLoadMore={onLoadMore}
+          total={total}
         />
       ) : null}
     </>

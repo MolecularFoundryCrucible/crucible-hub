@@ -1,9 +1,14 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
+import {
+  useInfiniteQuery,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
-import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -40,7 +45,7 @@ import {
 } from "@/components/ui/table"
 import {
   instrumentPageLimit,
-  instrumentsQueryOptions,
+  instrumentsCursorQueryOptions,
 } from "@/data/crucible/instruments.queries"
 import {
   collectionAffiliationSchema,
@@ -51,9 +56,14 @@ import {
   instrumentStatuses,
 } from "@/data/crucible/instrument-status"
 import type {
-  WorkspaceInstrumentPage,
+  WorkspaceInstrument,
   WorkspaceInstrumentStatus,
 } from "@/data/crucible/workspace-source"
+import {
+  cursorPageTotal,
+  flattenCursorPages,
+} from "@/data/crucible/cursor-pages"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
 const instrumentSearchSchema = z.object({
   affiliation: collectionAffiliationSchema.optional().catch(undefined),
@@ -73,23 +83,20 @@ export const Route = createFileRoute("/_app/instruments/")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const options = instrumentsQueryOptions(source.scope, {
+    const options = instrumentsCursorQueryOptions(source.scope, {
       includeOwner: true,
-      includeTotal: false,
+      includeTotal: true,
       limit: instrumentPageLimit,
       ...deps,
     })
-    const hasData =
-      context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchQuery(options)
-    if (cause === "stay" || hasData) {
-      void request
-      return
-    }
-
-    await request
+    const request = prefetchInfiniteQueryWithReadableCache(
+      context.queryClient,
+      options
+    )
+    if (cause !== "stay" && request) await request
   },
   pendingComponent: InstrumentsRoutePending,
+  staleTime: Infinity,
   component: InstrumentsPage,
 })
 
@@ -98,16 +105,23 @@ function InstrumentsPage() {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const status = search.status ?? "active"
-  const instrumentResult = useQuery(
-    instrumentsQueryOptions(scope, {
+  const instrumentResult = useInfiniteQuery(
+    instrumentsCursorQueryOptions(scope, {
       affiliation: search.affiliation,
       cursor: search.cursor,
       includeOwner: true,
-      includeTotal: false,
+      includeTotal: true,
       limit: instrumentPageLimit,
       status,
     })
   )
+  const instruments = useMemo(
+    () => flattenCursorPages(instrumentResult.data?.pages),
+    [instrumentResult.data]
+  )
+  const total = cursorPageTotal(instrumentResult.data?.pages)
+  const updating =
+    instrumentResult.isFetching && !instrumentResult.isFetchingNextPage
 
   return (
     <PageLayout>
@@ -129,7 +143,8 @@ function InstrumentsPage() {
         </>
       ) : (
         <>
-          {instrumentResult.isError ? (
+          {instrumentResult.isError &&
+          !instrumentResult.isFetchNextPageError ? (
             <CollectionUpdateError
               label="Instruments"
               preserved
@@ -138,9 +153,14 @@ function InstrumentsPage() {
           ) : null}
           <InstrumentCollection
             affiliation={search.affiliation}
-            instrumentPage={instrumentResult.data}
+            hasNextPage={Boolean(instrumentResult.hasNextPage)}
+            instruments={instruments}
+            isLoadingMore={instrumentResult.isFetchingNextPage}
+            loadMoreError={instrumentResult.isFetchNextPageError}
+            onLoadMore={() => void instrumentResult.fetchNextPage()}
             status={status}
-            updating={instrumentResult.isFetching}
+            total={total}
+            updating={updating}
           />
         </>
       )}
@@ -258,19 +278,29 @@ function InstrumentStatusNavigation({
 
 function InstrumentCollection({
   affiliation,
-  instrumentPage,
+  hasNextPage,
+  instruments,
+  isLoadingMore,
+  loadMoreError,
+  onLoadMore,
   status,
+  total,
   updating,
 }: {
   affiliation?: "owner"
-  instrumentPage: WorkspaceInstrumentPage
+  hasNextPage: boolean
+  instruments: readonly WorkspaceInstrument[]
+  isLoadingMore: boolean
+  loadMoreError: boolean
+  onLoadMore: () => void
   status: WorkspaceInstrumentStatus
+  total: number | null
   updating: boolean
 }) {
   return (
     <>
       <CollectionUpdateStatus label="instruments" updating={updating} />
-      {instrumentPage.items.length > 0 ? (
+      {instruments.length > 0 ? (
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             <Table
@@ -300,7 +330,7 @@ function InstrumentCollection({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {instrumentPage.items.map((instrument) => {
+                {instruments.map((instrument) => {
                   const instrumentId = instrument.instrument_id?.trim()
                   const name =
                     instrument.instrument_name.trim() ||
@@ -366,22 +396,16 @@ function InstrumentCollection({
           </Empty>
         </section>
       )}
-      {!updating && instrumentPage.nextCursor ? (
-        <CollectionPageNavigation
-          label="Instrument pages"
-          next={
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                affiliation,
-                cursor: instrumentPage.nextCursor,
-                status: status === "active" ? undefined : status,
-              }}
-              to="/instruments"
-            >
-              Next
-            </Link>
-          }
+      {instruments.length ? (
+        <CollectionPagination
+          disabled={updating}
+          hasNextPage={hasNextPage}
+          isError={loadMoreError}
+          isLoading={isLoadingMore}
+          label="instruments"
+          loaded={instruments.length}
+          onLoadMore={onLoadMore}
+          total={total}
         />
       ) : null}
     </>
