@@ -16,6 +16,7 @@ import { resourceAccessQueryOptions } from "@/data/crucible/access.queries"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
+import { isPrimaryProjectAccessGrant } from "@/data/crucible/resource-access"
 import {
   confirmWorkspaceResourceProjectAssignment,
   previewWorkspaceResourceProjectAssignment,
@@ -128,11 +129,13 @@ export function ProjectAssignmentCard({
       resourceAccessQueryOptions(scope, resource.unique_id).queryKey,
       (current) => {
         if (!current) return current
-        const projectGrant = current.find(
-          (grant) => grant.principal_type === "project"
+        const projectGrant = current.find((grant) =>
+          isPrimaryProjectAccessGrant(resource, grant)
         )
         return [
-          ...current.filter((grant) => grant.principal_type !== "project"),
+          ...current.filter(
+            (grant) => !isPrimaryProjectAccessGrant(resource, grant)
+          ),
           {
             display_name: selectedProject.name,
             permission: projectGrant?.permission ?? "viewer",

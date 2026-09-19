@@ -70,6 +70,7 @@ import {
 import { resourceAccessQueryOptions } from "@/data/crucible/access.queries"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
+import { isPrimaryProjectAccessGrant } from "@/data/crucible/resource-access"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
@@ -412,14 +413,22 @@ function ManagedResourceAccess({
             >
               {directGrants.map((grant) => {
                 const kind = principalKindFor(grant)
+                const primaryProject = isPrimaryProjectAccessGrant(
+                  resource,
+                  grant
+                )
                 const editable =
                   managing &&
+                  !primaryProject &&
                   canGrant &&
                   kind !== undefined &&
                   isAccessGrantRole(grant.permission) &&
                   roles.includes(grant.permission)
                 const revocable =
-                  managing && kind !== undefined && grant.permission !== "owner"
+                  managing &&
+                  !primaryProject &&
+                  kind !== undefined &&
+                  grant.permission !== "owner"
                 const pending =
                   pendingAction === `set:${kind ?? ""}:${grant.principal_id}`
                 return (
@@ -428,9 +437,19 @@ function ManagedResourceAccess({
                     key={grantKey(grant)}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-label">
-                        <PrincipalName grant={grant} />
-                      </p>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <p className="min-w-0 truncate text-label">
+                          <PrincipalName grant={grant} />
+                        </p>
+                        {primaryProject ? (
+                          <Badge
+                            aria-label="Primary project. Managed through project assignment."
+                            variant="outline"
+                          >
+                            Primary project
+                          </Badge>
+                        ) : null}
+                      </div>
                       <p className="flex min-w-0 items-center gap-1.5 text-body text-muted-foreground">
                         <PrincipalTypeIcon
                           label={principalLabel(grant)}
