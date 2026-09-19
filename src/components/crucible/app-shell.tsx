@@ -59,7 +59,7 @@ import {
   projectSummaryQueryOptions,
 } from "@/data/crucible/projects.queries"
 import {
-  RecentlyViewedProvider,
+  RecentlyViewedScope,
   useRecentlyViewed,
 } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
@@ -107,9 +107,11 @@ export function AppShell({
   })
   const pathname = location.pathname
   const projectMfid = activeProjectMfid(pathname, location.search)
+  const recentlyViewedIdentity =
+    scope?.join(":") ?? account?.unique_id ?? "anonymous"
 
   return (
-    <RecentlyViewedProvider key={account?.unique_id ?? "anonymous"}>
+    <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
       <SidebarProvider>
         <Sidebar
           aria-label="Primary navigation"
@@ -253,7 +255,7 @@ export function AppShell({
           </div>
         </SidebarInset>
       </SidebarProvider>
-    </RecentlyViewedProvider>
+    </RecentlyViewedScope>
   )
 }
 

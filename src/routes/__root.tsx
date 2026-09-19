@@ -15,6 +15,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/toast"
+import { RecentlyViewedProvider } from "@/features/recently-viewed/recently-viewed"
 import type { RouterContext } from "@/router-context"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 
@@ -67,13 +68,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>
-          <TooltipProvider>
-            <RouteProgress />
-            {children}
-            <Toaster limit={3} timeout={5000} />
-          </TooltipProvider>
-        </ThemeProvider>
+        <RecentlyViewedProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <RouteProgress />
+              {children}
+              <Toaster limit={3} timeout={5000} />
+            </TooltipProvider>
+          </ThemeProvider>
+        </RecentlyViewedProvider>
         <Scripts />
       </body>
     </html>
