@@ -24,8 +24,8 @@ import {
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import {
-  ScientificMetadata,
   ScientificMetadataExpansionAction,
+  ScientificMetadataViewer,
   useScientificMetadataExpansion,
 } from "@/components/crucible/scientific-metadata"
 import { Button } from "@/components/ui/button"
@@ -239,7 +239,7 @@ function InstrumentMetadata({
 }: {
   metadata: WorkspaceScientificMetadata | null
 }) {
-  const expansion = useScientificMetadataExpansion(metadata, true)
+  const expansion = useScientificMetadataExpansion(metadata)
   return (
     <Card>
       <CardHeader actionLayout="inline">
@@ -251,9 +251,8 @@ function InstrumentMetadata({
         ) : null}
       </CardHeader>
       <CardContent>
-        <ScientificMetadata
+        <ScientificMetadataViewer
           emptyMessage="This instrument does not currently expose scientific metadata."
-          expandFirstLevel
           expansion={expansion}
           metadata={metadata}
         />

@@ -1,28 +1,97 @@
 import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
 
-import { MetadataDisclosureIcon } from "@/components/crucible/icons"
+import { MetadataDisclosureIcon, SearchIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import type { WorkspaceMetadataValue } from "@/data/crucible/workspace-source"
 
-const initialFieldLimit = 6
-const additionalFieldsPath = '{"hub":"additional-fields"}'
+const compactArrayLimit = 6
+const arrayPageSize = 25
 
 type MetadataEntry = readonly [string, WorkspaceMetadataValue]
 export type ScientificMetadataExpansion = ReturnType<
   typeof useScientificMetadataExpansion
 >
 
+export function ScientificMetadataSearch({
+  onChange,
+  value,
+}: {
+  onChange: (value: string) => void
+  value: string
+}) {
+  return (
+    <InputGroup>
+      <InputGroupAddon>
+        <SearchIcon aria-hidden="true" />
+      </InputGroupAddon>
+      <InputGroupInput
+        aria-label="Search scientific metadata"
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Find a field or value"
+        type="search"
+        value={value}
+      />
+    </InputGroup>
+  )
+}
+
+export function ScientificMetadataViewer({
+  emptyMessage,
+  expansion,
+  expandFirstLevel = false,
+  metadata,
+}: {
+  emptyMessage?: string
+  expansion?: ScientificMetadataExpansion
+  expandFirstLevel?: boolean
+  metadata: WorkspaceMetadataValue | undefined
+}) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const hasFields =
+    metadata !== undefined &&
+    isMetadataObject(metadata) &&
+    Object.keys(metadata).length > 0
+
+  useEffect(() => setSearchQuery(""), [metadata])
+
+  return (
+    <div className="flex min-w-0 flex-col gap-3">
+      {hasFields ? (
+        <ScientificMetadataSearch
+          onChange={setSearchQuery}
+          value={searchQuery}
+        />
+      ) : null}
+      <ScientificMetadata
+        emptyMessage={emptyMessage}
+        expansion={expansion}
+        expandFirstLevel={expandFirstLevel}
+        metadata={metadata}
+        searchQuery={searchQuery}
+      />
+    </div>
+  )
+}
+
 export function ScientificMetadata({
   emptyMessage = "No scientific metadata is available.",
   expansion,
   expandFirstLevel = false,
   metadata,
+  searchQuery = "",
   showExpansionAction = false,
 }: {
   emptyMessage?: string
   expansion?: ScientificMetadataExpansion
   expandFirstLevel?: boolean
   metadata: WorkspaceMetadataValue | undefined
+  searchQuery?: string
   showExpansionAction?: boolean
 }) {
   const internalExpansion = useScientificMetadataExpansion(
@@ -38,8 +107,9 @@ export function ScientificMetadata({
   if (isMetadataArray(metadata)) {
     return (
       <MetadataTree
+        entries={arrayEntries(metadata)}
         expansion={activeExpansion}
-        initialEntries={arrayEntries(metadata)}
+        searchQuery={searchQuery}
         showExpansionAction={showExpansionAction}
       />
     )
@@ -49,12 +119,11 @@ export function ScientificMetadata({
     return <MetadataScalar value={metadata} />
   }
 
-  const entries = sortedEntries(metadata)
   return (
     <MetadataTree
-      additionalEntries={entries.slice(initialFieldLimit)}
+      entries={sortedEntries(metadata)}
       expansion={activeExpansion}
-      initialEntries={entries.slice(0, initialFieldLimit)}
+      searchQuery={searchQuery}
       showExpansionAction={showExpansionAction}
     />
   )
@@ -66,24 +135,14 @@ export function useScientificMetadataExpansion(
 ) {
   const entries = metadataEntries(metadata)
   const allPaths = expandablePaths(entries)
-  if (entries.length > initialFieldLimit) allPaths.push(additionalFieldsPath)
   const [expandedPaths, setExpandedPaths] = useState<ReadonlySet<string>>(
-    () =>
-      new Set(
-        expandFirstLevel
-          ? expandablePaths(entries.slice(0, initialFieldLimit), [], true)
-          : []
-      )
+    () => new Set(expandFirstLevel ? expandablePaths(entries, [], true) : [])
   )
 
   useEffect(() => {
     const nextEntries = metadataEntries(metadata)
     setExpandedPaths(
-      new Set(
-        expandFirstLevel
-          ? expandablePaths(nextEntries.slice(0, initialFieldLimit), [], true)
-          : []
-      )
+      new Set(expandFirstLevel ? expandablePaths(nextEntries, [], true) : [])
     )
   }, [expandFirstLevel, metadata])
 
@@ -129,16 +188,19 @@ export function ScientificMetadataExpansionAction({
 }
 
 function MetadataTree({
-  additionalEntries = [],
+  entries,
   expansion,
-  initialEntries,
+  searchQuery,
   showExpansionAction,
 }: {
-  additionalEntries?: readonly MetadataEntry[]
+  entries: readonly MetadataEntry[]
   expansion: ScientificMetadataExpansion
-  initialEntries: readonly MetadataEntry[]
+  searchQuery: string
   showExpansionAction: boolean
 }) {
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase()
+  const visibleEntries = filterEntries(entries, normalizedQuery)
+
   return (
     <div className="min-w-0">
       {showExpansionAction && expansion.canExpand ? (
@@ -146,38 +208,19 @@ function MetadataTree({
           <ScientificMetadataExpansionAction expansion={expansion} />
         </div>
       ) : null}
-      <MetadataEntries
-        entries={initialEntries}
-        expandedPaths={expansion.expandedPaths}
-        onExpandedChange={expansion.setExpanded}
-        path={[]}
-      />
-      {additionalEntries.length > 0 ? (
-        <details
-          className="group/more border-t"
-          onToggle={(event) =>
-            expansion.setExpanded(
-              additionalFieldsPath,
-              event.currentTarget.open
-            )
-          }
-          open={expansion.expandedPaths.has(additionalFieldsPath)}
-        >
-          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 py-2 text-label text-muted-foreground [&::-webkit-details-marker]:hidden">
-            <MetadataDisclosureIcon
-              aria-hidden="true"
-              className="size-4 shrink-0 transition-transform group-open/more:rotate-90"
-            />
-            {fieldCount(additionalEntries.length, "additional field")}
-          </summary>
-          <MetadataEntries
-            entries={additionalEntries}
-            expandedPaths={expansion.expandedPaths}
-            onExpandedChange={expansion.setExpanded}
-            path={[]}
-          />
-        </details>
-      ) : null}
+      {visibleEntries.length > 0 ? (
+        <MetadataEntries
+          entries={visibleEntries}
+          expandedPaths={expansion.expandedPaths}
+          onExpandedChange={expansion.setExpanded}
+          path={[]}
+          searchQuery={normalizedQuery}
+        />
+      ) : (
+        <p className="text-body text-muted-foreground">
+          No metadata matches this search.
+        </p>
+      )}
     </div>
   )
 }
@@ -187,11 +230,13 @@ function MetadataEntries({
   expandedPaths,
   onExpandedChange,
   path,
+  searchQuery,
 }: {
   entries: readonly MetadataEntry[]
   expandedPaths: ReadonlySet<string>
   onExpandedChange: (path: string, expanded: boolean) => void
   path: readonly string[]
+  searchQuery: string
 }) {
   return (
     <dl className="min-w-0">
@@ -202,6 +247,7 @@ function MetadataEntries({
           name={key}
           onExpandedChange={onExpandedChange}
           path={[...path, key]}
+          searchQuery={searchQuery}
           value={value}
         />
       ))}
@@ -214,14 +260,24 @@ function MetadataEntryRow({
   name,
   onExpandedChange,
   path,
+  searchQuery,
   value,
 }: {
   expandedPaths: ReadonlySet<string>
   name: string
   onExpandedChange: (path: string, expanded: boolean) => void
   path: readonly string[]
+  searchQuery: string
   value: WorkspaceMetadataValue
 }) {
+  if (isCompactScalarArray(value)) {
+    return (
+      <MetadataValueRow label={name}>
+        <MetadataInlineArray value={value} />
+      </MetadataValueRow>
+    )
+  }
+
   if (isMetadataArray(value) || isMetadataObject(value)) {
     return (
       <div className="min-w-0 border-t first:border-t-0">
@@ -229,9 +285,11 @@ function MetadataEntryRow({
         <dd className="min-w-0">
           <MetadataCollection
             expandedPaths={expandedPaths}
+            forceOpen={searchQuery.length > 0}
             label={name}
             onExpandedChange={onExpandedChange}
             path={path}
+            searchQuery={keyMatches(name, searchQuery) ? "" : searchQuery}
             value={value}
           />
         </dd>
@@ -240,30 +298,47 @@ function MetadataEntryRow({
   }
 
   return (
+    <MetadataValueRow label={name}>
+      <MetadataScalar value={value} />
+    </MetadataValueRow>
+  )
+}
+
+function MetadataValueRow({
+  children,
+  label,
+}: {
+  children: ReactNode
+  label: string
+}) {
+  return (
     <div className="grid min-w-0 grid-cols-1 gap-1 border-t py-2 first:border-t-0 sm:grid-cols-3 sm:gap-3">
-      <dt className="text-label break-words text-muted-foreground">{name}</dt>
-      <dd className="min-w-0 sm:col-span-2">
-        <MetadataScalar value={value} />
-      </dd>
+      <dt className="text-label break-words text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 sm:col-span-2">{children}</dd>
     </div>
   )
 }
 
 function MetadataCollection({
   expandedPaths,
+  forceOpen,
   label,
   onExpandedChange,
   path,
+  searchQuery,
   value,
 }: {
   expandedPaths: ReadonlySet<string>
+  forceOpen: boolean
   label: string
   onExpandedChange: (path: string, expanded: boolean) => void
   path: readonly string[]
+  searchQuery: string
   value:
     | readonly WorkspaceMetadataValue[]
     | Readonly<Record<string, WorkspaceMetadataValue>>
 }) {
+  const [visibleArrayItems, setVisibleArrayItems] = useState(arrayPageSize)
   const array = isMetadataArray(value)
   const entries = array ? arrayEntries(value) : sortedEntries(value)
 
@@ -280,16 +355,25 @@ function MetadataCollection({
     )
   }
 
-  const count = array
+  const filteredEntries = filterEntries(entries, searchQuery)
+  const displayedEntries = array
+    ? filteredEntries.slice(0, visibleArrayItems)
+    : filteredEntries
+  const remainingItems = filteredEntries.length - displayedEntries.length
+  const totalCount = array
     ? itemCount(entries.length)
     : fieldCount(entries.length, "field")
+  const count =
+    searchQuery && filteredEntries.length < entries.length
+      ? `${filteredEntries.length} of ${totalCount}`
+      : totalCount
   const pathKey = metadataPath(path)
 
   return (
     <details
       className="metadata-disclosure min-w-0"
       onToggle={(event) => onExpandedChange(pathKey, event.currentTarget.open)}
-      open={expandedPaths.has(pathKey)}
+      open={forceOpen || expandedPaths.has(pathKey)}
     >
       <summary
         aria-label={`${label}: ${count}`}
@@ -306,13 +390,42 @@ function MetadataCollection({
       </summary>
       <div className="mb-2 ml-2 min-w-0 border-l pl-4">
         <MetadataEntries
-          entries={entries}
+          entries={displayedEntries}
           expandedPaths={expandedPaths}
           onExpandedChange={onExpandedChange}
           path={path}
+          searchQuery={searchQuery}
         />
+        {remainingItems > 0 ? (
+          <Button
+            className="mt-1"
+            onClick={() =>
+              setVisibleArrayItems((current) => current + arrayPageSize)
+            }
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            Show {Math.min(arrayPageSize, remainingItems)} more
+          </Button>
+        ) : null}
       </div>
     </details>
+  )
+}
+
+function MetadataInlineArray({
+  value,
+}: {
+  value: readonly WorkspaceMetadataValue[]
+}) {
+  if (value.length === 0) {
+    return <span className="font-mono text-body text-muted-foreground">[]</span>
+  }
+  return (
+    <span className="font-mono text-body break-words">
+      [{value.map(compactScalar).join(", ")}]
+    </span>
   )
 }
 
@@ -342,6 +455,43 @@ function MetadataScalar({ value }: { value: WorkspaceMetadataValue }) {
   return null
 }
 
+function compactScalar(value: WorkspaceMetadataValue) {
+  if (typeof value === "string") return JSON.stringify(value)
+  if (value === null) return "null"
+  return String(value)
+}
+
+function filterEntries(
+  entries: readonly MetadataEntry[],
+  searchQuery: string
+): readonly MetadataEntry[] {
+  if (!searchQuery) return entries
+  return entries.filter(
+    ([key, value]) =>
+      keyMatches(key, searchQuery) || valueMatches(value, searchQuery)
+  )
+}
+
+function keyMatches(key: string, searchQuery: string) {
+  return searchQuery.length > 0 && key.toLocaleLowerCase().includes(searchQuery)
+}
+
+function valueMatches(
+  value: WorkspaceMetadataValue,
+  searchQuery: string
+): boolean {
+  if (isMetadataArray(value)) {
+    return value.some((nested) => valueMatches(nested, searchQuery))
+  }
+  if (isMetadataObject(value)) {
+    return Object.entries(value).some(
+      ([key, nested]) =>
+        keyMatches(key, searchQuery) || valueMatches(nested, searchQuery)
+    )
+  }
+  return String(value).toLocaleLowerCase().includes(searchQuery)
+}
+
 function expandablePaths(
   entries: readonly MetadataEntry[],
   path: readonly string[] = [],
@@ -349,11 +499,8 @@ function expandablePaths(
 ) {
   const paths: string[] = []
   for (const [key, value] of entries) {
-    if (!isMetadataArray(value) && !isMetadataObject(value)) continue
-    const entriesForValue = isMetadataArray(value)
-      ? arrayEntries(value)
-      : sortedEntries(value)
-    if (entriesForValue.length === 0) continue
+    if (!isExpandableCollection(value)) continue
+    const entriesForValue = metadataEntries(value)
     const childPath = [...path, key]
     paths.push(metadataPath(childPath))
     if (!rootOnly) {
@@ -372,9 +519,7 @@ function metadataEntries(
 ): readonly MetadataEntry[] {
   if (metadata === undefined) return []
   if (isMetadataArray(metadata)) return arrayEntries(metadata)
-  if (isMetadataObject(metadata)) {
-    return sortedEntries(metadata)
-  }
+  if (isMetadataObject(metadata)) return sortedEntries(metadata)
   return []
 }
 
@@ -386,6 +531,21 @@ function isEmptyValue(value: WorkspaceMetadataValue) {
   if (isMetadataArray(value)) return value.length === 0
   if (isMetadataObject(value)) return Object.keys(value).length === 0
   return false
+}
+
+function isExpandableCollection(value: WorkspaceMetadataValue) {
+  if (isMetadataObject(value)) return Object.keys(value).length > 0
+  return isMetadataArray(value) && !isCompactScalarArray(value)
+}
+
+function isCompactScalarArray(
+  value: WorkspaceMetadataValue
+): value is readonly (boolean | null | number | string)[] {
+  return (
+    isMetadataArray(value) &&
+    value.length <= compactArrayLimit &&
+    value.every((item) => !isMetadataArray(item) && !isMetadataObject(item))
+  )
 }
 
 function isMetadataArray(

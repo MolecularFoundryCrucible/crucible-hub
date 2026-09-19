@@ -8,7 +8,7 @@ Date: 2026-09-05
 
 Scientific metadata is an arbitrary JSON object that often contains nested objects, arrays, numbers, booleans, nulls, and strings. Flattening it into string key-value rows loses types and structure. The API provides a dedicated shallow-merge PATCH operation and a full-replacement POST operation, but it cannot remove a top-level key through PATCH and does not support conditional writes.
 
-The existing resource page already presents metadata through a bounded recursive renderer. Editing should remain close to that context without allowing large metadata to dominate the normal read view.
+The existing resource page presents metadata through a searchable recursive renderer with compact scalar arrays, collapsed nested collections, and incrementally revealed long arrays. Editing should remain close to that context without allowing large metadata to dominate the normal read view.
 
 ## Decision
 

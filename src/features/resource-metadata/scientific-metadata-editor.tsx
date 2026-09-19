@@ -7,8 +7,8 @@ import { EditableCardActions } from "@/components/crucible/editable-card-actions
 import { EditScientificMetadataIcon } from "@/components/crucible/icons"
 import { notifySuccess } from "@/components/crucible/notifications"
 import {
-  ScientificMetadata,
   ScientificMetadataExpansionAction,
+  ScientificMetadataViewer,
   useScientificMetadataExpansion,
 } from "@/components/crucible/scientific-metadata"
 import { Badge } from "@/components/ui/badge"
@@ -206,10 +206,7 @@ export function ScientificMetadataEditor({
   scope: IdentityScope
 }) {
   const [editing, setEditing] = useState(false)
-  const expansion = useScientificMetadataExpansion(
-    resource.scientific_metadata,
-    true
-  )
+  const expansion = useScientificMetadataExpansion(resource.scientific_metadata)
   if (editing) {
     return (
       <ScientificMetadataForm
@@ -240,10 +237,9 @@ export function ScientificMetadataEditor({
         ) : null}
       </CardHeader>
       <CardContent>
-        <ScientificMetadata
+        <ScientificMetadataViewer
           emptyMessage="This resource does not currently expose scientific metadata."
           expansion={expansion}
-          expandFirstLevel
           metadata={resource.scientific_metadata}
         />
       </CardContent>

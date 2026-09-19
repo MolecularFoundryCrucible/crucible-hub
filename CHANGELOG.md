@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Improved scientific metadata browsing with local field and value search, visible top-level fields, compact scalar arrays, collapsed nested structures, and incremental rendering for long arrays.
+
 - Added capability-gated service-account administration with a searchable directory, service-account-specific identity and profile fields, platform-role editing, non-secret credential status, one-time creation keys, confirmed key rotation, service-account autocomplete for instrument operators, contributor-bounded project roles, and authorized management links from service-account profiles.
 
 ### Added

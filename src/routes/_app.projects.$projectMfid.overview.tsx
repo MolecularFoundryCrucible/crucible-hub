@@ -8,7 +8,11 @@ import {
   ContentGrid,
   ContentGridItem,
 } from "@/components/crucible/content-layout"
-import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
+import {
+  ScientificMetadataExpansionAction,
+  ScientificMetadataViewer,
+  useScientificMetadataExpansion,
+} from "@/components/crucible/scientific-metadata"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import {
@@ -27,7 +31,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
-import type { WorkspaceProject } from "@/data/crucible/workspace-source"
+import type {
+  WorkspaceProject,
+  WorkspaceScientificMetadata,
+} from "@/data/crucible/workspace-source"
 import { ProjectSettingsForm } from "@/features/management-settings/settings-forms"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 
@@ -118,14 +125,7 @@ function ProjectOverviewPage() {
       </ContentGridItem>
 
       <ContentGridItem span="narrow">
-        <Card>
-          <CardHeader>
-            <CardTitle>Scientific metadata</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScientificMetadata metadata={project.scientific_metadata} />
-          </CardContent>
-        </Card>
+        <ProjectMetadata metadata={project.scientific_metadata} />
       </ContentGridItem>
 
       <ContentGridItem span="wide">
@@ -136,6 +136,29 @@ function ProjectOverviewPage() {
         />
       </ContentGridItem>
     </ContentGrid>
+  )
+}
+
+function ProjectMetadata({
+  metadata,
+}: {
+  metadata: WorkspaceScientificMetadata | null
+}) {
+  const expansion = useScientificMetadataExpansion(metadata)
+  return (
+    <Card>
+      <CardHeader actionLayout="inline">
+        <CardTitle>Scientific metadata</CardTitle>
+        {expansion.canExpand ? (
+          <CardAction>
+            <ScientificMetadataExpansionAction expansion={expansion} />
+          </CardAction>
+        ) : null}
+      </CardHeader>
+      <CardContent>
+        <ScientificMetadataViewer expansion={expansion} metadata={metadata} />
+      </CardContent>
+    </Card>
   )
 }
 

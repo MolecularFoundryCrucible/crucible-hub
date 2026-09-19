@@ -7,12 +7,15 @@ import {
 } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { ScientificMetadata } from "./scientific-metadata"
+import {
+  ScientificMetadata,
+  ScientificMetadataViewer,
+} from "./scientific-metadata"
 
 describe("ScientificMetadata", () => {
   afterEach(cleanup)
 
-  it("bounds the initial field presentation behind native disclosure", () => {
+  it("shows every top-level field without an arbitrary cutoff", () => {
     render(
       <ScientificMetadata
         metadata={{
@@ -28,16 +31,10 @@ describe("ScientificMetadata", () => {
       />
     )
 
-    const summary = screen.getByText("2 additional fields")
-    const details = summary.closest("details")
-
-    expect(summary.tagName).toBe("SUMMARY")
-    expect(details?.open).toBe(false)
-    expect(within(details!).getByText("theta")).toBeTruthy()
-    expect(within(details!).getByText("zeta")).toBeTruthy()
-
-    fireEvent.click(summary)
-    expect(details?.open).toBe(true)
+    expect(screen.getByText("alpha")).toBeTruthy()
+    expect(screen.getByText("theta")).toBeTruthy()
+    expect(screen.getByText("zeta")).toBeTruthy()
+    expect(screen.queryByText(/additional field/)).toBeNull()
   })
 
   it("renders nested dictionaries and lists as recursive disclosures", () => {
@@ -56,8 +53,8 @@ describe("ScientificMetadata", () => {
       />
     )
 
-    const [acquisitionSummary, detectorSummary] =
-      screen.getAllByText("2 fields")
+    const acquisitionSummary = screen.getByLabelText("acquisition: 2 fields")
+    const detectorSummary = screen.getByLabelText("detector: 2 fields")
     expect(acquisitionSummary.tagName).toBe("SUMMARY")
     expect(acquisitionSummary.tabIndex).toBe(0)
     expect(acquisitionSummary.getAttribute("aria-label")).toBe(
@@ -68,7 +65,7 @@ describe("ScientificMetadata", () => {
     expect(detectorSummary.closest("details")?.open).toBe(false)
     fireEvent.click(detectorSummary)
 
-    const listSummary = screen.getByText("3 items")
+    const listSummary = screen.getByLabelText("channels: 3 items")
     expect(listSummary.tagName).toBe("SUMMARY")
     expect(listSummary.getAttribute("aria-label")).toBe("channels: 3 items")
     fireEvent.click(listSummary)
@@ -94,6 +91,45 @@ describe("ScientificMetadata", () => {
     expect(screen.getByText("[]")).toBeTruthy()
     expect(screen.getByText("{}")).toBeTruthy()
     expect(screen.getByText("Empty string")).toBeTruthy()
+  })
+
+  it("renders short scalar arrays inline", () => {
+    render(
+      <ScientificMetadata
+        metadata={{ axes: ["energy", "intensity"], shape: [32, 64] }}
+      />
+    )
+
+    expect(screen.getByText('["energy", "intensity"]')).toBeTruthy()
+    expect(screen.getByText("[32, 64]")).toBeTruthy()
+    expect(document.querySelector("details")).toBeNull()
+  })
+
+  it("filters nested metadata by field or value", () => {
+    const metadata = {
+      acquisition: { detector: "pilatus", energy_ev: 7112 },
+      preparation: { solvent: "water" },
+    }
+    render(<ScientificMetadataViewer metadata={metadata} />)
+
+    fireEvent.change(
+      screen.getByRole("searchbox", { name: "Search scientific metadata" }),
+      { target: { value: "pilatus" } }
+    )
+
+    expect(screen.getByLabelText("acquisition: 1 of 2 fields")).toBeTruthy()
+    expect(
+      screen.getByLabelText("acquisition: 1 of 2 fields").closest("details")
+        ?.open
+    ).toBe(true)
+    expect(screen.getByText("detector")).toBeTruthy()
+    expect(screen.queryByText("preparation")).toBeNull()
+
+    fireEvent.change(
+      screen.getByRole("searchbox", { name: "Search scientific metadata" }),
+      { target: { value: "missing" } }
+    )
+    expect(screen.getByText("No metadata matches this search.")).toBeTruthy()
   })
 
   it("expands and collapses every metadata disclosure", () => {

@@ -59,7 +59,7 @@ Light, dark, and system preferences share these roles. Resolve theme before firs
 
 Install primitives only when needed and treat `src/components/ui` as the current inventory. Do not document a planned component as installed. Keep layout composition at call sites and semantic visual variants in shared components.
 
-Lists use flat full-width rows or semantic tables. Cards are reserved for contained groups, summaries, empty states, and bounded metrics. Metadata uses the shared full-width tree renderer: at most six top-level fields before disclosure, first-level collections expanded on resource pages, deeper native disclosures, explicit counts, monospaced scalar values, indentation guides, and compact JSON notation for empty collections. Resource metadata places one compact expand-all or collapse-all utility beside Edit in the card header. The inspector's metadata remains closed initially.
+Lists use flat full-width rows or semantic tables. Cards are reserved for contained groups, summaries, empty states, and bounded metrics. Metadata uses the shared searchable full-width tree renderer: all top-level fields remain visible, nested objects and structured arrays use native disclosures with explicit counts, short scalar arrays use compact JSON notation, long arrays reveal bounded increments, scalar values remain monospaced, and indentation guides preserve nesting. Resource metadata places one compact expand-all or collapse-all utility beside Edit in the card header. Nested collections and the inspector's metadata remain closed initially.
 
 ### Content composition
 
