@@ -82,7 +82,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootError({ error, info, reset }: ErrorComponentProps) {
   if (isCancelledError(error)) {
-    return <CancelledRoute reset={reset} />
+    return <CancelledRoute />
   }
 
   return <ReportedRootError error={error} info={info} reset={reset} />
@@ -117,7 +117,10 @@ function ReportedRootError({ error, info }: ErrorComponentProps) {
   )
 }
 
-function CancelledRoute({ reset }: { reset: () => void }) {
-  useEffect(() => reset(), [reset])
+function CancelledRoute() {
+  const router = useRouter()
+  useEffect(() => {
+    void router.invalidate({ sync: true })
+  }, [router])
   return null
 }
