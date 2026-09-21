@@ -1,5 +1,10 @@
 import { Button } from "@/components/ui/button"
 import {
+  ResourceList,
+  ResourceListItem,
+  ResourceListItemContent,
+} from "@/components/crucible/resource-list"
+import {
   Card,
   CardAction,
   CardContent,
@@ -14,39 +19,303 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 
 const rowPlaceholders = ["first", "second", "third", "fourth"] as const
 
-export function CollectionTablePending({ label }: { label: string }) {
+type CollectionTablePendingPresentation =
+  | "instruments"
+  | "projects"
+  | "resources"
+  | "resources-scoped"
+  | "service-accounts"
+
+type PendingColumn = {
+  className?: string
+  columnClassName?: string
+  label: string
+  name?: boolean
+}
+
+const pendingColumns: Record<
+  CollectionTablePendingPresentation,
+  readonly PendingColumn[]
+> = {
+  instruments: [
+    {
+      className: "resource-directory-name",
+      columnClassName: "resource-directory-name-column",
+      label: "Instrument",
+      name: true,
+    },
+    {
+      className: "resource-directory-location",
+      columnClassName: "resource-directory-location-column",
+      label: "Location",
+    },
+    {
+      className: "resource-directory-person",
+      columnClassName: "resource-directory-person-column",
+      label: "Manager",
+    },
+    {
+      className: "resource-directory-date hidden xl:table-cell",
+      columnClassName: "resource-directory-date-column hidden xl:table-column",
+      label: "Created",
+    },
+    {
+      className: "resource-directory-date",
+      columnClassName: "resource-directory-date-column",
+      label: "Updated",
+    },
+    {
+      className: "resource-directory-action",
+      columnClassName: "resource-directory-action-column",
+      label: "Open",
+    },
+  ],
+  projects: [
+    {
+      className: "resource-directory-name",
+      columnClassName: "resource-directory-name-column",
+      label: "Project",
+      name: true,
+    },
+    {
+      className: "resource-directory-person",
+      columnClassName: "resource-directory-person-column",
+      label: "Lead",
+    },
+    {
+      className: "resource-directory-date hidden xl:table-cell",
+      columnClassName: "resource-directory-date-column hidden xl:table-column",
+      label: "Created",
+    },
+    {
+      className: "resource-directory-date",
+      columnClassName: "resource-directory-date-column",
+      label: "Updated",
+    },
+    {
+      className: "resource-directory-action",
+      columnClassName: "resource-directory-action-column",
+      label: "Open",
+    },
+  ],
+  resources: [
+    {
+      className: "resource-collection-name",
+      columnClassName:
+        "w-data-name-column-with-action xl:w-data-name-column-wide-with-action",
+      label: "Name",
+      name: true,
+    },
+    {
+      className: "resource-collection-type hidden xl:table-cell",
+      columnClassName:
+        "hidden xl:table-column xl:w-data-type-column-wide-with-action",
+      label: "Type",
+    },
+    {
+      className: "resource-collection-project",
+      columnClassName:
+        "w-data-project-column-with-action xl:w-data-project-column-wide-with-action",
+      label: "Project",
+    },
+    {
+      className: "resource-collection-owner",
+      columnClassName:
+        "w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action",
+      label: "Owner",
+    },
+    {
+      className: "resource-collection-date hidden xl:table-cell",
+      columnClassName:
+        "hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action",
+      label: "Created",
+    },
+    {
+      className: "resource-collection-date",
+      columnClassName:
+        "w-data-date-column-with-action xl:w-data-date-column-wide-with-action",
+      label: "Updated",
+    },
+    {
+      className: "resource-collection-action",
+      columnClassName: "w-data-action-column",
+      label: "Open",
+    },
+  ],
+  "resources-scoped": [
+    {
+      className: "resource-collection-name",
+      columnClassName:
+        "w-data-name-column-with-action xl:w-data-name-column-wide-with-action",
+      label: "Name",
+      name: true,
+    },
+    {
+      className: "resource-collection-type hidden xl:table-cell",
+      columnClassName:
+        "hidden xl:table-column xl:w-data-type-column-wide-with-action",
+      label: "Type",
+    },
+    {
+      className: "resource-collection-owner",
+      columnClassName:
+        "w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action",
+      label: "Owner",
+    },
+    {
+      className: "resource-collection-date hidden xl:table-cell",
+      columnClassName:
+        "hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action",
+      label: "Created",
+    },
+    {
+      className: "resource-collection-date",
+      columnClassName:
+        "w-data-date-column-with-action xl:w-data-date-column-wide-with-action",
+      label: "Updated",
+    },
+    {
+      className: "resource-collection-action",
+      columnClassName: "w-data-action-column",
+      label: "Open",
+    },
+  ],
+  "service-accounts": [
+    { className: "identity-directory-account", label: "Account", name: true },
+    { className: "identity-directory-mfid", label: "Crucible ID" },
+    { className: "identity-directory-role", label: "Platform role" },
+    { className: "identity-directory-action", label: "Open" },
+  ],
+}
+
+export function CollectionTablePending({
+  label,
+  presentation = "resources",
+  subtypeLabel,
+}: {
+  label: string
+  presentation?: CollectionTablePendingPresentation
+  subtypeLabel?: string
+}) {
+  const columns = pendingColumns[presentation].map((column) =>
+    column.label === "Type" && subtypeLabel
+      ? { ...column, label: subtypeLabel }
+      : column
+  )
+  const tableClassName =
+    presentation === "service-accounts"
+      ? "identity-directory-table"
+      : presentation === "projects"
+        ? "resource-directory-table resource-directory-project-table table-fixed"
+        : presentation === "instruments"
+          ? "resource-directory-table resource-directory-instrument-table table-fixed"
+          : "resource-collection-table table-fixed"
   return (
-    <Card aria-label={`Loading ${label}`} role="status">
-      <CardContent className="flex flex-col gap-4 py-4">
-        {rowPlaceholders.map((placeholder) => (
-          <div className="flex gap-4" key={placeholder}>
-            <Skeleton className="h-5 flex-1" />
-            <Skeleton className="h-5 w-1/4" />
-            <Skeleton className="h-5 w-1/5" />
-          </div>
-        ))}
+    <Card aria-busy="true" aria-label={`Loading ${label}`} role="status">
+      <CardContent className="px-0">
+        <Table className={tableClassName}>
+          <colgroup>
+            {columns.map((column) => (
+              <col className={column.columnClassName} key={column.label} />
+            ))}
+          </colgroup>
+          <TableHeader>
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead
+                  className={cn(
+                    column.className?.includes("hidden") &&
+                      "hidden xl:table-cell",
+                    column.label === "Open" && "text-center"
+                  )}
+                  key={column.label}
+                >
+                  {column.label === "Open" ? (
+                    <span className="sr-only">Open</span>
+                  ) : (
+                    column.label
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rowPlaceholders.map((placeholder) => (
+              <TableRow key={placeholder}>
+                {columns.map((column) => (
+                  <TableCell
+                    className={column.className}
+                    data-label={column.label}
+                    key={column.label}
+                  >
+                    {column.name ? (
+                      <div className="flex min-w-0 items-start gap-2">
+                        <Skeleton className="mt-0.5 size-4 shrink-0" />
+                        <div className="flex min-w-0 flex-1 flex-col gap-2">
+                          <Skeleton className="h-4 w-2/3" />
+                          <Skeleton className="h-3 w-1/3" />
+                        </div>
+                      </div>
+                    ) : column.label === "Open" ? (
+                      <Skeleton className="mx-auto size-7" />
+                    ) : (
+                      <Skeleton className="h-4 w-3/4" />
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   )
 }
 
-export function CollectionRowsPending({ label }: { label: string }) {
+export function ResourceListPending({
+  label,
+  rows = 3,
+  trailing = true,
+}: {
+  label: string
+  rows?: number
+  trailing?: boolean
+}) {
   return (
-    <div
-      aria-label={`Loading ${label}`}
-      className="flex flex-col gap-3"
-      role="status"
-    >
-      {rowPlaceholders.slice(0, 3).map((placeholder) => (
-        <div className="flex flex-col gap-2" key={placeholder}>
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-4 w-1/3" />
-        </div>
+    <ResourceList aria-label={`Loading ${label}`} role="status">
+      {Array.from({ length: rows }, (_, index) => (
+        <ResourceListItem key={index}>
+          <ResourceListItemContent layout="responsive">
+            <div className="flex min-w-0 flex-1 items-start gap-2">
+              <Skeleton className="mt-0.5 size-4 shrink-0" />
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            </div>
+            {trailing ? (
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-3 w-28" />
+              </div>
+            ) : null}
+          </ResourceListItemContent>
+        </ResourceListItem>
       ))}
-    </div>
+    </ResourceList>
   )
 }
 
@@ -82,7 +351,7 @@ export function CollectionUpdateStatus({
   if (!updating) return null
 
   return (
-    <p className="text-supporting text-muted-foreground" role="status">
+    <p className="sr-only" role="status">
       Updating {label}…
     </p>
   )

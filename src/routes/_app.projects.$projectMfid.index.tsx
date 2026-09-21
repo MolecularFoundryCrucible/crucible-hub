@@ -1,7 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { CollectionTablePending } from "@/components/crucible/collection-state"
 import {
   collectionBrowseSearchFields,
   datasetFiltersForGroup,
@@ -145,7 +144,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
 })
 
 function ProjectDataPending() {
-  return <CollectionTablePending label="project data" />
+  return <ProjectDataPage />
 }
 
 function ProjectDataPage() {

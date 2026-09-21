@@ -5,7 +5,7 @@ import {
   preloadResourceShell,
 } from "@/features/resource-detail/resource-detail-page"
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
 import { hubPageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/_app/samples/$sampleMfid")({
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_app/samples/$sampleMfid")({
   head: ({ loaderData }) => ({
     meta: [{ title: hubPageTitle(loaderData?.resourceName) }],
   }),
-  pendingComponent: RouteContentPending,
+  pendingComponent: () => <EntityWorkspacePending kind="sample" />,
   component: SamplePage,
 })
 

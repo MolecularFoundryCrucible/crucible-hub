@@ -9,7 +9,7 @@ import {
   personDisplayName,
 } from "@/components/crucible/person-identity"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { IdentityDetailPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import {
   Breadcrumb,
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/_app/people/$personId")({
   head: ({ loaderData }) => ({
     meta: [{ title: hubPageTitle(loaderData?.personName) }],
   }),
-  pendingComponent: RouteContentPending,
+  pendingComponent: () => <IdentityDetailPending kind="person" />,
   component: PersonPage,
 })
 

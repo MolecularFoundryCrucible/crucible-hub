@@ -121,7 +121,7 @@ export const Route = createFileRoute(
 })
 
 function InstrumentDatasetsPending() {
-  return <CollectionTablePending label="datasets" />
+  return <InstrumentDatasetsPage />
 }
 
 function InstrumentDatasetsPage() {
@@ -177,7 +177,11 @@ function InstrumentDatasetsPage() {
   if (!instrumentMfid) return null
 
   const content = result.isPending ? (
-    <InstrumentDatasetsPending />
+    <CollectionTablePending
+      label="datasets"
+      presentation="resources"
+      subtypeLabel="Measurement"
+    />
   ) : result.isError && !result.data ? (
     <>
       <CollectionLoadError

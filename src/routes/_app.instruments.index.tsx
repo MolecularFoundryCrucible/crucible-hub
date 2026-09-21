@@ -133,7 +133,10 @@ function InstrumentsPage() {
         status={status}
       />
       {instrumentResult.isPending ? (
-        <CollectionTablePending label="instruments" />
+        <CollectionTablePending
+          label="instruments"
+          presentation="instruments"
+        />
       ) : instrumentResult.isError && !instrumentResult.data ? (
         <>
           <CollectionLoadError
@@ -181,7 +184,7 @@ function InstrumentsRoutePending() {
         affiliation={search.affiliation}
         status={search.status ?? "active"}
       />
-      <CollectionTablePending label="instruments" />
+      <CollectionTablePending label="instruments" presentation="instruments" />
     </PageLayout>
   )
 }
@@ -352,7 +355,7 @@ function InstrumentCollection({
                       </TableCell>
                       <TableCell
                         className="resource-directory-person"
-                        data-label="Owner"
+                        data-label="Manager"
                       >
                         {instrument.owner ? (
                           <PersonLink

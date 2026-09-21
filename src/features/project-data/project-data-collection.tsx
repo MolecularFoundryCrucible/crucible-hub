@@ -397,7 +397,15 @@ function ProjectSamples({
   )
   useRegisterResourceSiblings(siblingCollections)
 
-  if (result.isPending) return <CollectionTablePending label="samples" />
+  if (result.isPending) {
+    return (
+      <CollectionTablePending
+        label="samples"
+        presentation="resources-scoped"
+        subtypeLabel="Sample type"
+      />
+    )
+  }
   if (result.isError && !result.data) {
     return (
       <ProjectDataLoadError
@@ -474,7 +482,15 @@ function ProjectDatasets({
   )
   useRegisterResourceSiblings(siblingCollections)
 
-  if (result.isPending) return <CollectionTablePending label="datasets" />
+  if (result.isPending) {
+    return (
+      <CollectionTablePending
+        label="datasets"
+        presentation="resources-scoped"
+        subtypeLabel="Measurement"
+      />
+    )
+  }
   if (result.isError && !result.data) {
     return (
       <ProjectDataLoadError

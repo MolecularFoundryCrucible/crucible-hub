@@ -223,7 +223,10 @@ function ServiceAccountsPage() {
         ) : null}
       </form>
       {result.isPending ? (
-        <CollectionTablePending label="service accounts" />
+        <CollectionTablePending
+          label="service accounts"
+          presentation="service-accounts"
+        />
       ) : result.isError && !result.data ? (
         <CollectionLoadError
           label="Service accounts"
@@ -261,12 +264,7 @@ function ServiceAccountsPage() {
 }
 
 function ServiceAccountsPending() {
-  return (
-    <PageLayout>
-      <PageHeader title="Service accounts" />
-      <CollectionTablePending label="service accounts" />
-    </PageLayout>
-  )
+  return <ServiceAccountsPage />
 }
 
 function ServiceAccountCollection({

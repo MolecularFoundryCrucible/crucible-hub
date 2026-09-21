@@ -1,7 +1,7 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
 import { hubPageTitle } from "@/lib/page-title"
 import {
   ResourceWorkspace,
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_app/datasets/$datasetMfid")({
   head: ({ loaderData }) => ({
     meta: [{ title: hubPageTitle(loaderData?.resourceName) }],
   }),
-  pendingComponent: RouteContentPending,
+  pendingComponent: () => <EntityWorkspacePending kind="dataset" />,
   component: DatasetPage,
 })
 

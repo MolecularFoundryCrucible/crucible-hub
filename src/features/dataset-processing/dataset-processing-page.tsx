@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { UseQueryResult } from "@tanstack/react-query"
 
 import {
-  CollectionRowsPending,
   PanelState,
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
@@ -24,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
@@ -137,9 +137,18 @@ function FilesAndIngestionCard({
             Files
           </h3>
           {filesResult.isPending || requestsResult.isPending ? (
-            <div className="px-4 sm:px-6">
-              <CollectionRowsPending label="file processing information" />
-            </div>
+            <ProcessingTablePending
+              alignTrailing={2}
+              columns={[
+                "File",
+                "File MFID",
+                "Status",
+                "Ingestor",
+                "Updated",
+                "",
+              ]}
+              label="file processing information"
+            />
           ) : files !== undefined && requests !== undefined ? (
             <>
               {filesResult.isError || requestsResult.isError ? (
@@ -201,9 +210,17 @@ function FilesAndIngestionCard({
             ) : null}
           </div>
           {requestsResult.isPending ? (
-            <div className="px-4 sm:px-6">
-              <CollectionRowsPending label="ingestion request history" />
-            </div>
+            <ProcessingTablePending
+              columns={[
+                "Request",
+                "File MFID",
+                "Status",
+                "Ingestor",
+                "Created",
+                "Completed",
+              ]}
+              label="ingestion request history"
+            />
           ) : requests !== undefined ? (
             requests.length ? (
               <IngestionRequestHistory
@@ -239,6 +256,57 @@ function FilesAndIngestionCard({
         />
       ) : null}
     </Card>
+  )
+}
+
+function ProcessingTablePending({
+  alignTrailing = 0,
+  columns,
+  label,
+}: {
+  alignTrailing?: number
+  columns: readonly string[]
+  label: string
+}) {
+  return (
+    <div aria-label={`Loading ${label}`} role="status">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column, index) => (
+              <TableHead
+                className={
+                  alignTrailing > 0 && index >= columns.length - alignTrailing
+                    ? "text-right"
+                    : undefined
+                }
+                key={`${column}-${index}`}
+              >
+                {column || <span className="sr-only">File action</span>}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 3 }, (_, row) => (
+            <TableRow key={row}>
+              {columns.map((column, columnIndex) => (
+                <TableCell key={`${column}-${columnIndex}`}>
+                  <Skeleton
+                    className={
+                      alignTrailing > 0 &&
+                      columnIndex >= columns.length - alignTrailing
+                        ? "ml-auto h-4 w-20"
+                        : "h-4 w-24"
+                    }
+                  />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 

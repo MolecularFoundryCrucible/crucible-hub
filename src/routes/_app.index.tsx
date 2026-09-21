@@ -3,8 +3,8 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 
 import {
-  CollectionRowsPending,
   PanelState,
+  ResourceListPending,
 } from "@/components/crucible/collection-state"
 import { ForwardNavigationIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
@@ -146,7 +146,7 @@ function HomePage() {
               </CardHeader>
               <CardContent>
                 {recentDataPending && (
-                  <CollectionRowsPending label="recent research data" />
+                  <ResourceListPending label="recent research data" />
                 )}
                 {recentDataUnavailable && (
                   <PanelState
@@ -476,7 +476,9 @@ function HomeOwnershipCard({
           <CardAction>{viewAll}</CardAction>
         </CardHeader>
         <CardContent>
-          {pending ? <CollectionRowsPending label={label} /> : null}
+          {pending ? (
+            <ResourceListPending label={label} trailing={false} />
+          ) : null}
           {!pending && error ? (
             <PanelState
               retry={retry}

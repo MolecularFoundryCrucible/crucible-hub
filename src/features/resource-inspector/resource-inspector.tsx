@@ -9,7 +9,6 @@ import {
   ExploreGraphFocusIcon,
 } from "@/components/crucible/icons"
 import {
-  CollectionRowsPending,
   PanelState,
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
@@ -211,7 +210,11 @@ export function ResourceInspector({
           {navigation.invalidPreview ? (
             <p role="alert">The preview identifier is not valid.</p>
           ) : navigation.preview ? (
-            <InspectorBody query={query} resource={resource} />
+            <InspectorBody
+              previewKind={previewKind}
+              query={query}
+              resource={resource}
+            />
           ) : null}
         </div>
         {navigation.preview &&
@@ -291,9 +294,11 @@ function ResourceGraphFocusLink({
 }
 
 function InspectorBody({
+  previewKind,
   query,
   resource,
 }: {
+  previewKind: WorkspaceResourceDetail["kind"] | undefined
   query: {
     error: Error | null
     isError: boolean
@@ -304,7 +309,7 @@ function InspectorBody({
   resource: WorkspaceResourceDetail | null | undefined
 }) {
   if (query.isPending) {
-    return <CollectionRowsPending label="resource details" />
+    return <InspectorBodyPending kind={previewKind} />
   }
   if (!resource) {
     return (
@@ -354,6 +359,51 @@ function InspectorBody({
           <MetadataDisclosure metadata={resource.scientific_metadata} />
         </>
       )}
+    </div>
+  )
+}
+
+function InspectorBodyPending({
+  kind,
+}: {
+  kind: WorkspaceResourceDetail["kind"] | undefined
+}) {
+  const hasScientificContext = kind === "dataset" || kind === "sample"
+  return (
+    <div
+      aria-label="Loading resource details"
+      className="flex min-w-0 flex-col gap-6"
+      role="status"
+    >
+      <section>
+        <h3 className="mb-3 text-title-section">Context</h3>
+        <dl className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div className="grid gap-2" key={index}>
+              <dt>
+                <Skeleton className="h-3 w-20" />
+              </dt>
+              <dd>
+                <Skeleton className="h-5 w-32" />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+      {hasScientificContext ? (
+        <>
+          <section>
+            <h3 className="mb-3 text-title-section">Relationships</h3>
+            <div className="grid gap-3">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-5 w-1/2" />
+            </div>
+          </section>
+          <div className="border-t pt-4">
+            <span className="text-label">Scientific metadata</span>
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }

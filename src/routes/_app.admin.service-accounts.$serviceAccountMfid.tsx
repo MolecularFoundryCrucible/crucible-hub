@@ -4,7 +4,7 @@ import { Link, Navigate, createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { IdentityDetailPending } from "@/components/crucible/route-content-pending"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -48,7 +48,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [{ title: hubPageTitle(loaderData?.username) }],
   }),
-  pendingComponent: RouteContentPending,
+  pendingComponent: () => <IdentityDetailPending kind="service_account" />,
   component: ServiceAccountAdminPage,
 })
 
@@ -66,7 +66,9 @@ function ServiceAccountAdminPage() {
     return <Navigate replace to="/" />
   }
 
-  if (serviceAccountResult.isPending) return <RouteContentPending />
+  if (serviceAccountResult.isPending) {
+    return <IdentityDetailPending kind="service_account" />
+  }
 
   if (serviceAccountResult.isError) {
     return (

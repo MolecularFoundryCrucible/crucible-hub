@@ -212,12 +212,7 @@ function DataPage() {
 }
 
 function DataRoutePending() {
-  return (
-    <PageLayout>
-      <DataPageHeader />
-      <CollectionTablePending label="data" />
-    </PageLayout>
-  )
+  return <DataPage />
 }
 
 function DataPageHeader() {
@@ -439,7 +434,7 @@ function DataResults({
         }
       >
         {!hasReadableData && (samplePending || datasetPending) ? (
-          <CollectionTablePending label="data" />
+          <CollectionTablePending label="data" presentation="resources" />
         ) : !hasReadableData ? (
           <CollectionLoadError label="Data" retry={retrySelected} />
         ) : (

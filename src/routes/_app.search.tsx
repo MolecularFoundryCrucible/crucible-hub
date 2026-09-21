@@ -7,6 +7,7 @@ import {
   CollectionLoadError,
   CollectionUpdateError,
   CollectionUpdateStatus,
+  ResourceListPending,
 } from "@/components/crucible/collection-state"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { BackToProjectIcon, SearchIcon } from "@/components/crucible/icons"
@@ -21,7 +22,7 @@ import {
   ResourceListItemContent,
 } from "@/components/crucible/resource-list"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { SearchRoutePending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -71,7 +72,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_app/search")({
   head: () => ({ meta: [{ title: "Search | Crucible Hub" }] }),
   validateSearch: searchSchema,
-  pendingComponent: RouteContentPending,
+  pendingComponent: SearchRoutePending,
   component: SearchPage,
 })
 
@@ -308,19 +309,13 @@ function SearchBreadcrumb({
 
 function SearchResultsPending() {
   return (
-    <div
-      aria-label="Loading search results"
-      className="min-h-state flex flex-col gap-6"
-      role="status"
-    >
+    <div aria-busy="true" className="min-h-state flex flex-col gap-6">
       <Skeleton className="h-4 w-48" />
       <div className="flex flex-col gap-2">
         <Skeleton className="h-6 w-32" />
         <Card>
-          <CardContent className="flex flex-col gap-4 py-4">
-            <Skeleton className="h-5 w-2/3" />
-            <Skeleton className="h-5 w-1/2" />
-            <Skeleton className="h-5 w-3/4" />
+          <CardContent className="px-0">
+            <ResourceListPending label="search results" />
           </CardContent>
         </Card>
       </div>

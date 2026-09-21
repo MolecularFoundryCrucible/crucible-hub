@@ -11,7 +11,7 @@ import {
   resourceSectionActiveProps,
   resourceSectionLinkClassName,
 } from "@/components/crucible/resource-section-navigation"
-import { RouteContentPending } from "@/components/crucible/route-content-pending"
+import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import {
   Breadcrumb,
@@ -53,7 +53,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
   head: ({ loaderData }) => ({
     meta: [{ title: hubPageTitle(loaderData?.instrumentName) }],
   }),
-  pendingComponent: RouteContentPending,
+  pendingComponent: () => <EntityWorkspacePending kind="instrument" />,
   component: InstrumentPage,
 })
 

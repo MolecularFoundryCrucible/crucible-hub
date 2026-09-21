@@ -114,7 +114,7 @@ function ProjectsPage() {
       <ProjectsPageHeader canCreate={account.capabilities.can_create_project} />
       <ProjectDirectoryFilters affiliation={search.affiliation} />
       {projectResult.isPending ? (
-        <CollectionTablePending label="projects" />
+        <CollectionTablePending label="projects" presentation="projects" />
       ) : projectResult.isError && !projectResult.data ? (
         <>
           <CollectionLoadError
@@ -156,7 +156,7 @@ function ProjectsRoutePending() {
         canCreate={account?.capabilities.can_create_project === true}
       />
       <ProjectDirectoryFilters affiliation={Route.useSearch().affiliation} />
-      <CollectionTablePending label="projects" />
+      <CollectionTablePending label="projects" presentation="projects" />
     </PageLayout>
   )
 }
