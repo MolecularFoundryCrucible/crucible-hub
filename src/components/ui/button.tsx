@@ -19,6 +19,8 @@ const buttonVariantClasses = cva(
           "border-transparent hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "border-transparent bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        graph:
+          "border-graph-action-border bg-graph-action text-graph-action-foreground shadow-xs hover:border-graph-highlight hover:bg-graph-action-hover focus-visible:border-graph-highlight focus-visible:ring-graph-highlight/30",
         link: "border-transparent text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -32,6 +34,7 @@ const buttonVariantClasses = cva(
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "icon-circle": "size-8 rounded-full",
         "icon-lg": "size-9",
         floating: "size-11 gap-1.5 px-0 sm:w-auto sm:px-3",
         qr: "size-28 overflow-hidden p-0",

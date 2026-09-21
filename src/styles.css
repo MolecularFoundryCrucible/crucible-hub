@@ -212,6 +212,11 @@
   --color-border: var(--border);
   --color-action-border: var(--action-border);
   --color-action-surface: var(--action-surface);
+  --color-graph-action: var(--graph-action);
+  --color-graph-action-border: var(--graph-action-border);
+  --color-graph-action-foreground: var(--graph-action-foreground);
+  --color-graph-action-hover: var(--graph-action-hover);
+  --color-graph-highlight: var(--graph-highlight);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -340,6 +345,15 @@
   --graph-current: #cc5200;
   --graph-edge: #737373;
   --graph-highlight: #031e2d;
+  --graph-action: #ffffff;
+  --graph-action-border: #737373;
+  --graph-action-foreground: #0a0a0a;
+  --graph-action-hover: #edf3f5;
+  --graph-association-edge: color-mix(
+    in oklch,
+    var(--graph-edge) 72%,
+    var(--graph-card)
+  );
   --graph-grid: #edf0f2;
   --graph-grid-dot: 1px;
   --graph-grid-size: 20px;
@@ -368,6 +382,9 @@
   --graph-selected-overlay-opacity: 0.14;
   --graph-selected-overlay-padding: 7;
   --graph-edge-width: 1.5;
+  --graph-edge-corner-radius: 14;
+  --graph-arrow-size: 10;
+  --graph-expansion-control-position: 68%;
   --graph-fallback-spacing: 1.4;
   --graph-highlighted-edge-width: 2.5;
   --graph-font-size: 13;
@@ -458,6 +475,10 @@
   --graph-current: #ff8533;
   --graph-edge: #a1a1a1;
   --graph-highlight: #a8c4cd;
+  --graph-action: #171717;
+  --graph-action-border: #737373;
+  --graph-action-foreground: #fafafa;
+  --graph-action-hover: #24343a;
   --graph-grid: #242424;
   --graph-resource-dataset: #3fbf86;
   --graph-resource-dataset-surface: #182d23;
@@ -677,27 +698,27 @@ body {
 }
 
 .resource-graph-expansion-ancestors {
-  top: 50%;
+  top: var(--graph-expansion-control-position);
   left: 0;
   transform: translate(-50%, -50%);
 }
 
 .resource-graph-expansion-descendants {
-  top: 50%;
+  top: var(--graph-expansion-control-position);
   right: 0;
   transform: translate(50%, -50%);
 }
 
 .resource-graph-expansion-associations {
   bottom: 0;
-  left: 50%;
+  left: var(--graph-expansion-control-position);
   transform: translate(-50%, 50%);
 }
 
 .resource-graph-flow-node[data-layout-direction="DOWN"]
   .resource-graph-expansion-ancestors {
   top: 0;
-  left: 50%;
+  left: var(--graph-expansion-control-position);
   transform: translate(-50%, -50%);
 }
 
@@ -706,13 +727,13 @@ body {
   top: auto;
   right: auto;
   bottom: 0;
-  left: 50%;
+  left: var(--graph-expansion-control-position);
   transform: translate(-50%, 50%);
 }
 
 .resource-graph-flow-node[data-layout-direction="DOWN"]
   .resource-graph-expansion-associations {
-  top: 50%;
+  top: var(--graph-expansion-control-position);
   right: 0;
   bottom: auto;
   left: auto;
@@ -738,6 +759,8 @@ body {
 .resource-graph-surface .react-flow__edge-path {
   stroke: var(--graph-edge);
   stroke-width: var(--graph-edge-width);
+  stroke-linecap: round;
+  stroke-linejoin: round;
   transition:
     opacity var(--motion-fast),
     stroke var(--motion-fast),
@@ -745,6 +768,7 @@ body {
 }
 
 .resource-graph-surface .resource-graph-edge-associated .react-flow__edge-path {
+  stroke: var(--graph-association-edge);
   stroke-dasharray: 6 5;
 }
 

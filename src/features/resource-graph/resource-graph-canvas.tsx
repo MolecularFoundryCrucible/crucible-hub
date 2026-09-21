@@ -66,6 +66,7 @@ import type {
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
+import { cn } from "@/lib/utils"
 import {
   graphExpansionModeLabel,
   graphExpansionModesForNode,
@@ -109,6 +110,11 @@ type LayoutPosition = {
   width: number
   x: number
   y: number
+}
+
+type EdgeMetrics = {
+  cornerRadius: number
+  markerSize: number
 }
 
 const GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD = 100
@@ -202,6 +208,7 @@ function ResourceGraphFlow({
   const [layoutDirection, setLayoutDirection] =
     useState<LayoutDirection | null>(null)
   const [zoomRange, setZoomRange] = useState({ max: 2.5, min: 0.35 })
+  const [edgeMetrics, setEdgeMetrics] = useState<EdgeMetrics | null>(null)
   const [layoutPending, setLayoutPending] = useState(true)
   const [layoutRevision, setLayoutRevision] = useState(0)
   const [layoutPositions, setLayoutPositions] = useState(
@@ -216,6 +223,16 @@ function ResourceGraphFlow({
     if (!element) return
     const updateDirection = () => {
       setLayoutDirection(resolveLayoutDirection(display.orientation))
+      const nextEdgeMetrics = {
+        cornerRadius: graphNumberToken(element, "--graph-edge-corner-radius"),
+        markerSize: graphNumberToken(element, "--graph-arrow-size"),
+      }
+      setEdgeMetrics((current) =>
+        current?.cornerRadius === nextEdgeMetrics.cornerRadius &&
+        current.markerSize === nextEdgeMetrics.markerSize
+          ? current
+          : nextEdgeMetrics
+      )
       const nextZoomRange = {
         max: graphNumberToken(element, "--graph-max-zoom"),
         min: graphNumberToken(element, "--graph-min-zoom"),
@@ -469,6 +486,7 @@ function ResourceGraphFlow({
     () =>
       graph.edges.flatMap((edge) => {
         if (
+          !edgeMetrics ||
           !layoutPositions.has(edge.source) ||
           !layoutPositions.has(edge.target)
         ) {
@@ -479,6 +497,9 @@ function ResourceGraphFlow({
           (edge.source === hoveredNode || edge.target === hoveredNode)
         )
         const dimmed = Boolean(hoveredNode && !highlighted)
+        const edgeColor = highlighted
+          ? "var(--graph-highlight)"
+          : "var(--graph-edge)"
         return [
           {
             animated: false,
@@ -495,11 +516,15 @@ function ResourceGraphFlow({
             markerEnd:
               edge.relationship === "parent"
                 ? {
-                    color: "var(--graph-edge)",
-                    height: 14,
-                    type: MarkerType.ArrowClosed,
-                    width: 14,
+                    color: edgeColor,
+                    height: edgeMetrics.markerSize,
+                    type: MarkerType.Arrow,
+                    width: edgeMetrics.markerSize,
                   }
+                : undefined,
+            pathOptions:
+              edge.relationship === "parent"
+                ? { borderRadius: edgeMetrics.cornerRadius }
                 : undefined,
             reconnectable: false,
             selectable: false,
@@ -517,7 +542,7 @@ function ResourceGraphFlow({
           },
         ]
       }),
-    [graph.edges, hoveredNode, layoutPositions]
+    [edgeMetrics, graph.edges, hoveredNode, layoutPositions]
   )
 
   return (
@@ -733,22 +758,29 @@ function GraphNodeExpansionAction({
         render={
           <Button
             aria-label={label}
-            className={`nodrag nopan resource-graph-expansion-action resource-graph-expansion-${mode} rounded-full shadow-sm`}
+            className={cn(
+              "nodrag nopan resource-graph-expansion-action",
+              `resource-graph-expansion-${mode}`
+            )}
             disabled={pending}
             onClick={(event) => {
               event.stopPropagation()
               onExpand(node.unique_id, mode)
             }}
-            size="icon-sm"
+            size="icon-circle"
             type="button"
-            variant={state?.isError ? "destructive" : "outline"}
+            variant={state?.isError ? "destructive" : "graph"}
           />
         }
       >
         {pending ? (
-          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+          <LoadingMoreIcon
+            aria-hidden="true"
+            className="animate-spin"
+            data-icon="inline-start"
+          />
         ) : (
-          <Icon aria-hidden="true" />
+          <Icon aria-hidden="true" data-icon="inline-start" />
         )}
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>
