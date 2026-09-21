@@ -770,8 +770,8 @@ body {
   pointer-events: none;
 }
 
-.resource-graph-handle-association-source,
-.resource-graph-handle-association-target {
+.resource-graph-flow-node .resource-graph-handle-association-source,
+.resource-graph-flow-node .resource-graph-handle-association-target {
   top: 50%;
   right: auto;
   bottom: auto;

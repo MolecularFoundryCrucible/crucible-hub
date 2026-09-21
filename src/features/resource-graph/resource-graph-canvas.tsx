@@ -682,8 +682,7 @@ function ResourceGraphFlow({
               edge.relationship === "associated"
                 ? "association-target"
                 : "lineage-target",
-            type:
-              edge.relationship === "associated" ? "straight" : "smoothstep",
+            type: edge.relationship === "associated" ? "default" : "smoothstep",
           },
         ]
       }),
