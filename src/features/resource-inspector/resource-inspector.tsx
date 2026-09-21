@@ -158,7 +158,7 @@ export function ResourceInspector({
               }
               aria-atomic="true"
               aria-live="polite"
-              className="flex min-w-0 items-start gap-2"
+              className="flex min-w-0 items-start gap-2 text-title-section"
               tabIndex={-1}
             >
               {previewKind ? (
