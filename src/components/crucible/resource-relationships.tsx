@@ -4,6 +4,11 @@ import { Link } from "@tanstack/react-router"
 import { OpenFullPageIcon } from "@/components/crucible/icons"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import {
+  ResourceList,
+  ResourceListItem,
+  ResourceListItemContent,
+} from "@/components/crucible/resource-list"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -84,7 +89,7 @@ export function ResourceRelationships({
           <GroupHeading className="text-label">
             {group.title} ({group.links.length})
           </GroupHeading>
-          <ul className="mt-2 flex min-w-0 flex-col">
+          <ResourceList className="mt-2">
             {group.links.map((link) => (
               <RelationshipRow
                 key={`${link.relationship}:${link.resource_type}:${link.unique_id}`}
@@ -93,7 +98,7 @@ export function ResourceRelationships({
                 renderManagementAction={renderManagementAction}
               />
             ))}
-          </ul>
+          </ResourceList>
         </section>
       ))}
     </div>
@@ -129,30 +134,32 @@ function RelationshipRow({
     </span>
   )
   return (
-    <li className="flex min-w-0 items-center gap-2 border-b border-border py-3 last:border-0">
-      {link.resource_type === "sample" || link.resource_type === "dataset" ? (
-        <ResourcePreviewLink
-          className="group/resource min-w-0 flex-1"
-          mfid={link.unique_id}
-          resourceKind={link.resource_type}
-          resourceName={label}
-        >
-          <span className="sr-only">Preview {label}</span>
-          <span aria-hidden="true" className="block">
-            {identity}
-          </span>
-        </ResourcePreviewLink>
-      ) : (
-        <div className="min-w-0 flex-1">{identity}</div>
-      )}
-      <div className="flex shrink-0 items-center">
-        {managing ? (
-          renderManagementAction?.(link)
+    <ResourceListItem>
+      <ResourceListItemContent className="px-0">
+        {link.resource_type === "sample" || link.resource_type === "dataset" ? (
+          <ResourcePreviewLink
+            className="min-w-0 flex-1"
+            mfid={link.unique_id}
+            resourceKind={link.resource_type}
+            resourceName={label}
+          >
+            <span className="sr-only">Preview {label}</span>
+            <span aria-hidden="true" className="block">
+              {identity}
+            </span>
+          </ResourcePreviewLink>
         ) : (
-          <CanonicalResourceLink link={link} />
+          <div className="min-w-0 flex-1">{identity}</div>
         )}
-      </div>
-    </li>
+        <div className="flex shrink-0 items-center">
+          {managing ? (
+            renderManagementAction?.(link)
+          ) : (
+            <CanonicalResourceLink link={link} />
+          )}
+        </div>
+      </ResourceListItemContent>
+    </ResourceListItem>
   )
 }
 

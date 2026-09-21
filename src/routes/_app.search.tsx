@@ -15,6 +15,11 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import {
+  ResourceList,
+  ResourceListItem,
+  ResourceListItemContent,
+} from "@/components/crucible/resource-list"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { RouteContentPending } from "@/components/crucible/route-content-pending"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -395,7 +400,7 @@ function SearchResults({
               ) : group.items.length > 0 ? (
                 <Card>
                   <CardContent className="px-0">
-                    <ul className="divide-y">
+                    <ResourceList>
                       {group.items.map((item) => (
                         <SearchResult
                           item={item}
@@ -403,7 +408,7 @@ function SearchResults({
                           projectMfid={projectMfid}
                         />
                       ))}
-                    </ul>
+                    </ResourceList>
                   </CardContent>
                 </Card>
               ) : (
@@ -511,10 +516,12 @@ function SearchResult({
     )
 
   return (
-    <li className="flex min-w-0 items-start gap-3 px-4 py-3 sm:px-5">
-      <div className="min-w-0 flex-1">{link}</div>
-      <MfidValue className="hidden shrink-0 lg:flex" value={item.unique_id} />
-    </li>
+    <ResourceListItem>
+      <ResourceListItemContent className="sm:px-5" layout="start">
+        <div className="min-w-0 flex-1">{link}</div>
+        <MfidValue className="hidden shrink-0 lg:flex" value={item.unique_id} />
+      </ResourceListItemContent>
+    </ResourceListItem>
   )
 }
 

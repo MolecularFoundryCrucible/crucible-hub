@@ -82,6 +82,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Unified Home, search, relationship, and graph-table resource identities around shared flat list presentations with consistent spacing, separators, hover, focus, and responsive trailing content, and labelled instrument ownership as management in the directory.
 - Allowed normal page scrolling over resource graphs, reserved modifier-scroll and pinch gestures for graph zoom, and added double-click or focused-node keyboard centering without changing zoom.
 - Ordered relationship lists by natural resource name within Parents, Children, Associated, and Related groups across Overview and Graph.
 - Smoothed graph expansion by anchoring the activated node through multi-stage requests, updating React Flow through one controlled node state, introducing new nodes from their expansion origin, fading in additions, and cancelling obsolete layout work.

@@ -11,6 +11,11 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import {
+  ResourceList,
+  ResourceListItem,
+  ResourceListItemContent,
+} from "@/components/crucible/resource-list"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -187,7 +192,7 @@ function HomePage() {
                   </div>
                 )}
                 {recentResources.length > 0 && (
-                  <ul className="flex min-w-0 flex-col gap-2" role="list">
+                  <ResourceList>
                     {recentResources.map((item) => (
                       <HomeResourceLink
                         item={{
@@ -205,7 +210,7 @@ function HomePage() {
                         key={`${item.kind}:${item.resource.unique_id}`}
                       />
                     ))}
-                  </ul>
+                  </ResourceList>
                 )}
               </CardContent>
             </Card>
@@ -223,7 +228,7 @@ function HomePage() {
                     Resources opened during this session will appear here.
                   </p>
                 ) : (
-                  <ul className="flex min-w-0 flex-col gap-2" role="list">
+                  <ResourceList>
                     {recentlyViewed.map((item) => (
                       <HomeResourceLink
                         item={{
@@ -239,7 +244,7 @@ function HomePage() {
                         key={`${item.kind}:${item.uniqueId}`}
                       />
                     ))}
-                  </ul>
+                  </ResourceList>
                 )}
               </CardContent>
             </Card>
@@ -270,7 +275,7 @@ function HomePage() {
             }
           >
             {projects.length > 0 ? (
-              <ul className="flex min-w-0 flex-col gap-2" role="list">
+              <ResourceList>
                 {projects.map((project) => (
                   <OwnershipResourceLink
                     identifier={project.project_id}
@@ -280,7 +285,7 @@ function HomePage() {
                     name={project.title?.trim() || project.project_id}
                   />
                 ))}
-              </ul>
+              </ResourceList>
             ) : null}
           </HomeOwnershipCard>
 
@@ -311,7 +316,7 @@ function HomePage() {
             }
           >
             {instruments.length > 0 ? (
-              <ul className="flex min-w-0 flex-col gap-2" role="list">
+              <ResourceList>
                 {instruments.map((instrument) => (
                   <OwnershipResourceLink
                     identifier={instrument.instrument_id}
@@ -321,7 +326,7 @@ function HomePage() {
                     name={instrumentName(instrument)}
                   />
                 ))}
-              </ul>
+              </ResourceList>
             ) : null}
           </HomeOwnershipCard>
         </div>
@@ -361,66 +366,79 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
       ) : null}
     </>
   )
-  const className =
-    "group/resource flex min-w-0 flex-col gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-start"
-
   if (item.kind === "project") {
     return (
-      <li>
-        <Link
+      <ResourceListItem>
+        <ResourceListItemContent
           aria-label={"Open " + item.kind + ": " + item.name}
-          className={className}
-          params={{ projectMfid: item.uniqueId }}
-          search={{ preview: undefined }}
-          state={{}}
-          to="/projects/$projectMfid"
+          layout="responsive"
+          render={
+            <Link
+              params={{ projectMfid: item.uniqueId }}
+              search={{ preview: undefined }}
+              state={{}}
+              to="/projects/$projectMfid"
+            />
+          }
         >
           {content}
-        </Link>
-      </li>
+        </ResourceListItemContent>
+      </ResourceListItem>
     )
   }
   if (item.kind === "instrument") {
     return (
-      <li>
-        <Link
+      <ResourceListItem>
+        <ResourceListItemContent
           aria-label={"Open " + item.kind + ": " + item.name}
-          className={className}
-          params={{ instrumentMfid: item.uniqueId }}
-          search={{}}
-          state={{}}
-          to="/instruments/$instrumentMfid"
+          layout="responsive"
+          render={
+            <Link
+              params={{ instrumentMfid: item.uniqueId }}
+              search={{}}
+              state={{}}
+              to="/instruments/$instrumentMfid"
+            />
+          }
         >
           {content}
-        </Link>
-      </li>
+        </ResourceListItemContent>
+      </ResourceListItem>
     )
   }
   if (item.kind === "sample") {
     return (
-      <li>
-        <Link
+      <ResourceListItem>
+        <ResourceListItemContent
           aria-label={"Open " + item.kind + ": " + item.name}
-          className={className}
-          params={{ sampleMfid: item.uniqueId }}
-          to="/samples/$sampleMfid"
+          layout="responsive"
+          render={
+            <Link
+              params={{ sampleMfid: item.uniqueId }}
+              to="/samples/$sampleMfid"
+            />
+          }
         >
           {content}
-        </Link>
-      </li>
+        </ResourceListItemContent>
+      </ResourceListItem>
     )
   }
   return (
-    <li>
-      <Link
+    <ResourceListItem>
+      <ResourceListItemContent
         aria-label={"Open " + item.kind + ": " + item.name}
-        className={className}
-        params={{ datasetMfid: item.uniqueId }}
-        to="/datasets/$datasetMfid"
+        layout="responsive"
+        render={
+          <Link
+            params={{ datasetMfid: item.uniqueId }}
+            to="/datasets/$datasetMfid"
+          />
+        }
       >
         {content}
-      </Link>
-    </li>
+      </ResourceListItemContent>
+    </ResourceListItem>
   )
 }
 
@@ -503,35 +521,42 @@ function OwnershipResourceLink({
       />
     </>
   )
-  const className =
-    "group/resource flex min-w-0 items-start gap-2 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-
   return kind === "project" ? (
-    <li>
-      <Link
+    <ResourceListItem>
+      <ResourceListItemContent
         aria-label={`Open project: ${name}`}
-        className={className}
-        params={{ projectMfid: mfid }}
-        search={{ preview: undefined }}
-        state={{}}
-        to="/projects/$projectMfid"
+        density="compact"
+        layout="start"
+        render={
+          <Link
+            params={{ projectMfid: mfid }}
+            search={{ preview: undefined }}
+            state={{}}
+            to="/projects/$projectMfid"
+          />
+        }
       >
         {content}
-      </Link>
-    </li>
+      </ResourceListItemContent>
+    </ResourceListItem>
   ) : (
-    <li>
-      <Link
+    <ResourceListItem>
+      <ResourceListItemContent
         aria-label={`Open instrument: ${name}`}
-        className={className}
-        params={{ instrumentMfid: mfid }}
-        search={{}}
-        state={{}}
-        to="/instruments/$instrumentMfid"
+        density="compact"
+        layout="start"
+        render={
+          <Link
+            params={{ instrumentMfid: mfid }}
+            search={{}}
+            state={{}}
+            to="/instruments/$instrumentMfid"
+          />
+        }
       >
         {content}
-      </Link>
-    </li>
+      </ResourceListItemContent>
+    </ResourceListItem>
   )
 }
 

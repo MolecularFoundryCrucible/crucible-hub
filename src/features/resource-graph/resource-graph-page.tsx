@@ -12,6 +12,7 @@ import {
 } from "@/components/crucible/icons"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import {
   ResourcePreviewLink,
   useResourcePreviewContext,
@@ -671,24 +672,20 @@ function ResourceGraphTable({
                               thumbnail={thumbnail}
                             />
                           ) : null}
-                          <span className="flex min-w-0 items-center gap-2">
-                            <ResourceTypeIcon
-                              className="size-5 shrink-0"
-                              type={node.kind}
+                          <ResourcePreviewLink
+                            className="group/resource min-w-0 flex-1"
+                            mfid={node.unique_id}
+                            resourceKind={node.kind}
+                            resourceName={node.name}
+                          >
+                            <ResourceIdentity
+                              context={node.context}
+                              interactive
+                              kind={node.kind}
+                              name={node.name}
+                              presentation="collection"
                             />
-                            <span className="sr-only">
-                              {node.kind === "sample" ? "Sample" : "Dataset"}
-                              {": "}
-                            </span>
-                            <ResourcePreviewLink
-                              className="min-w-0 text-label break-words hover:underline"
-                              mfid={node.unique_id}
-                              resourceKind={node.kind}
-                              resourceName={node.name}
-                            >
-                              {node.name}
-                            </ResourcePreviewLink>
-                          </span>
+                          </ResourcePreviewLink>
                         </span>
                       </TableCell>
                       <TableCell className="resource-graph-action">

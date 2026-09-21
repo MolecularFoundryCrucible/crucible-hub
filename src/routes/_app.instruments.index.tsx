@@ -319,7 +319,7 @@ function InstrumentCollection({
                 <TableRow>
                   <TableHead>Instrument</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead>Owner</TableHead>
+                  <TableHead>Manager</TableHead>
                   <TableHead className="hidden xl:table-cell">
                     Created
                   </TableHead>
