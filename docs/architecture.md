@@ -20,6 +20,8 @@ Hub owns browser presentation, interaction, sessions, client state, and bounded 
 | Cross-repository ownership and compatibility          | `crucible-ecosystem`                                  |
 | Hub web behavior, sessions, and design system         | `crucible-hub`                                        |
 
+Scientific dataset viewers use a build-time Hub registry with lazy browser modules and a stable viewer route. The API and ingestion systems own typed versioned representation discovery, authorization, server-heavy parsing, and durable derived artifacts. Hub owns the viewer shell and browser interaction and does not execute Python scientific parsing, remote viewer code, or third-party viewer frames. See decision 0030.
+
 ## Runtime and trust boundaries
 
 ```mermaid

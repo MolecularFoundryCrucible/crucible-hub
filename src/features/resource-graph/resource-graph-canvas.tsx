@@ -31,20 +31,33 @@ import {
   GraphAncestorsIcon,
   GraphAssociationsIcon,
   GraphDescendantsIcon,
+  GraphDisplayOptionsIcon,
   LoadingMoreIcon,
   ResetGraphLayoutIcon,
   ZoomInGraphIcon,
   ZoomOutGraphIcon,
 } from "@/components/crucible/icons"
+import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import type {
+  WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
@@ -54,6 +67,10 @@ import {
   graphExpansionPending,
   graphExpansionState,
 } from "./resource-graph-expansion"
+import type {
+  GraphOrientation,
+  ResourceGraphDisplay,
+} from "./resource-graph-display"
 import type {
   GraphExpansionMode,
   GraphExpansionState,
@@ -68,6 +85,7 @@ type ResourceFlowNodeData = {
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  thumbnail?: WorkspaceDatasetThumbnail
 }
 
 type ResourceFlowNode = Node<ResourceFlowNodeData, "resource">
@@ -98,53 +116,68 @@ function resourceGraphLayoutEngine() {
 }
 
 export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
+  display,
   expansionStates,
   expansionModesByNode,
   graph,
   loading,
   onExpand,
+  onDisplayChange,
   onInspect,
   rootContext,
+  thumbnails,
 }: {
+  display: ResourceGraphDisplay
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   graph: WorkspaceResourceGraph
   loading: boolean
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
   rootContext: string | null
+  thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
   return (
     <ReactFlowProvider>
       <ResourceGraphFlow
+        display={display}
         expansionStates={expansionStates}
         expansionModesByNode={expansionModesByNode}
         graph={graph}
         loading={loading}
         onExpand={onExpand}
+        onDisplayChange={onDisplayChange}
         onInspect={onInspect}
         rootContext={rootContext}
+        thumbnails={thumbnails}
       />
     </ReactFlowProvider>
   )
 })
 
 function ResourceGraphFlow({
+  display,
   expansionStates,
   expansionModesByNode,
   graph,
   loading,
   onExpand,
+  onDisplayChange,
   onInspect,
   rootContext,
+  thumbnails,
 }: {
+  display: ResourceGraphDisplay
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   graph: WorkspaceResourceGraph
   loading: boolean
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
   rootContext: string | null
+  thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
   const surface = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
@@ -177,8 +210,7 @@ function ResourceGraphFlow({
     const element = surface.current
     if (!element) return
     const updateDirection = () => {
-      const direction = graphStringToken(element, "--graph-layout-direction")
-      setLayoutDirection(direction === "DOWN" ? "DOWN" : "RIGHT")
+      setLayoutDirection(resolveLayoutDirection(element, display.orientation))
       const nextZoomRange = {
         max: graphNumberToken(element, "--graph-max-zoom"),
         min: graphNumberToken(element, "--graph-min-zoom"),
@@ -193,7 +225,7 @@ function ResourceGraphFlow({
     const resizeObserver = new ResizeObserver(updateDirection)
     resizeObserver.observe(element)
     return () => resizeObserver.disconnect()
-  }, [])
+  }, [display.orientation])
 
   useEffect(() => {
     const updateFullscreen = () => {
@@ -339,6 +371,10 @@ function ResourceGraphFlow({
               layoutDirection: layoutDirection ?? "RIGHT",
               node,
               onExpand,
+              thumbnail:
+                display.thumbnails && node.kind === "dataset"
+                  ? thumbnails[node.unique_id]
+                  : undefined,
             },
             deletable: false,
             draggable: true,
@@ -359,10 +395,12 @@ function ResourceGraphFlow({
       expansionModesByNode,
       graph.nodes,
       graph.rootMfid,
+      display.thumbnails,
       layoutDirection,
       layoutPositions,
       onExpand,
       rootContext,
+      thumbnails,
     ]
   )
   const [flowNodes, setFlowNodes, handleNodesChange] =
@@ -485,10 +523,12 @@ function ResourceGraphFlow({
       ref={surface}
     >
       <GraphViewportControls
+        display={display}
         flow={flow}
         fullscreen={fullscreen}
         graph={graph}
         onResetLayout={resetLayout}
+        onDisplayChange={onDisplayChange}
         onToggleFullscreen={toggleFullscreen}
         positions={layoutPositions}
         surface={surface}
@@ -572,6 +612,7 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       data-dimmed={data.dimmed ? "" : undefined}
       data-kind={data.node.kind}
       data-root={data.isRoot ? "" : undefined}
+      data-thumbnail={data.thumbnail ? "" : undefined}
     >
       <Handle
         className="resource-graph-handle"
@@ -601,6 +642,15 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
         position={Position.Bottom}
         type="target"
       />
+      {data.thumbnail ? (
+        <DatasetThumbnailImage
+          alt=""
+          className="resource-graph-flow-node-thumbnail"
+          decoding="async"
+          loading="lazy"
+          thumbnail={data.thumbnail}
+        />
+      ) : null}
       <span className="resource-graph-flow-node-name">
         <ResourceTypeIcon className="size-5 shrink-0" type={data.node.kind} />
         <span>{data.node.name}</span>
@@ -701,18 +751,22 @@ function graphExpansionIcon(mode: GraphExpansionMode) {
 }
 
 function GraphViewportControls({
+  display,
   flow,
   fullscreen,
   graph,
   onResetLayout,
+  onDisplayChange,
   onToggleFullscreen,
   positions,
   surface,
 }: {
+  display: ResourceGraphDisplay
   flow: ReactFlowInstance<ResourceFlowNode, ResourceFlowEdge>
   fullscreen: boolean
   graph: WorkspaceResourceGraph
   onResetLayout: () => void
+  onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
   onToggleFullscreen: () => void
   positions: ReadonlyMap<string, LayoutPosition>
   surface: React.RefObject<HTMLDivElement | null>
@@ -756,6 +810,7 @@ function GraphViewportControls({
       <GraphControl label="Reset graph layout" onClick={onResetLayout}>
         <ResetGraphLayoutIcon aria-hidden="true" />
       </GraphControl>
+      <GraphDisplayMenu display={display} onDisplayChange={onDisplayChange} />
       <GraphControl
         label={fullscreen ? "Exit fullscreen graph" : "View graph fullscreen"}
         onClick={onToggleFullscreen}
@@ -768,6 +823,79 @@ function GraphViewportControls({
         )}
       </GraphControl>
     </div>
+  )
+}
+
+function GraphDisplayMenu({
+  display,
+  onDisplayChange,
+}: {
+  display: ResourceGraphDisplay
+  onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
+}) {
+  return (
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label="Graph display options"
+                  size="icon-sm"
+                  type="button"
+                  variant="outline"
+                />
+              }
+            />
+          }
+        >
+          <GraphDisplayOptionsIcon aria-hidden="true" />
+        </TooltipTrigger>
+        <TooltipContent>Graph display options</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="end" className="min-w-44">
+        <DropdownMenuLabel>Show</DropdownMenuLabel>
+        <DropdownMenuCheckboxItem
+          checked={display.associations}
+          onCheckedChange={(checked) =>
+            onDisplayChange({ associations: checked })
+          }
+        >
+          Associations
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={display.thumbnails}
+          onCheckedChange={(checked) =>
+            onDisplayChange({ thumbnails: checked })
+          }
+        >
+          Dataset thumbnails
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuRadioGroup
+          onValueChange={(value) => {
+            if (
+              value === "auto" ||
+              value === "horizontal" ||
+              value === "vertical"
+            ) {
+              onDisplayChange({ orientation: value })
+            }
+          }}
+          value={display.orientation}
+        >
+          <DropdownMenuLabel>Orientation</DropdownMenuLabel>
+          <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="horizontal">
+            Horizontal
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="vertical">
+            Vertical
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -973,6 +1101,17 @@ function graphStringToken(element: HTMLElement, name: string) {
   const value = getComputedStyle(element).getPropertyValue(name).trim()
   if (!value) throw new Error(`Invalid graph token: ${name}`)
   return value
+}
+
+function resolveLayoutDirection(
+  element: HTMLElement,
+  orientation: GraphOrientation
+): LayoutDirection {
+  if (orientation === "horizontal") return "RIGHT"
+  if (orientation === "vertical") return "DOWN"
+  return graphStringToken(element, "--graph-layout-direction") === "DOWN"
+    ? "DOWN"
+    : "RIGHT"
 }
 
 function graphDensity(nodeCount: number) {

@@ -113,7 +113,7 @@ Keep the implemented local workspace stable while the API-owned web login exchan
 
 ### P3: Explorer convergence
 
-Move advanced graph and data workflows only after the bounded graph prototype demonstrates feature, performance, accessibility, and usage parity. Migrate specialized viewers individually behind stable contracts and accountable ownership. Do not add new runtime handoffs to Explorer.
+The bounded graph workspace now owns typed topology, ELK layout, direct expansion, inspection, accessible table parity, and URL-backed canvas display preferences. Migrate specialized viewers individually behind the build-time registry and typed representation boundary in decision 0030. Establish the shared viewer route and shell with one browser-suitable viewer before moving server-heavy formats. Do not add new runtime handoffs to Explorer.
 
 ### P4: high-scale management and administration
 

@@ -69,6 +69,7 @@ import { HubApiClientError } from "@/data/crucible/result"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
 import type {
+  WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
@@ -89,6 +90,8 @@ import type {
   GraphExpansionState,
 } from "./resource-graph-expansion"
 import { mergeResourceGraphs } from "./resource-graph-merge"
+import { graphWithoutAssociations } from "./resource-graph-display"
+import type { ResourceGraphDisplay } from "./resource-graph-display"
 
 type GraphExpansionQueryResult = {
   data?: WorkspaceResourceGraph
@@ -97,6 +100,10 @@ type GraphExpansionQueryResult = {
   isPending: boolean
   isSuccess: boolean
   refetch: () => Promise<unknown>
+}
+
+type GraphThumbnailQueryResult = {
+  data?: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }
 
 const initialLineageDepth = 3
@@ -118,10 +125,23 @@ function combineResourceGraphExpansionQueries(
   }
 }
 
+function combineGraphThumbnailQueries(
+  results: readonly GraphThumbnailQueryResult[]
+) {
+  return Object.assign(
+    {},
+    ...results.flatMap((result) => (result.data ? [result.data] : []))
+  )
+}
+
 export function ResourceGraphPage({
+  display,
+  onDisplayChange,
   resourceKind,
   resourceMfid,
 }: {
+  display: ResourceGraphDisplay
+  onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
   resourceKind: "dataset" | "sample"
   resourceMfid: string
 }) {
@@ -199,6 +219,31 @@ export function ResourceGraphPage({
     if (!rootGraph) return undefined
     return mergeResourceGraphs(rootGraph, expansions.graphs)
   }, [expansions.graphs, rootGraph])
+  const canvasGraph = useMemo(() => {
+    if (!displayedGraph || display.associations) return displayedGraph
+    return graphWithoutAssociations(displayedGraph)
+  }, [display.associations, displayedGraph])
+  const graphThumbnailBatches = useMemo(() => {
+    if (!display.thumbnails || !canvasGraph) return []
+    const datasetMfids = canvasGraph.nodes
+      .filter((node) => node.kind === "dataset")
+      .map((node) => node.unique_id)
+    return Array.from(
+      { length: Math.ceil(datasetMfids.length / THUMBNAIL_PREVIEW_BATCH_MAX) },
+      (_, index) =>
+        datasetMfids.slice(
+          index * THUMBNAIL_PREVIEW_BATCH_MAX,
+          (index + 1) * THUMBNAIL_PREVIEW_BATCH_MAX
+        )
+    )
+  }, [canvasGraph, display.thumbnails])
+  const graphThumbnails = useQueries({
+    queries: graphThumbnailBatches.map((datasetMfids) => ({
+      ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
+      enabled: datasetMfids.length > 0,
+    })),
+    combine: combineGraphThumbnailQueries,
+  })
   const expansionStates = useMemo(
     () =>
       new Map<string, GraphExpansionState>(
@@ -252,6 +297,9 @@ export function ResourceGraphPage({
 
   const expandNode = useCallback(
     (nodeMfid: string, mode: GraphExpansionMode) => {
+      if (mode === "associations" && !display.associations) {
+        onDisplayChange({ associations: true })
+      }
       const state = expansionStates.get(graphExpansionKey(nodeMfid, mode))
       if (state?.isError) {
         void state.refetch()
@@ -273,7 +321,7 @@ export function ResourceGraphPage({
         }
       })
     },
-    [expansionStates, resourceMfid]
+    [display.associations, expansionStates, onDisplayChange, resourceMfid]
   )
   const inspectNode = useCallback(
     (mfid: string, trigger: HTMLElement) => {
@@ -403,18 +451,21 @@ export function ResourceGraphPage({
         </Empty>
       ) : (
         <ResourceGraphCanvas
+          display={display}
           expansionStates={expansionStates}
           expansionModesByNode={expansionModesByNode}
-          graph={displayedGraph}
+          graph={canvasGraph ?? displayedGraph}
           loading={
             query.isFetching ||
             descendantQuery.isFetching ||
             associationQuery.isFetching ||
             isExpanding
           }
+          onDisplayChange={onDisplayChange}
           onExpand={expandNode}
           rootContext={rootContext}
           onInspect={inspectNode}
+          thumbnails={graphThumbnails}
         />
       )}
 

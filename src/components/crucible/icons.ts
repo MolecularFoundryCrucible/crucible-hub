@@ -102,6 +102,7 @@ export {
   Maximize2 as EnterGraphFullscreenIcon,
   Minimize2 as ExitGraphFullscreenIcon,
   RotateCcw as ResetGraphLayoutIcon,
+  SlidersHorizontal as GraphDisplayOptionsIcon,
   ZoomIn as ZoomInGraphIcon,
   ZoomOut as ZoomOutGraphIcon,
   ScanText as DescriptionFieldIcon,
