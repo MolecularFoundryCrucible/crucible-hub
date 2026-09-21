@@ -24,16 +24,31 @@ export function ResourceOverviewPending({
   return (
     <div aria-label="Loading resource overview" role="status">
       <ContentGrid variant="detail">
-        <ContentGridItem className="flex flex-col gap-page-section" span="wide">
-          <ResourceCardPending title="Summary" />
-          {dataset ? <ResourceCardPending title="Files" /> : null}
+        <ContentGridItem
+          className="contents xl:flex xl:flex-col xl:gap-page-section"
+          span="wide"
+        >
+          <div className="order-1 min-w-0 xl:order-none">
+            <ResourceCardPending title="Summary" />
+          </div>
+          {dataset ? (
+            <div className="order-4 min-w-0 xl:order-none">
+              <ResourceCardPending title="Files" />
+            </div>
+          ) : null}
         </ContentGridItem>
         <ContentGridItem
-          className="flex flex-col gap-page-section"
+          className="contents xl:flex xl:flex-col xl:gap-page-section"
           span="narrow"
         >
-          <ResourceCardPending title="Identity" />
-          {dataset ? <ResourceCardPending title="Thumbnails" /> : null}
+          <div className="order-2 min-w-0 xl:order-none">
+            <ResourceCardPending title="Identity" />
+          </div>
+          {dataset ? (
+            <div className="order-3 min-w-0 xl:order-none">
+              <ResourceCardPending title="Thumbnails" />
+            </div>
+          ) : null}
         </ContentGridItem>
         {instrument ? (
           <ContentGridItem span="full">
@@ -41,10 +56,10 @@ export function ResourceOverviewPending({
           </ContentGridItem>
         ) : (
           <>
-            <ContentGridItem span="wide">
+            <ContentGridItem className="order-5 xl:order-none" span="wide">
               <ResourceCardPending title="Scientific metadata" />
             </ContentGridItem>
-            <ContentGridItem span="narrow">
+            <ContentGridItem className="order-6 xl:order-none" span="narrow">
               <ResourceCardPending title="Relationships" />
             </ContentGridItem>
           </>

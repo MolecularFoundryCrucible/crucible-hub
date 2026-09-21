@@ -256,31 +256,45 @@ export function ResourceOverview({
 
   return (
     <ContentGrid variant="detail">
-      <ContentGridItem className="flex flex-col gap-page-section" span="wide">
-        <ResourceSummaryCard mode={mode} resource={resource} scope={scope} />
+      <ContentGridItem
+        className="contents xl:flex xl:flex-col xl:gap-page-section"
+        span="wide"
+      >
+        <div className="order-1 min-w-0 xl:order-none">
+          <ResourceSummaryCard mode={mode} resource={resource} scope={scope} />
+        </div>
         {resource.kind === "dataset" ? (
-          <DatasetFiles datasetMfid={resource.unique_id} />
+          <div className="order-4 min-w-0 xl:order-none">
+            <DatasetFiles datasetMfid={resource.unique_id} />
+          </div>
         ) : null}
       </ContentGridItem>
-      <ContentGridItem className="flex flex-col gap-page-section" span="narrow">
-        <IdentityCard resource={resource} />
+      <ContentGridItem
+        className="contents xl:flex xl:flex-col xl:gap-page-section"
+        span="narrow"
+      >
+        <div className="order-2 min-w-0 xl:order-none">
+          <IdentityCard resource={resource} />
+        </div>
         {resource.kind === "dataset" ? (
-          <DatasetThumbnailsCard
-            canEdit={resource.capabilities?.can_edit === true}
-            datasetMfid={resource.unique_id}
-            mode={mode}
-            scope={scope}
-          />
+          <div className="order-3 min-w-0 xl:order-none">
+            <DatasetThumbnailsCard
+              canEdit={resource.capabilities?.can_edit === true}
+              datasetMfid={resource.unique_id}
+              mode={mode}
+              scope={scope}
+            />
+          </div>
         ) : null}
       </ContentGridItem>
-      <ContentGridItem span="wide">
+      <ContentGridItem className="order-5 xl:order-none" span="wide">
         <ScientificMetadataEditor
           mode={mode}
           resource={resource}
           scope={scope}
         />
       </ContentGridItem>
-      <ContentGridItem span="narrow">
+      <ContentGridItem className="order-6 xl:order-none" span="narrow">
         <ResourceRelationshipManager resource={resource} scope={scope} />
       </ContentGridItem>
     </ContentGrid>
