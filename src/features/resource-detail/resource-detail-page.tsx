@@ -273,15 +273,15 @@ export function ResourceOverview({
           />
         ) : null}
       </ContentGridItem>
-      <ContentGridItem span="full">
-        <ContentGrid variant="split">
-          <ResourceRelationshipManager resource={resource} scope={scope} />
-          <ScientificMetadataEditor
-            mode={mode}
-            resource={resource}
-            scope={scope}
-          />
-        </ContentGrid>
+      <ContentGridItem span="wide">
+        <ScientificMetadataEditor
+          mode={mode}
+          resource={resource}
+          scope={scope}
+        />
+      </ContentGridItem>
+      <ContentGridItem span="narrow">
+        <ResourceRelationshipManager resource={resource} scope={scope} />
       </ContentGridItem>
     </ContentGrid>
   )

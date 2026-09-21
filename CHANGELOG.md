@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Aligned Scientific metadata with the wide resource-detail column and Relationships with the narrow column while preserving a single-column reading order on compact screens.
+
 - Increased scientific metadata density with compact keys, tighter rows, and reduced nested indentation while preserving readable scalar values.
 
 - Moved recently viewed sidebar resources below Administration when administrative navigation is available.

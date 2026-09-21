@@ -35,16 +35,20 @@ export function ResourceOverviewPending({
           <ResourceCardPending title="Identity" />
           {dataset ? <ResourceCardPending title="Thumbnails" /> : null}
         </ContentGridItem>
-        <ContentGridItem span="full">
-          {instrument ? (
+        {instrument ? (
+          <ContentGridItem span="full">
             <ResourceCardPending title="Scientific metadata" />
-          ) : (
-            <ContentGrid variant="split">
-              <ResourceCardPending title="Relationships" />
+          </ContentGridItem>
+        ) : (
+          <>
+            <ContentGridItem span="wide">
               <ResourceCardPending title="Scientific metadata" />
-            </ContentGrid>
-          )}
-        </ContentGridItem>
+            </ContentGridItem>
+            <ContentGridItem span="narrow">
+              <ResourceCardPending title="Relationships" />
+            </ContentGridItem>
+          </>
+        )}
       </ContentGrid>
     </div>
   )
