@@ -697,15 +697,16 @@ function IngestionStatusBadge({
           normalized === "completed" ||
           normalized === "success"
         ? "success"
-        : normalized === "pending" ||
-            normalized === "queued" ||
-            normalized === "requested" ||
-            normalized === "running" ||
-            normalized === "processing" ||
-            normalized === "in_progress" ||
-            normalized === "retrying"
+        : normalized === "retrying"
           ? "warning"
-          : "outline"
+          : normalized === "pending" ||
+              normalized === "queued" ||
+              normalized === "requested" ||
+              normalized === "running" ||
+              normalized === "processing" ||
+              normalized === "in_progress"
+            ? "info"
+            : "outline"
   return (
     <Badge className="capitalize" variant={variant}>
       {label}

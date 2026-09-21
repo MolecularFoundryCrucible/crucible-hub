@@ -3,7 +3,7 @@ export const resourceSectionLinkClassName =
 
 export const resourceSectionActiveProps = {
   className:
-    "text-foreground! after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-brand-crucible-orange after:content-['']",
+    "text-foreground! after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-selection after:content-['']",
 }
 
 export function ResourceSectionNavigation({

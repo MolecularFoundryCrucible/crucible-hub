@@ -22,14 +22,13 @@ import {
   AccessPendingIcon,
   AddAccessGrantIcon,
   ManageAccessIcon,
-  PrivateAccessIcon,
-  PublicAccessIcon,
   RevokeAccessGrantIcon,
 } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
+import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -552,17 +551,7 @@ function ManagedResourceAccess({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
             <div className="flex min-w-0 flex-col gap-1">
               <h3 className="font-heading text-label">Public access</h3>
-              <Badge
-                className="w-fit"
-                variant={resource.public ? "default" : "outline"}
-              >
-                {resource.public ? (
-                  <PublicAccessIcon data-icon="inline-start" />
-                ) : (
-                  <PrivateAccessIcon data-icon="inline-start" />
-                )}
-                {resource.public ? "Public" : "Private"}
-              </Badge>
+              <VisibilityBadge isPublic={resource.public} />
             </div>
             <Button
               className="max-sm:w-full"

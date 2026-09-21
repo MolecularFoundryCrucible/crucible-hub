@@ -20,6 +20,7 @@ import {
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import {
   ResourceSectionNavigation,
   resourceSectionActiveProps,
@@ -34,7 +35,6 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -470,9 +470,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
                           : "visibility-private"
                       }
                     />
-                    <Badge variant={resource.public ? "secondary" : "outline"}>
-                      {resource.public ? "Public" : "Private"}
-                    </Badge>
+                    <VisibilityBadge isPublic={resource.public} />
                   </dd>
                 </div>
               )}

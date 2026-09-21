@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router"
 
+import {
+  AccessRoleBadge,
+  accessRoles,
+} from "@/components/crucible/access-role-badge"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import {
   DataCollectionIcon,
   PrincipalTypeIcon,
   ResourceTypeIcon,
 } from "@/components/crucible/resource-type-icon"
+import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import { ThemeSelect } from "@/components/theme-select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,6 +30,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -175,12 +181,19 @@ function DesignSystemFixtures() {
               <Button variant="ghost">Ghost</Button>
               <Button variant="destructive">Remove access</Button>
               <Button disabled>Unavailable</Button>
+              <div className="max-w-action basis-full">
+                <Input
+                  aria-label="Input boundary specimen"
+                  placeholder="Input"
+                />
+              </div>
             </CardContent>
             <CardFooter className="flex-wrap gap-2">
               <Badge variant="success">Active</Badge>
               <Badge variant="secondary">Member</Badge>
               <Badge variant="success">Complete</Badge>
-              <Badge variant="warning">Pending</Badge>
+              <Badge variant="info">Processing</Badge>
+              <Badge variant="warning">Retrying</Badge>
               <Badge variant="outline">Limited details</Badge>
               <Badge variant="destructive">Failed</Badge>
             </CardFooter>
@@ -225,6 +238,14 @@ function DesignSystemFixtures() {
                   </p>
                 </div>
                 <Badge variant="outline">Account</Badge>
+              </div>
+              <Separator />
+              <div className="flex flex-wrap items-center gap-2">
+                {accessRoles.map((role) => (
+                  <AccessRoleBadge key={role} role={role} />
+                ))}
+                <VisibilityBadge isPublic />
+                <VisibilityBadge isPublic={false} />
               </div>
               <Separator />
               <div className="grid gap-3">
