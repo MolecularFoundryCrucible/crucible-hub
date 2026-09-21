@@ -81,6 +81,7 @@ export {
   Unlink as UnlinkRelationshipIcon,
   LoaderCircle as RelationshipPendingIcon,
   Pencil as ManageAccessIcon,
+  Check as FinishManagingAccessIcon,
   ShieldPlus as AddAccessGrantIcon,
   ShieldMinus as RevokeAccessGrantIcon,
   Globe2 as PublicAccessIcon,

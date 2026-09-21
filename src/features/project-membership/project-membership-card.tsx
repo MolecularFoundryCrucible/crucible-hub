@@ -5,12 +5,12 @@ import {
   ProjectRoleBadge,
   sortProjectMembers,
 } from "@/components/crucible/project-members"
+import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import {
   AddMemberIcon,
-  EditMembersIcon,
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
@@ -237,30 +237,12 @@ export function ProjectMembershipCard({
         <CardTitle>Access management</CardTitle>
         {canManageMembers ? (
           <CardAction>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    aria-label={
-                      editingRoles
-                        ? "Finish managing members"
-                        : "Manage members"
-                    }
-                    aria-pressed={editingRoles}
-                    disabled={mutationPending}
-                    onClick={() => setEditingRoles((current) => !current)}
-                    size="icon-sm"
-                    type="button"
-                    variant="outline"
-                  />
-                }
-              >
-                <EditMembersIcon aria-hidden="true" />
-              </TooltipTrigger>
-              <TooltipContent>
-                {editingRoles ? "Finish managing members" : "Manage members"}
-              </TooltipContent>
-            </Tooltip>
+            <AccessManagementToggle
+              active={editingRoles}
+              disabled={mutationPending}
+              onChange={setEditingRoles}
+              subject="members"
+            />
           </CardAction>
         ) : null}
       </CardHeader>
@@ -329,14 +311,12 @@ export function ProjectMembershipCard({
                       ) : (
                         <ProjectRoleBadge role={member.role} />
                       )}
-                      <span className="inline-flex size-4 items-center justify-center">
-                        {pending ? (
-                          <SavingChangesIcon
-                            aria-label={`Saving ${memberName(member)}'s membership`}
-                            className="motion-safe:animate-spin"
-                          />
-                        ) : null}
-                      </span>
+                      {pending ? (
+                        <SavingChangesIcon
+                          aria-label={`Saving ${memberName(member)}'s membership`}
+                          className="motion-safe:animate-spin"
+                        />
+                      ) : null}
                       {canRemove ? (
                         <Tooltip>
                           <TooltipTrigger

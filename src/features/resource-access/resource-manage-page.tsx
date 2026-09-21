@@ -13,6 +13,7 @@ import {
   isAccessGrantRole,
   permittedAccessGrantRoles,
 } from "@/components/crucible/access-role-badge"
+import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   ConfirmationAlertDialog,
@@ -21,7 +22,6 @@ import {
 import {
   AccessPendingIcon,
   AddAccessGrantIcon,
-  ManageAccessIcon,
   RevokeAccessGrantIcon,
 } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -55,11 +55,6 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import {
   publishWorkspaceResource,
   revokeWorkspaceResourceAccess,
@@ -369,30 +364,12 @@ function ManagedResourceAccess({
         <CardHeader actionLayout="inline">
           <CardTitle>Access management</CardTitle>
           <CardAction>
-            <div className="flex flex-wrap justify-end gap-2">
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      aria-label={
-                        managing ? "Finish managing access" : "Manage access"
-                      }
-                      aria-pressed={managing}
-                      disabled={mutationPending}
-                      onClick={() => setManaging((current) => !current)}
-                      size="icon-sm"
-                      type="button"
-                      variant="outline"
-                    />
-                  }
-                >
-                  <ManageAccessIcon aria-hidden="true" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {managing ? "Finish managing access" : "Manage access"}
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <AccessManagementToggle
+              active={managing}
+              disabled={mutationPending}
+              onChange={setManaging}
+              subject="access"
+            />
           </CardAction>
         </CardHeader>
         <CardContent>
@@ -460,14 +437,12 @@ function ManagedResourceAccess({
                       </p>
                     </div>
                     <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
-                      <span className="inline-flex size-4 items-center justify-center">
-                        {pending ? (
-                          <AccessPendingIcon
-                            aria-label={`Saving access for ${grantName(grant)}`}
-                            className="motion-safe:animate-spin"
-                          />
-                        ) : null}
-                      </span>
+                      {pending ? (
+                        <AccessPendingIcon
+                          aria-label={`Saving access for ${grantName(grant)}`}
+                          className="motion-safe:animate-spin"
+                        />
+                      ) : null}
                       <span className="flex min-w-0 flex-1 justify-end sm:w-access-role-control sm:flex-none">
                         {editable ? (
                           <NativeSelect

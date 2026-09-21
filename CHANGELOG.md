@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Aligned access management across projects, instruments, samples, and datasets with a shared visible management mode, compact pending indicators, and instrument manager and operator role presentation.
+
 - Calibrated light and dark surface hierarchy, control boundaries, focus indicators, navigation selection, semantic status badges, visibility presentation, and graph resource colors through shared contrast-checked design roles.
 
 - Aligned Scientific metadata with the wide resource-detail column and Relationships with the narrow column while using a compact reading order that places Identity and Thumbnails before Files and Relationships before metadata.

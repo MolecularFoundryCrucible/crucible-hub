@@ -1,16 +1,16 @@
 import { useId, useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
+import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
+import { AccessRoleBadge } from "@/components/crucible/access-role-badge"
 import {
   AddMemberIcon,
-  ManageAccessIcon,
   RemoveMemberIcon,
   SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
-import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { Button } from "@/components/ui/button"
 import {
@@ -58,8 +58,8 @@ function operatorName(operator: OperatorProfile) {
 
 function actionErrorMessage(action: "add" | "remove") {
   return action === "add"
-    ? "The service account could not be added."
-    : "The service account could not be removed."
+    ? "The service account could not be assigned."
+    : "The service account could not be unassigned."
 }
 
 export function InstrumentOperatorsCard({
@@ -170,88 +170,68 @@ export function InstrumentOperatorsCard({
           <CardTitle>Access management</CardTitle>
           {canManage ? (
             <CardAction>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      aria-label={
-                        managing
-                          ? "Finish managing operators"
-                          : "Manage operators"
-                      }
-                      aria-pressed={managing}
-                      disabled={mutationPending}
-                      onClick={() => setManaging((current) => !current)}
-                      size="icon-sm"
-                      type="button"
-                      variant="outline"
-                    />
-                  }
-                >
-                  <ManageAccessIcon aria-hidden="true" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {managing ? "Finish managing operators" : "Manage operators"}
-                </TooltipContent>
-              </Tooltip>
+              <AccessManagementToggle
+                active={managing}
+                disabled={mutationPending}
+                onChange={setManaging}
+                subject="operators"
+              />
             </CardAction>
           ) : null}
         </CardHeader>
         <CardContent>
-          <h3 className="font-heading text-label">Operators</h3>
+          <h3 className="font-heading text-label">Direct access</h3>
           <p className="mb-3 text-body text-muted-foreground">
-            Service accounts collect data on behalf of this instrument.
+            Operators are service accounts assigned to this instrument.
           </p>
-          {!canManage ? (
-            <p className="text-body text-muted-foreground">
-              Operator management is not available for this instrument.
-            </p>
-          ) : operatorsQuery.isPending ? (
-            <p className="text-body text-muted-foreground" role="status">
-              Loading operators…
-            </p>
-          ) : operatorsQuery.isError ? (
-            <p className="text-body text-destructive" role="alert">
-              Operators could not be loaded.
-            </p>
-          ) : operators.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              No service accounts are currently assigned.
-            </p>
-          ) : (
-            <ul
-              aria-label="Instrument operators"
-              className="flex flex-col gap-3"
-            >
-              {operators.map((operator) => {
-                const pending =
-                  removeMutation.isPending &&
-                  removeMutation.variables === operator.unique_id
-                return (
-                  <li
-                    className="flex min-w-0 items-center gap-3"
-                    key={operator.unique_id}
-                  >
-                    <PrincipalTypeIcon type="service_account" />
-                    <PersonLink
-                      className="flex-1"
-                      person={{ ...operator, is_service_account: true }}
-                      presentation="stacked"
-                    />
-                    <span className="inline-flex size-4 shrink-0 items-center justify-center">
-                      {pending ? (
-                        <SavingChangesIcon
-                          aria-label={`Removing ${operatorName(operator)}`}
-                          className="motion-safe:animate-spin"
-                        />
-                      ) : null}
-                    </span>
+          <ul
+            aria-label="Instrument direct access"
+            className="flex flex-col gap-3"
+          >
+            {instrument.owner ? (
+              <li className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <PersonLink
+                  className="flex-1"
+                  person={instrument.owner}
+                  presentation="avatar"
+                />
+                <div className="flex min-h-8 w-full items-center justify-end sm:w-auto sm:shrink-0">
+                  <AccessRoleBadge label="Manager" role="owner" />
+                </div>
+              </li>
+            ) : (
+              <li className="text-body text-muted-foreground">
+                Manager details are unavailable.
+              </li>
+            )}
+            {operators.map((operator) => {
+              const pending =
+                removeMutation.isPending &&
+                removeMutation.variables === operator.unique_id
+              return (
+                <li
+                  className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
+                  key={operator.unique_id}
+                >
+                  <PersonLink
+                    className="flex-1"
+                    person={{ ...operator, is_service_account: true }}
+                    presentation="avatar"
+                  />
+                  <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
+                    {pending ? (
+                      <SavingChangesIcon
+                        aria-label={`Unassigning ${operatorName(operator)}`}
+                        className="motion-safe:animate-spin"
+                      />
+                    ) : null}
+                    <AccessRoleBadge label="Operator" role="editor" />
                     {managing ? (
                       <Tooltip>
                         <TooltipTrigger
                           render={
                             <Button
-                              aria-label={`Remove ${operatorName(operator)}`}
+                              aria-label={`Unassign ${operatorName(operator)}`}
                               disabled={mutationPending}
                               onClick={() => {
                                 setError(undefined)
@@ -265,14 +245,41 @@ export function InstrumentOperatorsCard({
                         >
                           <RemoveMemberIcon aria-hidden="true" />
                         </TooltipTrigger>
-                        <TooltipContent>Remove operator</TooltipContent>
+                        <TooltipContent>Unassign operator</TooltipContent>
                       </Tooltip>
                     ) : null}
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+          {!canManage ? (
+            <p className="text-body text-muted-foreground">
+              Operator management is not available for this instrument.
+            </p>
+          ) : operatorsQuery.isPending ? (
+            <p className="mt-3 text-body text-muted-foreground" role="status">
+              Loading operators…
+            </p>
+          ) : operatorsQuery.isError ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <p className="text-body text-destructive" role="alert">
+                Operators could not be loaded.
+              </p>
+              <Button
+                onClick={() => void operatorsQuery.refetch()}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                Retry
+              </Button>
+            </div>
+          ) : operators.length === 0 ? (
+            <p className="mt-3 text-body text-muted-foreground">
+              No service accounts are currently assigned.
+            </p>
+          ) : null}
           {error && !addOpen && !removingOperator ? (
             <p className="mt-4 text-body text-destructive" role="alert">
               {error}
@@ -352,10 +359,10 @@ export function InstrumentOperatorsCard({
       </Dialog>
 
       <ConfirmationAlertDialog
-        confirmLabel="Remove operator"
+        confirmLabel="Unassign operator"
         description={
           removingOperator
-            ? `${operatorName(removingOperator)} will no longer collect data for this instrument.`
+            ? `${operatorName(removingOperator)} will lose operator access to this instrument.`
             : null
         }
         error={removingOperator ? error : undefined}
@@ -365,7 +372,7 @@ export function InstrumentOperatorsCard({
         onConfirm={() => void removeOperator()}
         open={Boolean(removingOperator)}
         pending={removeMutation.isPending}
-        title="Remove operator?"
+        title="Unassign operator?"
         variant="destructive"
       />
     </>

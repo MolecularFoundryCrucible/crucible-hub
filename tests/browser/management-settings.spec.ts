@@ -282,7 +282,7 @@ test("instrument Lifecycle applies confirmed status changes and retains failed s
   ).toBeVisible()
 })
 
-test("instrument Operators removes a service account after confirmation", async ({
+test("instrument access shows its manager and unassigns an operator after confirmation", async ({
   page,
 }) => {
   await page.goto(
@@ -290,18 +290,24 @@ test("instrument Operators removes a service account after confirmation", async 
   )
   await page.waitForLoadState("networkidle")
 
-  const operators = page.getByRole("list", { name: "Instrument operators" })
-  await expect(operators.getByText("@beamline-collector")).toBeVisible()
+  const access = page.getByRole("list", { name: "Instrument direct access" })
+  await expect(access.getByText("Avery Chen", { exact: true })).toBeVisible()
+  await expect(access.getByText("Manager", { exact: true })).toBeVisible()
+  await expect(access.getByText("@beamline-collector")).toBeVisible()
+  await expect(access.getByText("Operator", { exact: true })).toBeVisible()
   await page.getByRole("button", { name: "Manage operators" }).click()
-  await operators
-    .getByRole("button", { name: "Remove @beamline-collector" })
+  await expect(
+    page.getByRole("button", { name: "Finish managing operators" })
+  ).toBeVisible()
+  await access
+    .getByRole("button", { name: "Unassign @beamline-collector" })
     .click()
 
-  const dialog = page.getByRole("alertdialog", { name: "Remove operator?" })
+  const dialog = page.getByRole("alertdialog", { name: "Unassign operator?" })
   await expect(dialog).toContainText("@beamline-collector")
-  await dialog.getByRole("button", { name: "Remove operator" }).click()
+  await dialog.getByRole("button", { name: "Unassign operator" }).click()
   await expect(dialog).toBeHidden()
-  await expect(operators.getByText("@beamline-collector")).toHaveCount(0)
+  await expect(access.getByText("@beamline-collector")).toHaveCount(0)
 })
 
 test("project Ownership previews and confirms the selected person", async ({
