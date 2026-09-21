@@ -29,8 +29,10 @@ import {
   ExitGraphFullscreenIcon,
   FitGraphIcon,
   GraphAncestorsIcon,
+  GraphAncestorsVerticalIcon,
   GraphAssociationsIcon,
   GraphDescendantsIcon,
+  GraphDescendantsVerticalIcon,
   GraphDisplayOptionsIcon,
   LoadingMoreIcon,
   ResetGraphLayoutIcon,
@@ -614,6 +616,7 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       className="resource-graph-flow-node"
       data-dimmed={data.dimmed ? "" : undefined}
       data-kind={data.node.kind}
+      data-layout-direction={data.layoutDirection}
       data-root={data.isRoot ? "" : undefined}
       data-thumbnail={data.thumbnail ? "" : undefined}
     >
@@ -665,6 +668,7 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
         <GraphNodeExpansionControls
           modes={expansionModes}
           expansionStates={data.expansionStates}
+          layoutDirection={data.layoutDirection}
           node={data.node}
           onExpand={data.onExpand}
         />
@@ -678,11 +682,13 @@ const nodeTypes = { resource: ResourceGraphNode }
 function GraphNodeExpansionControls({
   modes,
   expansionStates,
+  layoutDirection,
   node,
   onExpand,
 }: {
   modes: readonly GraphExpansionMode[]
   expansionStates: ReadonlyMap<string, GraphExpansionState>
+  layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
 }) {
@@ -691,6 +697,7 @@ function GraphNodeExpansionControls({
       {modes.map((mode) => (
         <GraphNodeExpansionAction
           key={mode}
+          layoutDirection={layoutDirection}
           mode={mode}
           node={node}
           onExpand={onExpand}
@@ -703,17 +710,19 @@ function GraphNodeExpansionControls({
 
 function GraphNodeExpansionAction({
   mode,
+  layoutDirection,
   node,
   onExpand,
   state,
 }: {
   mode: GraphExpansionMode
+  layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   state?: GraphExpansionState
 }) {
   const pending = graphExpansionPending(state)
-  const Icon = graphExpansionIcon(mode)
+  const Icon = graphExpansionIcon(mode, layoutDirection)
   const modeLabel = graphExpansionModeLabel(mode)
   const label = state?.isError
     ? `Retry loading ${modeLabel.toLowerCase()} from ${node.name}`
@@ -747,7 +756,14 @@ function GraphNodeExpansionAction({
   )
 }
 
-function graphExpansionIcon(mode: GraphExpansionMode) {
+function graphExpansionIcon(
+  mode: GraphExpansionMode,
+  layoutDirection: LayoutDirection
+) {
+  if (layoutDirection === "DOWN") {
+    if (mode === "ancestors") return GraphAncestorsVerticalIcon
+    if (mode === "descendants") return GraphDescendantsVerticalIcon
+  }
   if (mode === "ancestors") return GraphAncestorsIcon
   if (mode === "descendants") return GraphDescendantsIcon
   return GraphAssociationsIcon
