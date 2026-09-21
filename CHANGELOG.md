@@ -82,6 +82,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Smoothed graph expansion by anchoring the activated node, interpolating React Flow positions with attached edges, introducing new nodes from their expansion origin, fading in additions, and cancelling obsolete layout work.
 - Centered graph-node identity groups while keeping wrapped names and their sample type or measurement left aligned within one shared copy column.
 - Refined graph expansion actions and relationship paths with shared circular controls, directional more icons, controls offset from connection anchors, rounded lineage routing, lighter associations, compact open arrowheads, and synchronized highlight states.
 - Aligned graph node expansion controls with the selected layout direction, including vertical ancestor and descendant arrows and a separate association position.

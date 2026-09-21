@@ -394,6 +394,7 @@
   --graph-label-width: 164;
   --graph-label-offset-x: 42;
   --graph-layout-duration: 360;
+  --graph-node-enter-scale: 0.96;
   --graph-layout-layer-gap: 96;
   --graph-layout-node-gap: 40;
   --graph-fit-padding: 52;
@@ -600,7 +601,8 @@ body {
   transition:
     opacity var(--motion-fast),
     border-color var(--motion-fast),
-    box-shadow var(--motion-fast);
+    box-shadow var(--motion-fast),
+    transform calc(var(--graph-layout-duration) * 1ms) ease-out;
 }
 
 .resource-graph-flow-node[data-kind="sample"] {
@@ -624,6 +626,11 @@ body {
 
 .resource-graph-flow-node[data-dimmed] {
   opacity: var(--graph-muted-opacity);
+}
+
+.resource-graph-flow-node[data-entering] {
+  opacity: 0;
+  transform: scale(var(--graph-node-enter-scale));
 }
 
 .resource-graph-flow-node-content {
@@ -695,7 +702,6 @@ body {
 
 .react-flow__node-resource {
   cursor: grab;
-  transition: transform calc(var(--graph-layout-duration) * 1ms) ease-out;
 }
 
 .react-flow__node-resource.dragging {
@@ -781,6 +787,14 @@ body {
     opacity var(--motion-fast),
     stroke var(--motion-fast),
     stroke-width var(--motion-fast);
+}
+
+.resource-graph-surface .react-flow__edge {
+  transition: opacity calc(var(--graph-layout-duration) * 1ms) ease-out;
+}
+
+.resource-graph-surface .resource-graph-edge-entering {
+  opacity: 0;
 }
 
 .resource-graph-surface .resource-graph-edge-associated .react-flow__edge-path {
