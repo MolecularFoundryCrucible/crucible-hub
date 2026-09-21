@@ -673,22 +673,33 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
         position={Position.Bottom}
         type="target"
       />
-      {data.thumbnail ? (
-        <DatasetThumbnailImage
-          alt=""
-          className="resource-graph-flow-node-thumbnail"
-          decoding="async"
-          loading="lazy"
-          thumbnail={data.thumbnail}
-        />
-      ) : null}
-      <span className="resource-graph-flow-node-name">
-        <ResourceTypeIcon className="size-5 shrink-0" type={data.node.kind} />
-        <span>{data.node.name}</span>
-      </span>
-      {data.context ? (
-        <span className="resource-graph-flow-node-context">{data.context}</span>
-      ) : null}
+      <div className="resource-graph-flow-node-content">
+        {data.thumbnail ? (
+          <DatasetThumbnailImage
+            alt=""
+            className="resource-graph-flow-node-thumbnail"
+            decoding="async"
+            loading="lazy"
+            thumbnail={data.thumbnail}
+          />
+        ) : null}
+        <div className="resource-graph-flow-node-identity">
+          <ResourceTypeIcon
+            className="resource-graph-flow-node-icon"
+            type={data.node.kind}
+          />
+          <div className="resource-graph-flow-node-copy">
+            <span className="resource-graph-flow-node-name">
+              {data.node.name}
+            </span>
+            {data.context ? (
+              <span className="resource-graph-flow-node-context">
+                {data.context}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </div>
       {expansionModes.length > 0 ? (
         <GraphNodeExpansionControls
           modes={expansionModes}

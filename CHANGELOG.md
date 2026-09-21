@@ -82,6 +82,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Centered graph-node identity groups while keeping wrapped names and their sample type or measurement left aligned within one shared copy column.
 - Refined graph expansion actions and relationship paths with shared circular controls, directional more icons, controls offset from connection anchors, rounded lineage routing, lighter associations, compact open arrowheads, and synchronized highlight states.
 - Aligned graph node expansion controls with the selected layout direction, including vertical ancestor and descendant arrows and a separate association position.
 - Strengthened the resource inspector hierarchy by applying the shared semibold section-title typography to wrapping resource names.

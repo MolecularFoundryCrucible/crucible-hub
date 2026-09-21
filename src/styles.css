@@ -626,50 +626,66 @@ body {
   opacity: var(--graph-muted-opacity);
 }
 
-.resource-graph-flow-node[data-thumbnail] {
+.resource-graph-flow-node-content {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.resource-graph-flow-node[data-thumbnail] .resource-graph-flow-node-content {
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-content: center;
+  align-items: center;
   column-gap: var(--spacing-3);
 }
 
 .resource-graph-flow-node-thumbnail {
   width: 3rem;
   height: 3rem;
-  grid-row: 1 / 3;
-  align-self: center;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--card);
   object-fit: contain;
 }
 
-.resource-graph-flow-node[data-thumbnail] .resource-graph-flow-node-context {
-  padding-left: 0;
+.resource-graph-flow-node-identity {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+  justify-self: center;
+  gap: var(--spacing-2);
+}
+
+.resource-graph-flow-node-icon {
+  width: calc(var(--graph-icon-size) * 1px);
+  height: calc(var(--graph-icon-size) * 1px);
+  flex: none;
+}
+
+.resource-graph-flow-node-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
 }
 
 .resource-graph-flow-node-name {
-  display: flex;
-  min-width: 0;
-  align-items: flex-start;
-  gap: var(--spacing-2);
-  font-size: calc(var(--graph-font-size) * 1px);
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.resource-graph-flow-node-name > span {
   display: -webkit-box;
   overflow: hidden;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  font-size: calc(var(--graph-font-size) * 1px);
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .resource-graph-flow-node-context {
   overflow: hidden;
-  padding-left: calc(var(--graph-icon-size) * 1px + var(--spacing-2));
   color: color-mix(in srgb, var(--graph-foreground) 68%, transparent);
   font-size: var(--text-supporting);
   line-height: var(--text-supporting--line-height);
