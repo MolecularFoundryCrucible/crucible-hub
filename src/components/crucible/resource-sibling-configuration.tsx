@@ -8,7 +8,10 @@ import type {
   ActiveResourceSiblingNavigation,
   ResourceSiblingConfiguration,
 } from "@/components/crucible/resource-sibling-navigation"
-import { useActivateResourceSiblingCollection } from "@/components/crucible/resource-sibling-navigation"
+import {
+  useActivateResourceSiblingCollection,
+  useClearResourceSiblingNavigation,
+} from "@/components/crucible/resource-sibling-navigation"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -42,6 +45,7 @@ export function ResourceSiblingConfigurationAction({
 }) {
   const queryClient = useQueryClient()
   const activate = useActivateResourceSiblingCollection()
+  const clear = useClearResourceSiblingNavigation()
   const [open, setOpen] = useState(false)
   const [configuration, setConfiguration] = useState(defaultConfiguration)
   const [pending, setPending] = useState(false)
@@ -76,7 +80,7 @@ export function ResourceSiblingConfigurationAction({
     }
   }
 
-  const title = navigation?.label ?? "Browse nearby resources"
+  const title = navigation?.label ?? "Browse nearby"
 
   return (
     <Dialog onOpenChange={changeOpen} open={open}>
@@ -169,6 +173,20 @@ export function ResourceSiblingConfigurationAction({
           ) : null}
         </form>
         <DialogFooter>
+          {navigation ? (
+            <Button
+              className="sm:mr-auto"
+              disabled={pending}
+              onClick={() => {
+                clear?.()
+                setOpen(false)
+              }}
+              type="button"
+              variant="ghost"
+            >
+              Clear sequence
+            </Button>
+          ) : null}
           <DialogClose render={<Button type="button" variant="outline" />}>
             Cancel
           </DialogClose>

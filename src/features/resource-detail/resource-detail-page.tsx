@@ -105,6 +105,18 @@ export function ResourceWorkspace({
           params: { datasetMfid: resourceMfid },
           to: "/datasets/$datasetMfid/graph",
         })
+  const overviewMatch =
+    resourceKind === "sample"
+      ? matchRoute({
+          fuzzy: false,
+          params: { sampleMfid: resourceMfid },
+          to: "/samples/$sampleMfid",
+        })
+      : matchRoute({
+          fuzzy: false,
+          params: { datasetMfid: resourceMfid },
+          to: "/datasets/$datasetMfid",
+        })
   const navigation = useResourcePreviewNavigation({
     fromProject,
     kind: "resource",
@@ -205,17 +217,19 @@ export function ResourceWorkspace({
         <ResourceNavigation
           actions={
             <>
-              <ResourceSiblingNavigationControls
-                configurationAction={
-                  <ResourceSiblingConfigurationAction
-                    navigation={siblingNavigation}
-                    resource={resource}
-                    scope={scope}
-                  />
-                }
-                fromProject={fromProject}
-                navigation={siblingNavigation}
-              />
+              {overviewMatch ? (
+                <ResourceSiblingNavigationControls
+                  configurationAction={
+                    <ResourceSiblingConfigurationAction
+                      navigation={siblingNavigation}
+                      resource={resource}
+                      scope={scope}
+                    />
+                  }
+                  fromProject={fromProject}
+                  navigation={siblingNavigation}
+                />
+              ) : null}
               <EntityRefreshAction
                 exact={false}
                 label={`Refresh details for ${resource.name}`}

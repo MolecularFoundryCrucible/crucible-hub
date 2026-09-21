@@ -82,6 +82,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Limited Browse nearby configuration, sibling controls, and keyboard navigation to resource Overview, replaced inactive boundary arrows with one clear entry action, and retained active sequences across other resource sections with an explicit Clear sequence action.
 - Unified project and instrument directories with 100-row cursor pages, appended automatic continuation, explicit Load more recovery, loaded progress, and Back to top.
 - Kept breadcrumbs to one line with naturally sized bounded project labels and predictable truncation for long project and resource names.
 - Made project assignment optional when creating samples and datasets while retaining project-context preselection.

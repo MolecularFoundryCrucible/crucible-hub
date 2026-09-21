@@ -369,6 +369,7 @@ export function ResourceSiblingNavigationControls({
   })
 
   useEffect(() => {
+    if (!navigation) return
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.defaultPrevented ||
@@ -382,7 +383,7 @@ export function ResourceSiblingNavigationControls({
       }
       if (
         event.key === "ArrowLeft" &&
-        (navigation?.previous || navigation?.hasPreviousPage) &&
+        (navigation.previous || navigation.hasPreviousPage) &&
         !navigation.loadingDirection
       ) {
         event.preventDefault()
@@ -390,7 +391,7 @@ export function ResourceSiblingNavigationControls({
       }
       if (
         event.key === "ArrowRight" &&
-        (navigation?.next || navigation?.hasNextPage) &&
+        (navigation.next || navigation.hasNextPage) &&
         !navigation.loadingDirection
       ) {
         event.preventDefault()
@@ -411,16 +412,16 @@ export function ResourceSiblingNavigationControls({
     navigation?.previous || navigation?.hasPreviousPage
   )
   const canMoveNext = Boolean(navigation?.next || navigation?.hasNextPage)
+  if (!navigation) {
+    return <nav aria-label="Browse nearby resources">{configurationAction}</nav>
+  }
   return (
     <nav
       aria-label="Resource sequence navigation"
       className="flex min-w-0 flex-col items-end gap-1"
     >
-      <ButtonGroup
-        aria-label={navigation ? navigation.label : "Browse nearby resources"}
-        className="max-w-full"
-      >
-        {navigation?.previous ? (
+      <ButtonGroup aria-label={navigation.label} className="max-w-full">
+        {navigation.previous ? (
           <ResourceSiblingAction
             direction="previous"
             fromProject={fromProject}
@@ -431,12 +432,12 @@ export function ResourceSiblingNavigationControls({
           <SiblingBoundaryAction
             canLoad={canMovePrevious}
             direction="previous"
-            loading={navigation?.loadingDirection === "previous"}
+            loading={navigation.loadingDirection === "previous"}
             onLoad={movePrevious}
           />
         )}
         {configurationAction}
-        {navigation?.next ? (
+        {navigation.next ? (
           <ResourceSiblingAction
             direction="next"
             fromProject={fromProject}
@@ -447,12 +448,12 @@ export function ResourceSiblingNavigationControls({
           <SiblingBoundaryAction
             canLoad={canMoveNext}
             direction="next"
-            loading={navigation?.loadingDirection === "next"}
+            loading={navigation.loadingDirection === "next"}
             onLoad={() => void moveNext()}
           />
         )}
       </ButtonGroup>
-      {navigation?.loadErrorDirection ? (
+      {navigation.loadErrorDirection ? (
         <p className="text-supporting text-destructive" role="alert">
           The {navigation.loadErrorDirection} items could not be loaded. Try
           again.
