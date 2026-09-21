@@ -596,6 +596,23 @@ function ResourceGraphFlow({
     setLayoutPending(false)
   }, [setFlowNodes])
 
+  const centerGraphNode = useCallback(
+    (nodeMfid: string) => {
+      const element = surface.current
+      const position = displayedPositions.current.get(nodeMfid)
+      if (!element || !position) return
+      void flow.setCenter(
+        position.x + position.width / 2,
+        position.y + position.height / 2,
+        {
+          ...graphViewportOptions(element),
+          zoom: flow.getZoom(),
+        }
+      )
+    },
+    [flow]
+  )
+
   const handleInit = useCallback(() => setFlowReady(true), [])
   const handleNodeClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
     (event, node) => {
@@ -605,6 +622,37 @@ function ResourceGraphFlow({
       }
     },
     [graph.rootMfid, onInspect]
+  )
+  const handleNodeDoubleClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
+    (event, node) => {
+      event.preventDefault()
+      event.stopPropagation()
+      centerGraphNode(node.id)
+    },
+    [centerGraphNode]
+  )
+  const handleGraphKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (
+        event.defaultPrevented ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.key.toLocaleLowerCase() !== "f" ||
+        !(event.target instanceof HTMLElement)
+      ) {
+        return
+      }
+      const node = event.target.closest<HTMLElement>(
+        ".react-flow__node-resource"
+      )
+      if (!node || event.target !== node) return
+      const nodeMfid = node.dataset.id
+      if (!nodeMfid) return
+      event.preventDefault()
+      centerGraphNode(nodeMfid)
+    },
+    [centerGraphNode]
   )
   const handleNodeDragStop = useCallback<OnNodeDrag<ResourceFlowNode>>(
     (_event, node) => persistNodePosition(node),
@@ -721,7 +769,9 @@ function ResourceGraphFlow({
         nodes={flowNodes}
         nodesConnectable={false}
         nodesDraggable
+        onKeyDown={handleGraphKeyDown}
         onInit={handleInit}
+        onNodeDoubleClick={handleNodeDoubleClick}
         onNodeDragStart={handleNodeDragStart}
         onNodeDragStop={handleNodeDragStop}
         onNodesChange={handleNodesChange}
@@ -731,9 +781,9 @@ function ResourceGraphFlow({
         onlyRenderVisibleElements={
           graph.nodes.length >= GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD
         }
-        panOnScroll
         preventScrolling={false}
         proOptions={reactFlowProOptions}
+        zoomOnScroll={false}
         zoomOnDoubleClick={false}
       >
         <Background
@@ -748,9 +798,11 @@ function ResourceGraphFlow({
         from top to bottom unless horizontal orientation is selected. Dashed
         edges show sample and dataset associations. Expansion controls load
         ancestors, descendants, or associated resources. Nodes can be
-        repositioned by dragging, and Reset layout restores the ELK arrangement.
-        The relationship table following the graph provides the same resources
-        with keyboard-accessible inspection and navigation.
+        repositioned by dragging. Hold Control, or Command on macOS, while
+        scrolling to zoom. Double-click a node, or focus it and press F, to
+        center it. Reset layout restores the ELK arrangement. The relationship
+        table following the graph provides the same resources with
+        keyboard-accessible inspection and navigation.
       </span>
       {fullscreenError ? (
         <div

@@ -107,6 +107,7 @@ export function KeyboardShortcuts({
   }, [navigate, pathname])
 
   const resourceContext = getResourceContext(pathname)
+  const graphActive = /^\/(datasets|samples)\/[^/]+\/graph$/.test(pathname)
   const contextualShortcuts = resourceContext
     ? [
         ["G then O", "Go to this resource's Overview"],
@@ -119,6 +120,7 @@ export function KeyboardShortcuts({
                 : []),
               ["G then M", "Go to this resource's Manage page"],
               ["← / →", "Previous or next item when opened from a list"],
+              ...(graphActive ? [["F", "Center the focused graph node"]] : []),
             ]
           : []),
       ]
