@@ -45,6 +45,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -855,23 +856,25 @@ function GraphDisplayMenu({
         <TooltipContent>Graph display options</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="min-w-44">
-        <DropdownMenuLabel>Show</DropdownMenuLabel>
-        <DropdownMenuCheckboxItem
-          checked={display.associations}
-          onCheckedChange={(checked) =>
-            onDisplayChange({ associations: checked })
-          }
-        >
-          Associations
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={display.thumbnails}
-          onCheckedChange={(checked) =>
-            onDisplayChange({ thumbnails: checked })
-          }
-        >
-          Dataset thumbnails
-        </DropdownMenuCheckboxItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Show</DropdownMenuLabel>
+          <DropdownMenuCheckboxItem
+            checked={display.associations}
+            onCheckedChange={(checked) =>
+              onDisplayChange({ associations: checked })
+            }
+          >
+            Associations
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuCheckboxItem
+            checked={display.thumbnails}
+            onCheckedChange={(checked) =>
+              onDisplayChange({ thumbnails: checked })
+            }
+          >
+            Dataset thumbnails
+          </DropdownMenuCheckboxItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup
           onValueChange={(value) => {
