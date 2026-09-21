@@ -128,7 +128,20 @@ type EdgeMetrics = {
 
 type ExpansionAnchor = {
   layoutSignature: string
+  mode: GraphExpansionMode
   nodeMfid: string
+  requestStarted: boolean
+  retry: boolean
+}
+
+type ResourceFlowNodePresentation = {
+  displayThumbnails: boolean
+  expansionStates: ReadonlyMap<string, GraphExpansionState>
+  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
+  layoutDirection: LayoutDirection
+  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  rootContext: string | null
+  thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }
 
 const GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD = 100
@@ -227,9 +240,6 @@ function ResourceGraphFlow({
     useState<LayoutDirection | null>(null)
   const [zoomRange, setZoomRange] = useState({ max: 2.5, min: 0.35 })
   const [edgeMetrics, setEdgeMetrics] = useState<EdgeMetrics | null>(null)
-  const [enteringNodeIds, setEnteringNodeIds] = useState<ReadonlySet<string>>(
-    new Set()
-  )
   const [enteringEdgeIds, setEnteringEdgeIds] = useState<ReadonlySet<string>>(
     new Set()
   )
@@ -241,6 +251,35 @@ function ResourceGraphFlow({
   const [flowReady, setFlowReady] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const [fullscreenError, setFullscreenError] = useState(false)
+  const [flowNodes, setFlowNodes, handleNodesChange] =
+    useNodesState<ResourceFlowNode>([])
+
+  const requestExpansion = useCallback(
+    (nodeMfid: string, mode: GraphExpansionMode) => {
+      const state = graphExpansionState(expansionStates, nodeMfid, mode)
+      pendingExpansionAnchor.current = {
+        layoutSignature,
+        mode,
+        nodeMfid,
+        requestStarted: graphExpansionPending(state),
+        retry: Boolean(state?.isError),
+      }
+      onExpand(nodeMfid, mode)
+    },
+    [expansionStates, layoutSignature, onExpand]
+  )
+  const nodePresentation = useRef<ResourceFlowNodePresentation | null>(null)
+  nodePresentation.current = layoutDirection
+    ? {
+        displayThumbnails: display.thumbnails,
+        expansionModesByNode,
+        expansionStates,
+        layoutDirection,
+        onExpand: requestExpansion,
+        rootContext,
+        thumbnails,
+      }
+    : null
 
   useEffect(() => {
     const element = surface.current
@@ -293,19 +332,22 @@ function ResourceGraphFlow({
     const element = surface.current
     if (!element || !flowReady || !layoutDirection) return
     const currentGraph = layoutGraph.current.graph
+    const requestedAnchor = pendingExpansionAnchor.current
     const resetLayout = resetLayoutRequested.current
     resetLayoutRequested.current = false
     const generation = layoutGeneration.current + 1
     layoutGeneration.current = generation
     cancelAnimationFrameRef(layoutAnimationFrame)
     cancelAnimationFrameRef(entryRevealFrame)
-    setEnteringNodeIds(new Set())
+    setHoveredNode(null)
+    setFlowNodes((current) => clearEnteringFlowNodes(current))
     setEnteringEdgeIds(new Set())
     setLayoutPending(true)
     const applyLayout = (rawPositions: Map<string, LayoutPosition>) => {
       if (layoutGeneration.current !== generation) return
+      const presentation = nodePresentation.current
+      if (!presentation) return
       const previousPositions = displayedPositions.current
-      const requestedAnchor = pendingExpansionAnchor.current
       const expansionAnchor =
         requestedAnchor && requestedAnchor.layoutSignature !== layoutSignature
           ? requestedAnchor.nodeMfid
@@ -327,13 +369,20 @@ function ResourceGraphFlow({
       const duration = graphViewportOptions(element).duration
       const firstLayout = previousPositions.size === 0
       visibleEdgeIds.current = nextEdgeIds
-      if (expansionAnchor) pendingExpansionAnchor.current = null
 
       if (firstLayout || duration === 0) {
         displayedPositions.current = nextPositions
-        setEnteringNodeIds(new Set())
         setEnteringEdgeIds(new Set())
         setLayoutPositions(nextPositions)
+        setFlowNodes((current) =>
+          reconcileResourceFlowNodes(
+            current,
+            currentGraph,
+            nextPositions,
+            presentation,
+            new Set()
+          )
+        )
         if (firstLayout || resetLayout) {
           centerResourceGraph(
             flow,
@@ -352,15 +401,25 @@ function ResourceGraphFlow({
         anchorMfid
       )
       displayedPositions.current = startPositions
-      setEnteringNodeIds(newNodeIds)
       setEnteringEdgeIds(newEdgeIds)
-      setLayoutPositions(startPositions)
+      setLayoutPositions(nextPositions)
+      setFlowNodes((current) =>
+        reconcileResourceFlowNodes(
+          current,
+          currentGraph,
+          startPositions,
+          presentation,
+          newNodeIds
+        )
+      )
       scheduleEntryReveal(
         entryRevealFrame,
         generation,
         layoutGeneration,
-        setEnteringNodeIds,
-        setEnteringEdgeIds
+        () => {
+          setFlowNodes((current) => clearEnteringFlowNodes(current))
+          setEnteringEdgeIds(new Set())
+        }
       )
       if (resetLayout) {
         centerResourceGraph(flow, element, currentGraph.rootMfid, nextPositions)
@@ -375,14 +434,15 @@ function ResourceGraphFlow({
           easeOutCubic(progress)
         )
         displayedPositions.current = positions
-        setLayoutPositions(positions)
+        setFlowNodes((current) =>
+          updateResourceFlowNodePositions(current, positions)
+        )
         if (progress < 1) {
           layoutAnimationFrame.current = requestAnimationFrame(animate)
           return
         }
         layoutAnimationFrame.current = null
         displayedPositions.current = nextPositions
-        setLayoutPositions(nextPositions)
         setLayoutPending(false)
       }
       layoutAnimationFrame.current = requestAnimationFrame(animate)
@@ -395,7 +455,34 @@ function ResourceGraphFlow({
           fallbackResourceGraphLayout(currentGraph, element, layoutDirection)
         )
     )
-  }, [flow, flowReady, layoutDirection, layoutRevision, layoutSignature])
+  }, [
+    flow,
+    flowReady,
+    layoutDirection,
+    layoutRevision,
+    layoutSignature,
+    setFlowNodes,
+  ])
+
+  useEffect(() => {
+    const anchor = pendingExpansionAnchor.current
+    if (!anchor) return
+    const state = graphExpansionState(
+      expansionStates,
+      anchor.nodeMfid,
+      anchor.mode
+    )
+    if (graphExpansionPending(state)) {
+      anchor.requestStarted = true
+      return
+    }
+    if (
+      state?.isSuccess ||
+      (state?.isError && (!anchor.retry || anchor.requestStarted))
+    ) {
+      pendingExpansionAnchor.current = null
+    }
+  }, [expansionStates])
 
   useEffect(
     () => () => {
@@ -443,74 +530,37 @@ function ResourceGraphFlow({
     void element.requestFullscreen().catch(() => setFullscreenError(true))
   }, [])
 
-  const requestExpansion = useCallback(
-    (nodeMfid: string, mode: GraphExpansionMode) => {
-      pendingExpansionAnchor.current = { layoutSignature, nodeMfid }
-      onExpand(nodeMfid, mode)
-    },
-    [layoutSignature, onExpand]
-  )
-
-  const calculatedNodes = useMemo<ResourceFlowNode[]>(
-    () =>
-      graph.nodes.flatMap((node) => {
-        const position = layoutPositions.get(node.unique_id)
-        if (!position) return []
-        return [
-          {
-            ariaLabel: `${node.kind === "sample" ? "Sample" : "Dataset"}: ${node.name}`,
-            connectable: false,
-            data: {
-              context:
-                node.unique_id === graph.rootMfid ? rootContext : node.context,
-              dimmed: false,
-              entering: enteringNodeIds.has(node.unique_id),
-              expansionStates,
-              expansionModes: expansionModesByNode.get(node.unique_id) ?? [],
-              isRoot: node.unique_id === graph.rootMfid,
-              layoutDirection: layoutDirection ?? "RIGHT",
-              node,
-              onExpand: requestExpansion,
-              thumbnail:
-                display.thumbnails && node.kind === "dataset"
-                  ? thumbnails[node.unique_id]
-                  : undefined,
-            },
-            deletable: false,
-            draggable: true,
-            focusable: node.unique_id !== graph.rootMfid,
-            id: node.unique_id,
-            position,
-            selectable: false,
-            sourcePosition:
-              layoutDirection === "DOWN" ? Position.Bottom : Position.Right,
-            targetPosition:
-              layoutDirection === "DOWN" ? Position.Top : Position.Left,
-            type: "resource",
-          },
-        ]
-      }),
-    [
-      expansionStates,
-      expansionModesByNode,
-      graph.nodes,
-      graph.rootMfid,
-      display.thumbnails,
-      enteringNodeIds,
-      layoutDirection,
-      layoutPositions,
-      requestExpansion,
-      rootContext,
-      thumbnails,
-    ]
-  )
-  const [flowNodes, setFlowNodes, handleNodesChange] =
-    useNodesState<ResourceFlowNode>(calculatedNodes)
-
   useLayoutEffect(() => {
-    setHoveredNode(null)
-    setFlowNodes(calculatedNodes)
-  }, [calculatedNodes, setFlowNodes])
+    if (!layoutDirection) return
+    const presentation = nodePresentation.current
+    if (!presentation) return
+    const graphNodes = new Map(
+      graph.nodes.map((node) => [node.unique_id, node] as const)
+    )
+    setFlowNodes((current) =>
+      current.map((flowNode) => {
+        const node = graphNodes.get(flowNode.id)
+        if (!node) return flowNode
+        return updateResourceFlowNodePresentation(
+          flowNode,
+          graph.rootMfid,
+          node,
+          presentation
+        )
+      })
+    )
+  }, [
+    display.thumbnails,
+    expansionModesByNode,
+    expansionStates,
+    graph.nodes,
+    graph.rootMfid,
+    layoutDirection,
+    requestExpansion,
+    rootContext,
+    setFlowNodes,
+    thumbnails,
+  ])
 
   const setHoveredResource = useCallback(
     (nodeMfid: string | null) => {
@@ -528,24 +578,23 @@ function ResourceGraphFlow({
   )
 
   const persistNodePosition = useCallback((node: ResourceFlowNode) => {
-    setLayoutPositions((current) => {
-      const previous = current.get(node.id)
-      if (!previous) return current
-      const next = new Map(current)
-      next.set(node.id, { ...previous, ...node.position })
-      displayedPositions.current = next
-      return next
-    })
+    const previous = displayedPositions.current.get(node.id)
+    if (!previous) return
+    const next = new Map(displayedPositions.current)
+    next.set(node.id, { ...previous, ...node.position })
+    displayedPositions.current = next
+    setLayoutPositions(next)
   }, [])
 
   const cancelLayoutForDrag = useCallback(() => {
     layoutGeneration.current += 1
     cancelAnimationFrameRef(layoutAnimationFrame)
     cancelAnimationFrameRef(entryRevealFrame)
-    setEnteringNodeIds(new Set())
+    setFlowNodes((current) => clearEnteringFlowNodes(current))
     setEnteringEdgeIds(new Set())
+    setLayoutPositions(new Map(displayedPositions.current))
     setLayoutPending(false)
-  }, [])
+  }, [setFlowNodes])
 
   const handleInit = useCallback(() => setFlowReady(true), [])
   const handleNodeClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
@@ -1181,6 +1230,164 @@ async function layoutResourceGraph(
   )
 }
 
+function reconcileResourceFlowNodes(
+  currentNodes: ResourceFlowNode[],
+  graph: WorkspaceResourceGraph,
+  positions: ReadonlyMap<string, LayoutPosition>,
+  presentation: ResourceFlowNodePresentation,
+  enteringNodeIds: ReadonlySet<string>
+) {
+  const currentNodesByMfid = new Map(
+    currentNodes.map((node) => [node.id, node] as const)
+  )
+  return graph.nodes.flatMap<ResourceFlowNode>((node) => {
+    const position = positions.get(node.unique_id)
+    if (!position) return []
+    const currentNode = currentNodesByMfid.get(node.unique_id)
+    if (currentNode) {
+      const presentedNode = updateResourceFlowNodePresentation(
+        currentNode,
+        graph.rootMfid,
+        node,
+        presentation
+      )
+      return [
+        {
+          ...presentedNode,
+          data: {
+            ...presentedNode.data,
+            dimmed: false,
+            entering: enteringNodeIds.has(node.unique_id),
+          },
+          position: { x: position.x, y: position.y },
+        },
+      ]
+    }
+    return [
+      {
+        ariaLabel: resourceFlowNodeAriaLabel(node),
+        connectable: false,
+        data: resourceFlowNodeData(
+          graph.rootMfid,
+          node,
+          presentation,
+          false,
+          enteringNodeIds.has(node.unique_id)
+        ),
+        deletable: false,
+        draggable: true,
+        focusable: node.unique_id !== graph.rootMfid,
+        id: node.unique_id,
+        position: { x: position.x, y: position.y },
+        selectable: false,
+        sourcePosition:
+          presentation.layoutDirection === "DOWN"
+            ? Position.Bottom
+            : Position.Right,
+        targetPosition:
+          presentation.layoutDirection === "DOWN"
+            ? Position.Top
+            : Position.Left,
+        type: "resource",
+      },
+    ]
+  })
+}
+
+function updateResourceFlowNodePresentation(
+  flowNode: ResourceFlowNode,
+  rootMfid: string,
+  node: WorkspaceResourceGraphNode,
+  presentation: ResourceFlowNodePresentation
+): ResourceFlowNode {
+  return {
+    ...flowNode,
+    ariaLabel: resourceFlowNodeAriaLabel(node),
+    data: resourceFlowNodeData(
+      rootMfid,
+      node,
+      presentation,
+      flowNode.data.dimmed,
+      flowNode.data.entering
+    ),
+    focusable: node.unique_id !== rootMfid,
+    sourcePosition:
+      presentation.layoutDirection === "DOWN"
+        ? Position.Bottom
+        : Position.Right,
+    targetPosition:
+      presentation.layoutDirection === "DOWN" ? Position.Top : Position.Left,
+  }
+}
+
+function resourceFlowNodeData(
+  rootMfid: string,
+  node: WorkspaceResourceGraphNode,
+  presentation: ResourceFlowNodePresentation,
+  dimmed: boolean,
+  entering: boolean
+): ResourceFlowNodeData {
+  return {
+    context:
+      node.unique_id === rootMfid ? presentation.rootContext : node.context,
+    dimmed,
+    entering,
+    expansionStates: presentation.expansionStates,
+    expansionModes: presentation.expansionModesByNode.get(node.unique_id) ?? [],
+    isRoot: node.unique_id === rootMfid,
+    layoutDirection: presentation.layoutDirection,
+    node,
+    onExpand: presentation.onExpand,
+    thumbnail:
+      presentation.displayThumbnails && node.kind === "dataset"
+        ? presentation.thumbnails[node.unique_id]
+        : undefined,
+  }
+}
+
+function resourceFlowNodeAriaLabel(node: WorkspaceResourceGraphNode) {
+  return `${node.kind === "sample" ? "Sample" : "Dataset"}: ${node.name}`
+}
+
+function updateResourceFlowNodePositions(
+  nodes: ResourceFlowNode[],
+  positions: ReadonlyMap<string, LayoutPosition>
+) {
+  let changed = false
+  const nextNodes: ResourceFlowNode[] = []
+  for (const node of nodes) {
+    const position = positions.get(node.id)
+    if (!position) {
+      changed = true
+      continue
+    }
+    if (node.position.x === position.x && node.position.y === position.y) {
+      nextNodes.push(node)
+      continue
+    }
+    changed = true
+    nextNodes.push({
+      ...node,
+      position: { x: position.x, y: position.y },
+    })
+  }
+  return changed ? nextNodes : nodes
+}
+
+function clearEnteringFlowNodes(nodes: ResourceFlowNode[]) {
+  let changed = false
+  const nextNodes: ResourceFlowNode[] = []
+  for (const node of nodes) {
+    if (!node.data.entering) {
+      nextNodes.push(node)
+      continue
+    }
+    changed = true
+    nextNodes.push({ ...node, data: { ...node.data, entering: false } })
+  }
+  return changed ? nextNodes : nodes
+}
+
 function fallbackResourceGraphLayout(
   graph: WorkspaceResourceGraph,
   element: HTMLElement,
@@ -1344,15 +1551,13 @@ function scheduleEntryReveal(
   frame: { current: number | null },
   generation: number,
   currentGeneration: { current: number },
-  setEnteringNodeIds: (value: ReadonlySet<string>) => void,
-  setEnteringEdgeIds: (value: ReadonlySet<string>) => void
+  reveal: () => void
 ) {
   frame.current = requestAnimationFrame(() => {
     frame.current = requestAnimationFrame(() => {
       frame.current = null
       if (currentGeneration.current !== generation) return
-      setEnteringNodeIds(new Set())
-      setEnteringEdgeIds(new Set())
+      reveal()
     })
   })
 }
