@@ -160,7 +160,6 @@ export function AppShell({
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-            <SidebarRecentResources />
             {account?.capabilities.can_manage_service_accounts ? (
               <SidebarGroup>
                 <SidebarGroupLabel>Administration</SidebarGroupLabel>
@@ -191,6 +190,7 @@ export function AppShell({
                 </SidebarGroupContent>
               </SidebarGroup>
             ) : null}
+            <SidebarRecentResources />
           </SidebarContent>
           <SidebarUtilities
             pathname={pathname}
