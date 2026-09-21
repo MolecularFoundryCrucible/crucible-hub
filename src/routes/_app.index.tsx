@@ -33,7 +33,7 @@ import {
 import { instrumentsQueryOptions } from "@/data/crucible/instruments.queries"
 import { projectsQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceInstrument } from "@/data/crucible/workspace-source"
-import { selectRecentResources } from "@/features/home/home-data"
+import { useRecentResourcesSnapshot } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
@@ -100,18 +100,22 @@ function HomePage() {
   const account = accountResult.data
   const projects = projectResult.data?.items ?? []
   const instruments = instrumentResult.data?.items ?? []
-  const recentResources = selectRecentResources(
-    sampleResult.data?.items ?? [],
-    datasetResult.data?.items ?? [],
-    homeRecentResourceLimit
-  )
-  const recentDataPending =
-    recentResources.length === 0 &&
-    (sampleResult.isPending || datasetResult.isPending)
+  const recentSnapshot = useRecentResourcesSnapshot({
+    datasets: datasetResult.data?.items,
+    datasetsFetching: datasetResult.isFetching,
+    identity: JSON.stringify(scope),
+    limit: homeRecentResourceLimit,
+    samples: sampleResult.data?.items,
+    samplesFetching: sampleResult.isFetching,
+  })
+  const recentResources = recentSnapshot.resources
+  const recentDataPending = recentSnapshot.pending
   const recentDataUnavailable =
+    !recentDataPending &&
     recentResources.length === 0 &&
     (sampleResult.isError || datasetResult.isError)
   const recentDataPartial =
+    !recentDataPending &&
     recentResources.length > 0 &&
     (sampleResult.isError || datasetResult.isError)
   const recentlyViewed = useRecentlyViewed().slice(0, 5)

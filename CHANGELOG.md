@@ -82,6 +82,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Changed
 
+- Stabilized Home's recently added data as one creation-time-ordered sample and dataset snapshot, retaining the previous list until independently loading sources settle.
 - Preserved stable resource shells, navigation, collection controls, field labels, and table headings during loading with shared route-shaped, table-shaped, and compact-list skeleton presentations, while keeping refresh announcements out of page layout.
 - Unified Home, search, relationship, and graph-table resource identities around shared flat list presentations with consistent spacing, separators, hover, focus, and responsive trailing content, and labelled instrument ownership as management in the directory.
 - Allowed normal page scrolling over resource graphs, reserved modifier-scroll and pinch gestures for graph zoom, and added double-click or focused-node keyboard centering without changing zoom.
