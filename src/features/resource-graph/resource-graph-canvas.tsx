@@ -41,11 +41,13 @@ import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -211,7 +213,7 @@ function ResourceGraphFlow({
     const element = surface.current
     if (!element) return
     const updateDirection = () => {
-      setLayoutDirection(resolveLayoutDirection(element, display.orientation))
+      setLayoutDirection(resolveLayoutDirection(display.orientation))
       const nextZoomRange = {
         max: graphNumberToken(element, "--graph-max-zoom"),
         min: graphNumberToken(element, "--graph-min-zoom"),
@@ -571,12 +573,12 @@ function ResourceGraphFlow({
       </ReactFlow>
       <span className="sr-only" id="resource-graph-instructions">
         The current resource is centered. Lineage flows from parent to child
-        from left to right on wider screens and top to bottom on compact
-        screens. Dashed edges show sample and dataset associations. Expansion
-        controls load ancestors, descendants, or associated resources. Nodes can
-        be repositioned by dragging, and Reset layout restores the ELK
-        arrangement. The relationship table following the graph provides the
-        same resources with keyboard-accessible inspection and navigation.
+        from top to bottom unless horizontal orientation is selected. Dashed
+        edges show sample and dataset associations. Expansion controls load
+        ancestors, descendants, or associated resources. Nodes can be
+        repositioned by dragging, and Reset layout restores the ELK arrangement.
+        The relationship table following the graph provides the same resources
+        with keyboard-accessible inspection and navigation.
       </span>
       {fullscreenError ? (
         <div
@@ -773,45 +775,45 @@ function GraphViewportControls({
   surface: React.RefObject<HTMLDivElement | null>
 }) {
   return (
-    <div className="resource-graph-controls absolute top-3 right-3 flex gap-1">
-      <GraphControl
-        label="Zoom graph out"
-        onClick={() => void flow.zoomOut(graphViewportOptions(surface.current))}
-      >
-        <ZoomOutGraphIcon aria-hidden="true" />
-      </GraphControl>
-      <GraphControl
-        label="Zoom graph in"
-        onClick={() => void flow.zoomIn(graphViewportOptions(surface.current))}
-      >
-        <ZoomInGraphIcon aria-hidden="true" />
-      </GraphControl>
-      <GraphControl
-        label="Center current resource"
-        onClick={() => {
-          const element = surface.current
-          if (element) {
-            centerResourceGraph(flow, element, graph.rootMfid, positions)
+    <div className="resource-graph-controls absolute top-3 right-3 flex gap-2">
+      <ButtonGroup aria-label="Graph viewport controls">
+        <GraphControl
+          label="Zoom graph out"
+          onClick={() =>
+            void flow.zoomOut(graphViewportOptions(surface.current))
           }
-        }}
-      >
-        <ExploreGraphFocusIcon aria-hidden="true" />
-      </GraphControl>
-      <GraphControl
-        label="Fit all resources"
-        onClick={() =>
-          void flow.fitView({
-            ...graphViewportOptions(surface.current),
-            padding: 0.16,
-          })
-        }
-      >
-        <FitGraphIcon aria-hidden="true" />
-      </GraphControl>
-      <GraphControl label="Reset graph layout" onClick={onResetLayout}>
-        <ResetGraphLayoutIcon aria-hidden="true" />
-      </GraphControl>
-      <GraphDisplayMenu display={display} onDisplayChange={onDisplayChange} />
+        >
+          <ZoomOutGraphIcon aria-hidden="true" />
+        </GraphControl>
+        <GraphControl
+          label="Zoom graph in"
+          onClick={() =>
+            void flow.zoomIn(graphViewportOptions(surface.current))
+          }
+        >
+          <ZoomInGraphIcon aria-hidden="true" />
+        </GraphControl>
+        <GraphControl
+          label="Fit all resources"
+          onClick={() =>
+            void flow.fitView({
+              ...graphViewportOptions(surface.current),
+              padding: 0.16,
+            })
+          }
+        >
+          <FitGraphIcon aria-hidden="true" />
+        </GraphControl>
+      </ButtonGroup>
+      <GraphDisplayMenu
+        display={display}
+        flow={flow}
+        graph={graph}
+        onDisplayChange={onDisplayChange}
+        onResetLayout={onResetLayout}
+        positions={positions}
+        surface={surface}
+      />
       <GraphControl
         label={fullscreen ? "Exit fullscreen graph" : "View graph fullscreen"}
         onClick={onToggleFullscreen}
@@ -829,10 +831,20 @@ function GraphViewportControls({
 
 function GraphDisplayMenu({
   display,
+  flow,
+  graph,
   onDisplayChange,
+  onResetLayout,
+  positions,
+  surface,
 }: {
   display: ResourceGraphDisplay
+  flow: ReactFlowInstance<ResourceFlowNode, ResourceFlowEdge>
+  graph: WorkspaceResourceGraph
   onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
+  onResetLayout: () => void
+  positions: ReadonlyMap<string, LayoutPosition>
+  surface: React.RefObject<HTMLDivElement | null>
 }) {
   return (
     <DropdownMenu>
@@ -842,7 +854,7 @@ function GraphDisplayMenu({
             <DropdownMenuTrigger
               render={
                 <Button
-                  aria-label="Graph display options"
+                  aria-label="Graph options"
                   size="icon-sm"
                   type="button"
                   variant="outline"
@@ -853,9 +865,28 @@ function GraphDisplayMenu({
         >
           <GraphDisplayOptionsIcon aria-hidden="true" />
         </TooltipTrigger>
-        <TooltipContent>Graph display options</TooltipContent>
+        <TooltipContent>Graph options</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="min-w-44">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Layout</DropdownMenuLabel>
+          <DropdownMenuItem
+            onClick={() => {
+              const element = surface.current
+              if (element) {
+                centerResourceGraph(flow, element, graph.rootMfid, positions)
+              }
+            }}
+          >
+            <ExploreGraphFocusIcon aria-hidden="true" />
+            Center current resource
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onResetLayout}>
+            <ResetGraphLayoutIcon aria-hidden="true" />
+            Reset layout
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuLabel>Show</DropdownMenuLabel>
           <DropdownMenuCheckboxItem
@@ -878,18 +909,13 @@ function GraphDisplayMenu({
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup
           onValueChange={(value) => {
-            if (
-              value === "auto" ||
-              value === "horizontal" ||
-              value === "vertical"
-            ) {
+            if (value === "horizontal" || value === "vertical") {
               onDisplayChange({ orientation: value })
             }
           }}
           value={display.orientation}
         >
           <DropdownMenuLabel>Orientation</DropdownMenuLabel>
-          <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="horizontal">
             Horizontal
           </DropdownMenuRadioItem>
@@ -1100,21 +1126,11 @@ function graphNumberToken(
   return value
 }
 
-function graphStringToken(element: HTMLElement, name: string) {
-  const value = getComputedStyle(element).getPropertyValue(name).trim()
-  if (!value) throw new Error(`Invalid graph token: ${name}`)
-  return value
-}
-
 function resolveLayoutDirection(
-  element: HTMLElement,
   orientation: GraphOrientation
 ): LayoutDirection {
   if (orientation === "horizontal") return "RIGHT"
-  if (orientation === "vertical") return "DOWN"
-  return graphStringToken(element, "--graph-layout-direction") === "DOWN"
-    ? "DOWN"
-    : "RIGHT"
+  return "DOWN"
 }
 
 function graphDensity(nodeCount: number) {

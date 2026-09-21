@@ -2,7 +2,7 @@ import { z } from "zod"
 
 import type { WorkspaceResourceGraph } from "@/data/crucible/workspace-source"
 
-export const graphOrientations = ["auto", "horizontal", "vertical"] as const
+export const graphOrientations = ["horizontal", "vertical"] as const
 
 export type GraphOrientation = (typeof graphOrientations)[number]
 
@@ -14,7 +14,7 @@ export type ResourceGraphDisplay = {
 
 export const resourceGraphDisplayDefaults = {
   associations: true,
-  orientation: "auto",
+  orientation: "vertical",
   thumbnails: false,
 } satisfies ResourceGraphDisplay
 

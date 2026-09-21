@@ -18,7 +18,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ### Added
 
-- Added URL-backed graph display options for canvas associations, opt-in batched dataset thumbnails, and automatic, horizontal, or vertical ELK orientation while preserving the complete accessible relationship table.
+- Added URL-backed graph display options for canvas associations, opt-in batched dataset thumbnails, and vertical-default or horizontal ELK orientation while preserving the complete accessible relationship table, and grouped related viewport and recovery controls.
 - Added the four most recently viewed resources as bounded sidebar shortcuts, with a single collapsed history menu that remains separate from capability-gated Administration and preserves account-scoped history through recoverable route transitions.
 - Added URL-backed sortable group headers for sample and dataset directories, with API-provided canonical facet labels, reversible Name and Count ordering, and count columns that remain visible beside truncated long labels.
 - Added confirmed dataset acquisition-instrument reassignment with canonical instrument selection, API-authoritative identity updates, derived access refresh, dependent collection invalidation, and sibling-navigation reset.

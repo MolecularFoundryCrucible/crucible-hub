@@ -377,7 +377,6 @@
   --graph-label-width: 164;
   --graph-label-offset-x: 42;
   --graph-layout-duration: 360;
-  --graph-layout-direction: RIGHT;
   --graph-layout-layer-gap: 96;
   --graph-layout-node-gap: 40;
   --graph-fit-padding: 52;
@@ -760,7 +759,6 @@ body {
 @media (max-width: 47.999rem) {
   .resource-graph-canvas {
     --graph-center-offset-y: -48;
-    --graph-layout-direction: DOWN;
     --graph-layout-layer-gap: 72;
     --graph-layout-node-gap: 32;
     --graph-fit-padding: 32;
