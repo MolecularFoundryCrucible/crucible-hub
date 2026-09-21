@@ -61,7 +61,7 @@ export function ScientificMetadataViewer({
   useEffect(() => setSearchQuery(""), [metadata])
 
   return (
-    <div className="flex min-w-0 flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-2">
       {hasFields ? (
         <ScientificMetadataSearch
           onChange={setSearchQuery}
@@ -312,8 +312,10 @@ function MetadataValueRow({
   label: string
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-1 border-t py-2 first:border-t-0 sm:grid-cols-3 sm:gap-3">
-      <dt className="text-label break-words text-muted-foreground">{label}</dt>
+    <div className="grid min-w-0 grid-cols-1 gap-1 border-t py-1.5 first:border-t-0 sm:grid-cols-3 sm:gap-2">
+      <dt className="text-label-compact break-words text-muted-foreground">
+        {label}
+      </dt>
       <dd className="min-w-0 sm:col-span-2">{children}</dd>
     </div>
   )
@@ -344,8 +346,8 @@ function MetadataCollection({
 
   if (entries.length === 0) {
     return (
-      <div className="grid min-w-0 grid-cols-1 gap-1 py-2 sm:grid-cols-3 sm:gap-3">
-        <span className="text-label break-words text-muted-foreground">
+      <div className="grid min-w-0 grid-cols-1 gap-1 py-1.5 sm:grid-cols-3 sm:gap-2">
+        <span className="text-label-compact break-words text-muted-foreground">
           {label}
         </span>
         <span className="font-mono text-body text-muted-foreground sm:col-span-2">
@@ -377,18 +379,18 @@ function MetadataCollection({
     >
       <summary
         aria-label={`${label}: ${count}`}
-        className="metadata-disclosure-summary min-h-10 cursor-pointer list-none items-center gap-2 py-2 [&::-webkit-details-marker]:hidden"
+        className="metadata-disclosure-summary min-h-9 cursor-pointer list-none items-center gap-1.5 py-1 [&::-webkit-details-marker]:hidden"
       >
         <MetadataDisclosureIcon
           aria-hidden="true"
           className="metadata-disclosure-icon size-4 shrink-0 text-muted-foreground transition-transform"
         />
-        <span className="text-label break-words text-muted-foreground">
+        <span className="text-label-compact break-words text-muted-foreground">
           {label}
         </span>
         <span className="text-supporting text-muted-foreground">{count}</span>
       </summary>
-      <div className="mb-2 ml-2 min-w-0 border-l pl-4">
+      <div className="mb-1 ml-1 min-w-0 border-l pl-3">
         <MetadataEntries
           entries={displayedEntries}
           expandedPaths={expandedPaths}

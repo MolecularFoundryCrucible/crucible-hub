@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Increased scientific metadata density with compact keys, tighter rows, and reduced nested indentation while preserving readable scalar values.
+
 - Moved recently viewed sidebar resources below Administration when administrative navigation is available.
 
 - Improved scientific metadata browsing with local field and value search, visible top-level fields, compact scalar arrays, collapsed nested structures, and incremental rendering for long arrays.
