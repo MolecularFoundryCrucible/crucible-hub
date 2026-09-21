@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Aligned Scientific metadata with the wide resource-detail column and Relationships with the narrow column while using a compact reading order that places Identity and Thumbnails before Files.
+- Aligned Scientific metadata with the wide resource-detail column and Relationships with the narrow column while using a compact reading order that places Identity and Thumbnails before Files and Relationships before metadata.
 
 - Increased scientific metadata density with compact keys, tighter rows, and reduced nested indentation while preserving readable scalar values.
 

@@ -56,10 +56,10 @@ export function ResourceOverviewPending({
           </ContentGridItem>
         ) : (
           <>
-            <ContentGridItem className="order-5 xl:order-none" span="wide">
+            <ContentGridItem className="order-6 xl:order-none" span="wide">
               <ResourceCardPending title="Scientific metadata" />
             </ContentGridItem>
-            <ContentGridItem className="order-6 xl:order-none" span="narrow">
+            <ContentGridItem className="order-5 xl:order-none" span="narrow">
               <ResourceCardPending title="Relationships" />
             </ContentGridItem>
           </>

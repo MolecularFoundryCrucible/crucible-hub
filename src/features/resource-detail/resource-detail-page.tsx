@@ -287,14 +287,14 @@ export function ResourceOverview({
           </div>
         ) : null}
       </ContentGridItem>
-      <ContentGridItem className="order-5 xl:order-none" span="wide">
+      <ContentGridItem className="order-6 xl:order-none" span="wide">
         <ScientificMetadataEditor
           mode={mode}
           resource={resource}
           scope={scope}
         />
       </ContentGridItem>
-      <ContentGridItem className="order-6 xl:order-none" span="narrow">
+      <ContentGridItem className="order-5 xl:order-none" span="narrow">
         <ResourceRelationshipManager resource={resource} scope={scope} />
       </ContentGridItem>
     </ContentGrid>
