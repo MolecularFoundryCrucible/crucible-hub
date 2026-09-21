@@ -15,6 +15,11 @@ export type WorkspaceRelationshipChoice = {
   targetKind: WorkspaceRelationshipResourceKind
 }
 
+const workspaceRelationshipNameCollator = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+})
+
 export const workspaceRelationshipChoices = {
   dataset: [
     { label: "Parent dataset", relationship: "parent", targetKind: "dataset" },
@@ -46,6 +51,18 @@ export const workspaceRelationshipTypeOptions = [
   label: string
   value: WorkspaceRelationshipType
 }[]
+
+export function compareWorkspaceRelationshipResources(
+  left: Pick<WorkspaceLinkedResource, "name" | "unique_id">,
+  right: Pick<WorkspaceLinkedResource, "name" | "unique_id">
+) {
+  const leftLabel = left.name?.trim() || left.unique_id
+  const rightLabel = right.name?.trim() || right.unique_id
+  return (
+    workspaceRelationshipNameCollator.compare(leftLabel, rightLabel) ||
+    workspaceRelationshipNameCollator.compare(left.unique_id, right.unique_id)
+  )
+}
 
 export type WorkspaceApiRelationshipOperation =
   | {

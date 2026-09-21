@@ -67,7 +67,10 @@ import {
 } from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
+import {
+  compareWorkspaceRelationshipResources,
+  workspaceRelationshipTypeLabel,
+} from "@/data/crucible/resource-relationships"
 import type {
   WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
@@ -578,9 +581,26 @@ function ResourceGraphTable({
       Math.min(nodes.length, Math.max(current, GRAPH_TABLE_ROW_BATCH))
     )
   }, [nodes.length])
+  const relationships = useMemo(
+    () => graphRelationshipPresentations(graph),
+    [graph]
+  )
+  const sortedNodes = useMemo(
+    () =>
+      [...nodes].sort((left, right) => {
+        const relationshipDifference =
+          graphRelationshipOrder(relationships.get(left.unique_id)) -
+          graphRelationshipOrder(relationships.get(right.unique_id))
+        return (
+          relationshipDifference ||
+          compareWorkspaceRelationshipResources(left, right)
+        )
+      }),
+    [nodes, relationships]
+  )
   const visibleNodes = useMemo(
-    () => nodes.slice(0, visibleCount),
-    [nodes, visibleCount]
+    () => sortedNodes.slice(0, visibleCount),
+    [sortedNodes, visibleCount]
   )
   const datasetMfids = useMemo(
     () =>
@@ -594,10 +614,6 @@ function ResourceGraphTable({
     ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
     enabled: nearViewport && datasetMfids.length > 0,
   })
-  const relationships = useMemo(
-    () => graphRelationshipPresentations(graph),
-    [graph]
-  )
   const hasMoreRows = visibleCount < nodes.length
 
   return (
@@ -794,7 +810,11 @@ function GraphExpansionAction({
 function graphRelationshipPresentations(graph: WorkspaceResourceGraph) {
   const relationships = new Map<
     string,
-    { label: string; typeLabel: string | null }
+    {
+      label: string
+      relationship: "associated" | "child" | "parent"
+      typeLabel: string | null
+    }
   >()
   for (const edge of graph.edges) {
     const relatedMfid =
@@ -813,6 +833,8 @@ function graphRelationshipPresentations(graph: WorkspaceResourceGraph) {
     const relationship = edge.target === graph.rootMfid ? "parent" : "child"
     relationships.set(relatedMfid, {
       label,
+      relationship:
+        edge.relationship === "associated" ? "associated" : relationship,
       typeLabel:
         edge.relationship === "parent" && edge.relationshipType
           ? workspaceRelationshipTypeLabel({
@@ -823,6 +845,15 @@ function graphRelationshipPresentations(graph: WorkspaceResourceGraph) {
     })
   }
   return relationships
+}
+
+function graphRelationshipOrder(
+  presentation: { relationship: "associated" | "child" | "parent" } | undefined
+) {
+  if (presentation?.relationship === "parent") return 0
+  if (presentation?.relationship === "child") return 1
+  if (presentation?.relationship === "associated") return 2
+  return 3
 }
 
 function useNearViewport(element: RefObject<HTMLElement | null>) {

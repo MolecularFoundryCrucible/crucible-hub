@@ -11,7 +11,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
+import {
+  compareWorkspaceRelationshipResources,
+  workspaceRelationshipTypeLabel,
+} from "@/data/crucible/resource-relationships"
 import type { WorkspaceLinkedResource } from "@/data/crucible/workspace-source"
 import { cn } from "@/lib/utils"
 
@@ -24,15 +27,21 @@ export function groupResourceRelationships(
   const groups = [
     {
       title: "Parents",
-      links: links.filter((link) => link.relationship === "parent"),
+      links: links
+        .filter((link) => link.relationship === "parent")
+        .sort(compareWorkspaceRelationshipResources),
     },
     {
       title: "Children",
-      links: links.filter((link) => link.relationship === "child"),
+      links: links
+        .filter((link) => link.relationship === "child")
+        .sort(compareWorkspaceRelationshipResources),
     },
     {
       title: kind === "sample" ? "Linked datasets" : "Linked samples",
-      links: links.filter((link) => link.relationship === "associated"),
+      links: links
+        .filter((link) => link.relationship === "associated")
+        .sort(compareWorkspaceRelationshipResources),
     },
   ]
   return groups.filter((group) => group.links.length > 0)
