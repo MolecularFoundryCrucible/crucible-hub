@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Standardized date and person column widths across resource tables and rebalanced deletion-request Resource and Project columns for denser scanning.
+
 - Unified sortable and static column-header typography while retaining visible sort icons and interaction states.
 
 - Standardized MFID presentation with compact muted monospace identifiers in supporting contexts while retaining full-size identifiers for primary identity fields and dedicated table columns.
