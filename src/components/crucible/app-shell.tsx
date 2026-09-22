@@ -3,9 +3,9 @@ import { Link, useRouterState } from "@tanstack/react-router"
 
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
-  AdministratorViewMenuItem,
+  AdministratorViewProvider,
   AdministratorViewStatus,
-  useAdministratorView,
+  useAdministratorViewControl,
 } from "@/components/crucible/administrator-view-control"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
@@ -14,6 +14,8 @@ import { PersonIdentity } from "@/components/crucible/person-identity"
 import { QrScannerAction } from "@/components/crucible/qr-scanner-action"
 import {
   AccountIcon,
+  AdministratorViewDisabledIcon,
+  AdministratorViewEnabledIcon,
   AdministratorViewIcon,
   CollapseSidebarIcon,
   ExpandSidebarIcon,
@@ -59,6 +61,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { Switch } from "@/components/ui/switch"
 import type { Workspace } from "@/data/crucible/workspace-source"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
@@ -121,7 +124,7 @@ export function AppShell({
   const recentlyViewedIdentity =
     scope?.slice(0, 3).join(":") ?? account?.unique_id ?? "anonymous"
 
-  return (
+  const shell = (
     <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
       <SidebarProvider>
         <Sidebar
@@ -176,6 +179,11 @@ export function AppShell({
                 <SidebarGroupLabel>Administration</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
+                    {account.authorization.can_elevate ? (
+                      <SidebarMenuItem>
+                        <SidebarAdministratorViewControl />
+                      </SidebarMenuItem>
+                    ) : null}
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         isActive={pathname.startsWith(
@@ -219,15 +227,12 @@ export function AppShell({
               scope={scope}
             />
             <QrScannerAction />
-            {account ? (
-              <CreateMenu capabilities={account.capabilities} />
-            ) : null}
+            {account ? <CreateMenu account={account} /> : null}
             {account && scope ? (
               <AccountControls
                 account={account}
                 administrationActive={pathname.startsWith("/admin")}
                 privilegeMode={privilegeMode}
-                scope={scope}
               />
             ) : (
               <div className="ml-auto border-l pl-3">
@@ -248,25 +253,29 @@ export function AppShell({
       </SidebarProvider>
     </RecentlyViewedScope>
   )
+
+  return account && scope ? (
+    <AdministratorViewProvider privilegeMode={privilegeMode} scope={scope}>
+      {shell}
+    </AdministratorViewProvider>
+  ) : (
+    shell
+  )
 }
 
 function AccountControls({
   account,
   administrationActive,
   privilegeMode,
-  scope,
 }: {
   account: Workspace["account"]
   administrationActive: boolean
   privilegeMode: WorkspacePrivilegeMode
-  scope: IdentityScope
 }) {
-  const administratorView = useAdministratorView({ privilegeMode, scope })
-
   return (
     <div className="ml-auto flex items-center gap-2">
-      {administratorView.active ? (
-        <AdministratorViewStatus {...administratorView} />
+      {privilegeMode === "elevated" ? (
+        <AdministratorViewStatus />
       ) : administrationActive ? (
         <Badge aria-label="Platform administration" variant="warning">
           <AdministratorViewIcon />
@@ -299,12 +308,6 @@ function AccountControls({
                 My profile
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            {account.authorization.can_elevate ? (
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Access mode</DropdownMenuLabel>
-                <AdministratorViewMenuItem {...administratorView} />
-              </DropdownMenuGroup>
-            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -619,5 +622,45 @@ function SidebarUtilities({
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarFooter>
+  )
+}
+
+function SidebarAdministratorViewControl() {
+  const { isMobile, state } = useSidebar()
+  const { active, pending, setActive } = useAdministratorViewControl()
+  const expanded = isMobile || state === "expanded"
+  const Icon = active
+    ? AdministratorViewEnabledIcon
+    : AdministratorViewDisabledIcon
+
+  if (!expanded) {
+    return (
+      <SidebarMenuButton
+        aria-label="Administrator view"
+        aria-pressed={active}
+        disabled={pending}
+        onClick={() => setActive(!active)}
+        tooltip={active ? "Administrator view on" : "Administrator view off"}
+        variant={active ? "warning" : "default"}
+      >
+        <Icon aria-hidden="true" />
+        <span>Administrator view</span>
+      </SidebarMenuButton>
+    )
+  }
+
+  return (
+    <div className="flex h-8 items-center gap-2 rounded-md px-2 text-body">
+      <Icon aria-hidden="true" className="size-4 shrink-0" />
+      <span className="min-w-0 flex-1 truncate">Administrator view</span>
+      <Switch
+        aria-label="Administrator view"
+        checked={active}
+        disabled={pending}
+        onCheckedChange={setActive}
+        size="sm"
+        variant="warning"
+      />
+    </div>
   )
 }

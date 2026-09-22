@@ -14,7 +14,7 @@ Hub exposes two related authority scopes.
 
 Platform Administration uses contextual elevated authority for the requests owned by implemented `/admin` routes. Administration remains discoverable from the normal account profile through `authorization.can_elevate`. Entering service-account Administration requires no additional toggle and does not change authority outside Administration.
 
-Administrator view is a separate explicit global mode available to an eligible human administrator. When active, routine Hub API requests use elevated authority throughout navigation. The account menu owns the toggle, and a persistent warning action in the application bar identifies the active mode and returns to standard access.
+Administrator view is a separate explicit global mode available to an eligible human administrator. When active, routine Hub API requests use elevated authority throughout navigation. A labelled switch in the sidebar Administration section owns the toggle, condenses to an identifiable pressed icon with the sidebar, and a persistent warning action in the application bar identifies the active mode and returns to standard access.
 
 The server-only OpenAPI client attaches an explicit privilege-mode header and verifies the applied mode on successful responses. Query identity includes the effective privilege mode, elevated Queries are excluded from dehydration, and deactivation cancels and removes elevated Query data before normal-mode route reload.
 

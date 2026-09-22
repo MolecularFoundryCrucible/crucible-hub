@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
+import { createContext, useContext } from "react"
 
-import { AdministratorViewIcon } from "@/components/crucible/icons"
+import { AdministratorViewEnabledIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
-import { DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
 import { toast } from "@/components/ui/toast"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { updateGlobalPrivilegeMode } from "@/data/crucible/privilege-mode.functions"
@@ -23,7 +23,7 @@ function elevatedQueryForAccount(
   )
 }
 
-export function useAdministratorView({
+function useAdministratorView({
   privilegeMode,
   scope,
 }: {
@@ -85,27 +85,43 @@ export function useAdministratorView({
   }
 }
 
-export function AdministratorViewMenuItem({
-  active,
-  pending,
-  setActive,
-}: ReturnType<typeof useAdministratorView>) {
+type AdministratorViewControl = ReturnType<typeof useAdministratorView>
+
+const AdministratorViewContext = createContext<AdministratorViewControl | null>(
+  null
+)
+
+export function AdministratorViewProvider({
+  children,
+  privilegeMode,
+  scope,
+}: {
+  children: React.ReactNode
+  privilegeMode: WorkspacePrivilegeMode
+  scope: IdentityScope
+}) {
+  const control = useAdministratorView({ privilegeMode, scope })
+
   return (
-    <DropdownMenuCheckboxItem
-      checked={active}
-      disabled={pending}
-      onCheckedChange={setActive}
-    >
-      <AdministratorViewIcon />
-      Administrator view
-    </DropdownMenuCheckboxItem>
+    <AdministratorViewContext.Provider value={control}>
+      {children}
+    </AdministratorViewContext.Provider>
   )
 }
 
-export function AdministratorViewStatus({
-  pending,
-  setActive,
-}: ReturnType<typeof useAdministratorView>) {
+export function useAdministratorViewControl() {
+  const control = useContext(AdministratorViewContext)
+  if (!control) {
+    throw new Error(
+      "useAdministratorViewControl must be used within AdministratorViewProvider"
+    )
+  }
+  return control
+}
+
+export function AdministratorViewStatus() {
+  const { pending, setActive } = useAdministratorViewControl()
+
   return (
     <Button
       aria-label="Turn off administrator view"
@@ -114,7 +130,7 @@ export function AdministratorViewStatus({
       size="sm"
       variant="warning"
     >
-      <AdministratorViewIcon data-icon="inline-start" />
+      <AdministratorViewEnabledIcon data-icon="inline-start" />
       <span className="hidden sm:inline">Administrator view on</span>
     </Button>
   )

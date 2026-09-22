@@ -1,5 +1,6 @@
 import {
   HeadContent,
+  Link,
   Outlet,
   Scripts,
   createRootRouteWithContext,
@@ -54,6 +55,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       <p className="mt-3 text-body-prominent text-muted-foreground">
         The requested page could not be found.
       </p>
+      <div className="mt-6">
+        <Button nativeButton={false} render={<Link to="/" />}>
+          Go home
+        </Button>
+      </div>
     </main>
   ),
   errorComponent: RootError,
@@ -105,17 +111,23 @@ function ReportedRootError({ error, info }: ErrorComponentProps) {
       <p className="text-body-prominent text-muted-foreground">
         {report.message} Reference: {report.reference}
       </p>
-      <Button
-        onClick={() => {
-          if (report.reloadRequired) {
-            window.location.reload()
-            return
-          }
-          void router.invalidate()
-        }}
-      >
-        {report.reloadRequired ? "Reload page" : "Try again"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button nativeButton={false} render={<Link to="/" />}>
+          Go home
+        </Button>
+        <Button
+          onClick={() => {
+            if (report.reloadRequired) {
+              window.location.reload()
+              return
+            }
+            void router.invalidate()
+          }}
+          variant="outline"
+        >
+          {report.reloadRequired ? "Reload page" : "Try again"}
+        </Button>
+      </div>
     </main>
   )
 }

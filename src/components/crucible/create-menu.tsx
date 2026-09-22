@@ -1,8 +1,12 @@
 import { Link } from "@tanstack/react-router"
 
 import { CreateResourceIcon } from "@/components/crucible/icons"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  PrincipalTypeIcon,
+  ResourceTypeIcon,
+} from "@/components/crucible/resource-type-icon"
 import { Button } from "@/components/ui/button"
+import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
 import type { WorkspaceAccount } from "@/data/crucible/workspace-source"
 import {
   DropdownMenu,
@@ -10,14 +14,13 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export function CreateMenu({
-  capabilities,
-}: {
-  capabilities: WorkspaceAccount["capabilities"]
-}) {
+export function CreateMenu({ account }: { account: WorkspaceAccount }) {
+  const { capabilities } = account
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button aria-label="Create" />}>
@@ -66,6 +69,26 @@ export function CreateMenu({
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuGroup>
+        {canOpenServiceAccountAdministration(account) ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Administration</DropdownMenuLabel>
+              <DropdownMenuItem
+                render={
+                  <Link
+                    preload={false}
+                    search={{ create: true, offset: undefined, q: undefined }}
+                    to="/admin/service-accounts"
+                  />
+                }
+              >
+                <PrincipalTypeIcon type="service_account" />
+                Service account
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )

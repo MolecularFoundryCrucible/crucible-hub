@@ -66,6 +66,7 @@ import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-cr
 import { ServiceAccountCreateDialog } from "@/features/service-accounts/service-account-create-dialog"
 
 const serviceAccountSearchSchema = z.object({
+  create: z.boolean().optional().catch(undefined),
   offset: z.coerce.number().int().min(0).optional().catch(undefined),
   q: z.string().trim().min(3).max(200).optional().catch(undefined),
 })
@@ -120,7 +121,7 @@ function ServiceAccountsPage() {
     ...options,
     enabled: canOpenServiceAccountAdministration(account),
   })
-  const [createOpen, setCreateOpen] = useState(false)
+  const createOpen = search.create === true
   const [credential, setCredential] =
     useState<WorkspaceServiceAccountCredential>()
   const [searchError, setSearchError] = useState<string>()
@@ -174,6 +175,19 @@ function ServiceAccountsPage() {
     setSearchError(undefined)
     void navigate({
       search: { offset: undefined, q: query || undefined },
+      state: {},
+      to: "/admin/service-accounts",
+    })
+  }
+
+  function setCreateOpen(open: boolean) {
+    void navigate({
+      replace: true,
+      search: {
+        create: open ? true : undefined,
+        offset: search.offset,
+        q: search.q,
+      },
       state: {},
       to: "/admin/service-accounts",
     })
