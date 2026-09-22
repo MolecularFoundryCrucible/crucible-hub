@@ -212,7 +212,19 @@ function DataPage() {
 }
 
 function DataRoutePending() {
-  return <DataPage />
+  const search = Route.useSearch()
+  return (
+    <PageLayout>
+      <DataPageHeader />
+      <div className="flex min-w-0 flex-col gap-4">
+        <CollectionToolbar
+          actions={<DataFilters errors={[]} values={search} />}
+          primary={<DataTypeFilters kind={dataKind(search.kind)} />}
+        />
+        <CollectionTablePending label="data" presentation="resources" />
+      </div>
+    </PageLayout>
+  )
 }
 
 function DataPageHeader() {

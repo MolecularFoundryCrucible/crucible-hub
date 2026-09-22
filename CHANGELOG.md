@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Fixed collection loading routes so global Data, Project Data, and Instrument Datasets render independent pending shells without relying on route components removed by automatic code splitting.
+
 - Added account-visible deletion-request history and capability-guided review queues with project-scoped review, normal or explicitly elevated authority, responsive request details, confirmed approval or rejection, and complete discovery cache refresh.
 
 - Added a direct Home recovery action to route errors and missing-page states so inaccessible elevated resources do not trap navigation after Administrator view is disabled.

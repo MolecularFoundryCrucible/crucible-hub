@@ -121,7 +121,18 @@ export const Route = createFileRoute(
 })
 
 function InstrumentDatasetsPending() {
-  return <InstrumentDatasetsPage />
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <CollectionToolbar
+        primary={<h2 className="text-title-section">Datasets</h2>}
+      />
+      <CollectionTablePending
+        label="datasets"
+        presentation="resources"
+        subtypeLabel="Measurement"
+      />
+    </div>
+  )
 }
 
 function InstrumentDatasetsPage() {

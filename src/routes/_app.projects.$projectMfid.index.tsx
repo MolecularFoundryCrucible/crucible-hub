@@ -14,6 +14,7 @@ import {
   resourcePreviewSearchSchema,
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
+import { CollectionTablePending } from "@/components/crucible/collection-state"
 import { ProjectDataCollection } from "@/features/project-data/project-data-collection"
 import type { ProjectDataKind } from "@/features/project-data/project-data-collection"
 import { resolveProjectDataFilters } from "@/features/project-data/project-data-filter-state"
@@ -144,7 +145,14 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
 })
 
 function ProjectDataPending() {
-  return <ProjectDataPage />
+  const kind = Route.useSearch().kind ?? "samples"
+  return (
+    <CollectionTablePending
+      label={kind}
+      presentation="resources"
+      subtypeLabel={kind === "samples" ? "Sample type" : "Measurement"}
+    />
+  )
 }
 
 function ProjectDataPage() {
