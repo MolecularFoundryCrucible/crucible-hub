@@ -14,7 +14,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
@@ -27,7 +26,7 @@ export function CreateMenu({ account }: { account: WorkspaceAccount }) {
         <CreateResourceIcon data-icon="inline-start" />
         <span className="hidden sm:inline">Create</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="min-w-48">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Create new</DropdownMenuLabel>
           {capabilities.can_create_project ? (
@@ -68,27 +67,21 @@ export function CreateMenu({ account }: { account: WorkspaceAccount }) {
               Instrument
             </DropdownMenuItem>
           ) : null}
+          {canOpenServiceAccountAdministration(account) ? (
+            <DropdownMenuItem
+              render={
+                <Link
+                  preload={false}
+                  search={{ create: true, offset: undefined, q: undefined }}
+                  to="/admin/service-accounts"
+                />
+              }
+            >
+              <PrincipalTypeIcon type="service_account" />
+              Service account
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuGroup>
-        {canOpenServiceAccountAdministration(account) ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Administration</DropdownMenuLabel>
-              <DropdownMenuItem
-                render={
-                  <Link
-                    preload={false}
-                    search={{ create: true, offset: undefined, q: undefined }}
-                    to="/admin/service-accounts"
-                  />
-                }
-              >
-                <PrincipalTypeIcon type="service_account" />
-                Service account
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </>
-        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )
