@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   useInfiniteQuery,
   useMutation,
@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
@@ -24,6 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -59,12 +61,14 @@ import type {
   WorkspaceDeletionRequest,
   WorkspaceDeletionRequestSort,
 } from "@/data/crucible/workspace-source"
+import { cn } from "@/lib/utils"
 
 const pendingRows = ["first", "second", "third"] as const
 
 export function DeletionRequestQueue({
   account,
   action,
+  bulkReview = false,
   emptyTitle,
   filters,
   onSortChange,
@@ -74,6 +78,7 @@ export function DeletionRequestQueue({
 }: {
   account: WorkspaceAccount
   action?: React.ReactNode
+  bulkReview?: boolean
   emptyTitle: string
   filters: Omit<WorkspaceDeletionRequestFilters, "cursor">
   onSortChange?: (
@@ -87,9 +92,25 @@ export function DeletionRequestQueue({
   const options = deletionRequestsInfiniteQueryOptions(scope, filters)
   const result = useInfiniteQuery(options)
   const [selected, setSelected] = useState<WorkspaceDeletionRequest>()
+  const [selectedRequestIds, setSelectedRequestIds] = useState<Set<number>>(
+    () => new Set()
+  )
   const pages = result.data?.pages ?? []
   const items = pages.flatMap((page) => page.items)
   const total = pages.at(0)?.total ?? null
+
+  useEffect(() => {
+    setSelectedRequestIds(new Set())
+  }, [
+    filters.direction,
+    filters.projectMfid,
+    filters.scope,
+    filters.sort,
+    filters.status,
+    scope[1],
+    scope[2],
+    scope[3],
+  ])
 
   return (
     <>
@@ -101,7 +122,16 @@ export function DeletionRequestQueue({
           </CardHeader>
         ) : null}
         {result.isPending ? (
-          <DeletionRequestPending />
+          <DeletionRequestPending
+            bulkReview={bulkReview}
+            direction={filters.direction}
+            onSortChange={onSortChange}
+            requestTimePreferredDirection={
+              filters.scope === "reviewable" ? "asc" : "desc"
+            }
+            showProject={!filters.projectMfid}
+            sort={filters.sort}
+          />
         ) : result.isError && !result.data ? (
           <CardContent>
             <Empty className="min-h-40 border" role="alert">
@@ -129,8 +159,17 @@ export function DeletionRequestQueue({
                 requests.
               </p>
             ) : null}
+            {bulkReview && selectedRequestIds.size > 0 ? (
+              <BulkReviewToolbar
+                items={items}
+                onSelectionChange={setSelectedRequestIds}
+                scope={scope}
+                selectedRequestIds={selectedRequestIds}
+              />
+            ) : null}
             <DeletionRequestTable
               account={account}
+              bulkReview={bulkReview}
               direction={filters.direction}
               items={items}
               onSortChange={onSortChange}
@@ -138,6 +177,8 @@ export function DeletionRequestQueue({
               requestTimePreferredDirection={
                 filters.scope === "reviewable" ? "asc" : "desc"
               }
+              onSelectionChange={setSelectedRequestIds}
+              selectedRequestIds={selectedRequestIds}
               showProject={!filters.projectMfid}
               sort={filters.sort}
             />
@@ -168,36 +209,424 @@ export function DeletionRequestQueue({
   )
 }
 
-function DeletionRequestPending() {
-  return (
-    <CardContent aria-label="Loading deletion requests" role="status">
-      <div className="flex flex-col gap-4">
-        {pendingRows.map((row) => (
-          <div className="flex items-center gap-3" key={row}>
-            <Skeleton className="size-8 shrink-0 rounded-md" />
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <Skeleton className="h-4 w-2/5" />
-              <Skeleton className="h-3 w-3/5" />
-            </div>
-            <Skeleton className="h-8 w-20 shrink-0" />
-          </div>
-        ))}
-      </div>
-    </CardContent>
-  )
-}
-
-function DeletionRequestTable({
-  account,
+function DeletionRequestPending({
+  bulkReview,
   direction,
-  items,
   onSortChange,
-  onOpen,
   requestTimePreferredDirection,
   showProject,
   sort,
 }: {
+  bulkReview: boolean
+  direction: "asc" | "desc"
+  onSortChange?: (
+    sort: WorkspaceDeletionRequestSort,
+    direction: "asc" | "desc"
+  ) => void
+  requestTimePreferredDirection: "asc" | "desc"
+  showProject: boolean
+  sort: WorkspaceDeletionRequestSort
+}) {
+  return (
+    <CardContent
+      aria-label="Loading deletion requests"
+      className="px-0"
+      role="status"
+    >
+      {bulkReview ? (
+        <div className="flex items-center gap-2 border-b px-3 py-2 md:hidden">
+          <Checkbox
+            aria-label="Select all loaded reviewable requests"
+            disabled
+          />
+          <span className="text-label">Select all loaded</span>
+        </div>
+      ) : null}
+      <Table
+        className={cn(
+          "deletion-request-table table-fixed",
+          bulkReview && "has-selection"
+        )}
+      >
+        <DeletionRequestColgroup
+          bulkReview={bulkReview}
+          showProject={showProject}
+        />
+        <DeletionRequestTableHeader
+          bulkReview={bulkReview}
+          direction={direction}
+          onSortChange={onSortChange}
+          requestTimePreferredDirection={requestTimePreferredDirection}
+          showProject={showProject}
+          sort={sort}
+        />
+        <TableBody>
+          {pendingRows.map((row) => (
+            <TableRow key={row}>
+              {bulkReview ? (
+                <TableCell className="deletion-request-select text-center">
+                  <Skeleton className="mx-auto size-4 rounded-sm" />
+                </TableCell>
+              ) : null}
+              <TableCell className="deletion-request-resource">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Skeleton className="size-5 shrink-0 rounded-sm" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <Skeleton className="h-4 w-3/5" />
+                    <Skeleton className="h-3 w-2/5" />
+                  </div>
+                </div>
+              </TableCell>
+              {showProject ? (
+                <TableCell
+                  className="deletion-request-project"
+                  data-label="Project"
+                >
+                  <Skeleton className="h-4 w-3/4" />
+                </TableCell>
+              ) : null}
+              <TableCell
+                className="deletion-request-requester"
+                data-label="Requested by"
+              >
+                <Skeleton className="h-4 w-3/4" />
+              </TableCell>
+              <TableCell
+                className="deletion-request-date"
+                data-label="Requested"
+              >
+                <Skeleton className="h-4 w-4/5" />
+              </TableCell>
+              <TableCell
+                className="deletion-request-status"
+                data-label="Status"
+              >
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </TableCell>
+              <TableCell className="deletion-request-action text-center">
+                <Skeleton className="mx-auto h-7 w-16 rounded-lg" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </CardContent>
+  )
+}
+
+function DeletionRequestColgroup({
+  bulkReview,
+  showProject,
+}: {
+  bulkReview: boolean
+  showProject: boolean
+}) {
+  return (
+    <colgroup>
+      {bulkReview ? <col className="w-deletion-selection-column" /> : null}
+      <col
+        className={
+          bulkReview
+            ? showProject
+              ? "w-deletion-resource-column-with-project-and-selection"
+              : "w-deletion-resource-column-with-selection"
+            : showProject
+              ? "w-deletion-resource-column-with-project"
+              : "w-deletion-resource-column"
+        }
+      />
+      {showProject ? <col className="w-deletion-project-column" /> : null}
+      <col className="w-deletion-requester-column" />
+      <col className="w-deletion-date-column" />
+      <col className="w-deletion-status-column" />
+      <col className="w-deletion-action-column" />
+    </colgroup>
+  )
+}
+
+function DeletionRequestTableHeader({
+  bulkReview,
+  direction,
+  onSelectAll,
+  onSortChange,
+  requestTimePreferredDirection,
+  selectableCount = 0,
+  selectedCount = 0,
+  showProject,
+  sort,
+}: {
+  bulkReview: boolean
+  direction: "asc" | "desc"
+  onSelectAll?: (checked: boolean) => void
+  onSortChange?: (
+    sort: WorkspaceDeletionRequestSort,
+    direction: "asc" | "desc"
+  ) => void
+  requestTimePreferredDirection: "asc" | "desc"
+  selectableCount?: number
+  selectedCount?: number
+  showProject: boolean
+  sort: WorkspaceDeletionRequestSort
+}) {
+  return (
+    <TableHeader>
+      <TableRow>
+        {bulkReview ? (
+          <TableHead className="text-center">
+            <Checkbox
+              aria-label="Select all loaded reviewable requests"
+              className="mx-auto"
+              checked={selectableCount > 0 && selectedCount === selectableCount}
+              disabled={!onSelectAll || selectableCount === 0}
+              indeterminate={
+                selectedCount > 0 && selectedCount < selectableCount
+              }
+              onCheckedChange={(checked) => onSelectAll?.(checked)}
+            />
+          </TableHead>
+        ) : null}
+        {onSortChange ? (
+          <SortableTableHead
+            active={sort === "resource_name"}
+            direction={direction}
+            field="resource_name"
+            label="Resource"
+            onChange={onSortChange}
+            preferredDirection="asc"
+          />
+        ) : (
+          <TableHead>Resource</TableHead>
+        )}
+        {showProject ? (
+          onSortChange ? (
+            <SortableTableHead
+              active={sort === "project_id"}
+              direction={direction}
+              field="project_id"
+              label="Project"
+              onChange={onSortChange}
+              preferredDirection="asc"
+            />
+          ) : (
+            <TableHead>Project</TableHead>
+          )
+        ) : null}
+        {onSortChange ? (
+          <SortableTableHead
+            active={sort === "requester_name"}
+            direction={direction}
+            field="requester_name"
+            label="Requested by"
+            onChange={onSortChange}
+            preferredDirection="asc"
+          />
+        ) : (
+          <TableHead>Requested by</TableHead>
+        )}
+        {onSortChange ? (
+          <SortableTableHead
+            active={sort === "request_time"}
+            direction={direction}
+            field="request_time"
+            label="Requested"
+            onChange={onSortChange}
+            preferredDirection={requestTimePreferredDirection}
+          />
+        ) : (
+          <TableHead>Requested</TableHead>
+        )}
+        {onSortChange ? (
+          <SortableTableHead
+            active={sort === "status"}
+            direction={direction}
+            field="status"
+            label="Status"
+            onChange={onSortChange}
+            preferredDirection="asc"
+          />
+        ) : (
+          <TableHead>Status</TableHead>
+        )}
+        <TableHead className="text-center">
+          <span className="sr-only">Actions</span>
+        </TableHead>
+      </TableRow>
+    </TableHeader>
+  )
+}
+
+function BulkReviewToolbar({
+  items,
+  onSelectionChange,
+  scope,
+  selectedRequestIds,
+}: {
+  items: readonly WorkspaceDeletionRequest[]
+  onSelectionChange: React.Dispatch<React.SetStateAction<Set<number>>>
+  scope: IdentityScope
+  selectedRequestIds: ReadonlySet<number>
+}) {
+  const queryClient = useQueryClient()
+  const [decision, setDecision] = useState<WorkspaceDeletionReviewDecision>()
+  const [reviewError, setReviewError] = useState<string>()
+  const requests = items.filter(
+    (request) =>
+      selectedRequestIds.has(request.id) && isReviewableDeletionRequest(request)
+  )
+  const mutation = useMutation({
+    mutationFn: async ({
+      decision: nextDecision,
+      requests: nextRequests,
+    }: {
+      decision: WorkspaceDeletionReviewDecision
+      requests: readonly WorkspaceDeletionRequest[]
+    }) => {
+      const results = await Promise.allSettled(
+        nextRequests.map(async (request) =>
+          unwrapHubResult(
+            await reviewWorkspaceDeletionRequestById({
+              data: {
+                decision: nextDecision,
+                requestId: request.id,
+                scenario: fixtureScenarioFromScope(scope),
+              },
+            })
+          )
+        )
+      )
+      return results.reduce<{
+        failed: Array<{
+          error: unknown
+          request: WorkspaceDeletionRequest
+        }>
+        reviewed: WorkspaceDeletionRequest[]
+      }>(
+        (outcome, result, index) => {
+          const request = nextRequests[index]
+          if (result.status === "fulfilled") outcome.reviewed.push(result.value)
+          else outcome.failed.push({ error: result.reason, request })
+          return outcome
+        },
+        { failed: [], reviewed: [] }
+      )
+    },
+  })
+
+  async function reviewSelected() {
+    if (!decision || requests.length === 0) return
+    setReviewError(undefined)
+    try {
+      const outcome = await mutation.mutateAsync({ decision, requests })
+      const failedIds = new Set(outcome.failed.map(({ request }) => request.id))
+      onSelectionChange(failedIds)
+      if (outcome.reviewed.length > 0) {
+        await Promise.allSettled([
+          invalidateDeletionRequestMutationQueries(
+            queryClient,
+            scope,
+            outcome.reviewed.map((request) => request.resource_id)
+          ),
+        ])
+      }
+      if (outcome.failed.length > 0) {
+        const fallback = `${outcome.failed.length} request${outcome.failed.length === 1 ? "" : "s"} could not be reviewed.`
+        const reason = hubErrorMessage(outcome.failed[0]?.error, fallback)
+        setReviewError(
+          outcome.reviewed.length > 0
+            ? `${outcome.reviewed.length} completed. ${reason}`
+            : reason
+        )
+        return
+      }
+      notifySuccess(
+        decision === "approved"
+          ? `${outcome.reviewed.length} deletion request${outcome.reviewed.length === 1 ? "" : "s"} approved`
+          : `${outcome.reviewed.length} deletion request${outcome.reviewed.length === 1 ? "" : "s"} rejected`
+      )
+      setDecision(undefined)
+    } catch (error) {
+      setReviewError(
+        hubErrorMessage(error, "The selected requests could not be reviewed.")
+      )
+    }
+  }
+
+  if (requests.length === 0) return null
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2 border-b px-4 py-3">
+        <span className="mr-auto text-label">{requests.length} selected</span>
+        <Button
+          onClick={() => {
+            mutation.reset()
+            setReviewError(undefined)
+            setDecision("rejected")
+          }}
+          size="sm"
+          variant="outline"
+        >
+          Reject
+        </Button>
+        <Button
+          onClick={() => {
+            mutation.reset()
+            setReviewError(undefined)
+            setDecision("approved")
+          }}
+          size="sm"
+          variant="destructive"
+        >
+          Approve deletion
+        </Button>
+      </div>
+      <ConfirmationAlertDialog
+        confirmLabel={
+          decision === "approved" ? "Approve deletion" : "Reject requests"
+        }
+        description={`Review ${requests.length} selected request${requests.length === 1 ? "" : "s"} individually. Completed reviews remain applied if another request fails.`}
+        error={reviewError}
+        onConfirm={() => void reviewSelected()}
+        onOpenChange={(open) => {
+          if (!open) {
+            mutation.reset()
+            setReviewError(undefined)
+            setDecision(undefined)
+          }
+        }}
+        open={Boolean(decision)}
+        pending={mutation.isPending}
+        pendingLabel={decision === "approved" ? "Approving" : "Rejecting"}
+        title={
+          decision === "approved"
+            ? "Approve selected deletion requests?"
+            : "Reject selected deletion requests?"
+        }
+        variant={decision === "approved" ? "destructive" : "default"}
+      />
+    </>
+  )
+}
+
+function isReviewableDeletionRequest(request: WorkspaceDeletionRequest) {
+  return request.status === "pending" && request.capabilities.can_review
+}
+
+function DeletionRequestTable({
+  account,
+  bulkReview,
+  direction,
+  items,
+  onSortChange,
+  onOpen,
+  onSelectionChange,
+  requestTimePreferredDirection,
+  selectedRequestIds,
+  showProject,
+  sort,
+}: {
   account: WorkspaceAccount
+  bulkReview: boolean
   direction: "asc" | "desc"
   items: readonly WorkspaceDeletionRequest[]
   onSortChange?: (
@@ -205,166 +634,163 @@ function DeletionRequestTable({
     direction: "asc" | "desc"
   ) => void
   onOpen: (request: WorkspaceDeletionRequest) => void
+  onSelectionChange: React.Dispatch<React.SetStateAction<Set<number>>>
   requestTimePreferredDirection: "asc" | "desc"
+  selectedRequestIds: ReadonlySet<number>
   showProject: boolean
   sort: WorkspaceDeletionRequestSort
 }) {
+  const selectableRequests = bulkReview
+    ? items.filter(isReviewableDeletionRequest)
+    : []
+  const selectedCount = selectableRequests.filter((request) =>
+    selectedRequestIds.has(request.id)
+  ).length
+
+  function selectAll(checked: boolean) {
+    onSelectionChange((current) => {
+      const next = new Set(current)
+      for (const request of selectableRequests) {
+        if (checked) next.add(request.id)
+        else next.delete(request.id)
+      }
+      return next
+    })
+  }
+
   return (
-    <Table
-      aria-label="Deletion requests"
-      className="deletion-request-table table-fixed"
-    >
-      <colgroup>
-        <col
-          className={
-            showProject
-              ? "w-deletion-resource-column-with-project"
-              : "w-deletion-resource-column"
-          }
+    <>
+      {bulkReview ? (
+        <div className="flex items-center gap-2 border-b px-3 py-2 md:hidden">
+          <Checkbox
+            aria-label="Select all loaded reviewable requests"
+            checked={
+              selectableRequests.length > 0 &&
+              selectedCount === selectableRequests.length
+            }
+            disabled={selectableRequests.length === 0}
+            indeterminate={
+              selectedCount > 0 && selectedCount < selectableRequests.length
+            }
+            onCheckedChange={selectAll}
+          />
+          <span className="text-label">Select all loaded</span>
+        </div>
+      ) : null}
+      <Table
+        aria-label="Deletion requests"
+        className={cn(
+          "deletion-request-table table-fixed",
+          bulkReview && "has-selection"
+        )}
+      >
+        <DeletionRequestColgroup
+          bulkReview={bulkReview}
+          showProject={showProject}
         />
-        {showProject ? <col className="w-deletion-project-column" /> : null}
-        <col className="w-deletion-requester-column" />
-        <col className="w-deletion-date-column" />
-        <col className="w-deletion-status-column" />
-        <col className="w-deletion-action-column" />
-      </colgroup>
-      <TableHeader>
-        <TableRow>
-          {onSortChange ? (
-            <SortableTableHead
-              active={sort === "resource_name"}
-              direction={direction}
-              field="resource_name"
-              label="Resource"
-              onChange={onSortChange}
-              preferredDirection="asc"
-            />
-          ) : (
-            <TableHead>Resource</TableHead>
-          )}
-          {showProject ? (
-            onSortChange ? (
-              <SortableTableHead
-                active={sort === "project_id"}
-                direction={direction}
-                field="project_id"
-                label="Project"
-                onChange={onSortChange}
-                preferredDirection="asc"
-              />
-            ) : (
-              <TableHead>Project</TableHead>
-            )
-          ) : null}
-          {onSortChange ? (
-            <SortableTableHead
-              active={sort === "requester_name"}
-              direction={direction}
-              field="requester_name"
-              label="Requested by"
-              onChange={onSortChange}
-              preferredDirection="asc"
-            />
-          ) : (
-            <TableHead>Requested by</TableHead>
-          )}
-          {onSortChange ? (
-            <SortableTableHead
-              active={sort === "request_time"}
-              direction={direction}
-              field="request_time"
-              label="Requested"
-              onChange={onSortChange}
-              preferredDirection={requestTimePreferredDirection}
-            />
-          ) : (
-            <TableHead>Requested</TableHead>
-          )}
-          {onSortChange ? (
-            <SortableTableHead
-              active={sort === "status"}
-              direction={direction}
-              field="status"
-              label="Status"
-              onChange={onSortChange}
-              preferredDirection="asc"
-            />
-          ) : (
-            <TableHead>Status</TableHead>
-          )}
-          <TableHead className="text-center">
-            <span className="sr-only">Actions</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {items.map((request) => {
-          const requester =
-            request.requester_id === account.unique_id
-              ? account
-              : request.requester
-          return (
-            <TableRow key={request.id}>
-              <TableCell className="deletion-request-resource">
-                <DeletionRequestResource request={request} />
-              </TableCell>
-              {showProject ? (
-                <TableCell
-                  className="deletion-request-project"
-                  data-label="Project"
-                >
-                  <DeletionRequestProject request={request} />
-                </TableCell>
-              ) : null}
-              <TableCell
-                className="deletion-request-requester"
-                data-label="Requested by"
+        <DeletionRequestTableHeader
+          bulkReview={bulkReview}
+          direction={direction}
+          onSelectAll={selectAll}
+          onSortChange={onSortChange}
+          requestTimePreferredDirection={requestTimePreferredDirection}
+          selectedCount={selectedCount}
+          selectableCount={selectableRequests.length}
+          showProject={showProject}
+          sort={sort}
+        />
+        <TableBody>
+          {items.map((request) => {
+            const requester =
+              request.requester_id === account.unique_id
+                ? account
+                : request.requester
+            return (
+              <TableRow
+                data-state={
+                  selectedRequestIds.has(request.id) ? "selected" : undefined
+                }
+                key={request.id}
               >
-                {requester ? (
-                  <PersonLink
-                    nameStyle="abbreviated"
-                    person={requester}
-                    presentation="inline"
-                  />
-                ) : (
-                  <span className="inline-flex min-w-0 items-center gap-1.5">
-                    <PrincipalTypeIcon type="user" />
-                    <MfidText
-                      className="truncate"
-                      presentation="supporting"
-                      value={request.requester_id}
+                {bulkReview ? (
+                  <TableCell className="deletion-request-select text-center">
+                    <Checkbox
+                      aria-label={`Select deletion request for ${request.resource_name?.trim() || "untitled resource"}`}
+                      checked={selectedRequestIds.has(request.id)}
+                      className="mx-auto"
+                      disabled={!isReviewableDeletionRequest(request)}
+                      onCheckedChange={(checked) => {
+                        onSelectionChange((current) => {
+                          const next = new Set(current)
+                          if (checked) next.add(request.id)
+                          else next.delete(request.id)
+                          return next
+                        })
+                      }}
                     />
-                  </span>
-                )}
-              </TableCell>
-              <TableCell
-                className="deletion-request-date"
-                data-label="Requested"
-              >
-                <LocalDateTime value={request.request_time} />
-              </TableCell>
-              <TableCell
-                className="deletion-request-status"
-                data-label="Status"
-              >
-                <DeletionRequestStatusBadge status={request.status} />
-              </TableCell>
-              <TableCell className="deletion-request-action text-center">
-                <Button
-                  onClick={() => onOpen(request)}
-                  size="sm"
-                  variant={
-                    request.capabilities.can_review ? "default" : "outline"
-                  }
+                  </TableCell>
+                ) : null}
+                <TableCell className="deletion-request-resource">
+                  <DeletionRequestResource request={request} />
+                </TableCell>
+                {showProject ? (
+                  <TableCell
+                    className="deletion-request-project"
+                    data-label="Project"
+                  >
+                    <DeletionRequestProject request={request} />
+                  </TableCell>
+                ) : null}
+                <TableCell
+                  className="deletion-request-requester"
+                  data-label="Requested by"
                 >
-                  {request.capabilities.can_review ? "Review" : "View"}
-                </Button>
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
+                  {requester ? (
+                    <PersonLink
+                      nameStyle="abbreviated"
+                      person={requester}
+                      presentation="inline"
+                    />
+                  ) : (
+                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                      <PrincipalTypeIcon type="user" />
+                      <MfidText
+                        className="truncate"
+                        presentation="supporting"
+                        value={request.requester_id}
+                      />
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell
+                  className="deletion-request-date"
+                  data-label="Requested"
+                >
+                  <LocalDateTime value={request.request_time} />
+                </TableCell>
+                <TableCell
+                  className="deletion-request-status"
+                  data-label="Status"
+                >
+                  <DeletionRequestStatusBadge status={request.status} />
+                </TableCell>
+                <TableCell className="deletion-request-action text-center">
+                  <Button
+                    onClick={() => onOpen(request)}
+                    size="sm"
+                    variant={
+                      request.capabilities.can_review ? "default" : "outline"
+                    }
+                  >
+                    {request.capabilities.can_review ? "Review" : "View"}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </>
   )
 }
 

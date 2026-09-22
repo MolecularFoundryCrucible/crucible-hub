@@ -112,15 +112,22 @@ export function invalidateResourceDiscoveryQueries(
 export function invalidateDeletionRequestMutationQueries(
   queryClient: QueryClient,
   scope: IdentityScope,
-  resourceMfid: string
+  resourceMfids: string | readonly string[]
 ) {
+  const mfids = [
+    ...new Set(
+      typeof resourceMfids === "string" ? [resourceMfids] : resourceMfids
+    ),
+  ]
   return Promise.all([
     invalidateResourceDiscoveryQueries(queryClient, scope),
     queryClient.invalidateQueries({
       queryKey: crucibleKeys.deletionRequestQueries(scope),
     }),
-    queryClient.invalidateQueries({
-      queryKey: crucibleKeys.resourceDetails(scope, resourceMfid),
-    }),
+    ...mfids.map((resourceMfid) =>
+      queryClient.invalidateQueries({
+        queryKey: crucibleKeys.resourceDetails(scope, resourceMfid),
+      })
+    ),
   ])
 }

@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added page-scoped selection and partial-success bulk approval or rejection to the reviewable deletion-request queue, with stable table headings and shape-matched row skeletons during loading.
+
 - Added API-backed sorting by resource, project, requester, request time, and status to the deletion-request queue.
 
 - Added deletion-queue resource previews and visible deletion-request status to resource pages and inspector headers.

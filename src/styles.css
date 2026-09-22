@@ -120,6 +120,7 @@
   --spacing-deletion-date-column: var(--spacing-resource-date-column);
   --spacing-deletion-project-column: 16rem;
   --spacing-deletion-requester-column: var(--spacing-resource-person-column);
+  --spacing-deletion-selection-column: 3rem;
   --spacing-deletion-status-column: 7rem;
   --spacing-deletion-resource-column: calc(
     100% - var(--spacing-deletion-action-column) -
@@ -130,6 +131,14 @@
   --spacing-deletion-resource-column-with-project: calc(
     var(--spacing-deletion-resource-column) -
       var(--spacing-deletion-project-column)
+  );
+  --spacing-deletion-resource-column-with-selection: calc(
+    var(--spacing-deletion-resource-column) -
+      var(--spacing-deletion-selection-column)
+  );
+  --spacing-deletion-resource-column-with-project-and-selection: calc(
+    var(--spacing-deletion-resource-column-with-project) -
+      var(--spacing-deletion-selection-column)
   );
   --spacing-access-role-control: 6rem;
   --spacing-data-name-column-with-action: calc(
@@ -1150,6 +1159,31 @@ body {
     align-self: center;
     grid-column: 2;
     grid-row: 1;
+  }
+
+  .deletion-request-table.has-selection tr {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .deletion-request-table.has-selection .deletion-request-select {
+    align-self: center;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .deletion-request-table.has-selection .deletion-request-resource {
+    grid-column: 2;
+  }
+
+  .deletion-request-table.has-selection .deletion-request-requester,
+  .deletion-request-table.has-selection .deletion-request-project,
+  .deletion-request-table.has-selection .deletion-request-date,
+  .deletion-request-table.has-selection .deletion-request-status {
+    grid-column: 2 / -1;
+  }
+
+  .deletion-request-table.has-selection .deletion-request-action {
+    grid-column: 3;
   }
 }
 

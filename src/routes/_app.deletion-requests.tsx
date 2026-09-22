@@ -154,6 +154,7 @@ function DeletionRequestsPage() {
         />
         <DeletionRequestQueue
           account={account}
+          bulkReview={view === "reviewable"}
           emptyTitle={
             view === "reviewable"
               ? "No requests need review"
