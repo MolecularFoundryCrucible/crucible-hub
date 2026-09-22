@@ -21,6 +21,7 @@ import {
 
 type ConfirmationProps = {
   cancelLabel?: string
+  children?: React.ReactNode
   confirmLabel: string
   description: React.ReactNode
   error?: React.ReactNode
@@ -35,6 +36,7 @@ type ConfirmationProps = {
 
 export function DismissibleConfirmationDialog({
   cancelLabel = "Cancel",
+  children,
   confirmLabel,
   description,
   error,
@@ -58,6 +60,7 @@ export function DismissibleConfirmationDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {children}
         <ConfirmationError>{error}</ConfirmationError>
         <DialogFooter>
           <Button
@@ -85,6 +88,7 @@ export function DismissibleConfirmationDialog({
 
 export function ConfirmationAlertDialog({
   cancelLabel = "Cancel",
+  children,
   confirmLabel,
   description,
   error,
@@ -108,6 +112,7 @@ export function ConfirmationAlertDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {children}
         <ConfirmationError>{error}</ConfirmationError>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>

@@ -98,6 +98,7 @@ function fixtureDeletionRequests(
   const source = readWorkspaceFixture(scenario)
   if (source.status === "unavailable") throw new Error(source.reason)
   const resource = source.workspace.datasets[0]
+  const approvedResource = source.workspace.samples[0]
   const submittedResource = source.workspace.samples[1]
   const requester = source.workspace.people[1] ?? source.workspace.account
   const request = {
@@ -140,6 +141,24 @@ function fixtureDeletionRequests(
     reviewer_id: requester.unique_id,
     reviewer_notes: "The record remains relevant to an existing dataset.",
     status: "rejected",
+  })
+  requests.push({
+    capabilities: { can_review: false },
+    id: 3,
+    project_id: approvedResource.project_id ?? null,
+    project_mfid: approvedResource.project?.unique_id ?? null,
+    reason: "The duplicate sample record is no longer needed.",
+    request_time: "2026-08-20T14:15:00Z",
+    requester,
+    requester_id: requester.unique_id,
+    resource_id: approvedResource.unique_id,
+    resource_name: approvedResource.sample_name,
+    resource_type: "sample",
+    review_time: "2026-08-21T16:30:00Z",
+    reviewer: source.workspace.account,
+    reviewer_id: source.workspace.account.unique_id,
+    reviewer_notes: "Confirmed as a duplicate record.",
+    status: "approved",
   })
   return requests
 }

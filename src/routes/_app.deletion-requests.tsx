@@ -39,13 +39,17 @@ const deletionRequestSearchSchema = z
       ])
       .optional()
       .catch(undefined),
-    view: z.enum(["reviewable", "submitted"]).optional().catch(undefined),
+    view: z
+      .enum(["approved", "reviewable", "submitted"])
+      .optional()
+      .catch(undefined),
   })
   .merge(resourcePreviewSearchSchema)
 
 const views = [
-  { label: "Submitted by you", value: "submitted" },
+  { label: "Your requests", value: "submitted" },
   { label: "Needs review", value: "reviewable" },
+  { label: "Approved", value: "approved" },
 ] as const
 
 export const Route = createFileRoute("/_app/deletion-requests")({
@@ -65,9 +69,9 @@ export const Route = createFileRoute("/_app/deletion-requests")({
         deps.direction ?? defaultDeletionRequestDirection(deps.view, deps.sort),
       limit: deletionRequestPageLimit,
       projectMfid: deps.projectMfid,
-      scope: deps.view,
+      scope: deletionRequestScope(deps.view),
       sort: deps.sort,
-      status: deps.view === "reviewable" ? "pending" : undefined,
+      status: deletionRequestStatus(deps.view),
     })
     void context.queryClient.prefetchInfiniteQuery(options)
   },
@@ -158,15 +162,17 @@ function DeletionRequestsPage() {
           emptyTitle={
             view === "reviewable"
               ? "No requests need review"
-              : "No submitted requests"
+              : view === "approved"
+                ? "No approved requests"
+                : "No submitted requests"
           }
           filters={{
             direction,
             limit: deletionRequestPageLimit,
             projectMfid: search.projectMfid,
-            scope: view,
+            scope: deletionRequestScope(view),
             sort,
-            status: view === "reviewable" ? "pending" : undefined,
+            status: deletionRequestStatus(view),
           }}
           onSortChange={(nextSort, nextDirection) => {
             void navigate({
@@ -190,9 +196,20 @@ function DeletionRequestsPage() {
 }
 
 function defaultDeletionRequestDirection(
-  view: "reviewable" | "submitted",
+  view: "approved" | "reviewable" | "submitted",
   sort: WorkspaceDeletionRequestSort
 ) {
   if (sort !== "request_time") return "asc" as const
   return view === "reviewable" ? ("asc" as const) : ("desc" as const)
+}
+
+function deletionRequestScope(view: "approved" | "reviewable" | "submitted") {
+  if (view === "approved") return "accessible" as const
+  return view
+}
+
+function deletionRequestStatus(view: "approved" | "reviewable" | "submitted") {
+  if (view === "approved") return "approved" as const
+  if (view === "reviewable") return "pending" as const
+  return undefined
 }

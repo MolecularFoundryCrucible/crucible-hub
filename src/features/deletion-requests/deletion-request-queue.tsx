@@ -127,7 +127,7 @@ export function DeletionRequestQueue({
             direction={filters.direction}
             onSortChange={onSortChange}
             requestTimePreferredDirection={
-              filters.scope === "reviewable" ? "asc" : "desc"
+              filters.status === "pending" ? "asc" : "desc"
             }
             showProject={!filters.projectMfid}
             sort={filters.sort}
@@ -159,29 +159,31 @@ export function DeletionRequestQueue({
                 requests.
               </p>
             ) : null}
-            {bulkReview && selectedRequestIds.size > 0 ? (
-              <BulkReviewToolbar
-                items={items}
-                onSelectionChange={setSelectedRequestIds}
-                scope={scope}
-                selectedRequestIds={selectedRequestIds}
-              />
-            ) : null}
-            <DeletionRequestTable
-              account={account}
-              bulkReview={bulkReview}
-              direction={filters.direction}
-              items={items}
-              onSortChange={onSortChange}
-              onOpen={setSelected}
-              requestTimePreferredDirection={
-                filters.scope === "reviewable" ? "asc" : "desc"
-              }
+            <BulkReviewController
+              items={bulkReview ? items : []}
               onSelectionChange={setSelectedRequestIds}
+              scope={scope}
               selectedRequestIds={selectedRequestIds}
-              showProject={!filters.projectMfid}
-              sort={filters.sort}
-            />
+            >
+              {(bulkReviewActions) => (
+                <DeletionRequestTable
+                  account={account}
+                  bulkReview={bulkReview}
+                  bulkReviewActions={bulkReviewActions}
+                  direction={filters.direction}
+                  items={items}
+                  onSortChange={onSortChange}
+                  onOpen={setSelected}
+                  requestTimePreferredDirection={
+                    filters.status === "pending" ? "asc" : "desc"
+                  }
+                  onSelectionChange={setSelectedRequestIds}
+                  selectedRequestIds={selectedRequestIds}
+                  showProject={!filters.projectMfid}
+                  sort={filters.sort}
+                />
+              )}
+            </BulkReviewController>
           </CardContent>
         )}
       </Card>
@@ -346,6 +348,7 @@ function DeletionRequestColgroup({
 
 function DeletionRequestTableHeader({
   bulkReview,
+  bulkReviewActions,
   direction,
   onSelectAll,
   onSortChange,
@@ -356,6 +359,7 @@ function DeletionRequestTableHeader({
   sort,
 }: {
   bulkReview: boolean
+  bulkReviewActions?: React.ReactNode
   direction: "asc" | "desc"
   onSelectAll?: (checked: boolean) => void
   onSortChange?: (
@@ -385,7 +389,11 @@ function DeletionRequestTableHeader({
             />
           </TableHead>
         ) : null}
-        {onSortChange ? (
+        {bulkReviewActions ? (
+          <TableHead colSpan={showProject ? 6 : 5}>
+            {bulkReviewActions}
+          </TableHead>
+        ) : onSortChange ? (
           <SortableTableHead
             active={sort === "resource_name"}
             direction={direction}
@@ -397,7 +405,7 @@ function DeletionRequestTableHeader({
         ) : (
           <TableHead>Resource</TableHead>
         )}
-        {showProject ? (
+        {!bulkReviewActions && showProject ? (
           onSortChange ? (
             <SortableTableHead
               active={sort === "project_id"}
@@ -411,56 +419,66 @@ function DeletionRequestTableHeader({
             <TableHead>Project</TableHead>
           )
         ) : null}
-        {onSortChange ? (
-          <SortableTableHead
-            active={sort === "requester_name"}
-            direction={direction}
-            field="requester_name"
-            label="Requested by"
-            onChange={onSortChange}
-            preferredDirection="asc"
-          />
-        ) : (
-          <TableHead>Requested by</TableHead>
-        )}
-        {onSortChange ? (
-          <SortableTableHead
-            active={sort === "request_time"}
-            direction={direction}
-            field="request_time"
-            label="Requested"
-            onChange={onSortChange}
-            preferredDirection={requestTimePreferredDirection}
-          />
-        ) : (
-          <TableHead>Requested</TableHead>
-        )}
-        {onSortChange ? (
-          <SortableTableHead
-            active={sort === "status"}
-            direction={direction}
-            field="status"
-            label="Status"
-            onChange={onSortChange}
-            preferredDirection="asc"
-          />
-        ) : (
-          <TableHead>Status</TableHead>
-        )}
-        <TableHead className="text-center">
-          <span className="sr-only">Actions</span>
-        </TableHead>
+        {!bulkReviewActions ? (
+          onSortChange ? (
+            <SortableTableHead
+              active={sort === "requester_name"}
+              direction={direction}
+              field="requester_name"
+              label="Requested by"
+              onChange={onSortChange}
+              preferredDirection="asc"
+            />
+          ) : (
+            <TableHead>Requested by</TableHead>
+          )
+        ) : null}
+        {!bulkReviewActions ? (
+          onSortChange ? (
+            <SortableTableHead
+              active={sort === "request_time"}
+              direction={direction}
+              field="request_time"
+              label="Requested"
+              onChange={onSortChange}
+              preferredDirection={requestTimePreferredDirection}
+            />
+          ) : (
+            <TableHead>Requested</TableHead>
+          )
+        ) : null}
+        {!bulkReviewActions ? (
+          onSortChange ? (
+            <SortableTableHead
+              active={sort === "status"}
+              direction={direction}
+              field="status"
+              label="Status"
+              onChange={onSortChange}
+              preferredDirection="asc"
+            />
+          ) : (
+            <TableHead>Status</TableHead>
+          )
+        ) : null}
+        {!bulkReviewActions ? (
+          <TableHead className="text-center">
+            <span className="sr-only">Actions</span>
+          </TableHead>
+        ) : null}
       </TableRow>
     </TableHeader>
   )
 }
 
-function BulkReviewToolbar({
+function BulkReviewController({
+  children,
   items,
   onSelectionChange,
   scope,
   selectedRequestIds,
 }: {
+  children: (actions?: React.ReactNode) => React.ReactNode
   items: readonly WorkspaceDeletionRequest[]
   onSelectionChange: React.Dispatch<React.SetStateAction<Set<number>>>
   scope: IdentityScope
@@ -469,6 +487,7 @@ function BulkReviewToolbar({
   const queryClient = useQueryClient()
   const [decision, setDecision] = useState<WorkspaceDeletionReviewDecision>()
   const [reviewError, setReviewError] = useState<string>()
+  const [reviewerNotes, setReviewerNotes] = useState("")
   const requests = items.filter(
     (request) =>
       selectedRequestIds.has(request.id) && isReviewableDeletionRequest(request)
@@ -488,6 +507,7 @@ function BulkReviewToolbar({
               data: {
                 decision: nextDecision,
                 requestId: request.id,
+                reviewerNotes: reviewerNotes.trim() || undefined,
                 scenario: fixtureScenarioFromScope(scope),
               },
             })
@@ -543,6 +563,7 @@ function BulkReviewToolbar({
           ? `${outcome.reviewed.length} deletion request${outcome.reviewed.length === 1 ? "" : "s"} approved`
           : `${outcome.reviewed.length} deletion request${outcome.reviewed.length === 1 ? "" : "s"} rejected`
       )
+      setReviewerNotes("")
       setDecision(undefined)
     } catch (error) {
       setReviewError(
@@ -551,35 +572,27 @@ function BulkReviewToolbar({
     }
   }
 
-  if (requests.length === 0) return null
-
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2 border-b px-4 py-3">
-        <span className="mr-auto text-label">{requests.length} selected</span>
-        <Button
-          onClick={() => {
-            mutation.reset()
-            setReviewError(undefined)
-            setDecision("rejected")
-          }}
-          size="sm"
-          variant="outline"
-        >
-          Reject
-        </Button>
-        <Button
-          onClick={() => {
-            mutation.reset()
-            setReviewError(undefined)
-            setDecision("approved")
-          }}
-          size="sm"
-          variant="destructive"
-        >
-          Approve deletion
-        </Button>
-      </div>
+      {children(
+        requests.length > 0 ? (
+          <BulkReviewActions
+            count={requests.length}
+            onApprove={() => {
+              mutation.reset()
+              setReviewError(undefined)
+              setReviewerNotes("")
+              setDecision("approved")
+            }}
+            onReject={() => {
+              mutation.reset()
+              setReviewError(undefined)
+              setReviewerNotes("")
+              setDecision("rejected")
+            }}
+          />
+        ) : undefined
+      )}
       <ConfirmationAlertDialog
         confirmLabel={
           decision === "approved" ? "Approve deletion" : "Reject requests"
@@ -591,6 +604,7 @@ function BulkReviewToolbar({
           if (!open) {
             mutation.reset()
             setReviewError(undefined)
+            setReviewerNotes("")
             setDecision(undefined)
           }
         }}
@@ -603,8 +617,43 @@ function BulkReviewToolbar({
             : "Reject selected deletion requests?"
         }
         variant={decision === "approved" ? "destructive" : "default"}
-      />
+      >
+        <Field>
+          <FieldLabel htmlFor="bulk-deletion-review-notes" optional>
+            Reviewer comment
+          </FieldLabel>
+          <Textarea
+            disabled={mutation.isPending}
+            id="bulk-deletion-review-notes"
+            maxLength={2_000}
+            onChange={(event) => setReviewerNotes(event.target.value)}
+            value={reviewerNotes}
+          />
+        </Field>
+      </ConfirmationAlertDialog>
     </>
+  )
+}
+
+function BulkReviewActions({
+  count,
+  onApprove,
+  onReject,
+}: {
+  count: number
+  onApprove: () => void
+  onReject: () => void
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      <span className="mr-auto truncate text-label">{count} selected</span>
+      <Button onClick={onReject} size="sm" variant="outline">
+        Reject
+      </Button>
+      <Button onClick={onApprove} size="sm" variant="destructive">
+        Approve deletion
+      </Button>
+    </div>
   )
 }
 
@@ -615,6 +664,7 @@ function isReviewableDeletionRequest(request: WorkspaceDeletionRequest) {
 function DeletionRequestTable({
   account,
   bulkReview,
+  bulkReviewActions,
   direction,
   items,
   onSortChange,
@@ -627,6 +677,7 @@ function DeletionRequestTable({
 }: {
   account: WorkspaceAccount
   bulkReview: boolean
+  bulkReviewActions?: React.ReactNode
   direction: "asc" | "desc"
   items: readonly WorkspaceDeletionRequest[]
   onSortChange?: (
@@ -661,7 +712,7 @@ function DeletionRequestTable({
   return (
     <>
       {bulkReview ? (
-        <div className="flex items-center gap-2 border-b px-3 py-2 md:hidden">
+        <div className="flex min-h-11 items-center gap-2 border-b px-3 py-2 md:hidden">
           <Checkbox
             aria-label="Select all loaded reviewable requests"
             checked={
@@ -674,7 +725,9 @@ function DeletionRequestTable({
             }
             onCheckedChange={selectAll}
           />
-          <span className="text-label">Select all loaded</span>
+          {bulkReviewActions ?? (
+            <span className="text-label">Select all loaded</span>
+          )}
         </div>
       ) : null}
       <Table
@@ -689,6 +742,7 @@ function DeletionRequestTable({
           showProject={showProject}
         />
         <DeletionRequestTableHeader
+          bulkReviewActions={bulkReviewActions}
           bulkReview={bulkReview}
           direction={direction}
           onSelectAll={selectAll}
