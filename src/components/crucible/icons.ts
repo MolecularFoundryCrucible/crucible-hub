@@ -77,6 +77,7 @@ export {
   Copy as CopyIcon,
   ChevronRight as MetadataDisclosureIcon,
   Clock3 as DeletionRequestedIcon,
+  ClipboardList as DeletionRequestsIcon,
   Trash2 as RequestDeletionIcon,
   GitBranchPlus as AddRelationshipIcon,
   Pencil as ManageRelationshipsIcon,

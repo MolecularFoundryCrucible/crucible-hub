@@ -987,7 +987,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Deletion Requests */
+        /**
+         * List Deletion Requests
+         * @description List deletion requests visible to or actionable by the caller.
+         */
         get: operations["list_deletion_requests_deletion_requests_get"];
         put?: never;
         post?: never;
@@ -1004,14 +1007,22 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Deletion Request */
+        /**
+         * Get Deletion Request
+         * @description Return a request to its submitter or a caller with deletion-review authority.
+         */
         get: operations["get_deletion_request_deletion_requests__request_id__get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Review Deletion Request */
+        /**
+         * Review Deletion Request
+         * @description Review a pending request with effective Admin or Owner access.
+         *
+         *     Non-administrator service accounts cannot review deletion requests.
+         */
         patch: operations["review_deletion_request_deletion_requests__request_id__patch"];
         trace?: never;
     };
@@ -2089,6 +2100,7 @@ export interface paths {
         /**
          * Create Deletion Request
          * @description Request deletion of a resource. Requires contributor access to the resource.
+         *     Pending requests hide the resource from ordinary discovery until rejected.
          *     Returns 409 if an active deletion request already exists for this resource.
          */
         post: operations["create_deletion_request_resources__resource_id__delete_post"];
@@ -3409,15 +3421,26 @@ export interface components {
             /** Reviewer Notes */
             reviewer_notes?: string | null;
         };
+        /** DeletionRequestCapabilities */
+        DeletionRequestCapabilities: {
+            /**
+             * Can Review
+             * @description Whether the caller may approve or reject this pending request.
+             */
+            can_review: boolean;
+        };
         /**
          * DeletionRequestRead
-         * @description Response model for DeletionRequest that includes resource_type and project_id.
+         * @description Deletion request with resource, project, and caller capability context.
          */
         DeletionRequestRead: {
+            capabilities: components["schemas"]["DeletionRequestCapabilities"];
             /** Id */
             id: number;
             /** Project Id */
             project_id?: string | null;
+            /** Project Mfid */
+            project_mfid?: string | null;
             /** Reason */
             reason?: string | null;
             /** Request Time */
@@ -3436,9 +3459,23 @@ export interface components {
             reviewer_id?: string | null;
             /** Reviewer Notes */
             reviewer_notes?: string | null;
-            /** Status */
-            status: string;
+            status: components["schemas"]["DeletionRequestStatus"];
         };
+        /**
+         * DeletionRequestScope
+         * @enum {string}
+         */
+        DeletionRequestScope: "accessible" | "submitted" | "reviewable";
+        /**
+         * DeletionRequestStatus
+         * @enum {string}
+         */
+        DeletionRequestStatus: "pending" | "approved" | "rejected";
+        /**
+         * DeletionReviewDecision
+         * @enum {string}
+         */
+        DeletionReviewDecision: "approved" | "rejected";
         /**
          * EffectiveAccess
          * @enum {string}
@@ -6916,7 +6953,11 @@ export interface operations {
     list_deletion_requests_deletion_requests_get: {
         parameters: {
             query?: {
-                status?: string | null;
+                /** @description Select accessible, caller-submitted, or currently reviewable requests. Service accounts without platform-administrator authority cannot review. */
+                scope?: components["schemas"]["DeletionRequestScope"];
+                status?: components["schemas"]["DeletionRequestStatus"] | null;
+                /** @description Limit requests to resources assigned to this canonical project MFID. */
+                project_mfid?: string | null;
                 limit?: number;
                 offset?: number;
             };
@@ -6994,7 +7035,7 @@ export interface operations {
     review_deletion_request_deletion_requests__request_id__patch: {
         parameters: {
             query: {
-                status: string;
+                status: components["schemas"]["DeletionReviewDecision"];
                 reviewer_notes?: string | null;
             };
             header?: {

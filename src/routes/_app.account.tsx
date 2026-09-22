@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 
 import {
   ContentBoundary,
@@ -7,6 +7,8 @@ import {
 } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { DeletionRequestsIcon } from "@/components/crucible/icons"
+import { buttonVariants } from "@/components/ui/button"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { AccountCapabilitiesCard } from "@/features/account-profile/account-capabilities-card"
@@ -24,7 +26,19 @@ function AccountPage() {
 
   return (
     <PageLayout>
-      <PageHeader title="My profile" />
+      <PageHeader
+        actions={
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            search={{ view: "submitted" }}
+            to="/deletion-requests"
+          >
+            <DeletionRequestsIcon data-icon="inline-start" />
+            Deletion requests
+          </Link>
+        }
+        title="My profile"
+      />
       <ContentBoundary>
         <ContentGrid variant="split">
           <div className="flex min-w-0 flex-col gap-page-section">

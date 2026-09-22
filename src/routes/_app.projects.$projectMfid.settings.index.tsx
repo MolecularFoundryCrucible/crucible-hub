@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 
 import {
   ResourceManagementPending,
@@ -11,6 +11,8 @@ import {
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { buttonVariants } from "@/components/ui/button"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
@@ -21,6 +23,7 @@ import { ProjectLeaveCard } from "@/features/project-membership/project-leave-ca
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 import { ProjectMembershipCard } from "@/features/project-membership/project-membership-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
+import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/settings/")({
   loader: async ({ context, parentMatchPromise }) => {
@@ -47,6 +50,7 @@ function ProjectManagePage() {
   const { data: project } = useSuspenseQuery(
     projectQueryOptions(scope, projectMfid)
   )
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   if (!project || !("organization" in project)) return null
 
   const canTransfer = project.capabilities?.can_transfer === true
@@ -70,6 +74,32 @@ function ProjectManagePage() {
             mode={mode}
             project={{ ...project, members: project.members ?? null }}
             scope={scope}
+          />
+        </ContentBoundary>
+      ) : null}
+      {canManageMembers ? (
+        <ContentBoundary width="reading">
+          <DeletionRequestQueue
+            account={account}
+            action={
+              <Link
+                className={buttonVariants({ size: "sm", variant: "outline" })}
+                search={{ projectMfid, view: "reviewable" }}
+                to="/deletion-requests"
+              >
+                View all
+              </Link>
+            }
+            emptyTitle="No requests need review"
+            filters={{
+              limit: 5,
+              offset: 0,
+              projectMfid,
+              scope: "reviewable",
+              status: "pending",
+            }}
+            scope={scope}
+            title="Deletion requests"
           />
         </ContentBoundary>
       ) : null}

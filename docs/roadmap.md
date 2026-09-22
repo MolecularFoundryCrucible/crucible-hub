@@ -20,17 +20,17 @@ This document owns delivery order, entry and completion gates, current status, a
 
 The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, and the first capability-gated service-account administration slice. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
 
-| Area                                        | Status                                                                                                                                                                                           |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Runtime and server-only boundary            | Locally verified; production authentication and shared-session gates remain open.                                                                                                                |
-| Read and discovery workspace                | Home continuation, global and project search, QR lookup, directory ownership scopes, cursor pagination, facets, grouped browsing, previews, and sibling navigation are implemented locally.      |
-| Resource workspaces                         | Project, instrument, sample, and dataset routes with Overview, Data or Processing, Graph where applicable, and capability-gated Manage surfaces are implemented locally.                         |
-| Controlled mutations                        | Descriptive and metadata edits, creation, relationships, access, membership, assignment, ownership, lifecycle, thumbnails, ingestion requests, and deletion requests are implemented locally.    |
-| Account profile                             | Read-first identity editing, non-secret API credential status, and advertised account capabilities are implemented locally. Self-service key rotation waits for the production session contract. |
-| Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck. |
-| Broader administration and account activity | Proposed in [administration workspace](administration-workspace.md); review queues, people administration, audit, pins, and account activity await API contracts.                                |
-| Uploads                                     | Browser upload remains blocked by the secure exact-object capability, lifecycle, and CORS contract.                                                                                              |
-| Production exposure                         | Blocked by the API-owned login exchange, shared server sessions, same-origin and CSRF evidence, and deployment decisions.                                                                        |
+| Area                                        | Status                                                                                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Runtime and server-only boundary            | Locally verified; production authentication and shared-session gates remain open.                                                                                                                                  |
+| Read and discovery workspace                | Home continuation, global and project search, QR lookup, directory ownership scopes, cursor pagination, facets, grouped browsing, previews, and sibling navigation are implemented locally.                        |
+| Resource workspaces                         | Project, instrument, sample, and dataset routes with Overview, Data or Processing, Graph where applicable, and capability-gated Manage surfaces are implemented locally.                                           |
+| Controlled mutations                        | Descriptive and metadata edits, creation, relationships, access, membership, assignment, ownership, lifecycle, thumbnails, ingestion requests, and deletion request submission and review are implemented locally. |
+| Account profile                             | Read-first identity editing, non-secret API credential status, and advertised account capabilities are implemented locally. Self-service key rotation waits for the production session contract.                   |
+| Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck.                   |
+| Broader administration and account activity | Deletion-request history and review are implemented locally. Join review, people administration, audit, pins, and account activity await API contracts.                                                            |
+| Uploads                                     | Browser upload remains blocked by the secure exact-object capability, lifecycle, and CORS contract.                                                                                                                |
+| Production exposure                         | Blocked by the API-owned login exchange, shared server sessions, same-origin and CSRF evidence, and deployment decisions.                                                                                          |
 
 ## Ordered work packages
 
@@ -77,7 +77,7 @@ Implemented for local development. Dataset Overview loads an independent, browse
 
 ### P2: controlled self-service management
 
-Completed local slices are descriptive project and instrument Overview editing, sample and dataset summary editing, scientific metadata editing, reviewed resource deletion requests, a consolidated Project Overview, direct project membership, and resource relationship management. Project navigation uses Data and Overview plus capability-gated Manage for route-backed Members and Ownership operations.
+Completed local slices are descriptive project and instrument Overview editing, sample and dataset summary editing, scientific metadata editing, reviewed resource deletion submission and review, a consolidated Project Overview, direct project membership, and resource relationship management. Project navigation uses Data and Overview plus capability-gated Manage for route-backed Members, project-filtered deletion review, and Ownership operations.
 
 Direct membership uses the accepted contract: add an existing user, change an allowed non-owner role, remove a member, or let a non-owner leave. It is separate from resource ACLs, ownership transfer, and future join requests. No invitation workflow is planned. See decisions 0020 and 0021.
 
@@ -88,6 +88,10 @@ Implemented and fixture/browser verified for local development. Canonical sample
 #### Resource management
 
 Implemented and fixture/browser verified for local development. Route-backed sample and dataset Manage pages reuse the canonical parent shell, load ACLs only on Manage entry with preload disabled, gate access controls on exact `can_manage_access`, cap user and project grants with `max_grant_role`, keep non-manageable principals read-only, contain ownership and reviewed deletion actions, confirm consequential mutations, and apply server-confirmed non-optimistic state. The API shape and production session gate remain the authoritative deployment constraints.
+
+#### Deletion-request review
+
+Implemented locally against pinned API revision `f2a9c2e8662200f33994e44374b9253a4cbd2e3f`. One shared route presents submitted history and capability-guided pending review with URL-backed project scope and offset pages. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
 
 #### Deferred: join requests
 

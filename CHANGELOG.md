@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added account-visible deletion-request history and capability-guided review queues with project-scoped review, normal or explicitly elevated authority, responsive request details, confirmed approval or rejection, and complete discovery cache refresh.
+
 - Added a direct Home recovery action to route errors and missing-page states so inaccessible elevated resources do not trap navigation after Administrator view is disabled.
 
 - Added explicit normal and elevated API privilege modes, contextual elevation for platform Administration, a visible session-scoped Administrator view in the Administration sidebar, effective-capability and assigned-role context in Account access, and service-account creation through the shared Create menu.

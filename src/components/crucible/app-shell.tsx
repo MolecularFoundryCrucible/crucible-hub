@@ -18,6 +18,7 @@ import {
   AdministratorViewEnabledIcon,
   AdministratorViewIcon,
   CollapseSidebarIcon,
+  DeletionRequestsIcon,
   ExpandSidebarIcon,
   RecentResourcesIcon,
   ThemeIcon,
@@ -186,6 +187,26 @@ export function AppShell({
                     ) : null}
                     <SidebarMenuItem>
                       <SidebarMenuButton
+                        isActive={pathname === "/deletion-requests"}
+                        tooltip="Deletion requests"
+                        render={
+                          <Link
+                            aria-current={
+                              pathname === "/deletion-requests"
+                                ? "page"
+                                : undefined
+                            }
+                            search={{ view: "reviewable" }}
+                            to="/deletion-requests"
+                          />
+                        }
+                      >
+                        <DeletionRequestsIcon aria-hidden="true" />
+                        <span>Deletion requests</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
                         isActive={pathname.startsWith(
                           "/admin/service-accounts"
                         )}
@@ -306,6 +327,17 @@ function AccountControls({
               <DropdownMenuItem render={<Link to="/account" />}>
                 <AccountIcon />
                 My profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={
+                  <Link
+                    search={{ view: "submitted" }}
+                    to="/deletion-requests"
+                  />
+                }
+              >
+                <DeletionRequestsIcon />
+                Deletion requests
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

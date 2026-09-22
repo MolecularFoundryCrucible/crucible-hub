@@ -84,3 +84,43 @@ export function invalidateResourceMutationQueries(
   }
   return Promise.all(invalidations)
 }
+
+export function invalidateResourceDiscoveryQueries(
+  queryClient: QueryClient,
+  scope: IdentityScope
+) {
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.sampleQueries(scope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.datasetQueries(scope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.projectQueries(scope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.instrumentQueries(scope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.resourceGraphs(scope),
+    }),
+    queryClient.invalidateQueries({ queryKey: crucibleKeys.searches(scope) }),
+  ])
+}
+
+export function invalidateDeletionRequestMutationQueries(
+  queryClient: QueryClient,
+  scope: IdentityScope,
+  resourceMfid: string
+) {
+  return Promise.all([
+    invalidateResourceDiscoveryQueries(queryClient, scope),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.deletionRequestQueries(scope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.resourceDetails(scope, resourceMfid),
+    }),
+  ])
+}

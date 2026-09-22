@@ -24,8 +24,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
+import { invalidateDeletionRequestMutationQueries } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { createWorkspaceResourceDeletionRequest } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
@@ -92,19 +92,11 @@ export function ResourceDeletionRequestCard({
         mergeResourceDeletionRequest(current, confirmed)
       )
       if (mode === "api") {
-        void queryClient.invalidateQueries({
-          exact: true,
-          queryKey: resourceQuery.queryKey,
-        })
-        void queryClient.invalidateQueries({
-          queryKey:
-            resource.kind === "sample"
-              ? crucibleKeys.sampleLists(scope)
-              : crucibleKeys.datasetLists(scope),
-        })
-        void queryClient.invalidateQueries({
-          queryKey: crucibleKeys.searches(scope),
-        })
+        void invalidateDeletionRequestMutationQueries(
+          queryClient,
+          scope,
+          resource.unique_id
+        )
       }
       setOpen(false)
       setReason("")
@@ -144,8 +136,8 @@ export function ResourceDeletionRequestCard({
         action={action}
         description={
           <>
-            Submit this {resource.kind} for deletion review. This does not
-            immediately delete the resource or its files.
+            Submit this {resource.kind} for deletion review. It becomes hidden
+            from discovery while the request is pending.
           </>
         }
         presentation={presentation}
@@ -168,8 +160,8 @@ export function ResourceDeletionRequestCard({
               <DialogTitle>Request deletion?</DialogTitle>
               <DialogDescription>
                 This submits <ResourceName>{resource.name}</ResourceName> for
-                review. It does not immediately delete the {resource.kind} or
-                its files.
+                review. It becomes hidden from collections, search, facets, and
+                graphs while the request is pending.
               </DialogDescription>
             </DialogHeader>
             <FieldGroup>

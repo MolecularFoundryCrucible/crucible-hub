@@ -1068,6 +1068,57 @@ body {
     grid-column: 2;
     grid-row: 1;
   }
+
+  .deletion-request-table,
+  .deletion-request-table tbody {
+    display: block;
+  }
+
+  .deletion-request-table thead {
+    display: none;
+  }
+
+  .deletion-request-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 3);
+  }
+
+  .deletion-request-table td {
+    display: block;
+    padding: 0;
+    white-space: normal;
+  }
+
+  .deletion-request-table .deletion-request-resource {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .deletion-request-table .deletion-request-requester,
+  .deletion-request-table .deletion-request-date,
+  .deletion-request-table .deletion-request-status {
+    align-items: center;
+    column-gap: calc(var(--spacing) * 1);
+    display: flex;
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .deletion-request-table .deletion-request-requester::before,
+  .deletion-request-table .deletion-request-date::before,
+  .deletion-request-table .deletion-request-status::before {
+    color: var(--muted-foreground);
+    content: attr(data-label) ": ";
+    flex: none;
+  }
+
+  .deletion-request-table .deletion-request-action {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 
 @media (max-width: 29.999rem) {

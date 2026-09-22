@@ -18,7 +18,9 @@ Until the API publishes explicit `can_request_deletion` guidance, Hub presents t
 
 Hub safely reads the known deletion-request fields from the open detail value and ignores unknown additions. A confirmed response must identify the requested resource. Success updates the exact detail record with server-confirmed request state and API mode refreshes exact detail, the corresponding resource-family lists, and search. Conflict refreshes exact detail because another active request may already exist. Failed submission retains the reason. No optimistic deletion state is shown.
 
-An active request replaces the request action with a fixed-geometry status action. Review, audit, cancellation, permanent deletion, and deletion-request collection browsing remain separate workflows.
+An active request replaces the request action with a fixed-geometry status action. The shared `/deletion-requests` workspace exposes Submitted by you and Needs review as separate API scopes. Required per-request `can_review` guidance controls review actions. Approval permanently deletes the database resource while stored GCS objects remain retained; rejection restores normal discovery. Project Manage may show a bounded project-filtered review preview. Review, audit, cancellation, and force deletion remain separate workflows.
+
+Submission, approval, and rejection invalidate the affected resource families, facets, search, graphs, project and instrument summaries, deletion-request collections, and exact resource detail. Request collections use deterministic API offset ordering and preserve their URL-backed scope, project filter, and page.
 
 ## Consequences
 
@@ -27,6 +29,8 @@ An active request replaces the request action with a fixed-geometry status actio
 - Viewers may encounter a local permission error until operation-specific capability guidance exists.
 - Unknown deletion-request response additions do not erase otherwise valid known state.
 - Force deletion remains unavailable in Hub.
+- Requesters can find pending and completed submissions after the resource leaves ordinary discovery.
+- Resource Admin and Owner reviewers use ordinary ACL authority unless global Administrator view is explicitly enabled.
 
 ## Privacy review
 

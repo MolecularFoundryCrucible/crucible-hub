@@ -1912,9 +1912,26 @@
         "title": "DeletionAuditLogRead",
         "type": "object"
       },
-      "DeletionRequestRead": {
-        "description": "Response model for DeletionRequest that includes resource_type and project_id.",
+      "DeletionRequestCapabilities": {
         "properties": {
+          "can_review": {
+            "description": "Whether the caller may approve or reject this pending request.",
+            "title": "Can Review",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "can_review"
+        ],
+        "title": "DeletionRequestCapabilities",
+        "type": "object"
+      },
+      "DeletionRequestRead": {
+        "description": "Deletion request with resource, project, and caller capability context.",
+        "properties": {
+          "capabilities": {
+            "$ref": "#/components/schemas/DeletionRequestCapabilities"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -1929,6 +1946,17 @@
               }
             ],
             "title": "Project Id"
+          },
+          "project_mfid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Mfid"
           },
           "reason": {
             "anyOf": [
@@ -2016,18 +2044,44 @@
             "title": "Reviewer Notes"
           },
           "status": {
-            "title": "Status",
-            "type": "string"
+            "$ref": "#/components/schemas/DeletionRequestStatus"
           }
         },
         "required": [
           "id",
           "resource_id",
           "requester_id",
-          "status"
+          "status",
+          "capabilities"
         ],
         "title": "DeletionRequestRead",
         "type": "object"
+      },
+      "DeletionRequestScope": {
+        "enum": [
+          "accessible",
+          "submitted",
+          "reviewable"
+        ],
+        "title": "DeletionRequestScope",
+        "type": "string"
+      },
+      "DeletionRequestStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "DeletionRequestStatus",
+        "type": "string"
+      },
+      "DeletionReviewDecision": {
+        "enum": [
+          "approved",
+          "rejected"
+        ],
+        "title": "DeletionReviewDecision",
+        "type": "string"
       },
       "EffectiveAccess": {
         "enum": [
@@ -12054,11 +12108,40 @@
     },
     "/deletion_requests": {
       "get": {
+        "description": "List deletion requests visible to or actionable by the caller.",
         "operationId": "list_deletion_requests_deletion_requests_get",
         "parameters": [
           {
+            "description": "Select accessible, caller-submitted, or currently reviewable requests. Service accounts without platform-administrator authority cannot review.",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DeletionRequestScope",
+              "default": "accessible",
+              "description": "Select accessible, caller-submitted, or currently reviewable requests. Service accounts without platform-administrator authority cannot review."
+            }
+          },
+          {
             "in": "query",
             "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DeletionRequestStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Limit requests to resources assigned to this canonical project MFID.",
+            "in": "query",
+            "name": "project_mfid",
             "required": false,
             "schema": {
               "anyOf": [
@@ -12069,7 +12152,8 @@
                   "type": "null"
                 }
               ],
-              "title": "Status"
+              "description": "Limit requests to resources assigned to this canonical project MFID.",
+              "title": "Project Mfid"
             }
           },
           {
@@ -12163,6 +12247,7 @@
     },
     "/deletion_requests/{request_id}": {
       "get": {
+        "description": "Return a request to its submitter or a caller with deletion-review authority.",
         "operationId": "get_deletion_request_deletion_requests__request_id__get",
         "parameters": [
           {
@@ -12240,6 +12325,7 @@
         ]
       },
       "patch": {
+        "description": "Review a pending request with effective Admin or Owner access.\n\nNon-administrator service accounts cannot review deletion requests.",
         "operationId": "review_deletion_request_deletion_requests__request_id__patch",
         "parameters": [
           {
@@ -12256,8 +12342,7 @@
             "name": "status",
             "required": true,
             "schema": {
-              "title": "Status",
-              "type": "string"
+              "$ref": "#/components/schemas/DeletionReviewDecision"
             }
           },
           {
@@ -17823,7 +17908,7 @@
     },
     "/resources/{resource_id}/delete": {
       "post": {
-        "description": "Request deletion of a resource. Requires contributor access to the resource.\nReturns 409 if an active deletion request already exists for this resource.",
+        "description": "Request deletion of a resource. Requires contributor access to the resource.\nPending requests hide the resource from ordinary discovery until rejected.\nReturns 409 if an active deletion request already exists for this resource.",
         "operationId": "create_deletion_request_resources__resource_id__delete_post",
         "parameters": [
           {
@@ -22831,7 +22916,7 @@
   },
   "servers": [
     {
-      "url": "/api/v3"
+      "url": "/testapi"
     }
   ]
 }

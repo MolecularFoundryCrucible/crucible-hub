@@ -14,6 +14,7 @@ import { Route as HealthRouteImport } from './routes/health'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAccountRouteImport } from './routes/_app.account'
 import { Route as AppDataRouteImport } from './routes/_app.data'
+import { Route as AppDeletionRequestsRouteImport } from './routes/_app.deletion-requests'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.design-system'
 import { Route as FixturesScenariosRouteImport } from './routes/fixtures.scenarios'
@@ -77,6 +78,11 @@ const AppAccountRoute = AppAccountRouteImport.update({
 const AppDataRoute = AppDataRouteImport.update({
   id: '/data',
   path: '/data',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDeletionRequestsRoute = AppDeletionRequestsRouteImport.update({
+  id: '/deletion-requests',
+  path: '/deletion-requests',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSearchRoute = AppSearchRouteImport.update({
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
   '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
+  '/deletion-requests': typeof AppDeletionRequestsRoute
   '/search': typeof AppSearchRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/health': typeof HealthRoute
   '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
+  '/deletion-requests': typeof AppDeletionRequestsRoute
   '/search': typeof AppSearchRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
@@ -399,6 +407,7 @@ export interface FileRoutesById {
   '/health': typeof HealthRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/data': typeof AppDataRoute
+  '/_app/deletion-requests': typeof AppDeletionRequestsRoute
   '/_app/search': typeof AppSearchRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
@@ -448,6 +457,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/account'
     | '/data'
+    | '/deletion-requests'
     | '/search'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
@@ -493,6 +503,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/account'
     | '/data'
+    | '/deletion-requests'
     | '/search'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
@@ -534,6 +545,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/_app/account'
     | '/_app/data'
+    | '/_app/deletion-requests'
     | '/_app/search'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
@@ -619,6 +631,13 @@ declare module '@tanstack/react-router' {
       path: '/data'
       fullPath: '/data'
       preLoaderRoute: typeof AppDataRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/deletion-requests': {
+      id: '/_app/deletion-requests'
+      path: '/deletion-requests'
+      fullPath: '/deletion-requests'
+      preLoaderRoute: typeof AppDeletionRequestsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/search': {
@@ -1034,6 +1053,7 @@ const AppSamplesSampleMfidRouteWithChildren =
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
   AppDataRoute: typeof AppDataRoute
+  AppDeletionRequestsRoute: typeof AppDeletionRequestsRoute
   AppSearchRoute: typeof AppSearchRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDatasetsDatasetMfidRoute: typeof AppDatasetsDatasetMfidRouteWithChildren
@@ -1055,6 +1075,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
   AppDataRoute: AppDataRoute,
+  AppDeletionRequestsRoute: AppDeletionRequestsRoute,
   AppSearchRoute: AppSearchRoute,
   AppIndexRoute: AppIndexRoute,
   AppDatasetsDatasetMfidRoute: AppDatasetsDatasetMfidRouteWithChildren,

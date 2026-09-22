@@ -322,8 +322,10 @@ export type WorkspaceRelationshipMutationResult = {
 
 export type WorkspaceDeletionRequest = Pick<
   Schema<"DeletionRequestRead">,
+  | "capabilities"
   | "id"
   | "project_id"
+  | "project_mfid"
   | "reason"
   | "request_time"
   | "requester_id"
@@ -335,6 +337,13 @@ export type WorkspaceDeletionRequest = Pick<
   | "reviewer_notes"
   | "status"
 >
+
+export type WorkspaceDeletionRequestPage = {
+  items: readonly WorkspaceDeletionRequest[]
+  limit: number
+  offset: number
+  total: number | null
+}
 
 type WorkspaceResourceBase = {
   capabilities: WorkspaceResourceCapabilities | null

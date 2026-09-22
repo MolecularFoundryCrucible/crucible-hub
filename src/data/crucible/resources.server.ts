@@ -213,8 +213,13 @@ const fixtureIngestionState = new Map<string, WorkspaceIngestionRequest[]>()
 
 const workspaceDeletionRequestSchema = z
   .object({
+    capabilities: z
+      .object({ can_review: z.boolean() })
+      .optional()
+      .default({ can_review: false }),
     id: z.number(),
     project_id: z.string().nullable().optional(),
+    project_mfid: z.string().nullable().optional(),
     reason: z.string().nullable().optional(),
     request_time: z.string().nullable().optional(),
     requester_id: z.string(),
@@ -224,7 +229,7 @@ const workspaceDeletionRequestSchema = z
     review_time: z.string().nullable().optional(),
     reviewer_id: z.string().nullable().optional(),
     reviewer_notes: z.string().nullable().optional(),
-    status: z.string(),
+    status: z.enum(["pending", "approved", "rejected"]),
   })
   .passthrough()
 
@@ -234,8 +239,10 @@ function workspaceDeletionRequest(
   const result = workspaceDeletionRequestSchema.safeParse(value)
   if (!result.success) return null
   return {
+    capabilities: result.data.capabilities,
     id: result.data.id,
     project_id: result.data.project_id ?? null,
+    project_mfid: result.data.project_mfid ?? null,
     reason: result.data.reason ?? null,
     request_time: result.data.request_time ?? null,
     requester_id: result.data.requester_id,
@@ -1593,8 +1600,11 @@ export async function requestWorkspaceResourceDeletion(
       throw new CrucibleResponseError(404)
     }
     return {
+      capabilities: { can_review: true },
       id: 1,
       project_id: "project_id" in resource ? resource.project_id : null,
+      project_mfid:
+        "project" in resource ? (resource.project?.unique_id ?? null) : null,
       reason: reason ?? null,
       request_time: "2026-09-06T00:00:00Z",
       requester_id: "0000-0000-0000-000X",

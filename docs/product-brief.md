@@ -38,7 +38,7 @@ Hub uses stable MFIDs for routes, links, cache identity, and relationships. Edit
 
 ## Product destinations
 
-Hub currently provides Home, Projects, Data, Instruments, Search, Account, and a capability-gated Administration area for service-account management. Activity, broader review queues, people administration, and audit are proposed destinations that require the contracts in [administration workspace](administration-workspace.md) and [Crucible API handoff](crucible-api-handoff.md). The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
+Hub currently provides Home, Projects, Data, Instruments, Search, Account, deletion-request tracking and review, and a capability-gated Administration area for service-account management. Activity, join-request review, people administration, and audit are proposed destinations that require the contracts in [administration workspace](administration-workspace.md) and [Crucible API handoff](crucible-api-handoff.md). The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
 
 The core product surfaces are:
 
@@ -76,11 +76,13 @@ Resource management is a separate canonical workflow at `/samples/:sampleMfid/ma
 
 Project and instrument Manage pages use the same unified card structure without nested navigation. Access management contains project members or instrument operators. Resource management contains project ownership and leaving, or instrument lifecycle and ownership. Each section and action remains gated by its exact API capability.
 
+Deletion requests use one shared workspace with Submitted by you and Needs review views. Submitted requests remain available from the account menu after the pending resource leaves normal discovery. Reviewable requests use the API's exact `can_review` capability, normal ACL authority by default, optional explicit Administrator view, deterministic offset pages, and destructive approval or restorative rejection. Project Manage shows a bounded pending preview for project Admin and Owner workflows and links to the same project-filtered queue. Submission and review refresh affected collections, facets, search, graphs, summaries, request queues, and exact resource detail without optimistic domain state.
+
 Authorized human administrators manage service accounts in a separate Administration destination. The directory is searched and paginated by the API. Creation and credential rotation show each new key once in mutation-local memory and never store it in Query state, URLs, or browser persistence. Profile editing is read-first, platform-role changes require explicit confirmation and disclose delayed authorization propagation, credential rotation requires explicit confirmation, and unavailable lifecycle actions such as suspension and deletion are not invented by the Hub. Instrument operator and project member assignment remain contextual workflows on those resources and use the shared service-account-aware identity search.
 
 ## Delivery direction
 
-The runtime, design-system, read-workspace, and controlled-management foundations are implemented for local development. Native collection browsing, graph traversal, dataset processing, account profile management, explicit privilege modes, and the first service-account administration slice now extend that foundation. Production authentication, secure browser upload, API-backed activity and review queues, saved views, broader audit history, and remaining Explorer convergence are still open.
+The runtime, design-system, read-workspace, and controlled-management foundations are implemented for local development. Native collection browsing, graph traversal, dataset processing, account profile management, deletion-request review, explicit privilege modes, and the first service-account administration slice now extend that foundation. Production authentication, secure browser upload, API-backed activity and join-request queues, saved views, broader audit history, and remaining Explorer convergence are still open.
 
 The ordered packages, gates, current implementation status, and next action are authoritative in [roadmap](roadmap.md). Current verification is authoritative in [foundation evidence](phase-0-evidence.md). API-owned needs are maintained only in [Crucible API handoff](crucible-api-handoff.md).
 
