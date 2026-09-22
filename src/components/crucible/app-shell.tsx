@@ -121,8 +121,7 @@ export function AppShell({
     select: (state) => state.location,
   })
   const pathname = location.pathname
-  const deletionReviewActive =
-    pathname === "/deletion-requests" && location.search.view === "reviewable"
+  const deletionRequestsActive = pathname === "/deletion-requests"
   const projectMfid = activeProjectMfid(pathname, location.search)
   const recentlyViewedIdentity =
     scope?.slice(0, 3).join(":") ?? account?.unique_id ?? "anonymous"
@@ -177,7 +176,7 @@ export function AppShell({
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-            {account && canOpenServiceAccountAdministration(account) ? (
+            {account ? (
               <SidebarGroup>
                 <SidebarGroupLabel>Administration</SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -189,44 +188,46 @@ export function AppShell({
                     ) : null}
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        isActive={deletionReviewActive}
-                        tooltip="Deletion review"
+                        isActive={deletionRequestsActive}
+                        tooltip="Deletion requests"
                         render={
                           <Link
                             aria-current={
-                              deletionReviewActive ? "page" : undefined
+                              deletionRequestsActive ? "page" : undefined
                             }
-                            search={{ view: "reviewable" }}
+                            search={{ view: "submitted" }}
                             to="/deletion-requests"
                           />
                         }
                       >
                         <DeletionRequestsIcon aria-hidden="true" />
-                        <span>Deletion review</span>
+                        <span>Deletion requests</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        isActive={pathname.startsWith(
-                          "/admin/service-accounts"
-                        )}
-                        tooltip="Service accounts"
-                        render={
-                          <Link
-                            aria-current={
-                              pathname.startsWith("/admin/service-accounts")
-                                ? "page"
-                                : undefined
-                            }
-                            preload={false}
-                            to="/admin/service-accounts"
-                          />
-                        }
-                      >
-                        <PrincipalTypeIcon type="service_account" />
-                        <span>Service accounts</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {canOpenServiceAccountAdministration(account) ? (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={pathname.startsWith(
+                            "/admin/service-accounts"
+                          )}
+                          tooltip="Service accounts"
+                          render={
+                            <Link
+                              aria-current={
+                                pathname.startsWith("/admin/service-accounts")
+                                  ? "page"
+                                  : undefined
+                              }
+                              preload={false}
+                              to="/admin/service-accounts"
+                            />
+                          }
+                        >
+                          <PrincipalTypeIcon type="service_account" />
+                          <span>Service accounts</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ) : null}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -327,17 +328,6 @@ function AccountControls({
               <DropdownMenuItem render={<Link to="/account" />}>
                 <AccountIcon />
                 My profile
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                render={
-                  <Link
-                    search={{ view: "submitted" }}
-                    to="/deletion-requests"
-                  />
-                }
-              >
-                <DeletionRequestsIcon />
-                Deletion requests
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

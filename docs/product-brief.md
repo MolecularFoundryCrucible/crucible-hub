@@ -38,7 +38,7 @@ Hub uses stable MFIDs for routes, links, cache identity, and relationships. Edit
 
 ## Product destinations
 
-Hub currently provides Home, Projects, Data, Instruments, Search, Account, deletion-request tracking and review, and a capability-gated Administration area for service-account management. Activity, join-request review, people administration, and audit are proposed destinations that require the contracts in [administration workspace](administration-workspace.md) and [Crucible API handoff](crucible-api-handoff.md). The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
+Hub currently provides Home, Projects, Data, Instruments, Search, Account, and an Administration area with deletion-request tracking and review plus capability-gated service-account management. Activity, join-request review, people administration, and audit are proposed destinations that require the contracts in [administration workspace](administration-workspace.md) and [Crucible API handoff](crucible-api-handoff.md). The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
 
 The core product surfaces are:
 
@@ -48,7 +48,7 @@ The core product surfaces are:
 - Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, processing, access, and lifecycle-aware actions.
 - Search, scientific metadata search, direct MFID lookup, and local QR scanning for bounded cross-resource discovery, with project-scoped sample and dataset search available from an active project.
 - Account for reviewing and updating the authenticated person's own name, email, and username, inspecting non-secret API credential status, and understanding currently advertised account capabilities from the application-bar profile menu.
-- Administration for capability-gated service-account discovery, creation, profile maintenance, platform-role management, credential status, and credential rotation.
+- Administration for deletion-request tracking and review, plus capability-gated service-account discovery, creation, profile maintenance, platform-role management, credential status, and credential rotation.
 
 Accessible and owned resources are distinct sets. Hub must not invent a personal-project model or emulate unavailable server-side filtering with incomplete client-side scans.
 
@@ -76,7 +76,7 @@ Resource management is a separate canonical workflow at `/samples/:sampleMfid/ma
 
 Project and instrument Manage pages use the same unified card structure without nested navigation. Access management contains project members or instrument operators. Resource management contains project ownership and leaving, or instrument lifecycle and ownership. Each section and action remains gated by its exact API capability.
 
-Deletion requests use one shared workspace with Submitted by you and Needs review views. Submitted requests remain available from the account menu after the pending resource leaves normal discovery. Reviewable requests use the API's exact `can_review` capability, normal ACL authority by default, optional explicit Administrator view, cursor pagination, oldest-pending-first ordering, and destructive approval or restorative rejection. Submitted history is newest first, and the Requested column can reverse either view without client-side sorting. Project Manage shows a bounded project-filtered preview in the same compact table presentation and links to the shared queue. Submission and review refresh affected collections, facets, search, graphs, summaries, request queues, and exact resource detail without optimistic domain state.
+Deletion requests use one shared workspace with Submitted by you and Needs review views. The Administration sidebar provides its stable entry after a pending resource leaves normal discovery. Reviewable requests use the API's exact `can_review` capability, normal ACL authority by default, optional explicit Administrator view, cursor pagination, oldest-pending-first ordering, and destructive approval or restorative rejection. Submitted history is newest first, and the Requested column can reverse either view without client-side sorting. Project Manage shows a bounded project-filtered preview in the same compact table presentation and links to the shared queue. Submission and review refresh affected collections, facets, search, graphs, summaries, request queues, and exact resource detail without optimistic domain state.
 
 Authorized human administrators manage service accounts in a separate Administration destination. The directory is searched and paginated by the API. Creation and credential rotation show each new key once in mutation-local memory and never store it in Query state, URLs, or browser persistence. Profile editing is read-first, platform-role changes require explicit confirmation and disclose delayed authorization propagation, credential rotation requires explicit confirmation, and unavailable lifecycle actions such as suspension and deletion are not invented by the Hub. Instrument operator and project member assignment remain contextual workflows on those resources and use the shared service-account-aware identity search.
 

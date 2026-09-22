@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Moved deletion-request navigation into an Administration sidebar group available to every authenticated account and removed duplicate links from the account menu and profile page.
+
 - Updated deletion-request queues to use stable API cursor continuation, newest-first submitted history, oldest-first pending review, reversible request-time sorting, and the shared compact responsive collection table pattern.
 
 - Aligned deletion requests with collection-page hierarchy by moving its scope control below the page header, removing repeated headings and explanatory prose, presenting project context as a compact filter, and limiting Administration selection to review work.
@@ -35,7 +37,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 ### Added
 
 - Added URL-backed graph display options for canvas associations, opt-in batched dataset thumbnails, and vertical-default or horizontal ELK orientation while preserving the complete accessible relationship table, and grouped related viewport and recovery controls.
-- Added the four most recently viewed resources as bounded sidebar shortcuts, with a single collapsed history menu that remains separate from capability-gated Administration and preserves account-scoped history through recoverable route transitions.
+- Added the four most recently viewed resources as bounded sidebar shortcuts, with a single collapsed history menu that remains separate from Administration and preserves account-scoped history through recoverable route transitions.
 - Added URL-backed sortable group headers for sample and dataset directories, with API-provided canonical facet labels, reversible Name and Count ordering, and count columns that remain visible beside truncated long labels.
 - Added confirmed dataset acquisition-instrument reassignment with canonical instrument selection, API-authoritative identity updates, derived access refresh, dependent collection invalidation, and sibling-navigation reset.
 - Added configurable anchored sibling navigation on canonical sample and dataset pages, with project, subtype, owner, and instrument scopes, API-backed ordering, and independent on-demand continuation in both directions.
