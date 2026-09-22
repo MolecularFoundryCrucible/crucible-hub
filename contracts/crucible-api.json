@@ -2090,7 +2090,11 @@
       },
       "DeletionRequestSort": {
         "enum": [
-          "request_time"
+          "request_time",
+          "resource_name",
+          "project_id",
+          "requester_name",
+          "status"
         ],
         "title": "DeletionRequestSort",
         "type": "string"
@@ -12186,14 +12190,14 @@
             }
           },
           {
-            "description": "Field used to order deletion requests.",
+            "description": "Field used to order deletion requests. String fields are ordered case-insensitively, nulls are last, and request ID is the final tie-breaker. requester_name orders by last name, first name, username, and unique ID. Status order is pending, approved, rejected.",
             "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/DeletionRequestSort",
               "default": "request_time",
-              "description": "Field used to order deletion requests."
+              "description": "Field used to order deletion requests. String fields are ordered case-insensitively, nulls are last, and request ID is the final tie-breaker. requester_name orders by last name, first name, username, and unique ID. Status order is pending, approved, rejected."
             }
           },
           {

@@ -3472,7 +3472,7 @@ export interface components {
          * DeletionRequestSort
          * @enum {string}
          */
-        DeletionRequestSort: "request_time";
+        DeletionRequestSort: "request_time" | "resource_name" | "project_id" | "requester_name" | "status";
         /**
          * DeletionRequestStatus
          * @enum {string}
@@ -6965,7 +6965,7 @@ export interface operations {
                 status?: components["schemas"]["DeletionRequestStatus"] | null;
                 /** @description Limit requests to resources assigned to this canonical project MFID. */
                 project_mfid?: string | null;
-                /** @description Field used to order deletion requests. */
+                /** @description Field used to order deletion requests. String fields are ordered case-insensitively, nulls are last, and request ID is the final tie-breaker. requester_name orders by last name, first name, username, and unique ID. Status order is pending, approved, rejected. */
                 sort?: components["schemas"]["DeletionRequestSort"];
                 /** @description Sort direction for deletion requests. */
                 direction?: components["schemas"]["SortDirection"];

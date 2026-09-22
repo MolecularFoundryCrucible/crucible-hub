@@ -23,11 +23,22 @@ import {
 } from "@/data/crucible/deletion-requests.queries"
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
+import type { WorkspaceDeletionRequestSort } from "@/data/crucible/workspace-source"
 
 const deletionRequestSearchSchema = z
   .object({
     direction: z.enum(["asc", "desc"]).optional().catch(undefined),
     projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
+    sort: z
+      .enum([
+        "project_id",
+        "request_time",
+        "requester_name",
+        "resource_name",
+        "status",
+      ])
+      .optional()
+      .catch(undefined),
     view: z.enum(["reviewable", "submitted"]).optional().catch(undefined),
   })
   .merge(resourcePreviewSearchSchema)
@@ -43,6 +54,7 @@ export const Route = createFileRoute("/_app/deletion-requests")({
   loaderDeps: ({ search }) => ({
     direction: search.direction,
     projectMfid: search.projectMfid,
+    sort: search.sort ?? "request_time",
     view: search.view ?? "submitted",
   }),
   loader: async ({ context, deps, parentMatchPromise }) => {
@@ -50,11 +62,11 @@ export const Route = createFileRoute("/_app/deletion-requests")({
     if (!source || source.status === "unavailable") return
     const options = deletionRequestsInfiniteQueryOptions(source.scope, {
       direction:
-        deps.direction ?? (deps.view === "reviewable" ? "asc" : "desc"),
+        deps.direction ?? defaultDeletionRequestDirection(deps.view, deps.sort),
       limit: deletionRequestPageLimit,
       projectMfid: deps.projectMfid,
       scope: deps.view,
-      sort: "request_time",
+      sort: deps.sort,
       status: deps.view === "reviewable" ? "pending" : undefined,
     })
     void context.queryClient.prefetchInfiniteQuery(options)
@@ -68,7 +80,9 @@ function DeletionRequestsPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const view = search.view ?? "submitted"
-  const direction = search.direction ?? (view === "reviewable" ? "asc" : "desc")
+  const sort = search.sort ?? "request_time"
+  const direction =
+    search.direction ?? defaultDeletionRequestDirection(view, sort)
   const projectResult = useQuery({
     ...projectSummaryQueryOptions(scope, search.projectMfid ?? "unavailable"),
     enabled: Boolean(search.projectMfid),
@@ -127,6 +141,7 @@ function DeletionRequestsPage() {
                     ...current,
                     direction: undefined,
                     preview: undefined,
+                    sort: undefined,
                     view: nextView,
                   }),
                   to: "/deletion-requests",
@@ -149,16 +164,17 @@ function DeletionRequestsPage() {
             limit: deletionRequestPageLimit,
             projectMfid: search.projectMfid,
             scope: view,
-            sort: "request_time",
+            sort,
             status: view === "reviewable" ? "pending" : undefined,
           }}
-          onDirectionChange={(nextDirection) => {
+          onSortChange={(nextSort, nextDirection) => {
             void navigate({
               replace: true,
               search: (current) => ({
                 ...current,
                 direction: nextDirection,
                 preview: undefined,
+                sort: nextSort === "request_time" ? undefined : nextSort,
               }),
               to: "/deletion-requests",
             })
@@ -170,4 +186,12 @@ function DeletionRequestsPage() {
       <ResourceInspector navigation={navigation} />
     </ResourcePreviewContext.Provider>
   )
+}
+
+function defaultDeletionRequestDirection(
+  view: "reviewable" | "submitted",
+  sort: WorkspaceDeletionRequestSort
+) {
+  if (sort !== "request_time") return "asc" as const
+  return view === "reviewable" ? ("asc" as const) : ("desc" as const)
 }

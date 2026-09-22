@@ -340,6 +340,8 @@ export type WorkspaceDeletionRequest = Pick<
   | "status"
 >
 
+export type WorkspaceDeletionRequestSort = Schema<"DeletionRequestSort">
+
 export type WorkspaceDeletionRequestPage = {
   items: readonly WorkspaceDeletionRequest[]
   limit: number

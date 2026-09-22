@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added API-backed sorting by resource, project, requester, request time, and status to the deletion-request queue.
+
 - Added deletion-queue resource previews and visible deletion-request status to resource pages and inspector headers.
 
 - Fixed the Service accounts loading route so stable header and search controls remain available while only the API-backed collection renders a pending table.

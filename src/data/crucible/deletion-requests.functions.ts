@@ -18,6 +18,13 @@ const deletionRequestScopeSchema = z.enum([
 ])
 const deletionRequestStatusSchema = z.enum(["approved", "pending", "rejected"])
 const deletionRequestDirectionSchema = z.enum(["asc", "desc"])
+const deletionRequestSortSchema = z.enum([
+  "project_id",
+  "request_time",
+  "requester_name",
+  "resource_name",
+  "status",
+])
 const deletionReviewDecisionSchema = z.enum(["approved", "rejected"])
 
 export const deletionRequestListInputSchema = z
@@ -28,7 +35,7 @@ export const deletionRequestListInputSchema = z
     projectMfid: z.string().trim().min(1).max(255).optional(),
     scenario: fixtureScenarioSchema.optional(),
     scope: deletionRequestScopeSchema,
-    sort: z.literal("request_time"),
+    sort: deletionRequestSortSchema,
     status: deletionRequestStatusSchema.optional(),
   })
   .strict()

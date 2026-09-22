@@ -57,6 +57,7 @@ import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceAccount,
   WorkspaceDeletionRequest,
+  WorkspaceDeletionRequestSort,
 } from "@/data/crucible/workspace-source"
 
 const pendingRows = ["first", "second", "third"] as const
@@ -66,7 +67,7 @@ export function DeletionRequestQueue({
   action,
   emptyTitle,
   filters,
-  onDirectionChange,
+  onSortChange,
   paginate = false,
   scope,
   title,
@@ -75,7 +76,10 @@ export function DeletionRequestQueue({
   action?: React.ReactNode
   emptyTitle: string
   filters: Omit<WorkspaceDeletionRequestFilters, "cursor">
-  onDirectionChange?: (direction: "asc" | "desc") => void
+  onSortChange?: (
+    sort: WorkspaceDeletionRequestSort,
+    direction: "asc" | "desc"
+  ) => void
   paginate?: boolean
   scope: IdentityScope
   title?: string
@@ -129,9 +133,13 @@ export function DeletionRequestQueue({
               account={account}
               direction={filters.direction}
               items={items}
-              onDirectionChange={onDirectionChange}
+              onSortChange={onSortChange}
               onOpen={setSelected}
+              requestTimePreferredDirection={
+                filters.scope === "reviewable" ? "asc" : "desc"
+              }
               showProject={!filters.projectMfid}
+              sort={filters.sort}
             />
           </CardContent>
         )}
@@ -183,16 +191,23 @@ function DeletionRequestTable({
   account,
   direction,
   items,
-  onDirectionChange,
+  onSortChange,
   onOpen,
+  requestTimePreferredDirection,
   showProject,
+  sort,
 }: {
   account: WorkspaceAccount
   direction: "asc" | "desc"
   items: readonly WorkspaceDeletionRequest[]
-  onDirectionChange?: (direction: "asc" | "desc") => void
+  onSortChange?: (
+    sort: WorkspaceDeletionRequestSort,
+    direction: "asc" | "desc"
+  ) => void
   onOpen: (request: WorkspaceDeletionRequest) => void
+  requestTimePreferredDirection: "asc" | "desc"
   showProject: boolean
+  sort: WorkspaceDeletionRequestSort
 }) {
   return (
     <Table
@@ -215,21 +230,68 @@ function DeletionRequestTable({
       </colgroup>
       <TableHeader>
         <TableRow>
-          <TableHead>Resource</TableHead>
-          {showProject ? <TableHead>Project</TableHead> : null}
-          <TableHead>Requested by</TableHead>
-          {onDirectionChange ? (
+          {onSortChange ? (
             <SortableTableHead
-              active
+              active={sort === "resource_name"}
+              direction={direction}
+              field="resource_name"
+              label="Resource"
+              onChange={onSortChange}
+              preferredDirection="asc"
+            />
+          ) : (
+            <TableHead>Resource</TableHead>
+          )}
+          {showProject ? (
+            onSortChange ? (
+              <SortableTableHead
+                active={sort === "project_id"}
+                direction={direction}
+                field="project_id"
+                label="Project"
+                onChange={onSortChange}
+                preferredDirection="asc"
+              />
+            ) : (
+              <TableHead>Project</TableHead>
+            )
+          ) : null}
+          {onSortChange ? (
+            <SortableTableHead
+              active={sort === "requester_name"}
+              direction={direction}
+              field="requester_name"
+              label="Requested by"
+              onChange={onSortChange}
+              preferredDirection="asc"
+            />
+          ) : (
+            <TableHead>Requested by</TableHead>
+          )}
+          {onSortChange ? (
+            <SortableTableHead
+              active={sort === "request_time"}
               direction={direction}
               field="request_time"
               label="Requested"
-              onChange={(_, nextDirection) => onDirectionChange(nextDirection)}
+              onChange={onSortChange}
+              preferredDirection={requestTimePreferredDirection}
             />
           ) : (
             <TableHead>Requested</TableHead>
           )}
-          <TableHead>Status</TableHead>
+          {onSortChange ? (
+            <SortableTableHead
+              active={sort === "status"}
+              direction={direction}
+              field="status"
+              label="Status"
+              onChange={onSortChange}
+              preferredDirection="asc"
+            />
+          ) : (
+            <TableHead>Status</TableHead>
+          )}
           <TableHead className="text-center">
             <span className="sr-only">Actions</span>
           </TableHead>

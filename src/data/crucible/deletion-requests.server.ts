@@ -14,6 +14,7 @@ import { readWorkspaceFixture } from "./workspace-fixture.server"
 import type {
   WorkspaceDeletionRequest,
   WorkspaceDeletionRequestPage,
+  WorkspaceDeletionRequestSort,
 } from "./workspace-source"
 
 export type WorkspaceDeletionRequestScope =
@@ -28,7 +29,7 @@ export type WorkspaceDeletionRequestFilters = {
   limit: number
   projectMfid?: string
   scope: WorkspaceDeletionRequestScope
-  sort: "request_time"
+  sort: WorkspaceDeletionRequestSort
   status?: WorkspaceDeletionRequestStatus
 }
 
@@ -64,6 +65,7 @@ const deletionRequestPageSchema = z
   .passthrough()
 
 const fixtureDeletionRequestState = new Map<string, WorkspaceDeletionRequest>()
+const deletionRequestCollator = new Intl.Collator("en", { sensitivity: "base" })
 
 function workspaceDeletionRequest(value: unknown): WorkspaceDeletionRequest {
   const result = deletionRequestSchema.safeParse(value)
@@ -161,13 +163,7 @@ export async function readWorkspaceDeletionRequests(
           (!input.status || request.status === input.status) &&
           (!input.projectMfid || request.project_mfid === input.projectMfid)
       )
-      .sort((left, right) => {
-        const timeOrder = (left.request_time ?? "").localeCompare(
-          right.request_time ?? ""
-        )
-        const order = timeOrder || left.id - right.id
-        return input.direction === "asc" ? order : -order
-      })
+      .sort((left, right) => compareDeletionRequests(left, right, input))
     const page = fixtureCursorPage(requests, input)
     return {
       ...page,
@@ -200,6 +196,95 @@ export async function readWorkspaceDeletionRequests(
     nextCursor: page.data.next_cursor ?? null,
     total: page.data.total ?? null,
   }
+}
+
+function compareDeletionRequests(
+  left: WorkspaceDeletionRequest,
+  right: WorkspaceDeletionRequest,
+  input: Pick<WorkspaceDeletionRequestFilters, "direction" | "sort">
+) {
+  const fields = deletionRequestSortValues(input.sort, left, right)
+  for (const [leftValue, rightValue] of fields) {
+    const order = compareNullableDeletionRequestValue(
+      leftValue,
+      rightValue,
+      input.direction
+    )
+    if (order !== 0) return order
+  }
+  return input.direction === "asc" ? left.id - right.id : right.id - left.id
+}
+
+function deletionRequestSortValues(
+  sort: WorkspaceDeletionRequestSort,
+  left: WorkspaceDeletionRequest,
+  right: WorkspaceDeletionRequest
+): readonly (readonly [number | string | null, number | string | null])[] {
+  if (sort === "requester_name") {
+    return [
+      [personSortValue(left, "last_name"), personSortValue(right, "last_name")],
+      [
+        personSortValue(left, "first_name"),
+        personSortValue(right, "first_name"),
+      ],
+      [personSortValue(left, "username"), personSortValue(right, "username")],
+      [
+        left.requester?.unique_id ?? left.requester_id,
+        right.requester?.unique_id ?? right.requester_id,
+      ],
+    ]
+  }
+  if (sort === "status") {
+    const order = { approved: 1, pending: 0, rejected: 2 } as const
+    return [[order[left.status], order[right.status]]]
+  }
+  if (sort === "resource_name")
+    return [
+      [
+        normalizedSortValue(left.resource_name),
+        normalizedSortValue(right.resource_name),
+      ],
+    ]
+  if (sort === "project_id")
+    return [
+      [
+        normalizedSortValue(left.project_id),
+        normalizedSortValue(right.project_id),
+      ],
+    ]
+  return [
+    [
+      normalizedSortValue(left.request_time),
+      normalizedSortValue(right.request_time),
+    ],
+  ]
+}
+
+function personSortValue(
+  request: WorkspaceDeletionRequest,
+  field: "first_name" | "last_name" | "username"
+) {
+  return normalizedSortValue(request.requester?.[field])
+}
+
+function normalizedSortValue(value: string | null | undefined) {
+  const normalized = value?.trim()
+  return normalized || null
+}
+
+function compareNullableDeletionRequestValue(
+  left: number | string | null,
+  right: number | string | null,
+  direction: WorkspaceDeletionRequestDirection
+) {
+  if (left === null && right === null) return 0
+  if (left === null) return 1
+  if (right === null) return -1
+  const order =
+    typeof left === "number" && typeof right === "number"
+      ? left - right
+      : deletionRequestCollator.compare(String(left), String(right))
+  return direction === "asc" ? order : -order
 }
 
 export async function reviewWorkspaceDeletionRequest(
