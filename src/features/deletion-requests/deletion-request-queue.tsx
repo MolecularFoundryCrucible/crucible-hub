@@ -12,6 +12,7 @@ import { MfidText } from "@/components/crucible/mfid-text"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { Button } from "@/components/ui/button"
@@ -129,6 +130,7 @@ export function DeletionRequestQueue({
               items={items}
               onDirectionChange={onDirectionChange}
               onOpen={setSelected}
+              showProject={!filters.projectMfid}
             />
           </CardContent>
         )}
@@ -182,12 +184,14 @@ function DeletionRequestTable({
   items,
   onDirectionChange,
   onOpen,
+  showProject,
 }: {
   account: WorkspaceAccount
   direction: "asc" | "desc"
   items: readonly WorkspaceDeletionRequest[]
   onDirectionChange?: (direction: "asc" | "desc") => void
   onOpen: (request: WorkspaceDeletionRequest) => void
+  showProject: boolean
 }) {
   return (
     <Table
@@ -195,7 +199,14 @@ function DeletionRequestTable({
       className="deletion-request-table table-fixed"
     >
       <colgroup>
-        <col className="w-deletion-resource-column" />
+        <col
+          className={
+            showProject
+              ? "w-deletion-resource-column-with-project"
+              : "w-deletion-resource-column"
+          }
+        />
+        {showProject ? <col className="w-deletion-project-column" /> : null}
         <col className="w-deletion-requester-column" />
         <col className="w-deletion-date-column" />
         <col className="w-deletion-status-column" />
@@ -204,6 +215,7 @@ function DeletionRequestTable({
       <TableHeader>
         <TableRow>
           <TableHead>Resource</TableHead>
+          {showProject ? <TableHead>Project</TableHead> : null}
           <TableHead>Requested by</TableHead>
           {onDirectionChange ? (
             <SortableTableHead
@@ -235,9 +247,16 @@ function DeletionRequestTable({
                   kind={resourceKind(request.resource_type)}
                   name={request.resource_name?.trim() || "Untitled resource"}
                   presentation="collection"
-                  projectId={request.project_id}
                 />
               </TableCell>
+              {showProject ? (
+                <TableCell
+                  className="deletion-request-project"
+                  data-label="Project"
+                >
+                  <DeletionRequestProject request={request} />
+                </TableCell>
+              ) : null}
               <TableCell
                 className="deletion-request-requester"
                 data-label="Requested by"
@@ -287,6 +306,28 @@ function DeletionRequestTable({
         })}
       </TableBody>
     </Table>
+  )
+}
+
+function DeletionRequestProject({
+  request,
+}: {
+  request: WorkspaceDeletionRequest
+}) {
+  const projectId = request.project_id?.trim()
+  if (!projectId)
+    return <span className="text-muted-foreground">Not assigned</span>
+  if (!request.project_mfid)
+    return <span className="truncate">{projectId}</span>
+  return (
+    <ResourceIdentityLink
+      kind="project"
+      mfid={request.project_mfid}
+      name={projectId}
+      showTypeIcon={false}
+    >
+      <span className="block truncate hover:underline">{projectId}</span>
+    </ResourceIdentityLink>
   )
 }
 

@@ -101,6 +101,7 @@
   --spacing-directory-project-person-column: 14rem;
   --spacing-deletion-action-column: 5rem;
   --spacing-deletion-date-column: var(--spacing-resource-date-column);
+  --spacing-deletion-project-column: 12rem;
   --spacing-deletion-requester-column: 14rem;
   --spacing-deletion-status-column: 7rem;
   --spacing-deletion-resource-column: calc(
@@ -108,6 +109,10 @@
       var(--spacing-deletion-date-column) -
       var(--spacing-deletion-requester-column) -
       var(--spacing-deletion-status-column)
+  );
+  --spacing-deletion-resource-column-with-project: calc(
+    var(--spacing-deletion-resource-column) -
+      var(--spacing-deletion-project-column)
   );
   --spacing-access-role-control: 6rem;
   --spacing-data-name-column-with-action: calc(
@@ -1108,6 +1113,7 @@ body {
   }
 
   .deletion-request-table .deletion-request-requester,
+  .deletion-request-table .deletion-request-project,
   .deletion-request-table .deletion-request-date,
   .deletion-request-table .deletion-request-status {
     align-items: center;
@@ -1118,6 +1124,7 @@ body {
   }
 
   .deletion-request-table .deletion-request-requester::before,
+  .deletion-request-table .deletion-request-project::before,
   .deletion-request-table .deletion-request-date::before,
   .deletion-request-table .deletion-request-status::before {
     color: var(--muted-foreground);

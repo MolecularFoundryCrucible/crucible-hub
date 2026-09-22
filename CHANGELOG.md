@@ -10,7 +10,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Moved deletion-request navigation into an Administration sidebar group available to every authenticated account and removed duplicate links from the account menu and profile page.
 
-- Updated deletion-request queues to use stable API cursor continuation, newest-first submitted history, oldest-first pending review, reversible request-time sorting, embedded requester and reviewer identities, and the shared compact responsive collection table pattern.
+- Updated deletion-request queues to use stable API cursor continuation, newest-first submitted history, oldest-first pending review, reversible request-time sorting, embedded requester and reviewer identities, a linked Project column outside project-scoped views, and the shared compact responsive collection table pattern.
 
 - Aligned deletion requests with collection-page hierarchy by moving its scope control below the page header, removing repeated headings and explanatory prose, presenting project context as a compact filter, and limiting Administration selection to review work.
 
