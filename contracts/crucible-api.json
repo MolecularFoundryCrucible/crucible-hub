@@ -2066,6 +2066,13 @@
         "title": "DeletionRequestScope",
         "type": "string"
       },
+      "DeletionRequestSort": {
+        "enum": [
+          "request_time"
+        ],
+        "title": "DeletionRequestSort",
+        "type": "string"
+      },
       "DeletionRequestStatus": {
         "enum": [
           "pending",
@@ -12157,6 +12164,28 @@
             }
           },
           {
+            "description": "Field used to order deletion requests.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DeletionRequestSort",
+              "default": "request_time",
+              "description": "Field used to order deletion requests."
+            }
+          },
+          {
+            "description": "Sort direction for deletion requests.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc",
+              "description": "Sort direction for deletion requests."
+            }
+          },
+          {
             "in": "query",
             "name": "limit",
             "required": false,
@@ -12169,11 +12198,33 @@
             }
           },
           {
+            "description": "Opaque continuation cursor returned by a previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor returned by a previous page.",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Compatibility offset. A supplied cursor takes precedence.",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
               "default": 0,
+              "description": "Compatibility offset. A supplied cursor takes precedence.",
               "minimum": 0,
               "title": "Offset",
               "type": "integer"

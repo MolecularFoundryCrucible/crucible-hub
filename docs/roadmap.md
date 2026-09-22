@@ -91,7 +91,7 @@ Implemented and fixture/browser verified for local development. Route-backed sam
 
 #### Deletion-request review
 
-Implemented locally against pinned API revision `f2a9c2e8662200f33994e44374b9253a4cbd2e3f`. One shared route presents submitted history and capability-guided pending review with URL-backed project scope and offset pages. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
+Implemented locally against pinned API revision `4c542221b7927d58d7ed3bc892e225bb81a2dc44`. One shared route presents newest-first submitted history and oldest-first capability-guided pending review with URL-backed project scope and opaque cursor continuation. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
 
 #### Deferred: join requests
 

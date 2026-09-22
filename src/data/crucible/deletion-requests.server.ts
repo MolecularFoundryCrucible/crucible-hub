@@ -7,6 +7,7 @@ import { CrucibleResponseError } from "@/server/crucible/request-error.server"
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import type { FixtureScenario } from "./fixture-scenarios"
+import { fixtureCursorPage } from "./pagination"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import type {
@@ -18,12 +19,15 @@ export type WorkspaceDeletionRequestScope =
   "accessible" | "reviewable" | "submitted"
 export type WorkspaceDeletionRequestStatus = "approved" | "pending" | "rejected"
 export type WorkspaceDeletionReviewDecision = "approved" | "rejected"
+export type WorkspaceDeletionRequestDirection = "asc" | "desc"
 
 export type WorkspaceDeletionRequestFilters = {
+  cursor?: string
+  direction: WorkspaceDeletionRequestDirection
   limit: number
-  offset: number
   projectMfid?: string
   scope: WorkspaceDeletionRequestScope
+  sort: "request_time"
   status?: WorkspaceDeletionRequestStatus
 }
 
@@ -50,6 +54,7 @@ const deletionRequestPageSchema = z
   .object({
     items: z.array(deletionRequestSchema).max(1_000),
     limit: z.number().int().positive(),
+    next_cursor: z.string().nullable().optional(),
     offset: z.number().int().nonnegative().nullable().optional(),
     total: z.number().int().nonnegative().nullable().optional(),
   })
@@ -138,19 +143,25 @@ export async function readWorkspaceDeletionRequests(
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(input.scenario)
     if (source.status === "unavailable") throw new Error(source.reason)
-    const requests = fixtureDeletionRequests(input.scenario).filter(
-      (request) =>
-        (input.scope !== "reviewable" || request.capabilities.can_review) &&
-        (input.scope !== "submitted" ||
-          request.requester_id === source.workspace.account.unique_id) &&
-        (!input.status || request.status === input.status) &&
-        (!input.projectMfid || request.project_mfid === input.projectMfid)
-    )
+    const requests = fixtureDeletionRequests(input.scenario)
+      .filter(
+        (request) =>
+          (input.scope !== "reviewable" || request.capabilities.can_review) &&
+          (input.scope !== "submitted" ||
+            request.requester_id === source.workspace.account.unique_id) &&
+          (!input.status || request.status === input.status) &&
+          (!input.projectMfid || request.project_mfid === input.projectMfid)
+      )
+      .sort((left, right) => {
+        const timeOrder = (left.request_time ?? "").localeCompare(
+          right.request_time ?? ""
+        )
+        const order = timeOrder || left.id - right.id
+        return input.direction === "asc" ? order : -order
+      })
+    const page = fixtureCursorPage(requests, input)
     return {
-      items: requests.slice(input.offset, input.offset + input.limit),
-      limit: input.limit,
-      offset: input.offset,
-      total: requests.length,
+      ...page,
     }
   }
 
@@ -159,10 +170,12 @@ export async function readWorkspaceDeletionRequests(
     {
       params: {
         query: {
+          cursor: input.cursor,
+          direction: input.direction,
           limit: input.limit,
-          offset: input.offset,
           project_mfid: input.projectMfid,
           scope: input.scope,
+          sort: input.sort,
           status: input.status,
         },
       },
@@ -175,7 +188,7 @@ export async function readWorkspaceDeletionRequests(
   return {
     items: page.data.items.map(workspaceDeletionRequest),
     limit: page.data.limit,
-    offset: page.data.offset ?? input.offset,
+    nextCursor: page.data.next_cursor ?? null,
     total: page.data.total ?? null,
   }
 }

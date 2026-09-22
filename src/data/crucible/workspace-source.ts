@@ -341,7 +341,7 @@ export type WorkspaceDeletionRequest = Pick<
 export type WorkspaceDeletionRequestPage = {
   items: readonly WorkspaceDeletionRequest[]
   limit: number
-  offset: number
+  nextCursor: string | null
   total: number | null
 }
 

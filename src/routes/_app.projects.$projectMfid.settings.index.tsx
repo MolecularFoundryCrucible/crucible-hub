@@ -92,10 +92,11 @@ function ProjectManagePage() {
             }
             emptyTitle="No requests need review"
             filters={{
+              direction: "asc",
               limit: 5,
-              offset: 0,
               projectMfid,
               scope: "reviewable",
+              sort: "request_time",
               status: "pending",
             }}
             scope={scope}

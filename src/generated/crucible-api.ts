@@ -3467,6 +3467,11 @@ export interface components {
          */
         DeletionRequestScope: "accessible" | "submitted" | "reviewable";
         /**
+         * DeletionRequestSort
+         * @enum {string}
+         */
+        DeletionRequestSort: "request_time";
+        /**
          * DeletionRequestStatus
          * @enum {string}
          */
@@ -6958,7 +6963,14 @@ export interface operations {
                 status?: components["schemas"]["DeletionRequestStatus"] | null;
                 /** @description Limit requests to resources assigned to this canonical project MFID. */
                 project_mfid?: string | null;
+                /** @description Field used to order deletion requests. */
+                sort?: components["schemas"]["DeletionRequestSort"];
+                /** @description Sort direction for deletion requests. */
+                direction?: components["schemas"]["SortDirection"];
                 limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
             };
             header?: {

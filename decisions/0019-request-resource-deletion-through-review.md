@@ -20,7 +20,7 @@ Hub safely reads the known deletion-request fields from the open detail value an
 
 An active request replaces the request action with a fixed-geometry status action. The shared `/deletion-requests` workspace exposes Submitted by you and Needs review as separate API scopes. Required per-request `can_review` guidance controls review actions. Approval permanently deletes the database resource while stored GCS objects remain retained; rejection restores normal discovery. Project Manage may show a bounded project-filtered review preview. Review, audit, cancellation, and force deletion remain separate workflows.
 
-Submission, approval, and rejection invalidate the affected resource families, facets, search, graphs, project and instrument summaries, deletion-request collections, and exact resource detail. Request collections use deterministic API offset ordering and preserve their URL-backed scope, project filter, and page.
+Submission, approval, and rejection invalidate the affected resource families, facets, search, graphs, project and instrument summaries, deletion-request collections, and exact resource detail. Request collections preserve their URL-backed scope and project filter while TanStack Query owns opaque cursor continuation. Submitted history uses descending request time and pending review uses ascending request time. Hub preserves server order and does not sort individual pages locally.
 
 ## Consequences
 

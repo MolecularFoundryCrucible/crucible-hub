@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Updated deletion-request queues to use stable API cursor continuation, newest-first submitted history, oldest-first pending review, reversible request-time sorting, and the shared compact responsive collection table pattern.
+
 - Aligned deletion requests with collection-page hierarchy by moving its scope control below the page header, removing repeated headings and explanatory prose, presenting project context as a compact filter, and limiting Administration selection to review work.
 
 - Fixed collection loading routes so global Data, Project Data, and Instrument Datasets render independent pending shells without relying on route components removed by automatic code splitting.

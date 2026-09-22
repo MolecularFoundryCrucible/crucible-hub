@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions } from "@tanstack/react-query"
 
 import type { WorkspaceDeletionRequestFilters } from "./deletion-requests.server"
 import { getWorkspaceDeletionRequests } from "./deletion-requests.functions"
@@ -9,20 +9,26 @@ import { unwrapHubResult } from "./result"
 
 export const deletionRequestPageLimit = 50
 
-export function deletionRequestsQueryOptions(
+export function deletionRequestsInfiniteQueryOptions(
   scope: IdentityScope,
-  filters: WorkspaceDeletionRequestFilters
+  filters: Omit<WorkspaceDeletionRequestFilters, "cursor">
 ) {
   const scenario = fixtureScenarioFromScope(scope)
-  return queryOptions({
+  return infiniteQueryOptions({
+    initialPageParam: null as string | null,
     queryKey: crucibleKeys.deletionRequests(scope, filters),
-    queryFn: async ({ signal }) =>
+    queryFn: async ({ pageParam, signal }) =>
       unwrapHubResult(
         await getWorkspaceDeletionRequests({
-          data: { ...filters, scenario },
+          data: {
+            ...filters,
+            cursor: pageParam ?? undefined,
+            scenario,
+          },
           signal,
         })
       ),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: scenario ? false : undefined,
   })
 }

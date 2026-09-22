@@ -99,6 +99,16 @@
       var(--spacing-directory-project-person-column)
   );
   --spacing-directory-project-person-column: 14rem;
+  --spacing-deletion-action-column: 5rem;
+  --spacing-deletion-date-column: var(--spacing-resource-date-column);
+  --spacing-deletion-requester-column: 14rem;
+  --spacing-deletion-status-column: 7rem;
+  --spacing-deletion-resource-column: calc(
+    100% - var(--spacing-deletion-action-column) -
+      var(--spacing-deletion-date-column) -
+      var(--spacing-deletion-requester-column) -
+      var(--spacing-deletion-status-column)
+  );
   --spacing-access-role-control: 6rem;
   --spacing-data-name-column-with-action: calc(
     (
@@ -1074,7 +1084,8 @@ body {
     display: block;
   }
 
-  .deletion-request-table thead {
+  .deletion-request-table thead,
+  .deletion-request-table colgroup {
     display: none;
   }
 

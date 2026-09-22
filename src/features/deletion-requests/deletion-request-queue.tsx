@@ -1,7 +1,13 @@
 import { useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
@@ -9,6 +15,7 @@ import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -38,7 +45,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { invalidateDeletionRequestMutationQueries } from "@/data/crucible/cache-effects"
 import { reviewWorkspaceDeletionRequestById } from "@/data/crucible/deletion-requests.functions"
-import { deletionRequestsQueryOptions } from "@/data/crucible/deletion-requests.queries"
+import { deletionRequestsInfiniteQueryOptions } from "@/data/crucible/deletion-requests.queries"
 import type {
   WorkspaceDeletionRequestFilters,
   WorkspaceDeletionReviewDecision,
@@ -51,7 +58,6 @@ import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceAccount,
   WorkspaceDeletionRequest,
-  WorkspaceDeletionRequestPage,
 } from "@/data/crucible/workspace-source"
 
 const pendingRows = ["first", "second", "third"] as const
@@ -61,21 +67,26 @@ export function DeletionRequestQueue({
   action,
   emptyTitle,
   filters,
-  renderFooter,
+  onDirectionChange,
+  paginate = false,
   scope,
   title,
 }: {
   account: WorkspaceAccount
   action?: React.ReactNode
   emptyTitle: string
-  filters: WorkspaceDeletionRequestFilters
-  renderFooter?: (page: WorkspaceDeletionRequestPage) => React.ReactNode
+  filters: Omit<WorkspaceDeletionRequestFilters, "cursor">
+  onDirectionChange?: (direction: "asc" | "desc") => void
+  paginate?: boolean
   scope: IdentityScope
   title?: string
 }) {
-  const options = deletionRequestsQueryOptions(scope, filters)
-  const result = useQuery(options)
+  const options = deletionRequestsInfiniteQueryOptions(scope, filters)
+  const result = useInfiniteQuery(options)
   const [selected, setSelected] = useState<WorkspaceDeletionRequest>()
+  const pages = result.data?.pages ?? []
+  const items = pages.flatMap((page) => page.items)
+  const total = pages.at(0)?.total ?? null
 
   return (
     <>
@@ -99,7 +110,7 @@ export function DeletionRequestQueue({
               </Button>
             </Empty>
           </CardContent>
-        ) : result.data.items.length === 0 ? (
+        ) : items.length === 0 ? (
           <CardContent>
             <Empty className="min-h-32">
               <EmptyHeader>
@@ -109,7 +120,7 @@ export function DeletionRequestQueue({
           </CardContent>
         ) : (
           <CardContent className="px-0">
-            {result.isError ? (
+            {result.isRefetchError ? (
               <p className="px-4 pb-3 text-body text-destructive" role="alert">
                 The list could not be refreshed. Showing the last loaded
                 requests.
@@ -117,13 +128,26 @@ export function DeletionRequestQueue({
             ) : null}
             <DeletionRequestTable
               account={account}
-              items={result.data.items}
+              direction={filters.direction}
+              items={items}
+              onDirectionChange={onDirectionChange}
               onOpen={setSelected}
             />
           </CardContent>
         )}
       </Card>
-      {result.data && renderFooter ? renderFooter(result.data) : null}
+      {paginate ? (
+        <CollectionPagination
+          disabled={result.isFetchingNextPage}
+          hasNextPage={result.hasNextPage}
+          isError={result.isFetchNextPageError}
+          isLoading={result.isFetchingNextPage}
+          label="deletion requests"
+          loaded={items.length}
+          onLoadMore={() => void result.fetchNextPage()}
+          total={total}
+        />
+      ) : null}
       <DeletionRequestDialog
         account={account}
         onOpenChange={(open) => {
@@ -157,20 +181,44 @@ function DeletionRequestPending() {
 
 function DeletionRequestTable({
   account,
+  direction,
   items,
+  onDirectionChange,
   onOpen,
 }: {
   account: WorkspaceAccount
+  direction: "asc" | "desc"
   items: readonly WorkspaceDeletionRequest[]
+  onDirectionChange?: (direction: "asc" | "desc") => void
   onOpen: (request: WorkspaceDeletionRequest) => void
 }) {
   return (
-    <Table aria-label="Deletion requests" className="deletion-request-table">
+    <Table
+      aria-label="Deletion requests"
+      className="deletion-request-table table-fixed"
+    >
+      <colgroup>
+        <col className="w-deletion-resource-column" />
+        <col className="w-deletion-requester-column" />
+        <col className="w-deletion-date-column" />
+        <col className="w-deletion-status-column" />
+        <col className="w-deletion-action-column" />
+      </colgroup>
       <TableHeader>
         <TableRow>
           <TableHead>Resource</TableHead>
           <TableHead>Requested by</TableHead>
-          <TableHead>Requested</TableHead>
+          {onDirectionChange ? (
+            <SortableTableHead
+              active
+              direction={direction}
+              field="request_time"
+              label="Requested"
+              onChange={(_, nextDirection) => onDirectionChange(nextDirection)}
+            />
+          ) : (
+            <TableHead>Requested</TableHead>
+          )}
           <TableHead>Status</TableHead>
           <TableHead className="text-center">
             <span className="sr-only">Actions</span>
@@ -183,7 +231,6 @@ function DeletionRequestTable({
             <TableCell className="deletion-request-resource">
               <ResourceIdentity
                 kind={resourceKind(request.resource_type)}
-                mfid={request.resource_id}
                 name={request.resource_name?.trim() || "Untitled resource"}
                 presentation="collection"
                 projectId={request.project_id}

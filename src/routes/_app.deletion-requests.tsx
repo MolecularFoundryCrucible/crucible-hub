@@ -2,7 +2,6 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -15,13 +14,12 @@ import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import {
   deletionRequestPageLimit,
-  deletionRequestsQueryOptions,
+  deletionRequestsInfiniteQueryOptions,
 } from "@/data/crucible/deletion-requests.queries"
-import type { WorkspaceDeletionRequestPage } from "@/data/crucible/workspace-source"
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
 
 const deletionRequestSearchSchema = z.object({
-  offset: z.coerce.number().int().min(0).optional().catch(undefined),
+  direction: z.enum(["asc", "desc"]).optional().catch(undefined),
   projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
   view: z.enum(["reviewable", "submitted"]).optional().catch(undefined),
 })
@@ -35,21 +33,23 @@ export const Route = createFileRoute("/_app/deletion-requests")({
   head: () => ({ meta: [{ title: "Deletion requests | Crucible Hub" }] }),
   validateSearch: deletionRequestSearchSchema,
   loaderDeps: ({ search }) => ({
-    offset: search.offset ?? 0,
+    direction: search.direction,
     projectMfid: search.projectMfid,
     view: search.view ?? "submitted",
   }),
   loader: async ({ context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
-    const options = deletionRequestsQueryOptions(source.scope, {
+    const options = deletionRequestsInfiniteQueryOptions(source.scope, {
+      direction:
+        deps.direction ?? (deps.view === "reviewable" ? "asc" : "desc"),
       limit: deletionRequestPageLimit,
-      offset: deps.offset,
       projectMfid: deps.projectMfid,
       scope: deps.view,
+      sort: "request_time",
       status: deps.view === "reviewable" ? "pending" : undefined,
     })
-    void context.queryClient.prefetchQuery(options)
+    void context.queryClient.prefetchInfiniteQuery(options)
   },
   component: DeletionRequestsPage,
 })
@@ -60,7 +60,7 @@ function DeletionRequestsPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const view = search.view ?? "submitted"
-  const offset = search.offset ?? 0
+  const direction = search.direction ?? (view === "reviewable" ? "asc" : "desc")
   const projectResult = useQuery({
     ...projectSummaryQueryOptions(scope, search.projectMfid ?? "unavailable"),
     enabled: Boolean(search.projectMfid),
@@ -92,7 +92,11 @@ function DeletionRequestsPage() {
               <Link
                 aria-label="Clear project filter"
                 className={buttonVariants({ size: "sm", variant: "ghost" })}
-                search={{ offset: undefined, projectMfid: undefined, view }}
+                search={{
+                  direction: search.direction,
+                  projectMfid: undefined,
+                  view,
+                }}
                 to="/deletion-requests"
               >
                 Clear
@@ -107,7 +111,7 @@ function DeletionRequestsPage() {
               void navigate({
                 replace: true,
                 search: {
-                  offset: undefined,
+                  direction: undefined,
                   projectMfid: search.projectMfid,
                   view: nextView,
                 },
@@ -127,72 +131,27 @@ function DeletionRequestsPage() {
             : "No submitted requests"
         }
         filters={{
+          direction,
           limit: deletionRequestPageLimit,
-          offset,
           projectMfid: search.projectMfid,
           scope: view,
+          sort: "request_time",
           status: view === "reviewable" ? "pending" : undefined,
         }}
-        renderFooter={(page) => (
-          <DeletionRequestPagination
-            page={page}
-            projectMfid={search.projectMfid}
-            view={view}
-          />
-        )}
+        onDirectionChange={(nextDirection) => {
+          void navigate({
+            replace: true,
+            search: {
+              direction: nextDirection,
+              projectMfid: search.projectMfid,
+              view,
+            },
+            to: "/deletion-requests",
+          })
+        }}
+        paginate
         scope={scope}
       />
     </PageLayout>
-  )
-}
-
-function DeletionRequestPagination({
-  page,
-  projectMfid,
-  view,
-}: {
-  page: WorkspaceDeletionRequestPage
-  projectMfid?: string
-  view: "reviewable" | "submitted"
-}) {
-  const hasPrevious = page.offset > 0
-  const hasNext =
-    page.total === null
-      ? page.items.length === page.limit
-      : page.offset + page.items.length < page.total
-  return (
-    <CollectionPageNavigation
-      label="Deletion-request pages"
-      previous={
-        hasPrevious ? (
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            search={{
-              offset: Math.max(0, page.offset - page.limit) || undefined,
-              projectMfid,
-              view,
-            }}
-            to="/deletion-requests"
-          >
-            Previous
-          </Link>
-        ) : undefined
-      }
-      next={
-        hasNext ? (
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            search={{
-              offset: page.offset + page.items.length,
-              projectMfid,
-              view,
-            }}
-            to="/deletion-requests"
-          >
-            Next
-          </Link>
-        ) : undefined
-      }
-    />
   )
 }
