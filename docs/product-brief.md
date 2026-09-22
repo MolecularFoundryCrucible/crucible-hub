@@ -80,7 +80,7 @@ Authorized human administrators manage service accounts in a separate Administra
 
 ## Delivery direction
 
-The runtime, design-system, read-workspace, and controlled-management foundations are implemented for local development. Native collection browsing, graph traversal, dataset processing, account profile management, and the first service-account administration slice now extend that foundation. Production authentication, secure browser upload, API-backed activity and review queues, saved views, broader audit history, and remaining Explorer convergence are still open.
+The runtime, design-system, read-workspace, and controlled-management foundations are implemented for local development. Native collection browsing, graph traversal, dataset processing, account profile management, explicit privilege modes, and the first service-account administration slice now extend that foundation. Production authentication, secure browser upload, API-backed activity and review queues, saved views, broader audit history, and remaining Explorer convergence are still open.
 
 The ordered packages, gates, current implementation status, and next action are authoritative in [roadmap](roadmap.md). Current verification is authoritative in [foundation evidence](phase-0-evidence.md). API-owned needs are maintained only in [Crucible API handoff](crucible-api-handoff.md).
 

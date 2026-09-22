@@ -42,7 +42,8 @@ export function queryRetryDelay(attemptIndex: number, error: unknown) {
 }
 
 export function shouldDehydrateCrucibleQuery(query: Query) {
-  const [namespace, serverId, accountMfid, family] = query.queryKey
+  const [namespace, serverId, accountMfid, privilegeMode, family] =
+    query.queryKey
   return (
     query.state.status === "success" &&
     query.state.data !== undefined &&
@@ -51,6 +52,7 @@ export function shouldDehydrateCrucibleQuery(query: Query) {
     serverId.length > 0 &&
     typeof accountMfid === "string" &&
     accountMfid.length > 0 &&
+    privilegeMode === "normal" &&
     typeof family === "string" &&
     dehydratedQueryFamilies.has(family)
   )

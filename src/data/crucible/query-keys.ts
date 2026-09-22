@@ -1,7 +1,10 @@
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
+
 export type IdentityScope = readonly [
   "crucible",
   serverId: string,
   accountMfid: string,
+  privilegeMode: WorkspacePrivilegeMode,
 ]
 
 export type ListFilters = Readonly<
@@ -21,9 +24,17 @@ function normalizeFilters(filters: ListFilters) {
 
 export function identityScope(
   serverId: string,
-  accountMfid: string
+  accountMfid: string,
+  privilegeMode: WorkspacePrivilegeMode = "normal"
 ): IdentityScope {
-  return ["crucible", serverId, accountMfid]
+  return ["crucible", serverId, accountMfid, privilegeMode]
+}
+
+export function identityScopeWithPrivilegeMode(
+  scope: IdentityScope,
+  privilegeMode: WorkspacePrivilegeMode
+): IdentityScope {
+  return [scope[0], scope[1], scope[2], privilegeMode]
 }
 
 export const crucibleKeys = {

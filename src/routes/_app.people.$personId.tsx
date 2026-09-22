@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
+import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import { hubPageTitle } from "@/lib/page-title"
 
@@ -91,11 +92,11 @@ function PersonPage() {
       <PageHeader
         actions={
           person.is_service_account &&
-          account.capabilities.can_manage_service_accounts &&
-          !account.is_service_account ? (
+          canOpenServiceAccountAdministration(account) ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
               params={{ serviceAccountMfid: person.unique_id }}
+              preload={false}
               to="/admin/service-accounts/$serviceAccountMfid"
             >
               <PrincipalTypeIcon

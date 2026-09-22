@@ -21,12 +21,28 @@ describe("identityScopedPreviousData", () => {
 
     expect(
       identityScopedPreviousData(scope, page, {
-        queryKey: ["crucible", "hosted", "account-b", "projects"],
+        queryKey: ["crucible", "hosted", "account-b", "normal", "projects"],
       })
     ).toBeUndefined()
     expect(
       identityScopedPreviousData(scope, page, {
-        queryKey: ["crucible", "other-server", "account-a", "projects"],
+        queryKey: [
+          "crucible",
+          "other-server",
+          "account-a",
+          "normal",
+          "projects",
+        ],
+      })
+    ).toBeUndefined()
+  })
+
+  it("does not retain data from another privilege mode", () => {
+    const page = { items: ["private-project"] }
+
+    expect(
+      identityScopedPreviousData(scope, page, {
+        queryKey: ["crucible", "hosted", "account-a", "elevated", "projects"],
       })
     ).toBeUndefined()
   })

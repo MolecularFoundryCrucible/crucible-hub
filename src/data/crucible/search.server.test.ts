@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import { searchWorkspace } from "./search.server"
 
 const allKinds = [
@@ -114,7 +116,7 @@ describe("workspace search source", () => {
         if (url.pathname === "/instruments/search") {
           return new Response(null, { status: 503 })
         }
-        if (url.pathname === "/users/search") return Response.json([])
+        if (url.pathname === "/users/search") return crucibleApiResponse([])
         const items =
           url.pathname === "/projects/search"
             ? [
@@ -126,7 +128,7 @@ describe("workspace search source", () => {
                 },
               ]
             : []
-        return Response.json({ items, limit: 8, total: items.length })
+        return crucibleApiResponse({ items, limit: 8, total: items.length })
       })
     )
 

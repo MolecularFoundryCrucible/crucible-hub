@@ -45,7 +45,10 @@ export function AccountCapabilitiesCard({
       <CardContent>
         <ul className="grid gap-4 md:grid-cols-2">
           {capabilityDefinitions.map(([capability, label, kind, type]) => {
-            const available = account.capabilities[capability]
+            const available =
+              account.capabilities[capability] ||
+              (capability === "can_manage_service_accounts" &&
+                account.authorization.can_elevate)
             return (
               <li
                 className="flex min-w-0 items-center justify-between gap-3"

@@ -14,7 +14,8 @@ export function identityScopedPreviousData<TData>(
   const queryKey = previousQuery?.queryKey
   return queryKey?.[0] === scope[0] &&
     queryKey[1] === scope[1] &&
-    queryKey[2] === scope[2]
+    queryKey[2] === scope[2] &&
+    queryKey[3] === scope[3]
     ? previousData
     : undefined
 }
@@ -30,7 +31,7 @@ export function collectionScopedPreviousData<TData>(
   ) {
     return undefined
   }
-  const previousContext = previousQuery?.queryKey[5]
+  const previousContext = previousQuery?.queryKey[6]
   if (typeof previousContext !== "object" || previousContext === null) {
     return undefined
   }

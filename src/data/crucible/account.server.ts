@@ -1,6 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
+import { readGlobalPrivilegeMode } from "@/server/crucible/privilege-mode.server"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -12,22 +13,27 @@ import type {
   WorkspaceApiCredentialStatus,
 } from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 export async function readWorkspaceAccount(
   scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
+  requestSignal?: AbortSignal,
+  privilegeMode?: WorkspacePrivilegeMode
 ): Promise<WorkspaceAccount> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
-    const source = readWorkspaceFixture(scenario)
+    const source = readWorkspaceFixture(
+      scenario,
+      privilegeMode ?? readGlobalPrivilegeMode()
+    )
     if (source.status === "unavailable") throw new Error(source.reason)
     return source.workspace.account
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, { privilegeMode })
   const result = await client.GET("/account/profile", {
     signal: crucibleRequestSignal(requestSignal),
   })
@@ -47,7 +53,7 @@ export async function readWorkspaceAccountCredentialStatus(
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
-    const source = readWorkspaceFixture(scenario)
+    const source = readWorkspaceFixture(scenario, readGlobalPrivilegeMode())
     if (source.status === "unavailable") throw new Error(source.reason)
     return {
       created_at: source.workspace.referenceTime,
@@ -76,7 +82,7 @@ export async function patchWorkspaceAccount(
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
-    const source = readWorkspaceFixture(scenario)
+    const source = readWorkspaceFixture(scenario, readGlobalPrivilegeMode())
     if (source.status === "unavailable") throw new Error(source.reason)
     return { ...source.workspace.account, ...changes }
   }
@@ -94,6 +100,7 @@ export async function patchWorkspaceAccount(
 }
 
 function toWorkspaceAccount(account: {
+  authorization: WorkspaceAccount["authorization"]
   capabilities: WorkspaceAccount["capabilities"]
   email?: string | null
   first_name: string
@@ -103,6 +110,7 @@ function toWorkspaceAccount(account: {
   username?: string | null
 }): WorkspaceAccount {
   return {
+    authorization: account.authorization,
     capabilities: account.capabilities,
     email: account.email ?? null,
     first_name: account.first_name,

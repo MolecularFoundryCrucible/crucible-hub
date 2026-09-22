@@ -18,6 +18,7 @@ import { PageLayout } from "@/components/crucible/page-layout"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import {
+  useAdministrationScope,
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
@@ -47,7 +48,11 @@ import {
 } from "@/components/crucible/collection-state"
 import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { crucibleKeys } from "@/data/crucible/query-keys"
+import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
+import {
+  crucibleKeys,
+  identityScopeWithPrivilegeMode,
+} from "@/data/crucible/query-keys"
 import {
   serviceAccountPageLimit,
   serviceAccountsQueryOptions,
@@ -75,8 +80,12 @@ export const Route = createFileRoute("/_app/admin/service-accounts/")({
     const account = context.queryClient.getQueryData<WorkspaceAccount>(
       crucibleKeys.accountProfile(source.scope)
     )
-    if (!account?.capabilities.can_manage_service_accounts) return
-    const options = serviceAccountsQueryOptions(source.scope, {
+    if (!account || !canOpenServiceAccountAdministration(account)) return
+    const administrationScope = identityScopeWithPrivilegeMode(
+      source.scope,
+      "elevated"
+    )
+    const options = serviceAccountsQueryOptions(administrationScope, {
       limit: serviceAccountPageLimit,
       ...deps,
     })
@@ -95,27 +104,28 @@ export const Route = createFileRoute("/_app/admin/service-accounts/")({
 
 function ServiceAccountsPage() {
   const scope = useWorkspaceScope()
+  const administrationScope = useAdministrationScope()
   const mode = useWorkspaceMode()
   const queryClient = useQueryClient()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const offset = search.offset ?? 0
-  const options = serviceAccountsQueryOptions(scope, {
+  const options = serviceAccountsQueryOptions(administrationScope, {
     limit: serviceAccountPageLimit,
     offset,
     query: search.q,
   })
   const result = useQuery({
     ...options,
-    enabled: account.capabilities.can_manage_service_accounts,
+    enabled: canOpenServiceAccountAdministration(account),
   })
   const [createOpen, setCreateOpen] = useState(false)
   const [credential, setCredential] =
     useState<WorkspaceServiceAccountCredential>()
   const [searchError, setSearchError] = useState<string>()
 
-  if (!account.capabilities.can_manage_service_accounts) {
+  if (!canOpenServiceAccountAdministration(account)) {
     return <Navigate replace to="/" />
   }
 
@@ -123,7 +133,7 @@ function ServiceAccountsPage() {
     setCredential(created)
     if (mode === "api") {
       void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.serviceAccountAdminQueries(scope),
+        queryKey: crucibleKeys.serviceAccountAdminQueries(administrationScope),
       })
       return
     }
@@ -252,7 +262,7 @@ function ServiceAccountsPage() {
         onCreated={handleCreated}
         onOpenChange={setCreateOpen}
         open={createOpen}
-        scope={scope}
+        scope={administrationScope}
       />
       <OneTimeCredentialDialog
         credential={credential}

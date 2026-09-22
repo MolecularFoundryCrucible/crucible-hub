@@ -6,6 +6,7 @@ import { PageLayout } from "@/components/crucible/page-layout"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { IdentityDetailPending } from "@/components/crucible/route-content-pending"
 import {
+  useAdministrationScope,
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
@@ -24,7 +25,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { crucibleKeys } from "@/data/crucible/query-keys"
+import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
+import {
+  crucibleKeys,
+  identityScopeWithPrivilegeMode,
+} from "@/data/crucible/query-keys"
 import { serviceAccountAdminQueryOptions } from "@/data/crucible/service-accounts.queries"
 import type { WorkspaceAccount } from "@/data/crucible/workspace-source"
 import { ServiceAccountDetail } from "@/features/service-accounts/service-account-detail"
@@ -39,9 +44,16 @@ export const Route = createFileRoute(
     const account = context.queryClient.getQueryData<WorkspaceAccount>(
       crucibleKeys.accountProfile(source.scope)
     )
-    if (!account?.capabilities.can_manage_service_accounts) return
+    if (!account || !canOpenServiceAccountAdministration(account)) return
+    const administrationScope = identityScopeWithPrivilegeMode(
+      source.scope,
+      "elevated"
+    )
     const serviceAccount = await context.queryClient.ensureQueryData(
-      serviceAccountAdminQueryOptions(source.scope, params.serviceAccountMfid)
+      serviceAccountAdminQueryOptions(
+        administrationScope,
+        params.serviceAccountMfid
+      )
     )
     return { username: serviceAccount?.username }
   },
@@ -55,14 +67,15 @@ export const Route = createFileRoute(
 function ServiceAccountAdminPage() {
   const { serviceAccountMfid } = Route.useParams()
   const scope = useWorkspaceScope()
+  const administrationScope = useAdministrationScope()
   const mode = useWorkspaceMode()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const serviceAccountResult = useQuery({
-    ...serviceAccountAdminQueryOptions(scope, serviceAccountMfid),
-    enabled: account.capabilities.can_manage_service_accounts,
+    ...serviceAccountAdminQueryOptions(administrationScope, serviceAccountMfid),
+    enabled: canOpenServiceAccountAdministration(account),
   })
 
-  if (!account.capabilities.can_manage_service_accounts) {
+  if (!canOpenServiceAccountAdministration(account)) {
     return <Navigate replace to="/" />
   }
 
@@ -125,7 +138,7 @@ function ServiceAccountAdminPage() {
         account={serviceAccount}
         canChangePlatformRole={!account.is_service_account}
         mode={mode}
-        scope={scope}
+        scope={administrationScope}
       />
     </PageLayout>
   )

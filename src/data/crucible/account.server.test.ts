@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import { patchWorkspaceAccount, readWorkspaceAccount } from "./account.server"
 
 describe("workspace account source", () => {
@@ -48,7 +50,7 @@ describe("workspace account source", () => {
         first_name: "Ada",
         username: "ada_lovelace",
       })
-      return Response.json({
+      return crucibleApiResponse({
         email: "ada@example.invalid",
         first_name: "Ada",
         is_service_account: false,

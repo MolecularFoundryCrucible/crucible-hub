@@ -45,3 +45,4 @@ A decision record does not override a contract owned by another Crucible reposit
 | [0028](0028-consolidate-resource-management.md)               | Accepted   | Consolidated sample and dataset management                                        |
 | [0029](0029-separate-dataset-processing.md)                   | Accepted   | Dedicated file ingestion and future dataset processing workspace                  |
 | [0030](0030-load-scientific-viewers-from-a-typed-registry.md) | Accepted   | Typed build-time registry for independently loaded scientific viewers             |
+| [0031](0031-scope-administrator-authority.md)                 | Accepted   | Contextual platform Administration and explicit global Administrator view         |

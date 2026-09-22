@@ -111,7 +111,7 @@ function collectionScopedPreviousData<TData>(
   previousQuery: { queryKey: readonly unknown[] } | undefined
 ) {
   const queryKey = previousQuery?.queryKey
-  const previousFilters = queryKey?.[5]
+  const previousFilters = queryKey?.[6]
   const contextKeys = [
     "affiliation",
     "createdFrom",
@@ -139,8 +139,9 @@ function collectionScopedPreviousData<TData>(
   return queryKey?.[0] === scope[0] &&
     queryKey[1] === scope[1] &&
     queryKey[2] === scope[2] &&
-    queryKey[3] === family &&
-    queryKey[4] === "list" &&
+    queryKey[3] === scope[3] &&
+    queryKey[4] === family &&
+    queryKey[5] === "list" &&
     contextKeys.every(
       (key) =>
         (isRecord(previousFilters) ? previousFilters[key] : undefined) ===

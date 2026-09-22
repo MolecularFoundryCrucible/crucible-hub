@@ -6,9 +6,13 @@ describe("Crucible query keys", () => {
   it("scopes data by server and stable account identity", () => {
     const first = identityScope("staging", "user-a")
     const second = identityScope("staging", "user-b")
+    const elevated = identityScope("staging", "user-a", "elevated")
 
     expect(crucibleKeys.accountProfile(first)).not.toEqual(
       crucibleKeys.accountProfile(second)
+    )
+    expect(crucibleKeys.accountProfile(first)).not.toEqual(
+      crucibleKeys.accountProfile(elevated)
     )
   })
 

@@ -6,6 +6,7 @@ import type {
   Workspace,
   WorkspaceSource,
 } from "@/data/crucible/workspace-source"
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type ApiLinkedResource = components["schemas"]["LinkedResource"]
 
@@ -209,7 +210,8 @@ function workspaceForScenario(scenario: FixtureScenario): Workspace {
 }
 
 export function readWorkspaceFixture(
-  scenario: FixtureScenario = defaultFixtureScenario
+  scenario: FixtureScenario = defaultFixtureScenario,
+  privilegeMode: WorkspacePrivilegeMode = "normal"
 ): WorkspaceSource {
   const fixturesEnabled =
     process.env.NODE_ENV !== "production" ||
@@ -229,10 +231,26 @@ export function readWorkspaceFixture(
     }
   }
 
+  const workspace = workspaceForScenario(scenario)
   return {
     status: "ready",
     mode: "fixture",
-    workspace: workspaceForScenario(scenario),
+    privilegeMode,
+    workspace: {
+      ...workspace,
+      account: {
+        ...workspace.account,
+        authorization: {
+          ...workspace.account.authorization,
+          effective_privilege_mode: privilegeMode,
+        },
+        capabilities: {
+          ...workspace.account.capabilities,
+          can_create_for_others: privilegeMode === "elevated",
+          can_manage_service_accounts: privilegeMode === "elevated",
+        },
+      },
+    },
   }
 }
 

@@ -76,7 +76,9 @@ export async function readWorkspaceServiceAccounts(
     }
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  })
   const result = await client.GET("/service_accounts", {
     params: {
       query: {
@@ -119,7 +121,9 @@ export async function readWorkspaceServiceAccount(
     }
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  })
   const result = await client.GET("/service_accounts/{unique_id}", {
     params: { path: { unique_id: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),
@@ -146,7 +150,9 @@ export async function createWorkspaceServiceAccount(
     }
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  })
   const result = await client.POST("/service_accounts", {
     body: account,
     signal: crucibleRequestSignal(requestSignal),
@@ -187,7 +193,9 @@ export async function patchWorkspaceServiceAccount(
     }
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  })
   const result = await client.PATCH("/users/{user_id}", {
     body: changes,
     params: { path: { user_id: serviceAccountMfid } },
@@ -222,7 +230,9 @@ export async function patchWorkspaceServiceAccountPlatformRole(
     return { ...account, platform_role: platformRole }
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  })
   const result = await client.PATCH("/service_accounts/{unique_id}", {
     body: { platform_role: platformRole },
     params: { path: { unique_id: serviceAccountMfid } },
@@ -255,7 +265,9 @@ export async function rotateWorkspaceServiceAccountKey(
     }
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  })
   const result = await client.POST("/service_accounts/{unique_id}/rotate_key", {
     params: { path: { unique_id: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),

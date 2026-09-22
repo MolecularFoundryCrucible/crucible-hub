@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
 
@@ -61,7 +63,7 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           edge_limit: 1_000,
           has_more: true,
           node_limit: 500,
@@ -176,7 +178,7 @@ describe("workspace resource sources", () => {
 
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json({ nodes: [] }))
+      vi.fn(async () => crucibleApiResponse({ nodes: [] }))
     )
     await expect(readWorkspaceResourceGraph("sample-1")).rejects.toThrow(
       "resource graph response is invalid"
@@ -191,7 +193,7 @@ describe("workspace resource sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           edge_limit: 1_000,
           has_more: false,
           node_limit: 500,
@@ -406,9 +408,9 @@ describe("workspace resource sources", () => {
         vi.fn(async (request: Request) => {
           requests.push(request)
           const resourceMfid = new URL(request.url).pathname.split("/").at(-1)
-          if (request.method !== "GET") return Response.json(1)
+          if (request.method !== "GET") return crucibleApiResponse(1)
           const isDataset = resourceMfid?.startsWith("dataset")
-          return Response.json(
+          return crucibleApiResponse(
             isDataset
               ? {
                   capabilities: null,
@@ -475,7 +477,7 @@ describe("workspace resource sources", () => {
     }
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json({}, { status: 403 }))
+      vi.fn(async () => crucibleApiResponse({}, { status: 403 }))
     )
     await expect(
       safeCrucibleCall("test-correlation", () =>
@@ -489,8 +491,8 @@ describe("workspace resource sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (request: Request) => {
-        if (request.method !== "GET") return Response.json(1)
-        return Response.json({
+        if (request.method !== "GET") return crucibleApiResponse(1)
+        return crucibleApiResponse({
           capabilities: null,
           creation_time: null,
           links: [],
@@ -519,7 +521,7 @@ describe("workspace resource sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           capabilities: null,
           creation_time: null,
           deletion_request: {
@@ -565,7 +567,7 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           id: 12,
           project_id: "project-1",
           reason: "cleanup",
@@ -598,7 +600,7 @@ describe("workspace resource sources", () => {
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json({}, { status: 409 }))
+      vi.fn(async () => crucibleApiResponse({}, { status: 409 }))
     )
     await expect(
       safeCrucibleCall("test-correlation", () =>
@@ -612,7 +614,7 @@ describe("workspace resource sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           id: 12,
           requester_id: "user-1",
           resource_id: "other-resource",
@@ -720,7 +722,7 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           capabilities: { can_edit: true },
           description: "Updated description",
           modification_time: "2026-09-05T18:45:00Z",
@@ -810,7 +812,7 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           capabilities: { can_edit: true },
           data_format: "NeXus",
           data_type: null,
@@ -933,7 +935,7 @@ describe("workspace resource sources", () => {
         "fetch",
         vi.fn(async (request: Request) => {
           requests.push(request)
-          return Response.json({
+          return crucibleApiResponse({
             scientific_metadata: {
               acquisition: { energy_ev: { start: 7100 } },
               ...metadata,
@@ -983,7 +985,7 @@ describe("workspace resource sources", () => {
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json({ unique_id: "x" }))
+      vi.fn(async () => crucibleApiResponse({ unique_id: "x" }))
     )
     await expect(
       writeWorkspaceResourceMetadata("sample-mfid", "sample", {
@@ -995,7 +997,10 @@ describe("workspace resource sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({ scientific_metadata: {}, unique_id: "another-mfid" })
+        crucibleApiResponse({
+          scientific_metadata: {},
+          unique_id: "another-mfid",
+        })
       )
     )
     await expect(
@@ -1016,7 +1021,7 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           capabilities: {
             can_change_status: true,
             can_edit: true,
@@ -1135,7 +1140,7 @@ describe("workspace resource sources", () => {
         "fetch",
         vi.fn(async (request: Request) => {
           requests.push(request)
-          return Response.json({
+          return crucibleApiResponse({
             dataset_name: "Selected dataset",
             links,
             public: false,
@@ -1167,7 +1172,7 @@ describe("workspace resource sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           datasets: [
             {
               dataset_name: "Legacy embedded dataset",
@@ -1261,7 +1266,7 @@ describe("workspace resource sources", () => {
     const requests: Request[] = []
     const fetch = vi.fn(async (request: Request) => {
       requests.push(request)
-      return Response.json({
+      return crucibleApiResponse({
         expires_in: 3600,
         url: "https://downloads.example.invalid/file",
       })
@@ -1291,7 +1296,7 @@ describe("workspace resource sources", () => {
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json({ expires_in: null, url: null }))
+      vi.fn(async () => crucibleApiResponse({ expires_in: null, url: null }))
     )
 
     await expect(createWorkspaceFileDownload("file-mfid")).resolves.toEqual({
@@ -1320,7 +1325,7 @@ describe("workspace resource sources", () => {
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json(payload))
+      vi.fn(async () => crucibleApiResponse(payload))
     )
 
     const result = await safeCrucibleCall("test-correlation", () =>
@@ -1340,7 +1345,7 @@ describe("workspace resource sources", () => {
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json({}, { status: 404 }))
+      vi.fn(async () => crucibleApiResponse({}, { status: 404 }))
     )
 
     const result = await safeCrucibleCall("test-correlation", () =>
@@ -1446,7 +1451,7 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           new_owner: {
             first_name: "Morgan",
             last_name: "Lee",
@@ -1490,14 +1495,14 @@ describe("workspace resource sources", () => {
         requests.push(request)
         const path = new URL(request.url).pathname
         if (path === "/projects/project-mfid") {
-          return Response.json({
+          return crucibleApiResponse({
             organization: "Example Laboratory",
             project_id: "project-slug",
             project_lead_orcid: "person-mfid",
             unique_id: "project-mfid",
           })
         }
-        return Response.json({
+        return crucibleApiResponse({
           new_project_id: "project-slug",
           resource_id: "resource-mfid",
         })

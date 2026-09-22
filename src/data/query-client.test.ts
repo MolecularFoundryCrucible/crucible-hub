@@ -12,6 +12,7 @@ import {
 describe("Crucible Query client", () => {
   it("dehydrates and hydrates only successful identity-scoped queries", async () => {
     const scope = identityScope("staging", "user-a")
+    const elevatedScope = identityScope("staging", "user-a", "elevated")
     const source = createQueryClient()
     source.setQueryData(crucibleKeys.accountProfile(scope), {
       unique_id: "user-a",
@@ -24,6 +25,10 @@ describe("Crucible Query client", () => {
       username: "ada",
     })
     source.setQueryData(["unscoped", "diagnostic"], "not browser state")
+    source.setQueryData(crucibleKeys.accountProfile(elevatedScope), {
+      unique_id: "user-a",
+      username: "elevated-ada",
+    })
     source.setQueryData(
       crucibleKeys.search(scope, { query: "private experiment" }),
       { groups: [], query: "private experiment" }
@@ -54,6 +59,9 @@ describe("Crucible Query client", () => {
       }
     )
     expect(target.getQueryData(["unscoped", "diagnostic"])).toBeUndefined()
+    expect(
+      target.getQueryData(crucibleKeys.accountProfile(elevatedScope))
+    ).toBeUndefined()
     expect(JSON.stringify(dehydrated)).not.toContain("upstream detail")
     expect(JSON.stringify(dehydrated)).not.toContain("private experiment")
   })

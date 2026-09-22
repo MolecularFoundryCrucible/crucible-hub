@@ -36,7 +36,8 @@ export const Route = createFileRoute("/_app")({
 
     const scope = identityScope(
       source.mode === "fixture" ? fixtureServerId(scenario) : "crucible-hosted",
-      source.workspace.account.unique_id
+      source.workspace.account.unique_id,
+      source.privilegeMode
     )
     const { account } = source.workspace
     context.queryClient.setQueryData(
@@ -44,7 +45,12 @@ export const Route = createFileRoute("/_app")({
       account
     )
 
-    return { status: "ready" as const, mode: source.mode, scope }
+    return {
+      status: "ready" as const,
+      mode: source.mode,
+      privilegeMode: source.privilegeMode,
+      scope,
+    }
   },
   staleTime: Infinity,
   component: WorkspaceLayout,
@@ -68,21 +74,29 @@ function WorkspaceLayout() {
     )
   }
 
-  return <ReadyWorkspace mode={source.mode} scope={source.scope} />
+  return (
+    <ReadyWorkspace
+      mode={source.mode}
+      privilegeMode={source.privilegeMode}
+      scope={source.scope}
+    />
+  )
 }
 
 function ReadyWorkspace({
   mode,
+  privilegeMode,
   scope,
 }: {
   mode: "api" | "fixture"
+  privilegeMode: "elevated" | "normal"
   scope: ReturnType<typeof identityScope>
 }) {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
 
   return (
-    <WorkspaceProvider mode={mode} scope={scope}>
-      <AppShell account={account} scope={scope}>
+    <WorkspaceProvider mode={mode} privilegeMode={privilegeMode} scope={scope}>
+      <AppShell account={account} privilegeMode={privilegeMode} scope={scope}>
         <Outlet />
       </AppShell>
     </WorkspaceProvider>

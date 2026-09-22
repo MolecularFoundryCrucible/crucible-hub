@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import {
   addWorkspaceInstrumentOperator,
   createWorkspaceInstrumentResource,
@@ -54,7 +56,7 @@ describe("workspace instrument source", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           items: [
             {
               capabilities: {
@@ -106,7 +108,12 @@ describe("workspace instrument source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({ items: [], limit: 20, offset: 0, total: 0 })
+        return crucibleApiResponse({
+          items: [],
+          limit: 20,
+          offset: 0,
+          total: 0,
+        })
       })
     )
 
@@ -173,7 +180,7 @@ describe("workspace instrument source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           description: null,
           instrument_id: "hard-xray-microprobe",
           instrument_name: "Updated microprobe",
@@ -250,7 +257,7 @@ describe("workspace instrument source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           instrument_name: "Hard X-ray Microprobe",
           location: "Beamline 5.3.2",
           modification_time: "2026-09-06T18:00:00Z",
@@ -283,7 +290,7 @@ describe("workspace instrument source", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           instrument_name: "Hard X-ray Microprobe",
           location: "Beamline 5.3.2",
           owner_orcid: "0000-0000-0000-000X",
@@ -307,7 +314,7 @@ describe("workspace instrument source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json([
+        return crucibleApiResponse([
           {
             first_name: "Beamline",
             is_service_account: true,
@@ -352,7 +359,7 @@ describe("workspace instrument source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           instrument_id: "new-instrument",
           instrument_name: "New instrument",
           location: "Beamline 1",

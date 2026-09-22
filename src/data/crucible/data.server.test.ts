@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import { readWorkspaceDatasets, readWorkspaceSamples } from "./data.server"
 import { demoWorkspace } from "./fixtures/demo-workspace"
 
@@ -217,7 +219,7 @@ describe("workspace data sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           items: [
             {
               dataset_name: "Reference precedence",
@@ -272,7 +274,7 @@ describe("workspace data sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({
+        crucibleApiResponse({
           items: [
             {
               project: {
@@ -316,7 +318,7 @@ describe("workspace data sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           items: [],
           limit: 50,
           next_cursor: null,

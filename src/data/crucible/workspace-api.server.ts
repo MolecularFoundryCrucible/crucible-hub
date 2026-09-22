@@ -6,6 +6,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { createCrucibleClient } from "@/server/crucible/client.server"
 import { crucibleRequestSignal } from "@/server/crucible/request-signal.server"
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type ApiWorkspaceConfiguration = {
   baseUrl: string
@@ -13,6 +14,7 @@ type ApiWorkspaceConfiguration = {
   fetch?: typeof globalThis.fetch
   now?: () => Date
   signal?: AbortSignal
+  privilegeMode?: WorkspacePrivilegeMode
 }
 
 type ApiFailure = {
@@ -56,10 +58,14 @@ export async function readWorkspaceFromApi({
   bearerToken,
   fetch,
   now = () => new Date(),
+  privilegeMode = "normal",
   signal,
 }: ApiWorkspaceConfiguration): Promise<WorkspaceSource> {
   try {
-    const client = createCrucibleClient({ baseUrl, bearerToken, fetch })
+    const client = createCrucibleClient(
+      { baseUrl, bearerToken, fetch },
+      { privilegeMode }
+    )
     const accountResult = await client.GET("/account/profile", {
       signal: crucibleRequestSignal(signal),
     })
@@ -69,6 +75,7 @@ export async function readWorkspaceFromApi({
     }
 
     const account = {
+      authorization: accountResult.data.authorization,
       capabilities: accountResult.data.capabilities,
       email: accountResult.data.email,
       unique_id: accountResult.data.unique_id,
@@ -89,7 +96,7 @@ export async function readWorkspaceFromApi({
       files: [],
     }
 
-    return { status: "ready", mode: "api", workspace }
+    return { status: "ready", mode: "api", privilegeMode, workspace }
   } catch (error) {
     return unavailable(error)
   }

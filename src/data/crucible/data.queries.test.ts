@@ -11,6 +11,7 @@ describe("dataset query options", () => {
       "crucible",
       "hosted",
       "account-a",
+      "normal",
       "datasets",
       "list",
       { direction: "desc", limit: 50, sort: "created" },
@@ -24,6 +25,7 @@ describe("dataset query options", () => {
       "crucible",
       "hosted",
       "account-a",
+      "normal",
       "datasets",
       "list",
       {
@@ -40,7 +42,7 @@ describe("dataset query options", () => {
       samplesQueryOptions(scope, {
         limit: 50,
         projectMfid: " fixture-project-1 ",
-      }).queryKey[5]
+      }).queryKey[6]
     ).toEqual({
       direction: "desc",
       limit: 50,
@@ -53,7 +55,7 @@ describe("dataset query options", () => {
         limit: 50,
         projectMfid: "fixture-project-1",
         projectScope: "shared",
-      }).queryKey[5]
+      }).queryKey[6]
     ).toEqual({
       direction: "desc",
       limit: 50,
@@ -82,7 +84,7 @@ describe("dataset query options", () => {
         createdTo: "2026-08-29",
         limit: 50,
         visibility: "private",
-      }).queryKey[5]
+      }).queryKey[6]
     ).toEqual({
       createdFrom: "2026-08-27",
       createdTo: "2026-08-29",

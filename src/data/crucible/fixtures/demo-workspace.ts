@@ -21,12 +21,17 @@ type DemoWorkspaceContract = {
 }
 
 const account = {
+  authorization: {
+    can_elevate: true,
+    effective_privilege_mode: "normal",
+    platform_role: "admin",
+  },
   capabilities: {
     can_create_dataset: true,
-    can_create_for_others: true,
+    can_create_for_others: false,
     can_create_project: true,
     can_create_sample: true,
-    can_manage_service_accounts: true,
+    can_manage_service_accounts: false,
     can_register_instrument: true,
   },
   unique_id: "0000-0000-0000-000X",

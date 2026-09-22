@@ -1,5 +1,6 @@
 import type { components } from "@/generated/crucible-api"
 import type { FixtureScenario } from "./fixture-scenarios"
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
@@ -12,6 +13,7 @@ export type WorkspacePerson = Pick<
 export type WorkspaceAccount = Omit<
   Pick<
     Schema<"AccountProfileRead">,
+    | "authorization"
     | "capabilities"
     | "email"
     | "first_name"
@@ -564,6 +566,7 @@ export type WorkspaceSource =
   | {
       status: "ready"
       mode: WorkspaceMode
+      privilegeMode: WorkspacePrivilegeMode
       workspace: Workspace
     }
   | {

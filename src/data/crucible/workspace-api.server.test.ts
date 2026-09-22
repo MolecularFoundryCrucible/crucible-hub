@@ -5,7 +5,10 @@ import { readWorkspaceFromApi } from "@/data/crucible/workspace-api.server"
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Crucible-Privilege-Mode": "normal",
+    },
   })
 }
 
@@ -19,6 +22,19 @@ describe("API workspace adapter", () => {
 
       if (path === "/account/profile") {
         return json({
+          authorization: {
+            can_elevate: false,
+            effective_privilege_mode: "normal",
+            platform_role: "none",
+          },
+          capabilities: {
+            can_create_dataset: true,
+            can_create_for_others: false,
+            can_create_project: true,
+            can_create_sample: true,
+            can_manage_service_accounts: false,
+            can_register_instrument: true,
+          },
           unique_id: "0000-0000-0000-0001",
           username: "researcher",
           first_name: "Ada",
@@ -41,7 +57,21 @@ describe("API workspace adapter", () => {
     if (source.status !== "ready") return
 
     expect(source.mode).toBe("api")
+    expect(source.privilegeMode).toBe("normal")
     expect(source.workspace.account).toEqual({
+      authorization: {
+        can_elevate: false,
+        effective_privilege_mode: "normal",
+        platform_role: "none",
+      },
+      capabilities: {
+        can_create_dataset: true,
+        can_create_for_others: false,
+        can_create_project: true,
+        can_create_sample: true,
+        can_manage_service_accounts: false,
+        can_register_instrument: true,
+      },
       email: "private@example.invalid",
       unique_id: "0000-0000-0000-0001",
       username: "researcher",
@@ -57,6 +87,11 @@ describe("API workspace adapter", () => {
       requests.every(
         (request) =>
           request.headers.get("Authorization") === "Bearer test-token"
+      )
+    ).toBe(true)
+    expect(
+      requests.every(
+        (request) => request.headers.get("Crucible-Privilege-Mode") === "normal"
       )
     ).toBe(true)
     expect(JSON.stringify(source)).not.toContain("test-token")

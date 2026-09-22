@@ -26,6 +26,14 @@ This proposal extends the administration requirements in [`crucible-api-handoff.
 - Consequential actions require explicit confirmation, authoritative server responses, and local recovery without optimistic domain changes.
 - Empty queues are normal states. They should not be treated as authorization failures.
 
+## Implemented privilege behavior
+
+The pinned API contract separates a human platform administrator's assigned entitlement from the privilege mode applied to each request. Hub sends `Crucible-Privilege-Mode: normal` for standard access and verifies the applied mode returned by successful authenticated responses. Normal `/account/profile` capabilities describe normal authority, while `authorization.can_elevate` keeps eligible platform Administration destinations discoverable.
+
+Platform Administration and global Administrator view are separate Hub scopes. Requests owned by implemented `/admin` service-account routes use an explicit elevated server client without changing global mode. The shell shows a contextual Platform administration indicator, and leaving the route returns ordinary requests to the selected global mode. An eligible human administrator may separately enable Administrator view from the account menu. That visible mode applies elevated authority throughout the Hub, uses a persistent warning action in the top bar, and ends when explicitly disabled or when the browser session ends during the development bridge. Production must store privilege intent and any future API-issued lease in the authenticated server-side Hub session with expiry and session rotation.
+
+Normal and elevated Query representations use distinct identity scopes. Elevated Queries are never dehydrated, and disabling global Administrator view cancels and removes elevated data before the route reloads with ordinary ACL authority. The Hub never retries a denied or missing resource in elevated mode automatically.
+
 ## Roles and scopes
 
 The interface should distinguish authority scope from identity type.
@@ -45,20 +53,20 @@ Project and instrument roles must not be converted into platform privileges. Ins
 
 ### Broad Administration routes
 
-| Route                                         | Purpose                                                                               | Initial eligibility                                            |
-| --------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `/admin`                                      | Actionable summaries and direct links to authorized administration areas              | `can_open_administration`                                      |
-| `/admin/reviews`                              | Combined navigation for join and deletion review queues                               | At least one review capability                                 |
-| `/admin/reviews/join-requests`                | Join requests across every project the caller may review                              | `can_review_join_requests`                                     |
-| `/admin/reviews/deletion-requests`            | Deletion requests across every scope the caller may review                            | `can_review_deletion_requests`                                 |
-| `/admin/processing`                           | Failed, running, queued, and completed processing operations across authorized scopes | `can_manage_processing` or `can_view_processing_operations`    |
-| `/admin/service-accounts`                     | Existing service-account directory and creation workflow                              | `can_manage_service_accounts`                                  |
-| `/admin/service-accounts/:serviceAccountMfid` | Existing service-account identity, role, and credential workflow                      | `can_manage_service_accounts` plus operation-specific guidance |
-| `/admin/people`                               | Human account lookup and administration                                               | `can_manage_people`                                            |
-| `/admin/people/:personMfid`                   | Administrative person detail separate from the public profile                         | `can_manage_people` plus operation-specific guidance           |
-| `/admin/audit`                                | Immutable administrative and operational history                                      | `can_view_audit`                                               |
+| Route                                         | Purpose                                                                               | Initial eligibility                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `/admin`                                      | Actionable summaries and direct links to authorized administration areas              | `can_open_administration`                                                                                    |
+| `/admin/reviews`                              | Combined navigation for join and deletion review queues                               | At least one review capability                                                                               |
+| `/admin/reviews/join-requests`                | Join requests across every project the caller may review                              | `can_review_join_requests`                                                                                   |
+| `/admin/reviews/deletion-requests`            | Deletion requests across every scope the caller may review                            | `can_review_deletion_requests`                                                                               |
+| `/admin/processing`                           | Failed, running, queued, and completed processing operations across authorized scopes | `can_manage_processing` or `can_view_processing_operations`                                                  |
+| `/admin/service-accounts`                     | Existing service-account directory and creation workflow                              | Human `can_elevate` eligibility or effective `can_manage_service_accounts`                                   |
+| `/admin/service-accounts/:serviceAccountMfid` | Existing service-account identity, role, and credential workflow                      | Human `can_elevate` eligibility or effective `can_manage_service_accounts`, plus operation-specific guidance |
+| `/admin/people`                               | Human account lookup and administration                                               | `can_manage_people`                                                                                          |
+| `/admin/people/:personMfid`                   | Administrative person detail separate from the public profile                         | `can_manage_people` plus operation-specific guidance                                                         |
+| `/admin/audit`                                | Immutable administrative and operational history                                      | `can_view_audit`                                                                                             |
 
-The Administration sidebar group appears when `can_open_administration` is true. The API should set that value whenever at least one child capability is true, including `can_manage_service_accounts`. Each child appears only when its corresponding capability is true. During migration, the Hub may retain the existing `can_manage_service_accounts` check solely to keep the implemented service-account route discoverable until the pinned account contract includes `can_open_administration`.
+The future broad Administration sidebar group should appear when `can_open_administration` is true. The API should set that value whenever at least one child capability is true. The implemented service-account entry currently appears for an eligible human administrator through `authorization.can_elevate` or an effective `can_manage_service_accounts`, and its requests use contextual elevation. Future scoped administration entries should use their exact normal-mode navigation capability and must not depend on platform elevation eligibility.
 
 ### Contextual project surfaces
 

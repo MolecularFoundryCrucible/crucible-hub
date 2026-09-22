@@ -24,6 +24,7 @@ export const SampleIcon = createLucideIcon("Sample", SampleIconNode)
 
 export {
   CircleUserRound as AccountIcon,
+  ShieldCheck as AdministratorViewIcon,
   LibraryBig as DataIcon,
   Download as DownloadFileIcon,
   FileX2 as DownloadUnavailableIcon,

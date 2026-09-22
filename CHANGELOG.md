@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added explicit normal and elevated API privilege modes, contextual elevation for platform Administration, and a visible session-scoped Administrator view with privilege-isolated Query caches.
+
 - Aligned access management across projects, instruments, samples, and datasets with a shared visible management mode, compact pending indicators, and instrument manager and operator role presentation.
 
 - Calibrated light and dark surface hierarchy, control boundaries, focus indicators, navigation selection, semantic status badges, visibility presentation, and graph resource colors through shared contrast-checked design roles.

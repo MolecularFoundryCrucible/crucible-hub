@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
 
 import {
@@ -175,7 +177,7 @@ describe("workspace resource access source", () => {
       vi.fn(async (request: Request) => {
         requests.push(request)
         if (request.method === "GET") {
-          return Response.json([
+          return crucibleApiResponse([
             {
               permission: "viewer",
               principal_id: "principal-1",
@@ -188,7 +190,10 @@ describe("workspace resource access source", () => {
             },
           ])
         }
-        return new Response(null, { status: 200 })
+        return new Response(null, {
+          headers: { "Crucible-Privilege-Mode": "normal" },
+          status: 200,
+        })
       })
     )
 
@@ -239,11 +244,14 @@ describe("workspace resource access source", () => {
       vi.fn(async (request: Request) => {
         requests.push(request)
         const path = new URL(request.url).pathname
-        if (path.endsWith("/access")) return Response.json([])
+        if (path.endsWith("/access")) return crucibleApiResponse([])
         if (request.method === "GET") {
-          return Response.json(sampleDetail("resource-1"))
+          return crucibleApiResponse(sampleDetail("resource-1"))
         }
-        return new Response(null, { status: 200 })
+        return new Response(null, {
+          headers: { "Crucible-Privilege-Mode": "normal" },
+          status: 200,
+        })
       })
     )
 
@@ -285,7 +293,7 @@ describe("workspace resource access source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requestSignal = request.signal
-        return Response.json([])
+        return crucibleApiResponse([])
       })
     )
 

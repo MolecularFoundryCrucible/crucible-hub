@@ -19,6 +19,8 @@ const buttonVariantClasses = cva(
           "border-transparent hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "border-transparent bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        warning:
+          "border-warning/30 bg-warning/10 text-warning shadow-xs hover:bg-warning/20 focus-visible:border-warning/50 focus-visible:ring-warning/25 dark:bg-warning/15 dark:hover:bg-warning/25",
         graph:
           "border-graph-action-border bg-graph-action text-graph-action-foreground shadow-xs hover:border-graph-highlight hover:bg-graph-action-hover focus-visible:border-graph-highlight focus-visible:ring-graph-highlight/30",
         link: "border-transparent text-primary underline-offset-4 hover:underline",

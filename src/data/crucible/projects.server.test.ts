@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import {
   addWorkspaceProjectMember,
   patchWorkspaceProject,
@@ -70,7 +72,7 @@ describe("workspace project source", () => {
           include_metadata: "true",
         })
       )
-      return Response.json({
+      return crucibleApiResponse({
         lead: {
           first_name: "Ada",
           last_name: "Lovelace",
@@ -130,7 +132,7 @@ describe("workspace project source", () => {
         project_id: "updated-catalyst-mapping",
         title: "Updated Catalyst Mapping",
       })
-      return Response.json({
+      return crucibleApiResponse({
         capabilities: {
           can_change_status: true,
           can_edit: true,
@@ -171,14 +173,14 @@ describe("workspace project source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         if (request.url.includes("/account/profile")) {
-          return Response.json({
+          return crucibleApiResponse({
             first_name: "Ada",
             last_name: "Lovelace",
             unique_id: "account-mfid",
             username: "ada",
           })
         }
-        return Response.json({
+        return crucibleApiResponse({
           items: [
             {
               capabilities: {
@@ -258,7 +260,7 @@ describe("workspace project source", () => {
       expect(url.pathname).toBe("/projects/project-mfid/users/user-2")
       expect(url.search).toBe("?role=contributor")
       expect(request.signal.aborted).toBe(false)
-      return Response.json(members)
+      return crucibleApiResponse(members)
     })
     vi.stubGlobal("fetch", fetchMock)
 
@@ -293,7 +295,7 @@ describe("workspace project source", () => {
       expect(request.method).toBe("PATCH")
       expect(url.pathname).toBe("/projects/project-mfid/users/user-1")
       expect(url.search).toBe("?role=admin")
-      return Response.json(members)
+      return crucibleApiResponse(members)
     })
     vi.stubGlobal("fetch", fetchMock)
 
@@ -322,7 +324,7 @@ describe("workspace project source", () => {
       expect(request.method).toBe("DELETE")
       expect(url.pathname).toBe("/projects/project-mfid/users/user-1")
       expect(url.search).toBe("")
-      return Response.json(members)
+      return crucibleApiResponse(members)
     })
     vi.stubGlobal("fetch", fetchMock)
 

@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import { readWorkspacePerson } from "./people.server"
 
 describe("workspace person source", () => {
@@ -28,7 +30,7 @@ describe("workspace person source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           email: "private@example.invalid",
           first_name: "Morgan",
           is_service_account: false,

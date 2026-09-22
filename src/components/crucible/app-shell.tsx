@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useRouterState } from "@tanstack/react-router"
 
 import { BrandMark } from "@/components/crucible/brand-mark"
+import {
+  AdministratorViewMenuItem,
+  AdministratorViewStatus,
+  useAdministratorView,
+} from "@/components/crucible/administrator-view-control"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
 import { KeyboardShortcuts } from "@/components/crucible/keyboard-shortcuts"
@@ -9,6 +14,7 @@ import { PersonIdentity } from "@/components/crucible/person-identity"
 import { QrScannerAction } from "@/components/crucible/qr-scanner-action"
 import {
   AccountIcon,
+  AdministratorViewIcon,
   CollapseSidebarIcon,
   ExpandSidebarIcon,
   RecentResourcesIcon,
@@ -24,6 +30,7 @@ import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { useTheme } from "@/components/theme-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -53,6 +60,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import type { Workspace } from "@/data/crucible/workspace-source"
+import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
+import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
   projectQueryOptions,
@@ -96,10 +105,12 @@ const primaryItems = [
 export function AppShell({
   account,
   children,
+  privilegeMode = "normal",
   scope,
 }: {
   account?: Workspace["account"]
   children: React.ReactNode
+  privilegeMode?: WorkspacePrivilegeMode
   scope?: IdentityScope
 }) {
   const location = useRouterState({
@@ -108,7 +119,7 @@ export function AppShell({
   const pathname = location.pathname
   const projectMfid = activeProjectMfid(pathname, location.search)
   const recentlyViewedIdentity =
-    scope?.join(":") ?? account?.unique_id ?? "anonymous"
+    scope?.slice(0, 3).join(":") ?? account?.unique_id ?? "anonymous"
 
   return (
     <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
@@ -160,7 +171,7 @@ export function AppShell({
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-            {account?.capabilities.can_manage_service_accounts ? (
+            {account && canOpenServiceAccountAdministration(account) ? (
               <SidebarGroup>
                 <SidebarGroupLabel>Administration</SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -178,6 +189,7 @@ export function AppShell({
                                 ? "page"
                                 : undefined
                             }
+                            preload={false}
                             to="/admin/service-accounts"
                           />
                         }
@@ -210,41 +222,20 @@ export function AppShell({
             {account ? (
               <CreateMenu capabilities={account.capabilities} />
             ) : null}
-            <div className="ml-auto border-l pl-3">
-              {account ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button
-                        aria-label="Open account menu"
-                        size="lg"
-                        variant="ghost"
-                      />
-                    }
-                  >
-                    <PersonIdentity
-                      detailsClassName="hidden lg:grid"
-                      person={account}
-                      presentation="avatar"
-                      size="sm"
-                    />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-48">
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel>Account</DropdownMenuLabel>
-                      <DropdownMenuItem render={<Link to="/account" />}>
-                        <AccountIcon />
-                        My profile
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
+            {account && scope ? (
+              <AccountControls
+                account={account}
+                administrationActive={pathname.startsWith("/admin")}
+                privilegeMode={privilegeMode}
+                scope={scope}
+              />
+            ) : (
+              <div className="ml-auto border-l pl-3">
                 <Avatar size="sm">
                   <AvatarFallback className="text-foreground">?</AvatarFallback>
                 </Avatar>
-              )}
-            </div>
+              </div>
+            )}
           </header>
           <div className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">
             <ResourceSiblingNavigationProvider
@@ -256,6 +247,68 @@ export function AppShell({
         </SidebarInset>
       </SidebarProvider>
     </RecentlyViewedScope>
+  )
+}
+
+function AccountControls({
+  account,
+  administrationActive,
+  privilegeMode,
+  scope,
+}: {
+  account: Workspace["account"]
+  administrationActive: boolean
+  privilegeMode: WorkspacePrivilegeMode
+  scope: IdentityScope
+}) {
+  const administratorView = useAdministratorView({ privilegeMode, scope })
+
+  return (
+    <div className="ml-auto flex items-center gap-2">
+      {administratorView.active ? (
+        <AdministratorViewStatus {...administratorView} />
+      ) : administrationActive ? (
+        <Badge aria-label="Platform administration" variant="warning">
+          <AdministratorViewIcon />
+          <span className="hidden md:inline">Platform administration</span>
+        </Badge>
+      ) : null}
+      <div className="border-l pl-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label="Open account menu"
+                size="lg"
+                variant="ghost"
+              />
+            }
+          >
+            <PersonIdentity
+              detailsClassName="hidden lg:grid"
+              person={account}
+              presentation="avatar"
+              size="sm"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-56">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Account</DropdownMenuLabel>
+              <DropdownMenuItem render={<Link to="/account" />}>
+                <AccountIcon />
+                My profile
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            {account.authorization.can_elevate ? (
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Access mode</DropdownMenuLabel>
+                <AdministratorViewMenuItem {...administratorView} />
+              </DropdownMenuGroup>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   )
 }
 

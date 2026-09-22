@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { crucibleApiResponse } from "@/test/crucible-api-response"
+
 import {
   createWorkspaceDatasetResource,
   createWorkspaceProjectResource,
@@ -48,7 +50,7 @@ describe("workspace creation source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           organization: "Molecular Foundry",
           project_id: "perovskite-1",
           project_lead_orcid: "person-mfid",
@@ -84,7 +86,7 @@ describe("workspace creation source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           description: null,
           project: {
             project_id: "perovskite-1",
@@ -130,7 +132,7 @@ describe("workspace creation source", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return Response.json({
+        return crucibleApiResponse({
           dataset_name: "Dataset A",
           data_format: null,
           data_type: null,
