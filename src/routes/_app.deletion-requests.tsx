@@ -18,10 +18,12 @@ import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import {
+  deletionAuditInfiniteQueryOptions,
   deletionRequestPageLimit,
   deletionRequestsInfiniteQueryOptions,
 } from "@/data/crucible/deletion-requests.queries"
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
+import { DeletionAuditQueue } from "@/features/deletion-requests/deletion-audit-queue"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import type { WorkspaceDeletionRequestSort } from "@/data/crucible/workspace-source"
 
@@ -46,10 +48,9 @@ const deletionRequestSearchSchema = z
   })
   .merge(resourcePreviewSearchSchema)
 
-const views = [
+const requestViews = [
   { label: "Your requests", value: "submitted" },
   { label: "Needs review", value: "reviewable" },
-  { label: "Approved", value: "approved" },
 ] as const
 
 export const Route = createFileRoute("/_app/deletion-requests")({
@@ -64,6 +65,16 @@ export const Route = createFileRoute("/_app/deletion-requests")({
   loader: async ({ context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
+    if (deps.view === "approved") {
+      const account = context.queryClient.getQueryData(
+        accountQueryOptions(source.scope).queryKey
+      )
+      if (account?.authorization.can_elevate)
+        void context.queryClient.prefetchInfiniteQuery(
+          deletionAuditInfiniteQueryOptions(source.scope)
+        )
+      return
+    }
     const options = deletionRequestsInfiniteQueryOptions(source.scope, {
       direction:
         deps.direction ?? defaultDeletionRequestDirection(deps.view, deps.sort),
@@ -83,10 +94,18 @@ function DeletionRequestsPage() {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const view = search.view ?? "submitted"
+  const requestedView = search.view ?? "submitted"
+  const canViewDeletionAudit = account.authorization.can_elevate
+  const view =
+    requestedView === "approved" && !canViewDeletionAudit
+      ? "submitted"
+      : requestedView
   const sort = search.sort ?? "request_time"
   const direction =
     search.direction ?? defaultDeletionRequestDirection(view, sort)
+  const views = canViewDeletionAudit
+    ? [...requestViews, { label: "Approved", value: "approved" } as const]
+    : requestViews
   const projectResult = useQuery({
     ...projectSummaryQueryOptions(scope, search.projectMfid ?? "unavailable"),
     enabled: Boolean(search.projectMfid),
@@ -105,7 +124,7 @@ function DeletionRequestsPage() {
         <PageHeader title="Deletion requests" />
         <CollectionToolbar
           actions={
-            search.projectMfid && projectName ? (
+            view !== "approved" && search.projectMfid && projectName ? (
               <>
                 <ResourceIdentityLink
                   context={
@@ -144,6 +163,8 @@ function DeletionRequestsPage() {
                   search: (current) => ({
                     ...current,
                     direction: undefined,
+                    projectMfid:
+                      nextView === "approved" ? undefined : current.projectMfid,
                     preview: undefined,
                     sort: undefined,
                     view: nextView,
@@ -156,39 +177,41 @@ function DeletionRequestsPage() {
             />
           }
         />
-        <DeletionRequestQueue
-          account={account}
-          bulkReview={view === "reviewable"}
-          emptyTitle={
-            view === "reviewable"
-              ? "No requests need review"
-              : view === "approved"
-                ? "No approved requests"
+        {view === "approved" && canViewDeletionAudit ? (
+          <DeletionAuditQueue account={account} scope={scope} />
+        ) : (
+          <DeletionRequestQueue
+            account={account}
+            bulkReview={view === "reviewable"}
+            emptyTitle={
+              view === "reviewable"
+                ? "No requests need review"
                 : "No submitted requests"
-          }
-          filters={{
-            direction,
-            limit: deletionRequestPageLimit,
-            projectMfid: search.projectMfid,
-            scope: deletionRequestScope(view),
-            sort,
-            status: deletionRequestStatus(view),
-          }}
-          onSortChange={(nextSort, nextDirection) => {
-            void navigate({
-              replace: true,
-              search: (current) => ({
-                ...current,
-                direction: nextDirection,
-                preview: undefined,
-                sort: nextSort === "request_time" ? undefined : nextSort,
-              }),
-              to: "/deletion-requests",
-            })
-          }}
-          paginate
-          scope={scope}
-        />
+            }
+            filters={{
+              direction,
+              limit: deletionRequestPageLimit,
+              projectMfid: search.projectMfid,
+              scope: deletionRequestScope(view),
+              sort,
+              status: deletionRequestStatus(view),
+            }}
+            onSortChange={(nextSort, nextDirection) => {
+              void navigate({
+                replace: true,
+                search: (current) => ({
+                  ...current,
+                  direction: nextDirection,
+                  preview: undefined,
+                  sort: nextSort === "request_time" ? undefined : nextSort,
+                }),
+                to: "/deletion-requests",
+              })
+            }}
+            paginate
+            scope={scope}
+          />
+        )}
       </PageLayout>
       <ResourceInspector navigation={navigation} />
     </ResourcePreviewContext.Provider>
@@ -204,12 +227,10 @@ function defaultDeletionRequestDirection(
 }
 
 function deletionRequestScope(view: "approved" | "reviewable" | "submitted") {
-  if (view === "approved") return "accessible" as const
-  return view
+  return view === "reviewable" ? "reviewable" : "submitted"
 }
 
 function deletionRequestStatus(view: "approved" | "reviewable" | "submitted") {
-  if (view === "approved") return "approved" as const
   if (view === "reviewable") return "pending" as const
   return undefined
 }

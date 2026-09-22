@@ -1119,5 +1119,7 @@ function DeletionRequestDialog({
 }
 
 function resourceKind(type: string | null | undefined) {
-  return type === "sample" ? "sample" : "dataset"
+  if (type === "sample" || type === "project" || type === "instrument")
+    return type
+  return "dataset"
 }

@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Fixed approved deletion history to read the permanent administrator audit after hard deletion removes the active request, with compact pagination and retained review details.
+
 - Added page-scoped selection and partial-success bulk approval or rejection to the reviewable deletion-request queue, with a shared reviewer comment, an in-place contextual table header, compact controls, approved-request history, and shape-matched row skeletons during loading.
 
 - Added API-backed sorting by resource, project, requester, request time, and status to the deletion-request queue.

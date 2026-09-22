@@ -349,6 +349,15 @@ export type WorkspaceDeletionRequestPage = {
   total: number | null
 }
 
+export type WorkspaceDeletionAudit = Schema<"DeletionAuditLogRead">
+
+export type WorkspaceDeletionAuditPage = {
+  items: readonly WorkspaceDeletionAudit[]
+  limit: number
+  offset: number
+  total: number | null
+}
+
 type WorkspaceResourceBase = {
   capabilities: WorkspaceResourceCapabilities | null
   creation_time: string | null

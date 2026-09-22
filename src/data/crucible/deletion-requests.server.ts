@@ -12,10 +12,17 @@ import { workspacePersonSchema } from "./people.schema"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import type {
+  WorkspaceDeletionAudit,
+  WorkspaceDeletionAuditPage,
   WorkspaceDeletionRequest,
   WorkspaceDeletionRequestPage,
   WorkspaceDeletionRequestSort,
 } from "./workspace-source"
+
+export type WorkspaceDeletionAuditFilters = {
+  limit: number
+  offset: number
+}
 
 export type WorkspaceDeletionRequestScope =
   "accessible" | "reviewable" | "submitted"
@@ -64,6 +71,32 @@ const deletionRequestPageSchema = z
   })
   .passthrough()
 
+const deletionAuditSchema = z
+  .object({
+    deleted_at: z.string(),
+    id: z.number().int().positive(),
+    project_id: z.string().nullable().optional(),
+    reason: z.string().nullable().optional(),
+    request_time: z.string().nullable().optional(),
+    requester_id: z.string().min(1),
+    resource_id: z.string().min(1),
+    resource_name: z.string().nullable().optional(),
+    resource_type: z.string().nullable().optional(),
+    review_time: z.string().nullable().optional(),
+    reviewer_id: z.string().min(1),
+    reviewer_notes: z.string().nullable().optional(),
+  })
+  .passthrough()
+
+const deletionAuditPageSchema = z
+  .object({
+    items: z.array(deletionAuditSchema).max(1_000),
+    limit: z.number().int().positive(),
+    offset: z.number().int().nonnegative().nullable().optional(),
+    total: z.number().int().nonnegative().nullable().optional(),
+  })
+  .passthrough()
+
 const fixtureDeletionRequestState = new Map<string, WorkspaceDeletionRequest>()
 const deletionRequestCollator = new Intl.Collator("en", { sensitivity: "base" })
 
@@ -98,7 +131,6 @@ function fixtureDeletionRequests(
   const source = readWorkspaceFixture(scenario)
   if (source.status === "unavailable") throw new Error(source.reason)
   const resource = source.workspace.datasets[0]
-  const approvedResource = source.workspace.samples[0]
   const submittedResource = source.workspace.samples[1]
   const requester = source.workspace.people[1] ?? source.workspace.account
   const request = {
@@ -141,24 +173,6 @@ function fixtureDeletionRequests(
     reviewer_id: requester.unique_id,
     reviewer_notes: "The record remains relevant to an existing dataset.",
     status: "rejected",
-  })
-  requests.push({
-    capabilities: { can_review: false },
-    id: 3,
-    project_id: approvedResource.project_id ?? null,
-    project_mfid: approvedResource.project?.unique_id ?? null,
-    reason: "The duplicate sample record is no longer needed.",
-    request_time: "2026-08-20T14:15:00Z",
-    requester,
-    requester_id: requester.unique_id,
-    resource_id: approvedResource.unique_id,
-    resource_name: approvedResource.sample_name,
-    resource_type: "sample",
-    review_time: "2026-08-21T16:30:00Z",
-    reviewer: source.workspace.account,
-    reviewer_id: source.workspace.account.unique_id,
-    reviewer_notes: "Confirmed as a duplicate record.",
-    status: "approved",
   })
   return requests
 }
@@ -213,6 +227,60 @@ export async function readWorkspaceDeletionRequests(
     items: page.data.items.map(workspaceDeletionRequest),
     limit: page.data.limit,
     nextCursor: page.data.next_cursor ?? null,
+    total: page.data.total ?? null,
+  }
+}
+
+export async function readWorkspaceDeletionAudit(
+  input: WorkspaceDeletionAuditFilters & { scenario?: FixtureScenario },
+  requestSignal?: AbortSignal
+): Promise<WorkspaceDeletionAuditPage> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable")
+    throw new Error(configuration.reason)
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(input.scenario)
+    if (source.status === "unavailable") throw new Error(source.reason)
+    const resource = source.workspace.samples[0]
+    const reviewer = source.workspace.account
+    const requester = source.workspace.people[1] ?? reviewer
+    const items: WorkspaceDeletionAudit[] = [
+      {
+        deleted_at: "2026-08-21T16:31:00Z",
+        id: 1,
+        project_id: resource.project_id ?? null,
+        reason: "The duplicate sample record is no longer needed.",
+        request_time: "2026-08-20T14:15:00Z",
+        requester_id: requester.unique_id,
+        resource_id: resource.unique_id,
+        resource_name: resource.sample_name,
+        resource_type: "sample",
+        review_time: "2026-08-21T16:30:00Z",
+        reviewer_id: reviewer.unique_id,
+        reviewer_notes: "Confirmed as a duplicate record.",
+      },
+    ]
+    return {
+      items: items.slice(input.offset, input.offset + input.limit),
+      limit: input.limit,
+      offset: input.offset,
+      total: items.length,
+    }
+  }
+
+  const result = await createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  }).GET("/deletion_audit", {
+    params: { query: { limit: input.limit, offset: input.offset } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  const page = deletionAuditPageSchema.safeParse(result.data)
+  if (!page.success) throw new Error("The deletion audit list is invalid.")
+  return {
+    items: page.data.items,
+    limit: page.data.limit,
+    offset: page.data.offset ?? input.offset,
     total: page.data.total ?? null,
   }
 }

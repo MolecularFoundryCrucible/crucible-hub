@@ -5,6 +5,7 @@ import { z } from "zod"
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import {
+  readWorkspaceDeletionAudit,
   readWorkspaceDeletionRequests,
   reviewWorkspaceDeletionRequest,
 } from "./deletion-requests.server"
@@ -48,6 +49,24 @@ export const deletionRequestReviewInputSchema = z
     scenario: fixtureScenarioSchema.optional(),
   })
   .strict()
+
+export const deletionAuditListInputSchema = z
+  .object({
+    limit: z.number().int().min(1).max(1_000),
+    offset: z.number().int().min(0),
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
+
+export const getWorkspaceDeletionAudit = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(deletionAuditListInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceDeletionAudit(data, context.requestSignal)
+    )
+  })
 
 export const getWorkspaceDeletionRequests = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])

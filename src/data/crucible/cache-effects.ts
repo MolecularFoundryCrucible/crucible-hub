@@ -124,6 +124,9 @@ export function invalidateDeletionRequestMutationQueries(
     queryClient.invalidateQueries({
       queryKey: crucibleKeys.deletionRequestQueries(scope),
     }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.deletionAuditQueries(scope),
+    }),
     ...mfids.map((resourceMfid) =>
       queryClient.invalidateQueries({
         queryKey: crucibleKeys.resourceDetails(scope, resourceMfid),

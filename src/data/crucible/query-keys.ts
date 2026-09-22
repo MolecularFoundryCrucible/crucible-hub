@@ -86,6 +86,10 @@ export const crucibleKeys = {
     [...scope, "deletion-requests"] as const,
   deletionRequests: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "deletion-requests", "list", normalizeFilters(filters)] as const,
+  deletionAudit: (scope: IdentityScope, filters: ListFilters) =>
+    [...scope, "deletion-audit", "list", normalizeFilters(filters)] as const,
+  deletionAuditQueries: (scope: IdentityScope) =>
+    [...scope, "deletion-audit"] as const,
   samples: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "samples", "list", normalizeFilters(filters)] as const,
   sampleCursorChain: (scope: IdentityScope, filters: ListFilters) =>
