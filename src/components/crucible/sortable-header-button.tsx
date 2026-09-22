@@ -42,7 +42,7 @@ export function SortableHeaderButton({
       aria-pressed={active}
       className={className}
       onClick={() => onChange(nextDirection)}
-      size="sm"
+      size="table-header"
       type="button"
       variant="ghost"
     >

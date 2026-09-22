@@ -42,6 +42,8 @@ const buttonVariantClasses = cva(
         qr: "size-28 overflow-hidden p-0",
         selection:
           "h-auto w-full justify-start gap-1.5 px-2.5 py-2 whitespace-normal has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        "table-header":
+          "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         "table-action":
           "size-7 rounded-[min(var(--radius-md),12px)] max-md:size-9",
       },
