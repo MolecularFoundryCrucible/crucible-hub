@@ -81,11 +81,12 @@ export function QrScannerAction() {
           <DialogTitle>
             {mode === "scanner" ? "Scan a Crucible code" : "Open by MFID"}
           </DialogTitle>
-          <DialogDescription>
-            {mode === "scanner"
-              ? "Use your camera to open the resource identified by an MFID QR code."
-              : "Enter a complete MFID or paste a recognized Crucible resource link."}
-          </DialogDescription>
+          {mode === "manual" ? (
+            <DialogDescription>
+              Enter a complete MFID or paste a recognized Crucible resource
+              link.
+            </DialogDescription>
+          ) : null}
         </DialogHeader>
         {mode === "scanner" ? (
           <QrCodeScanner
