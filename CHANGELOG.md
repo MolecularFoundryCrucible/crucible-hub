@@ -10,7 +10,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Standardized MFID presentation with compact muted monospace identifiers in supporting contexts while retaining full-size identifiers for primary identity fields and dedicated table columns.
 
-- Moved deletion-request navigation into an Administration sidebar group available to every authenticated account and removed duplicate links from the account menu and profile page.
+- Moved deletion-request navigation into an Administration sidebar group with a trash icon, made it available to every authenticated account, and removed duplicate links from the account menu and profile page.
 
 - Updated deletion-request queues to use stable API cursor continuation, newest-first submitted history, oldest-first pending review, reversible request-time sorting, embedded requester and reviewer identities, a linked Project column outside project-scoped views, and the shared compact responsive collection table pattern.
 
