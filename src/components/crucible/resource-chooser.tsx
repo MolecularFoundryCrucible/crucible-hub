@@ -78,6 +78,7 @@ export function ResourceChooser({
           )}
           <MfidText
             className="block truncate text-muted-foreground"
+            presentation="supporting"
             value={value.unique_id}
           />
         </div>

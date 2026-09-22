@@ -253,6 +253,7 @@ function DeletionRequestTable({
                     <PrincipalTypeIcon type="user" />
                     <MfidText
                       className="truncate"
+                      presentation="supporting"
                       value={request.requester_id}
                     />
                   </span>

@@ -75,6 +75,7 @@ export function ResourceIdentityLink({
       <ResourceIdentity context={context} kind={kind} name={name} />
       <MfidText
         className="mt-2 block whitespace-nowrap text-muted-foreground"
+        presentation="supporting"
         value={mfid}
       />
       {details.length ? (

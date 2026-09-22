@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils"
 
 export function MfidValue({
   className,
+  presentation = "default",
   value,
 }: {
   className?: string
+  presentation?: "default" | "supporting"
   value: string
 }) {
   const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
@@ -41,11 +43,17 @@ export function MfidValue({
   return (
     <>
       <span
-        className={cn("flex min-w-0 items-center gap-2 text-body", className)}
+        className={cn(
+          "flex min-w-0 items-center gap-2",
+          presentation === "supporting" &&
+            "text-supporting text-muted-foreground",
+          className
+        )}
       >
         <IdentityFieldIcon className="mfid-value-icon" type="mfid" />
         <MfidText
           className="min-w-0 break-all sm:break-normal sm:whitespace-nowrap"
+          presentation={presentation}
           value={value}
         />
         <Tooltip>

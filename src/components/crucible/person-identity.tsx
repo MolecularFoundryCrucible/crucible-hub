@@ -103,6 +103,7 @@ export function PersonIdentity({
           />
           <MfidText
             className="mt-1 block whitespace-nowrap text-muted-foreground"
+            presentation="supporting"
             value={person.unique_id}
           />
         </span>

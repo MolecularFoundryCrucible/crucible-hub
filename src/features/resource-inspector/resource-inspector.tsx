@@ -181,7 +181,10 @@ export function ResourceInspector({
                 <SheetDescription className="sr-only">
                   MFID {navigation.preview}
                 </SheetDescription>
-                <MfidValue value={navigation.preview} />
+                <MfidValue
+                  presentation="supporting"
+                  value={navigation.preview}
+                />
               </div>
             ) : (
               <SheetDescription>

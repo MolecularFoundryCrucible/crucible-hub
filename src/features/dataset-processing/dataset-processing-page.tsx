@@ -630,7 +630,10 @@ function IngestionRequestDialog({
                             <FieldContent>
                               <FieldTitle>{file.filename}</FieldTitle>
                               <span className="flex flex-wrap gap-x-2 text-supporting text-muted-foreground">
-                                <MfidText value={file.mfid} />
+                                <MfidText
+                                  presentation="supporting"
+                                  value={file.mfid}
+                                />
                                 <span>{formatBytes(file.size)}</span>
                                 {!eligible ? <span>Unavailable</span> : null}
                               </span>

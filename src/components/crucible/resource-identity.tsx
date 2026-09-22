@@ -89,6 +89,7 @@ export function ResourceIdentity({
             <span className="sr-only">MFID:</span>
             <MfidText
               className={cn("min-w-0", truncate ? "truncate" : "break-all")}
+              presentation={truncate ? "supporting" : "default"}
               value={mfid}
             />
           </span>

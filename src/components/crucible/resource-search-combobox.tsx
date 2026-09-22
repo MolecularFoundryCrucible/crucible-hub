@@ -142,6 +142,7 @@ export function ResourceSearchCombobox({
                       />
                       <MfidText
                         className="block break-all text-muted-foreground"
+                        presentation="supporting"
                         value={item.unique_id}
                       />
                     </span>
@@ -151,6 +152,7 @@ export function ResourceSearchCombobox({
                       kind={item.kind}
                       mfid={item.unique_id}
                       name={item.name}
+                      presentation="collection"
                       projectId={item.projectId}
                     />
                   )}
