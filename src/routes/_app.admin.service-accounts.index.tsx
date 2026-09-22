@@ -124,7 +124,6 @@ function ServiceAccountsPage() {
   const createOpen = search.create === true
   const [credential, setCredential] =
     useState<WorkspaceServiceAccountCredential>()
-  const [searchError, setSearchError] = useState<string>()
 
   if (!canOpenServiceAccountAdministration(account)) {
     return <Navigate replace to="/" />
@@ -164,22 +163,6 @@ function ServiceAccountsPage() {
     }
   }
 
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const query = String(formData.get("service-account-search") ?? "").trim()
-    if (query.length > 0 && query.length < 3) {
-      setSearchError("Enter at least 3 characters.")
-      return
-    }
-    setSearchError(undefined)
-    void navigate({
-      search: { offset: undefined, q: query || undefined },
-      state: {},
-      to: "/admin/service-accounts",
-    })
-  }
-
   function setCreateOpen(open: boolean) {
     void navigate({
       replace: true,
@@ -195,57 +178,8 @@ function ServiceAccountsPage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <CreateResourceIcon data-icon="inline-start" />
-            Create service account
-          </Button>
-        }
-        title="Service accounts"
-      />
-      <form className="max-w-reading" onSubmit={submitSearch}>
-        <FieldGroup>
-          <Field orientation="responsive">
-            <FieldLabel className="sr-only" htmlFor="service-account-search">
-              Search service accounts
-            </FieldLabel>
-            <Input
-              defaultValue={search.q ?? ""}
-              id="service-account-search"
-              key={search.q ?? "all"}
-              name="service-account-search"
-              placeholder="Search by name or username"
-              type="search"
-            />
-            <Button type="submit" variant="outline">
-              <SearchIcon data-icon="inline-start" />
-              Search
-            </Button>
-            {search.q ? (
-              <Button
-                onClick={() => {
-                  setSearchError(undefined)
-                  void navigate({
-                    search: { offset: undefined, q: undefined },
-                    state: {},
-                    to: "/admin/service-accounts",
-                  })
-                }}
-                type="button"
-                variant="ghost"
-              >
-                Clear
-              </Button>
-            ) : null}
-          </Field>
-        </FieldGroup>
-        {searchError ? (
-          <p className="mt-2 text-body text-destructive" role="alert">
-            {searchError}
-          </p>
-        ) : null}
-      </form>
+      <ServiceAccountsPageHeader canCreate />
+      <ServiceAccountSearchForm />
       {result.isPending ? (
         <CollectionTablePending
           label="service accounts"
@@ -288,7 +222,110 @@ function ServiceAccountsPage() {
 }
 
 function ServiceAccountsPending() {
-  return <ServiceAccountsPage />
+  const scope = useWorkspaceScope()
+  const { data: account } = useQuery(accountQueryOptions(scope))
+  return (
+    <PageLayout>
+      <ServiceAccountsPageHeader
+        canCreate={
+          account ? canOpenServiceAccountAdministration(account) : false
+        }
+      />
+      <ServiceAccountSearchForm />
+      <CollectionTablePending
+        label="service accounts"
+        presentation="service-accounts"
+      />
+    </PageLayout>
+  )
+}
+
+function ServiceAccountsPageHeader({ canCreate }: { canCreate: boolean }) {
+  const search = Route.useSearch()
+  return (
+    <PageHeader
+      actions={
+        canCreate ? (
+          <Link
+            className={buttonVariants()}
+            search={{ create: true, offset: search.offset, q: search.q }}
+            to="/admin/service-accounts"
+          >
+            <CreateResourceIcon data-icon="inline-start" />
+            Create service account
+          </Link>
+        ) : null
+      }
+      title="Service accounts"
+    />
+  )
+}
+
+function ServiceAccountSearchForm() {
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const [searchError, setSearchError] = useState<string>()
+
+  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    const query = String(formData.get("service-account-search") ?? "").trim()
+    if (query.length > 0 && query.length < 3) {
+      setSearchError("Enter at least 3 characters.")
+      return
+    }
+    setSearchError(undefined)
+    void navigate({
+      search: { offset: undefined, q: query || undefined },
+      state: {},
+      to: "/admin/service-accounts",
+    })
+  }
+
+  return (
+    <form className="max-w-reading" onSubmit={submitSearch}>
+      <FieldGroup>
+        <Field orientation="responsive">
+          <FieldLabel className="sr-only" htmlFor="service-account-search">
+            Search service accounts
+          </FieldLabel>
+          <Input
+            defaultValue={search.q ?? ""}
+            id="service-account-search"
+            key={search.q ?? "all"}
+            name="service-account-search"
+            placeholder="Search by name or username"
+            type="search"
+          />
+          <Button type="submit" variant="outline">
+            <SearchIcon data-icon="inline-start" />
+            Search
+          </Button>
+          {search.q ? (
+            <Button
+              onClick={() => {
+                setSearchError(undefined)
+                void navigate({
+                  search: { offset: undefined, q: undefined },
+                  state: {},
+                  to: "/admin/service-accounts",
+                })
+              }}
+              type="button"
+              variant="ghost"
+            >
+              Clear
+            </Button>
+          ) : null}
+        </Field>
+      </FieldGroup>
+      {searchError ? (
+        <p className="mt-2 text-body text-destructive" role="alert">
+          {searchError}
+        </p>
+      ) : null}
+    </form>
+  )
 }
 
 function ServiceAccountCollection({

@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Fixed the Service accounts loading route so stable header and search controls remain available while only the API-backed collection renders a pending table.
+
 - Standardized date and person column widths across resource tables and rebalanced deletion-request Resource and Project columns for denser scanning.
 
 - Unified sortable and static column-header typography while retaining visible sort icons and interaction states.
