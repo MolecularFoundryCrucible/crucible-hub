@@ -121,6 +121,8 @@ export function AppShell({
     select: (state) => state.location,
   })
   const pathname = location.pathname
+  const deletionReviewActive =
+    pathname === "/deletion-requests" && location.search.view === "reviewable"
   const projectMfid = activeProjectMfid(pathname, location.search)
   const recentlyViewedIdentity =
     scope?.slice(0, 3).join(":") ?? account?.unique_id ?? "anonymous"
@@ -187,14 +189,12 @@ export function AppShell({
                     ) : null}
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        isActive={pathname === "/deletion-requests"}
-                        tooltip="Deletion requests"
+                        isActive={deletionReviewActive}
+                        tooltip="Deletion review"
                         render={
                           <Link
                             aria-current={
-                              pathname === "/deletion-requests"
-                                ? "page"
-                                : undefined
+                              deletionReviewActive ? "page" : undefined
                             }
                             search={{ view: "reviewable" }}
                             to="/deletion-requests"
@@ -202,7 +202,7 @@ export function AppShell({
                         }
                       >
                         <DeletionRequestsIcon aria-hidden="true" />
-                        <span>Deletion requests</span>
+                        <span>Deletion review</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>

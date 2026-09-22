@@ -1,16 +1,18 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
+import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { MfidText } from "@/components/crucible/mfid-text"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
+import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import {
   deletionRequestPageLimit,
   deletionRequestsQueryOptions,
@@ -59,11 +61,46 @@ function DeletionRequestsPage() {
   const navigate = Route.useNavigate()
   const view = search.view ?? "submitted"
   const offset = search.offset ?? 0
+  const projectResult = useQuery({
+    ...projectSummaryQueryOptions(scope, search.projectMfid ?? "unavailable"),
+    enabled: Boolean(search.projectMfid),
+  })
+  const project = projectResult.data
+  const projectName =
+    project?.title?.trim() || project?.project_id || search.projectMfid
 
   return (
     <PageLayout>
-      <PageHeader
+      <PageHeader title="Deletion requests" />
+      <CollectionToolbar
         actions={
+          search.projectMfid && projectName ? (
+            <>
+              <ResourceIdentityLink
+                context={
+                  project?.title?.trim() ? project.project_id : undefined
+                }
+                kind="project"
+                mfid={search.projectMfid}
+                name={projectName}
+              >
+                <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
+                  <ResourceTypeIcon className="shrink-0" type="project" />
+                  <span className="truncate">{projectName}</span>
+                </span>
+              </ResourceIdentityLink>
+              <Link
+                aria-label="Clear project filter"
+                className={buttonVariants({ size: "sm", variant: "ghost" })}
+                search={{ offset: undefined, projectMfid: undefined, view }}
+                to="/deletion-requests"
+              >
+                Clear
+              </Link>
+            </>
+          ) : undefined
+        }
+        primary={
           <SegmentedControl
             ariaLabel="Deletion request view"
             onValueChange={(nextView) => {
@@ -81,31 +118,9 @@ function DeletionRequestsPage() {
             value={view}
           />
         }
-        title="Deletion requests"
       />
-      {search.projectMfid ? (
-        <div className="flex flex-wrap items-center gap-2 text-body">
-          <span className="inline-flex min-w-0 items-center gap-2 text-muted-foreground">
-            <ResourceTypeIcon type="project" />
-            Project
-            <MfidText className="truncate" value={search.projectMfid} />
-          </span>
-          <Link
-            className={buttonVariants({ size: "sm", variant: "ghost" })}
-            search={{ offset: undefined, projectMfid: undefined, view }}
-            to="/deletion-requests"
-          >
-            Clear project
-          </Link>
-        </div>
-      ) : null}
       <DeletionRequestQueue
         account={account}
-        emptyDescription={
-          view === "reviewable"
-            ? "There are no pending requests you can currently review."
-            : "Requests you submit will appear here."
-        }
         emptyTitle={
           view === "reviewable"
             ? "No requests need review"
@@ -126,7 +141,6 @@ function DeletionRequestsPage() {
           />
         )}
         scope={scope}
-        title={view === "reviewable" ? "Needs review" : "Submitted by you"}
       />
     </PageLayout>
   )

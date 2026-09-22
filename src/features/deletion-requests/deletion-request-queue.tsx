@@ -20,17 +20,11 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty"
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -65,7 +59,6 @@ const pendingRows = ["first", "second", "third"] as const
 export function DeletionRequestQueue({
   account,
   action,
-  emptyDescription,
   emptyTitle,
   filters,
   renderFooter,
@@ -74,12 +67,11 @@ export function DeletionRequestQueue({
 }: {
   account: WorkspaceAccount
   action?: React.ReactNode
-  emptyDescription?: string
   emptyTitle: string
   filters: WorkspaceDeletionRequestFilters
   renderFooter?: (page: WorkspaceDeletionRequestPage) => React.ReactNode
   scope: IdentityScope
-  title: string
+  title?: string
 }) {
   const options = deletionRequestsQueryOptions(scope, filters)
   const result = useQuery(options)
@@ -88,10 +80,12 @@ export function DeletionRequestQueue({
   return (
     <>
       <Card aria-busy={result.isFetching}>
-        <CardHeader actionLayout="inline">
-          <CardTitle>{title}</CardTitle>
-          {action ? <CardAction>{action}</CardAction> : null}
-        </CardHeader>
+        {title || action ? (
+          <CardHeader actionLayout="inline">
+            {title ? <CardTitle>{title}</CardTitle> : null}
+            {action ? <CardAction>{action}</CardAction> : null}
+          </CardHeader>
+        ) : null}
         {result.isPending ? (
           <DeletionRequestPending />
         ) : result.isError && !result.data ? (
@@ -99,10 +93,6 @@ export function DeletionRequestQueue({
             <Empty className="min-h-40 border" role="alert">
               <EmptyHeader>
                 <EmptyTitle>Deletion requests could not be loaded</EmptyTitle>
-                <EmptyDescription>
-                  The existing page remains available. Try loading this list
-                  again.
-                </EmptyDescription>
               </EmptyHeader>
               <Button onClick={() => void result.refetch()} variant="outline">
                 Retry
@@ -114,9 +104,6 @@ export function DeletionRequestQueue({
             <Empty className="min-h-32">
               <EmptyHeader>
                 <EmptyTitle>{emptyTitle}</EmptyTitle>
-                {emptyDescription ? (
-                  <EmptyDescription>{emptyDescription}</EmptyDescription>
-                ) : null}
               </EmptyHeader>
             </Empty>
           </CardContent>
@@ -298,10 +285,7 @@ function DeletionRequestDialog({
       notifySuccess(
         decision === "approved"
           ? "Deletion request approved"
-          : "Deletion request rejected",
-        decision === "approved"
-          ? "The resource database record was permanently deleted."
-          : "The resource is available through normal discovery again."
+          : "Deletion request rejected"
       )
       setReviewerNotes("")
       onOpenChange(false)
@@ -335,11 +319,6 @@ function DeletionRequestDialog({
           <>
             <DialogHeader>
               <DialogTitle>Deletion request</DialogTitle>
-              <DialogDescription>
-                {request.capabilities.can_review
-                  ? "Approval permanently deletes the database record. Stored GCS objects are retained. Rejection restores normal discovery."
-                  : "Review the current state of this request."}
-              </DialogDescription>
             </DialogHeader>
             <ResourceIdentity
               kind={resourceKind(request.resource_type)}
