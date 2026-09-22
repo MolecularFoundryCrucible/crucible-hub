@@ -13,6 +13,7 @@ import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
+import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { Button } from "@/components/ui/button"
@@ -243,11 +244,7 @@ function DeletionRequestTable({
           return (
             <TableRow key={request.id}>
               <TableCell className="deletion-request-resource">
-                <ResourceIdentity
-                  kind={resourceKind(request.resource_type)}
-                  name={request.resource_name?.trim() || "Untitled resource"}
-                  presentation="collection"
-                />
+                <DeletionRequestResource request={request} />
               </TableCell>
               {showProject ? (
                 <TableCell
@@ -306,6 +303,31 @@ function DeletionRequestTable({
         })}
       </TableBody>
     </Table>
+  )
+}
+
+function DeletionRequestResource({
+  request,
+}: {
+  request: WorkspaceDeletionRequest
+}) {
+  const kind = resourceKind(request.resource_type)
+  const name = request.resource_name?.trim() || "Untitled resource"
+  return (
+    <ResourcePreviewLink
+      aria-label={`Preview ${name}`}
+      className="group/resource block min-w-0"
+      mfid={request.resource_id}
+      resourceKind={kind}
+      resourceName={name}
+    >
+      <ResourceIdentity
+        interactive
+        kind={kind}
+        name={name}
+        presentation="collection"
+      />
+    </ResourcePreviewLink>
   )
 }
 

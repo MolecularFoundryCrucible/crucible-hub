@@ -120,7 +120,7 @@ The Graph tab is a read-only alternate representation of a sample or dataset's b
 
 ### Resource inspector navigation
 
-An optional `preview` search parameter opens a sample or dataset in a right-side overlay above the current resource, project Data, or global Data page. The host page remains mounted, retains its geometry and scroll, and owns collection filters and cursors.
+An optional `preview` search parameter opens a sample or dataset in a right-side overlay above the current resource, project Data, global Data, or deletion-request queue. The host page remains mounted, retains its geometry and scroll, and owns collection filters and cursors. Resource detail and preview headers expose an API-reported deletion request so pending deletion state is visible before entering Manage.
 
 Opening from a closed panel creates one browser-history entry. Following another preview replaces that entry while a bounded in-preview trail supports Previous preview from the inspector top bar. Previous preview returns to the host when the trail is empty. Close returns safely to the host state while preserving its current scroll position. Direct preview entry and reload have no trusted trail. Canonical Open links navigate to the full resource page without leaking unrelated host search state. Invalid, unavailable, denied, loading, and failed previews remain local to the overlay.
 

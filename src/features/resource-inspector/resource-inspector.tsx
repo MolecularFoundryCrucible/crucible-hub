@@ -18,6 +18,7 @@ import { ResourceRelationships } from "@/components/crucible/resource-relationsh
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import type { ResourcePreviewNavigation } from "@/components/crucible/resource-preview-navigation"
+import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-deletion-request-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -59,6 +60,10 @@ export function ResourceInspector({
   const previewIdentity = navigation.previewIdentity
   const previewKind = resource?.kind ?? previewIdentity?.kind
   const previewName = resource?.name ?? previewIdentity?.name
+  const deletionRequest =
+    resource?.kind === "dataset" || resource?.kind === "sample"
+      ? resource.deletion_request
+      : null
 
   useEffect(() => {
     if (open) {
@@ -191,6 +196,11 @@ export function ResourceInspector({
                 Explore linked resources without leaving this page.
               </SheetDescription>
             )}
+            {deletionRequest ? (
+              <div className="flex min-w-0">
+                <ResourceDeletionRequestBadge status={deletionRequest.status} />
+              </div>
+            ) : null}
             {navigation.preview ? (
               <ResourceFullPageLink
                 fromProject={

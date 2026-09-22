@@ -20,6 +20,7 @@ import {
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-deletion-request-badge"
 import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import {
   ResourceSectionNavigation,
@@ -206,6 +207,13 @@ export function ResourceWorkspace({
           </BreadcrumbList>
         </Breadcrumb>
         <PageHeader
+          actions={
+            resource.deletion_request ? (
+              <ResourceDeletionRequestBadge
+                status={resource.deletion_request.status}
+              />
+            ) : undefined
+          }
           icon={
             <ResourceTypeIcon
               className="mt-1 size-6 shrink-0"

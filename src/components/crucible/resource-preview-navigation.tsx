@@ -18,6 +18,7 @@ const previewMfidSchema = z
   .regex(/^[a-zA-Z0-9_-]+$/)
 const invalidPreviewSearchValue = ""
 export const globalDataPreviewOrigin = "global-data"
+export const deletionRequestsPreviewOrigin = "deletion-requests"
 export const resourcePreviewSearchSchema = z.object({
   preview: previewMfidSchema.optional().catch(invalidPreviewSearchValue),
 })
@@ -25,7 +26,9 @@ export const resourceDetailSearchSchema = resourcePreviewSearchSchema.extend({
   fromProject: previewMfidSchema.optional().catch(undefined),
 })
 const trailSchema = z.object({
-  hostKind: z.enum(["data", "project-data", "resource"]).default("resource"),
+  hostKind: z
+    .enum(["data", "deletion-requests", "project-data", "resource"])
+    .default("resource"),
   owner: z.string(),
   origin: previewMfidSchema,
   previous: z.array(previewMfidSchema).max(20),
@@ -35,6 +38,7 @@ const trailSchema = z.object({
 type PreviewTrail = z.infer<typeof trailSchema>
 export type ResourcePreviewHost =
   | { kind: "data"; preview: unknown }
+  | { kind: "deletion-requests"; preview: unknown }
   | { kind: "project-data"; preview: unknown; projectMfid: string }
   | {
       kind: "resource"
@@ -119,9 +123,11 @@ declare module "@tanstack/react-router" {
 
 const owners = new WeakMap<QueryClient, { scope: string; token: string }>()
 const dataRoute = getRouteApi("/_app/data")
+const deletionRequestsRoute = getRouteApi("/_app/deletion-requests")
 const sampleRoute = getRouteApi("/_app/samples/$sampleMfid")
 const projectDataRoute = getRouteApi("/_app/projects/$projectMfid/")
 type DataSearch = ReturnType<typeof dataRoute.useSearch>
+type DeletionRequestsSearch = ReturnType<typeof deletionRequestsRoute.useSearch>
 type ResourceSearch = ReturnType<typeof sampleRoute.useSearch>
 type ProjectDataSearch = ReturnType<typeof projectDataRoute.useSearch>
 
@@ -131,7 +137,9 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       ? host.resourceMfid
       : host.kind === "project-data"
         ? host.projectMfid
-        : globalDataPreviewOrigin
+        : host.kind === "deletion-requests"
+          ? deletionRequestsPreviewOrigin
+          : globalDataPreviewOrigin
   const { preview, invalidPreview } = resolveResourcePreview(host.preview)
   const hasPreview = preview !== undefined || invalidPreview
   const scope = useWorkspaceScope()
@@ -240,6 +248,18 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       })
       return
     }
+    if (host.kind === "deletion-requests") {
+      void router.navigate({
+        ...common,
+        from: "/deletion-requests",
+        search: (currentSearch: DeletionRequestsSearch) => ({
+          ...currentSearch,
+          preview: targetPreview(target),
+        }),
+        to: "/deletion-requests",
+      })
+      return
+    }
     void router.navigate({
       ...common,
       from: "/projects/$projectMfid",
@@ -300,6 +320,18 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
         from: "/data",
         to: "/data",
         search: (currentSearch: DataSearch) => ({
+          ...currentSearch,
+          preview: undefined,
+        }),
+      })
+      return
+    }
+    if (host.kind === "deletion-requests") {
+      void router.navigate({
+        ...common,
+        from: "/deletion-requests",
+        to: "/deletion-requests",
+        search: (currentSearch: DeletionRequestsSearch) => ({
           ...currentSearch,
           preview: undefined,
         }),
@@ -521,6 +553,21 @@ export function ResourcePreviewLink({
         from="/data"
         to="/data"
         search={(currentSearch: DataSearch) => ({
+          ...currentSearch,
+          preview: navigation.targetPreview(mfid),
+        })}
+      >
+        {children}
+      </Link>
+    )
+  }
+  if (navigation.host.kind === "deletion-requests") {
+    return (
+      <Link
+        {...common}
+        from="/deletion-requests"
+        to="/deletion-requests"
+        search={(currentSearch: DeletionRequestsSearch) => ({
           ...currentSearch,
           preview: navigation.targetPreview(mfid),
         })}

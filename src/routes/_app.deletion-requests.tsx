@@ -6,6 +6,11 @@ import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
+import {
+  ResourcePreviewContext,
+  resourcePreviewSearchSchema,
+  useResourcePreviewNavigation,
+} from "@/components/crucible/resource-preview-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -17,12 +22,15 @@ import {
   deletionRequestsInfiniteQueryOptions,
 } from "@/data/crucible/deletion-requests.queries"
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
+import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 
-const deletionRequestSearchSchema = z.object({
-  direction: z.enum(["asc", "desc"]).optional().catch(undefined),
-  projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
-  view: z.enum(["reviewable", "submitted"]).optional().catch(undefined),
-})
+const deletionRequestSearchSchema = z
+  .object({
+    direction: z.enum(["asc", "desc"]).optional().catch(undefined),
+    projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
+    view: z.enum(["reviewable", "submitted"]).optional().catch(undefined),
+  })
+  .merge(resourcePreviewSearchSchema)
 
 const views = [
   { label: "Submitted by you", value: "submitted" },
@@ -68,90 +76,98 @@ function DeletionRequestsPage() {
   const project = projectResult.data
   const projectName =
     project?.title?.trim() || project?.project_id || search.projectMfid
+  const navigation = useResourcePreviewNavigation({
+    kind: "deletion-requests",
+    preview: search.preview,
+  })
 
   return (
-    <PageLayout>
-      <PageHeader title="Deletion requests" />
-      <CollectionToolbar
-        actions={
-          search.projectMfid && projectName ? (
-            <>
-              <ResourceIdentityLink
-                context={
-                  project?.title?.trim() ? project.project_id : undefined
-                }
-                kind="project"
-                mfid={search.projectMfid}
-                name={projectName}
-              >
-                <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
-                  <ResourceTypeIcon className="shrink-0" type="project" />
-                  <span className="truncate">{projectName}</span>
-                </span>
-              </ResourceIdentityLink>
-              <Link
-                aria-label="Clear project filter"
-                className={buttonVariants({ size: "sm", variant: "ghost" })}
-                search={{
-                  direction: search.direction,
-                  projectMfid: undefined,
-                  view,
-                }}
-                to="/deletion-requests"
-              >
-                Clear
-              </Link>
-            </>
-          ) : undefined
-        }
-        primary={
-          <SegmentedControl
-            ariaLabel="Deletion request view"
-            onValueChange={(nextView) => {
-              void navigate({
-                replace: true,
-                search: {
-                  direction: undefined,
-                  projectMfid: search.projectMfid,
-                  view: nextView,
-                },
-                to: "/deletion-requests",
-              })
-            }}
-            options={views}
-            value={view}
-          />
-        }
-      />
-      <DeletionRequestQueue
-        account={account}
-        emptyTitle={
-          view === "reviewable"
-            ? "No requests need review"
-            : "No submitted requests"
-        }
-        filters={{
-          direction,
-          limit: deletionRequestPageLimit,
-          projectMfid: search.projectMfid,
-          scope: view,
-          sort: "request_time",
-          status: view === "reviewable" ? "pending" : undefined,
-        }}
-        onDirectionChange={(nextDirection) => {
-          void navigate({
-            replace: true,
-            search: {
-              direction: nextDirection,
-              projectMfid: search.projectMfid,
-              view,
-            },
-            to: "/deletion-requests",
-          })
-        }}
-        paginate
-        scope={scope}
-      />
-    </PageLayout>
+    <ResourcePreviewContext.Provider value={navigation}>
+      <PageLayout>
+        <PageHeader title="Deletion requests" />
+        <CollectionToolbar
+          actions={
+            search.projectMfid && projectName ? (
+              <>
+                <ResourceIdentityLink
+                  context={
+                    project?.title?.trim() ? project.project_id : undefined
+                  }
+                  kind="project"
+                  mfid={search.projectMfid}
+                  name={projectName}
+                >
+                  <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
+                    <ResourceTypeIcon className="shrink-0" type="project" />
+                    <span className="truncate">{projectName}</span>
+                  </span>
+                </ResourceIdentityLink>
+                <Link
+                  aria-label="Clear project filter"
+                  className={buttonVariants({ size: "sm", variant: "ghost" })}
+                  from="/deletion-requests"
+                  search={(current) => ({
+                    ...current,
+                    projectMfid: undefined,
+                  })}
+                  to="/deletion-requests"
+                >
+                  Clear
+                </Link>
+              </>
+            ) : undefined
+          }
+          primary={
+            <SegmentedControl
+              ariaLabel="Deletion request view"
+              onValueChange={(nextView) => {
+                void navigate({
+                  replace: true,
+                  search: (current) => ({
+                    ...current,
+                    direction: undefined,
+                    preview: undefined,
+                    view: nextView,
+                  }),
+                  to: "/deletion-requests",
+                })
+              }}
+              options={views}
+              value={view}
+            />
+          }
+        />
+        <DeletionRequestQueue
+          account={account}
+          emptyTitle={
+            view === "reviewable"
+              ? "No requests need review"
+              : "No submitted requests"
+          }
+          filters={{
+            direction,
+            limit: deletionRequestPageLimit,
+            projectMfid: search.projectMfid,
+            scope: view,
+            sort: "request_time",
+            status: view === "reviewable" ? "pending" : undefined,
+          }}
+          onDirectionChange={(nextDirection) => {
+            void navigate({
+              replace: true,
+              search: (current) => ({
+                ...current,
+                direction: nextDirection,
+                preview: undefined,
+              }),
+              to: "/deletion-requests",
+            })
+          }}
+          paginate
+          scope={scope}
+        />
+      </PageLayout>
+      <ResourceInspector navigation={navigation} />
+    </ResourcePreviewContext.Provider>
   )
 }
