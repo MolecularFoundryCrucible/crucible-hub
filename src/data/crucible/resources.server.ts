@@ -14,6 +14,7 @@ import { crucibleRequestSignal } from "../../server/crucible/request-signal.serv
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import { normalizeScientificMetadata } from "./scientific-metadata"
+import { workspacePersonSchema } from "./people.schema"
 import {
   inverseWorkspaceRelationship,
   workspaceApiRelationshipOperation,
@@ -222,11 +223,13 @@ const workspaceDeletionRequestSchema = z
     project_mfid: z.string().nullable().optional(),
     reason: z.string().nullable().optional(),
     request_time: z.string().nullable().optional(),
+    requester: workspacePersonSchema.nullable(),
     requester_id: z.string(),
     resource_id: z.string(),
     resource_name: z.string().nullable().optional(),
     resource_type: z.string().nullable().optional(),
     review_time: z.string().nullable().optional(),
+    reviewer: workspacePersonSchema.nullable(),
     reviewer_id: z.string().nullable().optional(),
     reviewer_notes: z.string().nullable().optional(),
     status: z.enum(["pending", "approved", "rejected"]),
@@ -245,11 +248,13 @@ function workspaceDeletionRequest(
     project_mfid: result.data.project_mfid ?? null,
     reason: result.data.reason ?? null,
     request_time: result.data.request_time ?? null,
+    requester: result.data.requester,
     requester_id: result.data.requester_id,
     resource_id: result.data.resource_id,
     resource_name: result.data.resource_name ?? null,
     resource_type: result.data.resource_type ?? null,
     review_time: result.data.review_time ?? null,
+    reviewer: result.data.reviewer,
     reviewer_id: result.data.reviewer_id ?? null,
     reviewer_notes: result.data.reviewer_notes ?? null,
     status: result.data.status,
@@ -1588,6 +1593,8 @@ export async function requestWorkspaceResourceDeletion(
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario)
+    if (source.status === "unavailable") throw new Error(source.reason)
     const resource = await readWorkspaceResource(
       resourceMfid,
       scenario,
@@ -1607,11 +1614,13 @@ export async function requestWorkspaceResourceDeletion(
         "project" in resource ? (resource.project?.unique_id ?? null) : null,
       reason: reason ?? null,
       request_time: "2026-09-06T00:00:00Z",
-      requester_id: "0000-0000-0000-000X",
+      requester: source.workspace.account,
+      requester_id: source.workspace.account.unique_id,
       resource_id: resource.unique_id,
       resource_name: resource.name,
       resource_type: resource.kind,
       review_time: null,
+      reviewer: null,
       reviewer_id: null,
       reviewer_notes: null,
       status: "pending",

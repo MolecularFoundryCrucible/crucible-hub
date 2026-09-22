@@ -2,10 +2,8 @@ import { useState } from "react"
 import {
   useInfiniteQuery,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
@@ -51,7 +49,6 @@ import type {
   WorkspaceDeletionReviewDecision,
 } from "@/data/crucible/deletion-requests.server"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { personQueryOptions } from "@/data/crucible/people.queries"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
@@ -226,56 +223,67 @@ function DeletionRequestTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((request) => (
-          <TableRow key={request.id}>
-            <TableCell className="deletion-request-resource">
-              <ResourceIdentity
-                kind={resourceKind(request.resource_type)}
-                name={request.resource_name?.trim() || "Untitled resource"}
-                presentation="collection"
-                projectId={request.project_id}
-              />
-            </TableCell>
-            <TableCell
-              className="deletion-request-requester"
-              data-label="Requested by"
-            >
-              {request.requester_id === account.unique_id ? (
-                <PersonLink
-                  nameStyle="abbreviated"
-                  person={account}
-                  presentation="inline"
+        {items.map((request) => {
+          const requester =
+            request.requester_id === account.unique_id
+              ? account
+              : request.requester
+          return (
+            <TableRow key={request.id}>
+              <TableCell className="deletion-request-resource">
+                <ResourceIdentity
+                  kind={resourceKind(request.resource_type)}
+                  name={request.resource_name?.trim() || "Untitled resource"}
+                  presentation="collection"
+                  projectId={request.project_id}
                 />
-              ) : (
-                <Link
-                  className="inline-flex min-w-0 items-center gap-1.5 hover:underline"
-                  params={{ personId: request.requester_id }}
-                  to="/people/$personId"
-                >
-                  <PrincipalTypeIcon type="user" />
-                  <MfidText className="truncate" value={request.requester_id} />
-                </Link>
-              )}
-            </TableCell>
-            <TableCell className="deletion-request-date" data-label="Requested">
-              <LocalDateTime value={request.request_time} />
-            </TableCell>
-            <TableCell className="deletion-request-status" data-label="Status">
-              <DeletionRequestStatusBadge status={request.status} />
-            </TableCell>
-            <TableCell className="deletion-request-action text-center">
-              <Button
-                onClick={() => onOpen(request)}
-                size="sm"
-                variant={
-                  request.capabilities.can_review ? "default" : "outline"
-                }
+              </TableCell>
+              <TableCell
+                className="deletion-request-requester"
+                data-label="Requested by"
               >
-                {request.capabilities.can_review ? "Review" : "View"}
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
+                {requester ? (
+                  <PersonLink
+                    nameStyle="abbreviated"
+                    person={requester}
+                    presentation="inline"
+                  />
+                ) : (
+                  <span className="inline-flex min-w-0 items-center gap-1.5">
+                    <PrincipalTypeIcon type="user" />
+                    <MfidText
+                      className="truncate"
+                      value={request.requester_id}
+                    />
+                  </span>
+                )}
+              </TableCell>
+              <TableCell
+                className="deletion-request-date"
+                data-label="Requested"
+              >
+                <LocalDateTime value={request.request_time} />
+              </TableCell>
+              <TableCell
+                className="deletion-request-status"
+                data-label="Status"
+              >
+                <DeletionRequestStatusBadge status={request.status} />
+              </TableCell>
+              <TableCell className="deletion-request-action text-center">
+                <Button
+                  onClick={() => onOpen(request)}
+                  size="sm"
+                  variant={
+                    request.capabilities.can_review ? "default" : "outline"
+                  }
+                >
+                  {request.capabilities.can_review ? "Review" : "View"}
+                </Button>
+              </TableCell>
+            </TableRow>
+          )
+        })}
       </TableBody>
     </Table>
   )
@@ -294,16 +302,6 @@ function DeletionRequestDialog({
 }) {
   const queryClient = useQueryClient()
   const [reviewerNotes, setReviewerNotes] = useState("")
-  const personResult = useQuery({
-    ...personQueryOptions(scope, request?.requester_id ?? "unavailable"),
-    enabled: Boolean(request && request.requester_id !== account.unique_id),
-  })
-  const reviewerResult = useQuery({
-    ...personQueryOptions(scope, request?.reviewer_id ?? "unavailable"),
-    enabled: Boolean(
-      request?.reviewer_id && request.reviewer_id !== account.unique_id
-    ),
-  })
   const mutation = useMutation({
     mutationFn: async (decision: WorkspaceDeletionReviewDecision) => {
       if (!request) throw new Error("No deletion request is selected.")
@@ -345,9 +343,9 @@ function DeletionRequestDialog({
   }
 
   const requester =
-    request?.requester_id === account.unique_id ? account : personResult.data
+    request?.requester_id === account.unique_id ? account : request?.requester
   const reviewer =
-    request?.reviewer_id === account.unique_id ? account : reviewerResult.data
+    request?.reviewer_id === account.unique_id ? account : request?.reviewer
 
   return (
     <Dialog

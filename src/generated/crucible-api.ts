@@ -3445,6 +3445,7 @@ export interface components {
             reason?: string | null;
             /** Request Time */
             request_time?: string | null;
+            requester: components["schemas"]["UserPublicRead"] | null;
             /** Requester Id */
             requester_id: string;
             /** Resource Id */
@@ -3455,6 +3456,7 @@ export interface components {
             resource_type?: string | null;
             /** Review Time */
             review_time?: string | null;
+            reviewer: components["schemas"]["UserPublicRead"] | null;
             /** Reviewer Id */
             reviewer_id?: string | null;
             /** Reviewer Notes */

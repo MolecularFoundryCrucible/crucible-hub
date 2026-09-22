@@ -1980,6 +1980,16 @@
             ],
             "title": "Request Time"
           },
+          "requester": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserPublicRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "requester_id": {
             "title": "Requester Id",
             "type": "string"
@@ -2021,6 +2031,16 @@
             ],
             "title": "Review Time"
           },
+          "reviewer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserPublicRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "reviewer_id": {
             "anyOf": [
               {
@@ -2051,7 +2071,9 @@
           "id",
           "resource_id",
           "requester_id",
+          "requester",
           "status",
+          "reviewer",
           "capabilities"
         ],
         "title": "DeletionRequestRead",
