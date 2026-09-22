@@ -8,7 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Added a direct Home recovery action to route errors and missing-page states so inaccessible elevated resources do not trap navigation after Administrator view is disabled.
 
-- Added explicit normal and elevated API privilege modes, contextual elevation for platform Administration, a visible session-scoped Administrator view in the Administration sidebar, and service-account creation through the shared Create menu.
+- Added explicit normal and elevated API privilege modes, contextual elevation for platform Administration, a visible session-scoped Administrator view in the Administration sidebar, effective-capability and assigned-role context in Account access, and service-account creation through the shared Create menu.
 
 - Aligned access management across projects, instruments, samples, and datasets with a shared visible management mode, compact pending indicators, and instrument manager and operator role presentation.
 
