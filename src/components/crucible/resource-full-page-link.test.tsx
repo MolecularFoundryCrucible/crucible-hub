@@ -8,6 +8,7 @@ import { ResourceFullPageLink } from "./resource-full-page-link"
 const { linkProps } = vi.hoisted(() => ({ linkProps: vi.fn() }))
 
 vi.mock("@tanstack/react-router", () => ({
+  getRouteApi: () => ({ useSearch: vi.fn() }),
   Link: (props: {
     "aria-label": string
     children?: ReactNode
@@ -116,7 +117,7 @@ describe("ResourceFullPageLink", () => {
     })
     expect(link.className).toContain("size-7")
     expect(link.querySelector("svg")).toBeTruthy()
-    expect(screen.getByText("Open").className).toContain("hidden max-md:inline")
+    expect(link.textContent).toBe("")
     expect(screen.getByRole("tooltip").textContent).toBe(
       "Open full page: Named dataset"
     )

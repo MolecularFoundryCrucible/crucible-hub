@@ -31,7 +31,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Tooltip,
@@ -84,6 +89,7 @@ export function ProjectMembershipCard({
   const [personQuery, setPersonQuery] = useState("")
   const [selectedPerson, setSelectedPerson] = useState<WorkspaceSearchResult>()
   const [selectedRole, setSelectedRole] = useState<GrantRole>("viewer")
+  const [addError, setAddError] = useState<string>()
   const [pendingMember, setPendingMember] = useState<string>()
   const [memberErrors, setMemberErrors] = useState<Record<string, string>>({})
   const [removingMember, setRemovingMember] = useState<ProjectMember>()
@@ -120,6 +126,7 @@ export function ProjectMembershipCard({
     if (!nextOpen && mutationPending) return
     setAddOpen(nextOpen)
     if (!nextOpen) {
+      setAddError(undefined)
       setPersonQuery("")
       setSelectedPerson(undefined)
       setSelectedRole(roles[0] ?? "viewer")
@@ -152,7 +159,7 @@ export function ProjectMembershipCard({
 
   async function addMember(userId: string) {
     setPendingMember(userId)
-    setMemberErrors((current) => withoutMemberError(current, userId))
+    setAddError(undefined)
     try {
       replaceMembers(
         unwrapHubResult(
@@ -168,10 +175,7 @@ export function ProjectMembershipCard({
       )
       closeAddDialog(false)
     } catch (error) {
-      setMemberErrors((current) => ({
-        ...current,
-        [userId]: membershipErrorMessage(error, "add this member"),
-      }))
+      setAddError(membershipErrorMessage(error, "add this member"))
     } finally {
       setPendingMember(undefined)
     }
@@ -375,7 +379,10 @@ export function ProjectMembershipCard({
               id={searchInputId}
               kind="person"
               onQueryChange={setPersonQuery}
-              onValueChange={setSelectedPerson}
+              onValueChange={(person) => {
+                setSelectedPerson(person)
+                setAddError(undefined)
+              }}
               query={personQuery}
               scope={scope}
               value={selectedPerson}
@@ -399,6 +406,7 @@ export function ProjectMembershipCard({
               </NativeSelect>
             </Field>
           </FieldGroup>
+          {addError ? <FieldError role="alert">{addError}</FieldError> : null}
           <DialogFooter>
             <Button
               disabled={mutationPending}

@@ -87,6 +87,8 @@ describe("ResourceCollectionNameCell", () => {
     expect(
       container.querySelector('[data-resource-type="dataset"]')
     ).toBeTruthy()
-    expect(screen.getByText("XAS").className).toContain("xl:hidden")
+    expect(container.querySelector("td > span")?.className).toContain(
+      "[&_[data-resource-context]]:xl:hidden"
+    )
   })
 })

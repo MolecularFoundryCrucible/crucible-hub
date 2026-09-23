@@ -55,6 +55,7 @@ export function ResourceSearchCombobox({
       ? { plural: "service accounts", singular: "Service account" }
       : resourceLabels[kind]
   const normalizedQuery = query.trim()
+  const [open, setOpen] = useState(false)
   const debouncedQuery = useDebouncedValue(normalizedQuery, 250)
   const search = useQuery({
     ...searchQueryOptions(
@@ -92,6 +93,7 @@ export function ResourceSearchCombobox({
         items={items}
         onInputValueChange={(nextQuery, details) => {
           onQueryChange(nextQuery)
+          setOpen(nextQuery.trim().length > 0)
           if (
             details.reason === "input-change" ||
             details.reason === "clear-press"
@@ -102,8 +104,13 @@ export function ResourceSearchCombobox({
         onValueChange={(item) => {
           const nextValue = item ?? undefined
           onValueChange(nextValue)
-          if (nextValue) onQueryChange(nextValue.name)
+          if (nextValue) {
+            onQueryChange(nextValue.name)
+            setOpen(false)
+          }
         }}
+        onOpenChange={setOpen}
+        open={open}
         value={value ?? null}
       >
         <ComboboxInput

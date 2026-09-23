@@ -91,13 +91,15 @@ describe("ResourceChooser", () => {
     const onChange = renderChooser()
 
     await openChooser()
-    const input = screen.getByRole("searchbox", { name: "Search instruments" })
+    const input = screen.getByRole("combobox", { name: "Search instruments" })
+    fireEvent.click(input)
     fireEvent.change(input, { target: { value: "be" } })
     expect(getWorkspaceSearch).not.toHaveBeenCalled()
 
     expect(getWorkspaceSearch).not.toHaveBeenCalled()
 
     fireEvent.change(input, { target: { value: "beam" } })
+    fireEvent.keyDown(input, { key: "ArrowDown" })
 
     await waitFor(() =>
       expect(getWorkspaceSearch).toHaveBeenCalledWith(
@@ -120,7 +122,7 @@ describe("ResourceChooser", () => {
 
     await openChooser()
     expect(
-      screen.getByRole<HTMLInputElement>("searchbox", {
+      screen.getByRole<HTMLInputElement>("combobox", {
         name: "Search instruments",
       }).value
     ).toBe("")
@@ -139,18 +141,19 @@ describe("ResourceChooser", () => {
     renderChooser({ kind: "project" })
 
     await openChooser("project")
-    fireEvent.change(
-      screen.getByRole("searchbox", { name: "Search projects" }),
-      { target: { value: "catalyst" } }
-    )
+    const input = screen.getByRole("combobox", { name: "Search projects" })
+    fireEvent.click(input)
+    fireEvent.change(input, { target: { value: "catalyst" } })
+    fireEvent.keyDown(input, { key: "ArrowDown" })
     expect((await screen.findByRole("status")).textContent).toBe(
       "Searching projects…"
     )
+    await waitFor(() => expect(getWorkspaceSearch).toHaveBeenCalled())
     rejectSearch?.(new Error("search failed"))
     expect((await screen.findByRole("alert")).textContent).toBe(
       "Projects could not be searched."
     )
-    expect(screen.getByRole("dialog", { name: "Choose project" })).toBeTruthy()
+    expect(screen.getAllByText("Choose project")).toHaveLength(2)
   })
 
   it("shows a kind-specific empty state without changing the selection", async () => {
@@ -158,10 +161,10 @@ describe("ResourceChooser", () => {
     const onChange = renderChooser({ kind: "project" })
 
     await openChooser("project")
-    fireEvent.change(
-      screen.getByRole("searchbox", { name: "Search projects" }),
-      { target: { value: "missing" } }
-    )
+    const input = screen.getByRole("combobox", { name: "Search projects" })
+    fireEvent.click(input)
+    fireEvent.change(input, { target: { value: "missing" } })
+    fireEvent.keyDown(input, { key: "ArrowDown" })
     expect(
       await screen.findByText("No available projects matched this search.")
     ).toBeTruthy()
@@ -189,9 +192,12 @@ describe("ResourceChooser", () => {
 
     expect(screen.getByText("Not selected")).toBeTruthy()
     await openChooser("person")
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search people" }), {
+    const input = screen.getByRole("combobox", { name: "Search people" })
+    fireEvent.click(input)
+    fireEvent.change(input, {
       target: { value: "ada" },
     })
+    fireEvent.keyDown(input, { key: "ArrowDown" })
     expect(await screen.findByText("Ada Lovelace")).toBeTruthy()
     fireEvent.click(screen.getByRole("option", { name: /Ada Lovelace/ }))
     expect(onChange).toHaveBeenCalledWith(person)

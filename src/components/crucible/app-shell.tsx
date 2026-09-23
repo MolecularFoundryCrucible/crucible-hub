@@ -603,6 +603,7 @@ function SidebarUtilities({
               <span>Theme</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="right">
+              <DropdownMenuLabel>Theme</DropdownMenuLabel>
               <DropdownMenuRadioGroup
                 onValueChange={(value) => {
                   if (
@@ -615,7 +616,6 @@ function SidebarUtilities({
                 }}
                 value={theme}
               >
-                <DropdownMenuLabel>Theme</DropdownMenuLabel>
                 <DropdownMenuRadioItem value="system">
                   System
                 </DropdownMenuRadioItem>

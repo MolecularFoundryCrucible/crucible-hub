@@ -121,9 +121,7 @@ describe("DatasetFiles", () => {
     renderFiles()
 
     await waitFor(() =>
-      expect(
-        screen.getByText("File metadata could not be loaded.")
-      ).toBeTruthy()
+      expect(screen.getByText("File metadata could not be loaded")).toBeTruthy()
     )
     fireEvent.click(screen.getByRole("button", { name: "Try again" }))
     await waitFor(() =>

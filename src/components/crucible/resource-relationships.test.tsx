@@ -102,7 +102,7 @@ describe("ResourceRelationships", () => {
     expect(screen.getByText("Part of this")).toBeTruthy()
     expect(
       screen
-        .getByRole("link", { name: "Preview Parent sample" })
+        .getByRole("link", { name: "Parent sample" })
         .getAttribute("data-preview")
     ).toBe("parent")
     expect(

@@ -20,10 +20,15 @@ import { getWorkspaceSearch } from "@/data/crucible/search.functions"
 import type { components } from "@/generated/crucible-api"
 import type { HubResult } from "@/data/crucible/result"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
-
 import { ProjectLeaveCard } from "./project-leave-card"
 import { ProjectMembershipCard } from "./project-membership-card"
 import type { MembershipProject } from "./project-membership-card"
+
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children }: { children: React.ReactNode }) => (
+    <a href="#person">{children}</a>
+  ),
+}))
 
 vi.mock("@/data/crucible/projects.functions", () => ({
   addWorkspaceProjectMember: vi.fn(),
@@ -171,11 +176,13 @@ describe("ProjectMembershipCard", () => {
     const queryClient = renderCard()
 
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
-    const searchBox = screen.getByRole("searchbox", { name: "Search people" })
+    const searchBox = screen.getByRole("combobox", { name: "Search people" })
+    fireEvent.click(searchBox)
     fireEvent.change(searchBox, { target: { value: "ja" } })
     expect(getWorkspaceSearch).not.toHaveBeenCalled()
 
     fireEvent.change(searchBox, { target: { value: "jam" } })
+    fireEvent.keyDown(searchBox, { key: "ArrowDown" })
     await waitFor(() =>
       expect(getWorkspaceSearch).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -190,8 +197,8 @@ describe("ProjectMembershipCard", () => {
     fireEvent.change(screen.getByLabelText("Project role"), {
       target: { value: "editor" },
     })
+    fireEvent.click(screen.getByRole("option", { name: /Jamie Patel/ }))
     const dialog = screen.getByRole("dialog", { name: "Add member" })
-    fireEvent.click(within(dialog).getByRole("option", { name: /Jamie Patel/ }))
     fireEvent.click(within(dialog).getByRole("button", { name: "Add member" }))
 
     await waitFor(() =>
@@ -224,9 +231,12 @@ describe("ProjectMembershipCard", () => {
     renderCard()
 
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search people" }), {
+    const searchBox = screen.getByRole("combobox", { name: "Search people" })
+    fireEvent.click(searchBox)
+    fireEvent.change(searchBox, {
       target: { value: "jam" },
     })
+    fireEvent.keyDown(searchBox, { key: "ArrowDown" })
     const addResult = await screen.findByRole("option", {
       name: /Jamie Patel/,
     })

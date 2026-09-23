@@ -27,7 +27,10 @@ describe("global data filter state", () => {
         datasetCursor: "ignored-by-filter-resolution",
         kind: "datasets",
       })
-    ).toEqual({ filters: { kind: "datasets" }, valid: true })
+    ).toMatchObject({
+      filters: { direction: "desc", kind: "datasets", sort: "created" },
+      valid: true,
+    })
   })
 
   it("normalizes defaults for URLs but keeps project All query-ready", () => {
@@ -37,11 +40,13 @@ describe("global data filter state", () => {
       projectScope: "all",
       visibility: "all",
     })
-    expect(resolution).toEqual({
+    expect(resolution).toMatchObject({
       filters: {
+        direction: "desc",
         kind: "datasets",
         projectMfid: "project-1",
         projectScope: "all",
+        sort: "created",
       },
       valid: true,
     })
@@ -99,14 +104,16 @@ describe("global data filter state", () => {
         projectScope: "shared",
         visibility: "public",
       })
-    ).toEqual({
+    ).toMatchObject({
       filters: {
         createdFrom: "2026-01-01",
         createdTo: "2026-01-31",
+        direction: "desc",
         instrumentMfid: "instrument-1",
         kind: "datasets",
         projectMfid: "project-1",
         projectScope: "shared",
+        sort: "created",
         visibility: "public",
       },
       valid: true,

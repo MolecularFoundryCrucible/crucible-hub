@@ -18,6 +18,7 @@ describe("resource access query options", () => {
       "crucible",
       "fixture:populated",
       "account-1",
+      "normal",
       "resources",
       "access",
       "resource-1",

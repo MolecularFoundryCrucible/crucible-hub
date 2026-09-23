@@ -14,7 +14,12 @@ describe("dataset query options", () => {
       "normal",
       "datasets",
       "list",
-      { direction: "desc", limit: 50, sort: "created" },
+      {
+        direction: "desc",
+        includeTotal: true,
+        limit: 50,
+        sort: "created",
+      },
     ])
     expect(
       datasetsQueryOptions(scope, {
@@ -30,6 +35,7 @@ describe("dataset query options", () => {
       "list",
       {
         direction: "desc",
+        includeTotal: true,
         instrumentMfid: "fixture-instrument-1",
         limit: 50,
         sort: "created",
@@ -45,6 +51,7 @@ describe("dataset query options", () => {
       }).queryKey[6]
     ).toEqual({
       direction: "desc",
+      includeTotal: true,
       limit: 50,
       projectMfid: "fixture-project-1",
       projectScope: "all",
@@ -58,6 +65,7 @@ describe("dataset query options", () => {
       }).queryKey[6]
     ).toEqual({
       direction: "desc",
+      includeTotal: true,
       limit: 50,
       projectMfid: "fixture-project-1",
       projectScope: "shared",
@@ -89,6 +97,7 @@ describe("dataset query options", () => {
       createdFrom: "2026-08-27",
       createdTo: "2026-08-29",
       direction: "desc",
+      includeTotal: true,
       limit: 50,
       sort: "created",
       visibility: "private",

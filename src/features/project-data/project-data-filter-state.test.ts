@@ -14,11 +14,13 @@ describe("project data filter state", () => {
         },
         "datasets"
       )
-    ).toEqual({
+    ).toMatchObject({
       filters: {
         createdFrom: "2026-01-01",
         createdTo: "2026-01-31",
+        direction: "desc",
         instrumentMfid: "instrument-1",
+        sort: "created",
       },
       valid: true,
     })

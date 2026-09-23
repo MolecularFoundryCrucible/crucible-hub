@@ -45,12 +45,26 @@ describe("workspace account source", () => {
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     const fetchMock = vi.fn(async (request: Request) => {
       expect(new URL(request.url).pathname).toBe("/account/profile")
-      expect(request.method).toBe("PATCH")
-      await expect(request.json()).resolves.toEqual({
-        first_name: "Ada",
-        username: "ada_lovelace",
-      })
+      if (request.method === "PATCH") {
+        await expect(request.json()).resolves.toEqual({
+          first_name: "Ada",
+          username: "ada_lovelace",
+        })
+      } else {
+        expect(request.method).toBe("GET")
+      }
       return crucibleApiResponse({
+        authorization: {
+          assigned_platform_role: "none",
+          effective_platform_role: "none",
+          privilege_mode: "normal",
+        },
+        capabilities: {
+          can_create_project: true,
+          can_create_resource: true,
+          can_manage_service_accounts: false,
+          can_register_instrument: true,
+        },
         email: "ada@example.invalid",
         first_name: "Ada",
         is_service_account: false,
@@ -71,7 +85,7 @@ describe("workspace account source", () => {
       unique_id: "0000-0000-0000-0001",
       username: "ada_lovelace",
     })
-    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it("does not bypass the production fixture guard", async () => {

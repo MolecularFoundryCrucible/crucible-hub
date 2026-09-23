@@ -25,7 +25,7 @@ describe("workspace data sources", () => {
     expect(first.total).toBe(2)
     expect(first.nextCursor).toBe("fixture:1")
     expect(second.items).toHaveLength(1)
-    expect(second.total).toBeNull()
+    expect(second.total).toBe(2)
     expect(second.nextCursor).toBeNull()
   })
 
@@ -48,7 +48,7 @@ describe("workspace data sources", () => {
     expect(first.nextCursor).toBe("fixture:2")
     expect(second.items).toHaveLength(1)
     expect(second.items[0]?.unique_id).toBe("01J6Y8N4Q2R7M9K3T5V0W1X2Z7")
-    expect(second.total).toBeNull()
+    expect(second.total).toBe(3)
     expect(second.nextCursor).toBeNull()
     expect(demoWorkspace.datasets.map((dataset) => dataset.unique_id)).toEqual([
       "01J6Y8N4Q2R7M9K3T5V0W1X2Z7",
@@ -102,8 +102,8 @@ describe("workspace data sources", () => {
     expect(first.total).toBe(54)
     expect(second.nextCursor).toBeNull()
     expect(secondary.items.map((dataset) => dataset.unique_id)).toEqual([
-      "fixture-dataset-55",
       "fixture-dataset-56",
+      "fixture-dataset-55",
     ])
     await expect(
       readWorkspaceDatasets({
@@ -137,8 +137,8 @@ describe("workspace data sources", () => {
     })
 
     expect(assigned.items.map((sample) => sample.unique_id)).toEqual([
-      "fixture-sample-1",
       "fixture-sample-4",
+      "fixture-sample-49",
     ])
     expect(
       assigned.items.every((sample) => sample.project_relation === "assigned")
@@ -196,7 +196,7 @@ describe("workspace data sources", () => {
     })
 
     expect(assignedSamples.items.map((sample) => sample.unique_id)).toEqual([
-      "fixture-sample-1",
+      "fixture-sample-49",
       "fixture-sample-25",
     ])
     expect(assignedSamples.total).toBe(3)

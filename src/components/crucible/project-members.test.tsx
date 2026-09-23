@@ -100,7 +100,7 @@ describe("ProjectMembers", () => {
     expect(
       screen.getByRole("link", { name: "Ada Lovelace" }).getAttribute("href")
     ).toBe("/people/owner")
-    expect(screen.getByText("Lead").className).toContain("bg-secondary")
+    expect(screen.getByText("Lead").className).toContain("bg-access-role-owner")
     expect(screen.getByText("Admin").className).toContain(
       "bg-access-role-admin"
     )
