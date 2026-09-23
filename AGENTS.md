@@ -119,7 +119,6 @@ Run focused checks while iterating and the relevant browser checks before comple
 - `npm run boundary:check`: negative server-only import build
 - `npm run test:browser`: Chromium shell, responsive, theme, and accessibility checks
 - `npm run test:production`: built Node runtime, `/hub` paths, health, shutdown, and server-function checks
-- `npm run test:visual`: committed visual baselines and fixture behavior
 - `npm run api:generate` and `npm run api:check`: generated contract workflow and drift check
 - `npm run design:check`: design-token policy
 - `npm run docs:check` and `npm run secrets:check`: documentation links and secret scan

@@ -8,7 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Kept searchable resource pickers open through loading and failure states, surfaced add-member failures inside the active dialog, and repaired the Theme menu grouping required by Base UI.
 
-- Split functional, visual, and production browser validation into parallel CI jobs, kept visual baseline updates local-only, retained failure artifacts for diagnosis, repaired pending-list semantics, and resolved the OpenAPI toolchain dependency advisory.
+- Replaced the stale browser and screenshot corpus with a bounded screenshot-free functional gate, reduced CI to parallel static and browser-runtime jobs, removed duplicate dependency and browser installation and production builds, capped browser concurrency, retained failure artifacts for diagnosis, repaired pending-list semantics, and resolved the OpenAPI toolchain dependency advisory.
 
 - Varied the Home greeting by browser-local hour between time-aware messages, “Welcome to Crucible,” and the rare “Welcome to the Crux.”
 

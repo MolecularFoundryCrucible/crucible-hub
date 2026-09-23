@@ -36,7 +36,7 @@ test("opens profile management from the account avatar and saves changes", async
   await page.getByLabel("Username").fill("averie_chen")
   await page.getByRole("button", { name: "Save changes" }).click()
 
-  await expect(page.getByText("Profile saved.")).toBeVisible()
+  await expect(page.getByText("Profile saved")).toBeVisible()
   await expect(page.getByText("Averie Chen")).toHaveCount(2)
   await expect(
     page.getByRole("button", { name: "Open account menu" })

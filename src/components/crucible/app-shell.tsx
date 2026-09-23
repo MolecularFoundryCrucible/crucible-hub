@@ -603,27 +603,31 @@ function SidebarUtilities({
               <span>Theme</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="right">
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
-              <DropdownMenuRadioGroup
-                onValueChange={(value) => {
-                  if (
-                    value === "system" ||
-                    value === "light" ||
-                    value === "dark"
-                  ) {
-                    setTheme(value)
-                  }
-                }}
-                value={theme}
-              >
-                <DropdownMenuRadioItem value="system">
-                  System
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="light">
-                  Light
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  onValueChange={(value) => {
+                    if (
+                      value === "system" ||
+                      value === "light" ||
+                      value === "dark"
+                    ) {
+                      setTheme(value)
+                    }
+                  }}
+                  value={theme}
+                >
+                  <DropdownMenuRadioItem value="system">
+                    System
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="light">
+                    Light
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="dark">
+                    Dark
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>

@@ -38,7 +38,7 @@ Failures are scenario state around typed data, never invented API fields. They r
 
 Do not rely only on browser interception because API calls are server-only. Substitute the narrow server adapter or its fetch implementation instead. Fixtures are enabled outside production and fail closed in production. `HUB_ENABLE_FIXTURES=true` permits only populated controlled previews and is never a real deployment setting.
 
-Fixture routes are unlinked and `noindex`. Playwright keeps reviewed light and dark component baselines at compact, laptop, and large desktop widths plus route baselines for populated, empty, restricted, dense, partial, degraded, and global search. It also tests scenario retention, text-spacing reflow, keyboard order, reduced motion, compact reflow, and the 720 by 450 CSS-pixel layout equivalent of a 1440 by 900 area at 200 percent zoom. Native zoom and manual assistive-technology checks remain separate evidence.
+Fixture routes are unlinked and `noindex`. The bounded Playwright gate checks representative account, deletion, download, shell, theme, accessibility, responsive collection, scenario-retention, and text-spacing behavior without storing screenshots. Targeted local screenshots, native zoom, additional route combinations, and manual assistive-technology checks remain separate review evidence.
 
 ## Contract refresh
 

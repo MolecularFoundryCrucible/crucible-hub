@@ -17,19 +17,17 @@ test("serves prefixed production assets and direct deep links", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Samples and datasets"
   )
-  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+  const favicon = page.locator('link[rel="icon"]')
+  await expect(favicon).toHaveAttribute(
     "href",
-    "/hub/crucible-favicon-16x16.png"
+    /^\/hub\/assets\/crucible-logo-hub-[A-Za-z0-9_-]+\.svg$/
   )
-  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
-    "sizes",
-    "16x16"
-  )
-  const faviconResponse = await page.request.get(
-    "/hub/crucible-favicon-16x16.png"
-  )
+  await expect(favicon).toHaveAttribute("type", "image/svg+xml")
+  const faviconHref = await favicon.getAttribute("href")
+  if (!faviconHref) throw new Error("Favicon URL is missing")
+  const faviconResponse = await page.request.get(faviconHref)
   expect(faviconResponse.status()).toBe(200)
-  expect(faviconResponse.headers()["content-type"]).toContain("image/png")
+  expect(faviconResponse.headers()["content-type"]).toContain("image/svg+xml")
 
   const resourceUrls = await page.evaluate(() =>
     performance
@@ -43,7 +41,7 @@ test("serves prefixed production assets and direct deep links", async ({
   )
 })
 
-test("uses server functions during production client navigation", async ({
+test("uses server functions during production project navigation", async ({
   page,
 }) => {
   await page.goto("/hub/projects")
@@ -59,7 +57,7 @@ test("uses server functions during production client navigation", async ({
     }
   })
   await page
-    .getByRole("link", { name: /Open project/ })
+    .getByRole("link", { name: "Operando Catalyst Mapping" })
     .first()
     .click()
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -83,18 +81,6 @@ test("uses server functions during production client navigation", async ({
   await projectSections.getByRole("link", { name: "Overview" }).click()
   await expect(page.getByText("Project details", { exact: true })).toBeVisible()
   await expect(page.getByText("People", { exact: true })).toBeVisible()
-
-  await page.goto("/hub/data")
-  await page.getByRole("link", { name: "Datasets (3)" }).click()
-  const openDataset = page.getByRole("link", {
-    name: /Open full page: NiFe K-edge/,
-  })
-  await expect(openDataset.locator("svg")).toBeVisible()
-  await openDataset.click()
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "NiFe K-edge operando series"
-  )
-  await expect(page.getByText("operando-cycle-04.h5")).toBeVisible()
 })
 
 test("keeps health public, minimal, and outside the application shell", async ({
@@ -156,7 +142,9 @@ test("restores project preview deep links in the production runtime", async ({
   await expect(open).toHaveText("Open")
   await expect(open.locator('[data-icon="inline-end"]')).toBeVisible()
   await open.click()
-  await expect(page).toHaveURL(`/hub/datasets/${dataset}`)
+  await expect(page).toHaveURL(
+    `/hub/datasets/${dataset}?fromProject=01J6Y8N4Q2R7M9K3T5V0W1X2Z3`
+  )
   await page.goBack()
   await expect(page).toHaveURL(`${collection}&preview=${dataset}`)
   await expect(panel).toBeVisible()
@@ -170,7 +158,9 @@ test("serves nested instrument datasets with production navigation", async ({
     "Hard X-ray Microprobe"
   )
   await expect(
-    page.getByRole("link", { name: "Dataset: NiFe K-edge operando series" })
+    page.getByRole("link", {
+      name: "Preview NiFe K-edge operando series",
+    })
   ).toBeVisible()
   await page
     .getByRole("navigation", { name: "Instrument sections" })

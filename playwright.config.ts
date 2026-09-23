@@ -6,11 +6,6 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
-  expect: {
-    toHaveScreenshot: {
-      maxDiffPixels: 500,
-    },
-  },
   use: {
     baseURL: "http://127.0.0.1:4173/hub/",
     trace: process.env.CI ? "retain-on-failure" : "on-first-retry",

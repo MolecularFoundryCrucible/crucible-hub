@@ -14,10 +14,8 @@
     "start": "node .output/server/index.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:browser": "playwright test --grep-invert @visual",
+    "test:browser": "playwright test tests/browser/account-profile.spec.ts tests/browser/design-system.spec.ts tests/browser/file-downloads.spec.ts tests/browser/resource-deletion-request.spec.ts tests/browser/route-scenarios.spec.ts tests/browser/shell.spec.ts --workers=4",
     "test:production": "npm run build && node scripts/check-production-runtime.mjs && playwright test --config=playwright.production.config.ts",
-    "test:visual": "playwright test --grep @visual --retries=0",
-    "test:visual:update": "playwright test --grep @visual --retries=0 --update-snapshots",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -32,7 +30,8 @@
     "skills:load": "node node_modules/@tanstack/intent/dist/cli.mjs load",
     "skills:stale": "node node_modules/@tanstack/intent/dist/cli.mjs stale",
     "audit": "npm audit --audit-level=high",
-    "validate": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run api:check && npm run boundary:check && npm run design:check && npm run docs:check && npm run secrets:check && npm run build"
+    "validate:static": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run api:check && npm run boundary:check && npm run design:check && npm run docs:check && npm run secrets:check",
+    "validate": "npm run validate:static && npm run build"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

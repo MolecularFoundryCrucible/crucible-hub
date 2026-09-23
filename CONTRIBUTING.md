@@ -28,8 +28,8 @@ Add an `Unreleased` changelog entry only for user, operator, contributor, privac
 | Command                                    | Purpose                                                                                                |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | `npm run validate`                         | Full formatting, lint, type, unit, contract, boundary, token, link, secret, and production-build suite |
-| `npm run test:browser`                     | Chromium shell, responsive, theme, and accessibility checks                                            |
-| `npm run test:visual`                      | Committed design-system, route-scenario, and project-inspector baselines                               |
+| `npm run validate:static`                  | The same static and unit checks without the production build                                           |
+| `npm run test:browser`                     | Bounded Chromium smoke, responsive, theme, workflow, and accessibility checks used by CI               |
 | `npm run test:production`                  | Production build, Node runtime, `/hub` paths, health, shutdown, and server-function checks             |
 | `npm run api:generate`                     | Regenerate TypeScript from the pinned OpenAPI artifact                                                 |
 | `npm run api:check`                        | Verify artifact digest and deterministic generated output                                              |
@@ -41,13 +41,11 @@ Add an `Unreleased` changelog entry only for user, operator, contributor, privac
 | `npm run skills:stale`                     | Report stale TanStack skill sources without updating them                                              |
 | `npm run audit`                            | Fail on high or critical npm advisories                                                                |
 
-Install Chromium once with `npx playwright install chromium`. CI runs the canonical suite. Browser and production specs use [`tests/fixtures.ts`](tests/fixtures.ts), whose automatic fixture fails tests on uncaught page errors.
+Install Chromium once with `npx playwright install chromium`. CI runs static and unit validation in parallel with one browser job that performs the functional gate, production build, and runtime checks. Browser and production specs use [`tests/fixtures.ts`](tests/fixtures.ts), whose automatic fixture fails tests on uncaught page errors.
 
 ## Visual and runtime review
 
-After an intentional visual change, run `npm run test:visual:update`, inspect every affected image across themes, widths, and scenarios, and include the reviewed baselines. Never update snapshots to dismiss an unexplained difference.
-
-Use native desktop-browser zoom for the required 200 percent review. Check Home, dense Data, restricted Projects, Instruments, populated Search, and a resource detail route for enlarged text, available controls, visible focus, and no unnecessary horizontal scrolling. Record evidence in [`docs/phase-0-evidence.md`](docs/phase-0-evidence.md).
+Use targeted local screenshots and native desktop-browser zoom when a visual change needs review. Keep generated images out of the repository and CI. Check affected routes for enlarged text, available controls, visible focus, and unnecessary horizontal scrolling, then record durable evidence in [`docs/phase-0-evidence.md`](docs/phase-0-evidence.md) when required.
 
 After Dockerfile, runtime, dependency, or deployment-path changes, run the disposable non-root container check:
 

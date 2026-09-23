@@ -69,6 +69,7 @@ function ComboboxInput({
       <InputGroupAddon align="inline-end">
         {showTrigger && (
           <InputGroupButton
+            aria-label="Show options"
             size="icon-xs"
             variant="ghost"
             render={<ComboboxTrigger />}

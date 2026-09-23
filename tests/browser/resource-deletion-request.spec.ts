@@ -39,7 +39,7 @@ test("submits a reviewed sample deletion request without calling a live API", as
   await expect(
     dialog.getByRole("heading", { name: "Request deletion?" })
   ).toBeVisible()
-  await expect(dialog).toContainText("does not immediately delete")
+  await expect(dialog).toContainText("submits NiFe oxide catalyst A for review")
   await dialog.getByLabel("Reason").fill("Duplicate sample record")
   await dialog
     .getByRole("button", { name: "Submit deletion request", exact: true })

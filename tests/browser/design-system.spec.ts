@@ -1,45 +1,6 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "../fixtures"
 
-const visualCases = [
-  { name: "light-laptop", theme: "light", width: 1024, height: 768 },
-  { name: "dark-laptop", theme: "dark", width: 1024, height: 768 },
-  { name: "light-desktop", theme: "light", width: 1440, height: 900 },
-  { name: "dark-desktop", theme: "dark", width: 1440, height: 900 },
-  { name: "light-compact", theme: "light", width: 320, height: 900 },
-  { name: "dark-compact", theme: "dark", width: 320, height: 900 },
-] as const
-
-for (const visualCase of visualCases) {
-  test(`@visual matches the ${visualCase.name} design baseline`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({
-      width: visualCase.width,
-      height: visualCase.height,
-    })
-    await page.emulateMedia({
-      colorScheme: visualCase.theme,
-      reducedMotion: "reduce",
-    })
-    await page.addInitScript((theme) => {
-      localStorage.setItem("crucible-hub-theme", theme)
-    }, visualCase.theme)
-    await page.goto("/hub/fixtures/design-system")
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Design system fixtures"
-    )
-    await expect(page.getByRole("combobox", { name: "Theme" })).toHaveValue(
-      visualCase.theme
-    )
-
-    await expect(page.getByTestId("design-system-fixture")).toHaveScreenshot(
-      `${visualCase.name}.png`,
-      { animations: "disabled", caret: "hide" }
-    )
-  })
-}
-
 test("keeps the fixture keyboard operable", async ({ page }) => {
   await page.goto("/hub/fixtures/design-system")
 

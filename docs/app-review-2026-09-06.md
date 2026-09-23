@@ -61,7 +61,7 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 **Interpretation:** The flagged element is a tooltip during its exit state. This is not evidence that the entire dialog palette has insufficient contrast. The interaction between tooltip dismissal, its animation, and the timing of the accessibility scan needs inspection.
 
-**Recommendation:** Inspect the [tooltip primitive](../src/components/ui/tooltip.tsx) and [relationship dialog test](../tests/browser/resource-relationships.spec.ts). Establish correct dismissal/visibility semantics and test both the stable dialog and its transition. Avoid suppressing contrast checks or simply adding an arbitrary delay to hide the symptom.
+**Recommendation:** Inspect the [tooltip primitive](../src/components/ui/tooltip.tsx) and relationship dialog behavior. Establish correct dismissal and visibility semantics and test both the stable dialog and its transition. Avoid suppressing contrast checks or simply adding an arbitrary delay to hide the symptom.
 
 ### F5. Priority 2: cancelling a creation draft asks for discard confirmation twice
 

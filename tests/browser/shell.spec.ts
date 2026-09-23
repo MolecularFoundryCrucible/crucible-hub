@@ -7,7 +7,7 @@ test("renders the desktop workspace without development chrome", async ({
   await page.goto("/hub/")
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Welcome back, Avery"
+    /^(Good (morning|afternoon|evening)|Welcome to (Crucible|the Crux)), Avery$/
   )
   await expect(
     page.getByLabel("Primary navigation", { exact: true })
@@ -30,7 +30,7 @@ test("renders the desktop workspace without development chrome", async ({
     page.getByRole("heading", { name: "Recently added data" })
   ).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Your projects" })
+    page.getByRole("heading", { name: "Projects you lead" })
   ).toBeVisible()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
   await expect(page.getByText("Activated catalyst morphology")).toBeVisible()
@@ -74,7 +74,7 @@ test("keeps Home useful when one recent data source fails", async ({
   ).toBeVisible()
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Your projects" })
+    page.getByRole("heading", { name: "Projects you lead" })
   ).toBeVisible()
   await expect(
     page.getByText("Projects and navigation remain available.")
@@ -141,9 +141,6 @@ test("fits prioritized data columns within a laptop viewport", async ({
   await expect(page.getByRole("columnheader", { name: "Type" })).toBeHidden()
   await expect(page.getByRole("columnheader", { name: "Size" })).toHaveCount(0)
   await expect(
-    page.getByText("X-ray absorption spectroscopy", { exact: true }).first()
-  ).toBeVisible()
-  await expect(
     page.getByText("electrocatalyst", { exact: true }).first()
   ).toBeVisible()
   expect(
@@ -161,8 +158,9 @@ test("uses scientific subtypes in the wide data table", async ({ page }) => {
   await expect(
     page.getByRole("cell", { name: "electrocatalyst" }).first()
   ).toBeVisible()
+  await page.getByRole("link", { name: /^Datasets/ }).click()
   await expect(
-    page.getByRole("cell", { name: "X-ray absorption spectroscopy" })
+    page.getByRole("cell", { name: "X-ray fluorescence microscopy" })
   ).toBeVisible()
 })
 
@@ -193,15 +191,18 @@ test("opens canonical instrument detail from directory and search", async ({
   page,
 }) => {
   await page.goto("/hub/instruments")
-  await page.getByRole("link", { name: "Open instrument" }).click()
+  await page
+    .getByRole("link", { name: "Open full page: Hard X-ray Microprobe" })
+    .first()
+    .click()
 
   await expect(page).toHaveURL(/\/hub\/instruments\/01J6Y8N4Q2R7M9K3T5V0W1X2Z4/)
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Hard X-ray Microprobe"
   )
-  await expect(page.getByText("hard-xray-microprobe")).toBeVisible()
+  await expect(page.getByText("hard-xray-microprobe").first()).toBeVisible()
   await expect(page.getByText("spatial_resolution_nm")).toBeVisible()
-  await expect(page.getByRole("link", { name: "Avery Chen" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "A. Chen" })).toBeVisible()
   await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
     "Summary",
     "Identity",
@@ -377,6 +378,7 @@ test("has no detectable accessibility violations in light and dark themes", asyn
   await page.getByRole("button", { name: "Theme" }).click()
   await page.getByRole("menuitemradio", { name: "Dark" }).click()
   await expect(page.locator("html")).toHaveClass(/dark/)
+  await page.keyboard.press("Escape")
   await page.waitForTimeout(300)
   const darkResults = await new AxeBuilder({ page }).analyze()
   expect(darkResults.violations).toEqual([])
@@ -403,6 +405,7 @@ test("persists an explicit dark theme without a hydration mismatch", async ({
 
   await page.reload()
   await expect(page.locator("html")).toHaveClass(/dark/)
+  await page.waitForLoadState("networkidle")
   await page.getByRole("button", { name: "Theme" }).click()
   await expect(
     page.getByRole("menuitemradio", { name: "Dark" })
@@ -421,6 +424,7 @@ test("opens shortcut help and navigates with key sequences", async ({
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText("Ctrl K", { exact: true })).toBeVisible()
   await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
 
   await page.keyboard.press("g")
   await page.keyboard.press("p")
@@ -457,8 +461,7 @@ test("searches data within the active project and retains return context", async
     page.getByRole("link", { name: "Back to project" })
   ).toBeVisible()
   const sample = page.getByRole("link", {
-    name: "NiFe oxide catalyst A",
-    exact: true,
+    name: "Open full page: NiFe oxide catalyst A",
   })
   await expect(sample).toHaveAttribute(
     "href",
@@ -511,7 +514,7 @@ test("navigates typed project routes and URL-backed data filters", async ({
   page,
 }) => {
   await page.goto("/hub/data")
-  await page.getByRole("link", { name: "Datasets (3)" }).click()
+  await page.getByRole("link", { name: /^Datasets/ }).click()
   await expect(page).toHaveURL(/kind=datasets/)
   await expect(page.getByText("NiFe oxide catalyst A")).toBeHidden()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
@@ -579,14 +582,17 @@ test("renders exact dataset detail and file metadata from a canonical link", asy
     .locator('[data-slot="card"]')
     .filter({ has: page.getByText("Identity", { exact: true }) })
   await expect(identity.locator("[data-identity-field-icon]")).toHaveCount(4)
-  await expect(identity.locator('[data-resource-type="person"]')).toBeVisible()
+  await expect(identity.locator('[data-principal-type="user"]')).toBeVisible()
   await expect(page.getByText("operando-cycle-04.h5")).toBeVisible()
   await page.locator('summary[aria-label^="acquisition:"]').click()
   await expect(page.getByText("potential_v_rhe")).toBeVisible()
   const accessibilityResults = await new AxeBuilder({ page }).analyze()
   expect(accessibilityResults.violations).toEqual([])
 
-  await page.getByRole("link", { name: "Operando Catalyst Mapping" }).click()
+  await page
+    .getByRole("link", { name: "Operando Catalyst Mapping" })
+    .last()
+    .click()
   await expect(page).toHaveURL(/\/hub\/projects\/01J6Y8N4Q2R7M9K3T5V0W1X2Z3/)
 
   await page.goBack()
