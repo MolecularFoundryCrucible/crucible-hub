@@ -172,6 +172,7 @@ function QuickSearchControl({
 
   return (
     <form
+      aria-label="Quick search"
       className="min-w-0 flex-1 sm:max-w-sm"
       onSubmit={submit}
       role="search"
@@ -315,6 +316,7 @@ function SearchFallbackControl({
 
   return (
     <form
+      aria-label="Quick search"
       className="min-w-0 flex-1 sm:max-w-sm"
       onSubmit={(event) => {
         event.preventDefault()

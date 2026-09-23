@@ -14,7 +14,7 @@
     "start": "node .output/server/index.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:browser": "playwright test tests/browser/account-profile.spec.ts tests/browser/design-system.spec.ts tests/browser/file-downloads.spec.ts tests/browser/resource-deletion-request.spec.ts tests/browser/route-scenarios.spec.ts tests/browser/shell.spec.ts --workers=4",
+    "test:browser": "playwright test tests/browser/account-profile.spec.ts tests/browser/design-system.spec.ts tests/browser/file-downloads.spec.ts tests/browser/resource-deletion-request.spec.ts tests/browser/route-scenarios.spec.ts tests/browser/shell.spec.ts --workers=1",
     "test:production": "npm run build && node scripts/check-production-runtime.mjs && playwright test --config=playwright.production.config.ts",
     "lint": "eslint .",
     "format": "prettier --write .",

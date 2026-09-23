@@ -174,7 +174,12 @@ function SearchPage() {
         }
       />
       <ContentBoundary width="reading">
-        <form className="flex gap-2" onSubmit={submit} role="search">
+        <form
+          aria-label="Resource search"
+          className="flex gap-2"
+          onSubmit={submit}
+          role="search"
+        >
           {search.kind ? (
             <input name="kind" type="hidden" value={search.kind} />
           ) : null}

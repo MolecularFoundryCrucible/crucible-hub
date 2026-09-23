@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { ReactNode } from "react"
 
 import { MetadataDisclosureIcon, SearchIcon } from "@/components/crucible/icons"
@@ -341,8 +341,15 @@ function MetadataCollection({
     | Readonly<Record<string, WorkspaceMetadataValue>>
 }) {
   const [visibleArrayItems, setVisibleArrayItems] = useState(arrayPageSize)
+  const disclosureRef = useRef<HTMLDetailsElement>(null)
   const array = isMetadataArray(value)
   const entries = array ? arrayEntries(value) : sortedEntries(value)
+  const pathKey = metadataPath(path)
+  const open = forceOpen || expandedPaths.has(pathKey)
+
+  useEffect(() => {
+    if (disclosureRef.current) disclosureRef.current.open = open
+  }, [open])
 
   if (entries.length === 0) {
     return (
@@ -369,13 +376,13 @@ function MetadataCollection({
     searchQuery && filteredEntries.length < entries.length
       ? `${filteredEntries.length} of ${totalCount}`
       : totalCount
-  const pathKey = metadataPath(path)
-
   return (
     <details
       className="metadata-disclosure min-w-0"
       onToggle={(event) => onExpandedChange(pathKey, event.currentTarget.open)}
-      open={forceOpen || expandedPaths.has(pathKey)}
+      open={open}
+      ref={disclosureRef}
+      suppressHydrationWarning
     >
       <summary
         aria-label={`${label}: ${count}`}

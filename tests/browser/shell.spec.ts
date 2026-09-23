@@ -118,7 +118,7 @@ test("assigns a new Hub correlation ID to each request", async ({ page }) => {
   const serverFunctionResponse = page.waitForResponse((response) =>
     response.url().includes("/hub/_serverFn/")
   )
-  const searchForm = page.getByRole("search")
+  const searchForm = page.getByRole("search", { name: "Resource search" })
   await searchForm.getByRole("searchbox", { name: "Search query" }).fill("NiFe")
   await searchForm.getByRole("button", { name: "Search" }).click()
   const functionCorrelationId = (await serverFunctionResponse).headers()[
@@ -224,10 +224,13 @@ test("opens global search from the keyboard and restores URL-backed results", as
   await page.waitForLoadState("networkidle")
   await page.keyboard.press("Control+k")
 
-  const dialog = page.getByRole("dialog", { name: "Search Crucible" })
-  await expect(dialog).toBeVisible()
-  await dialog.getByRole("searchbox", { name: "Search query" }).fill("NiFe")
-  await dialog.getByRole("button", { name: "Search" }).click()
+  const quickSearch = page.getByRole("combobox", { name: "Search Crucible" })
+  await expect(quickSearch).toBeFocused()
+  await quickSearch.fill("NiFe")
+  await expect(
+    page.getByRole("listbox", { name: "Quick search results" })
+  ).toBeVisible()
+  await page.getByRole("button", { name: "View all results" }).click()
 
   await expect(page).toHaveURL(/\/hub\/search\?q=NiFe/)
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -244,7 +247,7 @@ test("opens global search from the keyboard and restores URL-backed results", as
   await page.reload()
   await page.waitForLoadState("networkidle")
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
-  const searchForm = page.getByRole("search")
+  const searchForm = page.getByRole("search", { name: "Resource search" })
   await searchForm
     .getByRole("searchbox", { name: "Search query" })
     .fill("operando")
@@ -326,7 +329,7 @@ test("cancels a superseded global search request", async ({ page }) => {
   })
 
   await page.goto("/hub/search")
-  const searchForm = page.getByRole("search")
+  const searchForm = page.getByRole("search", { name: "Resource search" })
   const searchbox = searchForm.getByRole("searchbox", {
     name: "Search query",
   })
@@ -437,22 +440,24 @@ test("searches data within the active project and retains return context", async
   const projectMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z3"
   await page.goto(`/hub/projects/${projectMfid}`)
   await page.waitForLoadState("networkidle")
-  await expect(
-    page.getByRole("button", { name: "Search Operando Catalyst Mapping" })
-  ).toBeVisible()
-  await page.keyboard.press("Control+Shift+k")
-
-  const dialog = page.getByRole("dialog", {
+  const quickSearch = page.getByRole("combobox", {
     name: "Search Operando Catalyst Mapping",
   })
+  await expect(quickSearch).toBeVisible()
+  await page.keyboard.press("Control+Shift+k")
+
+  await expect(quickSearch).toBeFocused()
   await expect(
-    dialog.getByRole("button", { name: "This project" })
+    page.getByRole("button", { name: "This project" })
   ).toHaveAttribute("aria-pressed", "true")
   await expect(
-    dialog.getByRole("button", { name: "All Crucible" })
+    page.getByRole("button", { name: "All Crucible" })
   ).toHaveAttribute("aria-pressed", "false")
-  await dialog.getByRole("searchbox", { name: "Search query" }).fill("NiFe")
-  await dialog.getByRole("button", { name: "Search" }).click()
+  await quickSearch.fill("NiFe")
+  await expect(
+    page.getByRole("listbox", { name: "Quick search results" })
+  ).toBeVisible()
+  await page.getByRole("button", { name: "View all results" }).click()
 
   await expect(page).toHaveURL(
     new RegExp(`/hub/search\\?.*projectMfid=${projectMfid}`)
@@ -469,7 +474,7 @@ test("searches data within the active project and retains return context", async
   )
   await sample.click()
   await expect(
-    page.getByRole("button", { name: "Search Operando Catalyst Mapping" })
+    page.getByRole("combobox", { name: "Search Operando Catalyst Mapping" })
   ).toBeVisible()
 })
 

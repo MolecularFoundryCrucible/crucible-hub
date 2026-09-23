@@ -41,7 +41,7 @@ Add an `Unreleased` changelog entry only for user, operator, contributor, privac
 | `npm run skills:stale`                     | Report stale TanStack skill sources without updating them                                              |
 | `npm run audit`                            | Fail on high or critical npm advisories                                                                |
 
-Install Chromium once with `npx playwright install chromium`. CI runs static and unit validation in parallel with one browser job that performs the functional gate, production build, and runtime checks. Browser and production specs use [`tests/fixtures.ts`](tests/fixtures.ts), whose automatic fixture fails tests on uncaught page errors.
+Install Chromium once with `npx playwright install chromium`. CI runs static and unit validation in parallel with one browser job that performs the functional gate, production build, and runtime checks. The bounded browser gate uses one worker without retries so shared server fixtures remain deterministic and failures remain visible. Browser and production specs use [`tests/fixtures.ts`](tests/fixtures.ts), whose automatic fixture fails tests on uncaught page errors.
 
 ## Visual and runtime review
 
