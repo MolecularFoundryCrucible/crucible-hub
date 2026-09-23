@@ -2,7 +2,7 @@
 
 Status: Active
 
-Date: 2026-09-16
+Date: 2026-09-23
 
 ## Purpose
 
@@ -15,6 +15,7 @@ This document owns delivery order, entry and completion gates, current status, a
 - Do not expose a production mutation until the shared session, authentication, same-origin, and CSRF gates are complete.
 - Record API-owned blockers in [Crucible API handoff](crucible-api-handoff.md), not as Hub workarounds.
 - Treat a package as complete only when its scoped validation and documentation are current.
+- Keep the blocking browser gate bounded, representative, and screenshot-free. Use fixture and unit coverage for deterministic workflow logic and targeted local browser review for specialized flows when they change.
 
 ## Current position
 
@@ -53,19 +54,19 @@ Implemented for local development. Type-specific global Data, Project Data, and 
 
 #### Resource inspector slice
 
-Implemented and fixture/browser verified. It provides bounded in-place relationship inspection, native history, local failure recovery, and canonical promotion. See [information architecture](information-architecture.md#resource-inspector-navigation) and decisions 0008 and 0009.
+Implemented and locally verified. It provides bounded in-place relationship inspection, native history, local failure recovery, and canonical promotion. The bounded browser gate covers compact preview entry, while the production runtime suite covers project preview deep links, full-page promotion, and browser Back restoration. Inspector-specific layout and focus changes require the targeted review in decision 0009. See [information architecture](information-architecture.md#resource-inspector-navigation) and decisions 0008 and 0009.
 
 #### Project collection inspection
 
-Implemented and fixture/browser verified. It reuses the inspector without altering project collection filters, cursors, geometry, or scroll. See decision 0010.
+Implemented and locally verified. It reuses the inspector without altering project collection filters, cursors, geometry, or scroll. The production runtime gate covers filtered project preview restoration and canonical promotion. See decision 0010.
 
 #### Global Data collection inspection
 
-Implemented and fixture/browser verified. It preserves applied global Data filters and cursor state while preview navigation remains independent of collection reads. See decision 0012.
+Implemented and locally verified. It preserves applied global Data filters and cursor state while preview navigation remains independent of collection reads. The bounded browser gate covers compact preview entry and canonical full-page availability. See decision 0012.
 
 #### Single-file downloads
 
-Implemented and fixture/browser verified. Links are generated only after activation and remain outside client caches, route state, and logs. The typed response and attachment behavior remain API follow-ups.
+Implemented and browser verified. Links are generated only after activation and remain outside client caches, route state, and logs. The focused browser gate covers compact access, one-shot handoff, local failure, and retry, while the production runtime gate checks the built handoff. The typed response and attachment behavior remain API follow-ups.
 
 #### Resource graph traversal
 
@@ -83,15 +84,15 @@ Direct membership uses the accepted contract: add an existing user, change an al
 
 #### Resource relationship management
 
-Implemented and fixture/browser verified for local development. Canonical sample and dataset pages provide capability-guided parent, child, and cross-type link management with bounded target search, confirmed unlink, retained failure state, exact source and target rereads, and no resource deletion. Production exposure remains gated on the API relationship contract described in [Crucible API handoff](crucible-api-handoff.md) and the Hub session boundary.
+Implemented with fixture and unit coverage for local development. Canonical sample and dataset pages provide capability-guided parent, child, and cross-type link management with bounded target search, confirmed unlink, retained failure state, exact source and target rereads, and no resource deletion. Relationship interaction and compact dialog changes require targeted local browser review. Production exposure remains gated on the API relationship contract described in [Crucible API handoff](crucible-api-handoff.md) and the Hub session boundary.
 
 #### Resource management
 
-Implemented and fixture/browser verified for local development. Route-backed sample and dataset Manage pages reuse the canonical parent shell, load ACLs only on Manage entry with preload disabled, gate access controls on exact `can_manage_access`, cap user and project grants with `max_grant_role`, keep non-manageable principals read-only, contain ownership and reviewed deletion actions, confirm consequential mutations, and apply server-confirmed non-optimistic state. The API shape and production session gate remain the authoritative deployment constraints.
+Implemented with fixture and unit coverage for local development. Route-backed sample and dataset Manage pages reuse the canonical parent shell, load ACLs only on Manage entry with preload disabled, gate access controls on exact `can_manage_access`, cap user and project grants with `max_grant_role`, keep non-manageable principals read-only, contain ownership and reviewed deletion actions, confirm consequential mutations, and apply server-confirmed non-optimistic state. Access and ownership interaction changes require targeted local browser review. The API shape and production session gate remain the authoritative deployment constraints.
 
 #### Deletion-request review
 
-Implemented locally against pinned API revision `4c542221b7927d58d7ed3bc892e225bb81a2dc44`. One shared route presents newest-first submitted history and oldest-first capability-guided pending review with URL-backed project scope and opaque cursor continuation. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
+Implemented locally against pinned API revision `f9fb3c723308e56a33804d5cf4306e4f3e3db7ce`. One shared route presents newest-first submitted history and oldest-first capability-guided pending review with URL-backed project scope and opaque cursor continuation. Approved history uses the permanent audit's submitted or administrator-wide scope, embedded actors, canonical project links when retained, and opaque cursor continuation. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
 
 #### Deferred: join requests
 
@@ -109,7 +110,7 @@ Browser upload orchestration remains blocked by proposed decision 0005 and the A
 
 #### Project, sample, and dataset creation
 
-Implemented and fixture/browser verified for local development without file upload. Dedicated routes validate contract fields, use bounded project, instrument, sample, and lead selectors, omit caller-assigned MFIDs, and navigate from API-assigned canonical identities. Confirmed rejections retain correctable drafts. Uncertain sample and dataset creates do not retry without API idempotency and direct the user to check Data before resubmitting. Dataset sample associations begin only after confirmed creation and retry only incomplete links. File attachment remains a later stage until the upload contract is safe for browsers.
+Implemented with fixture and unit coverage for local development without file upload. Dedicated routes validate contract fields, use bounded project, instrument, sample, and lead selectors, omit caller-assigned MFIDs, and navigate from API-assigned canonical identities. Confirmed rejections retain correctable drafts. Uncertain sample and dataset creates do not retry without API idempotency and direct the user to check Data before resubmitting. Dataset sample associations begin only after confirmed creation and retry only incomplete links. Creation-form interaction and recovery changes require targeted local browser review. File attachment remains a later stage until the upload contract is safe for browsers.
 
 #### Next action: production boundary and administration verification
 

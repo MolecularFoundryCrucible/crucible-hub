@@ -116,6 +116,7 @@ No Hub-authored workflow skill is active unless its `SKILL.md` exists and this g
 Run focused checks while iterating and the relevant browser checks before completion. Canonical commands are:
 
 - `npm run validate`: formatting, lint, types, unit tests, OpenAPI, server boundary, design tokens, links, secrets, and production build
+- `npm run validate:static`: the same static and unit checks without the production build
 - `npm run boundary:check`: negative server-only import build
 - `npm run test:browser`: Chromium shell, responsive, theme, and accessibility checks
 - `npm run test:production`: built Node runtime, `/hub` paths, health, shutdown, and server-function checks

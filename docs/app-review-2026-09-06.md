@@ -1,5 +1,7 @@
 # Crucible Hub application review
 
+Status: Historical snapshot. Findings and commands describe the 2026-09-06 working tree and are not the current Hub validation contract. As of 2026-09-23, current status lives in [foundation evidence](phase-0-evidence.md), CI uses a bounded screenshot-free browser gate, and targeted screenshots remain uncommitted local review artifacts.
+
 Review date: 2026-09-06, America/Los_Angeles.
 
 Scope: the current working tree based on commit `4881bf7`, including the substantial pre-existing uncommitted implementation and documentation changes. This is a review of the local application, not a production certification. No application fixes were made.

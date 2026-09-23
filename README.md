@@ -27,7 +27,7 @@ HUB_DATA_SOURCE=api CRUCIBLE_API_BASE_URL=https://crucible.lbl.gov/testapi-stagi
 
 Never use a `VITE_` prefix, enter the key in the browser, commit it, or use API-key mode in production.
 
-Run `npm run validate` for the full static and unit suite. Run `npm run test:browser` for the bounded CI browser and accessibility gate, and `npm run test:production` for the built Node runtime. Install Chromium once with `npx playwright install chromium`.
+Run `npm run validate` for the complete local validation and production build. Run `npm run validate:static` for the static and unit subset, `npm run test:browser` for the bounded screenshot-free CI browser and accessibility gate, and `npm run test:production` for the built Node runtime. Install Chromium once with `npx playwright install chromium`.
 
 ## Documentation
 
