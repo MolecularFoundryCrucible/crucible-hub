@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+
 import { BreakableText } from "@/components/crucible/breakable-text"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { MfidText } from "@/components/crucible/mfid-text"
@@ -14,6 +16,7 @@ export function ResourceIdentity({
   kind,
   mfid,
   name,
+  nameContent,
   presentation = "stacked",
   projectId,
   showTypeIcon = true,
@@ -25,6 +28,7 @@ export function ResourceIdentity({
   kind: ResourceType
   mfid?: string | null
   name: string
+  nameContent?: ReactNode
   presentation?: ResourceIdentityPresentation
   projectId?: string | null
   showTypeIcon?: boolean
@@ -47,7 +51,7 @@ export function ResourceIdentity({
           title={truncate && showTruncationTitle ? name : undefined}
           data-directory-name
         >
-          {truncate ? name : <BreakableText value={name} />}
+          {nameContent ?? (truncate ? name : <BreakableText value={name} />)}
         </span>
         {context || projectId ? (
           <span

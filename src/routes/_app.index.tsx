@@ -10,6 +10,7 @@ import { ForwardNavigationIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import {
   ResourceList,
@@ -351,96 +352,31 @@ type HomeResourceLinkItem = {
 }
 
 function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
-  const content = (
-    <>
-      <ResourceIdentity
-        className="flex-1"
-        interactive
-        kind={item.kind}
-        mfid={item.uniqueId}
-        name={item.name}
-        presentation="collection"
-        projectId={item.projectId}
-      />
-      {item.timestamp ? (
-        <div className="shrink-0 text-supporting text-muted-foreground sm:text-right">
-          <span className="block">{item.timestamp.label}</span>
-          <LocalDateTime className="block" value={item.timestamp.value} />
-        </div>
-      ) : null}
-    </>
-  )
-  if (item.kind === "project") {
-    return (
-      <ResourceListItem>
-        <ResourceListItemContent
-          aria-label={"Open " + item.kind + ": " + item.name}
-          layout="responsive"
-          render={
-            <Link
-              params={{ projectMfid: item.uniqueId }}
-              search={{ preview: undefined }}
-              state={{}}
-              to="/projects/$projectMfid"
-            />
-          }
-        >
-          {content}
-        </ResourceListItemContent>
-      </ResourceListItem>
-    )
-  }
-  if (item.kind === "instrument") {
-    return (
-      <ResourceListItem>
-        <ResourceListItemContent
-          aria-label={"Open " + item.kind + ": " + item.name}
-          layout="responsive"
-          render={
-            <Link
-              params={{ instrumentMfid: item.uniqueId }}
-              search={{}}
-              state={{}}
-              to="/instruments/$instrumentMfid"
-            />
-          }
-        >
-          {content}
-        </ResourceListItemContent>
-      </ResourceListItem>
-    )
-  }
-  if (item.kind === "sample") {
-    return (
-      <ResourceListItem>
-        <ResourceListItemContent
-          aria-label={"Open " + item.kind + ": " + item.name}
-          layout="responsive"
-          render={
-            <Link
-              params={{ sampleMfid: item.uniqueId }}
-              to="/samples/$sampleMfid"
-            />
-          }
-        >
-          {content}
-        </ResourceListItemContent>
-      </ResourceListItem>
-    )
-  }
   return (
     <ResourceListItem>
-      <ResourceListItemContent
-        aria-label={"Open " + item.kind + ": " + item.name}
-        layout="responsive"
-        render={
-          <Link
-            params={{ datasetMfid: item.uniqueId }}
-            to="/datasets/$datasetMfid"
-          />
-        }
-      >
-        {content}
+      <ResourceListItemContent className="select-text" layout="responsive">
+        <ResourceIdentity
+          className="w-full flex-1"
+          kind={item.kind}
+          mfid={item.uniqueId}
+          name={item.name}
+          nameContent={
+            <ResourceFullPageLink
+              kind={item.kind}
+              mfid={item.uniqueId}
+              name={item.name}
+              presentation="name"
+            />
+          }
+          presentation="collection"
+          projectId={item.projectId}
+        />
+        {item.timestamp ? (
+          <div className="shrink-0 text-supporting text-muted-foreground sm:text-right">
+            <span className="block">{item.timestamp.label}</span>
+            <LocalDateTime className="block" value={item.timestamp.value} />
+          </div>
+        ) : null}
       </ResourceListItemContent>
     </ResourceListItem>
   )
@@ -511,56 +447,28 @@ function OwnershipResourceLink({
   mfid: string
   name: string
 }) {
-  const content = (
-    <>
-      <ResourceIdentity
-        className="flex-1"
-        context={identifier}
-        interactive
-        kind={kind}
-        name={name}
-        presentation="collection"
-      />
-      <ForwardNavigationIcon
-        aria-hidden="true"
-        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-      />
-    </>
-  )
-  return kind === "project" ? (
+  return (
     <ResourceListItem>
       <ResourceListItemContent
-        aria-label={`Open project: ${name}`}
+        className="select-text"
         density="compact"
-        layout="start"
-        render={
-          <Link
-            params={{ projectMfid: mfid }}
-            search={{ preview: undefined }}
-            state={{}}
-            to="/projects/$projectMfid"
-          />
-        }
+        layout="row"
       >
-        {content}
-      </ResourceListItemContent>
-    </ResourceListItem>
-  ) : (
-    <ResourceListItem>
-      <ResourceListItemContent
-        aria-label={`Open instrument: ${name}`}
-        density="compact"
-        layout="start"
-        render={
-          <Link
-            params={{ instrumentMfid: mfid }}
-            search={{}}
-            state={{}}
-            to="/instruments/$instrumentMfid"
-          />
-        }
-      >
-        {content}
+        <ResourceIdentity
+          className="flex-1"
+          context={identifier}
+          kind={kind}
+          name={name}
+          nameContent={
+            <ResourceFullPageLink
+              kind={kind}
+              mfid={mfid}
+              name={name}
+              presentation="name"
+            />
+          }
+          presentation="collection"
+        />
       </ResourceListItemContent>
     </ResourceListItem>
   )
