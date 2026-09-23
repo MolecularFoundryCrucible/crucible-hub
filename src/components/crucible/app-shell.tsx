@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Link, useRouterState } from "@tanstack/react-router"
+import { Link, useHydrated, useRouterState } from "@tanstack/react-router"
 
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
@@ -294,6 +294,8 @@ function AccountControls({
   administrationActive: boolean
   privilegeMode: WorkspacePrivilegeMode
 }) {
+  const hydrated = useHydrated()
+
   return (
     <div className="ml-auto flex items-center gap-2">
       {privilegeMode === "elevated" ? (
@@ -310,6 +312,7 @@ function AccountControls({
             render={
               <Button
                 aria-label="Open account menu"
+                disabled={!hydrated}
                 size="lg"
                 variant="ghost"
               />

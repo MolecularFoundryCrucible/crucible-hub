@@ -17,7 +17,9 @@ test("opens profile management from the account avatar and saves changes", async
 
   await page.goto("/hub/?scenario=populated")
   await page.waitForLoadState("networkidle")
-  await page.getByRole("button", { name: "Open account menu" }).click()
+  const accountMenu = page.getByRole("button", { name: "Open account menu" })
+  await expect(accountMenu).toBeEnabled()
+  await accountMenu.click()
   await page.getByRole("menuitem", { name: "My profile" }).click()
 
   await expect(page).toHaveURL(/\/hub\/account\?scenario=populated/)
