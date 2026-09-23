@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Fixed scientific metadata disclosure hydration after browser history restoration and made bounded browser CI deterministic by updating search coverage, serializing fixture-backed checks, and removing retries.
+- Fixed scientific metadata disclosure hydration after browser history restoration and made bounded browser CI deterministic by updating search coverage, serializing fixture-backed checks, removing retries, and accepting normal SIGTERM production shutdown.
 
 - Added debounced, keyboard-navigable quick results to global and project-scoped application-bar search, with bounded per-type queries and a path to complete search results.
 - Kept collection view, filter, grouping, sorting, status, and ownership controls available while scrolling long data, project, instrument, and deletion-request lists on non-compact screens.

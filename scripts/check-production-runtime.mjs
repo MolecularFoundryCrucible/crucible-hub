@@ -104,8 +104,10 @@ try {
       )
     ),
   ])
-  assert.equal(code, 0)
-  assert.equal(signal, null)
+  assert(
+    (code === 0 && signal === null) || (code === null && signal === "SIGTERM"),
+    `Production server stopped unexpectedly with code ${code} and signal ${signal}`
+  )
 } catch (error) {
   child.kill("SIGKILL")
   if (output.length > 0) process.stderr.write(output.join(""))
