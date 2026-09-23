@@ -14,6 +14,7 @@ import {
 } from "@/components/crucible/collection-state"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
@@ -21,7 +22,10 @@ import type { ResourcePreviewNavigation } from "@/components/crucible/resource-p
 import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-deletion-request-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -33,13 +37,21 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import {
+  datasetFilesQueryOptions,
+  resourceQueryOptions,
+} from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
 import type {
   WorkspaceResourceDetail,
   WorkspaceScientificMetadata,
 } from "@/data/crucible/workspace-source"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
+import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
+import { formatBytes } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
 export function ResourceInspector({
   navigation,
@@ -51,6 +63,7 @@ export function ResourceInspector({
   const restoreFocus = useRef(true)
   const open = Boolean(navigation.preview) || navigation.invalidPreview
   const isMobile = useIsMobile()
+  const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
   const query = useQuery({
     ...resourceQueryOptions(scope, navigation.preview ?? ""),
@@ -176,7 +189,15 @@ export function ResourceInspector({
                   Invalid resource preview
                 </span>
               ) : previewName ? (
-                <span className="min-w-0 wrap-break-word">{previewName}</span>
+                <span
+                  className={cn(
+                    "min-w-0 wrap-break-word",
+                    previewKind === "project" && "line-clamp-2"
+                  )}
+                  title={previewKind === "project" ? previewName : undefined}
+                >
+                  {previewName}
+                </span>
               ) : (
                 <Skeleton aria-hidden="true" className="h-6 w-48" />
               )}
@@ -201,25 +222,12 @@ export function ResourceInspector({
                 <ResourceDeletionRequestBadge status={deletionRequest.status} />
               </div>
             ) : null}
-            {navigation.preview ? (
-              <ResourceFullPageLink
-                fromProject={
-                  navigation.host.kind === "project-data"
-                    ? navigation.host.projectMfid
-                    : navigation.host.kind === "resource"
-                      ? navigation.host.fromProject
-                      : undefined
-                }
-                kind={previewKind}
-                mfid={resource?.unique_id ?? navigation.preview}
-                name={previewName ?? navigation.preview}
-                onClick={suppressFocusRestore}
-                presentation="inspector-footer"
-              />
-            ) : null}
           </div>
         </SheetHeader>
-        <div ref={body} className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        <div
+          ref={body}
+          className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-4"
+        >
           {navigation.invalidPreview ? (
             <p role="alert">The preview identifier is not valid.</p>
           ) : navigation.preview ? (
@@ -230,13 +238,23 @@ export function ResourceInspector({
             />
           ) : null}
         </div>
-        {navigation.preview &&
-        navigation.host.kind === "resource" &&
-        navigation.host.section === "graph" ? (
-          <SheetFooter>
-            <ResourceGraphFocusLink
+        {navigation.preview ? (
+          <SheetFooter
+            className={cn(
+              "grid gap-2 border-t bg-card",
+              previewKind === "sample" || previewKind === "dataset"
+                ? "grid-cols-3"
+                : "grid-cols-1"
+            )}
+          >
+            <InspectorActions
+              mfid={resource?.unique_id ?? navigation.preview}
+              mode={mode}
+              name={previewName ?? navigation.preview}
+              navigation={navigation}
               onClick={suppressFocusRestore}
               resource={resource}
+              scope={scope}
             />
           </SheetFooter>
         ) : null}
@@ -256,25 +274,84 @@ function isInteractiveOutsideTarget(target: EventTarget | null) {
   )
 }
 
-function ResourceGraphFocusLink({
+function InspectorActions({
+  mfid,
+  mode,
+  name,
+  navigation,
   onClick,
   resource,
+  scope,
 }: {
+  mfid: string
+  mode: ReturnType<typeof useWorkspaceMode>
+  name: string
+  navigation: ResourcePreviewNavigation
   onClick: MouseEventHandler<HTMLAnchorElement>
   resource: WorkspaceResourceDetail | null | undefined
+  scope: ReturnType<typeof useWorkspaceScope>
+}) {
+  const kind = resource?.kind ?? navigation.previewIdentity?.kind
+  const fromProject =
+    navigation.host.kind === "project-data"
+      ? navigation.host.projectMfid
+      : navigation.host.kind === "resource"
+        ? navigation.host.fromProject
+        : undefined
+
+  return (
+    <>
+      <ResourceFullPageLink
+        className="w-full"
+        fromProject={fromProject}
+        kind={kind}
+        mfid={mfid}
+        name={name}
+        onClick={onClick}
+        presentation="inspector-footer"
+      />
+      {kind === "sample" || kind === "dataset" ? (
+        <>
+          <ResourceGraphLink kind={kind} mfid={mfid} onClick={onClick} />
+          {resource?.kind === "sample" || resource?.kind === "dataset" ? (
+            <ResourceDeletionRequestCard
+              mode={mode}
+              presentation="compact"
+              resource={resource}
+              scope={scope}
+            />
+          ) : (
+            <Button disabled type="button" variant="destructive">
+              Delete
+            </Button>
+          )}
+        </>
+      ) : null}
+    </>
+  )
+}
+
+function ResourceGraphLink({
+  kind,
+  mfid,
+  onClick,
+}: {
+  kind: WorkspaceResourceDetail["kind"] | undefined
+  mfid: string
+  onClick: MouseEventHandler<HTMLAnchorElement>
 }) {
   const children = (
     <>
       <ExploreGraphFocusIcon aria-hidden="true" data-icon="inline-start" />
-      Explore from here
+      Graph
     </>
   )
-  if (resource?.kind === "sample") {
+  if (kind === "sample") {
     return (
       <Link
-        className={buttonVariants({ variant: "outline" })}
+        className={cn(buttonVariants({ variant: "outline" }), "w-full")}
         onClick={onClick}
-        params={{ sampleMfid: resource.unique_id }}
+        params={{ sampleMfid: mfid }}
         preload={false}
         search={{ preview: undefined }}
         state={{}}
@@ -284,12 +361,12 @@ function ResourceGraphFocusLink({
       </Link>
     )
   }
-  if (resource?.kind === "dataset") {
+  if (kind === "dataset") {
     return (
       <Link
-        className={buttonVariants({ variant: "outline" })}
+        className={cn(buttonVariants({ variant: "outline" }), "w-full")}
         onClick={onClick}
-        params={{ datasetMfid: resource.unique_id }}
+        params={{ datasetMfid: mfid }}
         preload={false}
         search={{ preview: undefined }}
         state={{}}
@@ -300,7 +377,7 @@ function ResourceGraphFocusLink({
     )
   }
   return (
-    <Button disabled type="button" variant="outline">
+    <Button className="w-full" disabled type="button" variant="outline">
       {children}
     </Button>
   )
@@ -354,6 +431,9 @@ function InspectorBody({
         />
       )}
       <InspectorContext resource={resource} />
+      {resource.kind === "dataset" ? (
+        <InspectorDatasetFiles datasetMfid={resource.unique_id} />
+      ) : null}
       {hasScientificContext && (
         <>
           <section aria-labelledby="inspector-relationships-heading">
@@ -405,6 +485,7 @@ function InspectorBodyPending({
       </section>
       {hasScientificContext ? (
         <>
+          {kind === "dataset" ? <InspectorFilesPending /> : null}
           <section>
             <h3 className="mb-3 text-title-section">Relationships</h3>
             <div className="grid gap-3">
@@ -417,6 +498,91 @@ function InspectorBodyPending({
           </div>
         </>
       ) : null}
+    </div>
+  )
+}
+
+function InspectorDatasetFiles({ datasetMfid }: { datasetMfid: string }) {
+  const scope = useWorkspaceScope()
+  const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
+  const files = filesResult.data
+  const identity = JSON.stringify(scope)
+  const scenario = fixtureScenarioFromScope(scope)
+
+  return (
+    <section aria-labelledby="inspector-files-heading">
+      <h3 className="mb-3 text-title-section" id="inspector-files-heading">
+        Files
+      </h3>
+      {filesResult.isPending ? (
+        <InspectorFileRowsPending />
+      ) : files !== undefined ? (
+        <div aria-busy={filesResult.isFetching} className="grid gap-3">
+          {filesResult.isError ? (
+            <PanelUpdateError
+              description="Files could not be refreshed. Showing the last available data."
+              retry={() => void filesResult.refetch()}
+            />
+          ) : null}
+          {files.length ? (
+            <ul className="grid max-w-full min-w-0 divide-y overflow-hidden">
+              {files.map((file) => (
+                <li
+                  className="flex min-w-0 items-center gap-2 p-2"
+                  key={file.mfid}
+                >
+                  <ResourceIdentity
+                    className="min-w-0 flex-1"
+                    context={`${file.storage_backend} · ${formatBytes(file.size)}`}
+                    kind="file"
+                    name={file.filename}
+                    presentation="collection"
+                  />
+                  <FileDownloadAction
+                    file={file}
+                    identity={identity}
+                    scenario={scenario}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-body text-muted-foreground">No files</p>
+          )}
+        </div>
+      ) : (
+        <PanelState
+          retry={() => void filesResult.refetch()}
+          role="alert"
+          title="Files could not be loaded"
+        />
+      )}
+    </section>
+  )
+}
+
+function InspectorFilesPending() {
+  return (
+    <section>
+      <h3 className="mb-3 text-title-section">Files</h3>
+      <InspectorFileRowsPending />
+    </section>
+  )
+}
+
+function InspectorFileRowsPending() {
+  return (
+    <div className="grid gap-3">
+      {Array.from({ length: 2 }, (_, index) => (
+        <div className="flex items-center gap-2" key={index}>
+          <Skeleton className="size-4 shrink-0" />
+          <div className="grid min-w-0 flex-1 gap-2">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-3 w-1/3" />
+          </div>
+          <Skeleton className="size-8 shrink-0" />
+        </div>
+      ))}
     </div>
   )
 }
@@ -462,12 +628,13 @@ function inspectorContextFields(
           value: resource.project ? (
             <ResourcePreviewLink
               aria-label={`Preview project: ${resource.project.title ?? resource.project.project_id}`}
-              className="text-label hover:underline"
+              className="line-clamp-2 text-label hover:underline"
               mfid={resource.project.unique_id}
               resourceKind="project"
               resourceName={
                 resource.project.title ?? resource.project.project_id
               }
+              title={resource.project.title ?? resource.project.project_id}
             >
               {resource.project.title ?? resource.project.project_id}
             </ResourcePreviewLink>
@@ -480,7 +647,7 @@ function inspectorContextFields(
           value: resource.instrument ? (
             <ResourcePreviewLink
               aria-label={`Preview instrument: ${resource.instrument.instrument_name}`}
-              className="text-label hover:underline"
+              className="line-clamp-2 text-label hover:underline"
               mfid={resource.instrument.unique_id}
               resourceKind="instrument"
               resourceName={resource.instrument.instrument_name}
@@ -501,12 +668,13 @@ function inspectorContextFields(
           value: resource.project ? (
             <ResourcePreviewLink
               aria-label={`Preview project: ${resource.project.title ?? resource.project.project_id}`}
-              className="text-label hover:underline"
+              className="line-clamp-2 text-label hover:underline"
               mfid={resource.project.unique_id}
               resourceKind="project"
               resourceName={
                 resource.project.title ?? resource.project.project_id
               }
+              title={resource.project.title ?? resource.project.project_id}
             >
               {resource.project.title ?? resource.project.project_id}
             </ResourcePreviewLink>

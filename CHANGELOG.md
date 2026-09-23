@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added stable Open, Graph, and Delete actions to resource previews, included compact downloadable files in dataset previews, and limited long project names to two lines in inspector context.
+
 - Made bulk deletion review responsive while editing comments, processed requests sequentially with visible progress, added a safe stop-between-requests action, and identified review timeouts in server logs.
 
 - Clarified resource graphs with neutral node surfaces and kept graph tooltips and options visible in native fullscreen.

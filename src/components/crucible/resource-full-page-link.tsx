@@ -11,11 +11,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 type ResourceFullPageKind = "dataset" | "instrument" | "project" | "sample"
 type ResourceFullPagePresentation = "inspector-footer" | "table"
 
 export function ResourceFullPageLink({
+  className,
   fromProject,
   kind,
   mfid,
@@ -23,6 +25,7 @@ export function ResourceFullPageLink({
   onClick,
   presentation,
 }: {
+  className?: string
   fromProject?: string
   kind?: ResourceFullPageKind
   mfid: string
@@ -32,10 +35,13 @@ export function ResourceFullPageLink({
 }) {
   const siblingCandidate = useResourceSiblingCandidate(mfid, kind)
   const actionLabel = `Open full page: ${name}`
-  const className = buttonVariants(
-    presentation === "table"
-      ? { size: "table-action", variant: "outline" }
-      : { variant: "outline" }
+  const linkClassName = cn(
+    buttonVariants(
+      presentation === "table"
+        ? { size: "table-action", variant: "outline" }
+        : { variant: "outline" }
+    ),
+    className
   )
   const children =
     presentation === "inspector-footer" ? (
@@ -48,7 +54,7 @@ export function ResourceFullPageLink({
     )
   const common = {
     "aria-label": actionLabel,
-    className,
+    className: linkClassName,
     children,
     onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event)

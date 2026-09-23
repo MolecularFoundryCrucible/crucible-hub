@@ -60,7 +60,7 @@ export function ResourceDeletionRequestCard({
   scope,
 }: {
   mode: "api" | "fixture"
-  presentation?: "card" | "row"
+  presentation?: "card" | "compact" | "row"
   resource: DeletableResource
   scope: IdentityScope
 }) {
@@ -115,34 +115,46 @@ export function ResourceDeletionRequestCard({
   }
 
   const action = activeRequest ? (
-    <Button disabled variant="outline">
+    <Button
+      aria-label={deletionRequestStatusLabel(activeRequest.status)}
+      className={presentation === "compact" ? "w-full" : undefined}
+      disabled
+      variant="outline"
+    >
       <DeletionRequestedIcon aria-hidden="true" data-icon="inline-start" />
-      {deletionRequestStatusLabel(activeRequest.status)}
+      {presentation === "compact"
+        ? "Delete"
+        : deletionRequestStatusLabel(activeRequest.status)}
     </Button>
   ) : (
     <Button
       aria-label={`Request deletion of ${resource.name}`}
+      className={presentation === "compact" ? "w-full" : undefined}
       onClick={() => setOpen(true)}
       variant="destructive"
     >
       <RequestDeletionIcon aria-hidden="true" data-icon="inline-start" />
-      Request deletion
+      {presentation === "compact" ? "Delete" : "Request deletion"}
     </Button>
   )
 
   return (
     <>
-      <ManagementAction
-        action={action}
-        description={
-          <>
-            Submit this {resource.kind} for deletion review. It becomes hidden
-            from discovery while the request is pending.
-          </>
-        }
-        presentation={presentation}
-        title="Request deletion"
-      />
+      {presentation === "compact" ? (
+        action
+      ) : (
+        <ManagementAction
+          action={action}
+          description={
+            <>
+              Submit this {resource.kind} for deletion review. It becomes hidden
+              from discovery while the request is pending.
+            </>
+          }
+          presentation={presentation}
+          title="Request deletion"
+        />
+      )}
       <Dialog
         onOpenChange={(nextOpen) => {
           if (mutation.isPending) return
