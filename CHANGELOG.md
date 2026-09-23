@@ -6,6 +6,10 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Simplified repository agent guidance and skill routing around durable invariants, authoritative documents, focused validation, and installer-owned external skills.
+
+- Standardized username presentation so identity and search contexts use `@username`, while account titles, labelled fields, credential workflows, copied values, and accessible names use canonical raw usernames.
+
 - Kept searchable resource pickers open through loading and failure states, surfaced add-member failures inside the active dialog, and repaired the Theme menu grouping required by Base UI.
 
 - Replaced the stale browser and screenshot corpus with a bounded screenshot-free functional gate, reduced CI to parallel static and browser-runtime jobs, removed duplicate dependency and browser installation and production builds, capped browser concurrency, retained failure artifacts for diagnosis, repaired pending-list semantics, and resolved the OpenAPI toolchain dependency advisory.

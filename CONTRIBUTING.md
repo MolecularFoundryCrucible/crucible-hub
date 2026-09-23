@@ -1,6 +1,6 @@
 # Contributing to Crucible Hub
 
-Read [`AGENTS.md`](AGENTS.md), [`docs/product-brief.md`](docs/product-brief.md), [`docs/architecture.md`](docs/architecture.md), and relevant records under [`decisions/`](decisions/) before changing the repository. Keep changes focused, identify the authoritative document, and preserve unrelated work.
+Read [`AGENTS.md`](AGENTS.md) and the relevant authoritative documents it names before changing the repository. Keep changes focused and preserve unrelated work.
 
 ## Setup
 
@@ -59,9 +59,3 @@ docker stop -t 7 crucible-hub-phase0-check
 ```
 
 Expect `node healthy` and `{"status":"ok"}`. Do not enable fixtures in a real deployment.
-
-## Skills and review handoff
-
-Read [`skills/README.md`](skills/README.md) for skill lifecycle and routing. Do not update external skills silently. Review project-installed skill and lockfile changes before accepting them.
-
-Before handoff, report scope completed, files changed, validation performed, changelog impact, unresolved decisions or blocked dependencies, and cross-repository consequences. Do not switch branches, push, publish, deploy, tag, release, or reset unrelated work.
