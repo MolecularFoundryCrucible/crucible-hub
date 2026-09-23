@@ -1,5 +1,5 @@
-import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import { TableCell } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
@@ -23,25 +23,24 @@ export function ResourceCollectionNameCell({
 }) {
   return (
     <TableCell className={className}>
-      <ResourcePreviewLink
-        aria-label={`Preview ${name}`}
-        className="group/resource block min-w-0"
-        mfid={mfid}
-        resourceKind={kind}
-        resourceName={name}
-      >
-        <ResourceIdentity
-          className={cn(
-            subtypeVisibility === "compact" &&
-              "[&_[data-resource-context]]:xl:hidden"
-          )}
-          context={subtype}
-          interactive
-          kind={kind}
-          name={name}
-          presentation="collection"
-        />
-      </ResourcePreviewLink>
+      <ResourceIdentity
+        className={cn(
+          subtypeVisibility === "compact" &&
+            "[&_[data-resource-context]]:xl:hidden"
+        )}
+        context={subtype}
+        kind={kind}
+        name={name}
+        nameContent={
+          <ResourceNameLink
+            kind={kind}
+            mfid={mfid}
+            name={name}
+            navigation="preview"
+          />
+        }
+        presentation="collection"
+      />
     </TableCell>
   )
 }

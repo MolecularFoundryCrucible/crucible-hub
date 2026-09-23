@@ -45,7 +45,7 @@ describe("ResourceCollectionNameCell", () => {
     previewProps.mockClear()
   })
 
-  it("makes the complete sample identity the preview target", () => {
+  it("makes only the sample name the preview target", () => {
     const mfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z1"
     const { container } = renderCell({
       kind: "sample",
@@ -59,8 +59,8 @@ describe("ResourceCollectionNameCell", () => {
       name: "Preview Catalyst sample",
     })
     expect(preview.textContent).toContain("Catalyst sample")
-    expect(preview.textContent).toContain("oxide powder")
-    expect(preview.querySelector('[data-resource-type="sample"]')).toBeTruthy()
+    expect(preview.textContent).not.toContain("oxide powder")
+    expect(preview.querySelector('[data-resource-type="sample"]')).toBeNull()
     expect(screen.queryByText("Preview")).toBeNull()
     expect(
       container.querySelector('[data-resource-type="sample"]')

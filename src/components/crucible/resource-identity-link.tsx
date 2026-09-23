@@ -5,6 +5,7 @@ import { IdentityHoverCard } from "@/components/crucible/identity-hover-card"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import type { ResourceIdentityPresentation } from "@/components/crucible/resource-identity"
+import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { cn } from "@/lib/utils"
 
 export type ResourceIdentityDetail = {
@@ -35,42 +36,31 @@ export function ResourceIdentityLink({
   showTypeIcon?: boolean
   triggerContext?: string | null
 }) {
-  const identity = (
-    <ResourceIdentity
-      context={triggerContext}
-      interactive
-      kind={kind}
-      name={name}
-      presentation={presentation}
-      showTypeIcon={showTypeIcon}
-      showTruncationTitle={false}
-    />
-  )
-  const linkClassName = cn("group/resource block min-w-0", className)
-  const link =
+  const routeLink =
     kind === "project" ? (
       <Link
-        className={linkClassName}
         params={{ projectMfid: mfid }}
         search={{ preview: undefined }}
         state={{}}
         to="/projects/$projectMfid"
-      >
-        {children ?? identity}
-      </Link>
+      />
     ) : (
       <Link
-        className={linkClassName}
         params={{ instrumentMfid: mfid }}
         search={{}}
         state={{}}
         to="/instruments/$instrumentMfid"
-      >
-        {children ?? identity}
-      </Link>
+      />
     )
-
-  return (
+  const link = (
+    <SelectableTextLink
+      className={cn("group/resource block", children && className)}
+      render={routeLink}
+    >
+      {children ?? name}
+    </SelectableTextLink>
+  )
+  const hoverLink = (
     <IdentityHoverCard trigger={link}>
       <ResourceIdentity context={context} kind={kind} name={name} />
       <MfidText
@@ -91,5 +81,20 @@ export function ResourceIdentityLink({
         </dl>
       ) : null}
     </IdentityHoverCard>
+  )
+
+  if (children) return hoverLink
+
+  return (
+    <ResourceIdentity
+      className={className}
+      context={triggerContext}
+      kind={kind}
+      name={name}
+      nameContent={hoverLink}
+      presentation={presentation}
+      showTypeIcon={showTypeIcon}
+      showTruncationTitle={false}
+    />
   )
 }

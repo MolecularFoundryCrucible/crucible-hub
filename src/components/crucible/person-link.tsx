@@ -12,7 +12,7 @@ import type {
   PersonIdentitySize,
   PersonNameStyle,
 } from "@/components/crucible/person-identity"
-import { cn } from "@/lib/utils"
+import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 
 export function PersonLink({
   className,
@@ -28,34 +28,32 @@ export function PersonLink({
   size?: PersonIdentitySize
 }) {
   const label = personDisplayName(person, nameStyle)
-  const link = (
-    <Link
+  const nameLink = (
+    <SelectableTextLink
       aria-label={
         personIsServiceAccount(person) ? `${label}, Service account` : label
       }
-      className={cn(
-        "group/person min-w-0",
-        presentation === "inline" || presentation === undefined
-          ? "inline-block"
-          : "block",
-        className
-      )}
-      params={{ personId: person.unique_id }}
-      to="/people/$personId"
+      className="inline-block"
+      render={
+        <Link params={{ personId: person.unique_id }} to="/people/$personId" />
+      }
     >
-      <PersonIdentity
-        interactive
-        nameStyle={nameStyle}
-        person={person}
-        presentation={presentation}
-        size={size}
-      />
-    </Link>
+      {label}
+    </SelectableTextLink>
   )
 
   return (
-    <IdentityHoverCard trigger={link}>
-      <PersonIdentity person={person} presentation="tooltip" />
-    </IdentityHoverCard>
+    <PersonIdentity
+      className={className}
+      nameContent={
+        <IdentityHoverCard trigger={nameLink}>
+          <PersonIdentity person={person} presentation="tooltip" />
+        </IdentityHoverCard>
+      }
+      nameStyle={nameStyle}
+      person={person}
+      presentation={presentation}
+      size={size}
+    />
   )
 }

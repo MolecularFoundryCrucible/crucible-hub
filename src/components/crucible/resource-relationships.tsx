@@ -4,12 +4,12 @@ import { Link } from "@tanstack/react-router"
 import { OpenFullPageIcon } from "@/components/crucible/icons"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
   ResourceList,
   ResourceListItem,
   ResourceListItemContent,
 } from "@/components/crucible/resource-list"
-import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Tooltip,
@@ -119,9 +119,18 @@ function RelationshipRow({
   const identity = isKnownResourceType(link.resource_type) ? (
     <ResourceIdentity
       context={relationshipTypeLabel}
-      interactive
       kind={link.resource_type}
       name={label}
+      nameContent={
+        link.resource_type === "sample" || link.resource_type === "dataset" ? (
+          <ResourceNameLink
+            kind={link.resource_type}
+            mfid={link.unique_id}
+            name={label}
+            navigation="preview"
+          />
+        ) : undefined
+      }
     />
   ) : (
     <span className="min-w-0 flex-1">
@@ -136,21 +145,7 @@ function RelationshipRow({
   return (
     <ResourceListItem>
       <ResourceListItemContent className="px-0">
-        {link.resource_type === "sample" || link.resource_type === "dataset" ? (
-          <ResourcePreviewLink
-            className="min-w-0 flex-1"
-            mfid={link.unique_id}
-            resourceKind={link.resource_type}
-            resourceName={label}
-          >
-            <span className="sr-only">Preview {label}</span>
-            <span aria-hidden="true" className="block">
-              {identity}
-            </span>
-          </ResourcePreviewLink>
-        ) : (
-          <div className="min-w-0 flex-1">{identity}</div>
-        )}
+        <div className="min-w-0 flex-1">{identity}</div>
         <div className="flex shrink-0 items-center">
           {managing ? (
             renderManagementAction?.(link)

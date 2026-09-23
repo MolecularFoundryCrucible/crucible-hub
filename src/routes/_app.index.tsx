@@ -10,8 +10,8 @@ import { ForwardNavigationIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
   ResourceList,
   ResourceListItem,
@@ -361,11 +361,10 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
           mfid={item.uniqueId}
           name={item.name}
           nameContent={
-            <ResourceFullPageLink
+            <ResourceNameLink
               kind={item.kind}
               mfid={item.uniqueId}
               name={item.name}
-              presentation="name"
             />
           }
           presentation="collection"
@@ -459,14 +458,7 @@ function OwnershipResourceLink({
           context={identifier}
           kind={kind}
           name={name}
-          nameContent={
-            <ResourceFullPageLink
-              kind={kind}
-              mfid={mfid}
-              name={name}
-              presentation="name"
-            />
-          }
+          nameContent={<ResourceNameLink kind={kind} mfid={mfid} name={name} />}
           presentation="collection"
         />
       </ResourceListItemContent>

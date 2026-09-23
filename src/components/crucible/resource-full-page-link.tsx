@@ -4,6 +4,10 @@ import { Link } from "@tanstack/react-router"
 import { OpenFullPageIcon } from "@/components/crucible/icons"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { isPlainPreviewNavigation } from "@/components/crucible/resource-preview-navigation"
+import {
+  SelectableTextLink,
+  preventNavigationForTextSelection,
+} from "@/components/crucible/selectable-text-link"
 import { useResourceSiblingCandidate } from "@/components/crucible/resource-sibling-navigation"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -37,7 +41,7 @@ export function ResourceFullPageLink({
   const actionLabel = `Open full page: ${name}`
   const linkClassName = cn(
     presentation === "name"
-      ? "block min-w-0 rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+      ? undefined
       : buttonVariants(
           presentation === "table"
             ? { size: "table-action", variant: "outline" }
@@ -63,13 +67,8 @@ export function ResourceFullPageLink({
     draggable: presentation === "name" ? false : undefined,
     onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event)
-      if (
-        presentation === "name" &&
-        hasSelectedText(event.currentTarget, event.detail)
-      ) {
-        event.preventDefault()
+      if (presentation === "name" && preventNavigationForTextSelection(event))
         return
-      }
       if (
         !event.defaultPrevented &&
         isPlainPreviewNavigation({
@@ -138,8 +137,8 @@ export function ResourceFullPageLink({
     )
   }
 
-  if (presentation === "inspector-footer" || presentation === "name")
-    return link
+  if (presentation === "name") return <SelectableTextLink render={link} />
+  if (presentation === "inspector-footer") return link
 
   return (
     <Tooltip>
@@ -148,16 +147,6 @@ export function ResourceFullPageLink({
         Open full page: <ResourceName>{name}</ResourceName>
       </TooltipContent>
     </Tooltip>
-  )
-}
-
-function hasSelectedText(target: HTMLAnchorElement, eventDetail: number) {
-  if (eventDetail === 0) return false
-  const selection = window.getSelection()
-  if (!selection || selection.isCollapsed) return false
-  return Boolean(
-    (selection.anchorNode && target.contains(selection.anchorNode)) ||
-    (selection.focusNode && target.contains(selection.focusNode))
   )
 }
 

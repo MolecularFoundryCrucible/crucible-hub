@@ -15,6 +15,7 @@ import {
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
@@ -626,18 +627,14 @@ function inspectorContextFields(
         {
           label: "Project",
           value: resource.project ? (
-            <ResourcePreviewLink
-              aria-label={`Preview project: ${resource.project.title ?? resource.project.project_id}`}
+            <ResourceNameLink
               className="line-clamp-2 text-label hover:underline"
               mfid={resource.project.unique_id}
-              resourceKind="project"
-              resourceName={
-                resource.project.title ?? resource.project.project_id
-              }
+              kind="project"
+              name={resource.project.title ?? resource.project.project_id}
+              navigation="preview"
               title={resource.project.title ?? resource.project.project_id}
-            >
-              {resource.project.title ?? resource.project.project_id}
-            </ResourcePreviewLink>
+            />
           ) : (
             resource.project_id
           ),
@@ -645,15 +642,14 @@ function inspectorContextFields(
         {
           label: "Instrument",
           value: resource.instrument ? (
-            <ResourcePreviewLink
-              aria-label={`Preview instrument: ${resource.instrument.instrument_name}`}
+            <ResourceNameLink
               className="line-clamp-2 text-label hover:underline"
               mfid={resource.instrument.unique_id}
-              resourceKind="instrument"
-              resourceName={resource.instrument.instrument_name}
-            >
-              {resource.instrument.instrument_name}
-            </ResourcePreviewLink>
+              kind="instrument"
+              name={resource.instrument.instrument_name}
+              navigation="preview"
+              title={resource.instrument.instrument_name}
+            />
           ) : (
             resource.instrument_id
           ),
@@ -666,18 +662,14 @@ function inspectorContextFields(
         {
           label: "Project",
           value: resource.project ? (
-            <ResourcePreviewLink
-              aria-label={`Preview project: ${resource.project.title ?? resource.project.project_id}`}
+            <ResourceNameLink
               className="line-clamp-2 text-label hover:underline"
               mfid={resource.project.unique_id}
-              resourceKind="project"
-              resourceName={
-                resource.project.title ?? resource.project.project_id
-              }
+              kind="project"
+              name={resource.project.title ?? resource.project.project_id}
+              navigation="preview"
               title={resource.project.title ?? resource.project.project_id}
-            >
-              {resource.project.title ?? resource.project.project_id}
-            </ResourcePreviewLink>
+            />
           ) : (
             resource.project_id
           ),

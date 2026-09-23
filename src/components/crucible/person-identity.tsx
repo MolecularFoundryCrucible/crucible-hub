@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -43,7 +45,7 @@ export function personIsServiceAccount(person: PersonIdentityProfile) {
 export function PersonIdentity({
   className,
   detailsClassName,
-  interactive = false,
+  nameContent,
   nameStyle = "full",
   person,
   presentation = "inline",
@@ -51,7 +53,7 @@ export function PersonIdentity({
 }: {
   className?: string
   detailsClassName?: string
-  interactive?: boolean
+  nameContent?: ReactNode
   nameStyle?: PersonNameStyle
   person: PersonIdentityProfile
   presentation?: PersonIdentityVariant
@@ -63,14 +65,8 @@ export function PersonIdentity({
 
   if (presentation === "inline") {
     return (
-      <span
-        className={cn(
-          "text-label break-words",
-          interactive && "group-hover/person:underline",
-          className
-        )}
-      >
-        {name}
+      <span className={cn("text-label break-words", className)}>
+        {nameContent ?? name}
       </span>
     )
   }
@@ -116,11 +112,10 @@ export function PersonIdentity({
       <span
         className={cn(
           "truncate",
-          size === "lg" ? "text-title-section" : "text-label",
-          interactive && "group-hover/person:underline"
+          size === "lg" ? "text-title-section" : "text-label"
         )}
       >
-        {name}
+        {nameContent ?? name}
       </span>
       <PersonSecondaryLine
         hideUsername={

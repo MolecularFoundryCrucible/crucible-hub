@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
   ResourceList,
   ResourceListItem,
@@ -444,70 +445,22 @@ function SearchResult({
   const link =
     item.kind === "person" ? (
       <PersonLink person={item} presentation="avatar" size="sm" />
-    ) : item.kind === "project" ? (
-      <Link
-        className="group/resource block min-w-0"
-        params={{ projectMfid: item.unique_id }}
-        search={{ preview: undefined }}
-        state={{}}
-        to="/projects/$projectMfid"
-      >
-        <ResourceIdentity
-          context={item.context}
-          interactive
-          kind="project"
-          name={item.name}
-          presentation="collection"
-        />
-      </Link>
-    ) : item.kind === "instrument" ? (
-      <Link
-        className="group/resource block min-w-0"
-        params={{ instrumentMfid: item.unique_id }}
-        search={{}}
-        state={{}}
-        to="/instruments/$instrumentMfid"
-      >
-        <ResourceIdentity
-          context={item.context}
-          interactive
-          kind="instrument"
-          name={item.name}
-          presentation="collection"
-        />
-      </Link>
-    ) : item.kind === "sample" ? (
-      <Link
-        className="group/resource block min-w-0"
-        params={{ sampleMfid: item.unique_id }}
-        search={{ fromProject: projectMfid }}
-        to="/samples/$sampleMfid"
-      >
-        <ResourceIdentity
-          context={item.context}
-          interactive
-          kind="sample"
-          name={item.name}
-          presentation="collection"
-          projectId={item.projectId}
-        />
-      </Link>
     ) : (
-      <Link
-        className="group/resource block min-w-0"
-        params={{ datasetMfid: item.unique_id }}
-        search={{ fromProject: projectMfid }}
-        to="/datasets/$datasetMfid"
-      >
-        <ResourceIdentity
-          context={item.context}
-          interactive
-          kind="dataset"
-          name={item.name}
-          presentation="collection"
-          projectId={item.projectId}
-        />
-      </Link>
+      <ResourceIdentity
+        context={item.context}
+        kind={item.kind}
+        name={item.name}
+        nameContent={
+          <ResourceNameLink
+            fromProject={projectMfid}
+            kind={item.kind}
+            mfid={item.unique_id}
+            name={item.name}
+          />
+        }
+        presentation="collection"
+        projectId={item.projectId}
+      />
     )
 
   return (

@@ -13,10 +13,8 @@ import {
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
-import {
-  ResourcePreviewLink,
-  useResourcePreviewContext,
-} from "@/components/crucible/resource-preview-navigation"
+import { ResourceNameLink } from "@/components/crucible/resource-name-link"
+import { useResourcePreviewContext } from "@/components/crucible/resource-preview-navigation"
 import {
   staticResourceSiblingCollection,
   useRegisterResourceSiblings,
@@ -672,20 +670,21 @@ function ResourceGraphTable({
                               thumbnail={thumbnail}
                             />
                           ) : null}
-                          <ResourcePreviewLink
-                            className="group/resource min-w-0 flex-1"
-                            mfid={node.unique_id}
-                            resourceKind={node.kind}
-                            resourceName={node.name}
-                          >
-                            <ResourceIdentity
-                              context={node.context}
-                              interactive
-                              kind={node.kind}
-                              name={node.name}
-                              presentation="collection"
-                            />
-                          </ResourcePreviewLink>
+                          <ResourceIdentity
+                            className="min-w-0 flex-1"
+                            context={node.context}
+                            kind={node.kind}
+                            name={node.name}
+                            nameContent={
+                              <ResourceNameLink
+                                kind={node.kind}
+                                mfid={node.unique_id}
+                                name={node.name}
+                                navigation="preview"
+                              />
+                            }
+                            presentation="collection"
+                          />
                         </span>
                       </TableCell>
                       <TableCell className="resource-graph-action">

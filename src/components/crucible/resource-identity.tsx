@@ -12,7 +12,6 @@ type ResourceIdentityPresentation = "collection" | "stacked"
 export function ResourceIdentity({
   className,
   context,
-  interactive = false,
   kind,
   mfid,
   name,
@@ -24,7 +23,6 @@ export function ResourceIdentity({
 }: {
   className?: string
   context?: string | null
-  interactive?: boolean
   kind: ResourceType
   mfid?: string | null
   name: string
@@ -45,8 +43,7 @@ export function ResourceIdentity({
         <span
           className={cn(
             "block text-label",
-            truncate ? "truncate" : "wrap-break-word",
-            interactive && "group-hover/resource:underline"
+            truncate ? "truncate" : "wrap-break-word"
           )}
           title={truncate && showTruncationTitle ? name : undefined}
           data-directory-name

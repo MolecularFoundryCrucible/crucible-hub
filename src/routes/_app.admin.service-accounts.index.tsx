@@ -15,7 +15,11 @@ import {
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { PersonIdentity } from "@/components/crucible/person-identity"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
+import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import {
   useAdministrationScope,
@@ -367,20 +371,27 @@ function ServiceAccountCollection({
                 {page.items.map((serviceAccount) => (
                   <TableRow key={serviceAccount.unique_id}>
                     <TableCell className="identity-directory-account">
-                      <Link
-                        className="block min-w-48"
-                        params={{
-                          serviceAccountMfid: serviceAccount.unique_id,
-                        }}
-                        to="/admin/service-accounts/$serviceAccountMfid"
-                      >
-                        <PersonIdentity
-                          interactive
-                          person={serviceAccount}
-                          presentation="avatar"
-                          size="sm"
-                        />
-                      </Link>
+                      <PersonIdentity
+                        className="min-w-48"
+                        nameContent={
+                          <SelectableTextLink
+                            className="block"
+                            render={
+                              <Link
+                                params={{
+                                  serviceAccountMfid: serviceAccount.unique_id,
+                                }}
+                                to="/admin/service-accounts/$serviceAccountMfid"
+                              />
+                            }
+                          >
+                            {personDisplayName(serviceAccount)}
+                          </SelectableTextLink>
+                        }
+                        person={serviceAccount}
+                        presentation="avatar"
+                        size="sm"
+                      />
                     </TableCell>
                     <TableCell
                       className="identity-directory-mfid"

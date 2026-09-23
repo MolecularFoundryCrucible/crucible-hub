@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Made resource names, project and instrument identifiers, MFIDs, and timestamps selectable and copyable across Home, with uncluttered name-only navigation that ignores pointer text-selection gestures.
+- Standardized name-only navigation across Home, resource tables, directories, search, relationships, deletion requests, and person identities while keeping supporting identifiers and metadata selectable and suppressing navigation after pointer text selection.
 
 - Added stable Open, Graph, and Delete actions to resource previews, included compact downloadable files in dataset previews, and limited long project names to two lines in inspector context.
 
