@@ -953,7 +953,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Deletion Audit */
+        /**
+         * List Deletion Audit
+         * @description List permanent deletion records visible to the authenticated human user.
+         */
         get: operations["list_deletion_audit_deletion_audit_get"];
         put?: never;
         post?: never;
@@ -1878,6 +1881,26 @@ export interface paths {
         get: operations["regenerate_apikey_deprecated_regenerate_apikey_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/embeddings/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Resource Chunks
+         * @description Search 768-dimensional resource text chunks visible to the caller.
+         */
+        post: operations["search_resource_chunks_resources_embeddings_search_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3112,6 +3135,44 @@ export interface components {
             /** Git Commit */
             git_commit: string | null;
         };
+        /** ChunkHit */
+        ChunkHit: {
+            /** Chunk Index */
+            chunk_index: number;
+            /** Chunk Text */
+            chunk_text: string;
+            /** Distance */
+            distance: number;
+            /** Resource Mfid */
+            resource_mfid: string;
+            /** Similarity */
+            readonly similarity: number;
+        };
+        /** ChunkSearchRequest */
+        ChunkSearchRequest: {
+            /**
+             * K
+             * @default 20
+             */
+            k: number;
+            /** Model Name */
+            model_name?: string | null;
+            /**
+             * Probes
+             * @default 10
+             */
+            probes: number;
+            /**
+             * Query Vector
+             * @description Query embedding; it must match the table's 768 dimensions.
+             */
+            query_vector: number[];
+            /**
+             * Resource Mfids
+             * @description Optionally restrict results to these resource MFIDs.
+             */
+            resource_mfids?: string[] | null;
+        };
         /** DatabaseReadinessResponse */
         DatabaseReadinessResponse: {
             /** Latency Ms */
@@ -3392,6 +3453,11 @@ export interface components {
             timestamp?: string | null;
         };
         /**
+         * DeletableResourceType
+         * @enum {string}
+         */
+        DeletableResourceType: "dataset" | "sample";
+        /**
          * DeletionAuditLogRead
          * @description Response model for DeletionAuditLog.
          */
@@ -3402,25 +3468,38 @@ export interface components {
             id: number;
             /** Project Id */
             project_id?: string | null;
+            /**
+             * Project Mfid
+             * @description Canonical project MFID captured when the resource was deleted. Entries created before this field was introduced may be null.
+             */
+            project_mfid?: string | null;
             /** Reason */
             reason?: string | null;
             /** Request Time */
             request_time?: string | null;
+            /** @description Current public-safe requester identity when the account still exists. */
+            requester?: components["schemas"]["UserPublicRead"] | null;
             /** Requester Id */
             requester_id: string;
             /** Resource Id */
             resource_id: string;
             /** Resource Name */
             resource_name?: string | null;
-            /** Resource Type */
-            resource_type?: string | null;
+            resource_type?: components["schemas"]["DeletableResourceType"] | null;
             /** Review Time */
             review_time?: string | null;
+            /** @description Current public-safe reviewer identity when the account still exists. */
+            reviewer?: components["schemas"]["UserPublicRead"] | null;
             /** Reviewer Id */
             reviewer_id: string;
             /** Reviewer Notes */
             reviewer_notes?: string | null;
         };
+        /**
+         * DeletionAuditScope
+         * @enum {string}
+         */
+        DeletionAuditScope: "all" | "submitted";
         /** DeletionRequestCapabilities */
         DeletionRequestCapabilities: {
             /**
@@ -6880,10 +6959,26 @@ export interface operations {
     list_deletion_audit_deletion_audit_get: {
         parameters: {
             query?: {
+                /** @description Select the platform-wide administrator audit or deletion history submitted by the authenticated human user. */
+                scope?: components["schemas"]["DeletionAuditScope"];
+                /** @description Exact MFID of the deleted resource. */
                 resource_id?: string | null;
+                /** @description Type of deleted resource. */
+                resource_type?: components["schemas"]["DeletableResourceType"] | null;
+                /** @description Exact project slug captured when the resource was deleted. */
+                project_id?: string | null;
+                /** @description Exact canonical project MFID captured when the resource was deleted. Entries created before project MFID snapshots were introduced do not match. */
+                project_mfid?: string | null;
+                /** @description Exact stable requester user ID. */
                 requester_id?: string | null;
+                /** @description Exact stable reviewer user ID. */
                 reviewer_id?: string | null;
+                /** @description Sort direction for deletion time. Audit ID is the deterministic final tie-breaker. */
+                direction?: components["schemas"]["SortDirection"];
                 limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
             };
             header?: {
@@ -8869,6 +8964,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    search_resource_chunks_resources_embeddings_search_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChunkSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChunkHit"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

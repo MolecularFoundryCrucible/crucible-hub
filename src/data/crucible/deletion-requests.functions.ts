@@ -19,6 +19,7 @@ const deletionRequestScopeSchema = z.enum([
 ])
 const deletionRequestStatusSchema = z.enum(["approved", "pending", "rejected"])
 const deletionRequestDirectionSchema = z.enum(["asc", "desc"])
+const deletionAuditScopeSchema = z.enum(["all", "submitted"])
 const deletionRequestSortSchema = z.enum([
   "project_id",
   "request_time",
@@ -52,9 +53,11 @@ export const deletionRequestReviewInputSchema = z
 
 export const deletionAuditListInputSchema = z
   .object({
+    cursor: z.string().min(1).max(4_096).optional(),
+    direction: deletionRequestDirectionSchema,
     limit: z.number().int().min(1).max(1_000),
-    offset: z.number().int().min(0),
     scenario: fixtureScenarioSchema.optional(),
+    scope: deletionAuditScopeSchema,
   })
   .strict()
 

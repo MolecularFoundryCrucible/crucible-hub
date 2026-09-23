@@ -16,6 +16,8 @@ import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
+import { identityScopeWithPrivilegeMode } from "@/data/crucible/query-keys"
+import type { IdentityScope } from "@/data/crucible/query-keys"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import {
   deletionAuditInfiniteQueryOptions,
@@ -69,9 +71,12 @@ export const Route = createFileRoute("/_app/deletion-requests")({
       const account = context.queryClient.getQueryData(
         accountQueryOptions(source.scope).queryKey
       )
-      if (account?.authorization.can_elevate)
+      if (account && !account.is_service_account)
         void context.queryClient.prefetchInfiniteQuery(
-          deletionAuditInfiniteQueryOptions(source.scope)
+          deletionAuditInfiniteQueryOptions(
+            deletionAuditQueryScope(source.scope, account),
+            deletionAuditScope(account)
+          )
         )
       return
     }
@@ -95,7 +100,7 @@ function DeletionRequestsPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const requestedView = search.view ?? "submitted"
-  const canViewDeletionAudit = account.authorization.can_elevate
+  const canViewDeletionAudit = !account.is_service_account
   const view =
     requestedView === "approved" && !canViewDeletionAudit
       ? "submitted"
@@ -117,6 +122,7 @@ function DeletionRequestsPage() {
     kind: "deletion-requests",
     preview: search.preview,
   })
+  const auditScope = deletionAuditScope(account)
 
   return (
     <ResourcePreviewContext.Provider value={navigation}>
@@ -178,7 +184,11 @@ function DeletionRequestsPage() {
           }
         />
         {view === "approved" && canViewDeletionAudit ? (
-          <DeletionAuditQueue account={account} scope={scope} />
+          <DeletionAuditQueue
+            account={account}
+            auditScope={auditScope}
+            scope={deletionAuditQueryScope(scope, account)}
+          />
         ) : (
           <DeletionRequestQueue
             account={account}
@@ -228,6 +238,24 @@ function defaultDeletionRequestDirection(
 
 function deletionRequestScope(view: "approved" | "reviewable" | "submitted") {
   return view === "reviewable" ? "reviewable" : "submitted"
+}
+
+function deletionAuditScope(account: {
+  authorization: { can_elevate: boolean }
+}) {
+  return account.authorization.can_elevate
+    ? ("all" as const)
+    : ("submitted" as const)
+}
+
+function deletionAuditQueryScope(
+  scope: IdentityScope,
+  account: { authorization: { can_elevate: boolean } }
+) {
+  return identityScopeWithPrivilegeMode(
+    scope,
+    account.authorization.can_elevate ? "elevated" : "normal"
+  )
 }
 
 function deletionRequestStatus(view: "approved" | "reviewable" | "submitted") {

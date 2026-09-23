@@ -354,7 +354,7 @@ export type WorkspaceDeletionAudit = Schema<"DeletionAuditLogRead">
 export type WorkspaceDeletionAuditPage = {
   items: readonly WorkspaceDeletionAudit[]
   limit: number
-  offset: number
+  nextCursor: string | null
   total: number | null
 }
 

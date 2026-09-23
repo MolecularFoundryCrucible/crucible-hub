@@ -790,6 +790,104 @@
         "title": "BuildInfoResponse",
         "type": "object"
       },
+      "ChunkHit": {
+        "properties": {
+          "chunk_index": {
+            "title": "Chunk Index",
+            "type": "integer"
+          },
+          "chunk_text": {
+            "title": "Chunk Text",
+            "type": "string"
+          },
+          "distance": {
+            "title": "Distance",
+            "type": "number"
+          },
+          "resource_mfid": {
+            "title": "Resource Mfid",
+            "type": "string"
+          },
+          "similarity": {
+            "readOnly": true,
+            "title": "Similarity",
+            "type": "number"
+          }
+        },
+        "required": [
+          "resource_mfid",
+          "chunk_index",
+          "chunk_text",
+          "distance",
+          "similarity"
+        ],
+        "title": "ChunkHit",
+        "type": "object"
+      },
+      "ChunkSearchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "k": {
+            "default": 20,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "K",
+            "type": "integer"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name"
+          },
+          "probes": {
+            "default": 10,
+            "maximum": 32768.0,
+            "minimum": 1.0,
+            "title": "Probes",
+            "type": "integer"
+          },
+          "query_vector": {
+            "description": "Query embedding; it must match the table's 768 dimensions.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 768,
+            "minItems": 768,
+            "title": "Query Vector",
+            "type": "array"
+          },
+          "resource_mfids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optionally restrict results to these resource MFIDs.",
+            "title": "Resource Mfids"
+          }
+        },
+        "required": [
+          "query_vector"
+        ],
+        "title": "ChunkSearchRequest",
+        "type": "object"
+      },
       "DatabaseReadinessResponse": {
         "properties": {
           "latency_ms": {
@@ -1801,6 +1899,14 @@
         "title": "DatasetUpdate",
         "type": "object"
       },
+      "DeletableResourceType": {
+        "enum": [
+          "dataset",
+          "sample"
+        ],
+        "title": "DeletableResourceType",
+        "type": "string"
+      },
       "DeletionAuditLogRead": {
         "description": "Response model for DeletionAuditLog.",
         "properties": {
@@ -1822,6 +1928,18 @@
               }
             ],
             "title": "Project Id"
+          },
+          "project_mfid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical project MFID captured when the resource was deleted. Entries created before this field was introduced may be null.",
+            "title": "Project Mfid"
           },
           "reason": {
             "anyOf": [
@@ -1845,6 +1963,17 @@
             ],
             "title": "Request Time"
           },
+          "requester": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserPublicRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Current public-safe requester identity when the account still exists."
+          },
           "requester_id": {
             "title": "Requester Id",
             "type": "string"
@@ -1867,13 +1996,12 @@
           "resource_type": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/DeletableResourceType"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Resource Type"
+            ]
           },
           "review_time": {
             "anyOf": [
@@ -1885,6 +2013,17 @@
               }
             ],
             "title": "Review Time"
+          },
+          "reviewer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserPublicRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Current public-safe reviewer identity when the account still exists."
           },
           "reviewer_id": {
             "title": "Reviewer Id",
@@ -1911,6 +2050,14 @@
         ],
         "title": "DeletionAuditLogRead",
         "type": "object"
+      },
+      "DeletionAuditScope": {
+        "enum": [
+          "all",
+          "submitted"
+        ],
+        "title": "DeletionAuditScope",
+        "type": "string"
       },
       "DeletionRequestCapabilities": {
         "properties": {
@@ -11921,9 +12068,22 @@
     },
     "/deletion_audit": {
       "get": {
+        "description": "List permanent deletion records visible to the authenticated human user.",
         "operationId": "list_deletion_audit_deletion_audit_get",
         "parameters": [
           {
+            "description": "Select the platform-wide administrator audit or deletion history submitted by the authenticated human user.",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DeletionAuditScope",
+              "default": "all",
+              "description": "Select the platform-wide administrator audit or deletion history submitted by the authenticated human user."
+            }
+          },
+          {
+            "description": "Exact MFID of the deleted resource.",
             "in": "query",
             "name": "resource_id",
             "required": false,
@@ -11936,10 +12096,66 @@
                   "type": "null"
                 }
               ],
+              "description": "Exact MFID of the deleted resource.",
               "title": "Resource Id"
             }
           },
           {
+            "description": "Type of deleted resource.",
+            "in": "query",
+            "name": "resource_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DeletableResourceType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Type of deleted resource.",
+              "title": "Resource Type"
+            }
+          },
+          {
+            "description": "Exact project slug captured when the resource was deleted.",
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact project slug captured when the resource was deleted.",
+              "title": "Project Id"
+            }
+          },
+          {
+            "description": "Exact canonical project MFID captured when the resource was deleted. Entries created before project MFID snapshots were introduced do not match.",
+            "in": "query",
+            "name": "project_mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact canonical project MFID captured when the resource was deleted. Entries created before project MFID snapshots were introduced do not match.",
+              "title": "Project Mfid"
+            }
+          },
+          {
+            "description": "Exact stable requester user ID.",
             "in": "query",
             "name": "requester_id",
             "required": false,
@@ -11952,10 +12168,12 @@
                   "type": "null"
                 }
               ],
+              "description": "Exact stable requester user ID.",
               "title": "Requester Id"
             }
           },
           {
+            "description": "Exact stable reviewer user ID.",
             "in": "query",
             "name": "reviewer_id",
             "required": false,
@@ -11968,7 +12186,19 @@
                   "type": "null"
                 }
               ],
+              "description": "Exact stable reviewer user ID.",
               "title": "Reviewer Id"
+            }
+          },
+          {
+            "description": "Sort direction for deletion time. Audit ID is the deterministic final tie-breaker.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc",
+              "description": "Sort direction for deletion time. Audit ID is the deterministic final tie-breaker."
             }
           },
           {
@@ -11984,11 +12214,33 @@
             }
           },
           {
+            "description": "Opaque continuation cursor returned by a previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor returned by a previous page.",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Compatibility offset. A supplied cursor takes precedence.",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
               "default": 0,
+              "description": "Compatibility offset. A supplied cursor takes precedence.",
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
@@ -16832,6 +17084,91 @@
         "summary": "Regenerate Apikey Deprecated",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/resources/embeddings/search": {
+      "post": {
+        "description": "Search 768-dimensional resource text chunks visible to the caller.",
+        "operationId": "search_resource_chunks_resources_embeddings_search_post",
+        "parameters": [
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChunkSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChunkHit"
+                  },
+                  "title": "Response Search Resource Chunks Resources Embeddings Search Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Search Resource Chunks",
+        "tags": [
+          "resources"
         ]
       }
     },
@@ -22993,7 +23330,7 @@
   },
   "servers": [
     {
-      "url": "/testapi"
+      "url": "/api/v3"
     }
   ]
 }

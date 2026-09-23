@@ -20,8 +20,10 @@ import type {
 } from "./workspace-source"
 
 export type WorkspaceDeletionAuditFilters = {
+  cursor?: string
+  direction: WorkspaceDeletionRequestDirection
   limit: number
-  offset: number
+  scope: "all" | "submitted"
 }
 
 export type WorkspaceDeletionRequestScope =
@@ -52,7 +54,7 @@ const deletionRequestSchema = z
     requester_id: z.string().min(1),
     resource_id: z.string().min(1),
     resource_name: z.string().nullable().optional(),
-    resource_type: z.string().nullable().optional(),
+    resource_type: z.enum(["dataset", "sample"]).nullable().optional(),
     review_time: z.string().nullable().optional(),
     reviewer: workspacePersonSchema.nullable(),
     reviewer_id: z.string().nullable().optional(),
@@ -76,13 +78,16 @@ const deletionAuditSchema = z
     deleted_at: z.string(),
     id: z.number().int().positive(),
     project_id: z.string().nullable().optional(),
+    project_mfid: z.string().nullable().optional(),
     reason: z.string().nullable().optional(),
     request_time: z.string().nullable().optional(),
+    requester: workspacePersonSchema.nullable(),
     requester_id: z.string().min(1),
     resource_id: z.string().min(1),
     resource_name: z.string().nullable().optional(),
-    resource_type: z.string().nullable().optional(),
+    resource_type: z.enum(["dataset", "sample"]).nullable().optional(),
     review_time: z.string().nullable().optional(),
+    reviewer: workspacePersonSchema.nullable(),
     reviewer_id: z.string().min(1),
     reviewer_notes: z.string().nullable().optional(),
   })
@@ -92,6 +97,7 @@ const deletionAuditPageSchema = z
   .object({
     items: z.array(deletionAuditSchema).max(1_000),
     limit: z.number().int().positive(),
+    next_cursor: z.string().nullable().optional(),
     offset: z.number().int().nonnegative().nullable().optional(),
     total: z.number().int().nonnegative().nullable().optional(),
   })
@@ -249,38 +255,54 @@ export async function readWorkspaceDeletionAudit(
         deleted_at: "2026-08-21T16:31:00Z",
         id: 1,
         project_id: resource.project_id ?? null,
+        project_mfid: resource.project?.unique_id ?? null,
         reason: "The duplicate sample record is no longer needed.",
         request_time: "2026-08-20T14:15:00Z",
+        requester,
         requester_id: requester.unique_id,
         resource_id: resource.unique_id,
         resource_name: resource.sample_name,
         resource_type: "sample",
         review_time: "2026-08-21T16:30:00Z",
+        reviewer,
         reviewer_id: reviewer.unique_id,
         reviewer_notes: "Confirmed as a duplicate record.",
       },
     ]
-    return {
-      items: items.slice(input.offset, input.offset + input.limit),
-      limit: input.limit,
-      offset: input.offset,
-      total: items.length,
-    }
+    const visibleItems =
+      input.scope === "submitted"
+        ? items.filter(
+            (audit) => audit.requester_id === source.workspace.account.unique_id
+          )
+        : items
+    return fixtureCursorPage(visibleItems, input)
   }
 
   const result = await createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: input.scope === "all" ? "elevated" : "normal",
   }).GET("/deletion_audit", {
-    params: { query: { limit: input.limit, offset: input.offset } },
+    params: {
+      query: {
+        cursor: input.cursor,
+        direction: input.direction,
+        limit: input.limit,
+        scope: input.scope,
+      },
+    },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
   const page = deletionAuditPageSchema.safeParse(result.data)
   if (!page.success) throw new Error("The deletion audit list is invalid.")
   return {
-    items: page.data.items,
+    items: page.data.items.map((item) => ({
+      ...item,
+      project_mfid: item.project_mfid ?? null,
+      requester: item.requester ?? null,
+      reviewer: item.reviewer ?? null,
+    })),
     limit: page.data.limit,
-    offset: page.data.offset ?? input.offset,
+    nextCursor: page.data.next_cursor ?? null,
     total: page.data.total ?? null,
   }
 }

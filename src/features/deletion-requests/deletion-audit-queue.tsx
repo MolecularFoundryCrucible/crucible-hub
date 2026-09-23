@@ -7,6 +7,7 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,18 +33,24 @@ import type { IdentityScope } from "@/data/crucible/query-keys"
 import type {
   WorkspaceAccount,
   WorkspaceDeletionAudit,
+  WorkspacePerson,
 } from "@/data/crucible/workspace-source"
+import type { WorkspaceDeletionAuditFilters } from "@/data/crucible/deletion-requests.server"
 
 const pendingRows = ["first", "second", "third"] as const
 
 export function DeletionAuditQueue({
   account,
+  auditScope,
   scope,
 }: {
   account: WorkspaceAccount
+  auditScope: WorkspaceDeletionAuditFilters["scope"]
   scope: IdentityScope
 }) {
-  const result = useInfiniteQuery(deletionAuditInfiniteQueryOptions(scope))
+  const result = useInfiniteQuery(
+    deletionAuditInfiniteQueryOptions(scope, auditScope)
+  )
   const [selected, setSelected] = useState<WorkspaceDeletionAudit>()
   const pages = result.data?.pages ?? []
   const items = pages.flatMap((page) => page.items)
@@ -216,15 +223,17 @@ function DeletionAuditTable({
               className="deletion-request-project"
               data-label="Project"
             >
-              {audit.project_id?.trim() || (
-                <span className="text-muted-foreground">Not assigned</span>
-              )}
+              <AuditProject audit={audit} />
             </TableCell>
             <TableCell
               className="deletion-request-requester"
               data-label="Requested by"
             >
-              <AuditIdentity account={account} mfid={audit.requester_id} />
+              <AuditIdentity
+                account={account}
+                mfid={audit.requester_id}
+                person={audit.requester}
+              />
             </TableCell>
             <TableCell className="deletion-request-date" data-label="Deleted">
               <LocalDateTime value={audit.deleted_at} />
@@ -247,15 +256,18 @@ function DeletionAuditTable({
 function AuditIdentity({
   account,
   mfid,
+  person,
 }: {
   account: WorkspaceAccount
   mfid: string
+  person?: WorkspacePerson | null
 }) {
-  if (mfid === account.unique_id)
+  const identity = person ?? (mfid === account.unique_id ? account : undefined)
+  if (identity)
     return (
       <PersonLink
         nameStyle="abbreviated"
-        person={account}
+        person={identity}
         presentation="inline"
       />
     )
@@ -264,6 +276,23 @@ function AuditIdentity({
       <PrincipalTypeIcon type="user" />
       <MfidText className="truncate" presentation="supporting" value={mfid} />
     </span>
+  )
+}
+
+function AuditProject({ audit }: { audit: WorkspaceDeletionAudit }) {
+  const projectId = audit.project_id?.trim()
+  if (!projectId)
+    return <span className="text-muted-foreground">Not assigned</span>
+  if (!audit.project_mfid) return <span className="truncate">{projectId}</span>
+  return (
+    <ResourceIdentityLink
+      kind="project"
+      mfid={audit.project_mfid}
+      name={projectId}
+      showTypeIcon={false}
+    >
+      <span className="block truncate hover:underline">{projectId}</span>
+    </ResourceIdentityLink>
   )
 }
 
@@ -292,13 +321,21 @@ function DeletionAuditDialog({
             />
             <dl className="grid gap-4 text-body sm:grid-cols-2">
               <AuditDetail label="Requested by">
-                <AuditIdentity account={account} mfid={audit.requester_id} />
+                <AuditIdentity
+                  account={account}
+                  mfid={audit.requester_id}
+                  person={audit.requester}
+                />
               </AuditDetail>
               <AuditDetail label="Requested">
                 <LocalDateTime value={audit.request_time} />
               </AuditDetail>
               <AuditDetail label="Reviewed by">
-                <AuditIdentity account={account} mfid={audit.reviewer_id} />
+                <AuditIdentity
+                  account={account}
+                  mfid={audit.reviewer_id}
+                  person={audit.reviewer}
+                />
               </AuditDetail>
               <AuditDetail label="Reviewed">
                 <LocalDateTime value={audit.review_time} />
