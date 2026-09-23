@@ -105,7 +105,9 @@ const zoomEquivalentCases = [
 ] as const
 
 for (const scenario of scenarioCases) {
-  test(`matches the ${scenario.name} route baseline`, async ({ page }) => {
+  test(`@visual matches the ${scenario.name} route baseline`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" })
     await page.addInitScript(() => {
@@ -129,7 +131,7 @@ for (const scenario of scenarioCases) {
 }
 
 for (const zoomCase of zoomEquivalentCases) {
-  test(`matches the ${zoomCase.name} 200 percent layout equivalent`, async ({
+  test(`@visual matches the ${zoomCase.name} 200 percent layout equivalent`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 720, height: 450 })
@@ -250,7 +252,7 @@ const inspectorVisualCases = [
 ] as const
 
 for (const scenario of inspectorVisualCases) {
-  test(`matches the ${scenario.name} visual and accessibility baseline`, async ({
+  test(`@visual matches the ${scenario.name} visual and accessibility baseline`, async ({
     page,
   }) => {
     await page.setViewportSize(scenario.viewport)

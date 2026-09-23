@@ -286,7 +286,7 @@ test("direct, malformed, and failed previews preserve project state", async ({
   await expect(page).toHaveURL(filteredUrl)
 })
 
-test("project inspector matches wide light and compact dark baselines", async ({
+test("@visual project inspector matches wide light and compact dark baselines", async ({
   page,
 }) => {
   const cases = [

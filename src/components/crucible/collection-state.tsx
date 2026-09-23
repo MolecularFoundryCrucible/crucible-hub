@@ -294,28 +294,33 @@ export function ResourceListPending({
   trailing?: boolean
 }) {
   return (
-    <ResourceList aria-label={`Loading ${label}`} role="status">
-      {Array.from({ length: rows }, (_, index) => (
-        <ResourceListItem key={index}>
-          <ResourceListItemContent layout="responsive">
-            <div className="flex min-w-0 flex-1 items-start gap-2">
-              <Skeleton className="mt-0.5 size-4 shrink-0" />
-              <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-3 w-3/4" />
+    <>
+      <span className="sr-only" role="status">
+        Loading {label}
+      </span>
+      <ResourceList aria-busy="true" aria-label={`Loading ${label}`}>
+        {Array.from({ length: rows }, (_, index) => (
+          <ResourceListItem key={index}>
+            <ResourceListItemContent layout="responsive">
+              <div className="flex min-w-0 flex-1 items-start gap-2">
+                <Skeleton className="mt-0.5 size-4 shrink-0" />
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
               </div>
-            </div>
-            {trailing ? (
-              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-                <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-3 w-28" />
-              </div>
-            ) : null}
-          </ResourceListItemContent>
-        </ResourceListItem>
-      ))}
-    </ResourceList>
+              {trailing ? (
+                <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="h-3 w-28" />
+                </div>
+              ) : null}
+            </ResourceListItemContent>
+          </ResourceListItem>
+        ))}
+      </ResourceList>
+    </>
   )
 }
 

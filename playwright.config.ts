@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? "github" : "list",
+  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   expect: {
     toHaveScreenshot: {
       maxDiffPixels: 500,
@@ -13,7 +13,7 @@ export default defineConfig({
   },
   use: {
     baseURL: "http://127.0.0.1:4173/hub/",
-    trace: "on-first-retry",
+    trace: process.env.CI ? "retain-on-failure" : "on-first-retry",
   },
   projects: [
     {

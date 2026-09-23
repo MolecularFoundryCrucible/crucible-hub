@@ -11,7 +11,9 @@ const visualCases = [
 ] as const
 
 for (const visualCase of visualCases) {
-  test(`matches the ${visualCase.name} design baseline`, async ({ page }) => {
+  test(`@visual matches the ${visualCase.name} design baseline`, async ({
+    page,
+  }) => {
     await page.setViewportSize({
       width: visualCase.width,
       height: visualCase.height,

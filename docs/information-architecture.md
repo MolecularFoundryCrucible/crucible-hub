@@ -38,45 +38,45 @@ Home presents recently added data plus separate bounded ownership sections for P
 
 ## Route hierarchy
 
-| Route                                             | Page or behavior                                            |
-| ------------------------------------------------- | ----------------------------------------------------------- |
-| `/`                                               | Home dashboard.                                             |
-| `/data`                                           | Global sample and dataset collection.                       |
-| `/search`                                         | Global or project-scoped resource search.                   |
-| `/projects`                                       | Project collection.                                         |
-| `/projects/new`                                   | Project creation.                                           |
-| `/projects/:projectMfid`                          | Project Data index.                                         |
-| `/projects/:projectMfid/overview`                 | Project details, scientific metadata, and readable members. |
-| `/projects/:projectMfid/settings`                 | Unified project access and resource management.             |
-| `/projects/:projectMfid/settings/members`         | Compatibility redirect to project Manage.                   |
-| `/projects/:projectMfid/settings/ownership`       | Compatibility redirect to project Manage.                   |
-| `/projects/:projectMfid/members`                  | Replacement redirect to project Overview.                   |
-| `/instruments`                                    | Instrument collection.                                      |
-| `/instruments/new`                                | Instrument registration.                                    |
-| `/instruments/:instrumentMfid`                    | Instrument Overview.                                        |
-| `/instruments/:instrumentMfid/datasets`           | Instrument-scoped dataset collection.                       |
-| `/instruments/:instrumentMfid/settings`           | Unified instrument access and resource management.          |
-| `/instruments/:instrumentMfid/settings/lifecycle` | Compatibility redirect to instrument Manage.                |
-| `/instruments/:instrumentMfid/settings/operators` | Compatibility redirect to instrument Manage.                |
-| `/instruments/:instrumentMfid/settings/ownership` | Compatibility redirect to instrument Manage.                |
-| `/samples/:sampleMfid`                            | Canonical sample detail.                                    |
-| `/datasets/:datasetMfid`                          | Canonical dataset detail.                                   |
-| `/datasets/:datasetMfid/processing`               | Dataset files, ingestion, and processing requests.          |
-| `/samples/:sampleMfid/graph`                      | Immediate sample relationship graph.                        |
-| `/datasets/:datasetMfid/graph`                    | Immediate dataset relationship graph.                       |
-| `/samples/new`                                    | Sample creation with optional project preselection.         |
-| `/datasets/new`                                   | Dataset creation with optional context preselection.        |
-| `/samples/:sampleMfid/manage`                     | Canonical sample management.                                |
-| `/datasets/:datasetMfid/manage`                   | Canonical dataset management.                               |
-| `/samples/:sampleMfid/access`                     | Compatibility redirect to sample Manage.                    |
-| `/datasets/:datasetMfid/access`                   | Compatibility redirect to dataset Manage.                   |
-| `/resources/:resourceMfid`                        | Legacy type-resolving redirect to a canonical entity.       |
-| `/people/:userId`                                 | Public-safe person profile.                                 |
-| `/account`                                        | Authenticated self-service profile management.              |
+| Route                                             | Page or behavior                                             |
+| ------------------------------------------------- | ------------------------------------------------------------ |
+| `/`                                               | Home dashboard.                                              |
+| `/data`                                           | Global sample and dataset collection.                        |
+| `/search`                                         | Global or project-scoped resource search.                    |
+| `/projects`                                       | Project collection.                                          |
+| `/projects/new`                                   | Project creation.                                            |
+| `/projects/:projectMfid`                          | Project Data index.                                          |
+| `/projects/:projectMfid/overview`                 | Project details, scientific metadata, and readable members.  |
+| `/projects/:projectMfid/settings`                 | Unified project access and resource management.              |
+| `/projects/:projectMfid/settings/members`         | Compatibility redirect to project Manage.                    |
+| `/projects/:projectMfid/settings/ownership`       | Compatibility redirect to project Manage.                    |
+| `/projects/:projectMfid/members`                  | Replacement redirect to project Overview.                    |
+| `/instruments`                                    | Instrument collection.                                       |
+| `/instruments/new`                                | Instrument registration.                                     |
+| `/instruments/:instrumentMfid`                    | Instrument Overview.                                         |
+| `/instruments/:instrumentMfid/datasets`           | Instrument-scoped dataset collection.                        |
+| `/instruments/:instrumentMfid/settings`           | Unified instrument access and resource management.           |
+| `/instruments/:instrumentMfid/settings/lifecycle` | Compatibility redirect to instrument Manage.                 |
+| `/instruments/:instrumentMfid/settings/operators` | Compatibility redirect to instrument Manage.                 |
+| `/instruments/:instrumentMfid/settings/ownership` | Compatibility redirect to instrument Manage.                 |
+| `/samples/:sampleMfid`                            | Canonical sample detail.                                     |
+| `/datasets/:datasetMfid`                          | Canonical dataset detail.                                    |
+| `/datasets/:datasetMfid/processing`               | Dataset files, ingestion, and processing requests.           |
+| `/samples/:sampleMfid/graph`                      | Immediate sample relationship graph.                         |
+| `/datasets/:datasetMfid/graph`                    | Immediate dataset relationship graph.                        |
+| `/samples/new`                                    | Sample creation with optional project preselection.          |
+| `/datasets/new`                                   | Dataset creation with optional context preselection.         |
+| `/samples/:sampleMfid/manage`                     | Canonical sample management.                                 |
+| `/datasets/:datasetMfid/manage`                   | Canonical dataset management.                                |
+| `/samples/:sampleMfid/access`                     | Compatibility redirect to sample Manage.                     |
+| `/datasets/:datasetMfid/access`                   | Compatibility redirect to dataset Manage.                    |
+| `/resources/:resourceMfid`                        | Legacy type-resolving redirect to a canonical entity.        |
+| `/people/:userId`                                 | Public-safe person profile.                                  |
+| `/account`                                        | Authenticated self-service profile management.               |
 | `/deletion-requests`                              | Submitted requests, review work, and approved audit history. |
-| `/activity`                                       | Future account-relevant activity workflows.                 |
-| `/admin/service-accounts`                         | Capability-gated service-account directory and creation.    |
-| `/admin/service-accounts/:serviceAccountMfid`     | Service-account profile, role, and credential management.   |
+| `/activity`                                       | Future account-relevant activity workflows.                  |
+| `/admin/service-accounts`                         | Capability-gated service-account directory and creation.     |
+| `/admin/service-accounts/:serviceAccountMfid`     | Service-account profile, role, and credential management.    |
 
 ## Entity scopes
 

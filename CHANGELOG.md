@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Split functional, visual, and production browser validation into parallel CI jobs, kept visual baseline updates local-only, retained failure artifacts for diagnosis, repaired pending-list semantics, and resolved the OpenAPI toolchain dependency advisory.
+
 - Varied the Home greeting by browser-local hour between time-aware messages, “Welcome to Crucible,” and the rare “Welcome to the Crux.”
 
 - Standardized name-only navigation across Home, resource tables, directories, search, relationships, deletion requests, and person identities while keeping supporting identifiers and metadata selectable and suppressing navigation after pointer text selection.
