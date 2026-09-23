@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Varied the Home greeting with stable daily standard and browser-local time-aware messages, plus rare understated snarky variants.
+- Varied the Home greeting by browser-local hour between time-aware messages, “Welcome to Crucible,” and the rare “Welcome to the Crux.”
 
 - Standardized name-only navigation across Home, resource tables, directories, search, relationships, deletion requests, and person identities while keeping supporting identifiers and metadata selectable and suppressing navigation after pointer text selection.
 
