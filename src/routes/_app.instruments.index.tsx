@@ -8,6 +8,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
+import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
   CollectionLoadError,
@@ -222,10 +223,12 @@ function InstrumentDirectoryNavigation({
   status: WorkspaceInstrumentStatus
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <InstrumentStatusNavigation affiliation={affiliation} status={status} />
-      <InstrumentDirectoryFilters affiliation={affiliation} />
-    </div>
+    <CollectionToolbar
+      actions={<InstrumentDirectoryFilters affiliation={affiliation} />}
+      primary={
+        <InstrumentStatusNavigation affiliation={affiliation} status={status} />
+      }
+    />
   )
 }
 

@@ -28,6 +28,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { facetOrderingForGroupOrder } from "@/data/crucible/collection-browse"
+import { cn } from "@/lib/utils"
 import type {
   CollectionBrowseOption,
   CollectionGroupOrder,
@@ -51,12 +52,21 @@ import { facetBucketLabel } from "./collection-facet-filter"
 export function CollectionToolbar({
   actions,
   primary,
+  sticky = true,
 }: {
   actions?: React.ReactNode
   primary: React.ReactNode
+  sticky?: boolean
 }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+    <div
+      className={cn(
+        "flex min-w-0 flex-wrap items-center justify-between gap-3",
+        sticky &&
+          "sm:sticky sm:top-app-header sm:z-(--layer-sticky) sm:-mx-2 sm:border-b sm:bg-background/95 sm:px-2 sm:py-2 sm:backdrop-blur"
+      )}
+      data-slot="collection-toolbar"
+    >
       <div className="flex min-w-0 flex-wrap items-center gap-2">{primary}</div>
       {actions ? (
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">

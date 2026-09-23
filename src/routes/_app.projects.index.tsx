@@ -8,6 +8,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
+import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
   CollectionLoadError,
@@ -180,16 +181,20 @@ function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
 function ProjectDirectoryFilters({ affiliation }: { affiliation?: "owner" }) {
   const navigate = Route.useNavigate()
   return (
-    <CollectionAffiliationFilter
-      onChange={(nextAffiliation) =>
-        void navigate({
-          search: { affiliation: nextAffiliation, cursor: undefined },
-          state: {},
-          to: "/projects",
-        })
+    <CollectionToolbar
+      primary={
+        <CollectionAffiliationFilter
+          onChange={(nextAffiliation) =>
+            void navigate({
+              search: { affiliation: nextAffiliation, cursor: undefined },
+              state: {},
+              to: "/projects",
+            })
+          }
+          ownerLabel="Led by me"
+          value={affiliation}
+        />
       }
-      ownerLabel="Led by me"
-      value={affiliation}
     />
   )
 }

@@ -88,17 +88,17 @@ export function CollectionFilterPanel({
         </SheetContent>
       </Sheet>
       {visibleFilters.map((filter) => (
-        <Badge
+        <Button
           aria-label={`Remove filter: ${filter.label}`}
-          className="max-w-full"
           key={filter.id}
           onClick={() => onRemoveFilter(filter.id)}
-          render={<button type="button" />}
+          size="pill"
+          type="button"
           variant="outline"
         >
           <span className="truncate">{filter.label}</span>
           <RemoveFilterIcon aria-hidden="true" />
-        </Badge>
+        </Button>
       ))}
       {hiddenFilterCount > 0 ? (
         <Badge variant="outline">+{hiddenFilterCount} more</Badge>

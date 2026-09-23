@@ -38,6 +38,7 @@ const buttonVariantClasses = cva(
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-circle": "size-8 rounded-full",
         "icon-lg": "size-9",
+        pill: "h-pill-height max-w-full gap-1 rounded-4xl px-pill-inline text-label-compact [&_svg:not([class*='size-'])]:size-3",
         floating: "size-11 gap-1.5 px-0 sm:w-auto sm:px-3",
         qr: "size-28 overflow-hidden p-0",
         selection:

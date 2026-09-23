@@ -30,6 +30,7 @@
   --spacing-page-gutter-medium: 1.5rem;
   --spacing-page-gutter-wide: 2rem;
   --spacing-page-section: 2rem;
+  --spacing-app-header: 3.5rem;
   --spacing-resource-navigation-offset: 1rem;
   --spacing-resource-sequence: 18rem;
   --spacing-breadcrumb-ancestor: 18rem;
@@ -407,6 +408,7 @@
   --focus-offset: 0.125rem;
   --layer-route-progress: 50;
   --layer-floating-utility: 10;
+  --layer-sticky: 5;
   --layer-graph-overlay: 1;
   --route-progress-height: 0.1875rem;
   --graph-node-width: 220;
