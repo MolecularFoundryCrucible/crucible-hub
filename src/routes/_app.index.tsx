@@ -36,6 +36,7 @@ import { projectsQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceInstrument } from "@/data/crucible/workspace-source"
 import { useRecentResourcesSnapshot } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
+import { useHomeGreeting } from "@/features/home/home-greeting"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 
@@ -99,6 +100,10 @@ function HomePage() {
     ],
   })
   const account = accountResult.data
+  const greeting = useHomeGreeting({
+    accountMfid: account?.unique_id,
+    firstName: account?.first_name,
+  })
   const projects = projectResult.data?.items ?? []
   const instruments = instrumentResult.data?.items ?? []
   const recentSnapshot = useRecentResourcesSnapshot({
@@ -123,9 +128,7 @@ function HomePage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        title={`Welcome back, ${account?.first_name ?? "researcher"}`}
-      />
+      <PageHeader title={greeting} />
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-5">
         <div className="flex min-w-0 flex-col gap-6 xl:col-span-3">
