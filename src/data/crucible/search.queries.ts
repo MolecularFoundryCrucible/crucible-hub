@@ -11,6 +11,7 @@ import { unwrapHubResult } from "./result"
 import type { WorkspaceSearchKind } from "./workspace-source"
 
 export const searchGroupLimit = 8
+export const quickSearchGroupLimit = 2
 
 export function searchQueryOptions(
   scope: IdentityScope,
@@ -19,12 +20,45 @@ export function searchQueryOptions(
   projectMfid?: string,
   serviceAccountsOnly = false
 ) {
+  return workspaceSearchQueryOptions(
+    scope,
+    query,
+    kinds,
+    searchGroupLimit,
+    projectMfid,
+    serviceAccountsOnly
+  )
+}
+
+export function quickSearchQueryOptions(
+  scope: IdentityScope,
+  query: string,
+  kinds: readonly WorkspaceSearchKind[],
+  projectMfid?: string
+) {
+  return workspaceSearchQueryOptions(
+    scope,
+    query,
+    kinds,
+    quickSearchGroupLimit,
+    projectMfid
+  )
+}
+
+function workspaceSearchQueryOptions(
+  scope: IdentityScope,
+  query: string,
+  kinds: readonly WorkspaceSearchKind[],
+  limit: number,
+  projectMfid?: string,
+  serviceAccountsOnly = false
+) {
   const normalizedKinds = [...kinds].sort()
   const scenario = fixtureScenarioFromScope(scope)
   return queryOptions({
     queryKey: crucibleKeys.search(scope, {
       kinds: normalizedKinds,
-      limit: searchGroupLimit,
+      limit,
       projectMfid: projectMfid ?? null,
       query,
       serviceAccountsOnly,
@@ -34,7 +68,7 @@ export function searchQueryOptions(
         await getWorkspaceSearch({
           data: {
             kinds: [...kinds],
-            limit: searchGroupLimit,
+            limit,
             projectMfid,
             query,
             scenario,

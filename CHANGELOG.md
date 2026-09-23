@@ -6,6 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added debounced, keyboard-navigable quick results to global and project-scoped application-bar search, with bounded per-type queries and a path to complete search results.
 - Kept collection view, filter, grouping, sorting, status, and ownership controls available while scrolling long data, project, instrument, and deletion-request lists on non-compact screens.
 - Added visible removable filter chips and compact Clear all controls to global, project, and instrument data collections while preserving URL-backed filter and pagination behavior.
 

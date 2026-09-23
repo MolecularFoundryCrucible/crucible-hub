@@ -11,6 +11,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { SidebarMenuButton } from "@/components/ui/sidebar"
+import {
+  isDialogKeyboardTarget,
+  isEditableKeyboardTarget,
+} from "@/lib/keyboard"
 
 const navigationShortcuts = {
   d: "/data",
@@ -56,9 +60,13 @@ export function KeyboardShortcuts({
       if (sequenceTimer.current) clearTimeout(sequenceTimer.current)
     }
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || isEditableTarget(event.target)) return
-      const target = event.target
-      if (target instanceof Element && target.closest('[role="dialog"]')) return
+      if (
+        event.defaultPrevented ||
+        isEditableKeyboardTarget(event.target) ||
+        isDialogKeyboardTarget(event.target)
+      ) {
+        return
+      }
 
       if (
         event.key === "?" &&
@@ -269,12 +277,4 @@ function navigateWithinResource(
     })
   }
   return true
-}
-
-function isEditableTarget(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      target.matches("input, select, textarea, [role='textbox']"))
-  )
 }

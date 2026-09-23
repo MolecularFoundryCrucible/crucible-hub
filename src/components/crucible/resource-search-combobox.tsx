@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import { PersonIdentity } from "@/components/crucible/person-identity"
@@ -15,6 +15,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 
 export type SearchableResourceKind =
   "dataset" | "instrument" | "person" | "project" | "sample"
@@ -180,15 +181,4 @@ function ComboboxStatus({ className, ...props }: React.ComponentProps<"p">) {
       {...props}
     />
   )
-}
-
-function useDebouncedValue<T>(value: T, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value)
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setDebouncedValue(value), delay)
-    return () => window.clearTimeout(timeout)
-  }, [delay, value])
-
-  return debouncedValue
 }

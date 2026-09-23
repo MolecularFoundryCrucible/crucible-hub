@@ -461,7 +461,7 @@ function AppSearch({
   projectMfid?: string
   scope?: IdentityScope
 }) {
-  if (!projectMfid || !scope) return <GlobalSearch />
+  if (!projectMfid || !scope) return <GlobalSearch scope={scope} />
   return (
     <ProjectContextSearch
       preferFullProject={preferFullProject}
@@ -495,7 +495,13 @@ function ProjectContextSearchOverview({
   scope: IdentityScope
 }) {
   const { data: project } = useQuery(projectQueryOptions(scope, projectMfid))
-  return <ProjectSearchAction project={project} projectMfid={projectMfid} />
+  return (
+    <ProjectSearchAction
+      project={project}
+      projectMfid={projectMfid}
+      scope={scope}
+    />
+  )
 }
 
 function ProjectContextSearchSummary({
@@ -508,20 +514,29 @@ function ProjectContextSearchSummary({
   const { data: project } = useQuery(
     projectSummaryQueryOptions(scope, projectMfid)
   )
-  return <ProjectSearchAction project={project} projectMfid={projectMfid} />
+  return (
+    <ProjectSearchAction
+      project={project}
+      projectMfid={projectMfid}
+      scope={scope}
+    />
+  )
 }
 
 function ProjectSearchAction({
   project,
   projectMfid,
+  scope,
 }: {
   project?: { project_id: string; title?: string | null } | null
   projectMfid: string
+  scope: IdentityScope
 }) {
   return (
     <GlobalSearch
       projectMfid={projectMfid}
       projectName={project?.title ?? project?.project_id}
+      scope={scope}
     />
   )
 }
