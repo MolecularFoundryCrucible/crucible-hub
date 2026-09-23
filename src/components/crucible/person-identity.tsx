@@ -4,6 +4,7 @@ import { MfidText } from "@/components/crucible/mfid-text"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { formatUsername } from "@/lib/username"
 
 type PersonIdentityPresentation = "avatar" | "inline" | "stacked"
 type PersonIdentityVariant = PersonIdentityPresentation | "tooltip"
@@ -33,7 +34,7 @@ export function personDisplayName(
   return (
     structuredName ||
     person.name?.trim() ||
-    normalizedUsername(person.username ?? person.context) ||
+    formatUsername(person.username ?? person.context, "raw") ||
     person.unique_id
   )
 }
@@ -60,7 +61,7 @@ export function PersonIdentity({
   size?: PersonIdentitySize
 }) {
   const name = personDisplayName(person, nameStyle)
-  const username = normalizedUsername(person.username ?? person.context)
+  const username = formatUsername(person.username ?? person.context, "handle")
   const isServiceAccount = personIsServiceAccount(person)
 
   if (presentation === "inline") {
@@ -170,11 +171,6 @@ function PersonSecondaryLine({
       />
     </span>
   )
-}
-
-function normalizedUsername(username: string | null | undefined) {
-  const value = username?.trim().replace(/^@/, "")
-  return value ? `@${value}` : ""
 }
 
 function personInitials(person: PersonIdentityProfile) {

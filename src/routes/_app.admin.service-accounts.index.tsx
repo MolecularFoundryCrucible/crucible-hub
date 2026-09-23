@@ -68,6 +68,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-credential-dialog"
 import { ServiceAccountCreateDialog } from "@/features/service-accounts/service-account-create-dialog"
+import { formatUsername } from "@/lib/username"
 
 const serviceAccountSearchSchema = z.object({
   create: z.boolean().optional().catch(undefined),
@@ -407,7 +408,7 @@ function ServiceAccountCollection({
                     </TableCell>
                     <TableCell className="identity-directory-action text-center">
                       <Link
-                        aria-label={`Open @${serviceAccount.username}`}
+                        aria-label={`Open service account ${formatUsername(serviceAccount.username, "raw")}`}
                         className={buttonVariants({
                           size: "table-action",
                           variant: "ghost",

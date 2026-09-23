@@ -34,6 +34,7 @@ import { serviceAccountAdminQueryOptions } from "@/data/crucible/service-account
 import type { WorkspaceAccount } from "@/data/crucible/workspace-source"
 import { ServiceAccountDetail } from "@/features/service-accounts/service-account-detail"
 import { hubPageTitle } from "@/lib/page-title"
+import { formatUsername } from "@/lib/username"
 
 export const Route = createFileRoute(
   "/_app/admin/service-accounts/$serviceAccountMfid"
@@ -109,9 +110,8 @@ function ServiceAccountAdminPage() {
 
   const serviceAccount = serviceAccountResult.data
 
-  const title = serviceAccount.username
-    ? `@${serviceAccount.username}`
-    : serviceAccount.unique_id
+  const title =
+    formatUsername(serviceAccount.username, "raw") || serviceAccount.unique_id
 
   return (
     <PageLayout>

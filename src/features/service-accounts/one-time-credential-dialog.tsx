@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
+import { formatUsername } from "@/lib/username"
 
 export function OneTimeCredentialDialog({
   credential,
@@ -61,7 +62,9 @@ export function OneTimeCredentialDialog({
             <dl className="grid gap-3">
               <div>
                 <dt className="text-label text-muted-foreground">Account</dt>
-                <dd className="mt-1 text-body">@{credential.username}</dd>
+                <dd className="mt-1 text-body">
+                  {formatUsername(credential.username, "raw")}
+                </dd>
               </div>
               <div>
                 <dt className="text-label text-muted-foreground">MFID</dt>

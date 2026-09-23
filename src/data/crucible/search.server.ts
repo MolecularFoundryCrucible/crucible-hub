@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only"
 
 import type { components } from "@/generated/crucible-api"
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
+import { formatUsername } from "@/lib/username"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -81,7 +82,7 @@ function fixtureItems(
 ): readonly WorkspaceSearchResult[] {
   if (kind === "person") {
     return workspace.people.map((item) => ({
-      context: item.username ? `@${item.username}` : null,
+      context: formatUsername(item.username, "handle") || null,
       is_service_account: item.is_service_account,
       kind,
       name: `${item.first_name} ${item.last_name}`,
@@ -295,7 +296,7 @@ function projectResult(project: Schema<"ProjectRead">): WorkspaceSearchResult {
 
 function personResult(person: Schema<"UserPublicRead">): WorkspaceSearchResult {
   return {
-    context: person.username ? `@${person.username}` : null,
+    context: formatUsername(person.username, "handle") || null,
     is_service_account: person.is_service_account,
     kind: "person",
     name: `${person.first_name} ${person.last_name}`,

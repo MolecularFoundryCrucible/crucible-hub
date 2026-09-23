@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { personDisplayName } from "@/components/crucible/person-identity"
+import { formatUsername } from "@/lib/username"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -206,8 +207,8 @@ export function facetBucketLabel(
   }
   if (field === "owner" && bucket.owner) {
     const name = personDisplayName(bucket.owner)
-    const username = bucket.owner.username?.trim().replace(/^@/, "")
-    return username && name !== `@${username}` ? `${name} (@${username})` : name
+    const username = formatUsername(bucket.owner.username, "handle")
+    return username && name !== username ? `${name} (${username})` : name
   }
   if (field === "instrument" && bucket.instrument) {
     return bucket.instrument.instrument_name

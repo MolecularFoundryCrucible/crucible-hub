@@ -60,6 +60,7 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
+import { formatUsername } from "@/lib/username"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 
 const serviceAccountProfileSchema = z.object({
@@ -294,7 +295,7 @@ function ServiceAccountIdentityCard({
               <div>
                 <dt className="text-label text-muted-foreground">Username</dt>
                 <dd className="mt-1 text-body break-words">
-                  @{account.username}
+                  {formatUsername(account.username, "raw")}
                 </dd>
               </div>
               <div>
