@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Made bulk deletion review responsive while editing comments, processed requests sequentially with visible progress, added a safe stop-between-requests action, and identified review timeouts in server logs.
+
 - Clarified resource graphs with neutral node surfaces and kept graph tooltips and options visible in native fullscreen.
 
 - Fixed approved deletion history to read the permanent administrator audit after hard deletion removes the active request, with compact pagination and retained review details.

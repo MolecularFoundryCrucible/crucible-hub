@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   useInfiniteQuery,
   useMutation,
@@ -8,6 +8,7 @@ import {
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
+import { SavingChangesIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { notifySuccess } from "@/components/crucible/notifications"
@@ -484,71 +485,135 @@ function BulkReviewController({
   scope: IdentityScope
   selectedRequestIds: ReadonlySet<number>
 }) {
-  const queryClient = useQueryClient()
   const [decision, setDecision] = useState<WorkspaceDeletionReviewDecision>()
-  const [reviewError, setReviewError] = useState<string>()
-  const [reviewerNotes, setReviewerNotes] = useState("")
   const requests = items.filter(
     (request) =>
       selectedRequestIds.has(request.id) && isReviewableDeletionRequest(request)
   )
+  return (
+    <>
+      {children(
+        requests.length > 0 ? (
+          <BulkReviewActions
+            count={requests.length}
+            onApprove={() => setDecision("approved")}
+            onReject={() => setDecision("rejected")}
+          />
+        ) : undefined
+      )}
+      {decision ? (
+        <BulkReviewDialog
+          decision={decision}
+          key={decision}
+          onClose={() => setDecision(undefined)}
+          onSelectionChange={onSelectionChange}
+          requests={requests}
+          scope={scope}
+        />
+      ) : null}
+    </>
+  )
+}
+
+type BulkReviewOutcome = {
+  failed: Array<{ error: unknown; request: WorkspaceDeletionRequest }>
+  remaining: WorkspaceDeletionRequest[]
+  reviewed: WorkspaceDeletionRequest[]
+  stopped: boolean
+}
+
+function BulkReviewDialog({
+  decision,
+  onClose,
+  onSelectionChange,
+  requests,
+  scope,
+}: {
+  decision: WorkspaceDeletionReviewDecision
+  onClose: () => void
+  onSelectionChange: React.Dispatch<React.SetStateAction<Set<number>>>
+  requests: readonly WorkspaceDeletionRequest[]
+  scope: IdentityScope
+}) {
+  const queryClient = useQueryClient()
+  const stopRequested = useRef(false)
+  const [finalizing, setFinalizing] = useState(false)
+  const [progress, setProgress] = useState({
+    completed: 0,
+    total: requests.length,
+  })
+  const [reviewError, setReviewError] = useState<string>()
+  const [reviewStatus, setReviewStatus] = useState<string>()
+  const [reviewerNotes, setReviewerNotes] = useState("")
+  const [stopping, setStopping] = useState(false)
   const mutation = useMutation({
-    mutationFn: async ({
-      decision: nextDecision,
-      requests: nextRequests,
-    }: {
-      decision: WorkspaceDeletionReviewDecision
-      requests: readonly WorkspaceDeletionRequest[]
-    }) => {
-      const results = await Promise.allSettled(
-        nextRequests.map(async (request) =>
-          unwrapHubResult(
+    mutationFn: async ({ notes }: { notes?: string }) => {
+      const outcome: BulkReviewOutcome = {
+        failed: [],
+        remaining: [],
+        reviewed: [],
+        stopped: false,
+      }
+      setProgress({ completed: 0, total: requests.length })
+      for (const [index, request] of requests.entries()) {
+        if (stopRequested.current) {
+          outcome.stopped = true
+          outcome.remaining.push(...requests.slice(index))
+          break
+        }
+        setProgress({ completed: index, total: requests.length })
+        try {
+          const reviewed = unwrapHubResult(
             await reviewWorkspaceDeletionRequestById({
               data: {
-                decision: nextDecision,
+                decision,
                 requestId: request.id,
-                reviewerNotes: reviewerNotes.trim() || undefined,
+                reviewerNotes: notes,
                 scenario: fixtureScenarioFromScope(scope),
               },
             })
           )
-        )
-      )
-      return results.reduce<{
-        failed: Array<{
-          error: unknown
-          request: WorkspaceDeletionRequest
-        }>
-        reviewed: WorkspaceDeletionRequest[]
-      }>(
-        (outcome, result, index) => {
-          const request = nextRequests[index]
-          if (result.status === "fulfilled") outcome.reviewed.push(result.value)
-          else outcome.failed.push({ error: result.reason, request })
-          return outcome
-        },
-        { failed: [], reviewed: [] }
-      )
+          outcome.reviewed.push(reviewed)
+        } catch (error) {
+          outcome.failed.push({ error, request })
+        }
+        setProgress({ completed: index + 1, total: requests.length })
+      }
+      return outcome
     },
   })
 
   async function reviewSelected() {
-    if (!decision || requests.length === 0) return
+    if (requests.length === 0) return
+    stopRequested.current = false
+    setStopping(false)
     setReviewError(undefined)
+    setReviewStatus(undefined)
     try {
-      const outcome = await mutation.mutateAsync({ decision, requests })
-      const failedIds = new Set(outcome.failed.map(({ request }) => request.id))
-      onSelectionChange(failedIds)
-      if (outcome.reviewed.length > 0) {
-        await Promise.allSettled([
-          invalidateDeletionRequestMutationQueries(
-            queryClient,
-            scope,
-            outcome.reviewed.map((request) => request.resource_id)
-          ),
+      const outcome = await mutation.mutateAsync({
+        notes: reviewerNotes.trim() || undefined,
+      })
+      setFinalizing(true)
+      onSelectionChange(
+        new Set([
+          ...outcome.failed.map(({ request }) => request.id),
+          ...outcome.remaining.map((request) => request.id),
         ])
+      )
+      await invalidateDeletionRequestMutationQueries(
+        queryClient,
+        scope,
+        outcome.reviewed.map((request) => request.resource_id)
+      )
+      if (outcome.stopped) {
+        setFinalizing(false)
+        setReviewStatus(
+          `Stopped after ${outcome.reviewed.length + outcome.failed.length} of ${requests.length}. Unprocessed requests remain selected.`
+        )
+        return
       }
       if (outcome.failed.length > 0) {
+        setFinalizing(false)
         const fallback = `${outcome.failed.length} request${outcome.failed.length === 1 ? "" : "s"} could not be reviewed.`
         const reason = hubErrorMessage(outcome.failed[0]?.error, fallback)
         setReviewError(
@@ -563,75 +628,89 @@ function BulkReviewController({
           ? `${outcome.reviewed.length} deletion request${outcome.reviewed.length === 1 ? "" : "s"} approved`
           : `${outcome.reviewed.length} deletion request${outcome.reviewed.length === 1 ? "" : "s"} rejected`
       )
-      setReviewerNotes("")
-      setDecision(undefined)
+      setFinalizing(false)
+      onClose()
     } catch (error) {
+      setFinalizing(false)
       setReviewError(
         hubErrorMessage(error, "The selected requests could not be reviewed.")
       )
     }
   }
 
+  const action = decision === "approved" ? "Approving" : "Rejecting"
+  const pending = mutation.isPending || finalizing
   return (
-    <>
-      {children(
-        requests.length > 0 ? (
-          <BulkReviewActions
-            count={requests.length}
-            onApprove={() => {
-              mutation.reset()
-              setReviewError(undefined)
-              setReviewerNotes("")
-              setDecision("approved")
-            }}
-            onReject={() => {
-              mutation.reset()
-              setReviewError(undefined)
-              setReviewerNotes("")
-              setDecision("rejected")
-            }}
+    <ConfirmationAlertDialog
+      confirmLabel={
+        decision === "approved" ? "Approve deletion" : "Reject requests"
+      }
+      description={`${requests.length} selected request${requests.length === 1 ? "" : "s"}.`}
+      error={reviewError}
+      onCancelPending={
+        mutation.isPending
+          ? () => {
+              stopRequested.current = true
+              setStopping(true)
+            }
+          : undefined
+      }
+      onConfirm={() => void reviewSelected()}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+      open
+      pending={pending}
+      pendingCancelDisabled={stopping}
+      pendingCancelLabel={stopping ? "Stopping" : "Stop batch"}
+      pendingLabel={
+        finalizing
+          ? "Refreshing"
+          : `${action} ${Math.min(progress.completed + 1, progress.total)} of ${progress.total}`
+      }
+      title={
+        decision === "approved"
+          ? "Approve selected deletion requests?"
+          : "Reject selected deletion requests?"
+      }
+      variant={decision === "approved" ? "destructive" : "default"}
+    >
+      <Field>
+        <FieldLabel htmlFor="bulk-deletion-review-notes" optional>
+          Reviewer comment
+        </FieldLabel>
+        <Textarea
+          disabled={pending}
+          id="bulk-deletion-review-notes"
+          maxLength={2_000}
+          onChange={(event) => setReviewerNotes(event.target.value)}
+          value={reviewerNotes}
+        />
+      </Field>
+      {pending ? (
+        <div
+          aria-live="polite"
+          className="flex items-center gap-2 text-body text-muted-foreground"
+          role="status"
+        >
+          <SavingChangesIcon
+            aria-hidden="true"
+            className="motion-safe:animate-spin"
           />
-        ) : undefined
-      )}
-      <ConfirmationAlertDialog
-        confirmLabel={
-          decision === "approved" ? "Approve deletion" : "Reject requests"
-        }
-        description={`Review ${requests.length} selected request${requests.length === 1 ? "" : "s"} individually. Completed reviews remain applied if another request fails.`}
-        error={reviewError}
-        onConfirm={() => void reviewSelected()}
-        onOpenChange={(open) => {
-          if (!open) {
-            mutation.reset()
-            setReviewError(undefined)
-            setReviewerNotes("")
-            setDecision(undefined)
-          }
-        }}
-        open={Boolean(decision)}
-        pending={mutation.isPending}
-        pendingLabel={decision === "approved" ? "Approving" : "Rejecting"}
-        title={
-          decision === "approved"
-            ? "Approve selected deletion requests?"
-            : "Reject selected deletion requests?"
-        }
-        variant={decision === "approved" ? "destructive" : "default"}
-      >
-        <Field>
-          <FieldLabel htmlFor="bulk-deletion-review-notes" optional>
-            Reviewer comment
-          </FieldLabel>
-          <Textarea
-            disabled={mutation.isPending}
-            id="bulk-deletion-review-notes"
-            maxLength={2_000}
-            onChange={(event) => setReviewerNotes(event.target.value)}
-            value={reviewerNotes}
-          />
-        </Field>
-      </ConfirmationAlertDialog>
-    </>
+          <span>
+            {finalizing
+              ? "Refreshing deletion requests"
+              : stopping
+                ? `Stopping after the current request (${Math.min(progress.completed + 1, progress.total)} of ${progress.total})`
+                : `${action} request ${Math.min(progress.completed + 1, progress.total)} of ${progress.total}`}
+          </span>
+        </div>
+      ) : reviewStatus ? (
+        <p className="text-body" role="status">
+          {reviewStatus}
+        </p>
+      ) : null}
+    </ConfirmationAlertDialog>
   )
 }
 

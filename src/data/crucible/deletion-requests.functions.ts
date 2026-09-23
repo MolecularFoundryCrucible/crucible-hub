@@ -85,13 +85,16 @@ export const reviewWorkspaceDeletionRequestById = createServerFn({
   .validator(deletionRequestReviewInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      reviewWorkspaceDeletionRequest(
-        data.requestId,
-        data.decision,
-        data.reviewerNotes,
-        data.scenario,
-        context.requestSignal
-      )
+    return safeCrucibleCall(
+      context.correlationId,
+      () =>
+        reviewWorkspaceDeletionRequest(
+          data.requestId,
+          data.decision,
+          data.reviewerNotes,
+          data.scenario,
+          context.requestSignal
+        ),
+      { operation: "review-deletion-request" }
     )
   })
