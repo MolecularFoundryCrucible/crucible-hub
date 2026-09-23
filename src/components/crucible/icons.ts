@@ -71,6 +71,7 @@ export {
   Save as SaveChangesIcon,
   LoaderCircle as SavingChangesIcon,
   X as CancelChangesIcon,
+  X as RemoveFilterIcon,
   Check as CopySuccessIcon,
   CircleCheck as CapabilityAvailableIcon,
   CircleX as CapabilityUnavailableIcon,

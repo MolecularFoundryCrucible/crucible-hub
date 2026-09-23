@@ -6,7 +6,11 @@ import {
   DatasetFacetFilter,
   SampleFacetFilter,
 } from "@/components/crucible/collection-facet-filter"
-import { CollectionFilterPanel } from "@/components/crucible/collection-filter-panel"
+import {
+  CollectionFilterPanel,
+  collectionActiveFilter,
+  collectionActiveFilters,
+} from "@/components/crucible/collection-filter-panel"
 import {
   CollectionCreatedRangeFields,
   CollectionOrderFields,
@@ -37,6 +41,49 @@ import type {
 
 type ProjectDataFilterDraft = ProjectDataFilterSearch & {
   projectScope: ProjectScope
+}
+
+type ProjectDataFilterRemoval = Partial<ProjectDataFilterSearch> & {
+  scope?: undefined
+}
+
+const projectDataFilterRemoval: Readonly<
+  Partial<Record<string, ProjectDataFilterRemoval>>
+> = {
+  "created-from": { createdFrom: undefined },
+  "created-to": { createdTo: undefined },
+  "data-format": {
+    dataFormat: undefined,
+    dataFormatIsNull: undefined,
+    dataFormatSet: undefined,
+  },
+  instrument: {
+    instrumentMfid: undefined,
+    instrumentMfidIsNull: undefined,
+  },
+  measurement: {
+    measurement: undefined,
+    measurementIsNull: undefined,
+    measurementSet: undefined,
+  },
+  order: { direction: undefined, sort: undefined },
+  owner: {
+    ownerId: undefined,
+    ownerIdIsNull: undefined,
+    ownerIdSet: undefined,
+  },
+  "project-scope": { scope: undefined },
+  "sample-type": {
+    sampleType: undefined,
+    sampleTypeIsNull: undefined,
+    sampleTypeSet: undefined,
+  },
+  session: {
+    sessionName: undefined,
+    sessionNameIsNull: undefined,
+    sessionNameSet: undefined,
+  },
+  visibility: { visibility: undefined },
 }
 
 export function ProjectDataFilters({
@@ -97,59 +144,92 @@ export function ProjectDataFilters({
     if (hasErrors) setFiltersOpen(true)
   }, [errorKey, hasErrors, projectScope, valuesKey])
 
-  const active = [
-    projectScope !== "all"
-      ? `Relationship to this project: ${capitalize(projectScope)}`
-      : undefined,
-    values.visibility && values.visibility !== "all"
-      ? `Visibility: ${capitalize(values.visibility)}`
-      : undefined,
-    values.createdFrom
-      ? `Created from (UTC): ${values.createdFrom}`
-      : undefined,
-    values.createdTo ? `Created to (UTC): ${values.createdTo}` : undefined,
-    resolution.valid && resolution.filters.instrumentMfidIsNull
-      ? "Instrument: Unspecified"
-      : activeInstrumentMfid
-        ? `Instrument: ${resolvedInstrument ?? activeInstrumentMfid}`
-        : undefined,
-    resolution.valid && resolution.filters.ownerIdIsNull
-      ? "Owner: Unspecified"
-      : activeOwnerId
-        ? `Owner: ${resolvedOwner ?? activeOwnerId}`
-        : undefined,
-    resolution.valid
-      ? facetSummary(
-          "Sample type",
-          resolution.filters.sampleType,
-          resolution.filters.sampleTypeIsNull
-        )
-      : undefined,
-    resolution.valid
-      ? facetSummary(
-          "Measurement",
-          resolution.filters.measurement,
-          resolution.filters.measurementIsNull
-        )
-      : undefined,
-    resolution.valid
-      ? facetSummary(
-          "Session",
-          resolution.filters.sessionName,
-          resolution.filters.sessionNameIsNull
-        )
-      : undefined,
-    resolution.valid
-      ? facetSummary(
-          "Data format",
-          resolution.filters.dataFormat,
-          resolution.filters.dataFormatIsNull
-        )
-      : undefined,
-    resolution.valid && values.sort
-      ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
-      : undefined,
-  ].filter((value): value is string => Boolean(value))
+  const active = collectionActiveFilters(
+    collectionActiveFilter(
+      "project-scope",
+      projectScope !== "all"
+        ? `Relationship to this project: ${capitalize(projectScope)}`
+        : undefined
+    ),
+    collectionActiveFilter(
+      "visibility",
+      values.visibility && values.visibility !== "all"
+        ? `Visibility: ${capitalize(values.visibility)}`
+        : undefined
+    ),
+    collectionActiveFilter(
+      "created-from",
+      values.createdFrom
+        ? `Created from (UTC): ${values.createdFrom}`
+        : undefined
+    ),
+    collectionActiveFilter(
+      "created-to",
+      values.createdTo ? `Created to (UTC): ${values.createdTo}` : undefined
+    ),
+    collectionActiveFilter(
+      "instrument",
+      resolution.valid && resolution.filters.instrumentMfidIsNull
+        ? "Instrument: Unspecified"
+        : activeInstrumentMfid
+          ? `Instrument: ${resolvedInstrument ?? activeInstrumentMfid}`
+          : undefined
+    ),
+    collectionActiveFilter(
+      "owner",
+      resolution.valid && resolution.filters.ownerIdIsNull
+        ? "Owner: Unspecified"
+        : activeOwnerId
+          ? `Owner: ${resolvedOwner ?? activeOwnerId}`
+          : undefined
+    ),
+    collectionActiveFilter(
+      "sample-type",
+      resolution.valid
+        ? facetSummary(
+            "Sample type",
+            resolution.filters.sampleType,
+            resolution.filters.sampleTypeIsNull
+          )
+        : undefined
+    ),
+    collectionActiveFilter(
+      "measurement",
+      resolution.valid
+        ? facetSummary(
+            "Measurement",
+            resolution.filters.measurement,
+            resolution.filters.measurementIsNull
+          )
+        : undefined
+    ),
+    collectionActiveFilter(
+      "session",
+      resolution.valid
+        ? facetSummary(
+            "Session",
+            resolution.filters.sessionName,
+            resolution.filters.sessionNameIsNull
+          )
+        : undefined
+    ),
+    collectionActiveFilter(
+      "data-format",
+      resolution.valid
+        ? facetSummary(
+            "Data format",
+            resolution.filters.dataFormat,
+            resolution.filters.dataFormatIsNull
+          )
+        : undefined
+    ),
+    collectionActiveFilter(
+      "order",
+      resolution.valid && values.sort
+        ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
+        : undefined
+    )
+  )
   const invalid = (field: keyof ProjectDataFilterSearch) =>
     draftErrors.some((error) => error.field === field)
   const errorDescription = draftErrors.length
@@ -249,6 +329,23 @@ export function ProjectDataFilters({
     })
   }
 
+  function removeFilter(id: string) {
+    const changes = projectDataFilterRemoval[id]
+    if (!changes) return
+    void navigate({
+      params: { projectMfid },
+      search: (previous) => ({
+        ...previous,
+        ...changes,
+        datasetCursor: undefined,
+        preview: undefined,
+        sampleCursor: undefined,
+      }),
+      state: {},
+      to: "/projects/$projectMfid",
+    })
+  }
+
   return (
     <CollectionFilterPanel
       activeFilters={active}
@@ -262,7 +359,9 @@ export function ProjectDataFilters({
           </Button>
         </>
       }
+      onClearFilters={clear}
       onOpenChange={setFiltersOpen}
+      onRemoveFilter={removeFilter}
       open={filtersOpen}
       title="Project data filters"
     >

@@ -8,7 +8,11 @@ import {
   CollectionToolbar,
   DatasetCollectionBrowser,
 } from "@/components/crucible/collection-browser"
-import { CollectionFilterPanel } from "@/components/crucible/collection-filter-panel"
+import {
+  CollectionFilterPanel,
+  collectionActiveFilter,
+  collectionActiveFilters,
+} from "@/components/crucible/collection-filter-panel"
 import {
   CollectionCreatedRangeFields,
   CollectionOrderFields,
@@ -360,15 +364,24 @@ function InstrumentDatasetFilters({
   const [draft, setDraft] = useState(values)
   const [rangeInvalid, setRangeInvalid] = useState(false)
 
-  const active = [
-    values.createdFrom
-      ? `Created from (UTC): ${values.createdFrom}`
-      : undefined,
-    values.createdTo ? `Created to (UTC): ${values.createdTo}` : undefined,
-    values.sort
-      ? `Order: ${values.sort} (${values.direction === "asc" ? "ascending" : "descending"})`
-      : undefined,
-  ].filter((value): value is string => Boolean(value))
+  const active = collectionActiveFilters(
+    collectionActiveFilter(
+      "created-from",
+      values.createdFrom
+        ? `Created from (UTC): ${values.createdFrom}`
+        : undefined
+    ),
+    collectionActiveFilter(
+      "created-to",
+      values.createdTo ? `Created to (UTC): ${values.createdTo}` : undefined
+    ),
+    collectionActiveFilter(
+      "order",
+      values.sort
+        ? `Order: ${values.sort} (${values.direction === "asc" ? "ascending" : "descending"})`
+        : undefined
+    )
+  )
 
   function apply(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -403,6 +416,16 @@ function InstrumentDatasetFilters({
     setRangeInvalid(false)
   }
 
+  function removeFilter(id: string) {
+    if (id === "created-from") {
+      onApply({ ...values, createdFrom: undefined })
+    } else if (id === "created-to") {
+      onApply({ ...values, createdTo: undefined })
+    } else if (id === "order") {
+      onApply({ ...values, direction: undefined, sort: undefined })
+    }
+  }
+
   return (
     <CollectionFilterPanel
       activeFilters={active}
@@ -416,7 +439,9 @@ function InstrumentDatasetFilters({
           </Button>
         </>
       }
+      onClearFilters={clear}
       onOpenChange={changeOpen}
+      onRemoveFilter={removeFilter}
       open={open}
       title="Dataset filters"
     >

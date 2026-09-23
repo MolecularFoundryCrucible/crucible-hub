@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added visible removable filter chips and compact Clear all controls to global, project, and instrument data collections while preserving URL-backed filter and pagination behavior.
+
 - Simplified repository agent guidance and skill routing around durable invariants, authoritative documents, focused validation, and installer-owned external skills.
 
 - Standardized username presentation so identity and search contexts use `@username`, while account titles, labelled fields, credential workflows, copied values, and accessible names use canonical raw usernames.
