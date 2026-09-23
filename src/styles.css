@@ -398,17 +398,7 @@
   --graph-grid-dot: 1px;
   --graph-grid-size: 20px;
   --graph-resource-dataset: var(--resource-dataset);
-  --graph-resource-dataset-surface: color-mix(
-    in oklch,
-    var(--resource-dataset) 10%,
-    var(--graph-card)
-  );
   --graph-resource-sample: var(--resource-sample);
-  --graph-resource-sample-surface: color-mix(
-    in oklch,
-    var(--resource-sample) 10%,
-    var(--graph-card)
-  );
   --sidebar-width: 16rem;
   --sidebar-width-icon: 3rem;
   --sidebar-width-mobile: 18rem;
@@ -531,17 +521,7 @@
   --graph-action-hover: var(--accent);
   --graph-grid: #242424;
   --graph-resource-dataset: var(--resource-dataset);
-  --graph-resource-dataset-surface: color-mix(
-    in oklch,
-    var(--resource-dataset) 18%,
-    var(--graph-card)
-  );
   --graph-resource-sample: var(--resource-sample);
-  --graph-resource-sample-surface: color-mix(
-    in oklch,
-    var(--resource-sample) 18%,
-    var(--graph-card)
-  );
 }
 
 @layer base {
@@ -664,12 +644,10 @@ body {
 
 .resource-graph-flow-node[data-kind="sample"] {
   border-color: var(--graph-resource-sample);
-  background: var(--graph-resource-sample-surface);
 }
 
 .resource-graph-flow-node[data-kind="dataset"] {
   border-color: var(--graph-resource-dataset);
-  background: var(--graph-resource-dataset-surface);
 }
 
 .resource-graph-flow-node[data-root] {

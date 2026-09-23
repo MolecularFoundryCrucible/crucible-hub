@@ -100,6 +100,7 @@ type ResourceFlowNodeData = {
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  portalContainer?: React.RefObject<HTMLDivElement | null>
   thumbnail?: WorkspaceDatasetThumbnail
 }
 
@@ -140,6 +141,7 @@ type ResourceFlowNodePresentation = {
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   layoutDirection: LayoutDirection
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  portalContainer?: React.RefObject<HTMLDivElement | null>
   rootContext: string | null
   thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }
@@ -276,6 +278,7 @@ function ResourceGraphFlow({
         expansionStates,
         layoutDirection,
         onExpand: requestExpansion,
+        portalContainer: fullscreen ? surface : undefined,
         rootContext,
         thumbnails,
       }
@@ -553,6 +556,7 @@ function ResourceGraphFlow({
     display.thumbnails,
     expansionModesByNode,
     expansionStates,
+    fullscreen,
     graph.nodes,
     graph.rootMfid,
     layoutDirection,
@@ -905,6 +909,7 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
           layoutDirection={data.layoutDirection}
           node={data.node}
           onExpand={data.onExpand}
+          portalContainer={data.portalContainer}
         />
       ) : null}
     </div>
@@ -919,12 +924,14 @@ function GraphNodeExpansionControls({
   layoutDirection,
   node,
   onExpand,
+  portalContainer,
 }: {
   modes: readonly GraphExpansionMode[]
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  portalContainer?: React.RefObject<HTMLDivElement | null>
 }) {
   return (
     <>
@@ -935,6 +942,7 @@ function GraphNodeExpansionControls({
           mode={mode}
           node={node}
           onExpand={onExpand}
+          portalContainer={portalContainer}
           state={graphExpansionState(expansionStates, node.unique_id, mode)}
         />
       ))}
@@ -947,12 +955,14 @@ function GraphNodeExpansionAction({
   layoutDirection,
   node,
   onExpand,
+  portalContainer,
   state,
 }: {
   mode: GraphExpansionMode
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  portalContainer?: React.RefObject<HTMLDivElement | null>
   state?: GraphExpansionState
 }) {
   const pending = graphExpansionPending(state)
@@ -992,7 +1002,7 @@ function GraphNodeExpansionAction({
           <Icon aria-hidden="true" data-icon="inline-start" />
         )}
       </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent portalContainer={portalContainer}>{label}</TooltipContent>
     </Tooltip>
   )
 }
@@ -1031,6 +1041,7 @@ function GraphViewportControls({
   positions: ReadonlyMap<string, LayoutPosition>
   surface: React.RefObject<HTMLDivElement | null>
 }) {
+  const portalContainer = fullscreen ? surface : undefined
   return (
     <div className="resource-graph-controls absolute top-3 right-3 flex gap-2">
       <ButtonGroup aria-label="Graph viewport controls">
@@ -1039,6 +1050,7 @@ function GraphViewportControls({
           onClick={() =>
             void flow.zoomOut(graphViewportOptions(surface.current))
           }
+          portalContainer={portalContainer}
         >
           <ZoomOutGraphIcon aria-hidden="true" />
         </GraphControl>
@@ -1047,6 +1059,7 @@ function GraphViewportControls({
           onClick={() =>
             void flow.zoomIn(graphViewportOptions(surface.current))
           }
+          portalContainer={portalContainer}
         >
           <ZoomInGraphIcon aria-hidden="true" />
         </GraphControl>
@@ -1058,6 +1071,7 @@ function GraphViewportControls({
               padding: 0.16,
             })
           }
+          portalContainer={portalContainer}
         >
           <FitGraphIcon aria-hidden="true" />
         </GraphControl>
@@ -1068,12 +1082,14 @@ function GraphViewportControls({
         graph={graph}
         onDisplayChange={onDisplayChange}
         onResetLayout={onResetLayout}
+        portalContainer={portalContainer}
         positions={positions}
         surface={surface}
       />
       <GraphControl
         label={fullscreen ? "Exit fullscreen graph" : "View graph fullscreen"}
         onClick={onToggleFullscreen}
+        portalContainer={portalContainer}
         pressed={fullscreen}
       >
         {fullscreen ? (
@@ -1092,6 +1108,7 @@ function GraphDisplayMenu({
   graph,
   onDisplayChange,
   onResetLayout,
+  portalContainer,
   positions,
   surface,
 }: {
@@ -1100,6 +1117,7 @@ function GraphDisplayMenu({
   graph: WorkspaceResourceGraph
   onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
   onResetLayout: () => void
+  portalContainer?: React.RefObject<HTMLDivElement | null>
   positions: ReadonlyMap<string, LayoutPosition>
   surface: React.RefObject<HTMLDivElement | null>
 }) {
@@ -1122,9 +1140,15 @@ function GraphDisplayMenu({
         >
           <GraphDisplayOptionsIcon aria-hidden="true" />
         </TooltipTrigger>
-        <TooltipContent>Graph options</TooltipContent>
+        <TooltipContent portalContainer={portalContainer}>
+          Graph options
+        </TooltipContent>
       </Tooltip>
-      <DropdownMenuContent align="end" className="min-w-44">
+      <DropdownMenuContent
+        align="end"
+        className="min-w-44"
+        portalContainer={portalContainer}
+      >
         <DropdownMenuGroup>
           <DropdownMenuLabel>Layout</DropdownMenuLabel>
           <DropdownMenuItem
@@ -1189,11 +1213,13 @@ function GraphControl({
   children,
   label,
   onClick,
+  portalContainer,
   pressed,
 }: {
   children: React.ReactNode
   label: string
   onClick: () => void
+  portalContainer?: React.RefObject<HTMLDivElement | null>
   pressed?: boolean
 }) {
   return (
@@ -1212,7 +1238,7 @@ function GraphControl({
       >
         {children}
       </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent portalContainer={portalContainer}>{label}</TooltipContent>
     </Tooltip>
   )
 }
@@ -1390,6 +1416,7 @@ function resourceFlowNodeData(
     layoutDirection: presentation.layoutDirection,
     node,
     onExpand: presentation.onExpand,
+    portalContainer: presentation.portalContainer,
     thumbnail:
       presentation.displayThumbnails && node.kind === "dataset"
         ? presentation.thumbnails[node.unique_id]
