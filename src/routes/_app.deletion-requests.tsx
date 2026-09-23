@@ -13,7 +13,11 @@ import {
 } from "@/components/crucible/resource-preview-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  WorkspaceProvider,
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { identityScopeWithPrivilegeMode } from "@/data/crucible/query-keys"
@@ -27,7 +31,10 @@ import {
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
 import { DeletionAuditQueue } from "@/features/deletion-requests/deletion-audit-queue"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
-import type { WorkspaceDeletionRequestSort } from "@/data/crucible/workspace-source"
+import type {
+  WorkspaceAccount,
+  WorkspaceDeletionRequestSort,
+} from "@/data/crucible/workspace-source"
 
 const deletionRequestSearchSchema = z
   .object({
@@ -67,20 +74,20 @@ export const Route = createFileRoute("/_app/deletion-requests")({
   loader: async ({ context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
+    const account = context.queryClient.getQueryData(
+      accountQueryOptions(source.scope).queryKey
+    )
+    const scope = account
+      ? deletionAdministrationScope(source.scope, account)
+      : source.scope
     if (deps.view === "approved") {
-      const account = context.queryClient.getQueryData(
-        accountQueryOptions(source.scope).queryKey
-      )
       if (account && !account.is_service_account)
         void context.queryClient.prefetchInfiniteQuery(
-          deletionAuditInfiniteQueryOptions(
-            deletionAuditQueryScope(source.scope, account),
-            deletionAuditScope(account)
-          )
+          deletionAuditInfiniteQueryOptions(scope, deletionAuditScope(account))
         )
       return
     }
-    const options = deletionRequestsInfiniteQueryOptions(source.scope, {
+    const options = deletionRequestsInfiniteQueryOptions(scope, {
       direction:
         deps.direction ?? defaultDeletionRequestDirection(deps.view, deps.sort),
       limit: deletionRequestPageLimit,
@@ -95,8 +102,20 @@ export const Route = createFileRoute("/_app/deletion-requests")({
 })
 
 function DeletionRequestsPage() {
+  const baseScope = useWorkspaceScope()
+  const mode = useWorkspaceMode()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(baseScope))
+  const scope = deletionAdministrationScope(baseScope, account)
+
+  return (
+    <WorkspaceProvider mode={mode} privilegeMode={scope[3]} scope={scope}>
+      <DeletionRequestsContent account={account} />
+    </WorkspaceProvider>
+  )
+}
+
+function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
   const scope = useWorkspaceScope()
-  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const requestedView = search.view ?? "submitted"
@@ -187,7 +206,7 @@ function DeletionRequestsPage() {
           <DeletionAuditQueue
             account={account}
             auditScope={auditScope}
-            scope={deletionAuditQueryScope(scope, account)}
+            scope={scope}
           />
         ) : (
           <DeletionRequestQueue
@@ -248,7 +267,7 @@ function deletionAuditScope(account: {
     : ("submitted" as const)
 }
 
-function deletionAuditQueryScope(
+function deletionAdministrationScope(
   scope: IdentityScope,
   account: { authorization: { can_elevate: boolean } }
 ) {

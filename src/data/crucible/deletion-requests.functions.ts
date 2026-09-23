@@ -10,6 +10,7 @@ import {
   reviewWorkspaceDeletionRequest,
 } from "./deletion-requests.server"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
+import { privilegeModeSchema } from "./privilege-mode"
 import { queryCancellationMiddleware } from "./query-cancellation"
 
 const deletionRequestScopeSchema = z.enum([
@@ -35,6 +36,7 @@ export const deletionRequestListInputSchema = z
     direction: deletionRequestDirectionSchema,
     limit: z.number().int().min(1).max(1_000),
     projectMfid: z.string().trim().min(1).max(255).optional(),
+    privilegeMode: privilegeModeSchema,
     scenario: fixtureScenarioSchema.optional(),
     scope: deletionRequestScopeSchema,
     sort: deletionRequestSortSchema,
@@ -45,6 +47,7 @@ export const deletionRequestListInputSchema = z
 export const deletionRequestReviewInputSchema = z
   .object({
     decision: deletionReviewDecisionSchema,
+    privilegeMode: privilegeModeSchema,
     requestId: z.number().int().positive(),
     reviewerNotes: z.string().trim().max(2_000).optional(),
     scenario: fixtureScenarioSchema.optional(),
@@ -96,7 +99,8 @@ export const reviewWorkspaceDeletionRequestById = createServerFn({
           data.decision,
           data.reviewerNotes,
           data.scenario,
-          context.requestSignal
+          context.requestSignal,
+          data.privilegeMode
         ),
       { operation: "review-deletion-request" }
     )

@@ -33,6 +33,7 @@ export function resourceQueryOptions(
         await getWorkspaceResource({
           data: {
             projection: "overview",
+            privilegeMode: scope[3],
             resourceMfid,
             scenario: fixtureScenarioFromScope(scope),
           },
@@ -67,6 +68,7 @@ export function resourceSummaryQueryOptions(
         await getWorkspaceResource({
           data: {
             projection: "summary",
+            privilegeMode: scope[3],
             resourceMfid,
             scenario: fixtureScenarioFromScope(scope),
           },
@@ -86,7 +88,11 @@ export function datasetFilesQueryOptions(
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceDatasetFiles({
-          data: { datasetMfid, scenario: fixtureScenarioFromScope(scope) },
+          data: {
+            datasetMfid,
+            privilegeMode: scope[3],
+            scenario: fixtureScenarioFromScope(scope),
+          },
           signal,
         })
       ),

@@ -81,7 +81,7 @@ export function DeletionRequestQueue({
   action?: React.ReactNode
   bulkReview?: boolean
   emptyTitle: string
-  filters: Omit<WorkspaceDeletionRequestFilters, "cursor">
+  filters: Omit<WorkspaceDeletionRequestFilters, "cursor" | "privilegeMode">
   onSortChange?: (
     sort: WorkspaceDeletionRequestSort,
     direction: "asc" | "desc"
@@ -567,6 +567,7 @@ function BulkReviewDialog({
             await reviewWorkspaceDeletionRequestById({
               data: {
                 decision,
+                privilegeMode: scope[3],
                 requestId: request.id,
                 reviewerNotes: notes,
                 scenario: fixtureScenarioFromScope(scope),
@@ -993,6 +994,7 @@ function DeletionRequestDialog({
         await reviewWorkspaceDeletionRequestById({
           data: {
             decision,
+            privilegeMode: scope[3],
             requestId: request.id,
             reviewerNotes: reviewerNotes.trim() || undefined,
             scenario: fixtureScenarioFromScope(scope),

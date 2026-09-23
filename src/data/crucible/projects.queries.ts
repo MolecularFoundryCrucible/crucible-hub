@@ -89,6 +89,7 @@ export function projectQueryOptions(scope: IdentityScope, projectMfid: string) {
         await getWorkspaceProject({
           data: {
             projection: "overview",
+            privilegeMode: scope[3],
             projectMfid,
             scenario: fixtureScenarioFromScope(scope),
           },
@@ -115,6 +116,7 @@ export function projectSummaryQueryOptions(
         await getWorkspaceProject({
           data: {
             projection: "summary",
+            privilegeMode: scope[3],
             projectMfid,
             scenario: fixtureScenarioFromScope(scope),
           },

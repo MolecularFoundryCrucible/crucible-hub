@@ -73,6 +73,7 @@ export function ResourceDeletionRequestCard({
       unwrapHubResult(
         await createWorkspaceResourceDeletionRequest({
           data: {
+            privilegeMode: scope[3],
             reason: reason.trim() || undefined,
             resourceMfid: resource.unique_id,
             scenario: fixtureScenarioFromScope(scope),

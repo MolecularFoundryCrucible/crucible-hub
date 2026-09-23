@@ -9,6 +9,7 @@ import { crucibleRequestSignal } from "../../server/crucible/request-signal.serv
 import type { FixtureScenario } from "./fixture-scenarios"
 import { fixtureCursorPage } from "./pagination"
 import { workspacePersonSchema } from "./people.schema"
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import type {
@@ -37,6 +38,7 @@ export type WorkspaceDeletionRequestFilters = {
   direction: WorkspaceDeletionRequestDirection
   limit: number
   projectMfid?: string
+  privilegeMode: WorkspacePrivilegeMode
   scope: WorkspaceDeletionRequestScope
   sort: WorkspaceDeletionRequestSort
   status?: WorkspaceDeletionRequestStatus
@@ -209,23 +211,22 @@ export async function readWorkspaceDeletionRequests(
     }
   }
 
-  const result = await createCrucibleClient(configuration).GET(
-    "/deletion_requests",
-    {
-      params: {
-        query: {
-          cursor: input.cursor,
-          direction: input.direction,
-          limit: input.limit,
-          project_mfid: input.projectMfid,
-          scope: input.scope,
-          sort: input.sort,
-          status: input.status,
-        },
+  const result = await createCrucibleClient(configuration, {
+    privilegeMode: input.privilegeMode,
+  }).GET("/deletion_requests", {
+    params: {
+      query: {
+        cursor: input.cursor,
+        direction: input.direction,
+        limit: input.limit,
+        project_mfid: input.projectMfid,
+        scope: input.scope,
+        sort: input.sort,
+        status: input.status,
       },
-      signal: crucibleRequestSignal(requestSignal),
-    }
-  )
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
   const page = deletionRequestPageSchema.safeParse(result.data)
   if (!page.success) throw new Error("The deletion request list is invalid.")
@@ -401,7 +402,8 @@ export async function reviewWorkspaceDeletionRequest(
   decision: WorkspaceDeletionReviewDecision,
   reviewerNotes?: string,
   scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
+  requestSignal?: AbortSignal,
+  privilegeMode?: WorkspacePrivilegeMode
 ): Promise<WorkspaceDeletionRequest> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable")
@@ -429,19 +431,18 @@ export async function reviewWorkspaceDeletionRequest(
     return reviewed
   }
 
-  const result = await createCrucibleClient(configuration).PATCH(
-    "/deletion_requests/{request_id}",
-    {
-      params: {
-        path: { request_id: requestId },
-        query: {
-          reviewer_notes: reviewerNotes,
-          status: decision,
-        },
+  const result = await createCrucibleClient(configuration, {
+    privilegeMode,
+  }).PATCH("/deletion_requests/{request_id}", {
+    params: {
+      path: { request_id: requestId },
+      query: {
+        reviewer_notes: reviewerNotes,
+        status: decision,
       },
-      signal: crucibleRequestSignal(requestSignal),
-    }
-  )
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
   return workspaceDeletionRequest(result.data)
 }

@@ -25,6 +25,7 @@ import {
   writeWorkspaceResourceMetadata,
 } from "./resources.server"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
+import { privilegeModeSchema } from "./privilege-mode"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import type {
   WorkspaceDatasetThumbnailOperation,
@@ -67,12 +68,17 @@ export const resourceGraphInputSchema = resourceMfidInputSchema
   })
 
 const resourceReadInputSchema = resourceMfidInputSchema.extend({
+  privilegeMode: privilegeModeSchema,
   projection: z.enum(["overview", "summary"]),
 })
 
 export const datasetFilesInputSchema = z.object({
   datasetMfid: z.string().trim().min(1).max(255),
   scenario: fixtureScenarioSchema.optional(),
+})
+
+const datasetFilesReadInputSchema = datasetFilesInputSchema.extend({
+  privilegeMode: privilegeModeSchema,
 })
 
 export const THUMBNAIL_NAME_MAX_LENGTH = 255
@@ -400,6 +406,7 @@ export const datasetDescriptiveUpdateInputSchema = z
 
 export const resourceDeletionRequestInputSchema = z
   .object({
+    privilegeMode: privilegeModeSchema,
     reason: z.string().trim().min(1).max(2000).optional(),
     resourceMfid: canonicalResourceMfidSchema,
     scenario: fixtureScenarioSchema.optional(),
@@ -498,14 +505,15 @@ export const getWorkspaceResource = createServerFn({ method: "GET" })
         data.resourceMfid,
         data.scenario,
         context.requestSignal,
-        data.projection
+        data.projection,
+        data.privilegeMode
       )
     )
   })
 
 export const getWorkspaceDatasetFiles = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])
-  .validator(datasetFilesInputSchema)
+  .validator(datasetFilesReadInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(
@@ -514,7 +522,8 @@ export const getWorkspaceDatasetFiles = createServerFn({ method: "GET" })
         readWorkspaceDatasetFiles(
           data.datasetMfid,
           data.scenario,
-          context.requestSignal
+          context.requestSignal,
+          data.privilegeMode
         ),
       { operation: "read-dataset-files" }
     )
@@ -708,7 +717,8 @@ export const createWorkspaceResourceDeletionRequest = createServerFn({
         data.resourceMfid,
         data.reason,
         data.scenario,
-        context.requestSignal
+        context.requestSignal,
+        data.privilegeMode
       )
     )
   })

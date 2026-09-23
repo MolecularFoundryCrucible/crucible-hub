@@ -18,6 +18,7 @@ import {
 } from "./projects.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
+import { privilegeModeSchema } from "./privilege-mode"
 
 export const projectListInputSchema = z.object({
   affiliation: collectionAffiliationSchema.optional(),
@@ -28,6 +29,7 @@ export const projectListInputSchema = z.object({
 })
 
 export const projectDetailInputSchema = z.object({
+  privilegeMode: privilegeModeSchema,
   projectMfid: z.string().trim().min(1).max(255),
   projection: z.enum(["overview", "summary"]),
   scenario: fixtureScenarioSchema.optional(),
@@ -122,7 +124,8 @@ export const getWorkspaceProject = createServerFn({ method: "GET" })
         data.projectMfid,
         data.scenario,
         context.requestSignal,
-        data.projection
+        data.projection,
+        data.privilegeMode
       )
     )
   })

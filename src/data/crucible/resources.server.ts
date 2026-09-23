@@ -20,6 +20,7 @@ import {
   workspaceApiRelationshipOperation,
 } from "./resource-relationships"
 import type { FixtureScenario } from "./fixture-scenarios"
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
 import type {
   WorkspaceDatasetFile,
   WorkspaceDatasetInstrumentAssignment,
@@ -438,7 +439,8 @@ export async function readWorkspaceResource(
   resourceMfid: string,
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal,
-  projection: "overview" | "summary" = "overview"
+  projection: "overview" | "summary" = "overview",
+  privilegeMode?: WorkspacePrivilegeMode
 ): Promise<WorkspaceResourceDetail | null> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
@@ -494,7 +496,7 @@ export async function readWorkspaceResource(
     })
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, { privilegeMode })
   const result = await client.GET("/resources/{resource_id}", {
     params: {
       path: { resource_id: resourceMfid },
@@ -517,7 +519,8 @@ export async function readWorkspaceResource(
 export async function readWorkspaceDatasetFiles(
   datasetMfid: string,
   scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
+  requestSignal?: AbortSignal,
+  privilegeMode?: WorkspacePrivilegeMode
 ): Promise<readonly WorkspaceDatasetFile[]> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
@@ -529,7 +532,7 @@ export async function readWorkspaceDatasetFiles(
     )
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, { privilegeMode })
   const result = await client.GET("/datasets/{dsid}/files", {
     params: { path: { dsid: datasetMfid } },
     signal: crucibleRequestSignal(requestSignal),
@@ -1586,7 +1589,8 @@ export async function requestWorkspaceResourceDeletion(
   resourceMfid: string,
   reason?: string,
   scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
+  requestSignal?: AbortSignal,
+  privilegeMode?: WorkspacePrivilegeMode
 ): Promise<WorkspaceDeletionRequest> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
@@ -1598,7 +1602,9 @@ export async function requestWorkspaceResourceDeletion(
     const resource = await readWorkspaceResource(
       resourceMfid,
       scenario,
-      requestSignal
+      requestSignal,
+      "overview",
+      privilegeMode
     )
     if (
       !resource ||
@@ -1627,7 +1633,7 @@ export async function requestWorkspaceResourceDeletion(
     }
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, { privilegeMode })
   const result = await client.POST("/resources/{resource_id}/delete", {
     params: {
       path: { resource_id: resourceMfid },

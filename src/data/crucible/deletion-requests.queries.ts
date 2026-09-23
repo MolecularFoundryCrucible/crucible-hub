@@ -46,7 +46,7 @@ export function deletionAuditInfiniteQueryOptions(
 
 export function deletionRequestsInfiniteQueryOptions(
   scope: IdentityScope,
-  filters: Omit<WorkspaceDeletionRequestFilters, "cursor">
+  filters: Omit<WorkspaceDeletionRequestFilters, "cursor" | "privilegeMode">
 ) {
   const scenario = fixtureScenarioFromScope(scope)
   return infiniteQueryOptions({
@@ -58,6 +58,7 @@ export function deletionRequestsInfiniteQueryOptions(
           data: {
             ...filters,
             cursor: pageParam ?? undefined,
+            privilegeMode: scope[3],
             scenario,
           },
           signal,

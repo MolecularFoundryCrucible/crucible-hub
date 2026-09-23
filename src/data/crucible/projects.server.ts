@@ -12,6 +12,7 @@ import type { CollectionAffiliation } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
 import type { WorkspaceProject, WorkspaceProjectPage } from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
+import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
@@ -128,7 +129,8 @@ export async function readWorkspaceProject(
   projectMfid: string,
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal,
-  projection: "overview" | "summary" = "overview"
+  projection: "overview" | "summary" = "overview",
+  privilegeMode?: WorkspacePrivilegeMode
 ): Promise<WorkspaceProject | null> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
@@ -144,7 +146,7 @@ export async function readWorkspaceProject(
     )
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, { privilegeMode })
   const result = await client.GET("/projects/{project_ref}", {
     params: {
       path: { project_ref: projectMfid },
