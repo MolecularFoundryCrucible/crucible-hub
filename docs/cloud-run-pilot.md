@@ -1,6 +1,6 @@
 # Cloud Run pilot
 
-Status: Pilot infrastructure prepared; image and service deployment pending
+Status: Internal service deployed with production sign-in disabled; public proxy route pending
 
 The production API reported revision `8e4d0ef1f18878f0ab7eff428a053f83b970f3fe` deployed with schema `e92a6b1c730f` and healthy readiness. The Hub's pinned OpenAPI artifact and generated client now use that API revision. API production Hub login remains disabled until the proxy and Hub service are ready for the controlled pilot.
 
@@ -8,7 +8,9 @@ The limited Hub pilot uses `crucible-hub` in `mf-crucible/us-central1`, 2 vCPU, 
 
 ## Existing infrastructure and build
 
-Read-only inventory on 2026-09-28 found `crucible-web`, the Nginx proxy VM, in `mf-crucible/us-central1-a` on the project's default VPC. Private Google Access is enabled on its `us-central1` default subnet. The dedicated `crucible-hub` Artifact Registry repository and `crucible-hub-runtime@mf-crucible.iam.gserviceaccount.com` identity were then created. Cloud Build has repository-scoped writer access, and the runtime identity has accessor access only to the existing Hub client-secret resource. Secret version 1 is enabled; its value was not accessed. No `crucible-hub` Cloud Run service exists yet. Verify invocation from the VM after the service exists and before enabling the public route. The sibling `crucible-nginx/nginx.conf` has `/explore/` but no `/hub/` route.
+Read-only inventory on 2026-09-28 found `crucible-web`, the Nginx proxy VM, in `mf-crucible/us-central1-a` on the project's default VPC. Private Google Access is enabled on its `us-central1` default subnet. The dedicated `crucible-hub` Artifact Registry repository and `crucible-hub-runtime@mf-crucible.iam.gserviceaccount.com` identity were then created. Cloud Build has repository-scoped writer access, and the runtime identity has accessor access only to the existing Hub client-secret resource. Secret version 1 is enabled; its value was not accessed. The sibling `crucible-nginx/nginx.conf` has `/explore/` but no `/hub/` route.
+
+The first internal Cloud Run revision is `crucible-hub-00001-hlj`, built from Hub commit `4900081719116919cd4cb46638b6852e1ae02f3e` and image `us-central1-docker.pkg.dev/mf-crucible/crucible-hub/app@sha256:a3ba43bea096d7085e2cffced8e05ba0c1fb31d3243c11d5d55edcb5076a3696`. The service's reported URL is `https://crucible-hub-cem4trw4lq-uc.a.run.app`; the deploy output also gives `https://crucible-hub-776258882599.us-central1.run.app`. Use the reported URL for the proxy upstream. The service has `internal` ingress, `roles/run.invoker` for `allUsers`, one minimum and maximum instance, session affinity, and `HUB_AUTH_PRODUCTION_ENABLED=false`. The internal ingress restriction remains effective despite the IAM policy: from outside the project `/hub/health` returned 404, while `crucible-web` received 200 for `/hub/` and `/hub/health`. This verifies VM invocation but not the final Nginx route, cookies, or sign-in.
 
 The [pilot Cloud Build configuration](../cloudbuild.pilot.yaml) builds and pushes the existing Dockerfile image without deploying it. Unlike Explorer's combined build-and-deploy pipeline, this keeps the image build separate from authentication activation. The [Cloud Build source ignore file](../.gcloudignore) excludes local environment files and other private build artifacts before source upload; the Docker build context has its own [ignore file](../.dockerignore). Submit only the reviewed Hub commit from a clean checkout, supply its full SHA as `_IMAGE_TAG`, record the pushed image's `sha256` digest, and use that digest for Cloud Run deployment. A tag alone does not prove the uploaded source matched the commit.
 
@@ -33,28 +35,28 @@ gcloud iam service-accounts describe crucible-hub-runtime@mf-crucible.iam.gservi
 - Configure the service-level minimum and maximum to one and enable Cloud Run session affinity. Cloud Run treats both scaling limits and affinity as best effort. Keep all traffic on one revision; a new deployment signs users out as its process-local sessions disappear.
 - Preserve `/hub/` in the Nginx upstream request. The Graph Explorer's `/explore/` proxy strips its prefix because Explorer handles that internally; copying that rule would break Hub routes and its callback.
 
-After reviewing the network prerequisites, deploy the inactive service and verify the proxy's internal invocation path. The proposed initial service configuration is:
+The inactive service was deployed with the following configuration. Do not rerun the command as a new revision merely to inspect it:
 
 ```sh
 gcloud run deploy crucible-hub \
   --project mf-crucible \
   --region us-central1 \
-  --image "$HUB_IMAGE_DIGEST" \
+  --image us-central1-docker.pkg.dev/mf-crucible/crucible-hub/app@sha256:a3ba43bea096d7085e2cffced8e05ba0c1fb31d3243c11d5d55edcb5076a3696 \
   --service-account crucible-hub-runtime@mf-crucible.iam.gserviceaccount.com \
   --cpu 2 --memory 1Gi --concurrency 20 --cpu-throttling \
   --min 1 --max 1 --session-affinity \
   --port 3000 --ingress internal --allow-unauthenticated \
-  --set-env-vars "HUB_DATA_SOURCE=hub-auth,HUB_AUTH_SESSION_MODE=single-instance,HUB_AUTH_PRODUCTION_ENABLED=false,HUB_AUTH_CALLBACK_URI=https://crucible.lbl.gov/hub/auth/callback,HUB_AUTH_PUBLIC_API_URL=https://crucible.lbl.gov/api/v3,CRUCIBLE_API_BASE_URL=$HUB_API_BASE_URL" \
+  --set-env-vars "HUB_DATA_SOURCE=hub-auth,HUB_AUTH_SESSION_MODE=single-instance,HUB_AUTH_PRODUCTION_ENABLED=false,HUB_AUTH_CALLBACK_URI=https://crucible.lbl.gov/hub/auth/callback,HUB_AUTH_PUBLIC_API_URL=https://crucible.lbl.gov/api/v3,CRUCIBLE_API_BASE_URL=https://crucible.lbl.gov/api/v3" \
   --set-secrets HUB_AUTH_CLIENT_SECRET=crucible-hub-main-client-secret:1
 ```
 
-`HUB_IMAGE_DIGEST` must name a reviewed immutable Artifact Registry image. `HUB_API_BASE_URL` must be the approved protected HTTPS API route. These are operator-supplied non-secret values; the client secret is resolved by Cloud Run from Secret Manager. The command is a review target, not permission to deploy.
+The image is deployed by immutable digest. The Hub currently calls the existing public HTTPS API route, matching the restricted pilot's accepted API ingress limitation. The client secret is resolved by Cloud Run from Secret Manager.
 
 ## Ingress decision before deployment
 
 The existing Nginx proxy must be able to reach Cloud Run without exposing a direct public bypass. Prefer Cloud Run `internal` ingress from the verified same-project VPC. If invocation from `crucible-web` does not work, inspect its actual route and choose a reviewed Private Service Connect or load-balancer path rather than opening `run.app` to the internet. Nginx must preserve the `/hub/` path and both the Hub's session cookies and Cloud Run's affinity cookie. The proposed `--allow-unauthenticated` permits invocation from allowed internal sources without Google IAM tokens, while Hub authentication still protects private data. The API auth ingress and proxy-to-API transport limitations are accepted for the restricted test-user pilot and remain recorded in the [risk review](cloud-run-pilot-risk-review.md); they must be revisited before broader release. See [Cloud Run private networking](https://docs.cloud.google.com/run/docs/securing/private-networking) and [ingress controls](https://docs.cloud.google.com/run/docs/securing/ingress).
 
-Once Cloud Run returns its actual `run.app` hostname, prepare this addition to the `crucible.lbl.gov` Nginx server. The log format belongs in the `http` block. Replace `HUB_RUN_HOST` with the exact hostname returned by Cloud Run. Nginx [preserves the incoming URI](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass) when `proxy_pass` has no trailing URI, so `/hub/auth/callback` and built assets reach TanStack Start unchanged. Explorer's `/explore/` route strips its prefix and must not be copied. Confirm the Nginx container's CA bundle path before reloading.
+Prepare this addition to the `crucible.lbl.gov` Nginx server. The log format belongs in the `http` block. The upstream host below is the verified Cloud Run service URL. Nginx [preserves the incoming URI](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass) when `proxy_pass` has no trailing URI, so `/hub/auth/callback` and built assets reach TanStack Start unchanged. Explorer's `/explore/` route strips its prefix and must not be copied. Confirm the Nginx container's CA bundle path before reloading.
 
 ```nginx
 log_format hub_access escape=json '{"method":"$request_method","path":"$uri","status":$status,"duration":$request_time}';
@@ -67,13 +69,14 @@ location ^~ /hub/ {
     access_log /var/log/nginx/access.log hub_access;
     error_log /dev/null;
     client_max_body_size 16m;
-    proxy_pass https://HUB_RUN_HOST;
-    proxy_set_header Host HUB_RUN_HOST;
+    proxy_pass https://crucible-hub-cem4trw4lq-uc.a.run.app;
+    proxy_set_header Host crucible-hub-cem4trw4lq-uc.a.run.app;
     proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Proto https;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_ssl_server_name on;
+    proxy_ssl_name crucible-hub-cem4trw4lq-uc.a.run.app;
     proxy_ssl_verify on;
     proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
     proxy_connect_timeout 5s;
