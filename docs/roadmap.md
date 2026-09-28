@@ -12,37 +12,37 @@ This document owns delivery order, entry and completion gates, current status, a
 
 - Build API-authorized, capability-aware workflows without recreating authorization in Hub.
 - Complete one recoverable workflow at a time and keep mutation states local.
-- Do not expose a production mutation until the shared session, authentication, same-origin, and CSRF gates are complete.
+- Do not expose a production mutation until the selected pilot session mode, authentication, same-origin, and CSRF gates are complete. Require shared sessions before multi-instance deployment.
 - Record API-owned blockers in [Crucible API handoff](crucible-api-handoff.md), not as Hub workarounds.
 - Treat a package as complete only when its scoped validation and documentation are current.
 - Keep the blocking browser gate bounded, representative, and screenshot-free. Use fixture and unit coverage for deterministic workflow logic and targeted local browser review for specialized flows when they change.
 
 ## Current position
 
-The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, and the first capability-gated service-account administration slice. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
+The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, the first capability-gated service-account administration slice, and API-owned ORCID sign-in with an opt-in shared session path. Production authentication and mutation exposure remain blocked by deployment and browser security evidence.
 
-| Area                                        | Status                                                                                                                                                                                                             |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Runtime and server-only boundary            | Locally verified; production authentication and shared-session gates remain open.                                                                                                                                  |
-| Read and discovery workspace                | Home continuation, global and project search, QR lookup, directory ownership scopes, cursor pagination, facets, grouped browsing, previews, and sibling navigation are implemented locally.                        |
-| Resource workspaces                         | Project, instrument, sample, and dataset routes with Overview, Data or Processing, Graph where applicable, and capability-gated Manage surfaces are implemented locally.                                           |
-| Controlled mutations                        | Descriptive and metadata edits, creation, relationships, access, membership, assignment, ownership, lifecycle, thumbnails, ingestion requests, and deletion request submission and review are implemented locally. |
-| Account profile                             | Read-first identity editing, non-secret API credential status, and advertised account capabilities are implemented locally. Self-service key rotation waits for the production session contract.                   |
-| Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck.                   |
-| Broader administration and account activity | Deletion-request history and review are implemented locally. Join review, people administration, audit, pins, and account activity await API contracts.                                                            |
-| Uploads                                     | Browser upload remains blocked by the secure exact-object capability, lifecycle, and CORS contract.                                                                                                                |
-| Production exposure                         | Blocked by the API-owned login exchange, shared server sessions, same-origin and CSRF evidence, and deployment decisions.                                                                                          |
+| Area                                        | Status                                                                                                                                                                                                                 |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime and server-only boundary            | Locally verified; explicit single-instance production mode is implemented but not deployed. Shared-session gates remain open for later scaling.                                                                        |
+| Read and discovery workspace                | Home continuation, global and project search, QR lookup, directory ownership scopes, cursor pagination, facets, grouped browsing, previews, and sibling navigation are implemented locally.                            |
+| Resource workspaces                         | Project, instrument, sample, and dataset routes with Overview, Data or Processing, Graph where applicable, and capability-gated Manage surfaces are implemented locally.                                               |
+| Controlled mutations                        | Descriptive and metadata edits, creation, relationships, access, membership, assignment, ownership, lifecycle, thumbnails, ingestion requests, and deletion request submission and review are implemented locally.     |
+| Account profile                             | Read-first identity editing, non-secret API credential status, and advertised account capabilities are implemented locally. Self-service key rotation waits for the production session contract.                       |
+| Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck.                       |
+| Broader administration and account activity | Deletion-request history and review are implemented locally. Join review, people administration, audit, pins, and account activity await API contracts.                                                                |
+| Uploads                                     | Browser upload remains blocked by the secure exact-object capability, lifecycle, and CORS contract.                                                                                                                    |
+| Production exposure                         | Pilot process-local production mode is implemented behind activation; deployment and browser evidence remain open. The selected Cloud SQL shared store needs implementation and multi-replica evidence before scaling. |
 
 ## Ordered work packages
 
 ### P0: production foundation
 
-1. Finalize the API-owned web login exchange and Hub shared-session contract.
-2. Implement and verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement.
+1. Verify explicit process-local production sessions with Cloud Run minimum and maximum instances both set to one and best-effort session affinity. Verify that restart or deployment signs users out and does not expose credentials.
+2. Verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement in the target browser and deployment topology.
 3. Complete upload feasibility evidence for the direct object-storage boundary.
 4. Run the production go or no-go review with container, path-prefix, authentication, and operational evidence.
 
-Entry: accepted API login and session contract. Completion: production-shaped authentication, session, security, deployment, and recovery evidence is recorded in [foundation evidence](phase-0-evidence.md).
+Entry: accepted API login and session contract. Completion: pilot-shaped authentication, session, security, deployment, and recovery evidence is recorded in [foundation evidence](phase-0-evidence.md). Before raising the instance cap or requiring session continuity, implement and validate the Hub-owned Cloud SQL session store across replicas under [decision 0033](../decisions/0033-use-existing-cloud-sql-for-shared-hub-sessions.md).
 
 ### P1: useful read workspace
 
@@ -114,7 +114,7 @@ Implemented with fixture and unit coverage for local development without file up
 
 #### Next action: production boundary and administration verification
 
-Keep the implemented local workspace stable while the API-owned web login exchange and shared-session contract remain the release-critical path. Recheck service-account platform-role mutation against the deployed API revision, then implement broader Administration routes only as their capability, queue, mutation, and audit contracts become available. Browser upload, production mutations, and deployment remain blocked by P0.
+Keep the implemented local workspace stable while end-to-end login and [Cloud Run pilot](cloud-run-pilot.md) evidence remain the release-critical path. Recheck service-account platform-role mutation against the deployed API revision, then implement broader Administration routes only as their capability, queue, mutation, and audit contracts become available. Browser upload, production mutations, and deployment remain blocked by P0. The Hub-owned Cloud SQL session store and multi-replica validation remain prerequisites for later multi-instance operation.
 
 ### P3: Explorer convergence
 

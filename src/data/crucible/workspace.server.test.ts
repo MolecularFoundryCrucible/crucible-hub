@@ -28,6 +28,7 @@ describe("workspace source selection", () => {
     expect(source).toEqual({
       status: "unavailable",
       reason: "Development API-key access is disabled in production.",
+      authRequired: false,
     })
   })
 
@@ -43,6 +44,7 @@ describe("workspace source selection", () => {
       status: "unavailable",
       reason:
         "CRUCIBLE_API_BASE_URL must use HTTPS or point to the local machine.",
+      authRequired: false,
     })
   })
 })

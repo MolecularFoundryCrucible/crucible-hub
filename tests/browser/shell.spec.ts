@@ -37,6 +37,49 @@ test("renders the desktop workspace without development chrome", async ({
   await expect(page.getByText(/^Updated Sep 1, 2026$/)).toHaveCount(0)
 })
 
+test("keeps the origin on a native logout form submission", async ({
+  page,
+  request,
+}) => {
+  const documentResponse = await page.goto("/hub/")
+  expect(documentResponse?.headers()["referrer-policy"]).toBe("same-origin")
+
+  const callbackResponse = await request.get("/hub/auth/callback", {
+    maxRedirects: 0,
+  })
+  expect(callbackResponse.status()).toBe(303)
+  expect(callbackResponse.headers()["referrer-policy"]).toBe("no-referrer")
+  expect(callbackResponse.headers()["cache-control"]).toBe("no-store")
+
+  for (const origin of ["null", "https://example.org"]) {
+    const rejected = await request.post("/hub/auth/logout", {
+      headers: { Origin: origin },
+      maxRedirects: 0,
+    })
+    expect(rejected.status()).toBe(403)
+  }
+
+  const expectedOrigin = new URL(page.url()).origin
+  await page.route("**/hub/auth/logout", (route) =>
+    route.fulfill({ status: 200, body: "Signed out" })
+  )
+  const logoutRequest = page.waitForRequest(
+    (submission) =>
+      submission.url().endsWith("/hub/auth/logout") &&
+      submission.method() === "POST"
+  )
+
+  await page.evaluate(() => {
+    const form = document.createElement("form")
+    form.action = "/hub/auth/logout"
+    form.method = "post"
+    document.body.append(form)
+    form.requestSubmit()
+  })
+
+  expect((await logoutRequest).headers()["origin"]).toBe(expectedOrigin)
+})
+
 test("opens dedicated creation routes from the global Create menu", async ({
   page,
 }) => {

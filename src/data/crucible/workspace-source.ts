@@ -29,8 +29,8 @@ export type WorkspaceAccount = Omit<
 
 export type WorkspaceAccountProfileUpdate = {
   email?: string | null
-  first_name?: string
-  last_name?: string
+  first_name?: string | null
+  last_name?: string | null
   username?: string | null
 }
 
@@ -590,8 +590,10 @@ export type WorkspaceSource =
       mode: WorkspaceMode
       privilegeMode: WorkspacePrivilegeMode
       workspace: Workspace
+      sessionAuth?: boolean
     }
   | {
       status: "unavailable"
       reason: string
+      authRequired?: boolean
     }

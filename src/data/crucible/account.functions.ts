@@ -6,20 +6,21 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import {
+  checkWorkspaceUsernameExactMatch,
   patchWorkspaceAccount,
   readWorkspaceAccount,
   readWorkspaceAccountCredentialStatus,
 } from "./account.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 
-const profileNameSchema = z.string().trim().min(1).max(255)
+const profileNameSchema = z.string().trim().max(255).nullable()
 const profileEmailSchema = z.string().trim().email().max(320).nullable()
 const profileUsernameSchema = z
   .string()
   .trim()
   .min(3)
   .max(24)
-  .regex(/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/)
+  .regex(/^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$/)
   .nullable()
 
 export const accountProfileUpdateInputSchema = z
@@ -69,5 +70,24 @@ export const updateWorkspaceAccount = createServerFn({ method: "POST" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       patchWorkspaceAccount(data.changes, data.scenario, context.requestSignal)
+    )
+  })
+
+export const checkWorkspaceUsername = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(
+    z.object({
+      username: profileUsernameSchema.unwrap(),
+      scenario: fixtureScenarioSchema.optional(),
+    })
+  )
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      checkWorkspaceUsernameExactMatch(
+        data.username,
+        data.scenario,
+        context.requestSignal
+      )
     )
   })

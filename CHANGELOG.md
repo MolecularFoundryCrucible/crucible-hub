@@ -6,6 +6,46 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added Hub-only response headers that prevent framing, restrict base URLs and object content, disable MIME sniffing, and limit referrers to the same origin while preserving private OAuth redirects.
+
+- Directed sign-in callback success and error redirects to the configured public Hub origin behind the Cloud Run proxy.
+
+- Pinned the Hub OpenAPI contract to deployed API revision `8e4d0ef`, prepared a dedicated Cloud Run image repository and runtime identity for the single-instance pilot, and excluded Hub callback request URLs from the default Cloud Logging sink.
+
+- Added named local development scenarios for fixtures, API-key access, and ORCID against local or staging APIs, with separate gitignored credentials and no inherited settings from other scenarios.
+
+- Prepared a separate Cloud Build image workflow and a reviewable internal Cloud Run and Nginx `/hub/` route for the single-instance pilot, with callback-safe proxy logging and activation kept separate from building.
+
+- Added an explicit single-instance production ORCID session mode with server-side token expiry and fail-closed refresh, and documented the limited Cloud Run pilot and planned shared-session transition.
+
+- Kept profile Save disabled for unchanged or taken usernames, moved availability feedback into accessible field-end icons, show a save-time username conflict as a toast with a persistent invalid field state, and removed duplicate focus outlines from styled controls.
+
+- Added a standalone account-completion step after ORCID sign-in when email or username is missing, kept names optional, added debounced username lookup and specific taken-name feedback to both profile forms, and centered the ORCID sign-in action at its content width.
+
+- Prevented caching of redirects from private Hub pages to sign-in when a session is absent.
+
+- Made Sign out highlight the full account-menu row on hover and keyboard focus, matching My profile.
+
+- Refined the ORCID sign-in page with the Hub mark inside the card, a quieter outlined action, tighter footer, and a faint Explorer logo background.
+
+- Added an opt-in encrypted Redis session path for multi-replica ORCID sign-in, atomic refresh and logout, server-held administrator mode, session expiry and rotation, and broader CSRF coverage; production activation still requires deployment and browser validation.
+
+- Completed the local sign-out handoff with a dedicated sign-in confirmation, an explicit warning when API revocation cannot be confirmed, and cross-tab cleanup of in-memory workspace data.
+
+- Styled Sign out as an icon-bearing destructive menu action, kept the account menu enabled during page hydration, and fixed sign-out behind the configured HTTPS Hub proxy with a cookie-compatible redirect.
+
+- Refined the standalone ORCID sign-in and sign-in error pages with shared Hub branding, clearer hierarchy, responsive spacing, and consistent light and dark styling.
+
+- Added safe server-side sign-in callback failure reasons so failed ORCID exchanges can be diagnosed without logging credentials or callback codes.
+
+- Allowed local ORCID login to use a browser-reachable API URL and HTTPS Hub callback separate from the private API transport, supporting a Tailscale browser once its API route and ORCID redirect are configured.
+
+- Redirected signed-out visitors from protected Hub routes to the dedicated ORCID sign-in page while preserving their intended destination.
+
+- Documented the gitignored local ORCID environment file and startup command so server credentials and the trusted API certificate are available before Node starts.
+
+- Added a local API-owned ORCID sign-in flow with a dedicated sign-in page, return-to navigation, state and PKCE validation, opaque server-side sessions, bearer-token refresh and revocation, and an updated pinned OpenAPI client; production sign-in remains gated on shared session storage.
+
 - Standardized missing resource names across Home, collections, search, previews, graphs, sibling navigation, and resource pages: samples and datasets use Untitled labels, while projects and instruments fall back to their IDs and then MFIDs. Stored names remain unchanged for editing.
 
 - Added a Data toolbar Refresh action that reloads the active group directory and selected resource list without clearing filters or readable rows.

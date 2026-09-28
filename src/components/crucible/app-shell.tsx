@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Link, useHydrated, useRouterState } from "@tanstack/react-router"
+import { Link, useRouterState } from "@tanstack/react-router"
 
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
@@ -21,6 +21,7 @@ import {
   DeletionRequestsIcon,
   ExpandSidebarIcon,
   RecentResourcesIcon,
+  SignOutIcon,
   ThemeIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
@@ -31,6 +32,7 @@ import {
 } from "@/components/crucible/resource-type-icon"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
+import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { useTheme } from "@/components/theme-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -43,6 +45,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSubmitItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -111,11 +115,13 @@ export function AppShell({
   account,
   children,
   privilegeMode = "normal",
+  sessionAuth = false,
   scope,
 }: {
   account?: Workspace["account"]
   children: React.ReactNode
   privilegeMode?: WorkspacePrivilegeMode
+  sessionAuth?: boolean
   scope?: IdentityScope
 }) {
   const location = useRouterState({
@@ -129,6 +135,12 @@ export function AppShell({
 
   const shell = (
     <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
+      {sessionAuth && account ? (
+        <SessionTabSync
+          accountMfid={account.unique_id}
+          privilegeMode={privilegeMode}
+        />
+      ) : null}
       <SidebarProvider>
         <Sidebar
           aria-label="Primary navigation"
@@ -256,6 +268,7 @@ export function AppShell({
                 account={account}
                 administrationActive={pathname.startsWith("/admin")}
                 privilegeMode={privilegeMode}
+                sessionAuth={sessionAuth}
               />
             ) : (
               <div className="ml-auto border-l pl-3">
@@ -290,13 +303,13 @@ function AccountControls({
   account,
   administrationActive,
   privilegeMode,
+  sessionAuth,
 }: {
   account: Workspace["account"]
   administrationActive: boolean
   privilegeMode: WorkspacePrivilegeMode
+  sessionAuth: boolean
 }) {
-  const hydrated = useHydrated()
-
   return (
     <div className="ml-auto flex items-center gap-2">
       {privilegeMode === "elevated" ? (
@@ -308,12 +321,14 @@ function AccountControls({
         </Badge>
       ) : null}
       <div className="border-l pl-3">
+        {sessionAuth ? (
+          <form action="/hub/auth/logout" id="hub-sign-out" method="post" />
+        ) : null}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <Button
                 aria-label="Open account menu"
-                disabled={!hydrated}
                 size="lg"
                 variant="ghost"
               />
@@ -333,6 +348,18 @@ function AccountControls({
                 <AccountIcon />
                 My profile
               </DropdownMenuItem>
+              {sessionAuth ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSubmitItem
+                    form="hub-sign-out"
+                    variant="destructive"
+                  >
+                    <SignOutIcon aria-hidden="true" />
+                    Sign out
+                  </DropdownMenuSubmitItem>
+                </>
+              ) : null}
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

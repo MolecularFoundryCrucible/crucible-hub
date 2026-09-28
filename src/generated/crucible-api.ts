@@ -295,6 +295,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/hub/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Finish Hub Login */
+        get: operations["finish_hub_login_auth_hub_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Begin Hub Login */
+        get: operations["begin_hub_login_auth_hub_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Hub Credential */
+        post: operations["refresh_hub_credential_auth_hub_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke Hub Credential
+         * @description Requires HTTP Basic Hub client authentication and JSON containing token. Revokes the entire login token family, including all access and refresh generations. A previously rotated refresh token can revoke the family. Repeated requests, unknown tokens, and tokens belonging to another client return 204 without disclosing token validity. Subsequent authentication checks reject revoked tokens; already-authorized requests may finish. Other login sessions, legacy API keys, and the ORCID session are unaffected. The Hub must also delete its own session and browser cookie.
+         */
+        post: operations["revoke_hub_credential_auth_hub_revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange Hub Code */
+        post: operations["exchange_hub_code_auth_hub_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -1029,6 +1117,51 @@ export interface paths {
         patch: operations["review_deletion_request_deletion_requests__request_id__patch"];
         trace?: never;
     };
+    "/embeddings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Resource Embeddings
+         * @description Return a cursor-paginated, filtered list of visible resource embeddings.
+         *
+         *     Results are ordered by embedding row ID ascending. Pass the returned
+         *     next_cursor to retrieve the next stable keyset page. Offset pagination
+         *     remains available for compatibility; cursor takes precedence when both
+         *     are supplied.
+         */
+        get: operations["list_resource_embeddings_embeddings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/embeddings/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Resource Chunks
+         * @description Search 768-dimensional resource text chunks visible to the caller.
+         */
+        post: operations["search_resource_chunks_embeddings_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/entity_graph/{entity_id}": {
         parameters: {
             query?: never;
@@ -1289,8 +1422,7 @@ export interface paths {
         };
         /**
          * List Ingestion Requests
-         * @description List ingestion requests, paginated. Requires file_id or dataset_id for non-admins.
-         *     Admins may omit both filters to list all ingestion requests.
+         * @description List ingestion requests for datasets the caller is authorized to view.
          */
         get: operations["list_ingestion_requests_ingestion_requests_get"];
         put?: never;
@@ -1881,26 +2013,6 @@ export interface paths {
         get: operations["regenerate_apikey_deprecated_regenerate_apikey_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/embeddings/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Search Resource Chunks
-         * @description Search 768-dimensional resource text chunks visible to the caller.
-         */
-        post: operations["search_resource_chunks_resources_embeddings_search_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3648,6 +3760,49 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HubCodeExchangeRequest */
+        HubCodeExchangeRequest: {
+            /** Code */
+            code: string;
+            /** Code Verifier */
+            code_verifier: string;
+            /** Redirect Uri */
+            redirect_uri: string;
+        };
+        /** HubRefreshRequest */
+        HubRefreshRequest: {
+            /** Refresh Token */
+            refresh_token: string;
+        };
+        /** HubRevokeRequest */
+        HubRevokeRequest: {
+            /** Token */
+            token: string;
+        };
+        /** HubTokenResponse */
+        HubTokenResponse: {
+            /**
+             * Access Expires At
+             * Format: date-time
+             */
+            access_expires_at: string;
+            /** Access Token */
+            access_token: string;
+            /**
+             * Refresh Expires At
+             * Format: date-time
+             */
+            refresh_expires_at: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /**
+             * Token Type
+             * @default Bearer
+             */
+            token_type: string;
+            /** User Unique Id */
+            user_unique_id: string;
+        };
         /** ImageInput */
         ImageInput: {
             /** Data */
@@ -4069,6 +4224,19 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /** PaginatedResponse[ResourceEmbeddingRead] */
+        PaginatedResponse_ResourceEmbeddingRead_: {
+            /** Items */
+            items: components["schemas"]["ResourceEmbeddingRead"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
         /** PaginatedResponse[ResourceSearchResult] */
         PaginatedResponse_ResourceSearchResult_: {
             /** Items */
@@ -4359,6 +4527,21 @@ export interface components {
             can_transfer: boolean;
             /** Max Grant Role */
             max_grant_role?: ("viewer" | "contributor" | "editor" | "admin") | null;
+        };
+        /** ResourceEmbeddingRead */
+        ResourceEmbeddingRead: {
+            /** Chunk Index */
+            chunk_index: number;
+            /** Chunk Text */
+            chunk_text: string;
+            /** Embedding */
+            embedding: number[] | null;
+            /** Id */
+            id: number;
+            /** Model Name */
+            model_name: string;
+            /** Resource Mfid */
+            resource_mfid: string;
         };
         /** ResourceGraphResponse */
         ResourceGraphResponse: {
@@ -5439,6 +5622,385 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    finish_hub_login_auth_hub_callback_get: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in failed */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    begin_hub_login_auth_hub_login_get: {
+        parameters: {
+            query: {
+                client_id: string;
+                redirect_uri: string;
+                state: string;
+                code_challenge: string;
+                code_challenge_method: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid sign-in request */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refresh_hub_credential_auth_hub_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HubRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubTokenResponse"];
+                };
+            };
+            /** @description Invalid client or refresh token */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_hub_credential_auth_hub_revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HubRevokeRequest"];
+            };
+        };
+        responses: {
+            /** @description Revocation processed; no-store response */
+            204: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid client */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    exchange_hub_code_auth_hub_token_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HubCodeExchangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubTokenResponse"];
+                };
+            };
+            /** @description Invalid client or sign-in code */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -7169,6 +7731,98 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeletionRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_resource_embeddings_embeddings_get: {
+        parameters: {
+            query?: {
+                /** @description Exact embedding row ID. */
+                id?: number | null;
+                /** @description Exact resource MFID. */
+                resource_mfid?: string | null;
+                /** @description Exact chunk index. */
+                chunk_index?: number | null;
+                /** @description Exact embedding model name. */
+                model_name?: string | null;
+                /** @description Exact authorization-filtered total. It is included on the first page by default, may be requested on every page with true, and suppressed with false. */
+                include_total?: boolean | null;
+                limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_ResourceEmbeddingRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_resource_chunks_embeddings_search_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChunkSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChunkHit"][];
                 };
             };
             /** @description Validation Error */
@@ -8964,46 +9618,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-        };
-    };
-    search_resource_chunks_resources_embeddings_search_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChunkSearchRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChunkHit"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

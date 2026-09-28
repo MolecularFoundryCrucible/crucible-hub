@@ -8,10 +8,29 @@ import {
 } from "@tanstack/react-start/server"
 
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
+import {
+  sharedRequestPrivilegeMode,
+  updateSharedPrivilegeMode,
+} from "./hub-auth.server"
 
 const privilegeModeCookie = "crucible_hub_administrator_view"
 
+function cookieOptions() {
+  return {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax" as const,
+    secure: new URL(getRequest().url).protocol === "https:",
+  }
+}
+
+export function clearLegacyPrivilegeModeCookie() {
+  deleteCookie(privilegeModeCookie, cookieOptions())
+}
+
 export function readGlobalPrivilegeMode(): WorkspacePrivilegeMode {
+  const shared = sharedRequestPrivilegeMode()
+  if (shared) return shared
   try {
     return getCookie(privilegeModeCookie) === "elevated" ? "elevated" : "normal"
   } catch {
@@ -19,18 +38,12 @@ export function readGlobalPrivilegeMode(): WorkspacePrivilegeMode {
   }
 }
 
-export function writeGlobalPrivilegeMode(mode: WorkspacePrivilegeMode) {
-  const options = {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax" as const,
-    secure: new URL(getRequest().url).protocol === "https:",
-  }
-
+export async function writeGlobalPrivilegeMode(mode: WorkspacePrivilegeMode) {
+  if (await updateSharedPrivilegeMode(mode)) return
   if (mode === "normal") {
-    deleteCookie(privilegeModeCookie, options)
+    clearLegacyPrivilegeModeCookie()
     return
   }
 
-  setCookie(privilegeModeCookie, mode, options)
+  setCookie(privilegeModeCookie, mode, cookieOptions())
 }

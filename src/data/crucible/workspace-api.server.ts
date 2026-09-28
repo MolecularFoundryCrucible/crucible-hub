@@ -10,7 +10,7 @@ import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type ApiWorkspaceConfiguration = {
   baseUrl: string
-  bearerToken: string
+  bearerToken?: string
   fetch?: typeof globalThis.fetch
   now?: () => Date
   signal?: AbortSignal

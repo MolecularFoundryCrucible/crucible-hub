@@ -1,6 +1,6 @@
 # 0002: Use a Server-Side Hub Session Boundary
 
-Status: Proposed
+Status: Accepted
 
 Date: 2026-09-02
 
