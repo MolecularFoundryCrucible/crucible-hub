@@ -6,6 +6,10 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Standardized missing resource names across Home, collections, search, previews, graphs, sibling navigation, and resource pages: samples and datasets use Untitled labels, while projects and instruments fall back to their IDs and then MFIDs. Stored names remain unchanged for editing.
+
+- Added a Data toolbar Refresh action that reloads the active group directory and selected resource list without clearing filters or readable rows.
+
 - Fixed account-menu readiness and scientific metadata disclosure hydration, and made bounded browser CI deterministic by updating search coverage, serializing fixture-backed checks, removing retries, and accepting normal SIGTERM production shutdown.
 
 - Added debounced, keyboard-navigable quick results to global and project-scoped application-bar search, with bounded per-type queries and a path to complete search results.

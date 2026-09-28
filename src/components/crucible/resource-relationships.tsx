@@ -21,9 +21,16 @@ import {
   workspaceRelationshipTypeLabel,
 } from "@/data/crucible/resource-relationships"
 import type { WorkspaceLinkedResource } from "@/data/crucible/workspace-source"
+import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
 type RelationshipResourceKind = "dataset" | "sample"
+
+function relationshipDisplayName(link: WorkspaceLinkedResource) {
+  return link.resource_type === "sample" || link.resource_type === "dataset"
+    ? resourceDisplayName(link.resource_type, link.name)
+    : link.name || link.unique_id
+}
 
 export function groupResourceRelationships(
   kind: RelationshipResourceKind,
@@ -114,7 +121,7 @@ function RelationshipRow({
   managing: boolean
   renderManagementAction?: (link: WorkspaceLinkedResource) => ReactNode
 }) {
-  const label = link.name || link.unique_id
+  const label = relationshipDisplayName(link)
   const relationshipTypeLabel = workspaceRelationshipTypeLabel(link)
   const identity = isKnownResourceType(link.resource_type) ? (
     <ResourceIdentity
@@ -159,7 +166,7 @@ function RelationshipRow({
 }
 
 function CanonicalResourceLink({ link }: { link: WorkspaceLinkedResource }) {
-  const label = link.name || link.unique_id
+  const label = relationshipDisplayName(link)
   const className = cn(buttonVariants({ size: "icon-sm", variant: "outline" }))
   if (link.resource_type === "sample") {
     return (

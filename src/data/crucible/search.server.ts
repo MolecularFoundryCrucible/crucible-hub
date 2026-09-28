@@ -3,6 +3,7 @@ import "@tanstack/react-start/server-only"
 import type { components } from "@/generated/crucible-api"
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
 import { formatUsername } from "@/lib/username"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -67,7 +68,15 @@ function detailResult(
   return {
     context,
     kind: resource.kind,
-    name: resource.name,
+    name: resourceDisplayName(resource.kind, resource.name, {
+      identifier:
+        resource.kind === "project"
+          ? resource.project_id
+          : resource.kind === "instrument"
+            ? resource.instrument_id
+            : null,
+      mfid: resource.unique_id,
+    }),
     projectId:
       resource.kind === "dataset" || resource.kind === "sample"
         ? (resource.project?.project_id ?? resource.project_id ?? null)
@@ -94,7 +103,7 @@ function fixtureItems(
     return workspace.samples.map((item) => ({
       context: item.sample_type ?? null,
       kind,
-      name: item.sample_name,
+      name: resourceDisplayName("sample", item.sample_name),
       projectId: item.project?.project_id ?? item.project_id ?? null,
       unique_id: item.unique_id,
     }))
@@ -103,7 +112,7 @@ function fixtureItems(
     return workspace.datasets.map((item) => ({
       context: item.measurement ?? null,
       kind,
-      name: item.dataset_name ?? "Untitled dataset",
+      name: resourceDisplayName("dataset", item.dataset_name),
       projectId: item.project?.project_id ?? item.project_id ?? null,
       unique_id: item.unique_id,
     }))
@@ -112,7 +121,10 @@ function fixtureItems(
     return workspace.instruments.map((item) => ({
       context: item.instrument_type ?? item.location,
       kind,
-      name: item.instrument_name,
+      name: resourceDisplayName("instrument", item.instrument_name, {
+        identifier: item.instrument_id,
+        mfid: item.unique_id,
+      }),
       projectId: null,
       unique_id: item.unique_id,
     }))
@@ -120,7 +132,10 @@ function fixtureItems(
   return workspace.projects.map((item) => ({
     context: "organization" in item ? item.organization : item.project_id,
     kind,
-    name: item.title ?? item.project_id,
+    name: resourceDisplayName("project", item.title, {
+      identifier: item.project_id,
+      mfid: item.unique_id,
+    }),
     projectId: null,
     unique_id: item.unique_id,
   }))
@@ -229,7 +244,10 @@ function fixtureMetadataSearch(
       kind: "project" as const,
       metadata:
         "scientific_metadata" in resource ? resource.scientific_metadata : null,
-      name: resource.title ?? resource.project_id,
+      name: resourceDisplayName("project", resource.title, {
+        identifier: resource.project_id,
+        mfid: resource.unique_id,
+      }),
       unique_id: resource.unique_id,
     })),
     ...source.workspace.instruments.map((resource) => ({
@@ -238,7 +256,10 @@ function fixtureMetadataSearch(
         demoWorkspace.instruments.find(
           (candidate) => candidate.unique_id === resource.unique_id
         )?.scientific_metadata ?? null,
-      name: resource.instrument_name,
+      name: resourceDisplayName("instrument", resource.instrument_name, {
+        identifier: resource.instrument_id,
+        mfid: resource.unique_id,
+      }),
       unique_id: resource.unique_id,
     })),
     ...source.workspace.samples.map((resource) => ({
@@ -247,7 +268,7 @@ function fixtureMetadataSearch(
         demoWorkspace.samples.find(
           (candidate) => candidate.unique_id === resource.unique_id
         )?.scientific_metadata ?? null,
-      name: resource.sample_name,
+      name: resourceDisplayName("sample", resource.sample_name),
       unique_id: resource.unique_id,
     })),
     ...source.workspace.datasets.map((resource) => ({
@@ -256,7 +277,7 @@ function fixtureMetadataSearch(
         demoWorkspace.datasets.find(
           (candidate) => candidate.unique_id === resource.unique_id
         )?.scientific_metadata ?? null,
-      name: resource.dataset_name ?? "Untitled dataset",
+      name: resourceDisplayName("dataset", resource.dataset_name),
       unique_id: resource.unique_id,
     })),
   ]
@@ -288,7 +309,10 @@ function projectResult(project: Schema<"ProjectRead">): WorkspaceSearchResult {
   return {
     context: project.organization,
     kind: "project",
-    name: project.title ?? project.project_id,
+    name: resourceDisplayName("project", project.title, {
+      identifier: project.project_id,
+      mfid: project.unique_id,
+    }),
     projectId: null,
     unique_id: project.unique_id,
   }
@@ -311,7 +335,10 @@ function instrumentResult(
   return {
     context: instrument.instrument_type ?? instrument.location,
     kind: "instrument",
-    name: instrument.instrument_name,
+    name: resourceDisplayName("instrument", instrument.instrument_name, {
+      identifier: instrument.instrument_id,
+      mfid: instrument.unique_id,
+    }),
     projectId: null,
     unique_id: instrument.unique_id,
   }
@@ -321,7 +348,7 @@ function sampleResult(sample: Schema<"SampleResponse">): WorkspaceSearchResult {
   return {
     context: sample.sample_type ?? null,
     kind: "sample",
-    name: sample.sample_name,
+    name: resourceDisplayName("sample", sample.sample_name),
     projectId: sample.project?.project_id ?? sample.project_id ?? null,
     unique_id: sample.unique_id,
   }
@@ -333,7 +360,7 @@ function datasetResult(
   return {
     context: dataset.measurement ?? null,
     kind: "dataset",
-    name: dataset.dataset_name ?? "Untitled dataset",
+    name: resourceDisplayName("dataset", dataset.dataset_name),
     projectId: dataset.project?.project_id ?? dataset.project_id ?? null,
     unique_id: dataset.unique_id,
   }
@@ -481,7 +508,9 @@ export async function searchWorkspaceMetadata(
       return {
         context: metadataContext(resource.scientific_metadata, input.query),
         kind,
-        name: resource.name ?? resource.unique_id,
+        name: resourceDisplayName(kind, resource.name, {
+          mfid: resource.unique_id,
+        }),
         projectId: null,
         unique_id: resource.unique_id,
       }

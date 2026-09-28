@@ -3,6 +3,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
 import { hubPageTitle } from "@/lib/page-title"
+import { resourceDisplayName } from "@/lib/resource-name"
 import {
   ResourceWorkspace,
   preloadResourceShell,
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_app/datasets/$datasetMfid")({
     if (resource.kind !== "dataset") throw notFound()
     return {
       resourceMfid: resource.unique_id,
-      resourceName: resource.name,
+      resourceName: resourceDisplayName("dataset", resource.name),
       scope: source.scope,
     }
   },

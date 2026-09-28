@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
@@ -338,10 +339,11 @@ function InstrumentCollection({
               <TableBody>
                 {instruments.map((instrument) => {
                   const instrumentId = instrument.instrument_id?.trim()
-                  const name =
-                    instrument.instrument_name.trim() ||
-                    instrumentId ||
-                    instrument.unique_id
+                  const name = resourceDisplayName(
+                    "instrument",
+                    instrument.instrument_name,
+                    { identifier: instrumentId, mfid: instrument.unique_id }
+                  )
                   return (
                     <TableRow key={instrument.unique_id}>
                       <ResourceDirectoryNameCell

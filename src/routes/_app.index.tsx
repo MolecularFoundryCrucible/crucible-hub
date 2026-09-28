@@ -39,6 +39,7 @@ import type { HomeRecentResource } from "@/features/home/home-data"
 import { useHomeGreeting } from "@/features/home/home-greeting"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 const homeOwnershipLimit = 8
 const homeRecentResourceLimit = 5
@@ -290,7 +291,10 @@ function HomePage() {
                     kind="project"
                     key={project.unique_id}
                     mfid={project.unique_id}
-                    name={project.title?.trim() || project.project_id}
+                    name={resourceDisplayName("project", project.title, {
+                      identifier: project.project_id,
+                      mfid: project.unique_id,
+                    })}
                   />
                 ))}
               </ResourceList>
@@ -355,6 +359,9 @@ type HomeResourceLinkItem = {
 }
 
 function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
+  const name = resourceDisplayName(item.kind, item.name, {
+    mfid: item.uniqueId,
+  })
   return (
     <ResourceListItem>
       <ResourceListItemContent className="select-text" layout="responsive">
@@ -362,12 +369,12 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
           className="w-full flex-1"
           kind={item.kind}
           mfid={item.uniqueId}
-          name={item.name}
+          name={name}
           nameContent={
             <ResourceNameLink
               kind={item.kind}
               mfid={item.uniqueId}
-              name={item.name}
+              name={name}
             />
           }
           presentation="collection"
@@ -470,17 +477,16 @@ function OwnershipResourceLink({
 }
 
 function instrumentName(instrument: WorkspaceInstrument) {
-  return (
-    instrument.instrument_name.trim() ||
-    instrument.instrument_id?.trim() ||
-    instrument.unique_id
-  )
+  return resourceDisplayName("instrument", instrument.instrument_name, {
+    identifier: instrument.instrument_id,
+    mfid: instrument.unique_id,
+  })
 }
 
 function recentResourceName(item: HomeRecentResource) {
   return item.kind === "dataset"
-    ? (item.resource.dataset_name ?? "Untitled dataset")
-    : item.resource.sample_name
+    ? resourceDisplayName("dataset", item.resource.dataset_name)
+    : resourceDisplayName("sample", item.resource.sample_name)
 }
 
 function recentResourceProjectId(item: HomeRecentResource) {

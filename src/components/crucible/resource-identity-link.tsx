@@ -6,6 +6,7 @@ import { MfidText } from "@/components/crucible/mfid-text"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import type { ResourceIdentityPresentation } from "@/components/crucible/resource-identity"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
+import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
 export type ResourceIdentityDetail = {
@@ -36,6 +37,7 @@ export function ResourceIdentityLink({
   showTypeIcon?: boolean
   triggerContext?: string | null
 }) {
+  const displayName = resourceDisplayName(kind, name, { mfid })
   const routeLink =
     kind === "project" ? (
       <Link
@@ -57,12 +59,12 @@ export function ResourceIdentityLink({
       className={cn("group/resource block", children && className)}
       render={routeLink}
     >
-      {children ?? name}
+      {children ?? displayName}
     </SelectableTextLink>
   )
   const hoverLink = (
     <IdentityHoverCard trigger={link}>
-      <ResourceIdentity context={context} kind={kind} name={name} />
+      <ResourceIdentity context={context} kind={kind} name={displayName} />
       <MfidText
         className="mt-2 block whitespace-nowrap text-muted-foreground"
         presentation="supporting"
@@ -90,7 +92,7 @@ export function ResourceIdentityLink({
       className={className}
       context={triggerContext}
       kind={kind}
-      name={name}
+      name={displayName}
       nameContent={hoverLink}
       presentation={presentation}
       showTypeIcon={showTypeIcon}

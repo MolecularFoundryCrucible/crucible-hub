@@ -6,6 +6,7 @@ import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-l
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { TableCell } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 export function ResourceCreatedCell({
   className,
@@ -117,7 +118,10 @@ export function ResourceProjectCell({
           }
           kind="project"
           mfid={project.unique_id}
-          name={project.title ?? project.project_id}
+          name={resourceDisplayName("project", project.title, {
+            identifier: project.project_id,
+            mfid: project.unique_id,
+          })}
           showTypeIcon={false}
           triggerContext={null}
         />

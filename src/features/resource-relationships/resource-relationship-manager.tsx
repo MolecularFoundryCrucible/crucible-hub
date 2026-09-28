@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import {
   AddRelationshipIcon,
@@ -161,7 +162,7 @@ export function ResourceRelationshipManager({
             {canManage ? (
               <>
                 <Button
-                  aria-label={`Add relationship to ${resource.name}`}
+                  aria-label={`Add relationship to ${resourceDetailDisplayName(resource)}`}
                   onClick={() => setAddOpen(true)}
                   type="button"
                 >
@@ -176,10 +177,10 @@ export function ResourceRelationshipManager({
                     <Button
                       aria-label={
                         managementMode
-                          ? `Finish managing relationships for ${resource.name}`
+                          ? `Finish managing relationships for ${resourceDetailDisplayName(resource)}`
                           : !hasRelationships
-                            ? `No relationships to manage for ${resource.name}`
-                            : `Manage relationships for ${resource.name}`
+                            ? `No relationships to manage for ${resourceDetailDisplayName(resource)}`
+                            : `Manage relationships for ${resourceDetailDisplayName(resource)}`
                       }
                       aria-pressed={managementMode}
                       disabled={!hasRelationships}
@@ -201,7 +202,9 @@ export function ResourceRelationshipManager({
                       : !hasRelationships
                         ? "No relationships to manage for "
                         : "Manage relationships for "}
-                    <ResourceName>{resource.name}</ResourceName>
+                    <ResourceName>
+                      {resourceDetailDisplayName(resource)}
+                    </ResourceName>
                   </TooltipContent>
                 </Tooltip>
               </>
@@ -294,7 +297,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
   const link =
     resource.kind === "sample" ? (
       <Link
-        aria-label={`Explore graph for ${resource.name}`}
+        aria-label={`Explore graph for ${resourceDetailDisplayName(resource)}`}
         className={buttonVariants({ variant: "outline" })}
         params={{ sampleMfid: resource.unique_id }}
         preload={false}
@@ -303,7 +306,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
       />
     ) : (
       <Link
-        aria-label={`Explore graph for ${resource.name}`}
+        aria-label={`Explore graph for ${resourceDetailDisplayName(resource)}`}
         className={buttonVariants({ variant: "outline" })}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
@@ -318,7 +321,8 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
         Graph
       </TooltipTrigger>
       <TooltipContent>
-        Explore graph for <ResourceName>{resource.name}</ResourceName>
+        Explore graph for{" "}
+        <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>
       </TooltipContent>
     </Tooltip>
   )
@@ -414,8 +418,8 @@ function AddRelationshipDialog({
           <DialogTitle>Add relationship</DialogTitle>
           <DialogDescription>
             Choose how another resource relates to{" "}
-            <ResourceName>{resource.name}</ResourceName>, then search for it by
-            name or MFID.
+            <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>,
+            then search for it by name or MFID.
           </DialogDescription>
         </DialogHeader>
         <FieldGroup>
@@ -589,7 +593,7 @@ function LinkConfirmation({
     return (
       <>
         <ResourceName>{target.name}</ResourceName> will be linked with{" "}
-        <ResourceName>{resource.name}</ResourceName>.
+        <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>.
       </>
     )
   }
@@ -609,7 +613,7 @@ function LinkConfirmation({
   return (
     <>
       <ResourceName>{target.name}</ResourceName> will be a {choice.relationship}{" "}
-      of <ResourceName>{resource.name}</ResourceName>.
+      of <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>.
     </>
   )
 }
@@ -623,14 +627,15 @@ function unlinkDescription(
     return (
       <>
         <ResourceName>{target}</ResourceName> will no longer be linked with{" "}
-        <ResourceName>{resource.name}</ResourceName>.
+        <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>.
       </>
     )
   }
   return (
     <>
       <ResourceName>{target}</ResourceName> will no longer be a{" "}
-      {link.relationship} of <ResourceName>{resource.name}</ResourceName>.
+      {link.relationship} of{" "}
+      <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>.
     </>
   )
 }

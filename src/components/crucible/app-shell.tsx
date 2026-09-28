@@ -76,6 +76,7 @@ import {
   useRecentlyViewed,
 } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 type NavPath = "/" | "/data" | "/projects" | "/instruments"
 const sidebarRecentLimit = 4
@@ -378,7 +379,11 @@ function SidebarRecentResources() {
                         render={recentResourceLink(item)}
                       >
                         <ResourceTypeIcon type={item.kind} />
-                        <span className="truncate">{item.name}</span>
+                        <span className="truncate">
+                          {resourceDisplayName(item.kind, item.name, {
+                            mfid: item.uniqueId,
+                          })}
+                        </span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuGroup>
@@ -400,10 +405,16 @@ function SidebarRecentResources() {
             <SidebarMenuItem key={`${item.kind}:${item.uniqueId}`}>
               <SidebarMenuButton
                 render={recentResourceLink(item)}
-                tooltip={item.name}
+                tooltip={resourceDisplayName(item.kind, item.name, {
+                  mfid: item.uniqueId,
+                })}
               >
                 <ResourceTypeIcon type={item.kind} />
-                <span>{item.name}</span>
+                <span>
+                  {resourceDisplayName(item.kind, item.name, {
+                    mfid: item.uniqueId,
+                  })}
+                </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -414,7 +425,7 @@ function SidebarRecentResources() {
 }
 
 function recentResourceLink(item: RecentlyViewedResource) {
-  const ariaLabel = `Open ${item.kind}: ${item.name}`
+  const ariaLabel = `Open ${item.kind}: ${resourceDisplayName(item.kind, item.name, { mfid: item.uniqueId })}`
   if (item.kind === "project") {
     return (
       <Link
@@ -538,7 +549,14 @@ function ProjectSearchAction({
   return (
     <GlobalSearch
       projectMfid={projectMfid}
-      projectName={project?.title ?? project?.project_id}
+      projectName={
+        project
+          ? resourceDisplayName("project", project.title, {
+              identifier: project.project_id,
+              mfid: projectMfid,
+            })
+          : undefined
+      }
       scope={scope}
     />
   )

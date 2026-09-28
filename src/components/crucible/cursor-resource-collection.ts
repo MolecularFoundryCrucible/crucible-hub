@@ -11,6 +11,7 @@ import type {
   WorkspaceDataset,
   WorkspaceSample,
 } from "@/data/crucible/workspace-source"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 type CursorQueryResult<TItem> = {
   data: InfiniteData<WorkspaceCursorPage<TItem>, unknown> | undefined
@@ -83,9 +84,9 @@ export function useCursorResourceCollection<
 }
 
 export function sampleCollectionName(sample: WorkspaceSample) {
-  return sample.sample_name
+  return resourceDisplayName("sample", sample.sample_name)
 }
 
 export function datasetCollectionName(dataset: WorkspaceDataset) {
-  return dataset.dataset_name ?? "Untitled dataset"
+  return resourceDisplayName("dataset", dataset.dataset_name)
 }

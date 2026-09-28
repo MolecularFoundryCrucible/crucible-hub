@@ -2,6 +2,7 @@ import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-l
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
+import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
 type ResourceNameLinkKind = Exclude<ResourceType, "file" | "person">
@@ -23,19 +24,20 @@ export function ResourceNameLink({
   navigation?: "canonical" | "preview"
   title?: string
 }) {
+  const displayName = resourceDisplayName(kind, name, { mfid })
   if (navigation === "preview") {
     return (
       <SelectableTextLink
-        aria-label={`Preview ${name}`}
+        aria-label={`Preview ${displayName}`}
         className={cn("block", className)}
         title={title}
         render={
           <ResourcePreviewLink
             mfid={mfid}
             resourceKind={kind}
-            resourceName={name}
+            resourceName={displayName}
           >
-            {name}
+            {displayName}
           </ResourcePreviewLink>
         }
       />
@@ -48,7 +50,7 @@ export function ResourceNameLink({
       fromProject={fromProject}
       kind={kind}
       mfid={mfid}
-      name={name}
+      name={displayName}
       presentation="name"
     />
   )

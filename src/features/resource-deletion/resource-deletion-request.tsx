@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import {
   DeletionRequestedIcon,
@@ -129,7 +130,7 @@ export function ResourceDeletionRequestCard({
     </Button>
   ) : (
     <Button
-      aria-label={`Request deletion of ${resource.name}`}
+      aria-label={`Request deletion of ${resourceDetailDisplayName(resource)}`}
       className={presentation === "compact" ? "w-full" : undefined}
       onClick={() => setOpen(true)}
       variant="destructive"
@@ -172,9 +173,12 @@ export function ResourceDeletionRequestCard({
             <DialogHeader>
               <DialogTitle>Request deletion?</DialogTitle>
               <DialogDescription>
-                This submits <ResourceName>{resource.name}</ResourceName> for
-                review. It becomes hidden from collections, search, facets, and
-                graphs while the request is pending.
+                This submits{" "}
+                <ResourceName>
+                  {resourceDetailDisplayName(resource)}
+                </ResourceName>{" "}
+                for review. It becomes hidden from collections, search, facets,
+                and graphs while the request is pending.
               </DialogDescription>
             </DialogHeader>
             <FieldGroup>

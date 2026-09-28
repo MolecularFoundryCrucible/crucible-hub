@@ -1,5 +1,6 @@
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { ManagementAction } from "@/components/crucible/management-action"
@@ -193,8 +194,9 @@ export function OwnershipTransferCard({
         description={
           preview ? (
             <>
-              Ownership of <strong>{resource.name}</strong> will transfer to{" "}
-              <strong>{personName(preview.new_owner)}</strong>.
+              Ownership of{" "}
+              <strong>{resourceDetailDisplayName(resource)}</strong> will
+              transfer to <strong>{personName(preview.new_owner)}</strong>.
             </>
           ) : null
         }

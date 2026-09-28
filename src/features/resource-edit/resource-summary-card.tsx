@@ -68,6 +68,7 @@ import {
   localDateTimeToUtc,
   timestampToLocalInput,
 } from "@/lib/format"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 type DatasetDetail = Extract<WorkspaceResourceDetail, { kind: "dataset" }>
 type SampleDetail = Extract<WorkspaceResourceDetail, { kind: "sample" }>
@@ -954,30 +955,42 @@ function summaryFields(
 function contextFields(
   resource: DatasetDetail | SampleDetail
 ): readonly SummaryField[] {
+  const projectName = resource.project
+    ? resourceDisplayName("project", resource.project.title, {
+        identifier: resource.project.project_id,
+        mfid: resource.project.unique_id,
+      })
+    : null
   const project = resource.project ? (
     <ResourceIdentityLink
       context={resource.project.project_id}
       kind="project"
       mfid={resource.project.unique_id}
-      name={resource.project.title ?? resource.project.project_id}
+      name={projectName ?? ""}
     >
       <span className="text-label group-hover/resource:underline">
-        {resource.project.title ?? resource.project.project_id}
+        {projectName}
       </span>
     </ResourceIdentityLink>
   ) : (
     resource.project_id
   )
   if (resource.kind === "sample") return [["Project", project, "project"]]
+  const instrumentName = resource.instrument
+    ? resourceDisplayName("instrument", resource.instrument.instrument_name, {
+        identifier: resource.instrument.instrument_id,
+        mfid: resource.instrument.unique_id,
+      })
+    : null
   const instrument = resource.instrument ? (
     <ResourceIdentityLink
       context={resource.instrument.instrument_id}
       kind="instrument"
       mfid={resource.instrument.unique_id}
-      name={resource.instrument.instrument_name}
+      name={instrumentName ?? ""}
     >
       <span className="text-label group-hover/resource:underline">
-        {resource.instrument.instrument_name}
+        {instrumentName}
       </span>
     </ResourceIdentityLink>
   ) : (

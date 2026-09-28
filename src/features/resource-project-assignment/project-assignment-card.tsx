@@ -1,5 +1,6 @@
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { ManagementAction } from "@/components/crucible/management-action"
@@ -237,8 +238,8 @@ export function ProjectAssignmentCard({
         description={
           preview ? (
             <>
-              <strong>{resource.name}</strong> will move from{" "}
-              {resource.project?.title ?? "no project"} to{" "}
+              <strong>{resourceDetailDisplayName(resource)}</strong> will move
+              from {resource.project?.title ?? "no project"} to{" "}
               <strong>{selectedProject?.name ?? preview.new_project_id}</strong>
               .
             </>

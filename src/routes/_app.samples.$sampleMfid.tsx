@@ -7,6 +7,7 @@ import {
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
 import { hubPageTitle } from "@/lib/page-title"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 export const Route = createFileRoute("/_app/samples/$sampleMfid")({
   validateSearch: resourceDetailSearchSchema,
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_app/samples/$sampleMfid")({
     if (resource.kind !== "sample") throw notFound()
     return {
       resourceMfid: resource.unique_id,
-      resourceName: resource.name,
+      resourceName: resourceDisplayName("sample", resource.name),
       scope: source.scope,
     }
   },

@@ -30,6 +30,7 @@ import {
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 import { hubPageTitle } from "@/lib/page-title"
+import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid")({
@@ -43,7 +44,12 @@ export const Route = createFileRoute("/_app/projects/$projectMfid")({
     return {
       isProject: Boolean(project),
       projectMfid: project?.unique_id ?? params.projectMfid,
-      projectName: project?.title ?? project?.project_id,
+      projectName: project
+        ? resourceDisplayName("project", project.title, {
+            identifier: project.project_id,
+            mfid: project.unique_id,
+          })
+        : undefined,
       scope: source.scope,
     }
   },
@@ -59,11 +65,17 @@ function ProjectWorkspace() {
   const scope = useWorkspaceScope()
   const projectOptions = projectQueryOptions(scope, projectMfid)
   const { data: project, dataUpdatedAt } = useSuspenseQuery(projectOptions)
+  const displayName = project
+    ? resourceDisplayName("project", project.title, {
+        identifier: project.project_id,
+        mfid: project.unique_id,
+      })
+    : ""
   useRememberRecentlyViewed(
     project
       ? {
           kind: "project",
-          name: project.title ?? project.project_id,
+          name: displayName,
           projectId: project.project_id,
           uniqueId: project.unique_id,
         }
@@ -102,9 +114,7 @@ function ProjectWorkspace() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="min-w-0 flex-1 shrink">
-            <BreadcrumbPage>
-              {project.title ?? project.project_id}
-            </BreadcrumbPage>
+            <BreadcrumbPage>{displayName}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -118,7 +128,7 @@ function ProjectWorkspace() {
             ? project.project_id
             : undefined
         }
-        title={project.title ?? project.project_id}
+        title={displayName}
       />
 
       <ResourceSectionNavigation
@@ -126,7 +136,7 @@ function ProjectWorkspace() {
           <>
             <ResourceCreationActions projectMfid={project.unique_id} />
             <EntityRefreshAction
-              label={`Refresh details for ${project.title ?? project.project_id}`}
+              label={`Refresh details for ${displayName}`}
               queryKey={projectOptions.queryKey}
               refreshedAt={dataUpdatedAt}
               subject="Project details"

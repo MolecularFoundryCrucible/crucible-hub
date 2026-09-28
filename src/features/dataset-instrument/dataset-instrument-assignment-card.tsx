@@ -1,5 +1,6 @@
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { ManagementAction } from "@/components/crucible/management-action"
@@ -164,7 +165,8 @@ export function DatasetInstrumentAssignmentCard({
           selectedInstrument ? (
             <>
               Set <strong>{selectedInstrument.name}</strong> as the acquisition
-              instrument for <strong>{resource.name}</strong>
+              instrument for{" "}
+              <strong>{resourceDetailDisplayName(resource)}</strong>
               {currentInstrumentName ? (
                 <>
                   {" "}

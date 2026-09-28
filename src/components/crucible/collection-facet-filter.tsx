@@ -3,6 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import { formatUsername } from "@/lib/username"
+import { resourceDisplayName } from "@/lib/resource-name"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -211,10 +212,20 @@ export function facetBucketLabel(
     return username && name !== username ? `${name} (${username})` : name
   }
   if (field === "instrument" && bucket.instrument) {
-    return bucket.instrument.instrument_name
+    return resourceDisplayName(
+      "instrument",
+      bucket.instrument.instrument_name,
+      {
+        identifier: bucket.instrument.instrument_id,
+        mfid: bucket.instrument.unique_id,
+      }
+    )
   }
   if (field === "project" && bucket.project) {
-    return bucket.project.title ?? bucket.project.project_id
+    return resourceDisplayName("project", bucket.project.title, {
+      identifier: bucket.project.project_id,
+      mfid: bucket.project.unique_id,
+    })
   }
   return facetValueLabel(bucket.value)
 }

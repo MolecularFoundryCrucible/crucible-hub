@@ -52,6 +52,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
 import { formatBytes } from "@/lib/format"
+import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
 export function ResourceInspector({
@@ -73,7 +74,18 @@ export function ResourceInspector({
   const resource = query.data
   const previewIdentity = navigation.previewIdentity
   const previewKind = resource?.kind ?? previewIdentity?.kind
-  const previewName = resource?.name ?? previewIdentity?.name
+  const rawPreviewName = resource?.name ?? previewIdentity?.name
+  const previewName = previewKind
+    ? resourceDisplayName(previewKind, rawPreviewName, {
+        identifier:
+          resource?.kind === "project"
+            ? resource.project_id
+            : resource?.kind === "instrument"
+              ? resource.instrument_id
+              : null,
+        mfid: resource?.unique_id ?? previewIdentity?.mfid,
+      })
+    : rawPreviewName
   const deletionRequest =
     resource?.kind === "dataset" || resource?.kind === "sample"
       ? resource.deletion_request
@@ -631,9 +643,15 @@ function inspectorContextFields(
               className="line-clamp-2 text-label hover:underline"
               mfid={resource.project.unique_id}
               kind="project"
-              name={resource.project.title ?? resource.project.project_id}
+              name={resourceDisplayName("project", resource.project.title, {
+                identifier: resource.project.project_id,
+                mfid: resource.project.unique_id,
+              })}
               navigation="preview"
-              title={resource.project.title ?? resource.project.project_id}
+              title={resourceDisplayName("project", resource.project.title, {
+                identifier: resource.project.project_id,
+                mfid: resource.project.unique_id,
+              })}
             />
           ) : (
             resource.project_id
@@ -646,9 +664,23 @@ function inspectorContextFields(
               className="line-clamp-2 text-label hover:underline"
               mfid={resource.instrument.unique_id}
               kind="instrument"
-              name={resource.instrument.instrument_name}
+              name={resourceDisplayName(
+                "instrument",
+                resource.instrument.instrument_name,
+                {
+                  identifier: resource.instrument.instrument_id,
+                  mfid: resource.instrument.unique_id,
+                }
+              )}
               navigation="preview"
-              title={resource.instrument.instrument_name}
+              title={resourceDisplayName(
+                "instrument",
+                resource.instrument.instrument_name,
+                {
+                  identifier: resource.instrument.instrument_id,
+                  mfid: resource.instrument.unique_id,
+                }
+              )}
             />
           ) : (
             resource.instrument_id
@@ -666,9 +698,15 @@ function inspectorContextFields(
               className="line-clamp-2 text-label hover:underline"
               mfid={resource.project.unique_id}
               kind="project"
-              name={resource.project.title ?? resource.project.project_id}
+              name={resourceDisplayName("project", resource.project.title, {
+                identifier: resource.project.project_id,
+                mfid: resource.project.unique_id,
+              })}
               navigation="preview"
-              title={resource.project.title ?? resource.project.project_id}
+              title={resourceDisplayName("project", resource.project.title, {
+                identifier: resource.project.project_id,
+                mfid: resource.project.unique_id,
+              })}
             />
           ) : (
             resource.project_id

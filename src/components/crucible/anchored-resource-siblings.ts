@@ -21,6 +21,7 @@ import type {
   WorkspaceCursorPage,
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 const siblingPageLimit = 25
 
@@ -72,7 +73,7 @@ export async function createAnchoredResourceSiblingCollection({
               ? "owner"
               : undefined,
       }),
-      mapName: (sample) => sample.sample_name,
+      mapName: (sample) => resourceDisplayName("sample", sample.sample_name),
     })
   }
 
@@ -112,7 +113,7 @@ export async function createAnchoredResourceSiblingCollection({
               ? "owner"
               : undefined,
     }),
-    mapName: (dataset) => dataset.dataset_name ?? "Untitled dataset",
+    mapName: (dataset) => resourceDisplayName("dataset", dataset.dataset_name),
   })
 }
 

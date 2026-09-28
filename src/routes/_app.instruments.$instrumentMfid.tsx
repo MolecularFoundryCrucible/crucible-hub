@@ -30,6 +30,7 @@ import {
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import { hubPageTitle } from "@/lib/page-title"
+import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 
 export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
@@ -45,7 +46,10 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
     }
     return {
       instrumentMfid: resource.unique_id,
-      instrumentName: resource.name,
+      instrumentName: resourceDisplayName("instrument", resource.name, {
+        identifier: resource.instrument_id,
+        mfid: resource.unique_id,
+      }),
       isInstrument: true,
       scope: source.scope,
     }
@@ -62,11 +66,18 @@ function InstrumentPage() {
   const scope = useWorkspaceScope()
   const resourceOptions = resourceSummaryQueryOptions(scope, instrumentMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
+  const displayName =
+    resource?.kind === "instrument"
+      ? resourceDisplayName("instrument", resource.name, {
+          identifier: resource.instrument_id,
+          mfid: resource.unique_id,
+        })
+      : ""
   useRememberRecentlyViewed(
     resource?.kind === "instrument"
       ? {
           kind: "instrument",
-          name: resource.name,
+          name: displayName,
           projectId: null,
           uniqueId: resource.unique_id,
         }
@@ -99,7 +110,7 @@ function InstrumentPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="min-w-0 flex-1 shrink">
-            <BreadcrumbPage>{resource.name}</BreadcrumbPage>
+            <BreadcrumbPage>{displayName}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -116,7 +127,7 @@ function InstrumentPage() {
             ? resource.instrument_id
             : undefined
         }
-        title={resource.name}
+        title={displayName}
       />
 
       <ResourceSectionNavigation
@@ -128,7 +139,7 @@ function InstrumentPage() {
             />
             <EntityRefreshAction
               exact={false}
-              label={`Refresh details for ${resource.name}`}
+              label={`Refresh details for ${displayName}`}
               queryKey={crucibleKeys.resourceDetails(scope, instrumentMfid)}
               refreshedAt={dataUpdatedAt}
               subject="Instrument details"

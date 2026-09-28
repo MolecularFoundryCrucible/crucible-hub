@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react"
+import { resourceDetailDisplayName } from "@/lib/resource-name"
 import { Link } from "@tanstack/react-router"
 import {
   useQuery,
@@ -567,7 +568,8 @@ function ManagedResourceAccess({
             <>
               <ResourceName>{grantName(pendingRevoke)}</ResourceName> will no
               longer have direct access to{" "}
-              <ResourceName>{resource.name}</ResourceName>.
+              <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>
+              .
             </>
           ) : null
         }
@@ -589,13 +591,13 @@ function ManagedResourceAccess({
         description={
           pendingPublic ? (
             <>
-              <ResourceName>{resource.name}</ResourceName> will be available to
-              anyone who can access this Crucible server.
+              <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>{" "}
+              will be available to anyone who can access this Crucible server.
             </>
           ) : (
             <>
-              <ResourceName>{resource.name}</ResourceName> will no longer be
-              publicly available.
+              <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>{" "}
+              will no longer be publicly available.
             </>
           )
         }
@@ -690,7 +692,7 @@ function AddAccessDialog({
           <DialogTitle>Add direct access</DialogTitle>
           <DialogDescription>
             Choose a person or project, then set the access role for{" "}
-            <ResourceName>{resource.name}</ResourceName>.
+            <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>.
           </DialogDescription>
         </DialogHeader>
         <FieldGroup>

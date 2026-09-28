@@ -65,6 +65,7 @@ import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-v
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 export async function preloadResourceShell(
   queryClient: QueryClient,
@@ -130,11 +131,12 @@ export function ResourceWorkspace({
   const resourceOptions = resourceSummaryQueryOptions(scope, resourceMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
   const siblingNavigation = useActiveResourceSiblingNavigation(resourceMfid)
+  const displayName = resourceDisplayName(resourceKind, resource?.name)
   useRememberRecentlyViewed(
     resource && (resource.kind === "sample" || resource.kind === "dataset")
       ? {
           kind: resource.kind,
-          name: resource.name,
+          name: displayName,
           projectId:
             resource.project?.project_id ?? resource.project_id ?? null,
           uniqueId: resource.unique_id,
@@ -202,7 +204,7 @@ export function ResourceWorkspace({
               </>
             ) : null}
             <BreadcrumbItem className="min-w-0 flex-1 shrink">
-              <BreadcrumbPage>{resource.name}</BreadcrumbPage>
+              <BreadcrumbPage>{displayName}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -220,7 +222,7 @@ export function ResourceWorkspace({
               type={resource.kind}
             />
           }
-          title={resource.name}
+          title={displayName}
         />
         <ResourceNavigation
           actions={
@@ -240,7 +242,7 @@ export function ResourceWorkspace({
               ) : null}
               <EntityRefreshAction
                 exact={false}
-                label={`Refresh details for ${resource.name}`}
+                label={`Refresh details for ${displayName}`}
                 queryKey={crucibleKeys.resourceDetails(scope, resourceMfid)}
                 refreshedAt={dataUpdatedAt}
                 subject={

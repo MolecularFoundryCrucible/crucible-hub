@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 import { CollectionAffiliationFilter } from "@/components/crucible/collection-affiliation-filter"
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
@@ -252,7 +253,10 @@ function ProjectCollection({
                 {projects.map((project) => {
                   const complete = "status" in project
                   const title = project.title?.trim()
-                  const name = title || project.project_id || project.unique_id
+                  const name = resourceDisplayName("project", project.title, {
+                    identifier: project.project_id,
+                    mfid: project.unique_id,
+                  })
                   return (
                     <TableRow key={project.unique_id}>
                       <ResourceDirectoryNameCell

@@ -13,6 +13,11 @@ export default [
     },
   },
   {
-    ignores: ["eslint.config.js", ".output/**", ".prettierrc"],
+    ignores: [
+      "eslint.config.js",
+      ".output/**",
+      ".playwright-cli/**",
+      ".prettierrc",
+    ],
   },
 ]

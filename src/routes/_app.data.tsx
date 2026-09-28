@@ -1,5 +1,9 @@
 import { useMemo } from "react"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useIsFetching,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
 import {
@@ -15,6 +19,7 @@ import {
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import { RefreshResourceIcon } from "@/components/crucible/icons"
 import {
   datasetCollectionName,
   sampleCollectionName,
@@ -34,7 +39,7 @@ import {
 } from "@/components/crucible/resource-sibling-navigation"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -65,6 +70,7 @@ import {
   collectionGroupOrderSearchState,
   clearCollectionGroupFilterSearch,
   datasetFiltersForGroup,
+  facetOrderingForGroupOrder,
   globalDatasetBrowseOptions,
   globalSampleBrowseOptions,
   resolveCollectionBrowse,
@@ -85,6 +91,10 @@ import type {
   SampleFacetField,
   SampleFacetFilters,
 } from "@/data/crucible/facets"
+import {
+  datasetFacetQueryOptions,
+  sampleFacetQueryOptions,
+} from "@/data/crucible/facets.queries"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 
 export const Route = createFileRoute("/_app/data")({
@@ -269,6 +279,7 @@ function DataResults({
   search: DataSearch
 }) {
   const scope = useWorkspaceScope()
+  const queryClient = useQueryClient()
   const navigate = Route.useNavigate()
   const kind = filters.kind
   const showSamples = kind === "samples"
@@ -322,6 +333,33 @@ function DataResults({
       limit: dataPageLimit,
     }),
     enabled: loadDatasets,
+  })
+  const facetQueryKey =
+    sampleBrowse?.view === "grouped"
+      ? sampleFacetQueryOptions(scope, sampleBrowse.field, collectionFilters, {
+          excludeField: false,
+          ordering: facetOrderingForGroupOrder(
+            sampleBrowse.order,
+            sampleBrowse.direction
+          ),
+        }).queryKey
+      : datasetBrowse?.view === "grouped"
+        ? datasetFacetQueryOptions(
+            scope,
+            datasetBrowse.field,
+            collectionFilters,
+            {
+              excludeField: false,
+              ordering: facetOrderingForGroupOrder(
+                datasetBrowse.order,
+                datasetBrowse.direction
+              ),
+            }
+          ).queryKey
+        : undefined
+  const facetFetching = useIsFetching({
+    exact: true,
+    queryKey: facetQueryKey ?? ["inactive-data-facets"],
   })
 
   const sampleCollection = useCursorResourceCollection({
@@ -404,10 +442,19 @@ function DataResults({
     (showDatasets &&
       datasetResult.isFetching &&
       !datasetResult.isFetchingNextPage)
+  const refreshing = updating || facetFetching > 0
 
   function retrySelected() {
     if (showSamples) void sampleResult.refetch()
     if (showDatasets) void datasetResult.refetch()
+  }
+
+  function refreshVisibleData() {
+    if (loadSamples) void sampleResult.refetch()
+    if (loadDatasets) void datasetResult.refetch()
+    if (facetQueryKey) {
+      void queryClient.refetchQueries({ exact: true, queryKey: facetQueryKey })
+    }
   }
 
   function changeSort(sort: ResourceSort, direction: SortDirection) {
@@ -436,6 +483,25 @@ function DataResults({
         datasetBrowse={datasetBrowse}
         filters={collectionFilters}
         sampleBrowse={sampleBrowse}
+        refreshAction={
+          <Button
+            aria-label="Refresh data"
+            disabled={refreshing}
+            onClick={refreshVisibleData}
+            variant="outline"
+          >
+            <RefreshResourceIcon
+              aria-hidden="true"
+              className={
+                refreshing
+                  ? "animate-spin motion-reduce:animate-none"
+                  : undefined
+              }
+              data-icon="inline-start"
+            />
+            {refreshing ? "Refreshing" : "Refresh"}
+          </Button>
+        }
         toolbarActions={<DataFilters errors={[]} values={search} />}
         toolbarPrimary={
           <DataTypeFilters
@@ -562,6 +628,7 @@ function DataBrowseFrame({
   children,
   datasetBrowse,
   filters,
+  refreshAction,
   sampleBrowse,
   toolbarActions,
   toolbarPrimary,
@@ -569,6 +636,7 @@ function DataBrowseFrame({
   children: React.ReactNode
   datasetBrowse?: DataBrowseState<DatasetFacetField>
   filters: DataCollectionQueryFilters
+  refreshAction: React.ReactNode
   sampleBrowse?: DataBrowseState<SampleFacetField>
   toolbarActions: React.ReactNode
   toolbarPrimary: React.ReactNode
@@ -578,7 +646,15 @@ function DataBrowseFrame({
   if (!browse) {
     return (
       <div className="flex min-w-0 flex-col gap-4">
-        <CollectionToolbar actions={toolbarActions} primary={toolbarPrimary} />
+        <CollectionToolbar
+          actions={
+            <>
+              {toolbarActions}
+              {refreshAction}
+            </>
+          }
+          primary={toolbarPrimary}
+        />
         {children}
       </div>
     )
@@ -647,6 +723,7 @@ function DataBrowseFrame({
                 options={globalSampleBrowseOptions}
                 view={sampleBrowse.view}
               />
+              {refreshAction}
             </>
           }
           primary={toolbarPrimary}
@@ -685,6 +762,7 @@ function DataBrowseFrame({
               options={globalDatasetBrowseOptions}
               view={datasetBrowse.view}
             />
+            {refreshAction}
           </>
         }
         primary={toolbarPrimary}

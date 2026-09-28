@@ -839,7 +839,7 @@ describe("workspace resource sources", () => {
     expect(result).toEqual({
       data_format: "NeXus",
       data_type: null,
-      dataset_name: "Untitled dataset",
+      dataset_name: "",
       measurement: "X-ray diffraction",
       modification_time: "2026-09-06T01:30:00Z",
       session_name: null,

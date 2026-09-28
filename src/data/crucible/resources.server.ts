@@ -4,6 +4,7 @@ import { z } from "zod"
 
 import type { components } from "@/generated/crucible-api"
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
+import { resourceDisplayName } from "@/lib/resource-name"
 import {
   CrucibleContractError,
   CrucibleResponseError,
@@ -356,7 +357,7 @@ export function toWorkspaceResourceDetail(
       ...commonResource(
         resource,
         "dataset",
-        resource.dataset_name ?? "Untitled dataset",
+        resource.dataset_name ?? "",
         resource.owner
       ),
       kind: "dataset",
@@ -1079,7 +1080,7 @@ function normalizeApiResourceGraph(
         hasMoreRelationships: node.has_more_relationships,
         instrument: node.resource_type === "dataset" ? node.instrument : null,
         kind: node.resource_type,
-        name: node.name || node.mfid,
+        name: resourceDisplayName(node.resource_type, node.name),
         project: node.project,
         traversalDepth: node.traversal_depth,
         unique_id: node.mfid,
@@ -1554,7 +1555,7 @@ export async function patchWorkspaceDatasetDescription(
     return workspaceDatasetDescriptiveUpdate({
       data_format: template.data_format,
       data_type: template.data_type,
-      dataset_name: dataset.dataset_name ?? "Untitled dataset",
+      dataset_name: dataset.dataset_name ?? "",
       measurement: dataset.measurement ?? null,
       modification_time: dataset.modification_time ?? null,
       session_name: template.session_name,
@@ -1576,7 +1577,7 @@ export async function patchWorkspaceDatasetDescription(
   return workspaceDatasetDescriptiveUpdate({
     data_format: result.data.data_format ?? null,
     data_type: result.data.data_type ?? null,
-    dataset_name: result.data.dataset_name ?? "Untitled dataset",
+    dataset_name: result.data.dataset_name ?? "",
     measurement: result.data.measurement ?? null,
     modification_time: result.data.modification_time ?? null,
     session_name: result.data.session_name ?? null,

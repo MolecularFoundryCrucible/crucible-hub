@@ -1,3 +1,5 @@
+import { memo } from "react"
+
 import {
   ResourceCreatedCell,
   ResourceOpenCell,
@@ -23,6 +25,7 @@ import type {
   WorkspaceDataset,
   WorkspaceSample,
 } from "@/data/crucible/workspace-source"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 type SharedProps = {
   ariaLabel?: string
@@ -112,77 +115,120 @@ export function ResourceCollectionTable({
       <TableBody>
         {kind === "sample"
           ? items.map((sample) => (
-              <TableRow key={sample.unique_id}>
-                <ResourceCollectionNameCell
-                  className="resource-collection-name"
-                  kind="sample"
-                  mfid={sample.unique_id}
-                  name={sample.sample_name}
-                  subtype={sample.sample_type ?? "Unspecified sample type"}
-                  subtypeVisibility={subtypeVisibility}
-                />
-                {showSubtypeColumn ? (
-                  <SubtypeCell value={sample.sample_type} />
-                ) : null}
-                {showProjectColumn ? (
-                  <ResourceProjectCell
-                    project={sample.project}
-                    projectId={sample.project_id}
-                    relation={sample.project_relation}
-                  />
-                ) : null}
-                <ResourceOwnerCell owner={sample.owner} />
-                <ResourceCreatedCell
-                  className="hidden xl:table-cell"
-                  value={sample.creation_time}
-                />
-                <ResourceUpdatedCell value={sample.modification_time} />
-                <ResourceOpenCell
-                  fromProject={fromProject}
-                  kind="sample"
-                  mfid={sample.unique_id}
-                  name={sample.sample_name}
-                />
-              </TableRow>
+              <SampleCollectionRow
+                fromProject={fromProject}
+                key={sample.unique_id}
+                sample={sample}
+                showProjectColumn={showProjectColumn}
+                showSubtypeColumn={showSubtypeColumn}
+                subtypeVisibility={subtypeVisibility}
+              />
             ))
           : items.map((dataset) => (
-              <TableRow key={dataset.unique_id}>
-                <ResourceCollectionNameCell
-                  className="resource-collection-name"
-                  kind="dataset"
-                  mfid={dataset.unique_id}
-                  name={dataset.dataset_name ?? "Untitled dataset"}
-                  subtype={dataset.measurement ?? "Unspecified measurement"}
-                  subtypeVisibility={subtypeVisibility}
-                />
-                {showSubtypeColumn ? (
-                  <SubtypeCell value={dataset.measurement} />
-                ) : null}
-                {showProjectColumn ? (
-                  <ResourceProjectCell
-                    project={dataset.project}
-                    projectId={dataset.project_id}
-                    relation={dataset.project_relation}
-                  />
-                ) : null}
-                <ResourceOwnerCell owner={dataset.owner} />
-                <ResourceCreatedCell
-                  className="hidden xl:table-cell"
-                  value={dataset.creation_time}
-                />
-                <ResourceUpdatedCell value={dataset.modification_time} />
-                <ResourceOpenCell
-                  fromProject={fromProject}
-                  kind="dataset"
-                  mfid={dataset.unique_id}
-                  name={dataset.dataset_name ?? "Untitled dataset"}
-                />
-              </TableRow>
+              <DatasetCollectionRow
+                dataset={dataset}
+                fromProject={fromProject}
+                key={dataset.unique_id}
+                showProjectColumn={showProjectColumn}
+                showSubtypeColumn={showSubtypeColumn}
+                subtypeVisibility={subtypeVisibility}
+              />
             ))}
       </TableBody>
     </Table>
   )
 }
+
+type CollectionRowProps = {
+  fromProject?: string
+  showProjectColumn: boolean
+  showSubtypeColumn: boolean
+  subtypeVisibility: "always" | "compact"
+}
+
+const SampleCollectionRow = memo(function SampleRow({
+  fromProject,
+  sample,
+  showProjectColumn,
+  showSubtypeColumn,
+  subtypeVisibility,
+}: CollectionRowProps & { sample: WorkspaceSample }) {
+  const name = resourceDisplayName("sample", sample.sample_name)
+  return (
+    <TableRow>
+      <ResourceCollectionNameCell
+        className="resource-collection-name"
+        kind="sample"
+        mfid={sample.unique_id}
+        name={name}
+        subtype={sample.sample_type ?? "Unspecified sample type"}
+        subtypeVisibility={subtypeVisibility}
+      />
+      {showSubtypeColumn ? <SubtypeCell value={sample.sample_type} /> : null}
+      {showProjectColumn ? (
+        <ResourceProjectCell
+          project={sample.project}
+          projectId={sample.project_id}
+          relation={sample.project_relation}
+        />
+      ) : null}
+      <ResourceOwnerCell owner={sample.owner} />
+      <ResourceCreatedCell
+        className="hidden xl:table-cell"
+        value={sample.creation_time}
+      />
+      <ResourceUpdatedCell value={sample.modification_time} />
+      <ResourceOpenCell
+        fromProject={fromProject}
+        kind="sample"
+        mfid={sample.unique_id}
+        name={name}
+      />
+    </TableRow>
+  )
+})
+
+const DatasetCollectionRow = memo(function DatasetRow({
+  dataset,
+  fromProject,
+  showProjectColumn,
+  showSubtypeColumn,
+  subtypeVisibility,
+}: CollectionRowProps & { dataset: WorkspaceDataset }) {
+  const name = resourceDisplayName("dataset", dataset.dataset_name)
+  return (
+    <TableRow>
+      <ResourceCollectionNameCell
+        className="resource-collection-name"
+        kind="dataset"
+        mfid={dataset.unique_id}
+        name={name}
+        subtype={dataset.measurement ?? "Unspecified measurement"}
+        subtypeVisibility={subtypeVisibility}
+      />
+      {showSubtypeColumn ? <SubtypeCell value={dataset.measurement} /> : null}
+      {showProjectColumn ? (
+        <ResourceProjectCell
+          project={dataset.project}
+          projectId={dataset.project_id}
+          relation={dataset.project_relation}
+        />
+      ) : null}
+      <ResourceOwnerCell owner={dataset.owner} />
+      <ResourceCreatedCell
+        className="hidden xl:table-cell"
+        value={dataset.creation_time}
+      />
+      <ResourceUpdatedCell value={dataset.modification_time} />
+      <ResourceOpenCell
+        fromProject={fromProject}
+        kind="dataset"
+        mfid={dataset.unique_id}
+        name={name}
+      />
+    </TableRow>
+  )
+})
 
 function SubtypeCell({ value }: { value?: string | null }) {
   return (

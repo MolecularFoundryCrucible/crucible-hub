@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 import {
   CollectionLoadError,
@@ -121,7 +122,12 @@ function SearchPage() {
       <SearchBreadcrumb
         projectMfid={search.projectMfid}
         projectName={
-          project ? (project.title ?? project.project_id) : search.projectMfid
+          project
+            ? resourceDisplayName("project", project.title, {
+                identifier: project.project_id,
+                mfid: project.unique_id,
+              })
+            : search.projectMfid
         }
       />
       <PageHeader
@@ -164,7 +170,7 @@ function SearchPage() {
         }
         description={
           search.projectMfid
-            ? `Samples and datasets related to ${project ? (project.title ?? project.project_id) : search.projectMfid}.`
+            ? `Samples and datasets related to ${project ? resourceDisplayName("project", project.title, { identifier: project.project_id, mfid: project.unique_id }) : search.projectMfid}.`
             : undefined
         }
         title={
