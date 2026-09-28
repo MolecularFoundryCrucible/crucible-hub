@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Directed sign-in callback success and error redirects to the configured public Hub origin behind the Cloud Run proxy.
+
 - Pinned the Hub OpenAPI contract to deployed API revision `8e4d0ef`, prepared a dedicated Cloud Run image repository and runtime identity for the single-instance pilot, and excluded Hub callback request URLs from the default Cloud Logging sink.
 
 - Added named local development scenarios for fixtures, API-key access, and ORCID against local or staging APIs, with separate gitignored credentials and no inherited settings from other scenarios.

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import {
   finishHubLogin,
+  hubAuthPublicOrigin,
   hubSignInFailureDetails,
 } from "@/server/crucible/hub-auth.server"
 
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/auth/callback")({
         const url = new URL(request.url)
         const code = url.searchParams.get("code")
         const state = url.searchParams.get("state")
+        const publicOrigin = hubAuthPublicOrigin()
         try {
           let destination: string
           if (code && state && code.length <= 512 && state.length <= 256) {
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/auth/callback")({
           return new Response(null, {
             status: 303,
             headers: {
-              Location: new URL(destination, url).toString(),
+              Location: new URL(destination, publicOrigin).toString(),
               "Cache-Control": "no-store",
               "Referrer-Policy": "no-referrer",
             },
@@ -35,7 +37,7 @@ export const Route = createFileRoute("/auth/callback")({
           return new Response(null, {
             status: 303,
             headers: {
-              Location: new URL("/hub/auth/error", url).toString(),
+              Location: new URL("/hub/auth/error", publicOrigin).toString(),
               "Cache-Control": "no-store",
               "Referrer-Policy": "no-referrer",
             },
