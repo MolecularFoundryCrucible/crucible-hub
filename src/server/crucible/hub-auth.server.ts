@@ -46,6 +46,31 @@ class TokenRequestError extends Error {
   }
 }
 
+export function hubSignInFailureDetails(error: unknown) {
+  if (error instanceof TokenRequestError) {
+    return { reason: "token-exchange-rejected", status: error.status }
+  }
+  if (error instanceof z.ZodError) {
+    return { reason: "invalid-token-response" }
+  }
+  if (error instanceof Error) {
+    const knownReasons: Record<string, string> = {
+      "Invalid sign-in response.": "invalid-callback-response",
+      "The sign-in request has expired.": "expired-transaction",
+      "The sign-in request could not be verified.": "state-mismatch",
+      "Hub sign-in is not configured for local development.": "configuration",
+      "Hub sign-in callback is not configured correctly.": "configuration",
+      "Hub API URL must be a trusted HTTPS URL.": "configuration",
+    }
+    return {
+      reason:
+        knownReasons[error.message] ??
+        (error.name === "TypeError" ? "api-connection" : "unexpected"),
+    }
+  }
+  return { reason: "unexpected" }
+}
+
 const storeKey = Symbol.for("crucible.hub.auth.local-store")
 const globals = globalThis as typeof globalThis & { [storeKey]?: Store }
 const store = (globals[storeKey] ??= {

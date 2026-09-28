@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import { finishHubLogin } from "@/server/crucible/hub-auth.server"
+import {
+  finishHubLogin,
+  hubSignInFailureDetails,
+} from "@/server/crucible/hub-auth.server"
 
 export const Route = createFileRoute("/auth/callback")({
   server: {
@@ -24,7 +27,11 @@ export const Route = createFileRoute("/auth/callback")({
               "Referrer-Policy": "no-referrer",
             },
           })
-        } catch {
+        } catch (error) {
+          console.error(
+            "[Crucible Hub] Sign-in callback failed",
+            hubSignInFailureDetails(error)
+          )
           return new Response(null, {
             status: 303,
             headers: {
