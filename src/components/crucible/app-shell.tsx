@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Link, useHydrated, useRouterState } from "@tanstack/react-router"
+import { Link, useRouterState } from "@tanstack/react-router"
 
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
@@ -21,6 +21,7 @@ import {
   DeletionRequestsIcon,
   ExpandSidebarIcon,
   RecentResourcesIcon,
+  SignOutIcon,
   ThemeIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
@@ -43,6 +44,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuSubmitItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -301,8 +303,6 @@ function AccountControls({
   privilegeMode: WorkspacePrivilegeMode
   sessionAuth: boolean
 }) {
-  const hydrated = useHydrated()
-
   return (
     <div className="ml-auto flex items-center gap-2">
       {privilegeMode === "elevated" ? (
@@ -322,7 +322,6 @@ function AccountControls({
             render={
               <Button
                 aria-label="Open account menu"
-                disabled={!hydrated}
                 size="lg"
                 variant="ghost"
               />
@@ -343,9 +342,13 @@ function AccountControls({
                 My profile
               </DropdownMenuItem>
               {sessionAuth ? (
-                <DropdownMenuSubmitItem form="hub-sign-out">
-                  Sign out
-                </DropdownMenuSubmitItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSubmitItem form="hub-sign-out">
+                    <SignOutIcon aria-hidden="true" />
+                    Sign out
+                  </DropdownMenuSubmitItem>
+                </>
               ) : null}
             </DropdownMenuGroup>
           </DropdownMenuContent>

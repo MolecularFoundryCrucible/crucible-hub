@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Styled Sign out as a standard icon menu action, kept the account menu enabled during page hydration, and fixed sign-out behind the configured HTTPS Hub proxy.
+
 - Refined the standalone ORCID sign-in and sign-in error pages with shared Hub branding, clearer hierarchy, responsive spacing, and consistent light and dark styling.
 
 - Added safe server-side sign-in callback failure reasons so failed ORCID exchanges can be diagnosed without logging credentials or callback codes.

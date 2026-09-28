@@ -99,6 +99,10 @@ function configuredCallbackUri() {
   return url.toString()
 }
 
+export function hubAuthPublicOrigin() {
+  return new URL(configuredCallbackUri()).origin
+}
+
 function httpsApiUrl(value: string) {
   const url = new URL(value)
   if (

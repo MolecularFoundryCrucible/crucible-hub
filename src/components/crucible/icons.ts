@@ -52,6 +52,7 @@ export {
   UserPlus as AddMemberIcon,
   UserMinus as RemoveMemberIcon,
   LogOut as LeaveProjectIcon,
+  LogOut as SignOutIcon,
   UsersRound as EditMembersIcon,
   UsersRound as MembersIcon,
   Search as SearchIcon,

@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import { logoutHubSession } from "@/server/crucible/hub-auth.server"
+import {
+  hubAuthPublicOrigin,
+  logoutHubSession,
+} from "@/server/crucible/hub-auth.server"
 
 export const Route = createFileRoute("/auth/logout")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const origin = request.headers.get("origin")
-        if (origin !== new URL(request.url).origin) {
+        if (origin !== hubAuthPublicOrigin()) {
           return new Response("Forbidden", { status: 403 })
         }
         try {
@@ -21,7 +24,7 @@ export const Route = createFileRoute("/auth/logout")({
             }
           )
         }
-        return Response.redirect(new URL("/hub/", request.url), 303)
+        return Response.redirect(new URL("/hub/", hubAuthPublicOrigin()), 303)
       },
     },
   },
