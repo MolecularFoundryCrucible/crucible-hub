@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
-import { notifySuccess } from "@/components/crucible/notifications"
+import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +36,7 @@ import {
 import {
   ProfileField,
   accountProfileChanges,
+  accountProfileHasChanges,
   accountProfileSchema,
   accountProfileValues,
 } from "./account-profile-fields"
@@ -51,6 +52,8 @@ export function AccountProfileForm({
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [saveError, setSaveError] = useState<string>()
+  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
+  const [rejectedUsername, setRejectedUsername] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (changes: WorkspaceAccountProfileUpdate) =>
       unwrapHubResult(
@@ -71,7 +74,10 @@ export function AccountProfileForm({
     onSubmit: async ({ value }) => {
       setSaveError(undefined)
       const changes = accountProfileChanges(account, value)
-      if (Object.keys(changes).length === 0) return
+      if (Object.keys(changes).length === 0) {
+        setEditing(false)
+        return
+      }
       try {
         const update = await mutation.mutateAsync(changes)
         void applyAccountProfileUpdate(queryClient, scope, update)
@@ -79,24 +85,33 @@ export function AccountProfileForm({
         notifySuccess("Profile saved")
         setEditing(false)
       } catch (error) {
-        setSaveError(
+        if (
           error instanceof HubApiClientError &&
-            error.details.kind === "conflict" &&
-            changes.username
-            ? "Username already taken. Choose another username."
-            : hubErrorMessage(
-                error,
-                "Your profile could not be saved. Your changes are still here."
-              )
-        )
+          error.details.kind === "conflict" &&
+          changes.username
+        ) {
+          setRejectedUsername(changes.username)
+          notifyError("Username already taken")
+        } else {
+          setSaveError(
+            hubErrorMessage(
+              error,
+              "Your profile could not be saved. Your changes are still here."
+            )
+          )
+        }
       }
     },
   })
-  const isDirty = useStore(form.store, (state) => state.isDirty)
+  const hasChanges = useStore(form.store, (state) =>
+    accountProfileHasChanges(account, state.values)
+  )
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
-  const discard = useDiscardProtection(isDirty, () => {
+  const discard = useDiscardProtection(hasChanges, () => {
     form.reset()
     setSaveError(undefined)
+    setLiveTakenUsername(undefined)
+    setRejectedUsername(undefined)
     setEditing(false)
   })
   const formId = `account-profile-${account.unique_id}`
@@ -175,18 +190,13 @@ export function AccountProfileForm({
                 </form.Field>
                 <form.Field name="username">
                   {(field) => (
-                    <ProfileField
+                    <UsernameAvailability
+                      currentUsername={account.username}
                       field={field}
-                      label="Username"
-                      maxLength={24}
-                      required
-                    >
-                      <UsernameAvailability
-                        currentUsername={account.username}
-                        scenario={fixtureScenarioFromScope(scope)}
-                        username={field.state.value}
-                      />
-                    </ProfileField>
+                      onLiveTakenChange={setLiveTakenUsername}
+                      rejectedUsername={rejectedUsername}
+                      scenario={fixtureScenarioFromScope(scope)}
+                    />
                   )}
                 </form.Field>
               </FieldGroup>
@@ -200,8 +210,10 @@ export function AccountProfileForm({
         </CardContent>
         <form.Subscribe
           selector={(state) => [
-            state.canSubmit,
-            state.isDirty,
+            state.canSubmit &&
+              state.values.username.trim() !== liveTakenUsername &&
+              state.values.username.trim() !== rejectedUsername,
+            accountProfileHasChanges(account, state.values),
             state.isSubmitting,
           ]}
         >

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 
 import { Button } from "@/components/ui/button"
+import { notifyError } from "@/components/crucible/notifications"
 import { FieldGroup } from "@/components/ui/field"
 import { updateWorkspaceAccount } from "@/data/crucible/account.functions"
 import {
@@ -30,6 +31,8 @@ export function AccountSetupForm({
   returnTo?: string
 }) {
   const [saveError, setSaveError] = useState<string>()
+  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
+  const [rejectedUsername, setRejectedUsername] = useState<string>()
   const form = useForm({
     defaultValues: accountProfileValues(account),
     validators: {
@@ -52,15 +55,20 @@ export function AccountSetupForm({
         }
         window.location.replace(accountSetupDestination(returnTo))
       } catch (error) {
-        setSaveError(
+        if (
           error instanceof HubApiClientError &&
-            error.details.kind === "conflict"
-            ? "Username already taken. Choose another username."
-            : hubErrorMessage(
-                error,
-                "Your account could not be updated. Try again."
-              )
-        )
+          error.details.kind === "conflict"
+        ) {
+          setRejectedUsername(value.username.trim())
+          notifyError("Username already taken")
+        } else {
+          setSaveError(
+            hubErrorMessage(
+              error,
+              "Your account could not be updated. Try again."
+            )
+          )
+        }
       }
     },
   })
@@ -81,17 +89,12 @@ export function AccountSetupForm({
         <FieldGroup>
           <form.Field name="username">
             {(field) => (
-              <ProfileField
+              <UsernameAvailability
+                currentUsername={account.username}
                 field={field}
-                label="Username"
-                maxLength={24}
-                required
-              >
-                <UsernameAvailability
-                  currentUsername={account.username}
-                  username={field.state.value}
-                />
-              </ProfileField>
+                onLiveTakenChange={setLiveTakenUsername}
+                rejectedUsername={rejectedUsername}
+              />
             )}
           </form.Field>
           <form.Field name="email">
@@ -112,7 +115,13 @@ export function AccountSetupForm({
           {saveError}
         </p>
       ) : null}
-      <form.Subscribe selector={(state) => state.canSubmit}>
+      <form.Subscribe
+        selector={(state) =>
+          state.canSubmit &&
+          state.values.username.trim() !== liveTakenUsername &&
+          state.values.username.trim() !== rejectedUsername
+        }
+      >
         {(canSubmit) => (
           <Button disabled={!canSubmit || submitting} size="lg" type="submit">
             {submitting ? "Saving..." : "Continue"}

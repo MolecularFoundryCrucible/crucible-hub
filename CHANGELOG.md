@@ -6,7 +6,15 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Added an explicit single-instance production ORCID session mode with server-side token expiry and fail-closed refresh, and documented the limited Cloud Run pilot and later Redis transition.
+- Pinned the Hub OpenAPI contract to deployed API revision `8e4d0ef`, prepared a dedicated Cloud Run image repository and runtime identity for the single-instance pilot, and excluded Hub callback request URLs from the default Cloud Logging sink.
+
+- Added named local development scenarios for fixtures, API-key access, and ORCID against local or staging APIs, with separate gitignored credentials and no inherited settings from other scenarios.
+
+- Prepared a separate Cloud Build image workflow and a reviewable internal Cloud Run and Nginx `/hub/` route for the single-instance pilot, with callback-safe proxy logging and activation kept separate from building.
+
+- Added an explicit single-instance production ORCID session mode with server-side token expiry and fail-closed refresh, and documented the limited Cloud Run pilot and planned shared-session transition.
+
+- Kept profile Save disabled for unchanged or taken usernames, moved availability feedback into accessible field-end icons, show a save-time username conflict as a toast with a persistent invalid field state, and removed duplicate focus outlines from styled controls.
 
 - Added a standalone account-completion step after ORCID sign-in when email or username is missing, kept names optional, added debounced username lookup and specific taken-name feedback to both profile forms, and centered the ORCID sign-in action at its content width.
 

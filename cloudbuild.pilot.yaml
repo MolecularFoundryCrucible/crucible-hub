@@ -1,0 +1,9 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --tag
+      - us-central1-docker.pkg.dev/$PROJECT_ID/crucible-hub/app:${_IMAGE_TAG}
+      - .
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/crucible-hub/app:${_IMAGE_TAG}

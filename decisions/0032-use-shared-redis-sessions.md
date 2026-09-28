@@ -1,8 +1,10 @@
 # 0032: Use Shared Redis Sessions When Scaling Hub Authentication
 
-Status: Accepted
+Status: Superseded
 
 Date: 2026-09-28
+
+[Decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md) replaces the shared-store choice. The process-local pilot below is unchanged.
 
 ## Context
 

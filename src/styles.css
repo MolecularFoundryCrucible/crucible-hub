@@ -1327,10 +1327,12 @@ body {
   opacity: 1;
 }
 
-:focus-visible {
-  outline: var(--focus-width) solid
-    color-mix(in oklch, var(--ring), transparent 35%);
-  outline-offset: var(--focus-offset);
+@layer base {
+  :focus-visible {
+    outline: var(--focus-width) solid
+      color-mix(in oklch, var(--ring), transparent 35%);
+    outline-offset: var(--focus-offset);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

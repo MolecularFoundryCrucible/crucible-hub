@@ -14,18 +14,23 @@ Use Node.js 22.22 and npm 10.9:
 
 ```bash
 npm ci
-npm run dev
+npm run dev:fixtures
 ```
 
-The development server is available at `http://127.0.0.1:3000/hub/` and fails if port 3000 is occupied. Fixtures are the default data source. To use the temporary local API bridge, provide a user-scoped key only to the server process:
+The development server is available at `http://127.0.0.1:3000/hub/` and fails if port 3000 is occupied. `npm run dev` still uses fixtures by default. Use a named scenario to switch API and sign-in targets:
 
-```bash
-read -rsp "Crucible API key: " CRUCIBLE_API_KEY
-export CRUCIBLE_API_KEY
-HUB_DATA_SOURCE=api CRUCIBLE_API_BASE_URL=https://crucible.lbl.gov/testapi-staging npm run dev
-```
+| Command                     | Hub authentication | API target                        |
+| --------------------------- | ------------------ | --------------------------------- |
+| `npm run dev:fixtures`      | Fixtures           | None                              |
+| `npm run dev:api-local`     | Temporary API key  | Local HTTPS API                   |
+| `npm run dev:api-staging`   | Temporary API key  | Staging API                       |
+| `npm run dev:api-main`      | Temporary API key  | Main API                          |
+| `npm run dev:orcid-local`   | ORCID              | Local HTTPS API through Tailscale |
+| `npm run dev:orcid-staging` | ORCID              | Staging API through Tailscale     |
 
-Never use a `VITE_` prefix, enter the key in the browser, commit it, or use API-key mode in production.
+The nonsecret scenario settings live in [`config/env/`](config/env/). Put `CRUCIBLE_API_KEY` in a gitignored `.env.api-local.local`, `.env.api-staging.local`, or `.env.api-main.local` file for the corresponding API-key scenario. The existing `.env.api-key.local` and an exported shell key remain fallbacks. Put `HUB_AUTH_CLIENT_SECRET` in gitignored `.env.orcid-local.local` and `.env.orcid-staging.local` files for the ORCID scenarios. The existing `.env.hub-auth.local` remains a fallback while migrating. For local HTTPS API scenarios, set `NODE_EXTRA_CA_CERTS` to its trusted certificate in the corresponding local credential file or shell. The scenario launcher passes these values only to the server process and removes settings from other scenarios. Never use a `VITE_` prefix, enter a credential in the browser, commit it, or use API-key mode in production.
+
+The ORCID staging scenario uses `https://leviathan.rooster-chimaera.ts.net/hub/auth/callback`; the staging API must register that exact Hub callback. It does not change the API's own registered ORCID callback. See [authentication transition](docs/authentication-transition.md) for the Tailscale and API requirements. Deployed Hub settings are managed separately from these local development scenarios.
 
 Run `npm run validate` for the complete local validation and production build. Run `npm run validate:static` for the static and unit subset, `npm run test:browser` for the bounded screenshot-free CI browser and accessibility gate, and `npm run test:production` for the built Node runtime. Install Chromium once with `npx playwright install chromium`.
 

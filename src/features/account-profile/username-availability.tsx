@@ -1,9 +1,22 @@
 import { useEffect, useState } from "react"
+import type { Dispatch, SetStateAction } from "react"
 
+import {
+  UsernameAvailableIcon,
+  UsernameCheckUnavailableIcon,
+  UsernameCheckingIcon,
+  UsernameTakenIcon,
+} from "@/components/crucible/icons"
+import { InputGroupText } from "@/components/ui/input-group"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { checkWorkspaceUsername } from "@/data/crucible/account.functions"
 import type { FixtureScenario } from "@/data/crucible/fixture-scenarios"
 import { unwrapHubResult } from "@/data/crucible/result"
-import { accountProfileSchema } from "./account-profile-fields"
+import { ProfileField, accountProfileSchema } from "./account-profile-fields"
 
 type CheckResult = {
   result: "taken" | "no-exact-match" | "error"
@@ -12,16 +25,22 @@ type CheckResult = {
 
 export function UsernameAvailability({
   currentUsername,
+  field,
+  onLiveTakenChange,
+  rejectedUsername,
   scenario,
-  username,
 }: {
   currentUsername: string | null | undefined
+  field: Parameters<typeof ProfileField>[0]["field"]
+  onLiveTakenChange: Dispatch<SetStateAction<string | undefined>>
+  rejectedUsername?: string
   scenario?: FixtureScenario
-  username: string
 }) {
   const [checked, setChecked] = useState<CheckResult>()
-  const candidate = username.trim()
+  const candidate = field.state.value.trim()
+  const rejected = candidate === rejectedUsername
   const shouldCheck =
+    !rejected &&
     candidate !== currentUsername &&
     accountProfileSchema.shape.username.safeParse(candidate).success
 
@@ -36,10 +55,12 @@ export function UsernameAvailability({
       })
         .then((result) => {
           if (!active) return
+          const taken = unwrapHubResult(result)
           setChecked({
-            result: unwrapHubResult(result) ? "taken" : "no-exact-match",
+            result: taken ? "taken" : "no-exact-match",
             username: candidate,
           })
+          onLiveTakenChange(taken ? candidate : undefined)
         })
         .catch(() => {
           if (active) setChecked({ result: "error", username: candidate })
@@ -50,29 +71,75 @@ export function UsernameAvailability({
       window.clearTimeout(timeout)
       controller.abort()
     }
-  }, [candidate, scenario, shouldCheck])
+  }, [candidate, onLiveTakenChange, scenario, shouldCheck])
 
-  if (!shouldCheck) return null
-  if (checked?.username !== candidate) {
-    return <p className="text-supporting text-muted-foreground">Checking...</p>
-  }
-  if (checked.result === "taken") {
-    return (
-      <p className="text-supporting text-destructive" role="status">
-        Username already taken.
-      </p>
-    )
-  }
-  if (checked.result === "error") {
-    return (
-      <p className="text-supporting text-muted-foreground" role="status">
-        Check unavailable. Try saving.
-      </p>
-    )
-  }
+  const status = rejected
+    ? "taken"
+    : !shouldCheck
+      ? null
+      : checked?.username === candidate
+        ? checked.result
+        : "checking"
+  const Icon =
+    status === "taken"
+      ? UsernameTakenIcon
+      : status === "no-exact-match"
+        ? UsernameAvailableIcon
+        : status === "error"
+          ? UsernameCheckUnavailableIcon
+          : UsernameCheckingIcon
+  const label =
+    status === "taken"
+      ? "Username already taken"
+      : status === "no-exact-match"
+        ? "No exact match. Final availability check on save."
+        : status === "error"
+          ? "Could not check now. Save will verify."
+          : "Checking username"
+
+  const adornment = status ? (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <InputGroupText
+            className={
+              status === "taken"
+                ? "text-destructive"
+                : status === "no-exact-match"
+                  ? "text-success"
+                  : undefined
+            }
+            role="status"
+            tabIndex={0}
+          />
+        }
+      >
+        <Icon
+          aria-hidden="true"
+          className={
+            status === "checking" ? "motion-safe:animate-spin" : undefined
+          }
+        />
+        <span className="sr-only">{label}</span>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  ) : null
+
   return (
-    <p className="text-supporting text-muted-foreground" role="status">
-      No exact match. Final check on save.
-    </p>
+    <ProfileField
+      endAdornment={
+        adornment ?? (
+          <InputGroupText aria-hidden="true" className="invisible">
+            <UsernameCheckingIcon />
+          </InputGroupText>
+        )
+      }
+      field={field}
+      invalid={status === "taken"}
+      label="Username"
+      maxLength={24}
+      required
+    />
   )
 }
