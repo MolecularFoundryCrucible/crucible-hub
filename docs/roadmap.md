@@ -19,7 +19,7 @@ This document owns delivery order, entry and completion gates, current status, a
 
 ## Current position
 
-The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, the first capability-gated service-account administration slice, and a local API-owned ORCID sign-in implementation. Production authentication, shared sessions, and production mutation exposure remain blocked by session-store and security evidence.
+The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, the first capability-gated service-account administration slice, and API-owned ORCID sign-in with an opt-in shared session path. Production authentication and mutation exposure remain blocked by deployment and browser security evidence.
 
 | Area                                        | Status                                                                                                                                                                                                             |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -31,14 +31,14 @@ The local workspace has the runtime and server boundary, generated contract cons
 | Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck.                   |
 | Broader administration and account activity | Deletion-request history and review are implemented locally. Join review, people administration, audit, pins, and account activity await API contracts.                                                            |
 | Uploads                                     | Browser upload remains blocked by the secure exact-object capability, lifecycle, and CORS contract.                                                                                                                |
-| Production exposure                         | Blocked by the API-owned login exchange, shared server sessions, same-origin and CSRF evidence, and deployment decisions.                                                                                          |
+| Production exposure                         | Shared sessions are implemented behind explicit activation; multi-replica login, refresh, logout, browser protections, and deployment evidence remain open.                                                        |
 
 ## Ordered work packages
 
 ### P0: production foundation
 
-1. Verify the pinned API-owned web login exchange end to end and finalize the Hub shared-session contract.
-2. Implement and verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement.
+1. Verify the pinned API-owned web login exchange end to end and validate the shared session store across replicas.
+2. Verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement in the target browser and deployment topology.
 3. Complete upload feasibility evidence for the direct object-storage boundary.
 4. Run the production go or no-go review with container, path-prefix, authentication, and operational evidence.
 

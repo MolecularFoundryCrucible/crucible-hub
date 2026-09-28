@@ -1,10 +1,17 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 
-import { getHubSessionIdentity } from "@/data/crucible/session.functions"
+import { getHubSessionSnapshot } from "@/data/crucible/session.functions"
 import { openHubSessionChannel } from "@/data/crucible/session-tabs"
+import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 
-export function SessionTabSync({ accountMfid }: { accountMfid: string }) {
+export function SessionTabSync({
+  accountMfid,
+  privilegeMode,
+}: {
+  accountMfid: string
+  privilegeMode: WorkspacePrivilegeMode
+}) {
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -15,10 +22,14 @@ export function SessionTabSync({ accountMfid }: { accountMfid: string }) {
     }
     const checkSession = async () => {
       try {
-        const identity = await getHubSessionIdentity()
+        const snapshot = await getHubSessionSnapshot()
         if (!active) return
-        if (!identity) leaveWorkspace()
-        else if (identity !== accountMfid) leaveWorkspace("/hub/")
+        if (!snapshot) leaveWorkspace()
+        else if (
+          snapshot.accountMfid !== accountMfid ||
+          snapshot.privilegeMode !== privilegeMode
+        )
+          leaveWorkspace("/hub/")
       } catch {
         return
       }
@@ -43,7 +54,7 @@ export function SessionTabSync({ accountMfid }: { accountMfid: string }) {
       window.removeEventListener("pageshow", onPageShow)
       channel?.close()
     }
-  }, [accountMfid, queryClient])
+  }, [accountMfid, privilegeMode, queryClient])
 
   return null
 }

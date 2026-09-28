@@ -16,7 +16,7 @@ A decision record does not override a contract owned by another Crucible reposit
 | Decision                                                      | Status     | Subject                                                                           |
 | ------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------- |
 | [0001](0001-integrated-tanstack-stack.md)                     | Accepted   | Integrated TanStack application stack                                             |
-| [0002](0002-server-side-session-boundary.md)                  | Proposed   | Server-side Hub session and API authentication boundary                           |
+| [0002](0002-server-side-session-boundary.md)                  | Accepted   | Server-side Hub session and API authentication boundary                           |
 | [0003](0003-owned-design-system.md)                           | Accepted   | Owned shadcn/ui design system with semantic tokens                                |
 | [0004](0004-openapi-generated-client.md)                      | Accepted   | OpenAPI-generated TypeScript client                                               |
 | [0005](0005-direct-object-storage-uploads.md)                 | Proposed   | Direct browser-to-object-storage upload flow                                      |
@@ -46,3 +46,4 @@ A decision record does not override a contract owned by another Crucible reposit
 | [0029](0029-separate-dataset-processing.md)                   | Accepted   | Dedicated file ingestion and future dataset processing workspace                  |
 | [0030](0030-load-scientific-viewers-from-a-typed-registry.md) | Accepted   | Typed build-time registry for independently loaded scientific viewers             |
 | [0031](0031-scope-administrator-authority.md)                 | Accepted   | Contextual platform Administration and explicit global Administrator view         |
+| [0032](0032-use-shared-redis-sessions.md)                     | Accepted   | Encrypted shared sessions and atomic cross-replica refresh                        |

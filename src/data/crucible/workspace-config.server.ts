@@ -4,6 +4,10 @@ import {
   hasHubSession,
   sessionApiFetch,
 } from "@/server/crucible/hub-auth.server"
+import {
+  sharedSessionsConfigured,
+  sharedSessionsRequested,
+} from "@/server/crucible/hub-session-store.server"
 
 export type WorkspaceConfiguration =
   | { mode: "fixture" }
@@ -26,10 +30,20 @@ function isTrustedApiUrl(value: string) {
 export function readWorkspaceConfiguration(): WorkspaceConfiguration {
   if (process.env.HUB_DATA_SOURCE === "hub-auth") {
     const baseUrl = process.env.CRUCIBLE_API_BASE_URL
-    if (process.env.NODE_ENV === "production") {
+    if (
+      process.env.NODE_ENV === "production" &&
+      (!sharedSessionsConfigured() ||
+        process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true")
+    ) {
       return {
         mode: "unavailable",
         reason: "Hub session storage is not configured for production.",
+      }
+    }
+    if (sharedSessionsRequested() && !sharedSessionsConfigured()) {
+      return {
+        mode: "unavailable",
+        reason: "Shared Hub sessions are not configured.",
       }
     }
     if (

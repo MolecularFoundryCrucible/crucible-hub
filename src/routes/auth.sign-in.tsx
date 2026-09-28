@@ -10,7 +10,7 @@ import {
 } from "@/components/crucible/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getHubSessionIdentity } from "@/data/crucible/session.functions"
+import { getHubSessionSnapshot } from "@/data/crucible/session.functions"
 import { announceHubSignOut } from "@/data/crucible/session-tabs"
 
 export const Route = createFileRoute("/auth/sign-in")({
@@ -28,9 +28,9 @@ function SignInPage() {
   const { returnTo, signedOut } = Route.useSearch()
   useEffect(() => {
     if (!signedOut) return
-    void getHubSessionIdentity()
-      .then((identity) => {
-        if (!identity) announceHubSignOut()
+    void getHubSessionSnapshot()
+      .then((snapshot) => {
+        if (!snapshot) announceHubSignOut()
       })
       .catch(() => undefined)
   }, [signedOut])

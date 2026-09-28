@@ -37,7 +37,7 @@ export const updateGlobalPrivilegeMode = createServerFn({ method: "POST" })
         }
       }
 
-      writeGlobalPrivilegeMode(data.mode)
+      await writeGlobalPrivilegeMode(data.mode)
       return { privilegeMode: data.mode }
     })
   })

@@ -136,7 +136,10 @@ export function AppShell({
   const shell = (
     <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
       {sessionAuth && account ? (
-        <SessionTabSync accountMfid={account.unique_id} />
+        <SessionTabSync
+          accountMfid={account.unique_id}
+          privilegeMode={privilegeMode}
+        />
       ) : null}
       <SidebarProvider>
         <Sidebar
