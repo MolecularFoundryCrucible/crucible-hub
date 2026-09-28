@@ -100,6 +100,20 @@ function DropdownMenuItem({
   )
 }
 
+function DropdownMenuSubmitItem({
+  children,
+  form,
+}: {
+  children: React.ReactNode
+  form: string
+}) {
+  return (
+    <DropdownMenuItem render={<button form={form} type="submit" />}>
+      {children}
+    </DropdownMenuItem>
+  )
+}
+
 function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
   return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
 }
@@ -262,6 +276,7 @@ export {
   DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuItem,
+  DropdownMenuSubmitItem,
   DropdownMenuCheckboxItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,

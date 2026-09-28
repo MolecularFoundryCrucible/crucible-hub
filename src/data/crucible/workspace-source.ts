@@ -590,8 +590,10 @@ export type WorkspaceSource =
       mode: WorkspaceMode
       privilegeMode: WorkspacePrivilegeMode
       workspace: Workspace
+      sessionAuth?: boolean
     }
   | {
       status: "unavailable"
       reason: string
+      authRequired?: boolean
     }

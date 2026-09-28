@@ -9,7 +9,7 @@ import { readGlobalPrivilegeMode } from "./privilege-mode.server"
 
 type ClientConfiguration = {
   baseUrl: string
-  bearerToken: string
+  bearerToken?: string
   fetch?: typeof globalThis.fetch
 }
 
@@ -36,7 +36,7 @@ export function createCrucibleClient(
     baseUrl,
     fetch,
     headers: {
-      Authorization: `Bearer ${bearerToken}`,
+      ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
       "Crucible-Privilege-Mode": privilegeMode,
     },
   })

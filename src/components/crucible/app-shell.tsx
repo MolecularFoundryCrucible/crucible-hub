@@ -43,6 +43,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSubmitItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -111,11 +112,13 @@ export function AppShell({
   account,
   children,
   privilegeMode = "normal",
+  sessionAuth = false,
   scope,
 }: {
   account?: Workspace["account"]
   children: React.ReactNode
   privilegeMode?: WorkspacePrivilegeMode
+  sessionAuth?: boolean
   scope?: IdentityScope
 }) {
   const location = useRouterState({
@@ -256,6 +259,7 @@ export function AppShell({
                 account={account}
                 administrationActive={pathname.startsWith("/admin")}
                 privilegeMode={privilegeMode}
+                sessionAuth={sessionAuth}
               />
             ) : (
               <div className="ml-auto border-l pl-3">
@@ -290,10 +294,12 @@ function AccountControls({
   account,
   administrationActive,
   privilegeMode,
+  sessionAuth,
 }: {
   account: Workspace["account"]
   administrationActive: boolean
   privilegeMode: WorkspacePrivilegeMode
+  sessionAuth: boolean
 }) {
   const hydrated = useHydrated()
 
@@ -308,6 +314,9 @@ function AccountControls({
         </Badge>
       ) : null}
       <div className="border-l pl-3">
+        {sessionAuth ? (
+          <form action="/hub/auth/logout" id="hub-sign-out" method="post" />
+        ) : null}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -333,6 +342,11 @@ function AccountControls({
                 <AccountIcon />
                 My profile
               </DropdownMenuItem>
+              {sessionAuth ? (
+                <DropdownMenuSubmitItem form="hub-sign-out">
+                  Sign out
+                </DropdownMenuSubmitItem>
+              ) : null}
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

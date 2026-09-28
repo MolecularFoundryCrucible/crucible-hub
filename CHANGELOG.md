@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added a local API-owned ORCID sign-in flow with a dedicated sign-in page, return-to navigation, state and PKCE validation, opaque server-side sessions, bearer-token refresh and revocation, and an updated pinned OpenAPI client; production sign-in remains gated on shared session storage.
+
 - Standardized missing resource names across Home, collections, search, previews, graphs, sibling navigation, and resource pages: samples and datasets use Untitled labels, while projects and instruments fall back to their IDs and then MFIDs. Stored names remain unchanged for editing.
 
 - Added a Data toolbar Refresh action that reloads the active group directory and selected resource list without clearing filters or readable rows.

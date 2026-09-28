@@ -19,7 +19,7 @@ This document owns delivery order, entry and completion gates, current status, a
 
 ## Current position
 
-The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, and the first capability-gated service-account administration slice. Production authentication, shared sessions, and production mutation exposure remain blocked by the API-owned login exchange and session boundary.
+The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, the first capability-gated service-account administration slice, and a local API-owned ORCID sign-in implementation. Production authentication, shared sessions, and production mutation exposure remain blocked by session-store and security evidence.
 
 | Area                                        | Status                                                                                                                                                                                                             |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -37,7 +37,7 @@ The local workspace has the runtime and server boundary, generated contract cons
 
 ### P0: production foundation
 
-1. Finalize the API-owned web login exchange and Hub shared-session contract.
+1. Verify the pinned API-owned web login exchange end to end and finalize the Hub shared-session contract.
 2. Implement and verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement.
 3. Complete upload feasibility evidence for the direct object-storage boundary.
 4. Run the production go or no-go review with container, path-prefix, authentication, and operational evidence.
@@ -114,7 +114,7 @@ Implemented with fixture and unit coverage for local development without file up
 
 #### Next action: production boundary and administration verification
 
-Keep the implemented local workspace stable while the API-owned web login exchange and shared-session contract remain the release-critical path. Recheck service-account platform-role mutation against the deployed API revision, then implement broader Administration routes only as their capability, queue, mutation, and audit contracts become available. Browser upload, production mutations, and deployment remain blocked by P0.
+Keep the implemented local workspace stable while end-to-end login evidence and the shared-session contract remain the release-critical path. Recheck service-account platform-role mutation against the deployed API revision, then implement broader Administration routes only as their capability, queue, mutation, and audit contracts become available. Browser upload, production mutations, and deployment remain blocked by P0.
 
 ### P3: Explorer convergence
 

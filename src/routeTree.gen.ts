@@ -16,6 +16,11 @@ import { Route as AppAccountRouteImport } from './routes/_app.account'
 import { Route as AppDataRouteImport } from './routes/_app.data'
 import { Route as AppDeletionRequestsRouteImport } from './routes/_app.deletion-requests'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthErrorRouteImport } from './routes/auth.error'
+import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as AuthLogoutRouteImport } from './routes/auth.logout'
+import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
 import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.design-system'
 import { Route as FixturesScenariosRouteImport } from './routes/fixtures.scenarios'
 import { Route as AppDatasetsDatasetMfidRouteImport } from './routes/_app.datasets.$datasetMfid'
@@ -89,6 +94,31 @@ const AppSearchRoute = AppSearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => AppRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthErrorRoute = AuthErrorRouteImport.update({
+  id: '/auth/error',
+  path: '/auth/error',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLogoutRoute = AuthLogoutRouteImport.update({
+  id: '/auth/logout',
+  path: '/auth/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/auth/sign-in',
+  path: '/auth/sign-in',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FixturesDesignSystemRoute = FixturesDesignSystemRouteImport.update({
   id: '/fixtures/design-system',
@@ -320,6 +350,11 @@ export interface FileRoutesByFullPath {
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
   '/search': typeof AppSearchRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/logout': typeof AuthLogoutRoute
+  '/auth/sign-in': typeof AuthSignInRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
@@ -366,6 +401,11 @@ export interface FileRoutesByTo {
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
   '/search': typeof AppSearchRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/logout': typeof AuthLogoutRoute
+  '/auth/sign-in': typeof AuthSignInRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/': typeof AppIndexRoute
@@ -409,6 +449,11 @@ export interface FileRoutesById {
   '/_app/data': typeof AppDataRoute
   '/_app/deletion-requests': typeof AppDeletionRequestsRoute
   '/_app/search': typeof AppSearchRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/logout': typeof AuthLogoutRoute
+  '/auth/sign-in': typeof AuthSignInRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/_app/': typeof AppIndexRoute
@@ -459,6 +504,11 @@ export interface FileRouteTypes {
     | '/data'
     | '/deletion-requests'
     | '/search'
+    | '/auth/callback'
+    | '/auth/error'
+    | '/auth/login'
+    | '/auth/logout'
+    | '/auth/sign-in'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/datasets/$datasetMfid'
@@ -505,6 +555,11 @@ export interface FileRouteTypes {
     | '/data'
     | '/deletion-requests'
     | '/search'
+    | '/auth/callback'
+    | '/auth/error'
+    | '/auth/login'
+    | '/auth/logout'
+    | '/auth/sign-in'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/'
@@ -547,6 +602,11 @@ export interface FileRouteTypes {
     | '/_app/data'
     | '/_app/deletion-requests'
     | '/_app/search'
+    | '/auth/callback'
+    | '/auth/error'
+    | '/auth/login'
+    | '/auth/logout'
+    | '/auth/sign-in'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/_app/'
@@ -592,6 +652,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   HealthRoute: typeof HealthRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthErrorRoute: typeof AuthErrorRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthLogoutRoute: typeof AuthLogoutRoute
+  AuthSignInRoute: typeof AuthSignInRoute
   FixturesDesignSystemRoute: typeof FixturesDesignSystemRoute
   FixturesScenariosRoute: typeof FixturesScenariosRoute
 }
@@ -646,6 +711,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/search'
       preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/error': {
+      id: '/auth/error'
+      path: '/auth/error'
+      fullPath: '/auth/error'
+      preLoaderRoute: typeof AuthErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/logout': {
+      id: '/auth/logout'
+      path: '/auth/logout'
+      fullPath: '/auth/logout'
+      preLoaderRoute: typeof AuthLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/sign-in': {
+      id: '/auth/sign-in'
+      path: '/auth/sign-in'
+      fullPath: '/auth/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/fixtures/design-system': {
       id: '/fixtures/design-system'
@@ -1101,6 +1201,11 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   HealthRoute: HealthRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthErrorRoute: AuthErrorRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthLogoutRoute: AuthLogoutRoute,
+  AuthSignInRoute: AuthSignInRoute,
   FixturesDesignSystemRoute: FixturesDesignSystemRoute,
   FixturesScenariosRoute: FixturesScenariosRoute,
 }

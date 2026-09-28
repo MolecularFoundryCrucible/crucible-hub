@@ -1,8 +1,13 @@
 import "@tanstack/react-start/server-only"
 
+import {
+  hasHubSession,
+  sessionApiFetch,
+} from "@/server/crucible/hub-auth.server"
+
 export type WorkspaceConfiguration =
   | { mode: "fixture" }
-  | { mode: "api"; baseUrl: string; bearerToken: string }
+  | { mode: "api"; baseUrl: string; bearerToken?: string; fetch?: typeof fetch }
   | { mode: "unavailable"; reason: string }
 
 function isTrustedApiUrl(value: string) {
@@ -19,6 +24,34 @@ function isTrustedApiUrl(value: string) {
 }
 
 export function readWorkspaceConfiguration(): WorkspaceConfiguration {
+  if (process.env.HUB_DATA_SOURCE === "hub-auth") {
+    const baseUrl = process.env.CRUCIBLE_API_BASE_URL
+    if (process.env.NODE_ENV === "production") {
+      return {
+        mode: "unavailable",
+        reason: "Hub session storage is not configured for production.",
+      }
+    }
+    if (
+      !baseUrl ||
+      !isTrustedApiUrl(baseUrl) ||
+      !baseUrl.startsWith("https://")
+    ) {
+      return {
+        mode: "unavailable",
+        reason: "Hub sign-in requires a trusted HTTPS API URL.",
+      }
+    }
+    if (!process.env.HUB_AUTH_CLIENT_SECRET) {
+      return { mode: "unavailable", reason: "Hub sign-in is not configured." }
+    }
+    if (!hasHubSession())
+      return {
+        mode: "unavailable",
+        reason: "Sign in to Crucible Hub to continue.",
+      }
+    return { mode: "api", baseUrl, fetch: sessionApiFetch() }
+  }
   if (process.env.HUB_DATA_SOURCE !== "api") return { mode: "fixture" }
 
   if (process.env.NODE_ENV === "production") {

@@ -9,6 +9,7 @@ import { z } from "zod"
 import { AppShell } from "@/components/crucible/app-shell"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import {
   defaultFixtureScenario,
@@ -49,6 +50,7 @@ export const Route = createFileRoute("/_app")({
       status: "ready" as const,
       mode: source.mode,
       privilegeMode: source.privilegeMode,
+      sessionAuth: source.sessionAuth ?? false,
       scope,
     }
   },
@@ -68,6 +70,28 @@ function WorkspaceLayout() {
           </CardHeader>
           <CardContent className="text-muted-foreground">
             {source.reason}
+            {source.authRequired ? (
+              <div className="mt-4">
+                <Button
+                  nativeButton={false}
+                  render={
+                    <a
+                      href="/hub/auth/sign-in"
+                      onClick={(event) => {
+                        const url = new URL(event.currentTarget.href)
+                        url.searchParams.set(
+                          "returnTo",
+                          window.location.pathname + window.location.search
+                        )
+                        event.currentTarget.href = url.toString()
+                      }}
+                    />
+                  }
+                >
+                  Sign in with ORCID
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </AppShell>
@@ -78,6 +102,7 @@ function WorkspaceLayout() {
     <ReadyWorkspace
       mode={source.mode}
       privilegeMode={source.privilegeMode}
+      sessionAuth={source.sessionAuth}
       scope={source.scope}
     />
   )
@@ -86,17 +111,24 @@ function WorkspaceLayout() {
 function ReadyWorkspace({
   mode,
   privilegeMode,
+  sessionAuth,
   scope,
 }: {
   mode: "api" | "fixture"
   privilegeMode: "elevated" | "normal"
+  sessionAuth: boolean
   scope: ReturnType<typeof identityScope>
 }) {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
 
   return (
     <WorkspaceProvider mode={mode} privilegeMode={privilegeMode} scope={scope}>
-      <AppShell account={account} privilegeMode={privilegeMode} scope={scope}>
+      <AppShell
+        account={account}
+        privilegeMode={privilegeMode}
+        scope={scope}
+        sessionAuth={sessionAuth}
+      >
         <Outlet />
       </AppShell>
     </WorkspaceProvider>
