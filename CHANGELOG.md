@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Added Hub-only response headers that prevent framing, restrict base URLs and object content, disable MIME sniffing, and withhold referrers.
+- Added Hub-only response headers that prevent framing, restrict base URLs and object content, disable MIME sniffing, and limit referrers to the same origin while preserving private OAuth redirects.
 
 - Directed sign-in callback success and error redirects to the configured public Hub origin behind the Cloud Run proxy.
 

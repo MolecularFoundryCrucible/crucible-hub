@@ -37,7 +37,7 @@ const securityHeadersMiddleware = createMiddleware().server(
     )
     setResponseHeader("X-Frame-Options", "DENY")
     setResponseHeader("X-Content-Type-Options", "nosniff")
-    setResponseHeader("Referrer-Policy", "no-referrer")
+    setResponseHeader("Referrer-Policy", "same-origin")
     return next()
   }
 )
