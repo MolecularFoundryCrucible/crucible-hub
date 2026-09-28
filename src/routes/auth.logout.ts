@@ -14,21 +14,15 @@ export const Route = createFileRoute("/auth/logout")({
         if (origin !== publicOrigin) {
           return new Response("Forbidden", { status: 403 })
         }
-        try {
-          await logoutHubSession()
-        } catch {
-          return new Response(
-            "Signed out locally. API revocation could not be confirmed.",
-            {
-              status: 502,
-              headers: { "Cache-Control": "no-store" },
-            }
-          )
-        }
+        const signOutStatus = (await logoutHubSession())
+          ? "complete"
+          : "revocation-unconfirmed"
+        const destination = new URL("/hub/auth/sign-in", publicOrigin)
+        destination.searchParams.set("signedOut", signOutStatus)
         return new Response(null, {
           status: 303,
           headers: {
-            Location: new URL("/hub/", publicOrigin).toString(),
+            Location: destination.toString(),
             "Cache-Control": "no-store",
           },
         })

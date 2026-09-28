@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Completed the local sign-out handoff with a dedicated sign-in confirmation, an explicit warning when API revocation cannot be confirmed, and cross-tab cleanup of in-memory workspace data.
+
 - Styled Sign out as an icon-bearing destructive menu action, kept the account menu enabled during page hydration, and fixed sign-out behind the configured HTTPS Hub proxy with a cookie-compatible redirect.
 
 - Refined the standalone ORCID sign-in and sign-in error pages with shared Hub branding, clearer hierarchy, responsive spacing, and consistent light and dark styling.

@@ -32,6 +32,8 @@ type Transaction = {
   verifier: string
   returnTo: string
   expiresAt: number
+  consumed: boolean
+  cancelled: boolean
 }
 type Session = { tokens: Tokens }
 type Store = {
@@ -206,6 +208,8 @@ export function beginHubLogin(returnTo: string | null) {
     verifier,
     returnTo: safeReturnTo(returnTo),
     expiresAt: Date.now() + transactionLifetime,
+    consumed: false,
+    cancelled: false,
   })
   setCookie(transactionCookie, transactionId, {
     ...cookieOptions("/hub/auth"),
@@ -226,39 +230,64 @@ export async function finishHubLogin(code: string, state: string) {
   deleteCookie(transactionCookie, cookieOptions("/hub/auth"))
   if (!transactionId) throw new Error("The sign-in request has expired.")
   const transaction = store.transactions.get(transactionId)
-  store.transactions.delete(transactionId)
-  if (!transaction || transaction.expiresAt < Date.now()) {
+  if (
+    !transaction ||
+    transaction.expiresAt < Date.now() ||
+    transaction.consumed ||
+    transaction.cancelled
+  ) {
     throw new Error("The sign-in request has expired.")
   }
-  const expected = Buffer.from(transaction.state)
-  const actual = Buffer.from(state)
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-    throw new Error("The sign-in request could not be verified.")
+  transaction.consumed = true
+  try {
+    const expected = Buffer.from(transaction.state)
+    const actual = Buffer.from(state)
+    if (
+      expected.length !== actual.length ||
+      !timingSafeEqual(expected, actual)
+    ) {
+      throw new Error("The sign-in request could not be verified.")
+    }
+    const tokens = await tokenRequest("/auth/hub/token", {
+      code,
+      code_verifier: transaction.verifier,
+      redirect_uri: callbackUri,
+    })
+    if (
+      transaction.cancelled ||
+      store.transactions.get(transactionId) !== transaction
+    ) {
+      await revokeRefreshToken(tokens.refresh_token)
+      throw new Error("The sign-in request has expired.")
+    }
+    const previous = getCookie(sessionCookie)
+    if (previous) store.sessions.delete(previous)
+    const sessionId = randomValue()
+    store.sessions.set(sessionId, { tokens })
+    writeGlobalPrivilegeMode("normal")
+    setCookie(sessionCookie, sessionId, cookieOptions("/hub"))
+    return transaction.returnTo
+  } finally {
+    if (store.transactions.get(transactionId) === transaction) {
+      store.transactions.delete(transactionId)
+    }
   }
-  const tokens = await tokenRequest("/auth/hub/token", {
-    code,
-    code_verifier: transaction.verifier,
-    redirect_uri: callbackUri,
-  })
-  const previous = getCookie(sessionCookie)
-  if (previous) store.sessions.delete(previous)
-  const sessionId = randomValue()
-  store.sessions.set(sessionId, { tokens })
-  writeGlobalPrivilegeMode("normal")
-  setCookie(sessionCookie, sessionId, cookieOptions("/hub"))
-  return transaction.returnTo
 }
 
 export function hasHubSession() {
+  return hubSessionIdentity() !== null
+}
+
+export function hubSessionIdentity() {
   const sessionId = getCookie(sessionCookie)
-  if (!sessionId) return false
+  if (!sessionId) return null
   const current = store.sessions.get(sessionId)
-  if (!current) return false
+  if (!current) return null
   if (Date.parse(current.tokens.refresh_expires_at) <= Date.now()) {
     store.sessions.delete(sessionId)
-    return false
+    return null
   }
-  return true
+  return current.tokens.user_unique_id
 }
 
 function session() {
@@ -329,38 +358,39 @@ export function sessionApiFetch(): typeof fetch {
   }
 }
 
-export async function logoutHubSession() {
-  const sessionId = getCookie(sessionCookie)
-  deleteCookie(sessionCookie, cookieOptions("/hub"))
-  writeGlobalPrivilegeMode("normal")
-  if (!sessionId) return
+async function revokeRefreshToken(refreshToken: string) {
   try {
-    await store.refreshes.get(sessionId)
-  } catch {
-    store.sessions.delete(sessionId)
-    throw new Error(
-      "Signed out locally, but API revocation could not be confirmed."
-    )
-  }
-  const current = store.sessions.get(sessionId)
-  store.sessions.delete(sessionId)
-  if (!current) return
-  const { baseUrl, secret } = config()
-  try {
+    const { baseUrl, secret } = config()
     const response = await fetch(`${baseUrl}/auth/hub/revoke`, {
       method: "POST",
       headers: {
         Authorization: basicAuthorization(secret),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token: current.tokens.refresh_token }),
+      body: JSON.stringify({ token: refreshToken }),
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
     })
-    if (!response.ok) throw new Error("API revocation failed.")
+    return response.ok
   } catch {
-    throw new Error(
-      "Signed out locally, but API revocation could not be confirmed."
-    )
+    return false
   }
+}
+
+export async function logoutHubSession() {
+  const sessionId = getCookie(sessionCookie)
+  const transactionId = getCookie(transactionCookie)
+  if (transactionId) {
+    const transaction = store.transactions.get(transactionId)
+    if (transaction) transaction.cancelled = true
+    store.transactions.delete(transactionId)
+  }
+  deleteCookie(transactionCookie, cookieOptions("/hub/auth"))
+  const refreshToken = sessionId
+    ? store.sessions.get(sessionId)?.tokens.refresh_token
+    : undefined
+  if (sessionId) store.sessions.delete(sessionId)
+  deleteCookie(sessionCookie, cookieOptions("/hub"))
+  writeGlobalPrivilegeMode("normal")
+  return refreshToken ? revokeRefreshToken(refreshToken) : true
 }

@@ -32,6 +32,7 @@ import {
 } from "@/components/crucible/resource-type-icon"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
+import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { useTheme } from "@/components/theme-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -134,6 +135,9 @@ export function AppShell({
 
   const shell = (
     <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
+      {sessionAuth && account ? (
+        <SessionTabSync accountMfid={account.unique_id} />
+      ) : null}
       <SidebarProvider>
         <Sidebar
           aria-label="Primary navigation"

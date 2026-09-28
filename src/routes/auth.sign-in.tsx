@@ -1,19 +1,39 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { useEffect } from "react"
 import { z } from "zod"
 
 import orcidIdUrl from "@/assets/orcid-id.svg"
 import { AuthPage } from "@/components/crucible/auth-page"
+import {
+  SignOutSuccessIcon,
+  SignOutWarningIcon,
+} from "@/components/crucible/icons"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { getHubSessionIdentity } from "@/data/crucible/session.functions"
+import { announceHubSignOut } from "@/data/crucible/session-tabs"
 
 export const Route = createFileRoute("/auth/sign-in")({
   validateSearch: z.object({
     returnTo: z.string().max(1024).optional().catch(undefined),
+    signedOut: z
+      .enum(["complete", "revocation-unconfirmed"])
+      .optional()
+      .catch(undefined),
   }),
   component: SignInPage,
 })
 
 function SignInPage() {
-  const { returnTo } = Route.useSearch()
+  const { returnTo, signedOut } = Route.useSearch()
+  useEffect(() => {
+    if (!signedOut) return
+    void getHubSessionIdentity()
+      .then((identity) => {
+        if (!identity) announceHubSignOut()
+      })
+      .catch(() => undefined)
+  }, [signedOut])
   const loginUrl = returnTo
     ? `/hub/auth/login?${new URLSearchParams({ returnTo })}`
     : "/hub/auth/login"
@@ -24,7 +44,11 @@ function SignInPage() {
       description="Use your ORCID iD to access your projects and research data."
       footer={
         <>
-          <span>New to ORCID?</span>
+          <span>
+            {signedOut
+              ? "Your ORCID session may still be active."
+              : "New to ORCID?"}
+          </span>
           <Button
             nativeButton={false}
             render={
@@ -36,25 +60,46 @@ function SignInPage() {
             }
             variant="link"
           >
-            Learn more
+            {signedOut ? "Open ORCID" : "Learn more"}
           </Button>
         </>
       }
     >
-      <Button
-        className="w-full"
-        nativeButton={false}
-        render={<a href={loginUrl} />}
-        size="lg"
-      >
-        <img
-          alt=""
-          aria-hidden="true"
-          className="size-orcid-id-icon"
-          src={orcidIdUrl}
-        />
-        Sign in with ORCID
-      </Button>
+      <div className="flex flex-col gap-auth-brand-gap">
+        {signedOut === "complete" ? (
+          <Badge
+            className="max-w-full whitespace-normal"
+            role="status"
+            variant="success"
+          >
+            <SignOutSuccessIcon aria-hidden="true" />
+            You've signed out.
+          </Badge>
+        ) : signedOut === "revocation-unconfirmed" ? (
+          <Badge
+            className="max-w-full whitespace-normal"
+            role="status"
+            variant="warning"
+          >
+            <SignOutWarningIcon aria-hidden="true" />
+            Signed out here. API revocation could not be confirmed.
+          </Badge>
+        ) : null}
+        <Button
+          className="w-full"
+          nativeButton={false}
+          render={<a href={loginUrl} />}
+          size="lg"
+        >
+          <img
+            alt=""
+            aria-hidden="true"
+            className="size-orcid-id-icon"
+            src={orcidIdUrl}
+          />
+          Sign in with ORCID
+        </Button>
+      </div>
     </AuthPage>
   )
 }

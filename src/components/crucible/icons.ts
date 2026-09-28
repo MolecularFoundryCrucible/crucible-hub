@@ -49,6 +49,8 @@ export {
   ServerCog as SystemPrincipalIcon,
   CircleHelp as UnknownPrincipalIcon,
   CircleAlert as SignInFailureIcon,
+  CircleCheck as SignOutSuccessIcon,
+  CircleAlert as SignOutWarningIcon,
   UserPlus as AddMemberIcon,
   UserMinus as RemoveMemberIcon,
   LogOut as LeaveProjectIcon,
