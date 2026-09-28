@@ -103,12 +103,17 @@ function DropdownMenuItem({
 function DropdownMenuSubmitItem({
   children,
   form,
+  variant = "default",
 }: {
   children: React.ReactNode
   form: string
+  variant?: "default" | "destructive"
 }) {
   return (
-    <DropdownMenuItem render={<button form={form} type="submit" />}>
+    <DropdownMenuItem
+      render={<button form={form} type="submit" />}
+      variant={variant}
+    >
       {children}
     </DropdownMenuItem>
   )

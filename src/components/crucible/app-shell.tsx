@@ -344,7 +344,10 @@ function AccountControls({
               {sessionAuth ? (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuSubmitItem form="hub-sign-out">
+                  <DropdownMenuSubmitItem
+                    form="hub-sign-out"
+                    variant="destructive"
+                  >
                     <SignOutIcon aria-hidden="true" />
                     Sign out
                   </DropdownMenuSubmitItem>
