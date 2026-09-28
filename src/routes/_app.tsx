@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Outlet,
   createFileRoute,
+  redirect,
   retainSearchParams,
 } from "@tanstack/react-router"
 import { z } from "zod"
@@ -9,7 +10,6 @@ import { z } from "zod"
 import { AppShell } from "@/components/crucible/app-shell"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import {
   defaultFixtureScenario,
@@ -27,13 +27,26 @@ export const Route = createFileRoute("/_app")({
     middlewares: [retainSearchParams(["scenario"])],
   },
   loaderDeps: ({ search }) => ({ scenario: search.scenario }),
-  loader: async ({ abortController, context, deps }) => {
+  loader: async ({ abortController, context, deps, location }) => {
     const scenario = deps.scenario ?? defaultFixtureScenario
     const source = await getWorkspace({
       data: { scenario: deps.scenario },
       signal: abortController.signal,
     })
-    if (source.status === "unavailable") return source
+    if (source.status === "unavailable") {
+      if (source.authRequired) {
+        const current = new URL(location.href, "http://127.0.0.1:3000")
+        const pathname = current.pathname.startsWith("/hub/")
+          ? current.pathname
+          : `/hub${current.pathname}`
+        throw redirect({
+          to: "/auth/sign-in",
+          search: { returnTo: `${pathname}${current.search}${current.hash}` },
+          replace: true,
+        })
+      }
+      return source
+    }
 
     const scope = identityScope(
       source.mode === "fixture" ? fixtureServerId(scenario) : "crucible-hosted",
@@ -70,28 +83,6 @@ function WorkspaceLayout() {
           </CardHeader>
           <CardContent className="text-muted-foreground">
             {source.reason}
-            {source.authRequired ? (
-              <div className="mt-4">
-                <Button
-                  nativeButton={false}
-                  render={
-                    <a
-                      href="/hub/auth/sign-in"
-                      onClick={(event) => {
-                        const url = new URL(event.currentTarget.href)
-                        url.searchParams.set(
-                          "returnTo",
-                          window.location.pathname + window.location.search
-                        )
-                        event.currentTarget.href = url.toString()
-                      }}
-                    />
-                  }
-                >
-                  Sign in with ORCID
-                </Button>
-              </div>
-            ) : null}
           </CardContent>
         </Card>
       </AppShell>
