@@ -49,7 +49,9 @@
   --spacing-auth-mark: 3rem;
   --spacing-auth-card: 1.5rem;
   --spacing-auth-brand-gap: 0.75rem;
+  --spacing-auth-footer-block: 0.75rem;
   --spacing-auth-footer-gap: 0.25rem;
+  --opacity-auth-background-logo: 0.06;
   --spacing-resource-date-column: 10.5rem;
   --spacing-resource-person-column: 12rem;
   --spacing-data-name-column: calc(
@@ -310,6 +312,7 @@
   min-height: 100svh;
   place-items: center;
   padding: var(--spacing-page-gutter);
+  position: relative;
   background:
     radial-gradient(
       circle at 50% 0,
@@ -319,11 +322,22 @@
     var(--background);
 }
 
+.auth-page-sign-in::before {
+  position: absolute;
+  inset: 0;
+  background: url("./assets/crucible-logo-explorer.webp") center /
+    min(100vw, 100svh) no-repeat;
+  content: "";
+  opacity: var(--opacity-auth-background-logo);
+  pointer-events: none;
+}
+
 .auth-page-frame {
   display: grid;
   width: 100%;
   max-width: var(--container-state);
   gap: var(--spacing-page-section);
+  position: relative;
 }
 
 .auth-page-brand {
@@ -350,6 +364,12 @@
   gap: var(--spacing-auth-brand-gap);
 }
 
+.auth-page-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-auth-brand-gap);
+}
+
 .auth-page-status {
   display: grid;
   width: var(--spacing-auth-mark);
@@ -369,6 +389,7 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: var(--spacing-auth-footer-gap);
+  padding-block: var(--spacing-auth-footer-block);
   color: var(--muted-foreground);
 }
 

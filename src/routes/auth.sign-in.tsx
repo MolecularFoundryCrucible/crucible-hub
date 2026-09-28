@@ -41,7 +41,6 @@ function SignInPage() {
   return (
     <AuthPage
       title="Sign in to Crucible"
-      description="Use your ORCID iD to access your projects and research data."
       footer={
         <>
           <span>
@@ -90,6 +89,7 @@ function SignInPage() {
           nativeButton={false}
           render={<a href={loginUrl} />}
           size="lg"
+          variant="outline"
         >
           <img
             alt=""

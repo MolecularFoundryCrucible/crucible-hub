@@ -25,12 +25,14 @@ export function AuthPage({
   error?: boolean
 }) {
   return (
-    <main className="auth-page">
+    <main className={error ? "auth-page" : "auth-page auth-page-sign-in"}>
       <div className="auth-page-frame">
-        <div className="auth-page-brand">
-          <BrandMark className="auth-page-mark" />
-          <span className="text-brand">Crucible Hub</span>
-        </div>
+        {error ? (
+          <div className="auth-page-brand">
+            <BrandMark className="auth-page-mark" />
+            <span className="text-brand">Crucible Hub</span>
+          </div>
+        ) : null}
         <Card className="auth-page-card">
           <CardHeader className="auth-page-header">
             {error ? (
@@ -38,7 +40,8 @@ export function AuthPage({
                 <SignInFailureIcon />
               </span>
             ) : null}
-            <CardTitle>
+            <CardTitle className={error ? undefined : "auth-page-title"}>
+              {!error ? <BrandMark className="auth-page-mark" /> : null}
               <h1 className="text-title-page">{title}</h1>
             </CardTitle>
             {description ? (

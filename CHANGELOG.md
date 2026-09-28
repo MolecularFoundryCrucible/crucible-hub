@@ -6,6 +6,10 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Made Sign out highlight the full account-menu row on hover and keyboard focus, matching My profile.
+
+- Refined the ORCID sign-in page with the Hub mark inside the card, a quieter outlined action, tighter footer, and a faint Explorer logo background.
+
 - Added an opt-in encrypted Redis session path for multi-replica ORCID sign-in, atomic refresh and logout, server-held administrator mode, session expiry and rotation, and broader CSRF coverage; production activation still requires deployment and browser validation.
 
 - Completed the local sign-out handoff with a dedicated sign-in confirmation, an explicit warning when API revocation cannot be confirmed, and cross-tab cleanup of in-memory workspace data.
