@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Refined the standalone ORCID sign-in and sign-in error pages with shared Hub branding, clearer hierarchy, responsive spacing, and consistent light and dark styling.
+
 - Added safe server-side sign-in callback failure reasons so failed ORCID exchanges can be diagnosed without logging credentials or callback codes.
 
 - Allowed local ORCID login to use a browser-reachable API URL and HTTPS Hub callback separate from the private API transport, supporting a Tailscale browser once its API route and ORCID redirect are configured.

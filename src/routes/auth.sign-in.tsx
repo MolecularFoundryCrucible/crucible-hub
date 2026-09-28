@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import orcidIdUrl from "@/assets/orcid-id.svg"
-import { BrandMark } from "@/components/crucible/brand-mark"
+import { AuthPage } from "@/components/crucible/auth-page"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const Route = createFileRoute("/auth/sign-in")({
   validateSearch: z.object({
@@ -20,39 +19,42 @@ function SignInPage() {
     : "/hub/auth/login"
 
   return (
-    <main className="mx-auto flex min-h-svh w-full max-w-reading items-center justify-center p-page-gutter">
-      <Card className="w-full max-w-state">
-        <CardHeader>
-          <BrandMark />
-          <CardTitle>Sign in to Crucible</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-(--card-spacing)">
-          <p className="text-muted-foreground">
-            Crucible uses ORCID to connect your research identity to your
-            account.
-          </p>
-          <Button nativeButton={false} render={<a href={loginUrl} />} size="lg">
-            <img
-              alt=""
-              aria-hidden="true"
-              className="size-orcid-id-icon"
-              src={orcidIdUrl}
-            />
-            Sign in with ORCID
+    <AuthPage
+      title="Sign in to Crucible"
+      description="Use your ORCID iD to access your projects and research data."
+      footer={
+        <>
+          <span>New to ORCID?</span>
+          <Button
+            nativeButton={false}
+            render={
+              <a
+                href="https://orcid.org"
+                referrerPolicy="no-referrer"
+                rel="noopener noreferrer"
+              />
+            }
+            variant="link"
+          >
+            Learn more
           </Button>
-          <p className="text-label text-muted-foreground">
-            New to ORCID?{" "}
-            <a
-              className="underline"
-              href="https://orcid.org"
-              referrerPolicy="no-referrer"
-              rel="noopener noreferrer"
-            >
-              Learn more
-            </a>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+        </>
+      }
+    >
+      <Button
+        className="w-full"
+        nativeButton={false}
+        render={<a href={loginUrl} />}
+        size="lg"
+      >
+        <img
+          alt=""
+          aria-hidden="true"
+          className="size-orcid-id-icon"
+          src={orcidIdUrl}
+        />
+        Sign in with ORCID
+      </Button>
+    </AuthPage>
   )
 }

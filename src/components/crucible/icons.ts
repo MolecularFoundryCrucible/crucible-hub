@@ -48,6 +48,7 @@ export {
   RotateCw as RotateCredentialIcon,
   ServerCog as SystemPrincipalIcon,
   CircleHelp as UnknownPrincipalIcon,
+  CircleAlert as SignInFailureIcon,
   UserPlus as AddMemberIcon,
   UserMinus as RemoveMemberIcon,
   LogOut as LeaveProjectIcon,

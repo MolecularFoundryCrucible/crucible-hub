@@ -46,6 +46,10 @@
   --spacing-pill-inline: 0.625rem;
   --spacing-pill-icon-inline: 0.5rem;
   --spacing-orcid-id-icon: 1.5rem;
+  --spacing-auth-mark: 3rem;
+  --spacing-auth-card: 1.5rem;
+  --spacing-auth-brand-gap: 0.75rem;
+  --spacing-auth-footer-gap: 0.25rem;
   --spacing-resource-date-column: 10.5rem;
   --spacing-resource-person-column: 12rem;
   --spacing-data-name-column: calc(
@@ -299,6 +303,73 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.auth-page {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: var(--spacing-page-gutter);
+  background:
+    radial-gradient(
+      circle at 50% 0,
+      color-mix(in oklch, var(--sidebar) 28%, transparent),
+      transparent 65%
+    ),
+    var(--background);
+}
+
+.auth-page-frame {
+  display: grid;
+  width: 100%;
+  max-width: var(--container-state);
+  gap: var(--spacing-page-section);
+}
+
+.auth-page-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-auth-brand-gap);
+}
+
+.auth-page-mark {
+  width: var(--spacing-auth-mark);
+  height: var(--spacing-auth-mark);
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.auth-page-card[data-slot="card"] {
+  --card-spacing: var(--spacing-auth-card);
+  border-top: var(--focus-width) solid var(--brand-crucible-orange);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-page-header[data-slot="card-header"] {
+  gap: var(--spacing-auth-brand-gap);
+}
+
+.auth-page-status {
+  display: grid;
+  width: var(--spacing-auth-mark);
+  height: var(--spacing-auth-mark);
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--warning) 12%, transparent);
+  color: var(--warning);
+}
+
+.auth-page-status svg {
+  width: var(--spacing-orcid-id-icon);
+  height: var(--spacing-orcid-id-icon);
+}
+
+.auth-page-footer[data-slot="card-footer"] {
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-auth-footer-gap);
+  color: var(--muted-foreground);
 }
 
 @media (min-width: 80rem) {
