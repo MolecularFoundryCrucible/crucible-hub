@@ -10,7 +10,8 @@ export const Route = createFileRoute("/auth/logout")({
     handlers: {
       POST: async ({ request }) => {
         const origin = request.headers.get("origin")
-        if (origin !== hubAuthPublicOrigin()) {
+        const publicOrigin = hubAuthPublicOrigin()
+        if (origin !== publicOrigin) {
           return new Response("Forbidden", { status: 403 })
         }
         try {
@@ -24,7 +25,13 @@ export const Route = createFileRoute("/auth/logout")({
             }
           )
         }
-        return Response.redirect(new URL("/hub/", hubAuthPublicOrigin()), 303)
+        return new Response(null, {
+          status: 303,
+          headers: {
+            Location: new URL("/hub/", publicOrigin).toString(),
+            "Cache-Control": "no-store",
+          },
+        })
       },
     },
   },
