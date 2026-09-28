@@ -36,6 +36,8 @@ const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
 const sessionCookie = "crucible_hub_session"
 const transactionCookie = "crucible_hub_login"
 const transactionLifetime = 10 * 60 * 1000
+const sessionIdleLifetime = 8 * 60 * 60 * 1000
+const sessionAbsoluteLifetime = 12 * 60 * 60 * 1000
 
 const tokenSchema = z.object({
   access_token: z.string().min(1),
@@ -55,7 +57,11 @@ type Transaction = {
   consumed: boolean
   cancelled: boolean
 }
-type Session = { tokens: Tokens }
+type Session = {
+  tokens: Tokens
+  expiresAt: number
+  idleExpiresAt: number
+}
 type Store = {
   transactions: Map<string, Transaction>
   sessions: Map<string, Session>
@@ -80,7 +86,7 @@ export function hubSignInFailureDetails(error: unknown) {
       "Invalid sign-in response.": "invalid-callback-response",
       "The sign-in request has expired.": "expired-transaction",
       "The sign-in request could not be verified.": "state-mismatch",
-      "Hub sign-in is not configured for local development.": "configuration",
+      "Hub sign-in is not configured.": "configuration",
       "Hub sign-in callback is not configured correctly.": "configuration",
       "Hub API URL must be a trusted HTTPS URL.": "configuration",
     }
@@ -103,6 +109,38 @@ const store = (globals[storeKey] ??= {
 const requestSession = new AsyncLocalStorage<{
   session: SharedSession | null
 }>()
+
+export function productionHubAuthReady() {
+  if (process.env.NODE_ENV !== "production") return true
+  if (process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true") return false
+  if (process.env.HUB_AUTH_SESSION_MODE === "redis")
+    return sharedSessionsConfigured()
+  if (process.env.HUB_AUTH_SESSION_MODE === "single-instance")
+    return !sharedSessionsRequested()
+  return false
+}
+
+function localSession(id: string, touch = false) {
+  const current = store.sessions.get(id)
+  if (!current) return null
+  const now = Date.now()
+  if (
+    !Number.isFinite(current.expiresAt) ||
+    !Number.isFinite(current.idleExpiresAt) ||
+    current.expiresAt <= now ||
+    current.idleExpiresAt <= now ||
+    Date.parse(current.tokens.refresh_expires_at) <= now
+  ) {
+    store.sessions.delete(id)
+    return null
+  }
+  if (touch)
+    current.idleExpiresAt = Math.min(
+      now + sessionIdleLifetime,
+      current.expiresAt
+    )
+  return current
+}
 
 function clearSharedRequestSession() {
   const context = requestSession.getStore()
@@ -237,16 +275,14 @@ function config() {
   const callbackUri = configuredCallbackUri()
   if (
     process.env.HUB_DATA_SOURCE !== "hub-auth" ||
-    (process.env.NODE_ENV === "production" &&
-      (!sharedSessionsConfigured() ||
-        process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true")) ||
+    !productionHubAuthReady() ||
     !baseUrl ||
     !publicBaseUrl ||
     !secret ||
     (process.env.NODE_ENV === "production" &&
       new URL(callbackUri).protocol !== "https:")
   ) {
-    throw new Error("Hub sign-in is not configured for local development.")
+    throw new Error("Hub sign-in is not configured.")
   }
   return {
     baseUrl: httpsApiUrl(baseUrl),
@@ -282,11 +318,7 @@ export async function beginHubLogin(returnTo: string | null) {
     for (const [id, transaction] of store.transactions) {
       if (transaction.expiresAt < Date.now()) store.transactions.delete(id)
     }
-    for (const [id, current] of store.sessions) {
-      if (Date.parse(current.tokens.refresh_expires_at) < Date.now()) {
-        store.sessions.delete(id)
-      }
-    }
+    for (const id of store.sessions.keys()) localSession(id)
   }
   const state = randomValue()
   const verifier = randomValue()
@@ -393,7 +425,12 @@ export async function finishHubLogin(code: string, state: string) {
     const previous = getCookie(sessionCookie)
     if (previous) store.sessions.delete(previous)
     const sessionId = randomValue()
-    store.sessions.set(sessionId, { tokens })
+    const now = Date.now()
+    store.sessions.set(sessionId, {
+      tokens,
+      expiresAt: now + sessionAbsoluteLifetime,
+      idleExpiresAt: now + sessionIdleLifetime,
+    })
     await writeGlobalPrivilegeMode("normal")
     setCookie(sessionCookie, sessionId, cookieOptions("/hub"))
     return transaction.returnTo
@@ -413,12 +450,8 @@ export function hubSessionIdentity() {
     return requestSession.getStore()?.session?.tokens.user_unique_id ?? null
   const sessionId = getCookie(sessionCookie)
   if (!sessionId) return null
-  const current = store.sessions.get(sessionId)
+  const current = localSession(sessionId, true)
   if (!current) return null
-  if (Date.parse(current.tokens.refresh_expires_at) <= Date.now()) {
-    store.sessions.delete(sessionId)
-    return null
-  }
   return current.tokens.user_unique_id
 }
 
@@ -428,7 +461,7 @@ function session() {
     !sessionId ||
     (sharedMode()
       ? !requestSession.getStore()?.session
-      : !store.sessions.has(sessionId))
+      : !localSession(sessionId))
   ) {
     throw new Error("Sign in to Crucible Hub to continue.")
   }
@@ -544,21 +577,23 @@ function sharedSessionApiFetch(sessionId: string): typeof fetch {
 async function refresh(sessionId: string): Promise<Tokens | null> {
   const existing = store.refreshes.get(sessionId)
   if (existing) return existing
-  const current = store.sessions.get(sessionId)
+  const current = localSession(sessionId)
   if (!current) return null
   const operation = tokenRequest("/auth/hub/refresh", {
     refresh_token: current.tokens.refresh_token,
   })
-    .then((tokens) => {
-      if (store.sessions.get(sessionId) !== current) return null
+    .then(async (tokens) => {
+      if (localSession(sessionId) !== current) {
+        await revokeRefreshToken(tokens.refresh_token)
+        return null
+      }
       current.tokens = tokens
       return tokens
     })
     .catch((error: unknown) => {
-      if (error instanceof TokenRequestError && error.status === 401) {
-        store.sessions.delete(sessionId)
+      store.sessions.delete(sessionId)
+      if (error instanceof TokenRequestError && error.status === 401)
         return null
-      }
       throw error
     })
     .finally(() => store.refreshes.delete(sessionId))
@@ -576,7 +611,7 @@ export function sessionApiFetch(): typeof fetch {
       headers.set("Authorization", `Bearer ${accessToken}`)
       return fetch(new Request(original.clone(), { headers }))
     }
-    let current = store.sessions.get(sessionId)
+    let current = localSession(sessionId)
     if (!current) throw new Error("The Hub session has ended.")
     if (Date.parse(current.tokens.refresh_expires_at) <= Date.now()) {
       store.sessions.delete(sessionId)
@@ -585,13 +620,13 @@ export function sessionApiFetch(): typeof fetch {
     if (Date.parse(current.tokens.access_expires_at) <= Date.now() + 30000) {
       const tokens = await refresh(sessionId)
       if (!tokens) throw new Error("The Hub session has expired.")
-      current = store.sessions.get(sessionId)
+      current = localSession(sessionId)
       if (!current) throw new Error("The Hub session has ended.")
     }
     const usedToken = current.tokens.access_token
     let response = await execute(usedToken)
     if (response.status === 401) {
-      const latest = store.sessions.get(sessionId)?.tokens
+      const latest = localSession(sessionId)?.tokens
       const tokens =
         latest?.access_token !== usedToken ? latest : await refresh(sessionId)
       if (!tokens) throw new Error("The Hub session has expired.")

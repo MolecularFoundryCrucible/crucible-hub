@@ -2,11 +2,12 @@ import "@tanstack/react-start/server-only"
 
 import {
   hasHubSession,
+  productionHubAuthReady,
   sessionApiFetch,
 } from "@/server/crucible/hub-auth.server"
 import {
-  sharedSessionsConfigured,
   sharedSessionsRequested,
+  sharedSessionsConfigured,
 } from "@/server/crucible/hub-session-store.server"
 
 export type WorkspaceConfiguration =
@@ -30,14 +31,10 @@ function isTrustedApiUrl(value: string) {
 export function readWorkspaceConfiguration(): WorkspaceConfiguration {
   if (process.env.HUB_DATA_SOURCE === "hub-auth") {
     const baseUrl = process.env.CRUCIBLE_API_BASE_URL
-    if (
-      process.env.NODE_ENV === "production" &&
-      (!sharedSessionsConfigured() ||
-        process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true")
-    ) {
+    if (!productionHubAuthReady()) {
       return {
         mode: "unavailable",
-        reason: "Hub session storage is not configured for production.",
+        reason: "Hub authentication is not configured for production.",
       }
     }
     if (sharedSessionsRequested() && !sharedSessionsConfigured()) {

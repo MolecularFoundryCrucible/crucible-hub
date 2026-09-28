@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added an explicit single-instance production ORCID session mode with server-side token expiry and fail-closed refresh, and documented the limited Cloud Run pilot and later Redis transition.
+
 - Added a standalone account-completion step after ORCID sign-in when email or username is missing, kept names optional, added debounced username lookup and specific taken-name feedback to both profile forms, and centered the ORCID sign-in action at its content width.
 
 - Prevented caching of redirects from private Hub pages to sign-in when a session is absent.

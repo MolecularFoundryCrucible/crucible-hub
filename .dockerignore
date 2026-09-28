@@ -1,5 +1,15 @@
 .git
 .github
+.env*
+**/.env*
+*.local
+**/*.local
+.secret
+**/.secret
+*.pem
+**/*.pem
+*.key
+**/*.key
 .output
 dist
 node_modules
