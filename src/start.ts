@@ -29,6 +29,18 @@ const sessionMiddleware = createMiddleware().server(async ({ next }) => {
   const { withHubAuthRequest } = await hubAuth()
   return withHubAuthRequest(next)
 })
+const securityHeadersMiddleware = createMiddleware().server(
+  async ({ next }) => {
+    setResponseHeader(
+      "Content-Security-Policy",
+      "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+    )
+    setResponseHeader("X-Frame-Options", "DENY")
+    setResponseHeader("X-Content-Type-Options", "nosniff")
+    setResponseHeader("Referrer-Policy", "no-referrer")
+    return next()
+  }
+)
 const privateDocumentMiddleware = createMiddleware().server(
   async ({ next, request }) => {
     if (
@@ -43,6 +55,7 @@ const privateDocumentMiddleware = createMiddleware().server(
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [
+    securityHeadersMiddleware,
     csrfMiddleware,
     correlationMiddleware,
     privateDocumentMiddleware,

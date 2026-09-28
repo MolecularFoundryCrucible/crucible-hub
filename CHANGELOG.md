@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added Hub-only response headers that prevent framing, restrict base URLs and object content, disable MIME sniffing, and withhold referrers.
+
 - Directed sign-in callback success and error redirects to the configured public Hub origin behind the Cloud Run proxy.
 
 - Pinned the Hub OpenAPI contract to deployed API revision `8e4d0ef`, prepared a dedicated Cloud Run image repository and runtime identity for the single-instance pilot, and excluded Hub callback request URLs from the default Cloud Logging sink.
