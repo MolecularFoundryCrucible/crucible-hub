@@ -5,7 +5,6 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import {
   deleteCookie,
   getCookie,
-  getRequest,
   setCookie,
 } from "@tanstack/react-start/server"
 import { z } from "zod"
@@ -13,7 +12,7 @@ import { z } from "zod"
 import { writeGlobalPrivilegeMode } from "./privilege-mode.server"
 
 const clientId = "crucible-hub"
-const callbackUri = "http://127.0.0.1:3000/hub/auth/callback"
+const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
 const sessionCookie = "crucible_hub_session"
 const transactionCookie = "crucible_hub_login"
 const transactionLifetime = 10 * 60 * 1000
@@ -59,14 +58,45 @@ function randomValue() {
   return randomBytes(32).toString("base64url")
 }
 
+function configuredCallbackUri() {
+  const value = process.env.HUB_AUTH_CALLBACK_URI ?? localCallbackUri
+  const url = new URL(value)
+  if (
+    (url.protocol !== "https:" && value !== localCallbackUri) ||
+    url.pathname !== "/hub/auth/callback" ||
+    url.search ||
+    url.hash ||
+    url.username ||
+    url.password
+  ) {
+    throw new Error("Hub sign-in callback is not configured correctly.")
+  }
+  return url.toString()
+}
+
+function httpsApiUrl(value: string) {
+  const url = new URL(value)
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error("Hub API URL must be a trusted HTTPS URL.")
+  }
+  return url.toString().replace(/\/$/, "")
+}
+
 function safeReturnTo(value: string | null) {
   if (!value || !value.startsWith("/hub/") || value.startsWith("//")) {
     return "/hub/"
   }
   try {
-    const target = new URL(value, callbackUri)
+    const origin = configuredCallbackUri()
+    const target = new URL(value, origin)
     if (
-      target.origin !== new URL(callbackUri).origin ||
+      target.origin !== new URL(origin).origin ||
       !target.pathname.startsWith("/hub/") ||
       target.pathname.startsWith("/hub/auth/")
     ) {
@@ -83,23 +113,29 @@ function cookieOptions(path: string) {
     httpOnly: true,
     path,
     sameSite: "lax" as const,
-    secure: new URL(getRequest().url).protocol === "https:",
+    secure: new URL(configuredCallbackUri()).protocol === "https:",
   }
 }
 
 function config() {
   const baseUrl = process.env.CRUCIBLE_API_BASE_URL
+  const publicBaseUrl = process.env.HUB_AUTH_PUBLIC_API_URL ?? baseUrl
   const secret = process.env.HUB_AUTH_CLIENT_SECRET
   if (
     process.env.HUB_DATA_SOURCE !== "hub-auth" ||
     process.env.NODE_ENV === "production" ||
     !baseUrl ||
-    !secret ||
-    !/^https:\/\//.test(baseUrl)
+    !publicBaseUrl ||
+    !secret
   ) {
     throw new Error("Hub sign-in is not configured for local development.")
   }
-  return { baseUrl: baseUrl.replace(/\/$/, ""), secret }
+  return {
+    baseUrl: httpsApiUrl(baseUrl),
+    publicBaseUrl: httpsApiUrl(publicBaseUrl),
+    callbackUri: configuredCallbackUri(),
+    secret,
+  }
 }
 
 function basicAuthorization(secret: string) {
@@ -123,7 +159,7 @@ async function tokenRequest(path: string, body: object): Promise<Tokens> {
 }
 
 export function beginHubLogin(returnTo: string | null) {
-  const { baseUrl } = config()
+  const { publicBaseUrl, callbackUri } = config()
   for (const [id, transaction] of store.transactions) {
     if (transaction.expiresAt < Date.now()) store.transactions.delete(id)
   }
@@ -146,7 +182,7 @@ export function beginHubLogin(returnTo: string | null) {
     ...cookieOptions("/hub/auth"),
     maxAge: transactionLifetime / 1000,
   })
-  const url = new URL(`${baseUrl}/auth/hub/login`)
+  const url = new URL(`${publicBaseUrl}/auth/hub/login`)
   url.searchParams.set("client_id", clientId)
   url.searchParams.set("redirect_uri", callbackUri)
   url.searchParams.set("state", state)
@@ -156,7 +192,7 @@ export function beginHubLogin(returnTo: string | null) {
 }
 
 export async function finishHubLogin(code: string, state: string) {
-  config()
+  const { callbackUri } = config()
   const transactionId = getCookie(transactionCookie)
   deleteCookie(transactionCookie, cookieOptions("/hub/auth"))
   if (!transactionId) throw new Error("The sign-in request has expired.")
