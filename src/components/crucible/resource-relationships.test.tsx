@@ -110,7 +110,7 @@ describe("ResourceRelationships", () => {
         .getByRole("link", { name: "Open full page: Parent sample" })
         .getAttribute("data-to")
     ).toBe("/samples/$sampleMfid")
-    expect(screen.getByText("associated")).toBeTruthy()
+    expect(screen.getByText("Untitled dataset")).toBeTruthy()
   })
 
   it("supports inspector group heading depth", () => {

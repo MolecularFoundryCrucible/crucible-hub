@@ -57,7 +57,7 @@ test("validates profile fields and protects unsaved changes", async ({
   await page.getByLabel("Username").fill("Invalid username")
   await expect(
     page.getByText(
-      "Start with a lowercase letter and use lowercase letters, numbers, dots, hyphens, or underscores."
+      "Start with a lowercase letter and use lowercase letters, numbers, hyphens, or underscores."
     )
   ).toBeVisible()
   await expect(

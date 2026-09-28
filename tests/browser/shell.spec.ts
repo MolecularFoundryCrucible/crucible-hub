@@ -64,8 +64,9 @@ test("keeps the origin on a native logout form submission", async ({
     route.fulfill({ status: 200, body: "Signed out" })
   )
   const logoutRequest = page.waitForRequest(
-    (request) =>
-      request.url().endsWith("/hub/auth/logout") && request.method() === "POST"
+    (submission) =>
+      submission.url().endsWith("/hub/auth/logout") &&
+      submission.method() === "POST"
   )
 
   await page.evaluate(() => {
