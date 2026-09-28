@@ -84,7 +84,12 @@ export async function patchWorkspaceAccount(
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(scenario, readGlobalPrivilegeMode())
     if (source.status === "unavailable") throw new Error(source.reason)
-    return { ...source.workspace.account, ...changes }
+    return {
+      ...source.workspace.account,
+      ...changes,
+      first_name: changes.first_name ?? source.workspace.account.first_name,
+      last_name: changes.last_name ?? source.workspace.account.last_name,
+    }
   }
 
   const client = createCrucibleClient(configuration)
@@ -97,6 +102,32 @@ export async function patchWorkspaceAccount(
   }
   const account = await readWorkspaceAccount(scenario, requestSignal)
   return account
+}
+
+export async function checkWorkspaceUsernameExactMatch(
+  username: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<boolean> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario, readGlobalPrivilegeMode())
+    if (source.status === "unavailable") throw new Error(source.reason)
+    return source.workspace.people.some(
+      (person) => person.username?.toLowerCase() === username.toLowerCase()
+    )
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/users", {
+    params: { query: { username, limit: 1 } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return result.data.items.length > 0
 }
 
 function toWorkspaceAccount(account: {

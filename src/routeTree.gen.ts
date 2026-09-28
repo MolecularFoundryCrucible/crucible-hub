@@ -16,6 +16,7 @@ import { Route as AppAccountRouteImport } from './routes/_app.account'
 import { Route as AppDataRouteImport } from './routes/_app.data'
 import { Route as AppDeletionRequestsRouteImport } from './routes/_app.deletion-requests'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
+import { Route as AccountSetupRouteImport } from './routes/account.setup'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthErrorRouteImport } from './routes/auth.error'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -94,6 +95,11 @@ const AppSearchRoute = AppSearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => AppRoute,
+} as any)
+const AccountSetupRoute = AccountSetupRouteImport.update({
+  id: '/account/setup',
+  path: '/account/setup',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
@@ -350,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
   '/search': typeof AppSearchRoute
+  '/account/setup': typeof AccountSetupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/login': typeof AuthLoginRoute
@@ -401,6 +408,7 @@ export interface FileRoutesByTo {
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
   '/search': typeof AppSearchRoute
+  '/account/setup': typeof AccountSetupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/login': typeof AuthLoginRoute
@@ -449,6 +457,7 @@ export interface FileRoutesById {
   '/_app/data': typeof AppDataRoute
   '/_app/deletion-requests': typeof AppDeletionRequestsRoute
   '/_app/search': typeof AppSearchRoute
+  '/account/setup': typeof AccountSetupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/login': typeof AuthLoginRoute
@@ -504,6 +513,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/deletion-requests'
     | '/search'
+    | '/account/setup'
     | '/auth/callback'
     | '/auth/error'
     | '/auth/login'
@@ -555,6 +565,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/deletion-requests'
     | '/search'
+    | '/account/setup'
     | '/auth/callback'
     | '/auth/error'
     | '/auth/login'
@@ -602,6 +613,7 @@ export interface FileRouteTypes {
     | '/_app/data'
     | '/_app/deletion-requests'
     | '/_app/search'
+    | '/account/setup'
     | '/auth/callback'
     | '/auth/error'
     | '/auth/login'
@@ -652,6 +664,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   HealthRoute: typeof HealthRoute
+  AccountSetupRoute: typeof AccountSetupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthErrorRoute: typeof AuthErrorRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -711,6 +724,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/search'
       preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/account/setup': {
+      id: '/account/setup'
+      path: '/account/setup'
+      fullPath: '/account/setup'
+      preLoaderRoute: typeof AccountSetupRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -1201,6 +1221,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   HealthRoute: HealthRoute,
+  AccountSetupRoute: AccountSetupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthErrorRoute: AuthErrorRoute,
   AuthLoginRoute: AuthLoginRoute,

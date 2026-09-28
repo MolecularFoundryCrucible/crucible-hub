@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added a standalone account-completion step after ORCID sign-in when email or username is missing, kept names optional, added debounced username lookup and specific taken-name feedback to both profile forms, and centered the ORCID sign-in action at its content width.
+
 - Prevented caching of redirects from private Hub pages to sign-in when a session is absent.
 
 - Made Sign out highlight the full account-menu row on hover and keyboard focus, matching My profile.

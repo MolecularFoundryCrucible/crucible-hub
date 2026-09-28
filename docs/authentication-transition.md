@@ -28,6 +28,8 @@ Feature routes, Queries, mutations, and transient actions use browser-safe valid
 
 Direct project membership is implemented in fixture and local API development through this seam. It adds existing users immediately, changes roles, removes members, or allows non-owner self-leave using confirmed server responses. There is no invitation workflow. It remains unavailable in production until the session-authentication gate is satisfied and deployment is approved.
 
+After ORCID sign-in, a session-authenticated account missing email or username is redirected to the standalone `/account/setup` page before entering the workspace. It uses the existing self-service `PATCH /account/profile` operation, preserves a validated Hub return destination, and keeps first and last names optional. The same check applies to an existing account if either required field later becomes empty. A completed account bypasses setup. This is a Hub navigation requirement, not an API-wide completeness guarantee; the API currently permits nullable email and username and does not return an authoritative account-completion flag. Fixture and development API-key modes do not use this gate.
+
 ## Stable feature seam
 
 ```mermaid

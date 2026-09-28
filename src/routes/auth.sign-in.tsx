@@ -85,7 +85,7 @@ function SignInPage() {
           </Badge>
         ) : null}
         <Button
-          className="w-full"
+          className="self-center"
           nativeButton={false}
           render={<a href={loginUrl} />}
           size="lg"

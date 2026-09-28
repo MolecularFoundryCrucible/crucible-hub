@@ -210,6 +210,8 @@ Self-service key rotation needs an authenticated server-to-server operation with
 
 A suitable operation would be `POST /account/apikey/rotate`, authorized for the current account through the server-to-server Hub authority rather than an API-origin browser cookie. Its typed success response should contain the replacement `api_key` exactly once and the new `valid`, `created_at`, and `expires_at` status. The contract must state when the old key becomes invalid, whether the Hub login authority is independent from that key, and how a caller can recover from an uncertain response without rotating repeatedly. If the Hub authority uses the same key, the Hub session update and session-ID rotation requirements above remain mandatory before the response is exposed to the browser.
 
+Definitive live username availability needs an authenticated self-service endpoint that validates the same 3-24 character format and case- and separator-insensitive collision rule as `PATCH /account/profile`, excludes the caller's current identity, and returns only availability without exposing the matched user. Hub currently uses debounced exact `GET /users?username=` as a provisional taken-name check; a negative lookup cannot establish availability. Save-time uniqueness enforcement remains required even after an availability endpoint is added.
+
 ### Account capabilities and navigation
 
 Extend the existing authenticated account capabilities with exact operation-specific guidance for the broader Administration proposal. A preferred shape is:

@@ -73,6 +73,7 @@ Home presents recently added data plus separate bounded ownership sections for P
 | `/resources/:resourceMfid`                        | Legacy type-resolving redirect to a canonical entity.        |
 | `/people/:userId`                                 | Public-safe person profile.                                  |
 | `/account`                                        | Authenticated self-service profile management.               |
+| `/account/setup`                                  | ORCID account completion.                                    |
 | `/deletion-requests`                              | Submitted requests, review work, and approved audit history. |
 | `/activity`                                       | Future account-relevant activity workflows.                  |
 | `/admin/service-accounts`                         | Capability-gated service-account directory and creation.     |
@@ -82,7 +83,7 @@ Home presents recently added data plus separate bounded ownership sections for P
 
 ### Account
 
-The application-bar avatar opens the account menu and links only to My profile. The profile route presents the authenticated account identity in a read-first view without duplicating workspace navigation. Authenticated and public person profiles show the shared icon-labelled Crucible ID with its quick-copy action. Edit profile opens first name, last name, email, and username controls backed by the self-service account operation. Email remains private to the authenticated account view and profile mutation. Account access presents assigned platform role, current privilege mode, and Administrator-view availability separately from capability checks, which always reflect the currently effective API capabilities. At wide widths, Profile and Account access form the first row while API credential status sits directly beneath Profile at the same width. Status, Created, and Expires share one row inside the wide credential card. Compact layouts stack Profile, API credential, and Account access in that reading order. Credential rotation remains unavailable until it can replace the server-held upstream authority and active Hub session safely.
+The application-bar avatar opens the account menu and links only to My profile. The profile route presents the authenticated account identity in a read-first view without duplicating workspace navigation. Authenticated and public person profiles show the shared icon-labelled Crucible ID with its quick-copy action. Edit profile opens optional first and last name plus required email and username controls backed by the self-service account operation. Email remains private to the authenticated account view and profile mutation. Account access presents assigned platform role, current privilege mode, and Administrator-view availability separately from capability checks, which always reflect the currently effective API capabilities. At wide widths, Profile and Account access form the first row while API credential status sits directly beneath Profile at the same width. Status, Created, and Expires share one row inside the wide credential card. Compact layouts stack Profile, API credential, and Account access in that reading order. Credential rotation remains unavailable until it can replace the server-held upstream authority and active Hub session safely.
 
 ### Project
 

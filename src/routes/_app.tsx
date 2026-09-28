@@ -12,6 +12,10 @@ import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import {
+  accountNeedsSetup,
+  accountSetupDestination,
+} from "@/data/crucible/account-setup"
+import {
   defaultFixtureScenario,
   fixtureScenarioSchema,
   fixtureServerId,
@@ -47,6 +51,23 @@ export const Route = createFileRoute("/_app")({
         })
       }
       return source
+    }
+
+    if (source.sessionAuth && accountNeedsSetup(source.workspace.account)) {
+      const current = new URL(location.href, "http://127.0.0.1:3000")
+      const pathname = current.pathname.startsWith("/hub/")
+        ? current.pathname
+        : `/hub${current.pathname}`
+      throw redirect({
+        to: "/account/setup",
+        search: {
+          returnTo: accountSetupDestination(
+            `${pathname}${current.search}${current.hash}`
+          ),
+        },
+        replace: true,
+        headers: { "Cache-Control": "private, no-store" },
+      })
     }
 
     const scope = identityScope(
