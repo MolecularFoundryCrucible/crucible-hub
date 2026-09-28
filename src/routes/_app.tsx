@@ -43,6 +43,7 @@ export const Route = createFileRoute("/_app")({
           to: "/auth/sign-in",
           search: { returnTo: `${pathname}${current.search}${current.hash}` },
           replace: true,
+          headers: { "Cache-Control": "private, no-store" },
         })
       }
       return source

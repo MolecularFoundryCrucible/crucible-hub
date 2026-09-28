@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Prevented caching of redirects from private Hub pages to sign-in when a session is absent.
+
 - Made Sign out highlight the full account-menu row on hover and keyboard focus, matching My profile.
 
 - Refined the ORCID sign-in page with the Hub mark inside the card, a quieter outlined action, tighter footer, and a faint Explorer logo background.
