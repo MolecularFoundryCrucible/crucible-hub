@@ -642,12 +642,11 @@ function ResourceGraphFlow({
   const handleInit = useCallback(() => setFlowReady(true), [])
   const handleNodeClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
     (event, node) => {
-      if (node.id === graph.rootMfid) return
       if (event.currentTarget instanceof HTMLElement) {
         onInspect(node.id, event.currentTarget)
       }
     },
-    [graph.rootMfid, onInspect]
+    [onInspect]
   )
   const handleNodeDoubleClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
     (event, node) => {
@@ -715,6 +714,13 @@ function ResourceGraphFlow({
         const edgeColor = highlighted
           ? "var(--graph-highlight)"
           : "var(--graph-edge)"
+        const isAssociated = edge.relationship === "associated"
+        const sourceHandle = isAssociated
+          ? "association-source"
+          : "lineage-source"
+        const targetHandle = isAssociated
+          ? "association-target"
+          : "lineage-target"
         return [
           {
             animated: false,
@@ -736,7 +742,7 @@ function ResourceGraphFlow({
                 ? {
                     color: edgeColor,
                     height: edgeMetrics.markerSize,
-                    type: MarkerType.Arrow,
+                    type: MarkerType.ArrowClosed,
                     width: edgeMetrics.markerSize,
                   }
                 : undefined,
@@ -747,16 +753,10 @@ function ResourceGraphFlow({
             reconnectable: false,
             selectable: false,
             source: edge.source,
-            sourceHandle:
-              edge.relationship === "associated"
-                ? "association-source"
-                : "lineage-source",
+            sourceHandle,
             target: edge.target,
-            targetHandle:
-              edge.relationship === "associated"
-                ? "association-target"
-                : "lineage-target",
-            type: edge.relationship === "associated" ? "default" : "smoothstep",
+            targetHandle,
+            type: isAssociated ? "default" : "smoothstep",
           },
         ]
       }),
@@ -898,30 +898,44 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
         type="target"
       />
       <div className="resource-graph-flow-node-content">
-        {data.thumbnail ? (
-          <DatasetThumbnailImage
-            alt=""
-            className="resource-graph-flow-node-thumbnail"
-            decoding="async"
-            loading="lazy"
-            thumbnail={data.thumbnail}
-          />
-        ) : null}
-        <div className="resource-graph-flow-node-identity">
-          <ResourceTypeIcon
-            className="resource-graph-flow-node-icon"
-            type={data.node.kind}
-          />
-          <div className="resource-graph-flow-node-copy">
-            <span className="resource-graph-flow-node-name">
-              {data.node.name}
-            </span>
-            {data.context ? (
-              <span className="resource-graph-flow-node-context">
-                {data.context}
-              </span>
-            ) : null}
+        <div className="resource-graph-flow-node-header">
+          <div
+            className="resource-graph-flow-node-icon-badge"
+            aria-label={
+              data.isRoot ? `Current ${data.node.kind}` : data.node.kind
+            }
+            title={data.isRoot ? `Current ${data.node.kind}` : data.node.kind}
+          >
+            <ResourceTypeIcon
+              className="resource-graph-flow-node-icon"
+              type={data.node.kind}
+            />
           </div>
+          {data.thumbnail ? (
+            <DatasetThumbnailImage
+              alt=""
+              className="resource-graph-flow-node-thumbnail"
+              decoding="async"
+              loading="lazy"
+              thumbnail={data.thumbnail}
+            />
+          ) : null}
+        </div>
+        <div className="resource-graph-flow-node-body">
+          <span
+            className="resource-graph-flow-node-name"
+            title={data.node.name}
+          >
+            {data.node.name}
+          </span>
+          {data.context ? (
+            <span
+              className="resource-graph-flow-node-context"
+              title={data.context}
+            >
+              {data.context}
+            </span>
+          ) : null}
         </div>
       </div>
       {expansionModes.length > 0 ? (
@@ -1003,6 +1017,8 @@ function GraphNodeExpansionAction({
               "nodrag nopan resource-graph-expansion-action",
               `resource-graph-expansion-${mode}`
             )}
+            data-error={state?.isError ? "" : undefined}
+            data-pending={pending ? "" : undefined}
             disabled={pending}
             onClick={(event) => {
               event.stopPropagation()
@@ -1462,7 +1478,7 @@ function reconcileResourceFlowNodes(
         ),
         deletable: false,
         draggable: true,
-        focusable: node.unique_id !== graph.rootMfid,
+        focusable: true,
         id: node.unique_id,
         position: { x: position.x, y: position.y },
         selectable: false,
@@ -1496,7 +1512,7 @@ function updateResourceFlowNodePresentation(
       flowNode.data.dimmed,
       flowNode.data.entering
     ),
-    focusable: node.unique_id !== rootMfid,
+    focusable: true,
     sourcePosition:
       presentation.layoutDirection === "DOWN"
         ? Position.Bottom

@@ -279,13 +279,13 @@ export function AppShell({
               </div>
             )}
           </header>
-          <div className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">
+          <main className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">
             <ResourceSiblingNavigationProvider
               key={scope?.join(":") ?? account?.unique_id ?? "anonymous"}
             >
               {children}
             </ResourceSiblingNavigationProvider>
-          </div>
+          </main>
           <AppFooter />
         </SidebarInset>
       </SidebarProvider>

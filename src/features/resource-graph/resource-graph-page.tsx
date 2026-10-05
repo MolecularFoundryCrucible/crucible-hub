@@ -283,13 +283,11 @@ export function ResourceGraphPage({
   const previewSiblingCollections = useMemo(() => {
     const graphData = displayedGraph
     const items = graphData
-      ? graphData.nodes
-          .filter((node) => node.unique_id !== graphData.rootMfid)
-          .map((node) => ({
-            kind: node.kind,
-            mfid: node.unique_id,
-            name: node.name,
-          }))
+      ? graphData.nodes.map((node) => ({
+          kind: node.kind,
+          mfid: node.unique_id,
+          name: node.name,
+        }))
       : []
     return items.length
       ? [staticResourceSiblingCollection(items, "Graph relationships")]
