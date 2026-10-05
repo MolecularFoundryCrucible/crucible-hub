@@ -1,10 +1,31 @@
 # Cloud Run pilot
 
-Status: Limited production pilot active with single-instance sessions
+Status: Pilot temporarily paused on September 28, 2026
 
-The Hub is available at `https://crucible.lbl.gov/hub/`. The separate `crucible-hub` Cloud Run service in `mf-crucible/us-central1` uses 2 vCPU, 1 GiB, one minimum and one maximum instance, request-based billing, and session affinity. It retains `internal` ingress and is reached through the `crucible-web` proxy. The proxy preserves `/hub/` and forwards cookies without changing the Explorer or API routes. The production Hub uses API-owned ORCID sign-in, server-held API tokens, and an opaque `HttpOnly`, `Secure` browser session cookie. API-key mode is local development only.
+The Hub's public address is `https://crucible.lbl.gov/hub/`, but the service is currently disabled and `/hub/health` returns HTTP 503. The separate `crucible-hub` Cloud Run service in `mf-crucible/us-central1` retains its deployed image, revision, 2 vCPU, 1 GiB, one maximum instance, request-based billing, session affinity, and `internal` ingress. It is reached through the `crucible-web` proxy, whose configuration was not changed for this pause. The Explorer and API routes remain available. When active, the Hub uses API-owned ORCID sign-in, server-held API tokens, and an opaque `HttpOnly`, `Secure` browser session cookie. API-key mode is local development only.
 
 The pilot uses `HUB_AUTH_SESSION_MODE=single-instance` with process-local sessions. Cloud Run can [briefly exceed a configured maximum](https://docs.cloud.google.com/run/docs/configuring/max-instances), and [affinity is best effort](https://docs.cloud.google.com/run/docs/configuring/session-affinity). A deployment, replacement, or routing change can sign users out. Keep all traffic on one revision and do not promise session continuity. [Decision 0033](../decisions/0033-use-existing-cloud-sql-for-shared-hub-sessions.md) selects a future Hub-owned Cloud SQL session store before scaling; it is not implemented for this pilot. The [pilot risk review](cloud-run-pilot-risk-review.md) records remaining ingress and transport limitations.
+
+## Pause and resume the pilot
+
+On September 28, 2026, the `allUsers` `roles/run.invoker` binding was removed from `crucible-hub`, the service minimum was changed from one to zero, and [Cloud Run manual scaling was set to zero](https://docs.cloud.google.com/run/docs/managing/services). Removing the IAM binding and setting the minimum to zero alone did not stop the same-project proxy from serving the Hub. Manual scaling to zero disabled the service; `/hub/health` then returned HTTP 503. No proxy, Explorer, API, image, or secret configuration was changed. The retained ready revision is `crucible-hub-00008-qn9`. Process-local Hub sessions do not survive the pause.
+
+Check the disabled state without displaying environment variables or secrets:
+
+```sh
+gcloud run services describe crucible-hub --project mf-crucible --region us-central1 --format=json | jq '{scalingMode:.metadata.annotations["run.googleapis.com/scalingMode"], manualInstanceCount:.metadata.annotations["run.googleapis.com/manualInstanceCount"], latestReadyRevision:.status.latestReadyRevisionName}'
+gcloud run services get-iam-policy crucible-hub --project mf-crucible --region us-central1
+curl -sS -o /dev/null -w '%{http_code}\n' https://crucible.lbl.gov/hub/health
+```
+
+To resume the same single-instance pilot, restore automatic scaling with one minimum instance and the original public invoker binding on the Hub service only:
+
+```sh
+gcloud run services update crucible-hub --project mf-crucible --region us-central1 --scaling=auto --min=1 --quiet
+gcloud run services add-iam-policy-binding crucible-hub --project mf-crucible --region us-central1 --member=allUsers --role=roles/run.invoker --quiet
+```
+
+Confirm that scaling is automatic with a minimum and maximum of one, the original image and revision still serve 100% of traffic, and `/hub/health` returns HTTP 200. Then smoke-test sign-in, navigation, and logout with a disposable account. Users must sign in again because sessions were held in the stopped instance. Do not change `crucible-web` or the API to resume this service.
 
 ## Build and deploy
 

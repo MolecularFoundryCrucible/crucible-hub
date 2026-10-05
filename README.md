@@ -4,7 +4,7 @@ Crucible Hub is the browser workspace for finding, organizing, understanding, sh
 
 ## Status
 
-The Hub runs locally with fixtures, a developer API key, or ORCID sign-in. A limited production pilot serves `https://crucible.lbl.gov/hub/` through a single-instance Cloud Run service with ORCID authentication. Deployments can end active sessions. Shared session persistence, broader rollout checks, and browser upload remain future work. See the [pilot deployment guide](docs/cloud-run-pilot.md).
+The Hub runs locally with fixtures, a developer API key, or ORCID sign-in. Its limited production pilot at `https://crucible.lbl.gov/hub/` is temporarily paused by disabling the separate Cloud Run service. The [pilot deployment guide](docs/cloud-run-pilot.md) records the current state and resume steps. When active, the pilot uses one instance with ORCID authentication; deployments can end active sessions. Shared session persistence, broader rollout checks, and browser upload remain future work.
 
 Hub follows the API contract owned by `crucible-api`, cross-repository policy from `crucible-ecosystem`, interaction lessons from `crucible-lens`, and incremental convergence with `crucible_graph_explorer`. `nano-crucible` remains the Python and CLI interface.
 
