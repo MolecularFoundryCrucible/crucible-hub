@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Improved resource graph layout resilience and stability by configuring ELK port constraints and edge routing priorities for lineage and lateral associations, preserving mental maps with semi-interactive positioning during incremental expansion, resetting orientation hints cleanly on direction toggles, adding a worker watchdog with engine recovery, and decoupling node transitions from layout interpolation.
+
 - Removed link underlines in the application footer and vertically aligned the Crucible brand mark and API status indicator dot with adjacent text.
 
 - Replaced the static Crucible logo with theme-aware light and dark Crucible icons across the workspace shell and authentication views without corner clipping.

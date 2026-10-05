@@ -732,7 +732,7 @@ body {
     opacity var(--motion-fast),
     border-color var(--motion-fast),
     box-shadow var(--motion-fast),
-    transform calc(var(--graph-layout-duration) * 1ms) ease-out;
+    transform var(--motion-fast);
 }
 
 .resource-graph-flow-node[data-kind="sample"] {

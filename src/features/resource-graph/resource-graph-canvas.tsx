@@ -113,9 +113,9 @@ type ResourceFlowEdgeData = {
 
 type ResourceFlowEdge = Edge<ResourceFlowEdgeData>
 
-type LayoutDirection = "DOWN" | "RIGHT"
+export type LayoutDirection = "DOWN" | "RIGHT"
 
-type LayoutPosition = {
+export type LayoutPosition = {
   height: number
   width: number
   x: number
@@ -147,8 +147,20 @@ type ResourceFlowNodePresentation = {
 }
 
 const GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD = 100
+const ELK_LAYOUT_TIMEOUT_MS = 6000
 const reactFlowProOptions = { hideAttribution: true }
 let elk: ELKInstance | undefined
+
+export function resetResourceGraphLayoutEngine() {
+  if (elk) {
+    try {
+      elk.terminateWorker()
+    } catch {
+      // Worker could already be terminated.
+    }
+    elk = undefined
+  }
+}
 
 function resourceGraphLayoutEngine() {
   elk ??= new ELK({ workerFactory: () => new ELKWorker() })
@@ -236,6 +248,7 @@ function ResourceGraphFlow({
   }
   const layoutGeneration = useRef(0)
   const resetLayoutRequested = useRef(false)
+  const previousLayoutDirection = useRef<LayoutDirection | null>(null)
   const flow = useReactFlow<ResourceFlowNode, ResourceFlowEdge>()
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
   const [layoutDirection, setLayoutDirection] =
@@ -338,6 +351,10 @@ function ResourceGraphFlow({
     const requestedAnchor = pendingExpansionAnchor.current
     const resetLayout = resetLayoutRequested.current
     resetLayoutRequested.current = false
+    const directionChanged =
+      previousLayoutDirection.current !== null &&
+      previousLayoutDirection.current !== layoutDirection
+    previousLayoutDirection.current = layoutDirection
     const generation = layoutGeneration.current + 1
     layoutGeneration.current = generation
     cancelAnimationFrameRef(layoutAnimationFrame)
@@ -346,18 +363,22 @@ function ResourceGraphFlow({
     setFlowNodes((current) => clearEnteringFlowNodes(current))
     setEnteringEdgeIds(new Set())
     setLayoutPending(true)
+    const previousPositions = displayedPositions.current
+    const initialPositions =
+      previousPositions.size > 0 && !resetLayout && !directionChanged
+        ? previousPositions
+        : null
     const applyLayout = (rawPositions: Map<string, LayoutPosition>) => {
       if (layoutGeneration.current !== generation) return
       const presentation = nodePresentation.current
       if (!presentation) return
-      const previousPositions = displayedPositions.current
       const expansionAnchor =
         requestedAnchor && requestedAnchor.layoutSignature !== layoutSignature
           ? requestedAnchor.nodeMfid
           : null
       const anchorMfid = expansionAnchor ?? currentGraph.rootMfid
       const nextPositions =
-        previousPositions.size > 0 && !resetLayout
+        previousPositions.size > 0 && !resetLayout && !directionChanged
           ? alignLayoutToAnchor(rawPositions, previousPositions, anchorMfid)
           : rawPositions
       const nextEdgeIds = new Set(currentGraph.edges.map((edge) => edge.id))
@@ -373,7 +394,7 @@ function ResourceGraphFlow({
       const firstLayout = previousPositions.size === 0
       visibleEdgeIds.current = nextEdgeIds
 
-      if (firstLayout || duration === 0) {
+      if (firstLayout || resetLayout || directionChanged || duration === 0) {
         displayedPositions.current = nextPositions
         setEnteringEdgeIds(new Set())
         setLayoutPositions(nextPositions)
@@ -386,7 +407,7 @@ function ResourceGraphFlow({
             new Set()
           )
         )
-        if (firstLayout || resetLayout) {
+        if (firstLayout || resetLayout || directionChanged) {
           centerResourceGraph(
             flow,
             element,
@@ -424,9 +445,6 @@ function ResourceGraphFlow({
           setEnteringEdgeIds(new Set())
         }
       )
-      if (resetLayout) {
-        centerResourceGraph(flow, element, currentGraph.rootMfid, nextPositions)
-      }
       const startedAt = performance.now()
       const animate = (now: number) => {
         if (layoutGeneration.current !== generation) return
@@ -451,12 +469,15 @@ function ResourceGraphFlow({
       layoutAnimationFrame.current = requestAnimationFrame(animate)
     }
 
-    void layoutResourceGraph(currentGraph, element, layoutDirection).then(
-      applyLayout,
-      () =>
-        applyLayout(
-          fallbackResourceGraphLayout(currentGraph, element, layoutDirection)
-        )
+    void layoutResourceGraph(
+      currentGraph,
+      element,
+      layoutDirection,
+      initialPositions
+    ).then(applyLayout, () =>
+      applyLayout(
+        fallbackResourceGraphLayout(currentGraph, element, layoutDirection)
+      )
     )
   }, [
     flow,
@@ -509,6 +530,7 @@ function ResourceGraphFlow({
   }, [graph.edges, graph.nodes])
 
   const resetLayout = useCallback(() => {
+    resetResourceGraphLayoutEngine()
     resetLayoutRequested.current = true
     setHoveredNode(null)
     setLayoutRevision((current) => current + 1)
@@ -1259,53 +1281,131 @@ function ResourceGraphLegend() {
   )
 }
 
-async function layoutResourceGraph(
+export async function layoutResourceGraph(
   graph: WorkspaceResourceGraph,
   element: HTMLElement,
-  direction: LayoutDirection
-) {
+  direction: LayoutDirection,
+  previousPositions?: ReadonlyMap<string, LayoutPosition> | null
+): Promise<Map<string, LayoutPosition>> {
   const nodeWidth = graphNumberToken(element, "--graph-node-width")
   const nodeHeight = graphNumberToken(element, "--graph-node-height")
   const rootWidth = graphNumberToken(element, "--graph-root-node-width")
   const rootHeight = graphNumberToken(element, "--graph-root-node-height")
-  const layout = await resourceGraphLayoutEngine().layout({
-    children: graph.nodes.map((node) => ({
-      height: node.unique_id === graph.rootMfid ? rootHeight : nodeHeight,
-      id: node.unique_id,
-      width: node.unique_id === graph.rootMfid ? rootWidth : nodeWidth,
-    })),
-    edges: graph.edges.map((edge) => ({
-      id: edge.id,
-      sources: [edge.source],
-      targets: [edge.target],
-    })),
-    id: "resource-graph",
-    layoutOptions: {
-      "elk.algorithm": "layered",
-      "elk.direction": direction,
-      "elk.edgeRouting": "ORTHOGONAL",
-      "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
-      "elk.layered.nodePlacement.favorStraightEdges": "true",
-      "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
-      "elk.layered.spacing.nodeNodeBetweenLayers": String(
-        graphNumberToken(element, "--graph-layout-layer-gap")
-      ),
-      "elk.spacing.nodeNode": String(
-        graphNumberToken(element, "--graph-layout-node-gap")
-      ),
-    },
-  })
-  return new Map(
-    (layout.children ?? []).map((node) => [
-      node.id,
-      {
-        height: node.height,
-        width: node.width,
-        x: node.x ?? 0,
-        y: node.y ?? 0,
-      },
-    ])
+  const layerGap = graphNumberToken(element, "--graph-layout-layer-gap")
+  const nodeGap = graphNumberToken(element, "--graph-layout-node-gap")
+
+  const nodeIds = new Set(graph.nodes.map((node) => node.unique_id))
+  const validEdges = graph.edges.filter(
+    (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)
   )
+
+  const engine = resourceGraphLayoutEngine()
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  try {
+    const layoutPromise = engine.layout({
+      children: graph.nodes.map((node) => {
+        const isRoot = node.unique_id === graph.rootMfid
+        const width = isRoot ? rootWidth : nodeWidth
+        const height = isRoot ? rootHeight : nodeHeight
+        const prev = previousPositions?.get(node.unique_id)
+        return {
+          height,
+          id: node.unique_id,
+          width,
+          ...(prev ? { x: prev.x, y: prev.y } : {}),
+          ports: [
+            {
+              id: `${node.unique_id}:lineage-target`,
+              layoutOptions: {
+                "port.side": direction === "DOWN" ? "NORTH" : "WEST",
+              },
+            },
+            {
+              id: `${node.unique_id}:lineage-source`,
+              layoutOptions: {
+                "port.side": direction === "DOWN" ? "SOUTH" : "EAST",
+              },
+            },
+            {
+              id: `${node.unique_id}:association-source`,
+              layoutOptions: {
+                "port.side": direction === "DOWN" ? "SOUTH" : "EAST",
+              },
+            },
+            {
+              id: `${node.unique_id}:association-target`,
+              layoutOptions: {
+                "port.side": direction === "DOWN" ? "SOUTH" : "EAST",
+              },
+            },
+          ],
+        }
+      }),
+      edges: validEdges.map((edge) => {
+        const isAssociated = edge.relationship === "associated"
+        return {
+          id: edge.id,
+          sources: [
+            `${edge.source}:${isAssociated ? "association-source" : "lineage-source"}`,
+          ],
+          targets: [
+            `${edge.target}:${isAssociated ? "association-target" : "lineage-target"}`,
+          ],
+          layoutOptions: {
+            "org.eclipse.elk.edge.type": isAssociated
+              ? "ASSOCIATION"
+              : "DIRECTED",
+            "org.eclipse.elk.layered.priority.direction": isAssociated
+              ? "0"
+              : "10",
+          },
+        }
+      }),
+      id: "resource-graph",
+      layoutOptions: {
+        "elk.algorithm": "layered",
+        "elk.direction": direction,
+        "elk.edgeRouting": "ORTHOGONAL",
+        "elk.portConstraints": "FIXED_SIDE",
+        "elk.layered.cycleBreaking.strategy": "GREEDY",
+        "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+        "elk.layered.crossingMinimization.semiInteractive":
+          previousPositions && previousPositions.size > 0 ? "true" : "false",
+        "elk.layered.nodePlacement.favorStraightEdges": "true",
+        "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
+        "elk.layered.spacing.nodeNodeBetweenLayers": String(layerGap),
+        "elk.spacing.nodeNode": String(nodeGap),
+      },
+    })
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error("Resource graph layout calculation timed out"))
+      }, ELK_LAYOUT_TIMEOUT_MS)
+    })
+
+    const layout = await Promise.race([layoutPromise, timeoutPromise])
+
+    return new Map(
+      (layout.children ?? []).map((node) => [
+        node.id,
+        {
+          height: node.height,
+          width: node.width,
+          x: node.x ?? 0,
+          y: node.y ?? 0,
+        },
+      ])
+    )
+  } catch (error) {
+    resetResourceGraphLayoutEngine()
+    throw error
+  } finally {
+    if (timer) {
+      clearTimeout(timer)
+    }
+  }
 }
 
 function reconcileResourceFlowNodes(
@@ -1467,7 +1567,7 @@ function clearEnteringFlowNodes(nodes: ResourceFlowNode[]) {
   return changed ? nextNodes : nodes
 }
 
-function fallbackResourceGraphLayout(
+export function fallbackResourceGraphLayout(
   graph: WorkspaceResourceGraph,
   element: HTMLElement,
   direction: LayoutDirection
