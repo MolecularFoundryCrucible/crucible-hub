@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added a global application footer to the workspace shell displaying Crucible Dev Team attribution, links to Crucible, Molecular Foundry, and issues, API health status, and the current build revision.
+
 - Added Hub-only response headers that prevent framing, restrict base URLs and object content, disable MIME sniffing, and limit referrers to the same origin while preserving private OAuth redirects.
 
 - Directed sign-in callback success and error redirects to the configured public Hub origin behind the Cloud Run proxy.

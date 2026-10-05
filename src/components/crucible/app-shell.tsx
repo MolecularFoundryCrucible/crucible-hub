@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, useRouterState } from "@tanstack/react-router"
 
+import { AppFooter } from "@/components/crucible/app-footer"
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
   AdministratorViewProvider,
@@ -285,6 +286,7 @@ export function AppShell({
               {children}
             </ResourceSiblingNavigationProvider>
           </div>
+          <AppFooter />
         </SidebarInset>
       </SidebarProvider>
     </RecentlyViewedScope>
