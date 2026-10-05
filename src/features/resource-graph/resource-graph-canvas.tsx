@@ -1313,7 +1313,15 @@ export async function layoutResourceGraph(
           height,
           id: node.unique_id,
           width,
-          ...(prev ? { x: prev.x, y: prev.y } : {}),
+          ...(prev
+            ? {
+                layoutOptions: {
+                  "elk.position": `(${prev.x}, ${prev.y})`,
+                },
+                x: prev.x,
+                y: prev.y,
+              }
+            : {}),
           ports: [
             {
               id: `${node.unique_id}:lineage-target`,
