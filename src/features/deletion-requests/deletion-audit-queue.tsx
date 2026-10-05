@@ -268,7 +268,7 @@ function AuditIdentity({
       <PersonLink
         nameStyle="abbreviated"
         person={identity}
-        presentation="inline"
+        presentation="collection"
       />
     )
   return (

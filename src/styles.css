@@ -1048,7 +1048,13 @@ body {
     min-width: 0;
   }
 
-  .resource-directory-table .resource-directory-name [data-directory-name] {
+  .resource-directory-table .resource-directory-name [data-directory-name],
+  .resource-directory-table .resource-directory-name [data-directory-name] > *,
+  .resource-collection-table .resource-collection-name [data-directory-name],
+  .resource-collection-table
+    .resource-collection-name
+    [data-directory-name]
+    > * {
     overflow: visible;
     overflow-wrap: anywhere;
     white-space: normal;

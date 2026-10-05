@@ -883,7 +883,7 @@ function DeletionRequestTable({
                     <PersonLink
                       nameStyle="abbreviated"
                       person={requester}
-                      presentation="inline"
+                      presentation="collection"
                     />
                   ) : (
                     <span className="inline-flex min-w-0 items-center gap-1.5">

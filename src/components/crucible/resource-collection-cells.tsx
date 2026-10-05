@@ -146,7 +146,11 @@ export function ResourceOwnerCell({
   return (
     <TableCell className="resource-collection-owner" data-label="Owner">
       {owner ? (
-        <PersonLink nameStyle="abbreviated" person={owner} />
+        <PersonLink
+          nameStyle="abbreviated"
+          person={owner}
+          presentation="collection"
+        />
       ) : (
         <span className="block truncate" title={username ?? undefined}>
           {username ?? "Unknown owner"}

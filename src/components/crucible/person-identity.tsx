@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { formatUsername } from "@/lib/username"
 
-type PersonIdentityPresentation = "avatar" | "inline" | "stacked"
+type PersonIdentityPresentation = "avatar" | "collection" | "inline" | "stacked"
 type PersonIdentityVariant = PersonIdentityPresentation | "tooltip"
 type PersonNameStyle = "abbreviated" | "full"
 type PersonIdentitySize = "default" | "lg" | "sm"
@@ -63,6 +63,20 @@ export function PersonIdentity({
   const name = personDisplayName(person, nameStyle)
   const username = formatUsername(person.username ?? person.context, "handle")
   const isServiceAccount = personIsServiceAccount(person)
+
+  if (presentation === "collection") {
+    return (
+      <span
+        className={cn(
+          "block min-w-0 truncate text-label [&>*]:block [&>*]:truncate",
+          className
+        )}
+        title={nameContent ? undefined : name}
+      >
+        {nameContent ?? name}
+      </span>
+    )
+  }
 
   if (presentation === "inline") {
     return (

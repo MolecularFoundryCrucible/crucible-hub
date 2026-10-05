@@ -273,6 +273,7 @@ function ProjectCollection({
                           <PersonLink
                             nameStyle="abbreviated"
                             person={project.lead}
+                            presentation="collection"
                           />
                         ) : (
                           <span aria-label="Not available">-</span>

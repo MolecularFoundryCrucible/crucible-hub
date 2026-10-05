@@ -28,12 +28,13 @@ export function PersonLink({
   size?: PersonIdentitySize
 }) {
   const label = personDisplayName(person, nameStyle)
+  const isCollection = presentation === "collection"
   const nameLink = (
     <SelectableTextLink
       aria-label={
         personIsServiceAccount(person) ? `${label}, Service account` : label
       }
-      className="inline-block"
+      className={isCollection ? "block truncate" : "inline-block"}
       render={
         <Link params={{ personId: person.unique_id }} to="/people/$personId" />
       }

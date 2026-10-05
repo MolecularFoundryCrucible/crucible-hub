@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Truncated long resource and person names with ellipses in collection and directory tables to prevent column overflow.
+
 - Added a global application footer to the workspace shell displaying Crucible Dev Team attribution, links to Crucible, Molecular Foundry, and issues, API health status, and the current build revision.
 
 - Added Hub-only response headers that prevent framing, restrict base URLs and object content, disable MIME sniffing, and limit referrers to the same origin while preserving private OAuth redirects.

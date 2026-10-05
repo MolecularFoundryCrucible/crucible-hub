@@ -366,6 +366,7 @@ function InstrumentCollection({
                           <PersonLink
                             nameStyle="abbreviated"
                             person={instrument.owner}
+                            presentation="collection"
                           />
                         ) : (
                           <span aria-label="Not available">-</span>

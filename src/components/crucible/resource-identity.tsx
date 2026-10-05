@@ -43,7 +43,7 @@ export function ResourceIdentity({
         <span
           className={cn(
             "block text-label",
-            truncate ? "truncate" : "wrap-break-word"
+            truncate ? "truncate [&>*]:block [&>*]:truncate" : "wrap-break-word"
           )}
           title={truncate && showTruncationTitle ? name : undefined}
           data-directory-name

@@ -91,4 +91,19 @@ describe("ResourceCollectionNameCell", () => {
       "[&_[data-resource-context]]:xl:hidden"
     )
   })
+
+  it("applies collection truncation classes to name container and child preview link", () => {
+    const { container } = renderCell({
+      kind: "sample",
+      mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z1",
+      name: "Catalyst sample",
+      subtype: "oxide powder",
+      subtypeVisibility: "always",
+    })
+
+    const nameContainer = container.querySelector("[data-directory-name]")
+    expect(nameContainer?.className).toContain("truncate")
+    expect(nameContainer?.className).toContain("[&>*]:block")
+    expect(nameContainer?.className).toContain("[&>*]:truncate")
+  })
 })
