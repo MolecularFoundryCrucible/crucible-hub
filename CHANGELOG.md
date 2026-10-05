@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Refined resource graph visual styling with dedicated top-left icon badges, centered association edge routing below cards, root resource drawer inspection, progressive disclosure for node expansion controls on hover and focus, and aligned workspace shell landmarks to keep the application footer at the top level.
+- Refined resource graph node styling with flush top-left corner kind badges, expanded card height to eliminate multi-line text clipping, hover border transitions, centered association edge routing below cards, root resource drawer inspection, and progressive disclosure for node expansion controls on hover and focus.
 
 - Improved resource graph layout resilience and stability by configuring ELK port constraints and edge routing priorities for lineage and lateral associations, preserving mental maps with semi-interactive positioning during incremental expansion, resetting orientation hints cleanly on direction toggles, adding a worker watchdog with engine recovery, and decoupling node transitions from layout interpolation.
 

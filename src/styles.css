@@ -503,9 +503,9 @@
   --layer-graph-overlay: 1;
   --route-progress-height: 0.1875rem;
   --graph-node-width: 220;
-  --graph-node-height: 84;
+  --graph-node-height: 90;
   --graph-root-node-width: 236;
-  --graph-root-node-height: 92;
+  --graph-root-node-height: 98;
   --graph-node-border: 1.5;
   --graph-root-border: 3;
   --graph-root-overlay-opacity: 0.1;
@@ -725,7 +725,7 @@ body {
   border-radius: var(--radius-xl);
   background: var(--graph-card);
   color: var(--graph-foreground);
-  padding: 0.625rem 0.75rem;
+  padding: 0.375rem 0.75rem 0.5rem;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition:
@@ -778,58 +778,89 @@ body {
   min-width: 0;
   flex-direction: column;
   justify-content: space-between;
-  gap: var(--spacing-1-5);
+  gap: var(--spacing-1);
 }
 
 .resource-graph-flow-node-header {
   display: flex;
   width: 100%;
   min-width: 0;
+  min-height: 1.125rem;
   align-items: center;
-  gap: var(--spacing-2);
+  justify-content: flex-end;
 }
 
 .resource-graph-flow-node-icon-badge {
+  position: absolute;
+  top: calc(var(--graph-node-border) * -1px);
+  left: calc(var(--graph-node-border) * -1px);
   display: flex;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.625rem;
+  height: 1.625rem;
   flex: none;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--graph-foreground) 10%, transparent);
-  background: color-mix(in srgb, var(--graph-foreground) 4%, transparent);
+  border-top-left-radius: calc(var(--radius-xl) - 1px);
+  border-bottom-right-radius: var(--radius-md);
+  border-right: 1px solid
+    color-mix(in srgb, var(--graph-foreground) 10%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--graph-foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--graph-foreground) 4%, var(--graph-card));
+  color: var(--graph-foreground);
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast);
 }
 
 .resource-graph-flow-node[data-kind="sample"]
   .resource-graph-flow-node-icon-badge {
-  border-color: color-mix(
+  border-right-color: color-mix(
     in srgb,
-    var(--graph-resource-sample) 30%,
-    transparent
+    var(--graph-resource-sample) 45%,
+    var(--border)
   );
-  background: color-mix(in srgb, var(--graph-resource-sample) 12%, transparent);
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--graph-resource-sample) 45%,
+    var(--border)
+  );
+  background: color-mix(
+    in srgb,
+    var(--graph-resource-sample) 15%,
+    var(--graph-card)
+  );
   color: var(--graph-resource-sample);
 }
 
 .resource-graph-flow-node[data-kind="dataset"]
   .resource-graph-flow-node-icon-badge {
-  border-color: color-mix(
+  border-right-color: color-mix(
     in srgb,
-    var(--graph-resource-dataset) 30%,
-    transparent
+    var(--graph-resource-dataset) 45%,
+    var(--border)
+  );
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--graph-resource-dataset) 45%,
+    var(--border)
   );
   background: color-mix(
     in srgb,
-    var(--graph-resource-dataset) 12%,
-    transparent
+    var(--graph-resource-dataset) 15%,
+    var(--graph-card)
   );
   color: var(--graph-resource-dataset);
 }
 
 .resource-graph-flow-node[data-root] .resource-graph-flow-node-icon-badge {
-  border-color: color-mix(in srgb, var(--graph-current) 40%, transparent);
-  background: color-mix(in srgb, var(--graph-current) 14%, transparent);
+  top: calc(var(--graph-root-border) * -1px);
+  left: calc(var(--graph-root-border) * -1px);
+  border-right-width: calc(var(--graph-node-border) * 1px);
+  border-bottom-width: calc(var(--graph-node-border) * 1px);
+  border-right-color: var(--graph-current);
+  border-bottom-color: var(--graph-current);
+  background: color-mix(in srgb, var(--graph-current) 18%, var(--graph-card));
   color: var(--graph-current);
 }
 
@@ -841,8 +872,8 @@ body {
 
 .resource-graph-flow-node-thumbnail {
   margin-left: auto;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.375rem;
+  height: 1.375rem;
   flex: none;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -854,7 +885,9 @@ body {
 .resource-graph-flow-node-body {
   display: flex;
   min-width: 0;
+  flex: 1;
   flex-direction: column;
+  justify-content: center;
   gap: 2px;
 }
 
@@ -895,13 +928,36 @@ body {
     0 0 0 calc(var(--focus-width)) var(--graph-ring);
 }
 
-.react-flow__node-resource:hover .resource-graph-flow-node[data-kind="sample"] {
+.react-flow__node-resource:hover .resource-graph-flow-node[data-kind="sample"],
+.react-flow__node-resource:focus-visible
+  .resource-graph-flow-node[data-kind="sample"] {
   border-color: var(--graph-resource-sample);
 }
 
 .react-flow__node-resource:hover
+  .resource-graph-flow-node[data-kind="sample"]
+  .resource-graph-flow-node-icon-badge,
+.react-flow__node-resource:focus-visible
+  .resource-graph-flow-node[data-kind="sample"]
+  .resource-graph-flow-node-icon-badge {
+  border-right-color: var(--graph-resource-sample);
+  border-bottom-color: var(--graph-resource-sample);
+}
+
+.react-flow__node-resource:hover .resource-graph-flow-node[data-kind="dataset"],
+.react-flow__node-resource:focus-visible
   .resource-graph-flow-node[data-kind="dataset"] {
   border-color: var(--graph-resource-dataset);
+}
+
+.react-flow__node-resource:hover
+  .resource-graph-flow-node[data-kind="dataset"]
+  .resource-graph-flow-node-icon-badge,
+.react-flow__node-resource:focus-visible
+  .resource-graph-flow-node[data-kind="dataset"]
+  .resource-graph-flow-node-icon-badge {
+  border-right-color: var(--graph-resource-dataset);
+  border-bottom-color: var(--graph-resource-dataset);
 }
 
 .react-flow__node-resource:hover .resource-graph-flow-node[data-root],
