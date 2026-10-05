@@ -1,4 +1,5 @@
-import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg"
+import crucibleIconDarkUrl from "@/assets/crucible-icon-dark.svg"
+import crucibleIconLightUrl from "@/assets/crucible-icon-light.svg"
 import { cn } from "@/lib/utils"
 
 export function BrandMark({ className }: { className?: string }) {
@@ -12,8 +13,13 @@ export function BrandMark({ className }: { className?: string }) {
     >
       <img
         alt=""
-        className="size-full object-contain"
-        src={crucibleLogoHubUrl}
+        className="size-full object-contain dark:hidden"
+        src={crucibleIconLightUrl}
+      />
+      <img
+        alt=""
+        className="hidden size-full object-contain dark:block"
+        src={crucibleIconDarkUrl}
       />
     </span>
   )

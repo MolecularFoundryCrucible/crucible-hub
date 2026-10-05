@@ -350,8 +350,6 @@
 .auth-page-mark {
   width: var(--spacing-auth-mark);
   height: var(--spacing-auth-mark);
-  overflow: hidden;
-  border-radius: var(--radius-lg);
 }
 
 .auth-page-card[data-slot="card"] {
