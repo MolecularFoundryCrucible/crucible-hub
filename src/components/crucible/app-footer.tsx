@@ -1,4 +1,5 @@
 import { BrandMark } from "@/components/crucible/brand-mark"
+import { SystemStatusPopover } from "@/components/crucible/system-status-popover"
 import { cn } from "@/lib/utils"
 
 interface AppFooterProps {
@@ -35,7 +36,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
           className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1"
         >
           <a
-            className="rounded-sm underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center rounded-sm py-1 underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href="https://crucible.lbl.gov/"
             rel="noreferrer"
             target="_blank"
@@ -46,7 +47,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
             •
           </span>
           <a
-            className="rounded-sm underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center rounded-sm py-1 underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href="https://foundry.lbl.gov/"
             rel="noreferrer"
             target="_blank"
@@ -57,7 +58,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
             •
           </span>
           <a
-            className="rounded-sm underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center rounded-sm py-1 underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href="https://github.com/MolecularFoundryCrucible/crucible-hub/issues"
             rel="noreferrer"
             target="_blank"
@@ -67,12 +68,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
         </nav>
 
         <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 md:justify-end">
-          <a
-            className="rounded-sm underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            href="/hub/health"
-          >
-            API status
-          </a>
+          <SystemStatusPopover gitRevision={revision} />
           {revision ? (
             <>
               <span aria-hidden="true" className="select-none">
@@ -81,7 +77,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
               <div className="flex items-baseline gap-1.5">
                 <span>Revision</span>
                 <a
-                  className="rounded-sm font-mono underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex items-center rounded-sm py-1 font-mono underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   href={`https://github.com/MolecularFoundryCrucible/crucible-hub/commit/${revision}`}
                   rel="noreferrer"
                   target="_blank"

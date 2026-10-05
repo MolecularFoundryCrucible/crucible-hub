@@ -112,4 +112,8 @@ describe("Crucible query keys", () => {
       crucibleKeys.search(scope, { query: "operando" })
     )
   })
+
+  it("provides a global query key for system status", () => {
+    expect(crucibleKeys.systemStatus()).toEqual(["crucible", "system-status"])
+  })
 })

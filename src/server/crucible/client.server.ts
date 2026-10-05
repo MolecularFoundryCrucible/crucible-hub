@@ -14,7 +14,7 @@ type ClientConfiguration = {
 }
 
 type ClientAuthority = {
-  privilegeMode?: WorkspacePrivilegeMode
+  privilegeMode?: WorkspacePrivilegeMode | null
 }
 
 export class CruciblePrivilegeModeError extends Error {
@@ -31,25 +31,30 @@ export function createCrucibleClient(
   { baseUrl, bearerToken, fetch }: ClientConfiguration,
   authority: ClientAuthority = {}
 ) {
-  const privilegeMode = authority.privilegeMode ?? readGlobalPrivilegeMode()
+  const privilegeMode =
+    authority.privilegeMode === null
+      ? null
+      : (authority.privilegeMode ?? readGlobalPrivilegeMode())
   const client = createClient<paths>({
     baseUrl,
     fetch,
     headers: {
       ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
-      "Crucible-Privilege-Mode": privilegeMode,
+      ...(privilegeMode ? { "Crucible-Privilege-Mode": privilegeMode } : {}),
     },
   })
-  client.use({
-    onResponse({ response }) {
-      const appliedMode = response.headers.get("Crucible-Privilege-Mode")
-      if (
-        (response.ok && appliedMode !== privilegeMode) ||
-        (appliedMode !== null && appliedMode !== privilegeMode)
-      ) {
-        throw new CruciblePrivilegeModeError(privilegeMode, appliedMode)
-      }
-    },
-  })
+  if (privilegeMode !== null) {
+    client.use({
+      onResponse({ response }) {
+        const appliedMode = response.headers.get("Crucible-Privilege-Mode")
+        if (
+          (response.ok && appliedMode !== privilegeMode) ||
+          (appliedMode !== null && appliedMode !== privilegeMode)
+        ) {
+          throw new CruciblePrivilegeModeError(privilegeMode, appliedMode)
+        }
+      },
+    })
+  }
   return client
 }

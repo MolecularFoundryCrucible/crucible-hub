@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
@@ -5,9 +6,20 @@ import { AppFooter } from "./app-footer"
 
 afterEach(cleanup)
 
+function renderFooter(props: React.ComponentProps<typeof AppFooter> = {}) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AppFooter {...props} />
+    </QueryClientProvider>
+  )
+}
+
 describe("AppFooter", () => {
   it("renders with the semantic contentinfo role and accessible label", () => {
-    render(<AppFooter />)
+    renderFooter()
 
     const footer = screen.getByRole("contentinfo", {
       name: "Crucible Hub footer",
@@ -18,7 +30,7 @@ describe("AppFooter", () => {
   })
 
   it("renders attribution and current year", () => {
-    render(<AppFooter />)
+    renderFooter()
 
     const currentYear = new Date().getFullYear().toString()
     expect(
@@ -29,7 +41,7 @@ describe("AppFooter", () => {
   })
 
   it("renders external resource navigation links with secure targets and underlines", () => {
-    render(<AppFooter />)
+    renderFooter()
 
     const crucibleLink = screen.getByRole("link", { name: "Crucible" })
     expect(crucibleLink.getAttribute("href")).toBe("https://crucible.lbl.gov/")
@@ -53,22 +65,22 @@ describe("AppFooter", () => {
   })
 
   it("renders center dots separating external navigation links", () => {
-    render(<AppFooter />)
+    renderFooter()
 
     const nav = screen.getByRole("navigation", { name: "External resources" })
     expect(nav.textContent).toContain("•")
   })
 
-  it("renders API status link with underline", () => {
-    render(<AppFooter />)
+  it("renders API status trigger with underline and popover trigger semantics", () => {
+    renderFooter()
 
-    const statusLink = screen.getByRole("link", { name: "API status" })
-    expect(statusLink.getAttribute("href")).toBe("/hub/health")
-    expect(statusLink.classList.contains("underline")).toBe(true)
+    const statusButton = screen.getByRole("button", { name: "API status" })
+    expect(statusButton.getAttribute("aria-haspopup")).toBe("dialog")
+    expect(statusButton.classList.contains("underline")).toBe(true)
   })
 
   it("renders git revision with baseline alignment and separator dot when provided", () => {
-    render(<AppFooter gitRevision="7386cff" />)
+    renderFooter({ gitRevision: "7386cff" })
 
     const revisionLink = screen.getByRole("link", { name: "7386cff" })
     expect(revisionLink.getAttribute("href")).toBe(
@@ -88,16 +100,16 @@ describe("AppFooter", () => {
   })
 
   it("omits revision and separator dot when not provided or empty", () => {
-    render(<AppFooter gitRevision="" />)
+    renderFooter({ gitRevision: "" })
 
     expect(screen.queryByText("Revision")).toBeNull()
-    const statusLink = screen.getByRole("link", { name: "API status" })
-    const rightCluster = statusLink.parentElement
+    const statusButton = screen.getByRole("button", { name: "API status" })
+    const rightCluster = statusButton.parentElement
     expect(rightCluster?.textContent).not.toContain("•")
   })
 
   it("centers content on narrow screens and distributes on desktop", () => {
-    render(<AppFooter />)
+    renderFooter()
 
     const footer = screen.getByRole("contentinfo")
     const container = footer.firstElementChild
@@ -108,7 +120,7 @@ describe("AppFooter", () => {
   })
 
   it("merges custom className", () => {
-    render(<AppFooter className="custom-test-class" />)
+    renderFooter({ className: "custom-test-class" })
 
     const footer = screen.getByRole("contentinfo")
     expect(footer.classList.contains("custom-test-class")).toBe(true)

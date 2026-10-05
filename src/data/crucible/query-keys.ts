@@ -195,4 +195,5 @@ export const crucibleKeys = {
   search: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "search", normalizeFilters(filters)] as const,
   searches: (scope: IdentityScope) => [...scope, "search"] as const,
+  systemStatus: () => ["crucible", "system-status"] as const,
 }

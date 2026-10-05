@@ -142,6 +142,10 @@ export {
   ArrowDown as SortDescendingIcon,
   ChevronsUpDown as SortUnselectedIcon,
   ChevronDown as DisclosureIcon,
+  Database as DatabaseIcon,
+  Server as ServerIcon,
+  ExternalLink as ExternalLinkIcon,
+  X as CloseIcon,
 } from "lucide-react"
 
 export type { IconNode } from "lucide-react"
