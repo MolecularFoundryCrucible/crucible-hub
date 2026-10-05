@@ -27,7 +27,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
     >
       <div className="mx-auto flex w-full max-w-content flex-col items-center gap-y-4 px-page-gutter py-6 text-center text-supporting text-muted-foreground sm:px-page-gutter-medium md:flex-row md:items-center md:justify-between md:text-left lg:px-page-gutter-wide">
         <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 md:justify-start">
-          <BrandMark className="size-4 opacity-75" />
+          <BrandMark className="size-4 overflow-hidden rounded-sm opacity-75" />
           <span>© {currentYear} Crucible Dev Team</span>
         </div>
 

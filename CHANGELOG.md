@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Rounded the corners of the Crucible brand mark in the global application footer.
+
 - Replaced the static API health link in the application footer with an interactive status popover providing on-demand readiness probe diagnostics, Hub health links, close controls, and WCAG-compliant footer touch targets.
 
 - Truncated long resource and person names with ellipses in collection and directory tables to prevent column overflow.
