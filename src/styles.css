@@ -792,15 +792,17 @@ body {
 
 .resource-graph-flow-node-icon-badge {
   position: absolute;
-  top: calc(var(--graph-node-border) * -1px);
-  left: calc(var(--graph-node-border) * -1px);
+  top: 0;
+  left: 0;
   display: flex;
   width: 1.625rem;
   height: 1.625rem;
   flex: none;
   align-items: center;
   justify-content: center;
-  border-top-left-radius: calc(var(--radius-xl) - 1px);
+  border-top-left-radius: calc(
+    var(--radius-xl) - calc(var(--graph-node-border) * 1px)
+  );
   border-bottom-right-radius: var(--radius-md);
   border-right: 1px solid
     color-mix(in srgb, var(--graph-foreground) 10%, transparent);
@@ -854,8 +856,11 @@ body {
 }
 
 .resource-graph-flow-node[data-root] .resource-graph-flow-node-icon-badge {
-  top: calc(var(--graph-root-border) * -1px);
-  left: calc(var(--graph-root-border) * -1px);
+  top: 0;
+  left: 0;
+  border-top-left-radius: calc(
+    var(--radius-xl) - calc(var(--graph-root-border) * 1px)
+  );
   border-right-width: calc(var(--graph-node-border) * 1px);
   border-bottom-width: calc(var(--graph-node-border) * 1px);
   border-right-color: var(--graph-current);
@@ -967,6 +972,16 @@ body {
     var(--shadow-md),
     0 0 0 calc(var(--graph-root-overlay-padding) * 1px)
       color-mix(in srgb, var(--graph-current) 20%, transparent);
+}
+
+.react-flow__node-resource:hover
+  .resource-graph-flow-node[data-root]
+  .resource-graph-flow-node-icon-badge,
+.react-flow__node-resource:focus-visible
+  .resource-graph-flow-node[data-root]
+  .resource-graph-flow-node-icon-badge {
+  border-right-color: var(--graph-current);
+  border-bottom-color: var(--graph-current);
 }
 
 .resource-graph-expansion-action {
