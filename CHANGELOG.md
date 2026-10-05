@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added platform administration capabilities including an administration overview, user directory with creation, profile editing, and API key provisioning, access group management and membership inspection, access group join request review queue, and live system diagnostics.
+
 - Improved quick search keyboard and dropdown behavior by submitting searches on Enter when no suggestion is highlighted, navigating directly and closing search with input blur on highlighted suggestions, showing an animated progress spinner during search queries, sizing results comfortably, and dynamically displaying the search query and shortcut badge in the results footer.
 
 - Restored the Crucible Hub logo on the application sidebar with smooth collapse transitions and retained the theme-aware icon variant for compact badges and footer attribution.

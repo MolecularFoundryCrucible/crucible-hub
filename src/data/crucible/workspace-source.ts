@@ -570,6 +570,46 @@ export type WorkspaceServiceAccountPage = {
   total: number | null
 }
 
+export type WorkspaceAdminUser = Schema<"UserRead">
+
+export type WorkspaceAdminUserPage = {
+  items: readonly (Schema<"UserRead"> | Schema<"UserPublicRead">)[]
+  limit: number
+  offset: number
+  total: number | null
+}
+
+export type WorkspaceUserCreate = {
+  email?: string | null
+  first_name: string
+  last_name: string
+  project_ids?: readonly string[] | null
+  unique_id?: string | null
+  username: string
+}
+
+export type WorkspaceUserUpdate = {
+  email?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  username?: string | null
+}
+
+export type WorkspaceAccessGroup = Schema<"AccessGroupRead">
+
+export type WorkspaceAccessGroupMember = Schema<"AccessGroupMemberRead">
+
+export type WorkspaceJoinRequest = Schema<"JoinRequestRead">
+
+export type WorkspaceJoinRequestPage = {
+  items: readonly WorkspaceJoinRequest[]
+  limit: number
+  offset: number
+  total: number | null
+}
+
+export type WorkspaceJoinRequestReview = Schema<"JoinRequestReview">
+
 export type WorkspaceSearchGroup = {
   error: boolean
   items: readonly WorkspaceSearchResult[]

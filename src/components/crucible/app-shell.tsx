@@ -21,9 +21,13 @@ import {
   CollapseSidebarIcon,
   DeletionRequestsIcon,
   ExpandSidebarIcon,
+  JoinRequestIcon,
+  PersonIcon,
   RecentResourcesIcon,
   SignOutIcon,
+  SystemHealthIcon,
   ThemeIcon,
+  UserGroupIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
 import {
@@ -70,7 +74,10 @@ import {
 import { Switch } from "@/components/ui/switch"
 import type { Workspace } from "@/data/crucible/workspace-source"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
-import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
+import {
+  canOpenPlatformAdministration,
+  canOpenServiceAccountAdministration,
+} from "@/data/crucible/administration"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
   projectQueryOptions,
@@ -200,24 +207,48 @@ export function AppShell({
                         <SidebarAdministratorViewControl />
                       </SidebarMenuItem>
                     ) : null}
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        isActive={deletionRequestsActive}
-                        tooltip="Deletion requests"
-                        render={
-                          <Link
-                            aria-current={
-                              deletionRequestsActive ? "page" : undefined
+                    {canOpenPlatformAdministration(account) ? (
+                      <>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname === "/admin"}
+                            tooltip="Overview"
+                            render={
+                              <Link
+                                aria-current={
+                                  pathname === "/admin" ? "page" : undefined
+                                }
+                                preload={false}
+                                to="/admin"
+                              />
                             }
-                            search={{ view: "submitted" }}
-                            to="/deletion-requests"
-                          />
-                        }
-                      >
-                        <DeletionRequestsIcon aria-hidden="true" />
-                        <span>Deletion requests</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                          >
+                            <AdministratorViewIcon />
+                            <span>Overview</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname.startsWith("/admin/users")}
+                            tooltip="Users"
+                            render={
+                              <Link
+                                aria-current={
+                                  pathname.startsWith("/admin/users")
+                                    ? "page"
+                                    : undefined
+                                }
+                                preload={false}
+                                to="/admin/users"
+                              />
+                            }
+                          >
+                            <PersonIcon />
+                            <span>Users</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </>
+                    ) : null}
                     {canOpenServiceAccountAdministration(account) ? (
                       <SidebarMenuItem>
                         <SidebarMenuButton
@@ -242,6 +273,92 @@ export function AppShell({
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ) : null}
+                    {canOpenPlatformAdministration(account) ? (
+                      <>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname.startsWith(
+                              "/admin/access-groups"
+                            )}
+                            tooltip="Access groups"
+                            render={
+                              <Link
+                                aria-current={
+                                  pathname.startsWith("/admin/access-groups")
+                                    ? "page"
+                                    : undefined
+                                }
+                                preload={false}
+                                to="/admin/access-groups"
+                              />
+                            }
+                          >
+                            <UserGroupIcon />
+                            <span>Access groups</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname.startsWith(
+                              "/admin/join-requests"
+                            )}
+                            tooltip="Join requests"
+                            render={
+                              <Link
+                                aria-current={
+                                  pathname.startsWith("/admin/join-requests")
+                                    ? "page"
+                                    : undefined
+                                }
+                                preload={false}
+                                to="/admin/join-requests"
+                              />
+                            }
+                          >
+                            <JoinRequestIcon />
+                            <span>Join requests</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname.startsWith("/admin/system")}
+                            tooltip="System"
+                            render={
+                              <Link
+                                aria-current={
+                                  pathname.startsWith("/admin/system")
+                                    ? "page"
+                                    : undefined
+                                }
+                                preload={false}
+                                to="/admin/system"
+                              />
+                            }
+                          >
+                            <SystemHealthIcon />
+                            <span>System</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </>
+                    ) : null}
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={deletionRequestsActive}
+                        tooltip="Deletion requests"
+                        render={
+                          <Link
+                            aria-current={
+                              deletionRequestsActive ? "page" : undefined
+                            }
+                            search={{ view: "submitted" }}
+                            to="/deletion-requests"
+                          />
+                        }
+                      >
+                        <DeletionRequestsIcon aria-hidden="true" />
+                        <span>Deletion requests</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

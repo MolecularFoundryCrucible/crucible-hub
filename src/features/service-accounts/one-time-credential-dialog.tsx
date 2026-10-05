@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
 import { formatUsername } from "@/lib/username"
 
 export function OneTimeCredentialDialog({
@@ -20,7 +19,11 @@ export function OneTimeCredentialDialog({
   onClose,
   title,
 }: {
-  credential?: WorkspaceServiceAccountCredential
+  credential?: {
+    api_key: string
+    unique_id: string
+    username: string | null
+  }
   onClose: () => void
   title: string
 }) {

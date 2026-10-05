@@ -150,6 +150,9 @@ export {
   Server as ServerIcon,
   ExternalLink as ExternalLinkIcon,
   X as CloseIcon,
+  Inbox as JoinRequestIcon,
+  Activity as SystemHealthIcon,
+  Users as UserGroupIcon,
 } from "lucide-react"
 
 export type { IconNode } from "lucide-react"

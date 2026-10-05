@@ -24,6 +24,9 @@ import { Route as AuthLogoutRouteImport } from './routes/auth.logout'
 import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
 import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.design-system'
 import { Route as FixturesScenariosRouteImport } from './routes/fixtures.scenarios'
+import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
+import { Route as AppAdminJoinRequestsRouteImport } from './routes/_app.admin.join-requests'
+import { Route as AppAdminSystemRouteImport } from './routes/_app.admin.system'
 import { Route as AppDatasetsDatasetMfidRouteImport } from './routes/_app.datasets.$datasetMfid'
 import { Route as AppDatasetsNewRouteImport } from './routes/_app.datasets.new'
 import { Route as AppInstrumentsIndexRouteImport } from './routes/_app.instruments.index'
@@ -36,8 +39,12 @@ import { Route as AppProjectsNewRouteImport } from './routes/_app.projects.new'
 import { Route as AppResourcesResourceMfidRouteImport } from './routes/_app.resources.$resourceMfid'
 import { Route as AppSamplesSampleMfidRouteImport } from './routes/_app.samples.$sampleMfid'
 import { Route as AppSamplesNewRouteImport } from './routes/_app.samples.new'
+import { Route as AppAdminAccessGroupsIndexRouteImport } from './routes/_app.admin.access-groups.index'
+import { Route as AppAdminAccessGroupsGroupNameRouteImport } from './routes/_app.admin.access-groups.$groupName'
 import { Route as AppAdminServiceAccountsIndexRouteImport } from './routes/_app.admin.service-accounts.index'
 import { Route as AppAdminServiceAccountsServiceAccountMfidRouteImport } from './routes/_app.admin.service-accounts.$serviceAccountMfid'
+import { Route as AppAdminUsersIndexRouteImport } from './routes/_app.admin.users.index'
+import { Route as AppAdminUsersUserMfidRouteImport } from './routes/_app.admin.users.$userMfid'
 import { Route as AppDatasetsDatasetMfidIndexRouteImport } from './routes/_app.datasets.$datasetMfid.index'
 import { Route as AppDatasetsDatasetMfidAccessRouteImport } from './routes/_app.datasets.$datasetMfid.access'
 import { Route as AppDatasetsDatasetMfidGraphRouteImport } from './routes/_app.datasets.$datasetMfid.graph'
@@ -137,6 +144,21 @@ const FixturesScenariosRoute = FixturesScenariosRouteImport.update({
   path: '/fixtures/scenarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminJoinRequestsRoute = AppAdminJoinRequestsRouteImport.update({
+  id: '/admin/join-requests',
+  path: '/admin/join-requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSystemRoute = AppAdminSystemRouteImport.update({
+  id: '/admin/system',
+  path: '/admin/system',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDatasetsDatasetMfidRoute = AppDatasetsDatasetMfidRouteImport.update({
   id: '/datasets/$datasetMfid',
   path: '/datasets/$datasetMfid',
@@ -199,6 +221,18 @@ const AppSamplesNewRoute = AppSamplesNewRouteImport.update({
   path: '/samples/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminAccessGroupsIndexRoute =
+  AppAdminAccessGroupsIndexRouteImport.update({
+    id: '/admin/access-groups/',
+    path: '/admin/access-groups/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppAdminAccessGroupsGroupNameRoute =
+  AppAdminAccessGroupsGroupNameRouteImport.update({
+    id: '/admin/access-groups/$groupName',
+    path: '/admin/access-groups/$groupName',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAdminServiceAccountsIndexRoute =
   AppAdminServiceAccountsIndexRouteImport.update({
     id: '/admin/service-accounts/',
@@ -211,6 +245,16 @@ const AppAdminServiceAccountsServiceAccountMfidRoute =
     path: '/admin/service-accounts/$serviceAccountMfid',
     getParentRoute: () => AppRoute,
   } as any)
+const AppAdminUsersIndexRoute = AppAdminUsersIndexRouteImport.update({
+  id: '/admin/users/',
+  path: '/admin/users/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminUsersUserMfidRoute = AppAdminUsersUserMfidRouteImport.update({
+  id: '/admin/users/$userMfid',
+  path: '/admin/users/$userMfid',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDatasetsDatasetMfidIndexRoute =
   AppDatasetsDatasetMfidIndexRouteImport.update({
     id: '/',
@@ -371,6 +415,8 @@ export interface FileRoutesByFullPath {
   '/auth/sign-in': typeof AuthSignInRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
+  '/admin/join-requests': typeof AppAdminJoinRequestsRoute
+  '/admin/system': typeof AppAdminSystemRoute
   '/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -381,9 +427,12 @@ export interface FileRoutesByFullPath {
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/samples/new': typeof AppSamplesNewRoute
+  '/admin/': typeof AppAdminIndexRoute
   '/instruments/': typeof AppInstrumentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
+  '/admin/access-groups/$groupName': typeof AppAdminAccessGroupsGroupNameRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
+  '/admin/users/$userMfid': typeof AppAdminUsersUserMfidRoute
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -397,7 +446,9 @@ export interface FileRoutesByFullPath {
   '/samples/$sampleMfid/access': typeof AppSamplesSampleMfidAccessRoute
   '/samples/$sampleMfid/graph': typeof AppSamplesSampleMfidGraphRoute
   '/samples/$sampleMfid/manage': typeof AppSamplesSampleMfidManageRoute
+  '/admin/access-groups/': typeof AppAdminAccessGroupsIndexRoute
   '/admin/service-accounts/': typeof AppAdminServiceAccountsIndexRoute
+  '/admin/users/': typeof AppAdminUsersIndexRoute
   '/datasets/$datasetMfid/': typeof AppDatasetsDatasetMfidIndexRoute
   '/instruments/$instrumentMfid/': typeof AppInstrumentsInstrumentMfidIndexRoute
   '/projects/$projectMfid/': typeof AppProjectsProjectMfidIndexRoute
@@ -425,15 +476,20 @@ export interface FileRoutesByTo {
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/': typeof AppIndexRoute
+  '/admin/join-requests': typeof AppAdminJoinRequestsRoute
+  '/admin/system': typeof AppAdminSystemRoute
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/new': typeof AppInstrumentsNewRoute
   '/people/$personId': typeof AppPeoplePersonIdRoute
   '/projects/new': typeof AppProjectsNewRoute
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/new': typeof AppSamplesNewRoute
+  '/admin': typeof AppAdminIndexRoute
   '/instruments': typeof AppInstrumentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
+  '/admin/access-groups/$groupName': typeof AppAdminAccessGroupsGroupNameRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
+  '/admin/users/$userMfid': typeof AppAdminUsersUserMfidRoute
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -445,7 +501,9 @@ export interface FileRoutesByTo {
   '/samples/$sampleMfid/access': typeof AppSamplesSampleMfidAccessRoute
   '/samples/$sampleMfid/graph': typeof AppSamplesSampleMfidGraphRoute
   '/samples/$sampleMfid/manage': typeof AppSamplesSampleMfidManageRoute
+  '/admin/access-groups': typeof AppAdminAccessGroupsIndexRoute
   '/admin/service-accounts': typeof AppAdminServiceAccountsIndexRoute
+  '/admin/users': typeof AppAdminUsersIndexRoute
   '/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidIndexRoute
   '/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidIndexRoute
   '/projects/$projectMfid': typeof AppProjectsProjectMfidIndexRoute
@@ -475,6 +533,8 @@ export interface FileRoutesById {
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/join-requests': typeof AppAdminJoinRequestsRoute
+  '/_app/admin/system': typeof AppAdminSystemRoute
   '/_app/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
   '/_app/datasets/new': typeof AppDatasetsNewRoute
   '/_app/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -485,9 +545,12 @@ export interface FileRoutesById {
   '/_app/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/_app/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/_app/samples/new': typeof AppSamplesNewRoute
+  '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/instruments/': typeof AppInstrumentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
+  '/_app/admin/access-groups/$groupName': typeof AppAdminAccessGroupsGroupNameRoute
   '/_app/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
+  '/_app/admin/users/$userMfid': typeof AppAdminUsersUserMfidRoute
   '/_app/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/_app/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/_app/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -501,7 +564,9 @@ export interface FileRoutesById {
   '/_app/samples/$sampleMfid/access': typeof AppSamplesSampleMfidAccessRoute
   '/_app/samples/$sampleMfid/graph': typeof AppSamplesSampleMfidGraphRoute
   '/_app/samples/$sampleMfid/manage': typeof AppSamplesSampleMfidManageRoute
+  '/_app/admin/access-groups/': typeof AppAdminAccessGroupsIndexRoute
   '/_app/admin/service-accounts/': typeof AppAdminServiceAccountsIndexRoute
+  '/_app/admin/users/': typeof AppAdminUsersIndexRoute
   '/_app/datasets/$datasetMfid/': typeof AppDatasetsDatasetMfidIndexRoute
   '/_app/instruments/$instrumentMfid/': typeof AppInstrumentsInstrumentMfidIndexRoute
   '/_app/projects/$projectMfid/': typeof AppProjectsProjectMfidIndexRoute
@@ -531,6 +596,8 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
+    | '/admin/join-requests'
+    | '/admin/system'
     | '/datasets/$datasetMfid'
     | '/datasets/new'
     | '/instruments/$instrumentMfid'
@@ -541,9 +608,12 @@ export interface FileRouteTypes {
     | '/resources/$resourceMfid'
     | '/samples/$sampleMfid'
     | '/samples/new'
+    | '/admin/'
     | '/instruments/'
     | '/projects/'
+    | '/admin/access-groups/$groupName'
     | '/admin/service-accounts/$serviceAccountMfid'
+    | '/admin/users/$userMfid'
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
     | '/datasets/$datasetMfid/manage'
@@ -557,7 +627,9 @@ export interface FileRouteTypes {
     | '/samples/$sampleMfid/access'
     | '/samples/$sampleMfid/graph'
     | '/samples/$sampleMfid/manage'
+    | '/admin/access-groups/'
     | '/admin/service-accounts/'
+    | '/admin/users/'
     | '/datasets/$datasetMfid/'
     | '/instruments/$instrumentMfid/'
     | '/projects/$projectMfid/'
@@ -585,15 +657,20 @@ export interface FileRouteTypes {
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/'
+    | '/admin/join-requests'
+    | '/admin/system'
     | '/datasets/new'
     | '/instruments/new'
     | '/people/$personId'
     | '/projects/new'
     | '/resources/$resourceMfid'
     | '/samples/new'
+    | '/admin'
     | '/instruments'
     | '/projects'
+    | '/admin/access-groups/$groupName'
     | '/admin/service-accounts/$serviceAccountMfid'
+    | '/admin/users/$userMfid'
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
     | '/datasets/$datasetMfid/manage'
@@ -605,7 +682,9 @@ export interface FileRouteTypes {
     | '/samples/$sampleMfid/access'
     | '/samples/$sampleMfid/graph'
     | '/samples/$sampleMfid/manage'
+    | '/admin/access-groups'
     | '/admin/service-accounts'
+    | '/admin/users'
     | '/datasets/$datasetMfid'
     | '/instruments/$instrumentMfid'
     | '/projects/$projectMfid'
@@ -634,6 +713,8 @@ export interface FileRouteTypes {
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/_app/'
+    | '/_app/admin/join-requests'
+    | '/_app/admin/system'
     | '/_app/datasets/$datasetMfid'
     | '/_app/datasets/new'
     | '/_app/instruments/$instrumentMfid'
@@ -644,9 +725,12 @@ export interface FileRouteTypes {
     | '/_app/resources/$resourceMfid'
     | '/_app/samples/$sampleMfid'
     | '/_app/samples/new'
+    | '/_app/admin/'
     | '/_app/instruments/'
     | '/_app/projects/'
+    | '/_app/admin/access-groups/$groupName'
     | '/_app/admin/service-accounts/$serviceAccountMfid'
+    | '/_app/admin/users/$userMfid'
     | '/_app/datasets/$datasetMfid/access'
     | '/_app/datasets/$datasetMfid/graph'
     | '/_app/datasets/$datasetMfid/manage'
@@ -660,7 +744,9 @@ export interface FileRouteTypes {
     | '/_app/samples/$sampleMfid/access'
     | '/_app/samples/$sampleMfid/graph'
     | '/_app/samples/$sampleMfid/manage'
+    | '/_app/admin/access-groups/'
     | '/_app/admin/service-accounts/'
+    | '/_app/admin/users/'
     | '/_app/datasets/$datasetMfid/'
     | '/_app/instruments/$instrumentMfid/'
     | '/_app/projects/$projectMfid/'
@@ -794,6 +880,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FixturesScenariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/admin/': {
+      id: '/_app/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/join-requests': {
+      id: '/_app/admin/join-requests'
+      path: '/admin/join-requests'
+      fullPath: '/admin/join-requests'
+      preLoaderRoute: typeof AppAdminJoinRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/system': {
+      id: '/_app/admin/system'
+      path: '/admin/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AppAdminSystemRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/datasets/$datasetMfid': {
       id: '/_app/datasets/$datasetMfid'
       path: '/datasets/$datasetMfid'
@@ -878,6 +985,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSamplesNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/access-groups/': {
+      id: '/_app/admin/access-groups/'
+      path: '/admin/access-groups'
+      fullPath: '/admin/access-groups/'
+      preLoaderRoute: typeof AppAdminAccessGroupsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/access-groups/$groupName': {
+      id: '/_app/admin/access-groups/$groupName'
+      path: '/admin/access-groups/$groupName'
+      fullPath: '/admin/access-groups/$groupName'
+      preLoaderRoute: typeof AppAdminAccessGroupsGroupNameRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/service-accounts/': {
       id: '/_app/admin/service-accounts/'
       path: '/admin/service-accounts'
@@ -890,6 +1011,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/service-accounts/$serviceAccountMfid'
       fullPath: '/admin/service-accounts/$serviceAccountMfid'
       preLoaderRoute: typeof AppAdminServiceAccountsServiceAccountMfidRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/users/': {
+      id: '/_app/admin/users/'
+      path: '/admin/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AppAdminUsersIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/users/$userMfid': {
+      id: '/_app/admin/users/$userMfid'
+      path: '/admin/users/$userMfid'
+      fullPath: '/admin/users/$userMfid'
+      preLoaderRoute: typeof AppAdminUsersUserMfidRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/datasets/$datasetMfid/': {
@@ -1199,6 +1334,8 @@ interface AppRouteChildren {
   AppDeletionRequestsRoute: typeof AppDeletionRequestsRoute
   AppSearchRoute: typeof AppSearchRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdminJoinRequestsRoute: typeof AppAdminJoinRequestsRoute
+  AppAdminSystemRoute: typeof AppAdminSystemRoute
   AppDatasetsDatasetMfidRoute: typeof AppDatasetsDatasetMfidRouteWithChildren
   AppDatasetsNewRoute: typeof AppDatasetsNewRoute
   AppInstrumentsInstrumentMfidRoute: typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -1209,10 +1346,15 @@ interface AppRouteChildren {
   AppResourcesResourceMfidRoute: typeof AppResourcesResourceMfidRoute
   AppSamplesSampleMfidRoute: typeof AppSamplesSampleMfidRouteWithChildren
   AppSamplesNewRoute: typeof AppSamplesNewRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppInstrumentsIndexRoute: typeof AppInstrumentsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
+  AppAdminAccessGroupsGroupNameRoute: typeof AppAdminAccessGroupsGroupNameRoute
   AppAdminServiceAccountsServiceAccountMfidRoute: typeof AppAdminServiceAccountsServiceAccountMfidRoute
+  AppAdminUsersUserMfidRoute: typeof AppAdminUsersUserMfidRoute
+  AppAdminAccessGroupsIndexRoute: typeof AppAdminAccessGroupsIndexRoute
   AppAdminServiceAccountsIndexRoute: typeof AppAdminServiceAccountsIndexRoute
+  AppAdminUsersIndexRoute: typeof AppAdminUsersIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -1221,6 +1363,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppDeletionRequestsRoute: AppDeletionRequestsRoute,
   AppSearchRoute: AppSearchRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdminJoinRequestsRoute: AppAdminJoinRequestsRoute,
+  AppAdminSystemRoute: AppAdminSystemRoute,
   AppDatasetsDatasetMfidRoute: AppDatasetsDatasetMfidRouteWithChildren,
   AppDatasetsNewRoute: AppDatasetsNewRoute,
   AppInstrumentsInstrumentMfidRoute:
@@ -1232,11 +1376,16 @@ const AppRouteChildren: AppRouteChildren = {
   AppResourcesResourceMfidRoute: AppResourcesResourceMfidRoute,
   AppSamplesSampleMfidRoute: AppSamplesSampleMfidRouteWithChildren,
   AppSamplesNewRoute: AppSamplesNewRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
   AppInstrumentsIndexRoute: AppInstrumentsIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
+  AppAdminAccessGroupsGroupNameRoute: AppAdminAccessGroupsGroupNameRoute,
   AppAdminServiceAccountsServiceAccountMfidRoute:
     AppAdminServiceAccountsServiceAccountMfidRoute,
+  AppAdminUsersUserMfidRoute: AppAdminUsersUserMfidRoute,
+  AppAdminAccessGroupsIndexRoute: AppAdminAccessGroupsIndexRoute,
   AppAdminServiceAccountsIndexRoute: AppAdminServiceAccountsIndexRoute,
+  AppAdminUsersIndexRoute: AppAdminUsersIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

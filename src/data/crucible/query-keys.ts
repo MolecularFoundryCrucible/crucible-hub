@@ -82,6 +82,40 @@ export const crucibleKeys = {
       "detail",
       serviceAccountMfid,
     ] as const,
+  userAdminQueries: (scope: IdentityScope) =>
+    [...scope, "admin", "users"] as const,
+  userAdminLists: (scope: IdentityScope) =>
+    [...scope, "admin", "users", "list"] as const,
+  userAdminList: (scope: IdentityScope, filters: ListFilters) =>
+    [...scope, "admin", "users", "list", normalizeFilters(filters)] as const,
+  userAdminDetail: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "detail", userId] as const,
+  userAdminApiKeyStatus: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "detail", userId, "apikey"] as const,
+  userAdminAccessGroups: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "detail", userId, "access-groups"] as const,
+  userAdminProjects: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "detail", userId, "projects"] as const,
+  accessGroupAdminQueries: (scope: IdentityScope) =>
+    [...scope, "admin", "access-groups"] as const,
+  accessGroupAdminList: (scope: IdentityScope) =>
+    [...scope, "admin", "access-groups", "list"] as const,
+  accessGroupAdminDetail: (scope: IdentityScope, groupName: string) =>
+    [...scope, "admin", "access-groups", "detail", groupName] as const,
+  accessGroupAdminUsers: (scope: IdentityScope, groupName: string) =>
+    [...scope, "admin", "access-groups", "detail", groupName, "users"] as const,
+  joinRequestAdminQueries: (scope: IdentityScope) =>
+    [...scope, "admin", "join-requests"] as const,
+  joinRequestAdminList: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "admin",
+      "join-requests",
+      "list",
+      normalizeFilters(filters),
+    ] as const,
+  joinRequestAdminDetail: (scope: IdentityScope, requestId: number) =>
+    [...scope, "admin", "join-requests", "detail", String(requestId)] as const,
   deletionRequestQueries: (scope: IdentityScope) =>
     [...scope, "deletion-requests"] as const,
   deletionRequests: (scope: IdentityScope, filters: ListFilters) =>
