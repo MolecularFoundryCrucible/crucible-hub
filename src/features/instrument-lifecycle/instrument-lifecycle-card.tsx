@@ -1,14 +1,22 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
+import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import {
   InstrumentStatusPendingIcon,
   UpdateInstrumentStatusIcon,
 } from "@/components/crucible/icons"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
 import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
 import { ManagementAction } from "@/components/crucible/management-action"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Field,
   FieldDescription,
@@ -101,6 +109,7 @@ export function InstrumentLifecycleCard({
   scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState<
     WorkspaceInstrumentStatus | undefined
   >(() => initialStatus(instrument))
@@ -142,6 +151,7 @@ export function InstrumentLifecycleCard({
       }
       setSelectedStatus(update.status)
       setConfirmingDecommission(false)
+      setDialogOpen(false)
     } catch (cause) {
       setError(
         hubErrorMessage(
@@ -152,9 +162,19 @@ export function InstrumentLifecycleCard({
     }
   }
 
+  const openDialog = (nextOpen: boolean) => {
+    if (mutation.isPending) return
+    setDialogOpen(nextOpen)
+    if (nextOpen) {
+      setSelectedStatus(initialStatus(instrument))
+    }
+    setError(undefined)
+  }
+
   const submit = () => {
     if (!selectedStatus || selectedStatus === instrument.status) return
     if (selectedStatus === "decommissioned") {
+      setDialogOpen(false)
       setConfirmingDecommission(true)
       return
     }
@@ -170,98 +190,128 @@ export function InstrumentLifecycleCard({
     <>
       <ManagementAction
         action={
-          <Button
-            disabled={
-              pending || !selectedStatus || selectedStatus === instrument.status
-            }
-            form={`instrument-lifecycle-${instrument.unique_id}`}
-            type="submit"
-          >
-            {pending ? (
-              <InstrumentStatusPendingIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : (
-              <UpdateInstrumentStatusIcon
-                aria-hidden="true"
-                data-icon="inline-start"
-              />
-            )}
-            Update status
+          <Button onClick={() => openDialog(true)} type="button">
+            Change status
           </Button>
         }
         busy={pending}
-        description="Review and update whether this instrument is active, under maintenance, or decommissioned."
+        description="Update whether this instrument is active, under maintenance, or decommissioned."
         presentation={presentation}
-        title="Lifecycle"
+        title="Change status"
       >
-        <div className="flex flex-col gap-6">
-          <dl>
-            <div>
-              <dt className="text-label text-muted-foreground">
-                Current status
-              </dt>
-              <dd className="mt-1">
-                {instrument.status ? (
-                  <InstrumentStatusBadge status={instrument.status} />
-                ) : (
-                  currentLabel
-                )}
-              </dd>
-            </div>
-          </dl>
+        <div className="flex items-center gap-2 text-body">
+          <span className="text-muted-foreground">Current status:</span>
+          {instrument.status ? (
+            <InstrumentStatusBadge status={instrument.status} />
+          ) : (
+            currentLabel
+          )}
+        </div>
+        {error && !dialogOpen && !confirmingDecommission ? (
+          <p className="text-body text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </ManagementAction>
+
+      <Dialog onOpenChange={openDialog} open={dialogOpen}>
+        <DialogContent showCloseButton={!pending}>
           <form
-            id={`instrument-lifecycle-${instrument.unique_id}`}
+            className="contents"
             onSubmit={(event) => {
               event.preventDefault()
               submit()
             }}
           >
-            <fieldset disabled={pending}>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="instrument-status">Status</FieldLabel>
-                  <NativeSelect
-                    className="w-full"
-                    id="instrument-status"
-                    onChange={(event) => {
-                      const status = event.target.value
-                      if (isWorkspaceInstrumentStatus(status)) {
-                        setSelectedStatus(status)
-                        setError(undefined)
-                      }
-                    }}
-                    value={selectedStatus ?? ""}
-                  >
-                    {!selectedStatus ? (
-                      <NativeSelectOption disabled value="">
-                        Choose a status
-                      </NativeSelectOption>
-                    ) : null}
-                    {instrumentStatuses.map((status) => (
-                      <NativeSelectOption key={status} value={status}>
-                        {instrumentStatusLabel(status)}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                  {selectedStatus ? (
-                    <FieldDescription>
-                      {statusDescription(selectedStatus)}
-                    </FieldDescription>
+            <DialogHeader>
+              <DialogTitle>Change status</DialogTitle>
+              <DialogDescription>
+                Update whether this instrument is active, under maintenance, or
+                decommissioned.
+              </DialogDescription>
+            </DialogHeader>
+            <FieldGroup>
+              <div className="flex items-center gap-2 text-body">
+                <span className="text-muted-foreground">Current status:</span>
+                {instrument.status ? (
+                  <InstrumentStatusBadge status={instrument.status} />
+                ) : (
+                  currentLabel
+                )}
+              </div>
+              <Field>
+                <FieldLabel htmlFor="instrument-status">New status</FieldLabel>
+                <NativeSelect
+                  className="w-full"
+                  disabled={pending}
+                  id="instrument-status"
+                  onChange={(event) => {
+                    const status = event.target.value
+                    if (isWorkspaceInstrumentStatus(status)) {
+                      setSelectedStatus(status)
+                      setError(undefined)
+                    }
+                  }}
+                  value={selectedStatus ?? ""}
+                >
+                  {!selectedStatus ? (
+                    <NativeSelectOption disabled value="">
+                      Choose a status
+                    </NativeSelectOption>
                   ) : null}
-                </Field>
-              </FieldGroup>
-            </fieldset>
-            {error ? (
-              <p className="mt-4 text-body text-destructive" role="alert">
-                {error}
-              </p>
-            ) : null}
+                  {instrumentStatuses.map((status) => (
+                    <NativeSelectOption key={status} value={status}>
+                      {instrumentStatusLabel(status)}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+                {selectedStatus ? (
+                  <FieldDescription>
+                    {statusDescription(selectedStatus)}
+                  </FieldDescription>
+                ) : null}
+              </Field>
+              {error ? (
+                <p className="text-body text-destructive" role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </FieldGroup>
+            <DialogFooter>
+              <Button
+                disabled={pending}
+                onClick={() => openDialog(false)}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={
+                  pending ||
+                  !selectedStatus ||
+                  selectedStatus === instrument.status
+                }
+                type="submit"
+              >
+                {pending ? (
+                  <InstrumentStatusPendingIcon
+                    aria-hidden="true"
+                    className="motion-safe:animate-spin"
+                    data-icon="inline-start"
+                  />
+                ) : (
+                  <UpdateInstrumentStatusIcon
+                    aria-hidden="true"
+                    data-icon="inline-start"
+                  />
+                )}
+                Update status
+              </Button>
+            </DialogFooter>
           </form>
-        </div>
-      </ManagementAction>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmationAlertDialog
         confirmLabel="Decommission"
@@ -275,6 +325,9 @@ export function InstrumentLifecycleCard({
         onOpenChange={(open) => {
           if (pending) return
           setConfirmingDecommission(open)
+          if (!open) {
+            setError(undefined)
+          }
         }}
         onConfirm={() => void applyStatus("decommissioned")}
         open={confirmingDecommission}

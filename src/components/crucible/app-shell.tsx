@@ -607,23 +607,17 @@ function activeProjectMfid(pathname: string, search: Record<string, unknown>) {
 }
 
 function SidebarBrand() {
-  const { isMobile, state } = useSidebar()
-  const collapsed = !isMobile && state === "collapsed"
-
   return (
     <SidebarHeader className="h-14 justify-center">
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            className={collapsed ? "justify-center" : undefined}
             size="lg"
             tooltip="Crucible Hub"
             render={<Link aria-label="Crucible Hub" to="/" />}
           >
-            <BrandMark />
-            {collapsed ? null : (
-              <span className="truncate text-brand">Crucible Hub</span>
-            )}
+            <BrandMark className="overflow-hidden rounded-md" />
+            <span className="truncate text-brand">Crucible Hub</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

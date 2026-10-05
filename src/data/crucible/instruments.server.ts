@@ -253,6 +253,7 @@ export async function createWorkspaceInstrumentResource(
 
 type InstrumentDescriptiveChanges = {
   description?: string | null
+  instrument_id?: string
   instrument_name?: string
   instrument_type?: string | null
   location?: string
@@ -291,10 +292,22 @@ export async function patchWorkspaceInstrument(
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
-    const instrument = fixtureWorkspace(scenario).instruments.find(
+    const workspace = fixtureWorkspace(scenario)
+    const instrument = workspace.instruments.find(
       (candidate) => candidate.unique_id === instrumentMfid
     )
     if (!instrument) throw new CrucibleResponseError(404)
+    if (
+      changes.instrument_id &&
+      workspace.instruments.some(
+        (candidate) =>
+          candidate.unique_id !== instrumentMfid &&
+          candidate.instrument_id?.toLocaleLowerCase() ===
+            changes.instrument_id?.toLocaleLowerCase()
+      )
+    ) {
+      throw new CrucibleResponseError(409)
+    }
     return workspaceInstrumentDescriptiveUpdate({
       description: instrument.description ?? null,
       instrument_id: instrument.instrument_id ?? null,
@@ -456,4 +469,36 @@ export async function readWorkspaceInstruments(
     nextCursor: result.data.next_cursor ?? null,
     total: result.data.total ?? null,
   }
+}
+
+export async function checkWorkspaceInstrumentIdExactMatch(
+  instrumentId: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<boolean> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario)
+    if (source.status === "unavailable") throw new Error(source.reason)
+    return source.workspace.instruments.some(
+      (instrument) =>
+        instrument.instrument_id?.toLowerCase() === instrumentId.toLowerCase()
+    )
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/instruments", {
+    params: {
+      query: {
+        instrument_id: instrumentId,
+        limit: 1,
+      },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return result.data.items.length > 0
 }

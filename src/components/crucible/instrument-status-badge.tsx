@@ -1,17 +1,11 @@
-import { Badge } from "@/components/ui/badge"
-import { instrumentStatusLabel } from "@/data/crucible/instrument-status"
+import { ResourceStatusBadge } from "./resource-status-badge"
 
-function instrumentStatusVariant(status: string) {
-  if (status === "decommissioned") return "destructive" as const
-  if (status === "maintenance") return "warning" as const
-  if (status === "active") return "success" as const
-  return "outline" as const
-}
-
-export function InstrumentStatusBadge({ status }: { status: string }) {
-  return (
-    <Badge variant={instrumentStatusVariant(status)}>
-      {instrumentStatusLabel(status)}
-    </Badge>
-  )
+export function InstrumentStatusBadge({
+  className,
+  status,
+}: {
+  className?: string
+  status: string
+}) {
+  return <ResourceStatusBadge className={className} status={status} />
 }

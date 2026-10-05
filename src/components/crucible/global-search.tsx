@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Link, useNavigate } from "@tanstack/react-router"
+import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 
-import { SearchIcon } from "@/components/crucible/icons"
+import { LoadingMoreIcon, SearchIcon } from "@/components/crucible/icons"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -33,6 +33,7 @@ import {
   isDialogKeyboardTarget,
   isEditableKeyboardTarget,
 } from "@/lib/keyboard"
+import { cn } from "@/lib/utils"
 
 const searchScopeOptions = [
   { label: "This project", value: "project" },
@@ -125,9 +126,15 @@ function QuickSearchControl({
   scope,
   searchScope,
 }: SearchControlProps & { scope: IdentityScope }) {
+  const navigate = useNavigate()
+  const location = useLocation()
   const inputRef = useRef<HTMLInputElement>(null)
   const shortcutFocus = useRef(false)
+  const highlightedItemRef = useRef<WorkspaceSearchResult | undefined>(
+    undefined
+  )
   const [open, setOpen] = useState(false)
+  const previousHrefRef = useRef(location.href)
   const normalizedQuery = query.trim()
   const debouncedQuery = useDebouncedValue(normalizedQuery, 250)
   const activeProjectMfid = searchScope === "project" ? projectMfid : undefined
@@ -150,6 +157,13 @@ function QuickSearchControl({
     (waitingForDebounce || result.isPending || !response)
   const partialFailure = response?.groups.some((group) => group.error) ?? false
 
+  useEffect(() => {
+    if (previousHrefRef.current !== location.href) {
+      previousHrefRef.current = location.href
+      finishSearch()
+    }
+  }, [location.href])
+
   useSearchShortcut({
     inputRef,
     onOpen: setOpen,
@@ -160,13 +174,59 @@ function QuickSearchControl({
 
   function finishSearch() {
     setOpen(false)
+    highlightedItemRef.current = undefined
+    inputRef.current?.blur()
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
     onQueryChange("")
+  }
+
+  function navigateToResult(item: WorkspaceSearchResult) {
+    if (item.kind === "person") {
+      void navigate({
+        to: "/people/$personId",
+        params: { personId: item.unique_id },
+      })
+      return
+    }
+    if (item.kind === "project") {
+      void navigate({
+        to: "/projects/$projectMfid",
+        params: { projectMfid: item.unique_id },
+        search: { preview: undefined },
+        state: {},
+      })
+      return
+    }
+    if (item.kind === "instrument") {
+      void navigate({
+        to: "/instruments/$instrumentMfid",
+        params: { instrumentMfid: item.unique_id },
+        search: {},
+        state: {},
+      })
+      return
+    }
+    if (item.kind === "sample") {
+      void navigate({
+        to: "/samples/$sampleMfid",
+        params: { sampleMfid: item.unique_id },
+        search: { fromProject: activeProjectMfid, preview: undefined },
+      })
+      return
+    }
+    void navigate({
+      to: "/datasets/$datasetMfid",
+      params: { datasetMfid: item.unique_id },
+      search: { fromProject: activeProjectMfid, preview: undefined },
+    })
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (normalizedQuery.length < 3) return
-    setOpen(false)
+    finishSearch()
     onShowAll()
   }
 
@@ -177,6 +237,14 @@ function QuickSearchControl({
       onSubmit={submit}
       role="search"
     >
+      <Button
+        aria-hidden="true"
+        className="sr-only"
+        tabIndex={-1}
+        type="submit"
+      >
+        Search
+      </Button>
       <Combobox<WorkspaceSearchResult>
         autoHighlight={false}
         filter={null}
@@ -192,10 +260,29 @@ function QuickSearchControl({
             details.reason === "clear-press"
           ) {
             onQueryChange(nextQuery)
-            setOpen(true)
+            highlightedItemRef.current = undefined
+            if (nextQuery.trim().length >= 3) {
+              setOpen(true)
+            } else if (!projectMfid && details.reason === "clear-press") {
+              setOpen(false)
+            }
           }
         }}
-        onOpenChange={setOpen}
+        onItemHighlighted={(item) => {
+          highlightedItemRef.current = item ?? undefined
+        }}
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen)
+          if (!nextOpen) {
+            highlightedItemRef.current = undefined
+          }
+        }}
+        onValueChange={(selectedItem) => {
+          if (selectedItem) {
+            finishSearch()
+            navigateToResult(selectedItem)
+          }
+        }}
         open={open}
         value={null}
       >
@@ -212,7 +299,22 @@ function QuickSearchControl({
             if (!shortcutFocus.current) {
               onScopeChange(projectMfid ? "project" : "global")
             }
-            setOpen(true)
+            if (normalizedQuery.length >= 3 || projectMfid) {
+              setOpen(true)
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault()
+              if (highlightedItemRef.current) {
+                const target = highlightedItemRef.current
+                finishSearch()
+                navigateToResult(target)
+              } else if (normalizedQuery.length >= 3) {
+                finishSearch()
+                onShowAll()
+              }
+            }
           }}
           placeholder={
             activeProjectMfid
@@ -233,7 +335,7 @@ function QuickSearchControl({
             </kbd>
           ) : null}
         </ComboboxInput>
-        <ComboboxContent className="w-(--container-state) max-w-(--available-width)">
+        <ComboboxContent className="w-(--anchor-width) max-w-(--available-width) sm:min-w-md">
           {projectMfid ? (
             <div className="border-b p-2">
               <SegmentedControl
@@ -248,9 +350,22 @@ function QuickSearchControl({
             </div>
           ) : null}
           {normalizedQuery.length < 3 ? (
-            <QuickSearchStatus>Enter at least 3 characters.</QuickSearchStatus>
+            <QuickSearchStatus>
+              {activeProjectMfid
+                ? `Type at least 3 characters to search ${projectLabel || "this project"}.`
+                : "Type at least 3 characters to search Crucible."}
+            </QuickSearchStatus>
           ) : searching ? (
-            <QuickSearchStatus role="status">Searching…</QuickSearchStatus>
+            <QuickSearchStatus
+              className="flex items-center gap-2"
+              role="status"
+            >
+              <LoadingMoreIcon
+                aria-hidden="true"
+                className="size-4 animate-spin motion-reduce:animate-none"
+              />
+              <span>Searching…</span>
+            </QuickSearchStatus>
           ) : result.isError ? (
             <QuickSearchStatus role="alert">
               Search results are unavailable.
@@ -277,17 +392,31 @@ function QuickSearchControl({
           ) : null}
           <div className="border-t p-1">
             <Button
-              className="w-full justify-start"
+              className="w-full justify-between"
               disabled={normalizedQuery.length < 3}
               onClick={() => {
-                setOpen(false)
+                finishSearch()
                 onShowAll()
               }}
               type="button"
               variant="ghost"
             >
-              <SearchIcon aria-hidden="true" data-icon="inline-start" />
-              View all results
+              <span className="flex min-w-0 items-center gap-2 truncate">
+                <SearchIcon aria-hidden="true" data-icon="inline-start" />
+                <span className="truncate">
+                  {normalizedQuery.length >= 3
+                    ? `View all results for “${normalizedQuery}”`
+                    : "View all results"}
+                </span>
+              </span>
+              {normalizedQuery.length >= 3 ? (
+                <kbd
+                  aria-hidden="true"
+                  className="ml-2 hidden rounded border bg-muted px-1.5 py-0.5 text-label-compact sm:inline"
+                >
+                  Enter
+                </kbd>
+              ) : null}
             </Button>
           </div>
         </ComboboxContent>
@@ -505,9 +634,16 @@ function quickSearchResultLink(
   )
 }
 
-function QuickSearchStatus({ children, ...props }: React.ComponentProps<"p">) {
+function QuickSearchStatus({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<"p">) {
   return (
-    <p className="px-3 py-3 text-body text-muted-foreground" {...props}>
+    <p
+      className={cn("px-3 py-3 text-body text-muted-foreground", className)}
+      {...props}
+    >
       {children}
     </p>
   )

@@ -21,6 +21,7 @@ import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-l
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import type { ResourcePreviewNavigation } from "@/components/crucible/resource-preview-navigation"
 import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-deletion-request-badge"
+import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import {
@@ -718,14 +719,28 @@ function inspectorContextFields(
       return [
         { label: "Project ID", value: resource.project_id },
         { label: "Organization", value: resource.organization },
-        { label: "Status", value: resource.status },
+        {
+          label: "Status",
+          value: resource.status ? (
+            <ResourceStatusBadge status={resource.status} />
+          ) : (
+            "Not recorded"
+          ),
+        },
         { label: "Lead", value: owner },
       ]
     case "instrument":
       return [
         { label: "Instrument ID", value: resource.instrument_id },
         { label: "Type", value: resource.instrument_type },
-        { label: "Status", value: resource.status },
+        {
+          label: "Status",
+          value: resource.status ? (
+            <ResourceStatusBadge status={resource.status} />
+          ) : (
+            "Not recorded"
+          ),
+        },
         { label: "Location", value: resource.location },
         { label: "Manufacturer", value: resource.manufacturer },
         { label: "Model", value: resource.model },

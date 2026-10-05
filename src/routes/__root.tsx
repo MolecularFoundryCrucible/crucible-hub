@@ -137,5 +137,13 @@ function CancelledRoute() {
   useEffect(() => {
     void router.invalidate({ sync: true })
   }, [router])
-  return null
+  return (
+    <div
+      aria-busy="true"
+      aria-live="polite"
+      className="flex min-h-svh items-center justify-center p-page-gutter-wide"
+    >
+      <span className="sr-only">Refreshing view...</span>
+    </div>
+  )
 }

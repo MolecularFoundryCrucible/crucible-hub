@@ -34,6 +34,7 @@ import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 
 export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
+  staleTime: Infinity,
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
@@ -149,22 +150,22 @@ function InstrumentPage() {
         label="Instrument sections"
       >
         <Link
-          activeOptions={{ includeSearch: false }}
-          activeProps={resourceSectionActiveProps}
-          className={resourceSectionLinkClassName}
-          params={{ instrumentMfid }}
-          search={{ cursor: undefined }}
-          to="/instruments/$instrumentMfid/datasets"
-        >
-          Data
-        </Link>
-        <Link
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={resourceSectionActiveProps}
           className={resourceSectionLinkClassName}
           params={{ instrumentMfid }}
-          search={{}}
+          search={{ cursor: undefined }}
           to="/instruments/$instrumentMfid"
+        >
+          Data
+        </Link>
+        <Link
+          activeOptions={{ includeSearch: false }}
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
+          params={{ instrumentMfid }}
+          search={{}}
+          to="/instruments/$instrumentMfid/overview"
         >
           Overview
         </Link>

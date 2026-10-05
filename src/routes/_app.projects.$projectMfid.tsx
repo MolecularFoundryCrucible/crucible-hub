@@ -34,6 +34,7 @@ import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid")({
+  staleTime: Infinity,
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return

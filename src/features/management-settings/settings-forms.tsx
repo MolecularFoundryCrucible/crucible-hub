@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
-import { notifySuccess } from "@/components/crucible/notifications"
+import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
@@ -23,6 +23,7 @@ import {
 } from "@/features/forms/discard-changes"
 import {
   INSTRUMENT_DESCRIPTION_MAX_LENGTH,
+  INSTRUMENT_ID_MAX_LENGTH,
   INSTRUMENT_LOCATION_MAX_LENGTH,
   INSTRUMENT_MANUFACTURER_MAX_LENGTH,
   INSTRUMENT_MODEL_MAX_LENGTH,
@@ -30,12 +31,25 @@ import {
   INSTRUMENT_OTHER_ID_MAX_LENGTH,
   INSTRUMENT_OTHER_ID_SOURCE_MAX_LENGTH,
   INSTRUMENT_TYPE_MAX_LENGTH,
+  checkWorkspaceInstrumentId,
   updateWorkspaceInstrument,
 } from "@/data/crucible/instruments.functions"
-import { updateWorkspaceProject } from "@/data/crucible/projects.functions"
+import {
+  checkWorkspaceProjectId,
+  updateWorkspaceProject,
+} from "@/data/crucible/projects.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import {
+  HubApiClientError,
+  hubErrorMessage,
+  unwrapHubResult,
+} from "@/data/crucible/result"
+import {
+  PROJECT_ID_MAX_LENGTH,
+  instrumentIdSchema,
+  projectIdSchema,
+} from "@/data/crucible/slugs"
 import type {
   WorkspaceInstrument,
   WorkspaceInstrumentDescriptiveUpdate,
@@ -44,6 +58,10 @@ import type {
   WorkspaceProjectPage,
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
+import {
+  SlugAvailabilityField,
+  isSlugTakenOrRejected,
+} from "@/features/forms/slug-availability"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 type ProjectDetail = WorkspaceProject & {
@@ -53,12 +71,13 @@ type ProjectDetail = WorkspaceProject & {
 
 const projectSettingsSchema = z.object({
   organization: requiredText("organization"),
-  project_id: requiredText("project ID"),
+  project_id: projectIdSchema,
   title: optionalText(255, "title"),
 })
 
 const instrumentSettingsSchema = z.object({
   description: optionalText(INSTRUMENT_DESCRIPTION_MAX_LENGTH, "description"),
+  instrument_id: instrumentIdSchema,
   instrument_name: requiredText("instrument name"),
   instrument_type: optionalText(INSTRUMENT_TYPE_MAX_LENGTH, "instrument type"),
   location: z
@@ -90,6 +109,7 @@ type ProjectSettingsChanges = {
 }
 type InstrumentSettingsChanges = {
   description?: string | null
+  instrument_id?: string
   instrument_name?: string
   instrument_type?: string | null
   location?: string
@@ -130,6 +150,7 @@ function instrumentValues(
 ): InstrumentSettingsValues {
   return {
     description: instrument.description ?? "",
+    instrument_id: instrument.instrument_id ?? "",
     instrument_name: instrument.name,
     instrument_type: instrument.instrument_type ?? "",
     location: instrument.location,
@@ -179,7 +200,11 @@ export function instrumentSettingsChanges(
       changes[field] = normalized[field] || null
     }
   }
-  for (const field of ["instrument_name", "location"] as const) {
+  for (const field of [
+    "instrument_id",
+    "instrument_name",
+    "location",
+  ] as const) {
     if (normalized[field] !== initial[field]) {
       changes[field] = normalized[field]
     }
@@ -222,6 +247,8 @@ export function ProjectSettingsForm({
 }) {
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string>()
+  const [liveTakenProjectId, setLiveTakenProjectId] = useState<string>()
+  const [rejectedProjectId, setRejectedProjectId] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (changes: ProjectSettingsChanges) =>
       unwrapHubResult(
@@ -265,9 +292,19 @@ export function ProjectSettingsForm({
           )
         }
         form.reset(projectValues(update))
+        setLiveTakenProjectId(undefined)
+        setRejectedProjectId(undefined)
         notifySuccess("Project settings saved")
         onSaved?.()
       } catch (error) {
+        if (
+          error instanceof HubApiClientError &&
+          error.details.kind === "conflict" &&
+          changes.project_id
+        ) {
+          setRejectedProjectId(changes.project_id)
+          notifyError("Project ID already taken")
+        }
         setSaveError(saveErrorMessage(error, "project"))
       }
     },
@@ -277,6 +314,9 @@ export function ProjectSettingsForm({
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(isDirty, () => {
     form.reset()
+    setLiveTakenProjectId(undefined)
+    setRejectedProjectId(undefined)
+    setSaveError(undefined)
     onCancel?.()
   })
   const formId = `project-settings-${project.unique_id}`
@@ -295,7 +335,12 @@ export function ProjectSettingsForm({
         actions={
           <form.Subscribe
             selector={(state) => [
-              state.canSubmit,
+              state.canSubmit &&
+                !isSlugTakenOrRejected(
+                  state.values.project_id,
+                  liveTakenProjectId,
+                  rejectedProjectId
+                ),
               state.isDirty,
               state.isSubmitting,
             ]}
@@ -330,11 +375,26 @@ export function ProjectSettingsForm({
         </form.Field>
         <form.Field name="project_id">
           {(field) => (
-            <SettingsTextField
+            <SlugAvailabilityField
+              checkAvailability={async (candidate, signal) => {
+                const result = await checkWorkspaceProjectId({
+                  data: {
+                    projectId: candidate,
+                    scenario: fixtureScenarioFromScope(scope),
+                  },
+                  signal,
+                })
+                return unwrapHubResult(result)
+              }}
+              currentValue={project.project_id}
+              entityLabel="Project ID"
               field={field}
               label="Project ID"
-              maxLength={255}
+              maxLength={PROJECT_ID_MAX_LENGTH}
+              onLiveTakenChange={setLiveTakenProjectId}
+              rejectedValue={rejectedProjectId}
               required
+              schema={projectIdSchema}
             />
           )}
         </form.Field>
@@ -359,6 +419,8 @@ export function InstrumentSettingsForm({
 }) {
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string>()
+  const [liveTakenInstrumentId, setLiveTakenInstrumentId] = useState<string>()
+  const [rejectedInstrumentId, setRejectedInstrumentId] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (changes: InstrumentSettingsChanges) =>
       unwrapHubResult(
@@ -401,9 +463,19 @@ export function InstrumentSettingsForm({
         }
         const next = mergeInstrumentSettingsUpdate(instrument, update)
         if (next?.kind === "instrument") form.reset(instrumentValues(next))
+        setLiveTakenInstrumentId(undefined)
+        setRejectedInstrumentId(undefined)
         notifySuccess("Instrument settings saved")
         onSaved?.()
       } catch (error) {
+        if (
+          error instanceof HubApiClientError &&
+          error.details.kind === "conflict" &&
+          changes.instrument_id
+        ) {
+          setRejectedInstrumentId(changes.instrument_id)
+          notifyError("Instrument ID already taken")
+        }
         setSaveError(saveErrorMessage(error, "instrument"))
       }
     },
@@ -413,6 +485,9 @@ export function InstrumentSettingsForm({
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(isDirty, () => {
     form.reset()
+    setLiveTakenInstrumentId(undefined)
+    setRejectedInstrumentId(undefined)
+    setSaveError(undefined)
     onCancel?.()
   })
   const formId = `instrument-settings-${instrument.unique_id}`
@@ -431,7 +506,12 @@ export function InstrumentSettingsForm({
         actions={
           <form.Subscribe
             selector={(state) => [
-              state.canSubmit,
+              state.canSubmit &&
+                !isSlugTakenOrRejected(
+                  state.values.instrument_id,
+                  liveTakenInstrumentId,
+                  rejectedInstrumentId
+                ),
               state.isDirty,
               state.isSubmitting,
             ]}
@@ -457,6 +537,31 @@ export function InstrumentSettingsForm({
               label="Name"
               maxLength={INSTRUMENT_NAME_MAX_LENGTH}
               required
+            />
+          )}
+        </form.Field>
+        <form.Field name="instrument_id">
+          {(field) => (
+            <SlugAvailabilityField
+              checkAvailability={async (candidate, signal) => {
+                const result = await checkWorkspaceInstrumentId({
+                  data: {
+                    instrumentId: candidate,
+                    scenario: fixtureScenarioFromScope(scope),
+                  },
+                  signal,
+                })
+                return unwrapHubResult(result)
+              }}
+              currentValue={instrument.instrument_id}
+              entityLabel="Instrument ID"
+              field={field}
+              label="Instrument ID"
+              maxLength={INSTRUMENT_ID_MAX_LENGTH}
+              onLiveTakenChange={setLiveTakenInstrumentId}
+              rejectedValue={rejectedInstrumentId}
+              required
+              schema={instrumentIdSchema}
             />
           )}
         </form.Field>

@@ -15,6 +15,7 @@ describe("instrument update server function input", () => {
       instrumentDescriptiveUpdateInputSchema.parse({
         changes: {
           description: " Updated instrument description ",
+          instrument_id: " updated-probe ",
           instrument_name: " Updated instrument ",
           instrument_type: " X-ray microscope ",
           location: " Beamline 5.3.2 ",
@@ -29,6 +30,7 @@ describe("instrument update server function input", () => {
     ).toEqual({
       changes: {
         description: "Updated instrument description",
+        instrument_id: "updated-probe",
         instrument_name: "Updated instrument",
         instrument_type: "X-ray microscope",
         location: "Beamline 5.3.2",
@@ -50,6 +52,16 @@ describe("instrument update server function input", () => {
     },
     { changes: { instrument_name: " " }, instrumentMfid: "instrument-mfid" },
     { changes: { instrument_name: null }, instrumentMfid: "instrument-mfid" },
+    { changes: { instrument_id: " " }, instrumentMfid: "instrument-mfid" },
+    { changes: { instrument_id: "ab" }, instrumentMfid: "instrument-mfid" },
+    {
+      changes: { instrument_id: "_invalid" },
+      instrumentMfid: "instrument-mfid",
+    },
+    {
+      changes: { instrument_id: "a".repeat(26) },
+      instrumentMfid: "instrument-mfid",
+    },
     { changes: { location: " " }, instrumentMfid: "instrument-mfid" },
     { changes: { status: "maintenance" }, instrumentMfid: "instrument-mfid" },
     { changes: { description: "x" }, instrumentMfid: "instrument/mfid" },

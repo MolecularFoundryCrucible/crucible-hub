@@ -37,17 +37,24 @@ import { Input } from "@/components/ui/input"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { createWorkspaceProject } from "@/data/crucible/creation.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import { checkWorkspaceProjectId } from "@/data/crucible/projects.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import {
+  HubApiClientError,
+  hubErrorMessage,
+  unwrapHubResult,
+} from "@/data/crucible/result"
+import { PROJECT_ID_MAX_LENGTH, projectIdSchema } from "@/data/crucible/slugs"
 import type {
   WorkspaceAccount,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
-
-const projectIdPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
-const reservedProjectIds = new Set(["admin", "public", "read_only"])
+import {
+  SlugAvailabilityField,
+  isSlugTakenOrRejected,
+} from "@/features/forms/slug-availability"
 
 const projectCreationSchema = z.object({
   organization: z
@@ -55,17 +62,7 @@ const projectCreationSchema = z.object({
     .trim()
     .min(1, "Enter an organization.")
     .max(255, "Use 255 characters or fewer."),
-  project_id: z
-    .string()
-    .trim()
-    .regex(
-      projectIdPattern,
-      "Use 3 to 25 letters, numbers, underscores, or hyphens, starting with a letter or number."
-    )
-    .refine(
-      (value) => !reservedProjectIds.has(value.toLocaleLowerCase()),
-      "This project ID is reserved."
-    ),
+  project_id: projectIdSchema,
   project_lead: z.string().trim().min(1, "Choose a project lead."),
   title: z
     .string()
@@ -104,6 +101,8 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
     WorkspaceSearchResult | undefined
   >(accountLead)
   const [saveError, setSaveError] = useState<string>()
+  const [liveTakenProjectId, setLiveTakenProjectId] = useState<string>()
+  const [rejectedProjectId, setRejectedProjectId] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (value: ProjectCreationValues) =>
       unwrapHubResult(
@@ -137,6 +136,12 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
           to: "/projects/$projectMfid",
         })
       } catch (error) {
+        if (
+          error instanceof HubApiClientError &&
+          error.details.kind === "conflict"
+        ) {
+          setRejectedProjectId(value.project_id)
+        }
         setSaveError(projectCreationError(error))
       }
     }
@@ -184,13 +189,31 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                     label="Organization"
                     required
                   />
-                  <ProjectTextField
-                    description="Used to identify this project in integrations."
-                    fieldName="project_id"
-                    form={form}
-                    label="Project ID"
-                    required
-                  />
+                  <form.Field name="project_id">
+                    {(field) => (
+                      <SlugAvailabilityField
+                        checkAvailability={async (candidate, signal) => {
+                          const result = await checkWorkspaceProjectId({
+                            data: {
+                              projectId: candidate,
+                              scenario: fixtureScenarioFromScope(scope),
+                            },
+                            signal,
+                          })
+                          return unwrapHubResult(result)
+                        }}
+                        description="Used to identify this project in integrations."
+                        entityLabel="Project ID"
+                        field={field}
+                        label="Project ID"
+                        maxLength={PROJECT_ID_MAX_LENGTH}
+                        onLiveTakenChange={setLiveTakenProjectId}
+                        rejectedValue={rejectedProjectId}
+                        required
+                        schema={projectIdSchema}
+                      />
+                    )}
+                  </form.Field>
                   <form.Field name="project_lead">
                     {(field) => {
                       const invalid =
@@ -245,16 +268,29 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
             >
               Cancel
             </Button>
-            <Button
-              className="w-40"
-              disabled={isSubmitting}
-              form={formId}
-              type="submit"
+            <form.Subscribe
+              selector={(state) => [
+                isSlugTakenOrRejected(
+                  state.values.project_id,
+                  liveTakenProjectId,
+                  rejectedProjectId
+                ),
+                state.isSubmitting,
+              ]}
             >
-              <span className="inline-grid min-w-28 place-items-center">
-                {isSubmitting ? "Creating project" : "Create project"}
-              </span>
-            </Button>
+              {([isTaken, submitting]) => (
+                <Button
+                  className="w-40"
+                  disabled={isTaken || submitting}
+                  form={formId}
+                  type="submit"
+                >
+                  <span className="inline-grid min-w-28 place-items-center">
+                    {submitting ? "Creating project" : "Create project"}
+                  </span>
+                </Button>
+              )}
+            </form.Subscribe>
           </CardFooter>
         </Card>
       </ContentBoundary>
@@ -289,7 +325,7 @@ function ProjectTextField({
 }: {
   autoFocus?: boolean
   description?: string
-  fieldName: "organization" | "project_id" | "title"
+  fieldName: "organization" | "title"
   form: ProjectCreationForm
   label: string
   required?: boolean
@@ -314,7 +350,7 @@ function ProjectTextField({
               aria-invalid={invalid || undefined}
               autoFocus={autoFocus}
               id={field.name}
-              maxLength={fieldName === "project_id" ? 25 : 255}
+              maxLength={255}
               name={field.name}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}

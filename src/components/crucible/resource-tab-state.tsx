@@ -104,9 +104,8 @@ function pendingSection(kind: EntityWorkspacePendingKind, pathname: string) {
   if (pathname.includes("/settings") || pathname.endsWith("/manage")) {
     return "manage"
   }
-  if (kind === "project" && pathname.endsWith("/overview")) return "overview"
-  if (kind === "project") return "data"
-  if (kind === "instrument" && pathname.endsWith("/datasets")) return "data"
+  if (pathname.endsWith("/overview")) return "overview"
+  if (kind === "project" || kind === "instrument") return "data"
   return "overview"
 }
 
@@ -148,12 +147,15 @@ function ProjectOverviewPending() {
   return (
     <ContentGrid variant="detail">
       <ContentGridItem span="wide">
-        <ResourceCardPending title="Project details" />
+        <ResourceCardPending title="Summary" />
       </ContentGridItem>
       <ContentGridItem span="narrow">
+        <ResourceCardPending title="Identity" />
+      </ContentGridItem>
+      <ContentGridItem span="full">
         <ResourceCardPending title="Scientific metadata" />
       </ContentGridItem>
-      <ContentGridItem span="wide">
+      <ContentGridItem span="full">
         <ResourceCardPending title="People" />
       </ContentGridItem>
     </ContentGrid>

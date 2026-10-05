@@ -244,6 +244,10 @@ test("opens canonical instrument detail from directory and search", async ({
     "Hard X-ray Microprobe"
   )
   await expect(page.getByText("hard-xray-microprobe").first()).toBeVisible()
+  await page.getByRole("link", { name: "Overview" }).click()
+  await expect(page).toHaveURL(
+    /\/hub\/instruments\/01J6Y8N4Q2R7M9K3T5V0W1X2Z4\/overview/
+  )
   await expect(page.getByText("spatial_resolution_nm")).toBeVisible()
   await expect(page.getByRole("link", { name: "A. Chen" })).toBeVisible()
   await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
@@ -308,6 +312,51 @@ test("opens global search from the keyboard and restores URL-backed results", as
   ).toBe(true)
   const accessibilityResults = await new AxeBuilder({ page }).analyze()
   expect(accessibilityResults.violations).toEqual([])
+})
+
+test("submits quick search on enter when no suggestion is highlighted", async ({
+  page,
+}) => {
+  await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
+
+  const quickSearch = page.getByRole("combobox", { name: "Search Crucible" })
+  await quickSearch.fill("NiFe")
+  await expect(
+    page.getByRole("listbox", { name: "Quick search results" })
+  ).toBeVisible()
+  await page.keyboard.press("Enter")
+
+  await expect(page).toHaveURL(/\/hub\/search\?q=NiFe/)
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Find anything in Crucible"
+  )
+  await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
+})
+
+test("navigates to highlighted quick search suggestion on enter and closes search", async ({
+  page,
+}) => {
+  await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
+
+  const quickSearch = page.getByRole("combobox", { name: "Search Crucible" })
+  await quickSearch.fill("NiFe")
+  await expect(
+    page.getByRole("listbox", { name: "Quick search results" })
+  ).toBeVisible()
+
+  await page.keyboard.press("ArrowDown")
+  await page.keyboard.press("Enter")
+
+  await expect(page).toHaveURL(/\/hub\/samples\/01J6Y8N4Q2R7M9K3T5V0W1X2Z5/)
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "NiFe oxide catalyst A"
+  )
+  await expect(
+    page.getByRole("listbox", { name: "Quick search results" })
+  ).toHaveCount(0)
+  await expect(quickSearch).not.toBeFocused()
 })
 
 test("keeps successful global search groups when one source fails", async ({

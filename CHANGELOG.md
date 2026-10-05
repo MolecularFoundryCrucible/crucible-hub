@@ -6,6 +6,20 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Improved quick search keyboard and dropdown behavior by submitting searches on Enter when no suggestion is highlighted, navigating directly and closing search with input blur on highlighted suggestions, showing an animated progress spinner during search queries, sizing results comfortably, and dynamically displaying the search query and shortcut badge in the results footer.
+
+- Restored the Crucible Hub logo on the application sidebar with smooth collapse transitions and retained the theme-aware icon variant for compact badges and footer attribution.
+
+- Added direct member access management alongside service account operator management in instrument settings, allowing viewing, adding, role changing, and revoking for direct user and project access grants.
+
+- Unified instrument and project lifecycle status presentation with a shared ResourceStatusBadge across overview, resource summary, inspector, and settings management screens, and updated instrument status management in settings to use a modal dialog action matching other resource management actions.
+
+- Prevented route loader re-execution and promise cancellation during client hydration by configuring default router stale time and trailing-slash normalization, and preserved visible layout during query cancellation recovery.
+
+- Standardized Project Overview cards to follow the two-column header pattern with Summary, Identity, QR code, and full-width metadata and members, aligned the instrument landing page to Data with Overview at `/overview`, and added compatibility redirects for `/instruments/:instrumentMfid/datasets`.
+
+- Unified project, instrument, and username slug validation and live availability checks across creation and settings forms, and enabled instrument ID renaming in instrument management settings.
+
 - Refined resource graph node styling with flush top-left corner kind badges, expanded card height to eliminate multi-line text clipping, hover border transitions, centered association edge routing below cards, root resource drawer inspection, and progressive disclosure for node expansion controls on hover and focus.
 
 - Improved resource graph layout resilience and stability by configuring ELK port constraints and edge routing priorities for lineage and lateral associations, preserving mental maps with semi-interactive positioning during incremental expansion, resetting orientation hints cleanly on direction toggles, adding a worker watchdog with engine recovery, and decoupling node transitions from layout interpolation.

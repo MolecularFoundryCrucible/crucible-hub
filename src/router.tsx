@@ -16,6 +16,8 @@ export function getRouter() {
       location.href,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    defaultStaleTime: Infinity,
+    trailingSlash: "never",
   })
 
   setupRouterSsrQueryIntegration({ router, queryClient })

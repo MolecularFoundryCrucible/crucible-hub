@@ -183,6 +183,17 @@ export async function patchWorkspaceProject(
     if (!project || !("organization" in project)) {
       throw new CrucibleResponseError(404)
     }
+    if (
+      changes.project_id &&
+      source.workspace.projects.some(
+        (candidate) =>
+          candidate.unique_id !== projectMfid &&
+          candidate.project_id.toLowerCase() ===
+            changes.project_id?.toLowerCase()
+      )
+    ) {
+      throw new CrucibleResponseError(409)
+    }
     return toWorkspaceProject({ ...project, ...changes })
   }
 
@@ -196,6 +207,32 @@ export async function patchWorkspaceProject(
     throw new CrucibleResponseError(result.response.status)
   }
   return toWorkspaceProject(result.data)
+}
+
+export async function checkWorkspaceProjectIdExactMatch(
+  projectId: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<boolean> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario)
+    if (source.status === "unavailable") throw new Error(source.reason)
+    return source.workspace.projects.some(
+      (project) => project.project_id.toLowerCase() === projectId.toLowerCase()
+    )
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/projects", {
+    params: { query: { limit: 1, project_id: projectId } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return result.data.items.length > 0
 }
 
 function fixtureProjectMembers(

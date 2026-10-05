@@ -10,12 +10,14 @@ import {
 
 import {
   addWorkspaceProjectMember as addWorkspaceProjectMemberServer,
+  checkWorkspaceProjectIdExactMatch,
   patchWorkspaceProject,
   readWorkspaceProject,
   readWorkspaceProjects,
   removeWorkspaceProjectMember as removeWorkspaceProjectMemberServer,
   updateWorkspaceProjectMemberRole as updateWorkspaceProjectMemberRoleServer,
 } from "./projects.server"
+import { projectIdSchema } from "./slugs"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { privilegeModeSchema } from "./privilege-mode"
@@ -88,7 +90,7 @@ export const projectDescriptiveUpdateInputSchema = z
     changes: z
       .object({
         organization: projectTextChangeSchema,
-        project_id: projectTextChangeSchema,
+        project_id: projectIdSchema.optional(),
         title: projectTitleChangeSchema,
       })
       .strict()
@@ -190,6 +192,25 @@ export const removeWorkspaceProjectMember = createServerFn({
       removeWorkspaceProjectMemberServer(
         data.projectMfid,
         data.userId,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const checkWorkspaceProjectId = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(
+    z.object({
+      projectId: projectIdSchema,
+      scenario: fixtureScenarioSchema.optional(),
+    })
+  )
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      checkWorkspaceProjectIdExactMatch(
+        data.projectId,
         data.scenario,
         context.requestSignal
       )

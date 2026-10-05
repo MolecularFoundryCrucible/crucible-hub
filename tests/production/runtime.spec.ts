@@ -79,7 +79,7 @@ test("uses server functions during production project navigation", async ({
     name: "Project sections",
   })
   await projectSections.getByRole("link", { name: "Overview" }).click()
-  await expect(page.getByText("Project details", { exact: true })).toBeVisible()
+  await expect(page.getByText("Summary", { exact: true })).toBeVisible()
   await expect(page.getByText("People", { exact: true })).toBeVisible()
 })
 

@@ -12,16 +12,11 @@ import {
   readWorkspaceAccountCredentialStatus,
 } from "./account.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
+import { usernameSchema } from "./slugs"
 
 const profileNameSchema = z.string().trim().max(255).nullable()
 const profileEmailSchema = z.string().trim().email().max(320).nullable()
-const profileUsernameSchema = z
-  .string()
-  .trim()
-  .min(3)
-  .max(24)
-  .regex(/^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$/)
-  .nullable()
+const profileUsernameSchema = usernameSchema.nullable()
 
 export const accountProfileUpdateInputSchema = z
   .object({
@@ -77,7 +72,7 @@ export const checkWorkspaceUsername = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])
   .validator(
     z.object({
-      username: profileUsernameSchema.unwrap(),
+      username: usernameSchema,
       scenario: fixtureScenarioSchema.optional(),
     })
   )

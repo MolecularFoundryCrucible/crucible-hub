@@ -80,10 +80,9 @@ export function InstrumentDatasetCollection({
           cursor ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
-              from="/instruments/$instrumentMfid/datasets"
               params={{ instrumentMfid }}
               search={(previous) => ({ ...previous, cursor: undefined })}
-              to="/instruments/$instrumentMfid/datasets"
+              to="/instruments/$instrumentMfid"
             >
               First datasets
             </Link>

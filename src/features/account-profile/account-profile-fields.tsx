@@ -18,6 +18,8 @@ import type {
   WorkspaceAccountProfileUpdate,
 } from "@/data/crucible/workspace-source"
 
+import { usernameSchema } from "@/data/crucible/slugs"
+
 export const accountProfileSchema = z.object({
   email: z
     .string()
@@ -32,15 +34,7 @@ export const accountProfileSchema = z.object({
     .string()
     .trim()
     .max(255, "Use 255 characters or fewer for last name."),
-  username: z
-    .string()
-    .trim()
-    .min(3, "Use at least 3 characters for username.")
-    .max(24, "Use 24 characters or fewer for username.")
-    .regex(
-      /^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$/,
-      "Start with a lowercase letter and use lowercase letters, numbers, hyphens, or underscores."
-    ),
+  username: usernameSchema,
 })
 
 export type AccountProfileValues = z.infer<typeof accountProfileSchema>

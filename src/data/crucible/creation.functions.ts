@@ -11,6 +11,7 @@ import {
 } from "./creation.server"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { queryCancellationMiddleware } from "./query-cancellation"
+import { projectIdSchema } from "./slugs"
 import {
   DATASET_DATA_FORMAT_MAX_LENGTH,
   DATASET_DATA_TYPE_MAX_LENGTH,
@@ -42,17 +43,7 @@ export const projectCreateInputSchema = z
     project: z
       .object({
         organization: z.string().trim().min(1).max(PROJECT_TEXT_MAX_LENGTH),
-        project_id: z
-          .string()
-          .trim()
-          .regex(/^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/)
-          .refine(
-            (value) =>
-              !["admin", "public", "read_only"].includes(
-                value.toLocaleLowerCase()
-              ),
-            "This project ID is reserved."
-          ),
+        project_id: projectIdSchema,
         project_lead: z.string().trim().min(1).max(PROJECT_TEXT_MAX_LENGTH),
         title: z.string().trim().min(1).max(PROJECT_TEXT_MAX_LENGTH),
       })

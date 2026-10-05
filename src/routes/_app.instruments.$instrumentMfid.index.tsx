@@ -1,262 +1,477 @@
-import { useState } from "react"
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { useMemo, useState } from "react"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { Link, createFileRoute, getRouteApi } from "@tanstack/react-router"
+import { z } from "zod"
 
 import {
-  ResourceOverviewPending,
-  ResourceTabLoadError,
-} from "@/components/crucible/resource-tab-state"
-import { EditResourceIcon } from "@/components/crucible/icons"
-import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
-import { LocalDateTime } from "@/components/crucible/local-date-time"
-import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
-import { MfidValue } from "@/components/crucible/mfid-value"
-import { PersonLink } from "@/components/crucible/person-link"
-import { personIsServiceAccount } from "@/components/crucible/person-identity"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
+  CollectionGroupControl,
+  CollectionToolbar,
+  DatasetCollectionBrowser,
+} from "@/components/crucible/collection-browser"
 import {
-  useWorkspaceMode,
-  useWorkspaceScope,
-} from "@/components/crucible/workspace-provider"
+  CollectionFilterPanel,
+  collectionActiveFilter,
+  collectionActiveFilters,
+} from "@/components/crucible/collection-filter-panel"
 import {
-  ContentGrid,
-  ContentGridItem,
-} from "@/components/crucible/content-layout"
+  CollectionCreatedRangeFields,
+  CollectionOrderFields,
+} from "@/components/crucible/collection-query-fields"
 import {
-  ScientificMetadataExpansionAction,
-  ScientificMetadataViewer,
-  useScientificMetadataExpansion,
-} from "@/components/crucible/scientific-metadata"
-import { Button } from "@/components/ui/button"
+  CollectionLoadError,
+  CollectionTablePending,
+  CollectionUpdateError,
+  CollectionUpdateStatus,
+} from "@/components/crucible/collection-state"
+import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  datasetCollectionName,
+  useCursorResourceCollection,
+} from "@/components/crucible/cursor-resource-collection"
+import { InstrumentDatasetCollection } from "@/components/crucible/instrument-dataset-collection"
 import {
-  preloadResourceDetail,
-  resourceQueryOptions,
-} from "@/data/crucible/resources.queries"
-import { InstrumentSettingsForm } from "@/features/management-settings/settings-forms"
+  resourceSiblingSequenceLabel,
+  useRegisterResourceSiblings,
+} from "@/components/crucible/resource-sibling-navigation"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { FieldError, FieldGroup } from "@/components/ui/field"
+import {
+  collectionBrowseSearchFields,
+  collectionBrowseSearchState,
+  collectionGroupOrderSearchState,
+  datasetFiltersForGroup,
+  instrumentDatasetBrowseOptions,
+  resolveCollectionBrowse,
+} from "@/data/crucible/collection-browse"
+import type { CollectionGroupOrder } from "@/data/crucible/collection-browse"
+import type { DatasetFacetField, FacetSelection } from "@/data/crucible/facets"
+import { collectionFilterFields } from "@/data/crucible/collection-filters"
+import {
+  collectionOrderingSearchState,
+  normalizeCollectionQueryOptions,
+  resourceSortSchema,
+  sortDirectionSchema,
+} from "@/data/crucible/collection-query"
 import type {
-  WorkspaceResourceDetail,
-  WorkspaceScientificMetadata,
-} from "@/data/crucible/workspace-source"
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
+import {
+  dataPageLimit,
+  datasetsCursorQueryOptions,
+} from "@/data/crucible/data.queries"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
-type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
-
-export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
-  loader: async ({ context, parentMatchPromise }) => {
-    const parent = (await parentMatchPromise).loaderData
-    if (!parent?.instrumentMfid) return
-    await preloadResourceDetail(
-      context.queryClient,
-      parent.scope,
-      parent.instrumentMfid
-    )
-  },
-  pendingComponent: () => <ResourceOverviewPending resourceKind="instrument" />,
-  errorComponent: ResourceTabLoadError,
-  component: InstrumentOverviewPage,
+const instrumentDatasetSearchSchema = z.object({
+  ...collectionBrowseSearchFields,
+  createdFrom: collectionFilterFields.createdFrom.catch(undefined),
+  createdTo: collectionFilterFields.createdTo.catch(undefined),
+  cursor: z.string().min(1).max(2048).optional().catch(undefined),
+  direction: sortDirectionSchema.optional().catch(undefined),
+  sort: resourceSortSchema.optional().catch(undefined),
 })
 
-function InstrumentOverviewPage() {
-  const { instrumentMfid } = Route.useParams()
-  const mode = useWorkspaceMode()
+const instrumentRoute = getRouteApi("/_app/instruments/$instrumentMfid")
+
+export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
+  validateSearch: instrumentDatasetSearchSchema,
+  loaderDeps: ({ search }) => ({
+    cursor: search.cursor,
+    createdFrom: search.createdFrom,
+    createdTo: search.createdTo,
+    direction: search.direction,
+    groupBy: search.groupBy,
+    groupValue: search.groupValue,
+    groupValueIsNull: search.groupValueIsNull,
+    groupValueSet: search.groupValueSet,
+    sort: search.sort,
+    view: search.view,
+  }),
+  loader: async ({ cause, context, deps, parentMatchPromise }) => {
+    const instrument = (await parentMatchPromise).loaderData
+    if (!instrument?.isInstrument || !instrument.instrumentMfid) return
+
+    const browse = resolveCollectionBrowse(deps, instrumentDatasetBrowseOptions)
+    if (browse.view === "grouped" && browse.selection.kind === "all") return
+    const baseFilters = {
+      createdFrom: deps.createdFrom,
+      createdTo: deps.createdTo,
+      instrumentMfid: instrument.instrumentMfid,
+      ...normalizeCollectionQueryOptions({
+        direction: deps.direction,
+        sort: deps.sort,
+      }),
+    }
+    const filters =
+      browse.view === "grouped"
+        ? datasetFiltersForGroup(baseFilters, browse.field, browse.selection)
+        : baseFilters
+    const options = datasetsCursorQueryOptions(instrument.scope, {
+      cursor: deps.cursor,
+      ...filters,
+      limit: dataPageLimit,
+    })
+    const request = prefetchInfiniteQueryWithReadableCache(
+      context.queryClient,
+      options
+    )
+    if (cause !== "stay") await request
+  },
+  pendingComponent: InstrumentDatasetsPending,
+  component: InstrumentDatasetsPage,
+})
+
+function InstrumentDatasetsPending() {
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <CollectionToolbar
+        primary={<h2 className="text-title-section">Datasets</h2>}
+      />
+      <CollectionTablePending
+        label="datasets"
+        presentation="resources"
+        subtypeLabel="Measurement"
+      />
+    </div>
+  )
+}
+
+function InstrumentDatasetsPage() {
+  const { instrumentMfid: routeInstrumentMfid } = Route.useParams()
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const { cursor } = search
+  const instrument = instrumentRoute.useLoaderData()
   const scope = useWorkspaceScope()
-  const [editing, setEditing] = useState(false)
-  const { data: resource } = useSuspenseQuery(
-    resourceQueryOptions(scope, instrumentMfid)
+  const instrumentMfid = instrument?.instrumentMfid ?? ""
+  const browse = resolveCollectionBrowse(search, instrumentDatasetBrowseOptions)
+  const baseFilters = {
+    createdFrom: search.createdFrom,
+    createdTo: search.createdTo,
+    instrumentMfid,
+    ...normalizeCollectionQueryOptions({
+      direction: search.direction,
+      sort: search.sort,
+    }),
+  }
+  const collectionFilters =
+    browse.view === "grouped"
+      ? datasetFiltersForGroup(baseFilters, browse.field, browse.selection)
+      : baseFilters
+  const result = useInfiniteQuery({
+    ...datasetsCursorQueryOptions(scope, {
+      cursor,
+      ...collectionFilters,
+      limit: dataPageLimit,
+    }),
+    enabled:
+      Boolean(instrumentMfid) &&
+      (browse.view !== "grouped" || browse.selection.kind !== "all"),
+  })
+  const collection = useCursorResourceCollection({
+    getName: datasetCollectionName,
+    kind: "dataset",
+    label: resourceSiblingSequenceLabel({
+      filters: collectionFilters,
+      kind: "dataset",
+      scope: "instrument",
+    }),
+    query: result,
+  })
+  const siblingCollections = useMemo(
+    () => (result.data ? [collection.siblingCollection] : []),
+    [collection.siblingCollection, result.data]
   )
+  useRegisterResourceSiblings(siblingCollections)
+  const items = collection.items
+  const total = collection.total
 
-  if (!resource || resource.kind !== "instrument") return null
+  if (!instrumentMfid) return null
 
-  return (
-    <ContentGrid variant="detail">
-      <ContentGridItem span="wide">
-        {editing ? (
-          <InstrumentSettingsForm
-            instrument={resource}
-            mode={mode}
-            onCancel={() => setEditing(false)}
-            onSaved={() => setEditing(false)}
-            scope={scope}
-          />
-        ) : (
-          <InstrumentSummary
-            instrument={resource}
-            onEdit={
-              resource.capabilities?.can_edit === true
-                ? () => setEditing(true)
-                : undefined
-            }
-          />
-        )}
-      </ContentGridItem>
-      <ContentGridItem span="narrow">
-        <InstrumentIdentity instrument={resource} />
-      </ContentGridItem>
-      <ContentGridItem span="full">
-        <InstrumentMetadata metadata={resource.scientific_metadata} />
-      </ContentGridItem>
-    </ContentGrid>
-  )
-}
-
-function InstrumentSummary({
-  instrument,
-  onEdit,
-}: {
-  instrument: InstrumentDetail
-  onEdit?: () => void
-}) {
-  const fields = [
-    ["Instrument type", instrument.instrument_type, "type"],
-    ["Location", instrument.location, "location"],
-    ["Manufacturer", instrument.manufacturer, "manufacturer"],
-    ["Model", instrument.model, "model"],
-    ["Status", instrument.status, "status"],
-  ] as const
-
-  return (
-    <Card>
-      <CardHeader actionLayout="inline">
-        <CardTitle>Summary</CardTitle>
-        {onEdit ? (
-          <CardAction>
-            <Button onClick={onEdit} variant="outline">
-              <EditResourceIcon data-icon="inline-start" />
-              Edit instrument
-            </Button>
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="min-w-0 sm:col-span-2">
-            <dt className="text-label text-muted-foreground">Description</dt>
-            <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
-              <SummaryFieldIcon type="description" />
-              <span className="min-w-0">{instrument.description ?? "-"}</span>
-            </dd>
-          </div>
-          {fields.map(([label, value, type]) => (
-            <div className="min-w-0" key={label}>
-              <dt className="text-label text-muted-foreground">{label}</dt>
-              <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
-                <SummaryFieldIcon type={type} />
-                <span className="min-w-0">{value ?? "-"}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </CardContent>
-    </Card>
-  )
-}
-
-function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
-  return (
-    <Card>
-      <CardContent>
-        <ContentGrid variant="identity">
-          <div className="min-w-0">
-            <CardTitle>Identity</CardTitle>
-            <dl className="mt-4 grid gap-4">
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Instrument ID
-                </dt>
-                <dd className="mt-1 flex items-start gap-2 text-body break-words">
-                  <ResourceTypeIcon
-                    className="mt-0.5 size-4 shrink-0"
-                    type="instrument"
-                  />
-                  {instrument.instrument_id ?? "-"}
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">MFID</dt>
-                <dd className="mt-1">
-                  <MfidValue value={instrument.unique_id} />
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Owner</dt>
-                <dd className="mt-1 flex items-start gap-2 text-body">
-                  <IdentityFieldIcon
-                    accountType={
-                      instrument.owner &&
-                      personIsServiceAccount(instrument.owner)
-                        ? "service-account"
-                        : "person"
-                    }
-                    type="owner"
-                  />
-                  {instrument.owner ? (
-                    <PersonLink
-                      nameStyle="abbreviated"
-                      person={instrument.owner}
-                    />
-                  ) : (
-                    "Unknown owner"
-                  )}
-                </dd>
-              </div>
-            </dl>
-          </div>
-          <MfidQrCode value={instrument.unique_id} />
-          <dl className="col-span-2 grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-label text-muted-foreground">Created</dt>
-              <dd className="mt-1 flex items-start gap-2 text-body">
-                <IdentityFieldIcon type="created" />
-                <LocalDateTime fallback="-" value={instrument.creation_time} />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-label text-muted-foreground">Updated</dt>
-              <dd className="mt-1 flex items-start gap-2 text-body">
-                <IdentityFieldIcon type="updated" />
-                <LocalDateTime
-                  fallback="-"
-                  value={instrument.modification_time}
-                />
-              </dd>
-            </div>
-          </dl>
-        </ContentGrid>
-      </CardContent>
-    </Card>
-  )
-}
-
-function InstrumentMetadata({
-  metadata,
-}: {
-  metadata: WorkspaceScientificMetadata | null
-}) {
-  const expansion = useScientificMetadataExpansion(metadata)
-  return (
-    <Card>
-      <CardHeader actionLayout="inline">
-        <CardTitle>Scientific metadata</CardTitle>
-        {expansion.canExpand ? (
-          <CardAction>
-            <ScientificMetadataExpansionAction expansion={expansion} />
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent>
-        <ScientificMetadataViewer
-          emptyMessage="This instrument does not currently expose scientific metadata."
-          expansion={expansion}
-          metadata={metadata}
+  const content = result.isPending ? (
+    <CollectionTablePending
+      label="datasets"
+      presentation="resources"
+      subtypeLabel="Measurement"
+    />
+  ) : result.isError && !result.data ? (
+    <>
+      <CollectionLoadError
+        label="Datasets"
+        retry={() => void result.refetch()}
+      />
+      <CollectionPageNavigation
+        label="Instrument dataset pages"
+        previous={
+          cursor ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ instrumentMfid: routeInstrumentMfid }}
+              search={(previous) => ({ ...previous, cursor: undefined })}
+              to="/instruments/$instrumentMfid"
+            >
+              First datasets
+            </Link>
+          ) : undefined
+        }
+      />
+    </>
+  ) : (
+    <>
+      <CollectionUpdateStatus
+        label="datasets"
+        updating={result.isFetching && !result.isFetchingNextPage}
+      />
+      {result.isError && !result.isFetchNextPageError ? (
+        <CollectionUpdateError
+          label="Datasets"
+          preserved
+          retry={() => void result.refetch()}
         />
-      </CardContent>
-    </Card>
+      ) : null}
+      <InstrumentDatasetCollection
+        cursor={cursor}
+        direction={collectionFilters.direction}
+        hasNextPage={Boolean(result.hasNextPage)}
+        instrumentMfid={routeInstrumentMfid}
+        isPaginationDisabled={result.isFetching && !result.isFetchingNextPage}
+        isLoadingMore={result.isFetchingNextPage}
+        items={items}
+        loadMoreError={result.isFetchNextPageError}
+        onLoadMore={() => void result.fetchNextPage()}
+        onSort={changeSort}
+        sort={collectionFilters.sort}
+        total={total}
+        updating={result.isFetching && !result.isFetchingNextPage}
+      />
+    </>
+  )
+
+  function updateBrowse(values: Record<string, unknown>) {
+    void navigate({
+      params: { instrumentMfid: routeInstrumentMfid },
+      search: (previous) => ({
+        ...previous,
+        cursor: undefined,
+        ...values,
+      }),
+      to: "/instruments/$instrumentMfid",
+    })
+  }
+
+  function selectGroup(selection: FacetSelection) {
+    updateBrowse(collectionBrowseSearchState(selection))
+  }
+
+  function changeGroup(field: DatasetFacetField | undefined) {
+    updateBrowse({
+      ...collectionBrowseSearchState({ kind: "all" }),
+      groupBy: field,
+      view: field ? "grouped" : undefined,
+    })
+  }
+
+  function changeGroupOrder(
+    order: CollectionGroupOrder,
+    direction: SortDirection
+  ) {
+    void navigate({
+      params: { instrumentMfid: routeInstrumentMfid },
+      search: (previous) => ({
+        ...previous,
+        ...collectionGroupOrderSearchState(order, direction),
+      }),
+      to: "/instruments/$instrumentMfid",
+    })
+  }
+
+  function changeSort(sort: ResourceSort, direction: SortDirection) {
+    updateBrowse(collectionOrderingSearchState(sort, direction))
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <CollectionToolbar
+        actions={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <InstrumentDatasetFilters
+              onApply={(values) =>
+                updateBrowse({
+                  createdFrom: values.createdFrom,
+                  createdTo: values.createdTo,
+                  ...collectionOrderingSearchState(
+                    values.sort,
+                    values.direction
+                  ),
+                })
+              }
+              values={{
+                createdFrom: search.createdFrom,
+                createdTo: search.createdTo,
+                direction: search.direction,
+                sort: search.sort,
+              }}
+            />
+            <CollectionGroupControl
+              field={browse.field}
+              id="instrument-dataset-group-field"
+              onChange={changeGroup}
+              options={instrumentDatasetBrowseOptions}
+              view={browse.view}
+            />
+          </div>
+        }
+        primary={<h2 className="text-title-section">Datasets</h2>}
+      />
+      {browse.view === "grouped" ? (
+        <DatasetCollectionBrowser
+          direction={browse.direction}
+          field={browse.field}
+          filters={baseFilters}
+          onOrderChange={changeGroupOrder}
+          order={browse.order}
+          onSelect={selectGroup}
+          selection={browse.selection}
+        >
+          {content}
+        </DatasetCollectionBrowser>
+      ) : (
+        content
+      )}
+    </div>
+  )
+}
+
+type InstrumentDatasetFilterValues = {
+  createdFrom?: string
+  createdTo?: string
+  direction?: SortDirection
+  sort?: ResourceSort
+}
+
+function InstrumentDatasetFilters({
+  onApply,
+  values,
+}: {
+  onApply: (values: InstrumentDatasetFilterValues) => void
+  values: InstrumentDatasetFilterValues
+}) {
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState(values)
+  const [rangeInvalid, setRangeInvalid] = useState(false)
+
+  const active = collectionActiveFilters(
+    collectionActiveFilter(
+      "created-from",
+      values.createdFrom
+        ? `Created from (UTC): ${values.createdFrom}`
+        : undefined
+    ),
+    collectionActiveFilter(
+      "created-to",
+      values.createdTo ? `Created to (UTC): ${values.createdTo}` : undefined
+    ),
+    collectionActiveFilter(
+      "order",
+      values.sort
+        ? `Order: ${values.sort} (${values.direction === "asc" ? "ascending" : "descending"})`
+        : undefined
+    )
+  )
+
+  function apply(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (
+      draft.createdFrom &&
+      draft.createdTo &&
+      draft.createdFrom > draft.createdTo
+    ) {
+      setRangeInvalid(true)
+      return
+    }
+    setRangeInvalid(false)
+    setOpen(false)
+    onApply(draft)
+  }
+
+  function clear() {
+    setDraft({})
+    setRangeInvalid(false)
+    setOpen(false)
+    onApply({
+      createdFrom: undefined,
+      createdTo: undefined,
+      direction: undefined,
+      sort: undefined,
+    })
+  }
+
+  function changeOpen(nextOpen: boolean) {
+    setOpen(nextOpen)
+    if (nextOpen) setDraft(values)
+    setRangeInvalid(false)
+  }
+
+  function removeFilter(id: string) {
+    if (id === "created-from") {
+      onApply({ ...values, createdFrom: undefined })
+    } else if (id === "created-to") {
+      onApply({ ...values, createdTo: undefined })
+    } else if (id === "order") {
+      onApply({ ...values, direction: undefined, sort: undefined })
+    }
+  }
+
+  return (
+    <CollectionFilterPanel
+      activeFilters={active}
+      footer={
+        <>
+          <Button onClick={clear} type="button" variant="outline">
+            Clear filters
+          </Button>
+          <Button form="instrument-dataset-filters" type="submit">
+            Apply filters
+          </Button>
+        </>
+      }
+      onClearFilters={clear}
+      onOpenChange={changeOpen}
+      onRemoveFilter={removeFilter}
+      open={open}
+      title="Dataset filters"
+    >
+      <form id="instrument-dataset-filters" onSubmit={apply}>
+        <FieldGroup className="grid gap-4 sm:grid-cols-2">
+          <CollectionCreatedRangeFields
+            describedBy={
+              rangeInvalid ? "instrument-dataset-filter-error" : undefined
+            }
+            idPrefix="instrument-dataset"
+            invalid={(field) => rangeInvalid && field === "createdTo"}
+            onChange={(field, value) =>
+              setDraft((current) => ({ ...current, [field]: value }))
+            }
+            value={draft}
+          />
+          <CollectionOrderFields
+            idPrefix="instrument-dataset"
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, ...value }))
+            }
+            value={draft}
+          />
+        </FieldGroup>
+        {rangeInvalid ? (
+          <FieldError
+            errors={[
+              { message: "The start date must not be after the end date." },
+            ]}
+            id="instrument-dataset-filter-error"
+          />
+        ) : null}
+      </form>
+    </CollectionFilterPanel>
   )
 }

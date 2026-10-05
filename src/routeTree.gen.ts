@@ -45,6 +45,7 @@ import { Route as AppDatasetsDatasetMfidManageRouteImport } from './routes/_app.
 import { Route as AppDatasetsDatasetMfidProcessingRouteImport } from './routes/_app.datasets.$datasetMfid.processing'
 import { Route as AppInstrumentsInstrumentMfidIndexRouteImport } from './routes/_app.instruments.$instrumentMfid.index'
 import { Route as AppInstrumentsInstrumentMfidDatasetsRouteImport } from './routes/_app.instruments.$instrumentMfid.datasets'
+import { Route as AppInstrumentsInstrumentMfidOverviewRouteImport } from './routes/_app.instruments.$instrumentMfid.overview'
 import { Route as AppInstrumentsInstrumentMfidSettingsRouteImport } from './routes/_app.instruments.$instrumentMfid.settings'
 import { Route as AppProjectsProjectMfidIndexRouteImport } from './routes/_app.projects.$projectMfid.index'
 import { Route as AppProjectsProjectMfidMembersRouteImport } from './routes/_app.projects.$projectMfid.members'
@@ -252,6 +253,12 @@ const AppInstrumentsInstrumentMfidDatasetsRoute =
     path: '/datasets',
     getParentRoute: () => AppInstrumentsInstrumentMfidRoute,
   } as any)
+const AppInstrumentsInstrumentMfidOverviewRoute =
+  AppInstrumentsInstrumentMfidOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AppInstrumentsInstrumentMfidRoute,
+  } as any)
 const AppInstrumentsInstrumentMfidSettingsRoute =
   AppInstrumentsInstrumentMfidSettingsRouteImport.update({
     id: '/settings',
@@ -382,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
   '/datasets/$datasetMfid/processing': typeof AppDatasetsDatasetMfidProcessingRoute
   '/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
+  '/instruments/$instrumentMfid/overview': typeof AppInstrumentsInstrumentMfidOverviewRoute
   '/instruments/$instrumentMfid/settings': typeof AppInstrumentsInstrumentMfidSettingsRouteWithChildren
   '/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
   '/projects/$projectMfid/overview': typeof AppProjectsProjectMfidOverviewRoute
@@ -431,6 +439,7 @@ export interface FileRoutesByTo {
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
   '/datasets/$datasetMfid/processing': typeof AppDatasetsDatasetMfidProcessingRoute
   '/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
+  '/instruments/$instrumentMfid/overview': typeof AppInstrumentsInstrumentMfidOverviewRoute
   '/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
   '/projects/$projectMfid/overview': typeof AppProjectsProjectMfidOverviewRoute
   '/samples/$sampleMfid/access': typeof AppSamplesSampleMfidAccessRoute
@@ -484,6 +493,7 @@ export interface FileRoutesById {
   '/_app/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
   '/_app/datasets/$datasetMfid/processing': typeof AppDatasetsDatasetMfidProcessingRoute
   '/_app/instruments/$instrumentMfid/datasets': typeof AppInstrumentsInstrumentMfidDatasetsRoute
+  '/_app/instruments/$instrumentMfid/overview': typeof AppInstrumentsInstrumentMfidOverviewRoute
   '/_app/instruments/$instrumentMfid/settings': typeof AppInstrumentsInstrumentMfidSettingsRouteWithChildren
   '/_app/projects/$projectMfid/members': typeof AppProjectsProjectMfidMembersRoute
   '/_app/projects/$projectMfid/overview': typeof AppProjectsProjectMfidOverviewRoute
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/datasets/$datasetMfid/manage'
     | '/datasets/$datasetMfid/processing'
     | '/instruments/$instrumentMfid/datasets'
+    | '/instruments/$instrumentMfid/overview'
     | '/instruments/$instrumentMfid/settings'
     | '/projects/$projectMfid/members'
     | '/projects/$projectMfid/overview'
@@ -588,6 +599,7 @@ export interface FileRouteTypes {
     | '/datasets/$datasetMfid/manage'
     | '/datasets/$datasetMfid/processing'
     | '/instruments/$instrumentMfid/datasets'
+    | '/instruments/$instrumentMfid/overview'
     | '/projects/$projectMfid/members'
     | '/projects/$projectMfid/overview'
     | '/samples/$sampleMfid/access'
@@ -640,6 +652,7 @@ export interface FileRouteTypes {
     | '/_app/datasets/$datasetMfid/manage'
     | '/_app/datasets/$datasetMfid/processing'
     | '/_app/instruments/$instrumentMfid/datasets'
+    | '/_app/instruments/$instrumentMfid/overview'
     | '/_app/instruments/$instrumentMfid/settings'
     | '/_app/projects/$projectMfid/members'
     | '/_app/projects/$projectMfid/overview'
@@ -928,6 +941,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInstrumentsInstrumentMfidDatasetsRouteImport
       parentRoute: typeof AppInstrumentsInstrumentMfidRoute
     }
+    '/_app/instruments/$instrumentMfid/overview': {
+      id: '/_app/instruments/$instrumentMfid/overview'
+      path: '/overview'
+      fullPath: '/instruments/$instrumentMfid/overview'
+      preLoaderRoute: typeof AppInstrumentsInstrumentMfidOverviewRouteImport
+      parentRoute: typeof AppInstrumentsInstrumentMfidRoute
+    }
     '/_app/instruments/$instrumentMfid/settings': {
       id: '/_app/instruments/$instrumentMfid/settings'
       path: '/settings'
@@ -1092,6 +1112,7 @@ const AppInstrumentsInstrumentMfidSettingsRouteWithChildren =
 
 interface AppInstrumentsInstrumentMfidRouteChildren {
   AppInstrumentsInstrumentMfidDatasetsRoute: typeof AppInstrumentsInstrumentMfidDatasetsRoute
+  AppInstrumentsInstrumentMfidOverviewRoute: typeof AppInstrumentsInstrumentMfidOverviewRoute
   AppInstrumentsInstrumentMfidSettingsRoute: typeof AppInstrumentsInstrumentMfidSettingsRouteWithChildren
   AppInstrumentsInstrumentMfidIndexRoute: typeof AppInstrumentsInstrumentMfidIndexRoute
 }
@@ -1100,6 +1121,8 @@ const AppInstrumentsInstrumentMfidRouteChildren: AppInstrumentsInstrumentMfidRou
   {
     AppInstrumentsInstrumentMfidDatasetsRoute:
       AppInstrumentsInstrumentMfidDatasetsRoute,
+    AppInstrumentsInstrumentMfidOverviewRoute:
+      AppInstrumentsInstrumentMfidOverviewRoute,
     AppInstrumentsInstrumentMfidSettingsRoute:
       AppInstrumentsInstrumentMfidSettingsRouteWithChildren,
     AppInstrumentsInstrumentMfidIndexRoute:

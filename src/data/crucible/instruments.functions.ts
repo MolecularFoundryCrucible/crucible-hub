@@ -10,6 +10,7 @@ import {
 
 import {
   addWorkspaceInstrumentOperator as addWorkspaceInstrumentOperatorServer,
+  checkWorkspaceInstrumentIdExactMatch,
   createWorkspaceInstrumentResource,
   patchWorkspaceInstrument,
   readWorkspaceInstrumentOperators,
@@ -20,6 +21,7 @@ import {
 import { instrumentStatuses } from "./instrument-status"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
+import { instrumentIdSchema } from "./slugs"
 
 export const instrumentListInputSchema = z.object({
   affiliation: collectionAffiliationSchema.optional(),
@@ -32,6 +34,7 @@ export const instrumentListInputSchema = z.object({
 })
 
 export const INSTRUMENT_MFID_MAX_LENGTH = 255
+export const INSTRUMENT_ID_MAX_LENGTH = 25
 export const INSTRUMENT_NAME_MAX_LENGTH = 255
 export const INSTRUMENT_TYPE_MAX_LENGTH = 255
 export const INSTRUMENT_DESCRIPTION_MAX_LENGTH = 10_000
@@ -63,13 +66,7 @@ const instrumentLocationChangeSchema = z
 const nullableInstrumentTextChangeSchema = (maxLength: number) =>
   z.string().trim().min(1).max(maxLength).nullable().optional()
 
-const instrumentRegistrationIdSchema = z
-  .string()
-  .trim()
-  .regex(
-    /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/,
-    "Use 3 to 25 letters, numbers, underscores, or hyphens."
-  )
+const instrumentRegistrationIdSchema = instrumentIdSchema
 
 function hasDefinedChange(changes: Record<string, unknown>) {
   return Object.values(changes).some((value) => value !== undefined)
@@ -82,6 +79,7 @@ export const instrumentDescriptiveUpdateInputSchema = z
         description: nullableInstrumentTextChangeSchema(
           INSTRUMENT_DESCRIPTION_MAX_LENGTH
         ),
+        instrument_id: instrumentRegistrationIdSchema.optional(),
         instrument_name: instrumentNameChangeSchema.optional(),
         instrument_type: nullableInstrumentTextChangeSchema(
           INSTRUMENT_TYPE_MAX_LENGTH
@@ -253,6 +251,25 @@ export const updateWorkspaceInstrumentStatus = createServerFn({
       setWorkspaceInstrumentStatus(
         data.instrumentMfid,
         data.status,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const checkWorkspaceInstrumentId = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(
+    z.object({
+      instrumentId: instrumentIdSchema,
+      scenario: fixtureScenarioSchema.optional(),
+    })
+  )
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      checkWorkspaceInstrumentIdExactMatch(
+        data.instrumentId,
         data.scenario,
         context.requestSignal
       )

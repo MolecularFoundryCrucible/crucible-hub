@@ -102,11 +102,32 @@ function fixturePublicGrant(
   }
 }
 
+function fixtureInstrumentSeedGrants(
+  resource: WorkspaceResourceDetail
+): WorkspaceResourceAccessGrant[] {
+  if (
+    resource.kind !== "instrument" ||
+    resource.unique_id !== "01J6Y8N4Q2R7M9K3T5V0W1X2Z4"
+  ) {
+    return []
+  }
+  return [
+    {
+      display_name: "Morgan Lee",
+      permission: "editor",
+      principal_id: "0000-0000-0000-0018",
+      principal_type: "user",
+      slug: "morgan.lee",
+    },
+  ]
+}
+
 function fixtureAccessGrants(
   resource: WorkspaceResourceDetail
 ): WorkspaceResourceAccessGrant[] {
   return [
     fixtureOwnerGrant(resource),
+    ...fixtureInstrumentSeedGrants(resource),
     fixtureProjectGrant(resource),
     fixturePublicGrant(resource),
   ].filter((grant): grant is WorkspaceResourceAccessGrant => grant !== null)

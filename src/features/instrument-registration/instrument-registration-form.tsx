@@ -30,23 +30,30 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { createWorkspaceInstrument } from "@/data/crucible/instruments.functions"
+import {
+  checkWorkspaceInstrumentId,
+  createWorkspaceInstrument,
+} from "@/data/crucible/instruments.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
-
-const instrumentIdPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
+import {
+  HubApiClientError,
+  hubErrorMessage,
+  unwrapHubResult,
+} from "@/data/crucible/result"
+import {
+  INSTRUMENT_ID_MAX_LENGTH,
+  instrumentIdSchema,
+} from "@/data/crucible/slugs"
+import {
+  SlugAvailabilityField,
+  isSlugTakenOrRejected,
+} from "@/features/forms/slug-availability"
 
 const registrationSchema = z.object({
   description: z.string().trim().max(10_000, "Use 10,000 characters or fewer."),
-  instrument_id: z
-    .string()
-    .trim()
-    .regex(
-      instrumentIdPattern,
-      "Use 3 to 25 letters, numbers, underscores, or hyphens, starting with a letter or number."
-    ),
+  instrument_id: instrumentIdSchema,
   instrument_name: z
     .string()
     .trim()
@@ -97,6 +104,8 @@ export function InstrumentRegistrationForm({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string>()
+  const [liveTakenInstrumentId, setLiveTakenInstrumentId] = useState<string>()
+  const [rejectedInstrumentId, setRejectedInstrumentId] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (value: RegistrationValues) =>
       unwrapHubResult(
@@ -139,6 +148,12 @@ export function InstrumentRegistrationForm({
         to: "/instruments/$instrumentMfid",
       })
     } catch (error) {
+      if (
+        error instanceof HubApiClientError &&
+        error.details.kind === "conflict"
+      ) {
+        setRejectedInstrumentId(value.instrument_id)
+      }
       setSaveError(registrationError(error))
     }
   })
@@ -179,13 +194,31 @@ export function InstrumentRegistrationForm({
                     label="Name"
                     required
                   />
-                  <RegistrationTextField
-                    description="Used in links and integrations."
-                    fieldName="instrument_id"
-                    form={form}
-                    label="Instrument ID"
-                    required
-                  />
+                  <form.Field name="instrument_id">
+                    {(field) => (
+                      <SlugAvailabilityField
+                        checkAvailability={async (candidate, signal) => {
+                          const result = await checkWorkspaceInstrumentId({
+                            data: {
+                              instrumentId: candidate,
+                              scenario: fixtureScenarioFromScope(scope),
+                            },
+                            signal,
+                          })
+                          return unwrapHubResult(result)
+                        }}
+                        description="Used in links and integrations."
+                        entityLabel="Instrument ID"
+                        field={field}
+                        label="Instrument ID"
+                        maxLength={INSTRUMENT_ID_MAX_LENGTH}
+                        onLiveTakenChange={setLiveTakenInstrumentId}
+                        rejectedValue={rejectedInstrumentId}
+                        required
+                        schema={instrumentIdSchema}
+                      />
+                    )}
+                  </form.Field>
                   <RegistrationTextField
                     fieldName="location"
                     form={form}
@@ -242,18 +275,31 @@ export function InstrumentRegistrationForm({
             >
               Cancel
             </Button>
-            <Button
-              className="w-40"
-              disabled={isSubmitting}
-              form={formId}
-              type="submit"
+            <form.Subscribe
+              selector={(state) => [
+                isSlugTakenOrRejected(
+                  state.values.instrument_id,
+                  liveTakenInstrumentId,
+                  rejectedInstrumentId
+                ),
+                state.isSubmitting,
+              ]}
             >
-              <span className="inline-grid min-w-28 place-items-center">
-                {isSubmitting
-                  ? "Registering instrument"
-                  : "Register instrument"}
-              </span>
-            </Button>
+              {([isTaken, submitting]) => (
+                <Button
+                  className="w-40"
+                  disabled={isTaken || submitting}
+                  form={formId}
+                  type="submit"
+                >
+                  <span className="inline-grid min-w-28 place-items-center">
+                    {submitting
+                      ? "Registering instrument"
+                      : "Register instrument"}
+                  </span>
+                </Button>
+              )}
+            </form.Subscribe>
           </CardFooter>
         </Card>
       </ContentBoundary>

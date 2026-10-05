@@ -4,6 +4,7 @@ import { crucibleApiResponse } from "@/test/crucible-api-response"
 
 import {
   addWorkspaceInstrumentOperator,
+  checkWorkspaceInstrumentIdExactMatch,
   createWorkspaceInstrumentResource,
   patchWorkspaceInstrument,
   readWorkspaceInstrumentOperators,
@@ -148,12 +149,13 @@ describe("workspace instrument source", () => {
     await expect(
       patchWorkspaceInstrument(instrumentMfid, {
         description: null,
+        instrument_id: "renamed-microprobe",
         instrument_name: "Updated microprobe",
         location: "Beamline 6.1",
       })
     ).resolves.toEqual({
       description: null,
-      instrument_id: "hard-xray-microprobe",
+      instrument_id: "renamed-microprobe",
       instrument_name: "Updated microprobe",
       instrument_type: "X-ray microscope",
       location: "Beamline 6.1",
@@ -168,6 +170,14 @@ describe("workspace instrument source", () => {
     await expect(
       patchWorkspaceInstrument("missing-instrument", { description: "Missing" })
     ).rejects.toMatchObject({ status: 404 })
+
+    await expect(
+      patchWorkspaceInstrument(
+        "fixture-instrument-1",
+        { instrument_id: "dense-instrument-2" },
+        "dense"
+      )
+    ).rejects.toMatchObject({ status: 409 })
   })
 
   it("patches only supplied instrument descriptive fields and normalizes the response", async () => {
@@ -182,7 +192,7 @@ describe("workspace instrument source", () => {
         requests.push(request)
         return crucibleApiResponse({
           description: null,
-          instrument_id: "hard-xray-microprobe",
+          instrument_id: "renamed-microprobe",
           instrument_name: "Updated microprobe",
           instrument_type: "X-ray microscope",
           location: "Beamline 6.1",
@@ -199,13 +209,14 @@ describe("workspace instrument source", () => {
 
     const result = await patchWorkspaceInstrument("selected-instrument", {
       description: null,
+      instrument_id: "renamed-microprobe",
       location: "Beamline 6.1",
       other_id: "serial-42",
     })
 
     expect(result).toEqual({
       description: null,
-      instrument_id: "hard-xray-microprobe",
+      instrument_id: "renamed-microprobe",
       instrument_name: "Updated microprobe",
       instrument_type: "X-ray microscope",
       location: "Beamline 6.1",
@@ -226,6 +237,7 @@ describe("workspace instrument source", () => {
     )
     await expect(requests[0].json()).resolves.toEqual({
       description: null,
+      instrument_id: "renamed-microprobe",
       location: "Beamline 6.1",
       other_id: "serial-42",
     })
@@ -389,5 +401,44 @@ describe("workspace instrument source", () => {
       instrument_name: "New instrument",
       location: "Beamline 1",
     })
+  })
+
+  it("checks instrument_id availability in fixture and API mode", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(
+      checkWorkspaceInstrumentIdExactMatch("hard-xray-microprobe")
+    ).resolves.toBe(true)
+    await expect(
+      checkWorkspaceInstrumentIdExactMatch("HARD-XRAY-MICROPROBE")
+    ).resolves.toBe(true)
+    await expect(
+      checkWorkspaceInstrumentIdExactMatch("non-existent-instrument")
+    ).resolves.toBe(false)
+
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+
+    const fetchMock = vi.fn(async (request: Request) => {
+      const url = new URL(request.url)
+      expect(url.pathname).toBe("/instruments")
+      const instrumentId = url.searchParams.get("instrument_id")
+      if (instrumentId === "taken-instrument") {
+        return crucibleApiResponse({
+          items: [{ instrument_id: "taken-instrument", unique_id: "inst-1" }],
+        })
+      }
+      return crucibleApiResponse({ items: [] })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(
+      checkWorkspaceInstrumentIdExactMatch("taken-instrument")
+    ).resolves.toBe(true)
+    await expect(
+      checkWorkspaceInstrumentIdExactMatch("available-instrument")
+    ).resolves.toBe(false)
   })
 })

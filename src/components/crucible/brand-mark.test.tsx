@@ -6,8 +6,17 @@ import { BrandMark } from "./brand-mark"
 afterEach(cleanup)
 
 describe("BrandMark", () => {
-  it("renders light and dark theme icons", () => {
+  it("renders the hub logo with background by default", () => {
     const { container } = render(<BrandMark />)
+    const images = container.querySelectorAll("img")
+    expect(images).toHaveLength(1)
+
+    const [logoImg] = images
+    expect(logoImg.getAttribute("src")).toContain("crucible-logo-hub")
+  })
+
+  it("renders light and dark theme icons when variant is icon", () => {
+    const { container } = render(<BrandMark variant="icon" />)
     const images = container.querySelectorAll("img")
     expect(images).toHaveLength(2)
 

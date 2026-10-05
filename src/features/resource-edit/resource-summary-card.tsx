@@ -9,6 +9,7 @@ import { EditResourceIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
+import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import type { SummaryFieldType } from "@/components/crucible/summary-field-icon"
 import { Badge } from "@/components/ui/badge"
@@ -435,7 +436,13 @@ function SummaryFields({ fields }: { fields: readonly SummaryField[] }) {
           <dt className="text-label text-muted-foreground">{label}</dt>
           <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
             <SummaryFieldIcon type={type} />
-            <span className="min-w-0">{value ?? "-"}</span>
+            <span className="min-w-0">
+              {type === "status" && typeof value === "string" && value ? (
+                <ResourceStatusBadge status={value} />
+              ) : (
+                (value ?? "-")
+              )}
+            </span>
           </dd>
         </div>
       ))}

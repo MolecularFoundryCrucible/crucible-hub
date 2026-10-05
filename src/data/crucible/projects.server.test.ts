@@ -4,6 +4,7 @@ import { crucibleApiResponse } from "@/test/crucible-api-response"
 
 import {
   addWorkspaceProjectMember,
+  checkWorkspaceProjectIdExactMatch,
   patchWorkspaceProject,
   readWorkspaceProject,
   readWorkspaceProjects,
@@ -390,5 +391,55 @@ describe("workspace project source", () => {
     await expect(
       addWorkspaceProjectMember(projectMfid, "0000-0000-0000-0018", "viewer")
     ).rejects.toMatchObject({ status: 409 })
+  })
+
+  it("rejects duplicate project_id updates with 409 conflict in fixture mode", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(
+      patchWorkspaceProject("01J6Y8N4Q2R7M9K3T5V0W1X2Z3", {
+        project_id: "porous-framework-screening",
+      })
+    ).rejects.toMatchObject({ status: 409 })
+  })
+
+  it("checks project_id availability in fixture and API mode", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(
+      checkWorkspaceProjectIdExactMatch("operando-catalyst-mapping")
+    ).resolves.toBe(true)
+    await expect(
+      checkWorkspaceProjectIdExactMatch("OPERANDO-CATALYST-MAPPING")
+    ).resolves.toBe(true)
+    await expect(
+      checkWorkspaceProjectIdExactMatch("non-existent-project")
+    ).resolves.toBe(false)
+
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+
+    const fetchMock = vi.fn(async (request: Request) => {
+      const url = new URL(request.url)
+      expect(url.pathname).toBe("/projects")
+      const projectId = url.searchParams.get("project_id")
+      if (projectId === "taken-project") {
+        return crucibleApiResponse({
+          items: [{ project_id: "taken-project", unique_id: "proj-1" }],
+        })
+      }
+      return crucibleApiResponse({ items: [] })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(
+      checkWorkspaceProjectIdExactMatch("taken-project")
+    ).resolves.toBe(true)
+    await expect(
+      checkWorkspaceProjectIdExactMatch("available-project")
+    ).resolves.toBe(false)
   })
 })

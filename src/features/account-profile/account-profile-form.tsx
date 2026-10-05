@@ -40,6 +40,7 @@ import {
   accountProfileSchema,
   accountProfileValues,
 } from "./account-profile-fields"
+import { isSlugTakenOrRejected } from "@/features/forms/slug-availability"
 import { UsernameAvailability } from "./username-availability"
 
 export function AccountProfileForm({
@@ -211,8 +212,11 @@ export function AccountProfileForm({
         <form.Subscribe
           selector={(state) => [
             state.canSubmit &&
-              state.values.username.trim() !== liveTakenUsername &&
-              state.values.username.trim() !== rejectedUsername,
+              !isSlugTakenOrRejected(
+                state.values.username,
+                liveTakenUsername,
+                rejectedUsername
+              ),
             accountProfileHasChanges(account, state.values),
             state.isSubmitting,
           ]}
