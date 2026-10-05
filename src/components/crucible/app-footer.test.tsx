@@ -40,20 +40,20 @@ describe("AppFooter", () => {
     ).toBeTruthy()
   })
 
-  it("renders external resource navigation links with secure targets and underlines", () => {
+  it("renders external resource navigation links with secure targets", () => {
     renderFooter()
 
     const crucibleLink = screen.getByRole("link", { name: "Crucible" })
     expect(crucibleLink.getAttribute("href")).toBe("https://crucible.lbl.gov/")
     expect(crucibleLink.getAttribute("target")).toBe("_blank")
     expect(crucibleLink.getAttribute("rel")).toBe("noreferrer")
-    expect(crucibleLink.classList.contains("underline")).toBe(true)
+    expect(crucibleLink.classList.contains("underline")).toBe(false)
 
     const foundryLink = screen.getByRole("link", { name: "Molecular Foundry" })
     expect(foundryLink.getAttribute("href")).toBe("https://foundry.lbl.gov/")
     expect(foundryLink.getAttribute("target")).toBe("_blank")
     expect(foundryLink.getAttribute("rel")).toBe("noreferrer")
-    expect(foundryLink.classList.contains("underline")).toBe(true)
+    expect(foundryLink.classList.contains("underline")).toBe(false)
 
     const issuesLink = screen.getByRole("link", { name: "Issues" })
     expect(issuesLink.getAttribute("href")).toBe(
@@ -61,7 +61,7 @@ describe("AppFooter", () => {
     )
     expect(issuesLink.getAttribute("target")).toBe("_blank")
     expect(issuesLink.getAttribute("rel")).toBe("noreferrer")
-    expect(issuesLink.classList.contains("underline")).toBe(true)
+    expect(issuesLink.classList.contains("underline")).toBe(false)
   })
 
   it("renders center dots separating external navigation links", () => {
@@ -71,15 +71,15 @@ describe("AppFooter", () => {
     expect(nav.textContent).toContain("•")
   })
 
-  it("renders API status trigger with underline and popover trigger semantics", () => {
+  it("renders API status trigger without underline and popover trigger semantics", () => {
     renderFooter()
 
     const statusButton = screen.getByRole("button", { name: "API status" })
     expect(statusButton.getAttribute("aria-haspopup")).toBe("dialog")
-    expect(statusButton.classList.contains("underline")).toBe(true)
+    expect(statusButton.classList.contains("underline")).toBe(false)
   })
 
-  it("renders git revision with baseline alignment and separator dot when provided", () => {
+  it("renders git revision with center alignment and separator dot when provided", () => {
     renderFooter({ gitRevision: "7386cff" })
 
     const revisionLink = screen.getByRole("link", { name: "7386cff" })
@@ -88,10 +88,10 @@ describe("AppFooter", () => {
     )
     expect(revisionLink.getAttribute("target")).toBe("_blank")
     expect(revisionLink.classList.contains("font-mono")).toBe(true)
-    expect(revisionLink.classList.contains("underline")).toBe(true)
+    expect(revisionLink.classList.contains("underline")).toBe(false)
 
     const revisionContainer = revisionLink.parentElement
-    expect(revisionContainer?.classList.contains("items-baseline")).toBe(true)
+    expect(revisionContainer?.classList.contains("items-center")).toBe(true)
 
     const rightCluster = revisionContainer?.parentElement
     expect(rightCluster?.textContent).toContain("•")

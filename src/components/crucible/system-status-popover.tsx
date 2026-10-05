@@ -88,14 +88,14 @@ export function SystemStatusPopover({
             : "API status"
         }
         className={cn(
-          "inline-flex cursor-pointer items-center gap-1.5 rounded-sm py-1 underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+          "inline-flex cursor-pointer items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
           className
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
-            "size-2 shrink-0 rounded-full ring-1 ring-border/60",
+            "size-2 shrink-0 translate-y-px rounded-full ring-1 ring-border/60",
             statusQuery.data?.status === "ok" && "bg-success",
             statusQuery.data?.status === "degraded" && "bg-warning",
             statusQuery.data?.status === "unreachable" && "bg-destructive",

@@ -27,7 +27,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
     >
       <div className="mx-auto flex w-full max-w-content flex-col items-center gap-y-4 px-page-gutter py-6 text-center text-supporting text-muted-foreground sm:px-page-gutter-medium md:flex-row md:items-center md:justify-between md:text-left lg:px-page-gutter-wide">
         <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 md:justify-start">
-          <BrandMark className="size-4 opacity-75" />
+          <BrandMark className="size-4 translate-y-px opacity-75" />
           <span>© {currentYear} Crucible Dev Team</span>
         </div>
 
@@ -36,7 +36,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
           className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1"
         >
           <a
-            className="inline-flex items-center rounded-sm py-1 underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href="https://crucible.lbl.gov/"
             rel="noreferrer"
             target="_blank"
@@ -47,7 +47,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
             •
           </span>
           <a
-            className="inline-flex items-center rounded-sm py-1 underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href="https://foundry.lbl.gov/"
             rel="noreferrer"
             target="_blank"
@@ -58,7 +58,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
             •
           </span>
           <a
-            className="inline-flex items-center rounded-sm py-1 underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href="https://github.com/MolecularFoundryCrucible/crucible-hub/issues"
             rel="noreferrer"
             target="_blank"
@@ -74,10 +74,10 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
               <span aria-hidden="true" className="select-none">
                 •
               </span>
-              <div className="flex items-baseline gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <span>Revision</span>
                 <a
-                  className="inline-flex items-center rounded-sm py-1 font-mono underline underline-offset-4 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex items-center rounded-sm py-1 font-mono transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   href={`https://github.com/MolecularFoundryCrucible/crucible-hub/commit/${revision}`}
                   rel="noreferrer"
                   target="_blank"

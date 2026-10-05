@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Removed link underlines in the application footer and vertically aligned the Crucible brand mark and API status indicator dot with adjacent text.
+
 - Replaced the static Crucible logo with theme-aware light and dark Crucible icons across the workspace shell and authentication views without corner clipping.
 
 - Replaced the static API health link in the application footer with an interactive status popover providing on-demand readiness probe diagnostics, Hub health links, close controls, and WCAG-compliant footer touch targets.
