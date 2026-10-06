@@ -23,11 +23,3 @@ export function canOpenUserAdministration(account: WorkspaceAccount) {
 export function canOpenAccessGroupAdministration(account: WorkspaceAccount) {
   return canOpenPlatformAdministration(account)
 }
-
-export function canOpenJoinRequestAdministration(account: WorkspaceAccount) {
-  return canOpenPlatformAdministration(account)
-}
-
-export function canOpenSystemDiagnostics(account: WorkspaceAccount) {
-  return canOpenPlatformAdministration(account)
-}

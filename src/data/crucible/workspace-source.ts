@@ -599,17 +599,6 @@ export type WorkspaceAccessGroup = Schema<"AccessGroupRead">
 
 export type WorkspaceAccessGroupMember = Schema<"AccessGroupMemberRead">
 
-export type WorkspaceJoinRequest = Schema<"JoinRequestRead">
-
-export type WorkspaceJoinRequestPage = {
-  items: readonly WorkspaceJoinRequest[]
-  limit: number
-  offset: number
-  total: number | null
-}
-
-export type WorkspaceJoinRequestReview = Schema<"JoinRequestReview">
-
 export type WorkspaceSearchGroup = {
   error: boolean
   items: readonly WorkspaceSearchResult[]

@@ -25,8 +25,6 @@ import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
 import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.design-system'
 import { Route as FixturesScenariosRouteImport } from './routes/fixtures.scenarios'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
-import { Route as AppAdminJoinRequestsRouteImport } from './routes/_app.admin.join-requests'
-import { Route as AppAdminSystemRouteImport } from './routes/_app.admin.system'
 import { Route as AppDatasetsDatasetMfidRouteImport } from './routes/_app.datasets.$datasetMfid'
 import { Route as AppDatasetsNewRouteImport } from './routes/_app.datasets.new'
 import { Route as AppInstrumentsIndexRouteImport } from './routes/_app.instruments.index'
@@ -147,16 +145,6 @@ const FixturesScenariosRoute = FixturesScenariosRouteImport.update({
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminJoinRequestsRoute = AppAdminJoinRequestsRouteImport.update({
-  id: '/admin/join-requests',
-  path: '/admin/join-requests',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminSystemRoute = AppAdminSystemRouteImport.update({
-  id: '/admin/system',
-  path: '/admin/system',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDatasetsDatasetMfidRoute = AppDatasetsDatasetMfidRouteImport.update({
@@ -415,8 +403,6 @@ export interface FileRoutesByFullPath {
   '/auth/sign-in': typeof AuthSignInRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
-  '/admin/join-requests': typeof AppAdminJoinRequestsRoute
-  '/admin/system': typeof AppAdminSystemRoute
   '/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -476,8 +462,6 @@ export interface FileRoutesByTo {
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/': typeof AppIndexRoute
-  '/admin/join-requests': typeof AppAdminJoinRequestsRoute
-  '/admin/system': typeof AppAdminSystemRoute
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/new': typeof AppInstrumentsNewRoute
   '/people/$personId': typeof AppPeoplePersonIdRoute
@@ -533,8 +517,6 @@ export interface FileRoutesById {
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/admin/join-requests': typeof AppAdminJoinRequestsRoute
-  '/_app/admin/system': typeof AppAdminSystemRoute
   '/_app/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
   '/_app/datasets/new': typeof AppDatasetsNewRoute
   '/_app/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -596,8 +578,6 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
-    | '/admin/join-requests'
-    | '/admin/system'
     | '/datasets/$datasetMfid'
     | '/datasets/new'
     | '/instruments/$instrumentMfid'
@@ -657,8 +637,6 @@ export interface FileRouteTypes {
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/'
-    | '/admin/join-requests'
-    | '/admin/system'
     | '/datasets/new'
     | '/instruments/new'
     | '/people/$personId'
@@ -713,8 +691,6 @@ export interface FileRouteTypes {
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/_app/'
-    | '/_app/admin/join-requests'
-    | '/_app/admin/system'
     | '/_app/datasets/$datasetMfid'
     | '/_app/datasets/new'
     | '/_app/instruments/$instrumentMfid'
@@ -885,20 +861,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/admin/join-requests': {
-      id: '/_app/admin/join-requests'
-      path: '/admin/join-requests'
-      fullPath: '/admin/join-requests'
-      preLoaderRoute: typeof AppAdminJoinRequestsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/admin/system': {
-      id: '/_app/admin/system'
-      path: '/admin/system'
-      fullPath: '/admin/system'
-      preLoaderRoute: typeof AppAdminSystemRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/datasets/$datasetMfid': {
@@ -1334,8 +1296,6 @@ interface AppRouteChildren {
   AppDeletionRequestsRoute: typeof AppDeletionRequestsRoute
   AppSearchRoute: typeof AppSearchRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppAdminJoinRequestsRoute: typeof AppAdminJoinRequestsRoute
-  AppAdminSystemRoute: typeof AppAdminSystemRoute
   AppDatasetsDatasetMfidRoute: typeof AppDatasetsDatasetMfidRouteWithChildren
   AppDatasetsNewRoute: typeof AppDatasetsNewRoute
   AppInstrumentsInstrumentMfidRoute: typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -1363,8 +1323,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppDeletionRequestsRoute: AppDeletionRequestsRoute,
   AppSearchRoute: AppSearchRoute,
   AppIndexRoute: AppIndexRoute,
-  AppAdminJoinRequestsRoute: AppAdminJoinRequestsRoute,
-  AppAdminSystemRoute: AppAdminSystemRoute,
   AppDatasetsDatasetMfidRoute: AppDatasetsDatasetMfidRouteWithChildren,
   AppDatasetsNewRoute: AppDatasetsNewRoute,
   AppInstrumentsInstrumentMfidRoute:

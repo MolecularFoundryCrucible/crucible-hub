@@ -21,11 +21,9 @@ import {
   CollapseSidebarIcon,
   DeletionRequestsIcon,
   ExpandSidebarIcon,
-  JoinRequestIcon,
   PersonIcon,
   RecentResourcesIcon,
   SignOutIcon,
-  SystemHealthIcon,
   ThemeIcon,
   UserGroupIcon,
   WorkspaceIcon,
@@ -274,72 +272,26 @@ export function AppShell({
                       </SidebarMenuItem>
                     ) : null}
                     {canOpenPlatformAdministration(account) ? (
-                      <>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname.startsWith(
-                              "/admin/access-groups"
-                            )}
-                            tooltip="Access groups"
-                            render={
-                              <Link
-                                aria-current={
-                                  pathname.startsWith("/admin/access-groups")
-                                    ? "page"
-                                    : undefined
-                                }
-                                preload={false}
-                                to="/admin/access-groups"
-                              />
-                            }
-                          >
-                            <UserGroupIcon />
-                            <span>Access groups</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname.startsWith(
-                              "/admin/join-requests"
-                            )}
-                            tooltip="Join requests"
-                            render={
-                              <Link
-                                aria-current={
-                                  pathname.startsWith("/admin/join-requests")
-                                    ? "page"
-                                    : undefined
-                                }
-                                preload={false}
-                                to="/admin/join-requests"
-                              />
-                            }
-                          >
-                            <JoinRequestIcon />
-                            <span>Join requests</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname.startsWith("/admin/system")}
-                            tooltip="System"
-                            render={
-                              <Link
-                                aria-current={
-                                  pathname.startsWith("/admin/system")
-                                    ? "page"
-                                    : undefined
-                                }
-                                preload={false}
-                                to="/admin/system"
-                              />
-                            }
-                          >
-                            <SystemHealthIcon />
-                            <span>System</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      </>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={pathname.startsWith("/admin/access-groups")}
+                          tooltip="Access groups"
+                          render={
+                            <Link
+                              aria-current={
+                                pathname.startsWith("/admin/access-groups")
+                                  ? "page"
+                                  : undefined
+                              }
+                              preload={false}
+                              to="/admin/access-groups"
+                            />
+                          }
+                        >
+                          <UserGroupIcon />
+                          <span>Access groups</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
                     ) : null}
                     <SidebarMenuItem>
                       <SidebarMenuButton
