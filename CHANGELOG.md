@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Moved platform user detail from a dedicated administration route into the shared people detail page for eligible administrators, displayed platform roles in the user directory and detail views, and added live email availability checking to user creation and profile editing alongside username checks.
+
 - Added platform administration capabilities including user directory management with account creation, profile editing, and API key provisioning, and programmatic service account management.
 
 - Improved quick search keyboard and dropdown behavior by submitting searches on Enter when no suggestion is highlighted, navigating directly and closing search with input blur on highlighted suggestions, showing an animated progress spinner during search queries, sizing results comfortably, and dynamically displaying the search query and shortcut badge in the results footer.

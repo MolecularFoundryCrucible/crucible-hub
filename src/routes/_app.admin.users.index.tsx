@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import {
   useQuery,
   useQueryClient,
@@ -19,13 +19,14 @@ import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
+import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import {
   useAdministrationScope,
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -53,6 +54,8 @@ import {
 import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { canOpenUserAdministration } from "@/data/crucible/administration"
+import type { SortDirection } from "@/data/crucible/collection-query"
+import { sortDirectionSchema } from "@/data/crucible/collection-query"
 import {
   crucibleKeys,
   identityScopeWithPrivilegeMode,
@@ -69,16 +72,31 @@ import type {
 import { UserCreateDialog } from "@/features/admin/user-create-dialog"
 import { formatUsername } from "@/lib/username"
 
+const userSortFieldSchema = z.enum([
+  "account",
+  "unique_id",
+  "platform_role",
+  "email",
+])
+export type UserSortField = z.infer<typeof userSortFieldSchema>
+
 const userSearchSchema = z.object({
   create: z.boolean().optional().catch(undefined),
+  direction: sortDirectionSchema.optional().catch(undefined),
   offset: z.coerce.number().int().min(0).optional().catch(undefined),
   q: z.string().trim().min(3).max(200).optional().catch(undefined),
+  sort: userSortFieldSchema.optional().catch(undefined),
 })
 
 export const Route = createFileRoute("/_app/admin/users/")({
   head: () => ({ meta: [{ title: "Users | Crucible Hub" }] }),
   validateSearch: userSearchSchema,
-  loaderDeps: ({ search }) => ({ offset: search.offset ?? 0, query: search.q }),
+  loaderDeps: ({ search }) => ({
+    direction: search.direction,
+    offset: search.offset ?? 0,
+    query: search.q,
+    sort: search.sort,
+  }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
@@ -91,8 +109,10 @@ export const Route = createFileRoute("/_app/admin/users/")({
       "elevated"
     )
     const options = usersListQueryOptions(administrationScope, {
+      is_service_account: false,
       limit: userAdminPageLimit,
-      ...deps,
+      offset: deps.offset,
+      query: deps.query,
     })
     const hasData =
       context.queryClient.getQueryData(options.queryKey) !== undefined
@@ -116,7 +136,10 @@ function UsersAdminPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const offset = search.offset ?? 0
+  const sort = search.sort
+  const direction = search.direction ?? "asc"
   const options = usersListQueryOptions(administrationScope, {
+    is_service_account: false,
     limit: userAdminPageLimit,
     offset,
     query: search.q,
@@ -153,13 +176,32 @@ function UsersAdminPage() {
     }
   }
 
+  function handleSortChange(
+    nextField: UserSortField,
+    nextDirection: SortDirection
+  ) {
+    void navigate({
+      replace: true,
+      search: {
+        ...search,
+        direction: nextDirection,
+        offset: undefined,
+        sort: nextField,
+      },
+      state: {},
+      to: "/admin/users",
+    })
+  }
+
   function setCreateOpen(open: boolean) {
     void navigate({
       replace: true,
       search: {
         create: open ? true : undefined,
+        direction: search.direction,
         offset: search.offset,
         q: search.q,
+        sort: search.sort,
       },
       state: {},
       to: "/admin/users",
@@ -169,7 +211,7 @@ function UsersAdminPage() {
   return (
     <PageLayout>
       <UsersPageHeader canCreate />
-      <UserSearchForm />
+      <UserSearchForm direction={direction} sort={sort} />
       {result.isPending ? (
         <CollectionTablePending label="users" presentation="service-accounts" />
       ) : result.isError && !result.data ? (
@@ -187,8 +229,12 @@ function UsersAdminPage() {
             />
           ) : null}
           <UserCollection
+            account={account}
+            direction={direction}
+            onSortChange={handleSortChange}
             page={result.data}
             query={search.q}
+            sort={sort}
             updating={result.isFetching}
           />
         </>
@@ -225,7 +271,13 @@ function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
         canCreate ? (
           <Link
             className={buttonVariants()}
-            search={{ create: true, offset: search.offset, q: search.q }}
+            search={{
+              create: true,
+              direction: search.direction,
+              offset: search.offset,
+              q: search.q,
+              sort: search.sort,
+            }}
             to="/admin/users"
           >
             <CreateResourceIcon data-icon="inline-start" />
@@ -238,7 +290,13 @@ function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
   )
 }
 
-function UserSearchForm() {
+function UserSearchForm({
+  direction,
+  sort,
+}: {
+  direction?: SortDirection
+  sort?: UserSortField
+} = {}) {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const [searchError, setSearchError] = useState<string>()
@@ -253,7 +311,12 @@ function UserSearchForm() {
     }
     setSearchError(undefined)
     void navigate({
-      search: { offset: undefined, q: query || undefined },
+      search: {
+        direction,
+        offset: undefined,
+        q: query || undefined,
+        sort,
+      },
       state: {},
       to: "/admin/users",
     })
@@ -283,7 +346,12 @@ function UserSearchForm() {
               onClick={() => {
                 setSearchError(undefined)
                 void navigate({
-                  search: { offset: undefined, q: undefined },
+                  search: {
+                    direction,
+                    offset: undefined,
+                    q: undefined,
+                    sort,
+                  },
                   state: {},
                   to: "/admin/users",
                 })
@@ -306,12 +374,20 @@ function UserSearchForm() {
 }
 
 function UserCollection({
+  account,
+  direction = "asc",
+  onSortChange,
   page,
   query,
+  sort,
   updating,
 }: {
+  account: WorkspaceAccount
+  direction?: SortDirection
+  onSortChange: (field: UserSortField, direction: SortDirection) => void
   page?: WorkspaceAdminUserPage
   query?: string
+  sort?: UserSortField
   updating: boolean
 }) {
   if (!page) return null
@@ -321,10 +397,43 @@ function UserCollection({
       ? page.items.length === page.limit
       : page.offset + page.items.length < page.total
 
+  const filteredItems = useMemo(
+    () => page.items.filter((u) => !u.is_service_account),
+    [page.items]
+  )
+
+  const sortedItems = useMemo(() => {
+    const items = [...filteredItems]
+    if (!sort) return items
+    return items.sort((a, b) => {
+      let comparison = 0
+      if (sort === "account") {
+        comparison = personDisplayName(a).localeCompare(personDisplayName(b))
+      } else if (sort === "unique_id") {
+        comparison = a.unique_id.localeCompare(b.unique_id)
+      } else if (sort === "platform_role") {
+        const roleA =
+          a.unique_id === account.unique_id
+            ? account.authorization.platform_role
+            : (a.platform_role ?? "")
+        const roleB =
+          b.unique_id === account.unique_id
+            ? account.authorization.platform_role
+            : (b.platform_role ?? "")
+        comparison = roleA.localeCompare(roleB)
+      } else {
+        const emailA = a.email ?? ""
+        const emailB = b.email ?? ""
+        comparison = emailA.localeCompare(emailB)
+      }
+      return direction === "desc" ? -comparison : comparison
+    })
+  }, [filteredItems, sort, direction, account])
+
   return (
     <>
       <CollectionUpdateStatus label="users" updating={updating} />
-      {page.items.length > 0 ? (
+      {sortedItems.length > 0 ? (
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             <Table
@@ -333,78 +442,115 @@ function UserCollection({
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Crucible ID</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Type</TableHead>
+                  <SortableTableHead
+                    active={sort === "account"}
+                    direction={direction}
+                    field="account"
+                    label="Account"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "unique_id"}
+                    direction={direction}
+                    field="unique_id"
+                    label="Crucible ID"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "platform_role"}
+                    direction={direction}
+                    field="platform_role"
+                    label="Platform role"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "email"}
+                    direction={direction}
+                    field="email"
+                    label="Email"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
                   <TableHead className="text-center">
                     <span className="sr-only">Open</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {page.items.map((user) => (
-                  <TableRow key={user.unique_id}>
-                    <TableCell className="identity-directory-account">
-                      <PersonIdentity
-                        className="min-w-48"
-                        nameContent={
-                          <SelectableTextLink
-                            className="block"
-                            render={
-                              <Link
-                                params={{ userMfid: user.unique_id }}
-                                to="/admin/users/$userMfid"
-                              />
-                            }
-                          >
-                            {personDisplayName(user)}
-                          </SelectableTextLink>
-                        }
-                        person={user}
-                        presentation="avatar"
-                        size="sm"
-                      />
-                    </TableCell>
-                    <TableCell
-                      className="identity-directory-mfid"
-                      data-label="Crucible ID"
-                    >
-                      <MfidText value={user.unique_id} />
-                    </TableCell>
-                    <TableCell data-label="Email">
-                      {"email" in user && user.email ? (
-                        <span className="text-body">{user.email}</span>
-                      ) : (
-                        <span className="text-body text-muted-foreground">
-                          None
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell data-label="Type">
-                      <Badge
-                        variant={
-                          user.is_service_account ? "secondary" : "outline"
-                        }
+                {sortedItems.map((user) => {
+                  const effectivePlatformRole =
+                    user.unique_id === account.unique_id
+                      ? account.authorization.platform_role
+                      : user.platform_role
+                  return (
+                    <TableRow key={user.unique_id}>
+                      <TableCell className="identity-directory-account">
+                        <PersonIdentity
+                          className="min-w-48"
+                          nameContent={
+                            <SelectableTextLink
+                              className="block"
+                              render={
+                                <Link
+                                  params={{ personId: user.unique_id }}
+                                  to="/people/$personId"
+                                />
+                              }
+                            >
+                              {personDisplayName(user)}
+                            </SelectableTextLink>
+                          }
+                          person={user}
+                          presentation="avatar"
+                          size="sm"
+                        />
+                      </TableCell>
+                      <TableCell
+                        className="identity-directory-mfid"
+                        data-label="Crucible ID"
                       >
-                        {user.is_service_account ? "Service account" : "User"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="identity-directory-action text-center">
-                      <Link
-                        aria-label={`Open user ${formatUsername(user.username, "raw")}`}
-                        className={buttonVariants({
-                          size: "table-action",
-                          variant: "ghost",
-                        })}
-                        params={{ userMfid: user.unique_id }}
-                        to="/admin/users/$userMfid"
+                        <MfidText value={user.unique_id} />
+                      </TableCell>
+                      <TableCell
+                        className="identity-directory-role"
+                        data-label="Platform role"
                       >
-                        <OpenFullPageIcon aria-hidden="true" />
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        {effectivePlatformRole ? (
+                          <PlatformRoleBadge role={effectivePlatformRole} />
+                        ) : (
+                          <span className="text-body text-muted-foreground">
+                            None
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell data-label="Email">
+                        {user.email ? (
+                          <span className="text-body">{user.email}</span>
+                        ) : (
+                          <span className="text-body text-muted-foreground">
+                            None
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="identity-directory-action text-center">
+                        <Link
+                          aria-label={`Open user ${formatUsername(user.username, "raw")}`}
+                          className={buttonVariants({
+                            size: "table-action",
+                            variant: "ghost",
+                          })}
+                          params={{ personId: user.unique_id }}
+                          to="/people/$personId"
+                        >
+                          <OpenFullPageIcon aria-hidden="true" />
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -426,8 +572,10 @@ function UserCollection({
             <Link
               className={buttonVariants({ variant: "outline" })}
               search={{
+                direction,
                 offset: Math.max(0, page.offset - page.limit) || undefined,
                 q: query,
+                sort,
               }}
               to="/admin/users"
             >
@@ -439,7 +587,12 @@ function UserCollection({
           hasNext ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
-              search={{ offset: page.offset + page.limit, q: query }}
+              search={{
+                direction,
+                offset: page.offset + page.limit,
+                q: query,
+                sort,
+              }}
               to="/admin/users"
             >
               Next

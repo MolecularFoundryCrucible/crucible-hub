@@ -39,7 +39,6 @@ import { Route as AppSamplesNewRouteImport } from './routes/_app.samples.new'
 import { Route as AppAdminServiceAccountsIndexRouteImport } from './routes/_app.admin.service-accounts.index'
 import { Route as AppAdminServiceAccountsServiceAccountMfidRouteImport } from './routes/_app.admin.service-accounts.$serviceAccountMfid'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app.admin.users.index'
-import { Route as AppAdminUsersUserMfidRouteImport } from './routes/_app.admin.users.$userMfid'
 import { Route as AppDatasetsDatasetMfidIndexRouteImport } from './routes/_app.datasets.$datasetMfid.index'
 import { Route as AppDatasetsDatasetMfidAccessRouteImport } from './routes/_app.datasets.$datasetMfid.access'
 import { Route as AppDatasetsDatasetMfidGraphRouteImport } from './routes/_app.datasets.$datasetMfid.graph'
@@ -218,11 +217,6 @@ const AppAdminUsersIndexRoute = AppAdminUsersIndexRouteImport.update({
   path: '/admin/users/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminUsersUserMfidRoute = AppAdminUsersUserMfidRouteImport.update({
-  id: '/admin/users/$userMfid',
-  path: '/admin/users/$userMfid',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppDatasetsDatasetMfidIndexRoute =
   AppDatasetsDatasetMfidIndexRouteImport.update({
     id: '/',
@@ -396,7 +390,6 @@ export interface FileRoutesByFullPath {
   '/instruments/': typeof AppInstrumentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
-  '/admin/users/$userMfid': typeof AppAdminUsersUserMfidRoute
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -448,7 +441,6 @@ export interface FileRoutesByTo {
   '/instruments': typeof AppInstrumentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
-  '/admin/users/$userMfid': typeof AppAdminUsersUserMfidRoute
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -504,7 +496,6 @@ export interface FileRoutesById {
   '/_app/instruments/': typeof AppInstrumentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
-  '/_app/admin/users/$userMfid': typeof AppAdminUsersUserMfidRoute
   '/_app/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/_app/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/_app/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -562,7 +553,6 @@ export interface FileRouteTypes {
     | '/instruments/'
     | '/projects/'
     | '/admin/service-accounts/$serviceAccountMfid'
-    | '/admin/users/$userMfid'
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
     | '/datasets/$datasetMfid/manage'
@@ -614,7 +604,6 @@ export interface FileRouteTypes {
     | '/instruments'
     | '/projects'
     | '/admin/service-accounts/$serviceAccountMfid'
-    | '/admin/users/$userMfid'
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
     | '/datasets/$datasetMfid/manage'
@@ -669,7 +658,6 @@ export interface FileRouteTypes {
     | '/_app/instruments/'
     | '/_app/projects/'
     | '/_app/admin/service-accounts/$serviceAccountMfid'
-    | '/_app/admin/users/$userMfid'
     | '/_app/datasets/$datasetMfid/access'
     | '/_app/datasets/$datasetMfid/graph'
     | '/_app/datasets/$datasetMfid/manage'
@@ -921,13 +909,6 @@ declare module '@tanstack/react-router' {
       path: '/admin/users'
       fullPath: '/admin/users/'
       preLoaderRoute: typeof AppAdminUsersIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/admin/users/$userMfid': {
-      id: '/_app/admin/users/$userMfid'
-      path: '/admin/users/$userMfid'
-      fullPath: '/admin/users/$userMfid'
-      preLoaderRoute: typeof AppAdminUsersUserMfidRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/datasets/$datasetMfid/': {
@@ -1250,7 +1231,6 @@ interface AppRouteChildren {
   AppInstrumentsIndexRoute: typeof AppInstrumentsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
   AppAdminServiceAccountsServiceAccountMfidRoute: typeof AppAdminServiceAccountsServiceAccountMfidRoute
-  AppAdminUsersUserMfidRoute: typeof AppAdminUsersUserMfidRoute
   AppAdminServiceAccountsIndexRoute: typeof AppAdminServiceAccountsIndexRoute
   AppAdminUsersIndexRoute: typeof AppAdminUsersIndexRoute
 }
@@ -1276,7 +1256,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjectsIndexRoute: AppProjectsIndexRoute,
   AppAdminServiceAccountsServiceAccountMfidRoute:
     AppAdminServiceAccountsServiceAccountMfidRoute,
-  AppAdminUsersUserMfidRoute: AppAdminUsersUserMfidRoute,
   AppAdminServiceAccountsIndexRoute: AppAdminServiceAccountsIndexRoute,
   AppAdminUsersIndexRoute: AppAdminUsersIndexRoute,
 }

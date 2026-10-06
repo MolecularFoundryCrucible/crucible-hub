@@ -80,7 +80,11 @@ export function useSlugAvailability({
     currentValue &&
     trimmedCandidate.toLowerCase() === currentValue.trim().toLowerCase()
   )
-  const shouldCheck = !rejected && !isCurrent && validate(trimmedCandidate)
+  const shouldCheck =
+    Boolean(trimmedCandidate) &&
+    !rejected &&
+    !isCurrent &&
+    validate(trimmedCandidate)
 
   useEffect(() => {
     if (isCurrent) {
@@ -205,9 +209,11 @@ export function SlugAvailabilityField({
   label,
   maxLength = 25,
   onLiveTakenChange,
+  placeholder,
   rejectedValue,
   required = false,
   schema,
+  type,
 }: {
   autoComplete?: string
   autoFocus?: boolean
@@ -240,9 +246,11 @@ export function SlugAvailabilityField({
   onLiveTakenChange?:
     | Dispatch<SetStateAction<string | undefined>>
     | ((candidate: string | undefined) => void)
+  placeholder?: string
   rejectedValue?: string | null
   required?: boolean
   schema: z.ZodType<string>
+  type?: string
 }) {
   const { adornment, isTaken } = useSlugAvailability({
     candidate: field.state.value,
@@ -285,7 +293,9 @@ export function SlugAvailabilityField({
           name={field.name}
           onBlur={field.handleBlur}
           onChange={(event) => field.handleChange(event.target.value)}
+          placeholder={placeholder}
           required={required}
+          type={type}
           value={field.state.value}
         />
         <InputGroupAddon align="inline-end">{adornment}</InputGroupAddon>

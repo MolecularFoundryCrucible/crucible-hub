@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import {
@@ -22,19 +22,34 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { checkWorkspaceUsername } from "@/data/crucible/account.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
-import { usernameSchema } from "@/data/crucible/slugs"
-import { createWorkspaceUserFn } from "@/data/crucible/users.functions"
+import { crucibleKeys } from "@/data/crucible/query-keys"
+import {
+  HubApiClientError,
+  hubErrorMessage,
+  unwrapHubResult,
+} from "@/data/crucible/result"
+import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
+import {
+  checkWorkspaceEmail,
+  createWorkspaceUserFn,
+} from "@/data/crucible/users.functions"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
+import {
+  isSlugTakenOrRejected,
+  SlugAvailabilityField,
+} from "@/features/forms/slug-availability"
+
+const userEmailSchema = z
+  .string()
+  .trim()
+  .max(320, "Use 320 characters or fewer for email.")
+  .email("Enter a valid email address.")
 
 const createUserSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email("Enter a valid email address.")
-    .or(z.literal("")),
+  email: userEmailSchema.or(z.literal("")),
   first_name: z.string().trim().min(1, "Enter a first name.").max(255),
   last_name: z.string().trim().min(1, "Enter a last name.").max(255),
   unique_id: z.string().trim().max(255),
@@ -52,7 +67,13 @@ export function UserCreateDialog({
   open: boolean
   scope: IdentityScope
 }) {
+  const queryClient = useQueryClient()
   const [error, setError] = useState<string>()
+  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
+  const [rejectedUsername, setRejectedUsername] = useState<string>()
+  const [liveTakenEmail, setLiveTakenEmail] = useState<string>()
+  const [rejectedEmail, setRejectedEmail] = useState<string>()
+
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof createUserSchema>) =>
       unwrapHubResult(
@@ -77,15 +98,32 @@ export function UserCreateDialog({
       unique_id: "",
       username: "",
     },
-    validators: { onChange: createUserSchema },
+    validators: {
+      onChange: createUserSchema,
+      onSubmit: createUserSchema,
+    },
     onSubmit: async ({ value }) => {
       setError(undefined)
       try {
         const user = await mutation.mutateAsync(value)
+        void queryClient.invalidateQueries({
+          queryKey: crucibleKeys.userAdminLists(scope),
+        })
         form.reset()
         onOpenChange(false)
         onCreated(user)
       } catch (cause) {
+        if (
+          cause instanceof HubApiClientError &&
+          cause.details.kind === "conflict"
+        ) {
+          if (value.username) {
+            setRejectedUsername(value.username)
+          }
+          if (value.email) {
+            setRejectedEmail(value.email)
+          }
+        }
         setError(hubErrorMessage(cause, "The user could not be created."))
       }
     },
@@ -98,6 +136,10 @@ export function UserCreateDialog({
     if (!nextOpen) {
       form.reset()
       setError(undefined)
+      setLiveTakenUsername(undefined)
+      setRejectedUsername(undefined)
+      setLiveTakenEmail(undefined)
+      setRejectedEmail(undefined)
     }
   }
 
@@ -120,22 +162,29 @@ export function UserCreateDialog({
             <FieldGroup>
               <form.Field name="username">
                 {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      autoFocus
-                      id={field.name}
-                      maxLength={24}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      placeholder="e.g. jdoe"
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
+                  <SlugAvailabilityField
+                    autoComplete="nickname"
+                    autoFocus
+                    checkAvailability={async (candidate, signal) => {
+                      const result = await checkWorkspaceUsername({
+                        data: {
+                          scenario: fixtureScenarioFromScope(scope),
+                          username: candidate,
+                        },
+                        signal,
+                      })
+                      return unwrapHubResult(result)
+                    }}
+                    entityLabel="Username"
+                    field={field}
+                    label="Username"
+                    maxLength={USERNAME_MAX_LENGTH}
+                    onLiveTakenChange={setLiveTakenUsername}
+                    placeholder="e.g. jdoe"
+                    rejectedValue={rejectedUsername}
+                    required
+                    schema={usernameSchema}
+                  />
                 )}
               </form.Field>
               <div className="grid grid-cols-2 gap-4">
@@ -180,24 +229,28 @@ export function UserCreateDialog({
               </div>
               <form.Field name="email">
                 {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} optional>
-                      Email address
-                    </FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      id={field.name}
-                      maxLength={320}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      placeholder="e.g. jdoe@lbl.gov"
-                      type="email"
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
+                  <SlugAvailabilityField
+                    autoComplete="email"
+                    checkAvailability={async (candidate, signal) => {
+                      const result = await checkWorkspaceEmail({
+                        data: {
+                          email: candidate,
+                          scenario: fixtureScenarioFromScope(scope),
+                        },
+                        signal,
+                      })
+                      return unwrapHubResult(result)
+                    }}
+                    entityLabel="Email"
+                    field={field}
+                    label="Email address"
+                    maxLength={320}
+                    onLiveTakenChange={setLiveTakenEmail}
+                    placeholder="e.g. jdoe@lbl.gov"
+                    rejectedValue={rejectedEmail}
+                    schema={userEmailSchema}
+                    type="email"
+                  />
                 )}
               </form.Field>
               <form.Field name="unique_id">
@@ -230,28 +283,51 @@ export function UserCreateDialog({
             </p>
           ) : null}
         </form>
-        <DialogFooter>
-          <Button
-            disabled={pending}
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            Cancel
-          </Button>
-          <Button disabled={pending} form="user-create" type="submit">
-            {pending ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : (
-              <CreateResourceIcon data-icon="inline-start" />
-            )}
-            Create user
-          </Button>
-        </DialogFooter>
+        <form.Subscribe
+          selector={(state) => [
+            state.canSubmit &&
+              !isSlugTakenOrRejected(
+                state.values.username,
+                liveTakenUsername,
+                rejectedUsername
+              ) &&
+              !isSlugTakenOrRejected(
+                state.values.email,
+                liveTakenEmail,
+                rejectedEmail
+              ),
+            state.isSubmitting,
+          ]}
+        >
+          {([canSubmit, isSubmitting]) => (
+            <DialogFooter>
+              <Button
+                disabled={isSubmitting}
+                onClick={() => setOpen(false)}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={!canSubmit || isSubmitting}
+                form="user-create"
+                type="submit"
+              >
+                {isSubmitting ? (
+                  <SavingChangesIcon
+                    aria-hidden="true"
+                    className="motion-safe:animate-spin"
+                    data-icon="inline-start"
+                  />
+                ) : (
+                  <CreateResourceIcon data-icon="inline-start" />
+                )}
+                Create user
+              </Button>
+            </DialogFooter>
+          )}
+        </form.Subscribe>
       </DialogContent>
     </Dialog>
   )

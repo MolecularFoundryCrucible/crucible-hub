@@ -116,8 +116,12 @@ export async function checkWorkspaceUsernameExactMatch(
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(scenario, readGlobalPrivilegeMode())
     if (source.status === "unavailable") throw new Error(source.reason)
-    return source.workspace.people.some(
-      (person) => person.username?.toLowerCase() === username.toLowerCase()
+    return (
+      source.workspace.account.username?.toLowerCase() ===
+        username.toLowerCase() ||
+      source.workspace.people.some(
+        (person) => person.username?.toLowerCase() === username.toLowerCase()
+      )
     )
   }
 

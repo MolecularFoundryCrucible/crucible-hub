@@ -21,7 +21,6 @@ import {
   CollapseSidebarIcon,
   DeletionRequestsIcon,
   ExpandSidebarIcon,
-  PersonIcon,
   RecentResourcesIcon,
   SignOutIcon,
   ThemeIcon,
@@ -221,7 +220,7 @@ export function AppShell({
                             />
                           }
                         >
-                          <PersonIcon />
+                          <PrincipalTypeIcon type="user" />
                           <span>Users</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

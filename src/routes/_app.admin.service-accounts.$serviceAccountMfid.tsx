@@ -135,6 +135,7 @@ function ServiceAccountAdminPage() {
         title={title}
       />
       <ServiceAccountDetail
+        key={serviceAccount.unique_id}
         account={serviceAccount}
         canChangePlatformRole={!account.is_service_account}
         mode={mode}

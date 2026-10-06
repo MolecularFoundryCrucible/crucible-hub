@@ -9,6 +9,7 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import { usernameSchema } from "./slugs"
 import {
   addUserToAccessGroup,
+  checkWorkspaceEmailExactMatch,
   createWorkspaceUser,
   patchWorkspaceUser,
   provisionWorkspaceUserApiKey,
@@ -206,6 +207,25 @@ export const getWorkspaceUserProjects = createServerFn({ method: "GET" })
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceUserProjects(
         data.userId,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const checkWorkspaceEmail = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(
+    z.object({
+      email: z.string().trim().email(),
+      scenario: fixtureScenarioSchema.optional(),
+    })
+  )
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      checkWorkspaceEmailExactMatch(
+        data.email,
         data.scenario,
         context.requestSignal
       )

@@ -570,10 +570,12 @@ export type WorkspaceServiceAccountPage = {
   total: number | null
 }
 
-export type WorkspaceAdminUser = Schema<"UserRead">
+export type WorkspaceAdminUser = Schema<"UserRead"> & {
+  platform_role?: components["schemas"]["PlatformRole"] | null
+}
 
 export type WorkspaceAdminUserPage = {
-  items: readonly (Schema<"UserRead"> | Schema<"UserPublicRead">)[]
+  items: readonly WorkspaceAdminUser[]
   limit: number
   offset: number
   total: number | null

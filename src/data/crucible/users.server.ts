@@ -39,6 +39,10 @@ function toWorkspaceAdminUser(
     first_name: user.first_name,
     is_service_account: user.is_service_account ?? false,
     last_name: user.last_name,
+    platform_role:
+      "platform_role" in user && typeof user.platform_role === "string"
+        ? (user.platform_role as components["schemas"]["PlatformRole"])
+        : null,
     unique_id: user.unique_id,
     username: user.username ?? null,
   }
@@ -53,6 +57,7 @@ function fixtureUsers(scenario?: FixtureScenario): WorkspaceAdminUser[] {
     first_name: source.workspace.account.first_name,
     is_service_account: source.workspace.account.is_service_account,
     last_name: source.workspace.account.last_name,
+    platform_role: source.workspace.account.authorization.platform_role,
     unique_id: source.workspace.account.unique_id,
     username: source.workspace.account.username,
   })
@@ -63,6 +68,7 @@ function fixtureUsers(scenario?: FixtureScenario): WorkspaceAdminUser[] {
         first_name: person.first_name,
         is_service_account: person.is_service_account,
         last_name: person.last_name,
+        platform_role: null,
         unique_id: person.unique_id,
         username: person.username ?? null,
       })
@@ -193,6 +199,7 @@ export async function patchWorkspaceUser(
       first_name: changes.first_name ?? existing?.first_name ?? "Updated",
       is_service_account: existing?.is_service_account ?? false,
       last_name: changes.last_name ?? existing?.last_name ?? "User",
+      platform_role: existing?.platform_role ?? null,
       unique_id: userId,
       username: changes.username ?? existing?.username ?? null,
     }
@@ -225,6 +232,7 @@ export async function createWorkspaceUser(
       first_name: input.first_name,
       is_service_account: false,
       last_name: input.last_name,
+      platform_role: null,
       unique_id: input.unique_id || "0000-0000-0000-9999",
       username: input.username,
     }
@@ -411,4 +419,31 @@ export async function readWorkspaceUserProjects(
   })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
   return result.data.items
+}
+
+export async function checkWorkspaceEmailExactMatch(
+  email: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<boolean> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const users = fixtureUsers(scenario)
+    return users.some(
+      (user) => user.email?.toLowerCase() === email.toLowerCase()
+    )
+  }
+
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: "elevated",
+  })
+  const result = await client.GET("/users", {
+    params: { query: { email, limit: 1 } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  return result.data.items.length > 0
 }
