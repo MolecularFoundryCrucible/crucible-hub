@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Throttled sign-in starts to 30 per 10 minutes per client address and capped pending sign-in transactions, answering throttled requests with HTTP 429.
+
 - Derived the legacy administrator-view cookie `Secure` flag from the configured Hub origin instead of the incoming request URL so the cookie stays `Secure` behind a TLS-terminating proxy.
 
 - Gated the footer system readiness probe behind Hub authentication in authenticated deployments, reported an explicit unreachable state instead of a synthetic healthy status when Hub sign-in is not configured, announced status transitions to assistive technology, and disabled status retry while a refresh is in flight.

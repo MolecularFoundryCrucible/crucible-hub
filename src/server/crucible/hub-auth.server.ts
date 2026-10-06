@@ -7,6 +7,7 @@ import {
   deleteCookie,
   getCookie,
   getRequest,
+  getRequestIP,
   setCookie,
 } from "@tanstack/react-start/server"
 import { z } from "zod"
@@ -109,6 +110,42 @@ const store = (globals[storeKey] ??= {
 const requestSession = new AsyncLocalStorage<{
   session: SharedSession | null
 }>()
+
+const loginRateLimit = 30
+const loginRateWindow = 10 * 60 * 1000
+const maxPendingTransactions = 500
+const maxTrackedLoginClients = 1000
+const loginAttempts = new Map<string, number[]>()
+
+export class HubLoginRateLimitError extends Error {
+  constructor() {
+    super("Too many sign-in requests. Try again shortly.")
+    this.name = "HubLoginRateLimitError"
+  }
+}
+
+export function enforceHubLoginRateLimit() {
+  const ip = getRequestIP({ xForwardedFor: true }) ?? "unknown"
+  const now = Date.now()
+  if (loginAttempts.size >= maxTrackedLoginClients) {
+    for (const [client, timestamps] of loginAttempts) {
+      if (timestamps.every((timestamp) => now - timestamp >= loginRateWindow)) {
+        loginAttempts.delete(client)
+      }
+    }
+  }
+  const attempts = (loginAttempts.get(ip) ?? []).filter(
+    (timestamp) => now - timestamp < loginRateWindow
+  )
+  if (
+    attempts.length >= loginRateLimit ||
+    store.transactions.size >= maxPendingTransactions
+  ) {
+    throw new HubLoginRateLimitError()
+  }
+  attempts.push(now)
+  loginAttempts.set(ip, attempts)
+}
 
 export function productionHubAuthReady() {
   if (process.env.NODE_ENV !== "production") return true
