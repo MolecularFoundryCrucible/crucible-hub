@@ -10,8 +10,8 @@ import { z } from "zod"
 import {
   CreateResourceIcon,
   OpenFullPageIcon,
-  SearchIcon,
 } from "@/components/crucible/icons"
+import { DirectorySearchField } from "@/components/crucible/directory-search-field"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -26,7 +26,7 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -34,8 +34,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -184,7 +182,7 @@ function ServiceAccountsPage() {
   return (
     <PageLayout>
       <ServiceAccountsPageHeader canCreate />
-      <ServiceAccountSearchForm />
+      <ServiceAccountSearchField />
       {result.isPending ? (
         <CollectionTablePending
           label="service accounts"
@@ -236,7 +234,7 @@ function ServiceAccountsPending() {
           account ? canOpenServiceAccountAdministration(account) : false
         }
       />
-      <ServiceAccountSearchForm />
+      <ServiceAccountSearchField />
       <CollectionTablePending
         label="service accounts"
         presentation="service-accounts"
@@ -266,70 +264,24 @@ function ServiceAccountsPageHeader({ canCreate }: { canCreate: boolean }) {
   )
 }
 
-function ServiceAccountSearchForm() {
+function ServiceAccountSearchField() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const [searchError, setSearchError] = useState<string>()
-
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const query = String(formData.get("service-account-search") ?? "").trim()
-    if (query.length > 0 && query.length < 3) {
-      setSearchError("Enter at least 3 characters.")
-      return
-    }
-    setSearchError(undefined)
-    void navigate({
-      search: { offset: undefined, q: query || undefined },
-      state: {},
-      to: "/admin/service-accounts",
-    })
-  }
 
   return (
-    <form className="max-w-reading" onSubmit={submitSearch}>
-      <FieldGroup>
-        <Field orientation="responsive">
-          <FieldLabel className="sr-only" htmlFor="service-account-search">
-            Search service accounts
-          </FieldLabel>
-          <Input
-            defaultValue={search.q ?? ""}
-            id="service-account-search"
-            key={search.q ?? "all"}
-            name="service-account-search"
-            placeholder="Search by name or username"
-            type="search"
-          />
-          <Button type="submit" variant="outline">
-            <SearchIcon data-icon="inline-start" />
-            Search
-          </Button>
-          {search.q ? (
-            <Button
-              onClick={() => {
-                setSearchError(undefined)
-                void navigate({
-                  search: { offset: undefined, q: undefined },
-                  state: {},
-                  to: "/admin/service-accounts",
-                })
-              }}
-              type="button"
-              variant="ghost"
-            >
-              Clear
-            </Button>
-          ) : null}
-        </Field>
-      </FieldGroup>
-      {searchError ? (
-        <p className="mt-2 text-body text-destructive" role="alert">
-          {searchError}
-        </p>
-      ) : null}
-    </form>
+    <DirectorySearchField
+      label="Search service accounts"
+      onSearch={(query) => {
+        void navigate({
+          replace: true,
+          search: { offset: undefined, q: query },
+          state: {},
+          to: "/admin/service-accounts",
+        })
+      }}
+      placeholder="Search by name or username"
+      query={search.q}
+    />
   )
 }
 

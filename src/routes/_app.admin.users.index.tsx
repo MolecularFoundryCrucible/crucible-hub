@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import {
   useQuery,
   useQueryClient,
@@ -10,8 +10,8 @@ import { z } from "zod"
 import {
   CreateResourceIcon,
   OpenFullPageIcon,
-  SearchIcon,
 } from "@/components/crucible/icons"
+import { DirectorySearchField } from "@/components/crucible/directory-search-field"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -27,7 +27,7 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -35,8 +35,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -211,7 +209,7 @@ function UsersAdminPage() {
   return (
     <PageLayout>
       <UsersPageHeader canCreate />
-      <UserSearchForm direction={direction} sort={sort} />
+      <UserSearchField />
       {result.isPending ? (
         <CollectionTablePending label="users" presentation="service-accounts" />
       ) : result.isError && !result.data ? (
@@ -257,7 +255,7 @@ function UsersPending() {
       <UsersPageHeader
         canCreate={account ? canOpenUserAdministration(account) : false}
       />
-      <UserSearchForm />
+      <UserSearchField />
       <CollectionTablePending label="users" presentation="service-accounts" />
     </PageLayout>
   )
@@ -290,86 +288,29 @@ function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
   )
 }
 
-function UserSearchForm({
-  direction,
-  sort,
-}: {
-  direction?: SortDirection
-  sort?: UserSortField
-} = {}) {
+function UserSearchField() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const [searchError, setSearchError] = useState<string>()
-
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const query = String(formData.get("user-search") ?? "").trim()
-    if (query.length > 0 && query.length < 3) {
-      setSearchError("Enter at least 3 characters.")
-      return
-    }
-    setSearchError(undefined)
-    void navigate({
-      search: {
-        direction,
-        offset: undefined,
-        q: query || undefined,
-        sort,
-      },
-      state: {},
-      to: "/admin/users",
-    })
-  }
 
   return (
-    <form className="max-w-reading" onSubmit={submitSearch}>
-      <FieldGroup>
-        <Field orientation="responsive">
-          <FieldLabel className="sr-only" htmlFor="user-search">
-            Search users
-          </FieldLabel>
-          <Input
-            defaultValue={search.q ?? ""}
-            id="user-search"
-            key={search.q ?? "all"}
-            name="user-search"
-            placeholder="Search by name, username, or email"
-            type="search"
-          />
-          <Button type="submit" variant="outline">
-            <SearchIcon data-icon="inline-start" />
-            Search
-          </Button>
-          {search.q ? (
-            <Button
-              onClick={() => {
-                setSearchError(undefined)
-                void navigate({
-                  search: {
-                    direction,
-                    offset: undefined,
-                    q: undefined,
-                    sort,
-                  },
-                  state: {},
-                  to: "/admin/users",
-                })
-              }}
-              type="button"
-              variant="ghost"
-            >
-              Clear
-            </Button>
-          ) : null}
-        </Field>
-      </FieldGroup>
-      {searchError ? (
-        <p className="mt-2 text-body text-destructive" role="alert">
-          {searchError}
-        </p>
-      ) : null}
-    </form>
+    <DirectorySearchField
+      label="Search users"
+      onSearch={(query) => {
+        void navigate({
+          replace: true,
+          search: {
+            direction: search.direction,
+            offset: undefined,
+            q: query,
+            sort: search.sort,
+          },
+          state: {},
+          to: "/admin/users",
+        })
+      }}
+      placeholder="Search by name, username, or email"
+      query={search.q}
+    />
   )
 }
 
