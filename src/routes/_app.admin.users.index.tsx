@@ -75,8 +75,8 @@ import { formatUsername } from "@/lib/username"
 const userSortFieldSchema = z.enum([
   "account",
   "unique_id",
-  "platform_role",
   "email",
+  "platform_role",
 ])
 export type UserSortField = z.infer<typeof userSortFieldSchema>
 
@@ -459,18 +459,18 @@ function UserCollection({
                     preferredDirection="asc"
                   />
                   <SortableTableHead
-                    active={sort === "platform_role"}
-                    direction={direction}
-                    field="platform_role"
-                    label="Platform role"
-                    onChange={onSortChange}
-                    preferredDirection="asc"
-                  />
-                  <SortableTableHead
                     active={sort === "email"}
                     direction={direction}
                     field="email"
                     label="Email"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "platform_role"}
+                    direction={direction}
+                    field="platform_role"
+                    label="Platform role"
                     onChange={onSortChange}
                     preferredDirection="asc"
                   />
@@ -514,21 +514,21 @@ function UserCollection({
                       >
                         <MfidText value={user.unique_id} />
                       </TableCell>
-                      <TableCell
-                        className="identity-directory-role"
-                        data-label="Platform role"
-                      >
-                        {effectivePlatformRole ? (
-                          <PlatformRoleBadge role={effectivePlatformRole} />
+                      <TableCell data-label="Email">
+                        {user.email ? (
+                          <span className="text-body">{user.email}</span>
                         ) : (
                           <span className="text-body text-muted-foreground">
                             None
                           </span>
                         )}
                       </TableCell>
-                      <TableCell data-label="Email">
-                        {user.email ? (
-                          <span className="text-body">{user.email}</span>
+                      <TableCell
+                        className="identity-directory-role"
+                        data-label="Platform role"
+                      >
+                        {effectivePlatformRole ? (
+                          <PlatformRoleBadge role={effectivePlatformRole} />
                         ) : (
                           <span className="text-body text-muted-foreground">
                             None

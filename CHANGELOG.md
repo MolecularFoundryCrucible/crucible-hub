@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
-- Sorted the users directory alphabetically by account name by default, with the Account column shown as the active ascending sort until another column is chosen.
+- Sorted the users directory alphabetically by account name by default, with the Account column shown as the active ascending sort until another column is chosen, and moved the Email column before the Platform role column.
 
 - Throttled sign-in starts to 30 per 10 minutes per client address and capped pending sign-in transactions, answering throttled requests with HTTP 429.
 
