@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Added sortable Account, Crucible ID, and Platform role headers to the service-accounts directory, defaulting to alphabetical account order, with the sort state in the URL.
+
 - Fired users and service-account directory searches as typing pauses with the shared 250 ms debounce and three-character minimum, committed immediately on Enter, replaced the search and clear buttons with an in-field clear action, and reset the directory to the full list below the minimum instead of showing an error.
 
 - Sorted the users directory alphabetically by account name by default, with the Account column shown as the active ascending sort until another column is chosen, and moved the Email column before the Platform role column.

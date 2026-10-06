@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import {
   useQuery,
   useQueryClient,
@@ -20,6 +20,7 @@ import {
   personDisplayName,
 } from "@/components/crucible/person-identity"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import {
   useAdministrationScope,
@@ -50,6 +51,8 @@ import {
 } from "@/components/crucible/collection-state"
 import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
+import type { SortDirection } from "@/data/crucible/collection-query"
+import { sortDirectionSchema } from "@/data/crucible/collection-query"
 import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
 import {
   crucibleKeys,
@@ -68,16 +71,32 @@ import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-cr
 import { ServiceAccountCreateDialog } from "@/features/service-accounts/service-account-create-dialog"
 import { formatUsername } from "@/lib/username"
 
+const serviceAccountSortFieldSchema = z.enum([
+  "account",
+  "unique_id",
+  "platform_role",
+])
+export type ServiceAccountSortField = z.infer<
+  typeof serviceAccountSortFieldSchema
+>
+
 const serviceAccountSearchSchema = z.object({
   create: z.boolean().optional().catch(undefined),
+  direction: sortDirectionSchema.optional().catch(undefined),
   offset: z.coerce.number().int().min(0).optional().catch(undefined),
   q: z.string().trim().min(3).max(200).optional().catch(undefined),
+  sort: serviceAccountSortFieldSchema.optional().catch(undefined),
 })
 
 export const Route = createFileRoute("/_app/admin/service-accounts/")({
   head: () => ({ meta: [{ title: "Service accounts | Crucible Hub" }] }),
   validateSearch: serviceAccountSearchSchema,
-  loaderDeps: ({ search }) => ({ offset: search.offset ?? 0, query: search.q }),
+  loaderDeps: ({ search }) => ({
+    direction: search.direction,
+    offset: search.offset ?? 0,
+    query: search.q,
+    sort: search.sort,
+  }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
@@ -115,6 +134,8 @@ function ServiceAccountsPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const offset = search.offset ?? 0
+  const sort = search.sort ?? "account"
+  const direction = search.direction ?? "asc"
   const options = serviceAccountsQueryOptions(administrationScope, {
     limit: serviceAccountPageLimit,
     offset,
@@ -166,13 +187,32 @@ function ServiceAccountsPage() {
     }
   }
 
+  function handleSortChange(
+    nextField: ServiceAccountSortField,
+    nextDirection: SortDirection
+  ) {
+    void navigate({
+      replace: true,
+      search: {
+        ...search,
+        direction: nextDirection,
+        offset: undefined,
+        sort: nextField,
+      },
+      state: {},
+      to: "/admin/service-accounts",
+    })
+  }
+
   function setCreateOpen(open: boolean) {
     void navigate({
       replace: true,
       search: {
         create: open ? true : undefined,
+        direction: search.direction,
         offset: search.offset,
         q: search.q,
+        sort: search.sort,
       },
       state: {},
       to: "/admin/service-accounts",
@@ -203,8 +243,11 @@ function ServiceAccountsPage() {
             />
           ) : null}
           <ServiceAccountCollection
+            direction={direction}
+            onSortChange={handleSortChange}
             page={result.data}
             query={search.q}
+            sort={sort}
             updating={result.isFetching}
           />
         </>
@@ -286,12 +329,21 @@ function ServiceAccountSearchField() {
 }
 
 function ServiceAccountCollection({
+  direction = "asc",
+  onSortChange,
   page,
   query,
+  sort,
   updating,
 }: {
+  direction?: SortDirection
+  onSortChange: (
+    field: ServiceAccountSortField,
+    direction: SortDirection
+  ) => void
   page: WorkspaceServiceAccountPage
   query?: string
+  sort?: ServiceAccountSortField
   updating: boolean
 }) {
   const hasPrevious = page.offset > 0
@@ -300,10 +352,28 @@ function ServiceAccountCollection({
       ? page.items.length === page.limit
       : page.offset + page.items.length < page.total
 
+  const sortedItems = useMemo(() => {
+    const items = [...page.items]
+    if (!sort) return items
+    return items.sort((left, right) => {
+      let comparison = 0
+      if (sort === "account") {
+        comparison = personDisplayName(left).localeCompare(
+          personDisplayName(right)
+        )
+      } else if (sort === "unique_id") {
+        comparison = left.unique_id.localeCompare(right.unique_id)
+      } else {
+        comparison = left.platform_role.localeCompare(right.platform_role)
+      }
+      return direction === "desc" ? -comparison : comparison
+    })
+  }, [page.items, sort, direction])
+
   return (
     <>
       <CollectionUpdateStatus label="service accounts" updating={updating} />
-      {page.items.length > 0 ? (
+      {sortedItems.length > 0 ? (
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             <Table
@@ -312,16 +382,37 @@ function ServiceAccountCollection({
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead>Crucible ID</TableHead>
-                  <TableHead>Platform role</TableHead>
+                  <SortableTableHead
+                    active={sort === "account"}
+                    direction={direction}
+                    field="account"
+                    label="Account"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "unique_id"}
+                    direction={direction}
+                    field="unique_id"
+                    label="Crucible ID"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "platform_role"}
+                    direction={direction}
+                    field="platform_role"
+                    label="Platform role"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
                   <TableHead className="text-center">
                     <span className="sr-only">Open</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {page.items.map((serviceAccount) => (
+                {sortedItems.map((serviceAccount) => (
                   <TableRow key={serviceAccount.unique_id}>
                     <TableCell className="identity-directory-account">
                       <PersonIdentity
@@ -398,8 +489,10 @@ function ServiceAccountCollection({
             <Link
               className={buttonVariants({ variant: "outline" })}
               search={{
+                direction,
                 offset: Math.max(0, page.offset - page.limit) || undefined,
                 q: query,
+                sort,
               }}
               to="/admin/service-accounts"
             >
@@ -411,7 +504,12 @@ function ServiceAccountCollection({
           hasNext ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
-              search={{ offset: page.offset + page.limit, q: query }}
+              search={{
+                direction,
+                offset: page.offset + page.limit,
+                q: query,
+                sort,
+              }}
               to="/admin/service-accounts"
             >
               Next
