@@ -136,7 +136,7 @@ function UsersAdminPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const offset = search.offset ?? 0
-  const sort = search.sort
+  const sort = search.sort ?? "account"
   const direction = search.direction ?? "asc"
   const options = usersListQueryOptions(administrationScope, {
     is_service_account: false,

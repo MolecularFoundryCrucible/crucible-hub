@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Sorted the users directory alphabetically by account name by default, with the Account column shown as the active ascending sort until another column is chosen.
+
 - Throttled sign-in starts to 30 per 10 minutes per client address and capped pending sign-in transactions, answering throttled requests with HTTP 429.
 
 - Derived the legacy administrator-view cookie `Secure` flag from the configured Hub origin instead of the incoming request URL so the cookie stays `Secure` behind a TLS-terminating proxy.
