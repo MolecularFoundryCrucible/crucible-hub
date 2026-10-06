@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { Dispatch, ReactNode, SetStateAction } from "react"
 import type { z } from "zod"
 
@@ -71,6 +71,12 @@ export function useSlugAvailability({
   validate: (candidate: string) => boolean
 }) {
   const [checked, setChecked] = useState<CheckResult>()
+  const checkAvailabilityRef = useRef(checkAvailability)
+  const onLiveTakenChangeRef = useRef(onLiveTakenChange)
+  useEffect(() => {
+    checkAvailabilityRef.current = checkAvailability
+    onLiveTakenChangeRef.current = onLiveTakenChange
+  })
   const trimmedCandidate = candidate.trim()
   const rejected = Boolean(
     rejectedValue &&
@@ -97,14 +103,15 @@ export function useSlugAvailability({
     const controller = new AbortController()
     let active = true
     const timeout = window.setTimeout(() => {
-      void checkAvailability(trimmedCandidate, controller.signal)
+      void checkAvailabilityRef
+        .current(trimmedCandidate, controller.signal)
         .then((taken) => {
           if (!active) return
           setChecked({
             candidate: trimmedCandidate,
             result: taken ? "taken" : "no-exact-match",
           })
-          onLiveTakenChange?.(taken ? trimmedCandidate : undefined)
+          onLiveTakenChangeRef.current?.(taken ? trimmedCandidate : undefined)
         })
         .catch(() => {
           if (active) {
@@ -118,13 +125,7 @@ export function useSlugAvailability({
       window.clearTimeout(timeout)
       controller.abort()
     }
-  }, [
-    checkAvailability,
-    debounceMs,
-    onLiveTakenChange,
-    shouldCheck,
-    trimmedCandidate,
-  ])
+  }, [debounceMs, shouldCheck, trimmedCandidate])
 
   const status: SlugAvailabilityStatus | null = rejected
     ? "taken"

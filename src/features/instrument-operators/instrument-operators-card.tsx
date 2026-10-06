@@ -187,6 +187,7 @@ export function InstrumentAccessCard({
     removeOperatorMutation.isPending
 
   const directGrants = useMemo(() => {
+    if (canManage && grantsQuery.isLoading) return []
     const loaded = (grantsQuery.data ?? []).filter(
       (grant) => grant.principal_type !== "public"
     )
@@ -209,7 +210,7 @@ export function InstrumentAccessCard({
       ])
     }
     return sortGrants(loaded)
-  }, [grantsQuery.data, instrument.owner])
+  }, [canManage, grantsQuery.data, grantsQuery.isLoading, instrument.owner])
 
   function replaceGrants(nextGrants: readonly WorkspaceResourceAccessGrant[]) {
     queryClient.setQueryData(

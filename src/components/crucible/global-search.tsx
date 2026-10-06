@@ -133,6 +133,7 @@ function QuickSearchControl({
   const highlightedItemRef = useRef<WorkspaceSearchResult | undefined>(
     undefined
   )
+  const navigatedResultRef = useRef<string | undefined>(undefined)
   const [open, setOpen] = useState(false)
   const previousHrefRef = useRef(location.href)
   const normalizedQuery = query.trim()
@@ -160,7 +161,9 @@ function QuickSearchControl({
   useEffect(() => {
     if (previousHrefRef.current !== location.href) {
       previousHrefRef.current = location.href
-      finishSearch()
+      if (open || query.length > 0) {
+        finishSearch()
+      }
     }
   }, [location.href])
 
@@ -183,6 +186,8 @@ function QuickSearchControl({
   }
 
   function navigateToResult(item: WorkspaceSearchResult) {
+    if (navigatedResultRef.current === item.unique_id) return
+    navigatedResultRef.current = item.unique_id
     if (item.kind === "person") {
       void navigate({
         to: "/people/$personId",
@@ -260,6 +265,7 @@ function QuickSearchControl({
             details.reason === "clear-press"
           ) {
             onQueryChange(nextQuery)
+            navigatedResultRef.current = undefined
             highlightedItemRef.current = undefined
             if (nextQuery.trim().length >= 3) {
               setOpen(true)
