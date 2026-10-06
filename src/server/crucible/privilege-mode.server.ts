@@ -1,6 +1,10 @@
 import "@tanstack/react-start/server-only"
 
-import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server"
+import {
+  deleteCookie,
+  getCookie,
+  setCookie,
+} from "@tanstack/react-start/server"
 
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import {
