@@ -96,14 +96,6 @@ export const crucibleKeys = {
     [...scope, "admin", "users", "detail", userId, "access-groups"] as const,
   userAdminProjects: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "detail", userId, "projects"] as const,
-  accessGroupAdminQueries: (scope: IdentityScope) =>
-    [...scope, "admin", "access-groups"] as const,
-  accessGroupAdminList: (scope: IdentityScope) =>
-    [...scope, "admin", "access-groups", "list"] as const,
-  accessGroupAdminDetail: (scope: IdentityScope, groupName: string) =>
-    [...scope, "admin", "access-groups", "detail", groupName] as const,
-  accessGroupAdminUsers: (scope: IdentityScope, groupName: string) =>
-    [...scope, "admin", "access-groups", "detail", groupName, "users"] as const,
   deletionRequestQueries: (scope: IdentityScope) =>
     [...scope, "deletion-requests"] as const,
   deletionRequests: (scope: IdentityScope, filters: ListFilters) =>

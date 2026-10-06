@@ -1,11 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, Navigate, createFileRoute } from "@tanstack/react-router"
 
-import {
-  OpenFullPageIcon,
-  PersonIcon,
-  UserGroupIcon,
-} from "@/components/crucible/icons"
+import { OpenFullPageIcon, PersonIcon } from "@/components/crucible/icons"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -39,13 +35,6 @@ const adminModules = [
     href: "/admin/service-accounts" as const,
     icon: <PrincipalTypeIcon type="service_account" />,
     title: "Service accounts",
-  },
-  {
-    description:
-      "Inspect access groups, create new groups, and audit assigned user memberships.",
-    href: "/admin/access-groups" as const,
-    icon: <UserGroupIcon aria-hidden="true" className="size-5" />,
-    title: "Access groups",
   },
 ]
 

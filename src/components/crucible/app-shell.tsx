@@ -25,7 +25,6 @@ import {
   RecentResourcesIcon,
   SignOutIcon,
   ThemeIcon,
-  UserGroupIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
 import {
@@ -268,28 +267,6 @@ export function AppShell({
                         >
                           <PrincipalTypeIcon type="service_account" />
                           <span>Service accounts</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ) : null}
-                    {canOpenPlatformAdministration(account) ? (
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          isActive={pathname.startsWith("/admin/access-groups")}
-                          tooltip="Access groups"
-                          render={
-                            <Link
-                              aria-current={
-                                pathname.startsWith("/admin/access-groups")
-                                  ? "page"
-                                  : undefined
-                              }
-                              preload={false}
-                              to="/admin/access-groups"
-                            />
-                          }
-                        >
-                          <UserGroupIcon />
-                          <span>Access groups</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ) : null}

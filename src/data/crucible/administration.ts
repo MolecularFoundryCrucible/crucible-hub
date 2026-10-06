@@ -19,7 +19,3 @@ export function canOpenServiceAccountAdministration(account: WorkspaceAccount) {
 export function canOpenUserAdministration(account: WorkspaceAccount) {
   return canOpenPlatformAdministration(account)
 }
-
-export function canOpenAccessGroupAdministration(account: WorkspaceAccount) {
-  return canOpenPlatformAdministration(account)
-}

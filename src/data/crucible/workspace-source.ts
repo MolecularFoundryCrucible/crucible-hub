@@ -597,8 +597,6 @@ export type WorkspaceUserUpdate = {
 
 export type WorkspaceAccessGroup = Schema<"AccessGroupRead">
 
-export type WorkspaceAccessGroupMember = Schema<"AccessGroupMemberRead">
-
 export type WorkspaceSearchGroup = {
   error: boolean
   items: readonly WorkspaceSearchResult[]
