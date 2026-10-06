@@ -150,6 +150,7 @@ export function SystemStatusPopover({
             <p>Failed to query system status.</p>
             <div>
               <Button
+                disabled={isFetching}
                 size="xs"
                 variant="outline"
                 onClick={() => void handleRefresh()}
@@ -161,119 +162,130 @@ export function SystemStatusPopover({
         ) : null}
 
         {statusQuery.data ? (
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between rounded-md border border-border p-2.5">
-              <div className="flex items-center gap-2">
-                <ServerIcon
-                  aria-hidden="true"
-                  className="size-4 shrink-0 text-muted-foreground"
-                />
-                <div className="flex flex-col">
-                  <span className="text-label-compact text-foreground">
-                    API
-                  </span>
-                  <span className="text-supporting text-muted-foreground">
-                    {statusQuery.data.api.latencyMs != null
-                      ? `${statusQuery.data.api.latencyMs} ms`
-                      : "Unknown latency"}
-                    {statusQuery.data.api.version
-                      ? ` • v${statusQuery.data.api.version}`
-                      : null}
-                  </span>
-                </div>
-              </div>
-              <Badge variant={statusBadgeVariant(statusQuery.data.api.status)}>
-                {statusBadgeLabel(statusQuery.data.api.status)}
-              </Badge>
+          <>
+            <div aria-live="polite" className="sr-only">
+              System status: {statusBadgeLabel(statusQuery.data.status)}.
+              Database {databaseBadgeLabel(statusQuery.data.database.status)}.
             </div>
-
-            <div className="flex items-center justify-between rounded-md border border-border p-2.5">
-              <div className="flex items-center gap-2">
-                <DatabaseIcon
-                  aria-hidden="true"
-                  className="size-4 shrink-0 text-muted-foreground"
-                />
-                <div className="flex flex-col">
-                  <span className="text-label-compact text-foreground">
-                    Database
-                  </span>
-                  <span className="text-supporting text-muted-foreground">
-                    {statusQuery.data.database.latencyMs != null
-                      ? `${statusQuery.data.database.latencyMs} ms`
-                      : "Unknown latency"}
-                    {statusQuery.data.database.schemaRevisions.length > 0
-                      ? ` • ${
-                          statusQuery.data.database.schemaRevisions[
-                            statusQuery.data.database.schemaRevisions.length - 1
-                          ]
-                        }`
-                      : null}
-                  </span>
-                </div>
-              </div>
-              <Badge
-                variant={databaseBadgeVariant(statusQuery.data.database.status)}
-              >
-                {databaseBadgeLabel(statusQuery.data.database.status)}
-              </Badge>
-            </div>
-
-            {effectiveRevision ? (
+            <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between rounded-md border border-border p-2.5">
-                <div className="flex flex-col">
-                  <span className="text-label-compact text-foreground">
-                    Hub Revision
-                  </span>
-                  <span className="font-mono text-supporting text-muted-foreground">
-                    {effectiveRevision}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <ServerIcon
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-label-compact text-foreground">
+                      API
+                    </span>
+                    <span className="text-supporting text-muted-foreground">
+                      {statusQuery.data.api.latencyMs != null
+                        ? `${statusQuery.data.api.latencyMs} ms`
+                        : "Unknown latency"}
+                      {statusQuery.data.api.version
+                        ? ` • v${statusQuery.data.api.version}`
+                        : null}
+                    </span>
+                  </div>
+                </div>
+                <Badge
+                  variant={statusBadgeVariant(statusQuery.data.api.status)}
+                >
+                  {statusBadgeLabel(statusQuery.data.api.status)}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between rounded-md border border-border p-2.5">
+                <div className="flex items-center gap-2">
+                  <DatabaseIcon
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-label-compact text-foreground">
+                      Database
+                    </span>
+                    <span className="text-supporting text-muted-foreground">
+                      {statusQuery.data.database.latencyMs != null
+                        ? `${statusQuery.data.database.latencyMs} ms`
+                        : "Unknown latency"}
+                      {statusQuery.data.database.schemaRevisions.length > 0
+                        ? ` • ${
+                            statusQuery.data.database.schemaRevisions[
+                              statusQuery.data.database.schemaRevisions.length -
+                                1
+                            ]
+                          }`
+                        : null}
+                    </span>
+                  </div>
+                </div>
+                <Badge
+                  variant={databaseBadgeVariant(
+                    statusQuery.data.database.status
+                  )}
+                >
+                  {databaseBadgeLabel(statusQuery.data.database.status)}
+                </Badge>
+              </div>
+
+              {effectiveRevision ? (
+                <div className="flex items-center justify-between rounded-md border border-border p-2.5">
+                  <div className="flex flex-col">
+                    <span className="text-label-compact text-foreground">
+                      Hub Revision
+                    </span>
+                    <span className="font-mono text-supporting text-muted-foreground">
+                      {effectiveRevision}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+
+              <details className="group border-t border-border pt-1">
+                <summary className="cursor-pointer text-supporting text-muted-foreground underline underline-offset-4 transition-colors outline-none select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+                  Diagnostic payload
+                </summary>
+                <pre className="mt-1.5 max-h-36 overflow-auto rounded-md bg-muted/50 p-2 font-mono text-supporting text-foreground">
+                  {JSON.stringify(statusQuery.data, null, 2)}
+                </pre>
+              </details>
+
+              <div className="flex items-center justify-between border-t border-border pt-1">
+                <span className="text-supporting text-muted-foreground">
+                  Checked <LocalDateTime value={statusQuery.data.timestamp} />
+                </span>
+                <div className="flex items-center gap-2">
+                  <a
+                    className="inline-flex items-center gap-1 rounded-sm text-supporting text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    href="/hub/health"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Hub health
+                    <ExternalLinkIcon aria-hidden="true" className="size-3" />
+                  </a>
+                  <Button
+                    disabled={isFetching}
+                    onClick={() => void handleRefresh()}
+                    size="xs"
+                    variant="outline"
+                  >
+                    <RefreshResourceIcon
+                      aria-hidden="true"
+                      className={
+                        isFetching
+                          ? "animate-spin motion-reduce:animate-none"
+                          : undefined
+                      }
+                      data-icon="inline-start"
+                    />
+                    {isFetching ? "Refreshing" : "Refresh"}
+                  </Button>
                 </div>
               </div>
-            ) : null}
-
-            <details className="group border-t border-border pt-1">
-              <summary className="cursor-pointer text-supporting text-muted-foreground underline underline-offset-4 transition-colors outline-none select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
-                Diagnostic payload
-              </summary>
-              <pre className="mt-1.5 max-h-36 overflow-auto rounded-md bg-muted/50 p-2 font-mono text-supporting text-foreground">
-                {JSON.stringify(statusQuery.data, null, 2)}
-              </pre>
-            </details>
-
-            <div className="flex items-center justify-between border-t border-border pt-1">
-              <span className="text-supporting text-muted-foreground">
-                Checked <LocalDateTime value={statusQuery.data.timestamp} />
-              </span>
-              <div className="flex items-center gap-2">
-                <a
-                  className="inline-flex items-center gap-1 rounded-sm text-supporting text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  href="/hub/health"
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  Hub health
-                  <ExternalLinkIcon aria-hidden="true" className="size-3" />
-                </a>
-                <Button
-                  disabled={isFetching}
-                  onClick={() => void handleRefresh()}
-                  size="xs"
-                  variant="outline"
-                >
-                  <RefreshResourceIcon
-                    aria-hidden="true"
-                    className={
-                      isFetching
-                        ? "animate-spin motion-reduce:animate-none"
-                        : undefined
-                    }
-                    data-icon="inline-start"
-                  />
-                  {isFetching ? "Refreshing" : "Refresh"}
-                </Button>
-              </div>
             </div>
-          </div>
+          </>
         ) : null}
       </PopoverContent>
     </Popover>

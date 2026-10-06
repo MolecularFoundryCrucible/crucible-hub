@@ -9,7 +9,7 @@ describe("system status query options", () => {
 
     expect(options.queryKey).toEqual(crucibleKeys.systemStatus())
     expect(options.enabled).toBe(false)
-    expect(options.staleTime).toBe(30_000)
+    expect(options.staleTime).toBe(15_000)
     expect(options.gcTime).toBe(60_000)
     expect(options.refetchOnWindowFocus).toBe(false)
   })

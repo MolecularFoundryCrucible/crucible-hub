@@ -19,7 +19,7 @@ export function systemStatusQueryOptions(
         signal,
       }),
     enabled: options.enabled ?? true,
-    staleTime: 30_000,
+    staleTime: 15_000,
     gcTime: 60_000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

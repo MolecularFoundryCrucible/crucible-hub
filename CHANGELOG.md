@@ -6,6 +6,10 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Gated the footer system readiness probe behind Hub authentication in authenticated deployments, reported an explicit unreachable state instead of a synthetic healthy status when Hub sign-in is not configured, announced status transitions to assistive technology, and disabled status retry while a refresh is in flight.
+
+- Stopped quick search from blurring the active page control when collection pages update their URL, made repeated result selection idempotent, removed duplicate live availability requests caused by unstable form closures, and rendered the instrument access-grants loading state instead of a transient owner-only list.
+
 - Moved platform user detail from a dedicated administration route into the shared people detail page for eligible administrators, displayed platform roles in the user directory and detail views, and added live email availability checking to user creation and profile editing alongside username checks.
 
 - Added platform administration capabilities including user directory management with account creation, profile editing, and API key provisioning, and programmatic service account management.

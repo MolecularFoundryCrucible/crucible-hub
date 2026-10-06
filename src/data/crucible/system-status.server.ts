@@ -34,6 +34,25 @@ export function readFixtureSystemStatus(): SystemStatus {
   }
 }
 
+function unreachableStatus(latencyMs?: number): SystemStatus {
+  return {
+    status: "unreachable",
+    hub: {
+      revision: process.env.VITE_GIT_COMMIT || undefined,
+    },
+    api: {
+      status: "unreachable",
+      latencyMs,
+    },
+    database: {
+      status: "unknown",
+      latencyMs: null,
+      schemaRevisions: [],
+    },
+    timestamp: new Date().toISOString(),
+  }
+}
+
 export async function readSystemStatus(
   requestSignal?: AbortSignal,
   bypassCache = false
@@ -50,23 +69,21 @@ export async function readSystemStatus(
     return fixture
   }
 
-  const baseUrl =
-    configuration.mode === "api"
-      ? configuration.baseUrl
-      : process.env.CRUCIBLE_API_BASE_URL
+  if (configuration.mode === "unavailable") {
+    const unavailableStatus = unreachableStatus()
+    return unavailableStatus
+  }
 
-  if (!baseUrl) {
-    const fixture = readFixtureSystemStatus()
-    cachedStatus = { status: fixture, expiresAt: now + CACHE_TTL_MS }
-    return fixture
+  if (!configuration.baseUrl) {
+    const unavailableStatus = unreachableStatus()
+    return unavailableStatus
   }
 
   const client = createCrucibleClient(
     {
-      baseUrl,
-      bearerToken:
-        configuration.mode === "api" ? configuration.bearerToken : undefined,
-      fetch: configuration.mode === "api" ? configuration.fetch : undefined,
+      baseUrl: configuration.baseUrl,
+      bearerToken: configuration.bearerToken,
+      fetch: configuration.fetch,
     },
     { privilegeMode: null }
   )
@@ -144,48 +161,12 @@ export async function readSystemStatus(
       return status
     }
 
-    const unreachableStatus: SystemStatus = {
-      status: "unreachable",
-      hub: {
-        revision: process.env.VITE_GIT_COMMIT || undefined,
-      },
-      api: {
-        status: "unreachable",
-        latencyMs,
-      },
-      database: {
-        status: "unknown",
-        latencyMs: null,
-        schemaRevisions: [],
-      },
-      timestamp: new Date().toISOString(),
-    }
-    cachedStatus = {
-      status: unreachableStatus,
-      expiresAt: Date.now() + CACHE_TTL_MS,
-    }
-    return unreachableStatus
+    const status = unreachableStatus(latencyMs)
+    cachedStatus = { status, expiresAt: Date.now() + CACHE_TTL_MS }
+    return status
   } catch {
-    const unreachableStatus: SystemStatus = {
-      status: "unreachable",
-      hub: {
-        revision: process.env.VITE_GIT_COMMIT || undefined,
-      },
-      api: {
-        status: "unreachable",
-        latencyMs: Math.round(Date.now() - startTime),
-      },
-      database: {
-        status: "unknown",
-        latencyMs: null,
-        schemaRevisions: [],
-      },
-      timestamp: new Date().toISOString(),
-    }
-    cachedStatus = {
-      status: unreachableStatus,
-      expiresAt: Date.now() + CACHE_TTL_MS,
-    }
-    return unreachableStatus
+    const status = unreachableStatus(Math.round(Date.now() - startTime))
+    cachedStatus = { status, expiresAt: Date.now() + CACHE_TTL_MS }
+    return status
   }
 }

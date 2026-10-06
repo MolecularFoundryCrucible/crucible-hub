@@ -126,6 +126,25 @@ describe("system-status server source", () => {
     expect(status.database.status).toBe("unknown")
   })
 
+  it("returns unreachable status without probing when hub-auth is unconfigured", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "hub-auth")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    const status = await readSystemStatus(undefined, true)
+
+    expect(status.status).toBe("unreachable")
+    expect(status.api.status).toBe("unreachable")
+    expect(status.api.version).toBeUndefined()
+    expect(status.api.commit).toBeUndefined()
+    expect(status.database.status).toBe("unknown")
+    expect(status.database.schemaRevisions).toEqual([])
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it("caches status and reuses it until bypassCache is requested", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
