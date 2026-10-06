@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from "node:async_hooks"
+import type { AsyncLocalStorage } from "node:async_hooks"
 
 import { H3Event } from "h3-v2"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -23,7 +23,7 @@ function attempt(ip: string): Promise<void> {
       headers: { "x-forwarded-for": ip },
     })
   )
-  return eventStorage!.run({ h3Event }, async () => {
+  return eventStorage.run({ h3Event }, async () => {
     enforceHubLoginRateLimit()
   })
 }
