@@ -24,7 +24,6 @@ import { Route as AuthLogoutRouteImport } from './routes/auth.logout'
 import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
 import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.design-system'
 import { Route as FixturesScenariosRouteImport } from './routes/fixtures.scenarios'
-import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppDatasetsDatasetMfidRouteImport } from './routes/_app.datasets.$datasetMfid'
 import { Route as AppDatasetsNewRouteImport } from './routes/_app.datasets.new'
 import { Route as AppInstrumentsIndexRouteImport } from './routes/_app.instruments.index'
@@ -139,11 +138,6 @@ const FixturesScenariosRoute = FixturesScenariosRouteImport.update({
   id: '/fixtures/scenarios',
   path: '/fixtures/scenarios',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AppRoute,
 } as any)
 const AppDatasetsDatasetMfidRoute = AppDatasetsDatasetMfidRouteImport.update({
   id: '/datasets/$datasetMfid',
@@ -399,7 +393,6 @@ export interface FileRoutesByFullPath {
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/samples/new': typeof AppSamplesNewRoute
-  '/admin/': typeof AppAdminIndexRoute
   '/instruments/': typeof AppInstrumentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -452,7 +445,6 @@ export interface FileRoutesByTo {
   '/projects/new': typeof AppProjectsNewRoute
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/new': typeof AppSamplesNewRoute
-  '/admin': typeof AppAdminIndexRoute
   '/instruments': typeof AppInstrumentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -509,7 +501,6 @@ export interface FileRoutesById {
   '/_app/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/_app/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/_app/samples/new': typeof AppSamplesNewRoute
-  '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/instruments/': typeof AppInstrumentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -568,7 +559,6 @@ export interface FileRouteTypes {
     | '/resources/$resourceMfid'
     | '/samples/$sampleMfid'
     | '/samples/new'
-    | '/admin/'
     | '/instruments/'
     | '/projects/'
     | '/admin/service-accounts/$serviceAccountMfid'
@@ -621,7 +611,6 @@ export interface FileRouteTypes {
     | '/projects/new'
     | '/resources/$resourceMfid'
     | '/samples/new'
-    | '/admin'
     | '/instruments'
     | '/projects'
     | '/admin/service-accounts/$serviceAccountMfid'
@@ -677,7 +666,6 @@ export interface FileRouteTypes {
     | '/_app/resources/$resourceMfid'
     | '/_app/samples/$sampleMfid'
     | '/_app/samples/new'
-    | '/_app/admin/'
     | '/_app/instruments/'
     | '/_app/projects/'
     | '/_app/admin/service-accounts/$serviceAccountMfid'
@@ -829,13 +817,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/fixtures/scenarios'
       preLoaderRoute: typeof FixturesScenariosRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_app/admin/': {
-      id: '/_app/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppRoute
     }
     '/_app/datasets/$datasetMfid': {
       id: '/_app/datasets/$datasetMfid'
@@ -1266,7 +1247,6 @@ interface AppRouteChildren {
   AppResourcesResourceMfidRoute: typeof AppResourcesResourceMfidRoute
   AppSamplesSampleMfidRoute: typeof AppSamplesSampleMfidRouteWithChildren
   AppSamplesNewRoute: typeof AppSamplesNewRoute
-  AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppInstrumentsIndexRoute: typeof AppInstrumentsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
   AppAdminServiceAccountsServiceAccountMfidRoute: typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -1292,7 +1272,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppResourcesResourceMfidRoute: AppResourcesResourceMfidRoute,
   AppSamplesSampleMfidRoute: AppSamplesSampleMfidRouteWithChildren,
   AppSamplesNewRoute: AppSamplesNewRoute,
-  AppAdminIndexRoute: AppAdminIndexRoute,
   AppInstrumentsIndexRoute: AppInstrumentsIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
   AppAdminServiceAccountsServiceAccountMfidRoute:

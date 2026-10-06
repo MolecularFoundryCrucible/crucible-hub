@@ -111,12 +111,6 @@ function UserAdminDetailPage() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink render={<Link to="/admin" />}>
-              Administration
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbLink render={<Link to="/admin/users" />}>
               Users
             </BreadcrumbLink>

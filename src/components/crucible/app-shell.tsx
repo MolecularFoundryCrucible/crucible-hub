@@ -205,46 +205,26 @@ export function AppShell({
                       </SidebarMenuItem>
                     ) : null}
                     {canOpenPlatformAdministration(account) ? (
-                      <>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname === "/admin"}
-                            tooltip="Overview"
-                            render={
-                              <Link
-                                aria-current={
-                                  pathname === "/admin" ? "page" : undefined
-                                }
-                                preload={false}
-                                to="/admin"
-                              />
-                            }
-                          >
-                            <AdministratorViewIcon />
-                            <span>Overview</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname.startsWith("/admin/users")}
-                            tooltip="Users"
-                            render={
-                              <Link
-                                aria-current={
-                                  pathname.startsWith("/admin/users")
-                                    ? "page"
-                                    : undefined
-                                }
-                                preload={false}
-                                to="/admin/users"
-                              />
-                            }
-                          >
-                            <PersonIcon />
-                            <span>Users</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      </>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={pathname.startsWith("/admin/users")}
+                          tooltip="Users"
+                          render={
+                            <Link
+                              aria-current={
+                                pathname.startsWith("/admin/users")
+                                  ? "page"
+                                  : undefined
+                              }
+                              preload={false}
+                              to="/admin/users"
+                            />
+                          }
+                        >
+                          <PersonIcon />
+                          <span>Users</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
                     ) : null}
                     {canOpenServiceAccountAdministration(account) ? (
                       <SidebarMenuItem>
