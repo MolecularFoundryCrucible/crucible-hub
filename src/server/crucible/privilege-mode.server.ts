@@ -1,14 +1,10 @@
 import "@tanstack/react-start/server-only"
 
-import {
-  deleteCookie,
-  getCookie,
-  getRequest,
-  setCookie,
-} from "@tanstack/react-start/server"
+import { deleteCookie, getCookie, setCookie } from "@tanstack/react-start/server"
 
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import {
+  hubAuthPublicOrigin,
   sharedRequestPrivilegeMode,
   updateSharedPrivilegeMode,
 } from "./hub-auth.server"
@@ -20,7 +16,7 @@ function cookieOptions() {
     httpOnly: true,
     path: "/",
     sameSite: "lax" as const,
-    secure: new URL(getRequest().url).protocol === "https:",
+    secure: new URL(hubAuthPublicOrigin()).protocol === "https:",
   }
 }
 

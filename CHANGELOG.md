@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Derived the legacy administrator-view cookie `Secure` flag from the configured Hub origin instead of the incoming request URL so the cookie stays `Secure` behind a TLS-terminating proxy.
+
 - Gated the footer system readiness probe behind Hub authentication in authenticated deployments, reported an explicit unreachable state instead of a synthetic healthy status when Hub sign-in is not configured, announced status transitions to assistive technology, and disabled status retry while a refresh is in flight.
 
 - Stopped quick search from blurring the active page control when collection pages update their URL, made repeated result selection idempotent, removed duplicate live availability requests caused by unstable form closures, and rendered the instrument access-grants loading state instead of a transient owner-only list.
