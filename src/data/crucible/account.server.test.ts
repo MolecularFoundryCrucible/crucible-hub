@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
-import { patchWorkspaceAccount, readWorkspaceAccount } from "./account.server"
+import {
+  checkWorkspaceUsernameExactMatch,
+  patchWorkspaceAccount,
+  readWorkspaceAccount,
+} from "./account.server"
 
 describe("workspace account source", () => {
   afterEach(() => {
@@ -18,6 +22,24 @@ describe("workspace account source", () => {
 
     expect(account.unique_id).toBe("0000-0000-0000-000X")
     expect(account.email).toBe("avery.chen@example.invalid")
+  })
+
+  it("matches the account username when checking username availability", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(checkWorkspaceUsernameExactMatch("avery.chen")).resolves.toBe(
+      true
+    )
+    await expect(checkWorkspaceUsernameExactMatch("AVERY.CHEN")).resolves.toBe(
+      true
+    )
+    await expect(checkWorkspaceUsernameExactMatch("morgan.lee")).resolves.toBe(
+      true
+    )
+    await expect(
+      checkWorkspaceUsernameExactMatch("available.username")
+    ).resolves.toBe(false)
   })
 
   it("returns a confirmed fixture profile update", async () => {
