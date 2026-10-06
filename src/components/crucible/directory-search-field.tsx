@@ -8,9 +8,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
-
-const directorySearchDebounceMs = 250
-const directorySearchMinLength = 3
+import { searchDebounceMs, searchMinQueryLength } from "@/lib/search"
 
 export function DirectorySearchField({
   label,
@@ -26,7 +24,7 @@ export function DirectorySearchField({
   const [value, setValue] = useState(query ?? "")
   const inputRef = useRef<HTMLInputElement>(null)
   const lastCommittedRef = useRef<string | undefined>(query)
-  const debouncedValue = useDebouncedValue(value, directorySearchDebounceMs)
+  const debouncedValue = useDebouncedValue(value, searchDebounceMs)
 
   useEffect(() => {
     if ((query ?? null) === (lastCommittedRef.current ?? null)) return
@@ -40,8 +38,7 @@ export function DirectorySearchField({
 
   function commit(next: string) {
     const trimmed = next.trim()
-    const search =
-      trimmed.length >= directorySearchMinLength ? trimmed : undefined
+    const search = trimmed.length >= searchMinQueryLength ? trimmed : undefined
     if ((search ?? null) === (lastCommittedRef.current ?? null)) return
     lastCommittedRef.current = search
     onSearch(search)

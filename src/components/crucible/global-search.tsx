@@ -29,6 +29,7 @@ import type {
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { searchDebounceMs, searchMinQueryLength } from "@/lib/search"
 import {
   isDialogKeyboardTarget,
   isEditableKeyboardTarget,
@@ -137,12 +138,12 @@ function QuickSearchControl({
   const [open, setOpen] = useState(false)
   const previousHrefRef = useRef(location.href)
   const normalizedQuery = query.trim()
-  const debouncedQuery = useDebouncedValue(normalizedQuery, 250)
+  const debouncedQuery = useDebouncedValue(normalizedQuery, searchDebounceMs)
   const activeProjectMfid = searchScope === "project" ? projectMfid : undefined
   const kinds = activeProjectMfid ? projectSearchKinds : globalSearchKinds
   const result = useQuery({
     ...quickSearchQueryOptions(scope, debouncedQuery, kinds, activeProjectMfid),
-    enabled: open && debouncedQuery.length >= 3,
+    enabled: open && debouncedQuery.length >= searchMinQueryLength,
   })
   const response =
     result.data?.query === debouncedQuery ? result.data : undefined
@@ -152,9 +153,10 @@ function QuickSearchControl({
     ) ?? []
   const items = groups.flatMap((group) => group.items)
   const waitingForDebounce =
-    normalizedQuery.length >= 3 && normalizedQuery !== debouncedQuery
+    normalizedQuery.length >= searchMinQueryLength &&
+    normalizedQuery !== debouncedQuery
   const searching =
-    normalizedQuery.length >= 3 &&
+    normalizedQuery.length >= searchMinQueryLength &&
     (waitingForDebounce || result.isPending || !response)
   const partialFailure = response?.groups.some((group) => group.error) ?? false
 
@@ -267,7 +269,7 @@ function QuickSearchControl({
             onQueryChange(nextQuery)
             navigatedResultRef.current = undefined
             highlightedItemRef.current = undefined
-            if (nextQuery.trim().length >= 3) {
+            if (nextQuery.trim().length >= searchMinQueryLength) {
               setOpen(true)
             } else if (!projectMfid && details.reason === "clear-press") {
               setOpen(false)
@@ -305,7 +307,7 @@ function QuickSearchControl({
             if (!shortcutFocus.current) {
               onScopeChange(projectMfid ? "project" : "global")
             }
-            if (normalizedQuery.length >= 3 || projectMfid) {
+            if (normalizedQuery.length >= searchMinQueryLength || projectMfid) {
               setOpen(true)
             }
           }}
@@ -316,7 +318,7 @@ function QuickSearchControl({
                 const target = highlightedItemRef.current
                 finishSearch()
                 navigateToResult(target)
-              } else if (normalizedQuery.length >= 3) {
+              } else if (normalizedQuery.length >= searchMinQueryLength) {
                 finishSearch()
                 onShowAll()
               }
@@ -410,12 +412,12 @@ function QuickSearchControl({
               <span className="flex min-w-0 items-center gap-2 truncate">
                 <SearchIcon aria-hidden="true" data-icon="inline-start" />
                 <span className="truncate">
-                  {normalizedQuery.length >= 3
+                  {normalizedQuery.length >= searchMinQueryLength
                     ? `View all results for “${normalizedQuery}”`
                     : "View all results"}
                 </span>
               </span>
-              {normalizedQuery.length >= 3 ? (
+              {normalizedQuery.length >= searchMinQueryLength ? (
                 <kbd
                   aria-hidden="true"
                   className="ml-2 hidden rounded border bg-muted px-1.5 py-0.5 text-label-compact sm:inline"

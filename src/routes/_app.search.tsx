@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 import { resourceDisplayName } from "@/lib/resource-name"
+import { searchMinQueryLength } from "@/lib/search"
 
 import {
   CollectionLoadError,
@@ -101,7 +102,8 @@ function SearchPage() {
       ? [search.kind]
       : kinds
   const metadataMode = !search.projectMfid && search.mode === "metadata"
-  const validQuery = search.q && search.q.length >= 3 ? search.q : null
+  const validQuery =
+    search.q && search.q.length >= searchMinQueryLength ? search.q : null
 
   useEffect(() => {
     setQuery(search.q ?? "")
@@ -196,7 +198,7 @@ function SearchPage() {
             autoComplete="off"
             id="search-query"
             maxLength={200}
-            minLength={3}
+            minLength={searchMinQueryLength}
             name="q"
             onChange={(event) => setQuery(event.target.value)}
             placeholder={

@@ -16,6 +16,7 @@ import { searchQueryOptions } from "@/data/crucible/search.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { searchDebounceMs, searchMinQueryLength } from "@/lib/search"
 
 export type SearchableResourceKind =
   "dataset" | "instrument" | "person" | "project" | "sample"
@@ -57,7 +58,7 @@ export function ResourceSearchCombobox({
       : resourceLabels[kind]
   const normalizedQuery = query.trim()
   const [open, setOpen] = useState(false)
-  const debouncedQuery = useDebouncedValue(normalizedQuery, 250)
+  const debouncedQuery = useDebouncedValue(normalizedQuery, searchDebounceMs)
   const search = useQuery({
     ...searchQueryOptions(
       scope,
@@ -66,7 +67,7 @@ export function ResourceSearchCombobox({
       undefined,
       serviceAccountsOnly
     ),
-    enabled: debouncedQuery.length >= 3,
+    enabled: debouncedQuery.length >= searchMinQueryLength,
   })
   const excluded = new Set(excludedIds)
   const group = search.data?.groups.find((candidate) => candidate.kind === kind)
@@ -75,9 +76,10 @@ export function ResourceSearchCombobox({
       (item) => item.kind === kind && !excluded.has(item.unique_id)
     ) ?? []
   const waitingForDebounce =
-    normalizedQuery.length >= 3 && normalizedQuery !== debouncedQuery
+    normalizedQuery.length >= searchMinQueryLength &&
+    normalizedQuery !== debouncedQuery
   const searching =
-    normalizedQuery.length >= 3 &&
+    normalizedQuery.length >= searchMinQueryLength &&
     (waitingForDebounce || search.isPending || search.isPlaceholderData)
 
   return (
