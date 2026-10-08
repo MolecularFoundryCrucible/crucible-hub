@@ -20,7 +20,10 @@ import {
 } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { identityScopeWithPrivilegeMode } from "@/data/crucible/query-keys"
+import {
+  identityScopeWithPrivilegeMode,
+  privilegeModeFromScope,
+} from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import {
@@ -108,7 +111,11 @@ function DeletionRequestsPage() {
   const scope = deletionAdministrationScope(baseScope, account)
 
   return (
-    <WorkspaceProvider mode={mode} privilegeMode={scope[3]} scope={scope}>
+    <WorkspaceProvider
+      mode={mode}
+      privilegeMode={privilegeModeFromScope(scope)}
+      scope={scope}
+    >
       <DeletionRequestsContent account={account} />
     </WorkspaceProvider>
   )

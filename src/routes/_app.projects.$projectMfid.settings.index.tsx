@@ -23,6 +23,7 @@ import { ProjectLeaveCard } from "@/features/project-membership/project-leave-ca
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 import { ProjectMembershipCard } from "@/features/project-membership/project-membership-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
+import { ResourceForcedDeletionCard } from "@/features/resource-deletion/resource-forced-deletion"
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/settings/")({
@@ -54,12 +55,13 @@ function ProjectManagePage() {
   if (!project || !("organization" in project)) return null
 
   const canTransfer = project.capabilities?.can_transfer === true
+  const canDelete = project.capabilities?.can_delete === true
   const { canLeave, canManageAccess } = projectMembershipActions(
     project,
     scope[2]
   )
   const canManageMembers = canManageAccess || canTransfer
-  const hasResourceManagement = canLeave || canTransfer
+  const hasResourceManagement = canLeave || canTransfer || canDelete
 
   if (!canManageMembers && !hasResourceManagement) {
     return <ManagementUnavailable />
@@ -118,6 +120,19 @@ function ProjectManagePage() {
                   scope={scope}
                 />
               ) : null}
+              {canDelete ? (
+                <ProjectDeletionRow
+                  onSuccess={() =>
+                    void navigate({
+                      replace: true,
+                      search: { cursor: undefined },
+                      to: "/projects",
+                    })
+                  }
+                  projectMfid={projectMfid}
+                  scope={scope}
+                />
+              ) : null}
               {canLeave ? (
                 <ProjectLeaveCard
                   accountId={scope[2]}
@@ -158,6 +173,29 @@ function ProjectOwnershipRow({
   return (
     <OwnershipTransferCard
       mode={mode}
+      presentation="row"
+      resource={resource}
+      scope={scope}
+    />
+  )
+}
+
+function ProjectDeletionRow({
+  onSuccess,
+  projectMfid,
+  scope,
+}: {
+  onSuccess: () => void
+  projectMfid: string
+  scope: IdentityScope
+}) {
+  const { data: resource } = useSuspenseQuery(
+    resourceQueryOptions(scope, projectMfid)
+  )
+  if (!resource || resource.kind !== "project") return null
+  return (
+    <ResourceForcedDeletionCard
+      onSuccess={onSuccess}
       presentation="row"
       resource={resource}
       scope={scope}

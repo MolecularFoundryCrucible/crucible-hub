@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 import type { AnyFormApi } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -21,11 +20,11 @@ import {
 } from "@/features/forms/discard-changes"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -58,10 +57,7 @@ import {
   useCreationTimestampDefault,
   workspaceSelectionOf,
 } from "./creation-form"
-import {
-  creationFailureMessage,
-  isUncertainCreationError,
-} from "./creation-error"
+import { useStagedCreation } from "./creation-submission"
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -101,9 +97,6 @@ export function DatasetCreationForm({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [uncertainOutcome, setUncertainOutcome] = useState(false)
-  const [createdDataset, setCreatedDataset] = useState<DatasetResource>()
-  const [saveError, setSaveError] = useState<string>()
   const createMutation = useMutation({
     mutationFn: async (value: DatasetFormValues) =>
       unwrapHubResult(
@@ -129,10 +122,24 @@ export function DatasetCreationForm({
   })
   const relationships = useCreationRelationshipSubmission({
     onApplied: (resource) => {
-      if (resource.kind === "dataset") setCreatedDataset(resource)
+      if (resource.kind === "dataset") setCreated(resource)
     },
     resourceKind: "dataset",
     scope,
+  })
+  const {
+    created: createdDataset,
+    saveError,
+    setCreated,
+    submit,
+    uncertainOutcome,
+  } = useStagedCreation<DatasetFormValues>({
+    create: (value) => createMutation.mutateAsync(value),
+    kind: "dataset",
+    onCreated: (resource) => {
+      if (resource.kind === "dataset") cacheDataset(resource)
+    },
+    relationships,
   })
   const form = useDatasetForm(
     {
@@ -148,35 +155,9 @@ export function DatasetCreationForm({
       timestamp: "",
     },
     async ({ formApi, value }) => {
-      setSaveError(undefined)
-      if (createdDataset) {
-        const complete = await relationships.apply(
-          createdDataset.unique_id,
-          value.relationships
-        )
-        if (complete) await openCreatedDataset(createdDataset.unique_id)
-        return
-      }
-      if (uncertainOutcome) {
-        return
-      }
-      try {
-        const created = await createMutation.mutateAsync(value)
-        if (created.kind !== "dataset") {
-          throw new Error("The dataset creation response is invalid.")
-        }
-        setCreatedDataset(created)
-        cacheDataset(created)
-        formApi.reset(value)
-        const complete = await relationships.apply(
-          created.unique_id,
-          value.relationships
-        )
-        if (complete) await openCreatedDataset(created.unique_id)
-      } catch (error) {
-        setUncertainOutcome(isUncertainCreationError(error))
-        setSaveError(creationFailureMessage("dataset", error))
-      }
+      await submit(value, formApi, async (resource) => {
+        await openCreatedDataset(resource.unique_id)
+      })
     }
   )
   useCreationTimestampDefault(form)
@@ -239,13 +220,12 @@ export function DatasetCreationForm({
                 <FieldGroup>
                   <form.Field name="dataset_name">
                     {(field) => {
-                      const invalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
+                      const invalid = shouldShowFieldError(field)
                       const errorId = `${field.name}-error`
                       return (
                         <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            Name <span aria-hidden="true">*</span>
+                          <FieldLabel htmlFor={field.name} required>
+                            Name
                           </FieldLabel>
                           <Input
                             aria-describedby={errorId}
@@ -263,7 +243,7 @@ export function DatasetCreationForm({
                             value={field.state.value}
                           />
                           <FieldError
-                            errors={field.state.meta.errors}
+                            errors={fieldErrors(field)}
                             id={errorId}
                           />
                         </Field>
@@ -272,8 +252,7 @@ export function DatasetCreationForm({
                   </form.Field>
                   <form.Field name="project">
                     {(field) => {
-                      const invalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
+                      const invalid = shouldShowFieldError(field)
                       return (
                         <Field
                           data-invalid={invalid}
@@ -287,7 +266,7 @@ export function DatasetCreationForm({
                           </FieldLabel>
                           <ResourceChooser
                             describedBy="dataset-project-error"
-                            emptyLabel="Not selected"
+                            emptyLabel="Choose a project"
                             invalid={invalid}
                             kind="project"
                             onChange={field.handleChange}
@@ -296,7 +275,7 @@ export function DatasetCreationForm({
                           />
                           <FieldError
                             id="dataset-project-error"
-                            errors={field.state.meta.errors}
+                            errors={fieldErrors(field)}
                           />
                         </Field>
                       )
@@ -304,14 +283,12 @@ export function DatasetCreationForm({
                   </form.Field>
                   <form.Field name="public">
                     {(field) => {
-                      const descriptionId = `${field.name}-description`
                       return (
                         <Field data-disabled={Boolean(createdDataset)}>
-                          <FieldLabel htmlFor={field.name}>
+                          <FieldLabel htmlFor={field.name} required>
                             Visibility
                           </FieldLabel>
                           <NativeSelect
-                            aria-describedby={descriptionId}
                             id={field.name}
                             name={field.name}
                             onChange={(event) =>
@@ -328,10 +305,6 @@ export function DatasetCreationForm({
                               Public
                             </NativeSelectOption>
                           </NativeSelect>
-                          <FieldDescription id={descriptionId}>
-                            Public datasets can be read outside their project
-                            grants.
-                          </FieldDescription>
                         </Field>
                       )
                     }}
@@ -347,7 +320,7 @@ export function DatasetCreationForm({
                             Acquisition instrument
                           </FieldLabel>
                           <ResourceChooser
-                            emptyLabel="Not selected"
+                            emptyLabel="Choose an instrument"
                             kind="instrument"
                             onChange={field.handleChange}
                             triggerId="dataset-instrument-trigger"
@@ -364,13 +337,11 @@ export function DatasetCreationForm({
                     />
                     <form.Field name="timestamp">
                       {(field) => {
-                        const invalid =
-                          field.state.meta.isTouched &&
-                          !field.state.meta.isValid
+                        const invalid = shouldShowFieldError(field)
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name} optional>
+                            <FieldLabel htmlFor={field.name} required>
                               Local date and time
                             </FieldLabel>
                             <Input
@@ -387,7 +358,7 @@ export function DatasetCreationForm({
                               value={field.state.value}
                             />
                             <FieldError
-                              errors={field.state.meta.errors}
+                              errors={fieldErrors(field)}
                               id={errorId}
                             />
                           </Field>
@@ -506,7 +477,7 @@ function DatasetTextField({
   return (
     <form.Field name={fieldName}>
       {(field) => {
-        const invalid = field.state.meta.isTouched && !field.state.meta.isValid
+        const invalid = shouldShowFieldError(field)
         const errorId = `${field.name}-error`
         return (
           <Field data-invalid={invalid}>
@@ -524,7 +495,7 @@ function DatasetTextField({
               onChange={(event) => field.handleChange(event.target.value)}
               value={field.state.value}
             />
-            <FieldError errors={field.state.meta.errors} id={errorId} />
+            <FieldError errors={fieldErrors(field)} id={errorId} />
           </Field>
         )
       }}

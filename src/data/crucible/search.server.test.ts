@@ -152,4 +152,122 @@ describe("workspace search source", () => {
       result.groups.find((group) => group.kind === "instrument")?.error
     ).toBe(true)
   })
+
+  it("falls back to the username or MFID when a person has no display name", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        crucibleApiResponse([
+          {
+            first_name: "Titanx",
+            is_service_account: true,
+            last_name: "Admin",
+            unique_id: "user-mfid-1",
+            username: "titanx_admin",
+          },
+          {
+            first_name: "",
+            is_service_account: true,
+            last_name: "",
+            unique_id: "user-mfid-2",
+            username: "sa-hip",
+          },
+          {
+            first_name: "",
+            is_service_account: true,
+            last_name: "",
+            unique_id: "user-mfid-3",
+            username: null,
+          },
+        ])
+      )
+    )
+
+    const result = await searchWorkspace({
+      kinds: ["person"],
+      limit: 8,
+      query: "service",
+    })
+
+    expect(result.groups[0].items.map((item) => item.name)).toEqual([
+      "Titanx Admin",
+      "sa-hip",
+      "user-mfid-3",
+    ])
+  })
+
+  it("browses initial collections when query is empty in fixture mode", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    const result = await searchWorkspace({
+      kinds: ["instrument", "project"],
+      limit: 8,
+      query: "",
+    })
+
+    expect(result.groups.map((g) => g.kind)).toEqual(["instrument", "project"])
+    expect(result.groups[0].items.length).toBeGreaterThan(0)
+    expect(result.groups[1].items.length).toBeGreaterThan(0)
+  })
+
+  it("calls collection list endpoints rather than search endpoints when query is empty in API mode", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requestedPaths: string[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        const url = new URL(request.url)
+        requestedPaths.push(url.pathname)
+        if (url.pathname === "/projects") {
+          const items = [
+            {
+              organization: "Lab",
+              project_id: "demo-project",
+              title: "Demo Project",
+              unique_id: "proj-1",
+            },
+          ]
+          return crucibleApiResponse({ items, total: items.length })
+        }
+        if (url.pathname === "/users") {
+          const items = [
+            {
+              first_name: "Alice",
+              last_name: "Smith",
+              unique_id: "user-1",
+              username: "asmith",
+            },
+          ]
+          return crucibleApiResponse({ items, total: items.length })
+        }
+        return crucibleApiResponse({ items: [], total: 0 })
+      })
+    )
+
+    const result = await searchWorkspace({
+      kinds: ["project", "person"],
+      limit: 8,
+      query: "",
+    })
+
+    expect(requestedPaths.sort()).toEqual(["/projects", "/users"])
+    expect(result.groups[0].items[0]).toMatchObject({
+      kind: "project",
+      name: "Demo Project",
+      unique_id: "proj-1",
+    })
+    expect(result.groups[1].items[0]).toMatchObject({
+      kind: "person",
+      name: "Alice Smith",
+      unique_id: "user-1",
+    })
+  })
 })

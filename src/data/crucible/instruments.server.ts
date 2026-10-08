@@ -23,9 +23,11 @@ import type {
   WorkspaceInstrumentCreate,
   WorkspaceInstrumentOperator,
   WorkspaceInstrumentPage,
+  WorkspaceInstrumentSort,
   WorkspaceInstrumentStatus,
   WorkspacePerson,
   WorkspaceResourceDetail,
+  WorkspaceSortDirection,
 } from "./workspace-source"
 
 type Schema<TSchemaName extends keyof components["schemas"]> =
@@ -72,6 +74,7 @@ function toWorkspaceInstrument(
     other_id_source: instrument.other_id_source,
     capabilities: instrument.capabilities ?? null,
     owner: safeOwner(instrument.owner),
+    role: instrument.role ?? null,
   }
 }
 
@@ -118,9 +121,9 @@ export async function readWorkspaceInstrumentOperators(
 
   const client = createCrucibleClient(configuration)
   const result = await client.GET(
-    "/instruments/{instrument_mfid}/service_accounts",
+    "/instruments/{instrument_ref}/service_accounts",
     {
-      params: { path: { instrument_mfid: instrumentMfid } },
+      params: { path: { instrument_ref: instrumentMfid } },
       signal: crucibleRequestSignal(requestSignal),
     }
   )
@@ -159,12 +162,12 @@ export async function addWorkspaceInstrumentOperator(
 
   const client = createCrucibleClient(configuration)
   const result = await client.POST(
-    "/instruments/{instrument_mfid}/service_accounts/{sa_unique_id}",
+    "/instruments/{instrument_ref}/service_accounts/{service_account_ref}",
     {
       params: {
         path: {
-          instrument_mfid: instrumentMfid,
-          sa_unique_id: serviceAccountId,
+          instrument_ref: instrumentMfid,
+          service_account_ref: serviceAccountId,
         },
       },
       signal: crucibleRequestSignal(requestSignal),
@@ -192,12 +195,12 @@ export async function removeWorkspaceInstrumentOperator(
 
   const client = createCrucibleClient(configuration)
   const result = await client.DELETE(
-    "/instruments/{instrument_mfid}/service_accounts/{sa_unique_id}",
+    "/instruments/{instrument_ref}/service_accounts/{service_account_ref}",
     {
       params: {
         path: {
-          instrument_mfid: instrumentMfid,
-          sa_unique_id: serviceAccountId,
+          instrument_ref: instrumentMfid,
+          service_account_ref: serviceAccountId,
         },
       },
       signal: crucibleRequestSignal(requestSignal),
@@ -325,9 +328,9 @@ export async function patchWorkspaceInstrument(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.PATCH("/instruments/{instrument_mfid}", {
+  const result = await client.PATCH("/instruments/{instrument_ref}", {
     body: changes,
-    params: { path: { instrument_mfid: instrumentMfid } },
+    params: { path: { instrument_ref: instrumentMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
@@ -384,9 +387,9 @@ export async function setWorkspaceInstrumentStatus(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.POST("/instruments/{instrument_mfid}/status", {
+  const result = await client.POST("/instruments/{instrument_ref}/status", {
     params: {
-      path: { instrument_mfid: instrumentMfid },
+      path: { instrument_ref: instrumentMfid },
       query: { status },
     },
     signal: crucibleRequestSignal(requestSignal),
@@ -405,18 +408,22 @@ export async function readWorkspaceInstruments(
   {
     affiliation,
     cursor,
+    direction,
     includeOwner,
     includeTotal,
     limit,
     scenario,
+    sort,
     status,
   }: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    direction?: WorkspaceSortDirection
     includeOwner?: boolean
     includeTotal?: boolean
     limit: number
     scenario?: FixtureScenario
+    sort?: WorkspaceInstrumentSort
     status?: WorkspaceInstrumentStatus
   },
   requestSignal?: AbortSignal
@@ -429,12 +436,34 @@ export async function readWorkspaceInstruments(
     assertFixtureScenarioAvailable(scenario, "instruments")
     const source = readWorkspaceFixture(scenario)
     if (source.status === "unavailable") throw new Error(source.reason)
-    const instruments = source.workspace.instruments.filter(
+    let instruments = source.workspace.instruments.filter(
       (instrument) =>
         instrument.status === (status ?? "active") &&
         (!affiliation ||
           instrument.owner?.unique_id === source.workspace.account.unique_id)
     )
+    if (sort) {
+      const dir = direction === "desc" ? -1 : 1
+      instruments = [...instruments].sort((a, b) => {
+        if (sort === "name")
+          return (
+            dir *
+            (a.instrument_name || "").localeCompare(b.instrument_name || "")
+          )
+        if (sort === "instrument_id")
+          return (
+            dir * (a.instrument_id || "").localeCompare(b.instrument_id || "")
+          )
+        if (sort === "created")
+          return (
+            dir * ((a.creation_time || "") > (b.creation_time || "") ? 1 : -1)
+          )
+        return (
+          dir *
+          ((a.modification_time || "") > (b.modification_time || "") ? 1 : -1)
+        )
+      })
+    }
     const page = fixtureCursorPage(instruments, { cursor, limit })
     return {
       ...page,
@@ -452,9 +481,11 @@ export async function readWorkspaceInstruments(
       query: {
         affiliation: affiliation ? [affiliation] : undefined,
         cursor,
+        direction: sort ? direction : undefined,
         include_owner: includeOwner ?? true,
         include_total: includeTotal ?? true,
         limit,
+        sort: sort ?? undefined,
         status,
       },
     },

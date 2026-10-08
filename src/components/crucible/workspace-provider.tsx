@@ -1,6 +1,9 @@
 import { createContext, useContext } from "react"
 
-import { identityScopeWithPrivilegeMode } from "@/data/crucible/query-keys"
+import {
+  identityScopeWithPrivilegeMode,
+  privilegeModeFromScope,
+} from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import type { WorkspaceMode } from "@/data/crucible/workspace-source"
@@ -19,7 +22,7 @@ export function WorkspaceProvider({
   children,
   mode,
   scope,
-  privilegeMode = scope[3],
+  privilegeMode = privilegeModeFromScope(scope),
 }: {
   children: React.ReactNode
   mode: WorkspaceMode

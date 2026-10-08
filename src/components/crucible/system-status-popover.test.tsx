@@ -21,6 +21,7 @@ const healthyStatus: SystemStatus = {
   hub: { revision: "hub-123" },
   api: {
     status: "ok",
+    url: "https://api.example.test",
     version: "1.2.3",
     commit: "api-commit-456",
     branch: "main",
@@ -79,6 +80,7 @@ describe("SystemStatusPopover", () => {
       0
     )
     expect(screen.getByText("API")).toBeTruthy()
+    expect(screen.getByText("https://api.example.test")).toBeTruthy()
     expect(screen.getByText(/12 ms/)).toBeTruthy()
     expect(screen.getByText(/v1\.2\.3/)).toBeTruthy()
     expect(screen.getByText("Database")).toBeTruthy()

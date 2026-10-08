@@ -33,6 +33,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { createWorkspaceProject } from "@/data/crucible/creation.functions"
@@ -202,7 +203,6 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                           })
                           return unwrapHubResult(result)
                         }}
-                        description="Used to identify this project in integrations."
                         entityLabel="Project ID"
                         field={field}
                         label="Project ID"
@@ -216,18 +216,17 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                   </form.Field>
                   <form.Field name="project_lead">
                     {(field) => {
-                      const invalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
-                      const descriptionId = `${formId}-${field.name}-description`
+                      const invalid = shouldShowFieldError(field)
                       const errorId = `${formId}-${field.name}-error`
                       return (
                         <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name}>
+                          <FieldLabel htmlFor={field.name} required>
                             Project lead
                           </FieldLabel>
                           <ResourceChooser
-                            describedBy={`${descriptionId} ${errorId}`}
+                            describedBy={errorId}
                             emptyLabel="Choose a project lead"
+                            excludeServiceAccounts
                             invalid={invalid}
                             kind="person"
                             onChange={(value) => {
@@ -237,11 +236,8 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                             triggerId={field.name}
                             value={selectedLead}
                           />
-                          <FieldDescription id={descriptionId}>
-                            Your account is selected by default.
-                          </FieldDescription>
                           <FieldError
-                            errors={field.state.meta.errors}
+                            errors={fieldErrors(field)}
                             id={errorId}
                           />
                         </Field>
@@ -333,13 +329,17 @@ function ProjectTextField({
   return (
     <form.Field name={fieldName}>
       {(field) => {
-        const invalid = field.state.meta.isTouched && !field.state.meta.isValid
+        const invalid = shouldShowFieldError(field)
         const descriptionId = `project-creation-${field.name}-description`
         const errorId = `project-creation-${field.name}-error`
         const hasDescription = Boolean(description)
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name} optional={!required}>
+            <FieldLabel
+              htmlFor={field.name}
+              optional={!required}
+              required={required}
+            >
               {label}
             </FieldLabel>
             <Input
@@ -362,7 +362,7 @@ function ProjectTextField({
                 {description}
               </FieldDescription>
             ) : null}
-            <FieldError errors={field.state.meta.errors} id={errorId} />
+            <FieldError errors={fieldErrors(field)} id={errorId} />
           </Field>
         )
       }}

@@ -174,3 +174,26 @@ describe("instrument registration server function input", () => {
     }
   )
 })
+
+describe("instrument list server function input", () => {
+  it("accepts valid sort and direction parameters", () => {
+    expect(
+      instrumentListInputSchema.parse({
+        direction: "desc",
+        limit: 20,
+        sort: "name",
+      })
+    ).toEqual({
+      direction: "desc",
+      limit: 20,
+      sort: "name",
+    })
+  })
+
+  it("rejects invalid instrument sort", () => {
+    expect(
+      instrumentListInputSchema.safeParse({ limit: 20, sort: "invalid" })
+        .success
+    ).toBe(false)
+  })
+})

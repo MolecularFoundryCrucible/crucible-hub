@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import { LeaveProjectIcon } from "@/components/crucible/icons"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { ManagementAction } from "@/components/crucible/management-action"
 import { Button } from "@/components/ui/button"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -103,7 +103,8 @@ export function ProjectLeaveCard({
         presentation={presentation}
         title="Leave project"
       />
-      <ConfirmationAlertDialog
+      <ConfirmationDialog
+        kind="alert"
         confirmLabel="Leave project"
         description="You will lose access to this project and its shared resources."
         error={error}

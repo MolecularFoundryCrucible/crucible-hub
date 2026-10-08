@@ -1,7 +1,10 @@
 import { Link } from "@tanstack/react-router"
 
 import { ContentBoundary } from "@/components/crucible/content-layout"
-import { PageHeader } from "@/components/crucible/page-header"
+import {
+  PageHeader,
+  PageHeaderSkeleton,
+} from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceListPending } from "@/components/crucible/collection-state"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -22,10 +25,6 @@ export function IdentityDetailPending({
   kind: "person" | "service_account"
 }) {
   const serviceAccount = kind === "service_account"
-  const rootLabel = serviceAccount ? "Service accounts" : "People"
-  const fields = serviceAccount
-    ? ["Username", "Platform role", "Crucible ID"]
-    : ["Username", "Crucible ID"]
   return (
     <PageLayout>
       <Breadcrumb>
@@ -40,7 +39,7 @@ export function IdentityDetailPending({
                 )
               }
             >
-              {rootLabel}
+              {serviceAccount ? "Service accounts" : "People"}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -52,52 +51,57 @@ export function IdentityDetailPending({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <header className="border-b pb-6">
-        <div className="flex min-w-0 items-start gap-2">
+      <PageHeaderSkeleton
+        icon={
           <PrincipalTypeIcon
             className="mt-1 size-6 shrink-0"
             type={serviceAccount ? "service_account" : "user"}
           />
-          <div className="min-w-0 flex-1" role="status">
-            <Skeleton className="h-8 w-64 max-w-full" />
-            <span className="sr-only">Loading account identity</span>
-          </div>
-        </div>
-      </header>
-      <div
-        className={
-          serviceAccount
-            ? "grid gap-4 lg:grid-cols-2 lg:items-start"
-            : "max-w-2xl"
         }
-      >
-        <Card aria-busy="true">
-          <CardHeader>
-            {serviceAccount ? (
-              <CardTitle>Identity</CardTitle>
-            ) : (
-              <PendingPrincipalIdentity />
-            )}
-          </CardHeader>
-          <CardContent
-            className={serviceAccount ? "flex flex-col gap-5" : undefined}
-          >
-            {serviceAccount ? <PendingPrincipalIdentity /> : null}
-            <dl className="grid gap-4 sm:grid-cols-2">
-              {fields.map((label) => (
-                <div className="grid gap-1" key={label}>
-                  <dt className="text-label text-muted-foreground">{label}</dt>
-                  <dd>
-                    <Skeleton className="h-5 w-32" />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
-        {serviceAccount ? <CredentialCardPending /> : null}
-      </div>
+      />
+      <IdentityDetailContentPending kind={kind} />
     </PageLayout>
+  )
+}
+
+export function IdentityDetailContentPending({
+  kind,
+}: {
+  kind: "person" | "service_account"
+}) {
+  const serviceAccount = kind === "service_account"
+  const fields = serviceAccount
+    ? ["Username", "Platform role", "Crucible ID"]
+    : ["Username", "Platform role", "Email", "Crucible ID / ORCID"]
+  return (
+    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <Card aria-busy="true">
+        <CardHeader>
+          <CardTitle>Identity</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-5">
+          <PendingPrincipalIdentity />
+          <dl className="grid gap-4 sm:grid-cols-2">
+            {fields.map((label) => (
+              <div
+                className={
+                  serviceAccount && label.startsWith("Crucible ID")
+                    ? "grid gap-1 sm:col-span-2"
+                    : "grid gap-1"
+                }
+                key={label}
+              >
+                <dt className="text-label text-muted-foreground">{label}</dt>
+                <dd>
+                  <Skeleton className="h-5 w-32" />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </CardContent>
+      </Card>
+      <CredentialCardPending />
+    </div>
   )
 }
 

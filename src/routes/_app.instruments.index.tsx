@@ -19,6 +19,7 @@ import {
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
@@ -45,13 +46,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import {
   instrumentPageLimit,
   instrumentsCursorQueryOptions,
 } from "@/data/crucible/instruments.queries"
+import type { SortDirection } from "@/data/crucible/collection-query"
 import {
   collectionAffiliationSchema,
   collectionCursorSchema,
+  sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import {
   instrumentStatusLabel,
@@ -67,9 +71,14 @@ import {
 } from "@/data/crucible/cursor-pages"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
+const instrumentSortFieldSchema = z.enum(["name", "created", "updated"])
+export type InstrumentSortField = z.infer<typeof instrumentSortFieldSchema>
+
 const instrumentSearchSchema = z.object({
   affiliation: collectionAffiliationSchema.optional().catch(undefined),
   cursor: collectionCursorSchema,
+  direction: sortDirectionSchema.optional().catch(undefined),
+  sort: instrumentSortFieldSchema.optional().catch(undefined),
   status: z.enum(instrumentStatuses).optional().catch(undefined),
 })
 
@@ -79,6 +88,8 @@ export const Route = createFileRoute("/_app/instruments/")({
   loaderDeps: ({ search }) => ({
     affiliation: search.affiliation,
     cursor: search.cursor,
+    direction: search.direction,
+    sort: search.sort,
     status: search.status ?? "active",
   }),
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
@@ -86,10 +97,14 @@ export const Route = createFileRoute("/_app/instruments/")({
     if (!source || source.status === "unavailable") return
 
     const options = instrumentsCursorQueryOptions(source.scope, {
+      affiliation: deps.affiliation,
+      cursor: deps.cursor,
+      direction: deps.sort ? deps.direction : undefined,
       includeOwner: true,
       includeTotal: true,
       limit: instrumentPageLimit,
-      ...deps,
+      sort: deps.sort,
+      status: deps.status,
     })
     const request = prefetchInfiniteQueryWithReadableCache(
       context.queryClient,
@@ -106,14 +121,19 @@ function InstrumentsPage() {
   const scope = useWorkspaceScope()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
+  const navigate = Route.useNavigate()
   const status = search.status ?? "active"
+  const sort = search.sort
+  const direction = search.direction ?? "asc"
   const instrumentResult = useInfiniteQuery(
     instrumentsCursorQueryOptions(scope, {
       affiliation: search.affiliation,
       cursor: search.cursor,
+      direction: search.sort ? search.direction : undefined,
       includeOwner: true,
       includeTotal: true,
       limit: instrumentPageLimit,
+      sort: search.sort,
       status,
     })
   )
@@ -124,6 +144,23 @@ function InstrumentsPage() {
   const total = cursorPageTotal(instrumentResult.data?.pages)
   const updating =
     instrumentResult.isFetching && !instrumentResult.isFetchingNextPage
+
+  function handleSortChange(
+    nextField: InstrumentSortField,
+    nextDirection: SortDirection
+  ) {
+    void navigate({
+      replace: true,
+      search: (previous) => ({
+        ...previous,
+        cursor: undefined,
+        direction: nextDirection,
+        sort: nextField,
+      }),
+      state: {},
+      to: "/instruments",
+    })
+  }
 
   return (
     <PageLayout>
@@ -158,11 +195,14 @@ function InstrumentsPage() {
           ) : null}
           <InstrumentCollection
             affiliation={search.affiliation}
+            direction={direction}
             hasNextPage={Boolean(instrumentResult.hasNextPage)}
             instruments={instruments}
             isLoadingMore={instrumentResult.isFetchingNextPage}
             loadMoreError={instrumentResult.isFetchNextPageError}
             onLoadMore={() => void instrumentResult.fetchNextPage()}
+            onSortChange={handleSortChange}
+            sort={sort}
             status={status}
             total={total}
             updating={updating}
@@ -256,50 +296,56 @@ function InstrumentStatusNavigation({
   affiliation?: "owner"
   status: WorkspaceInstrumentStatus
 }) {
+  const navigate = Route.useNavigate()
+  const options = instrumentStatuses.map((candidate) => ({
+    label: instrumentStatusLabel(candidate),
+    value: candidate,
+  }))
+
   return (
-    <nav
-      aria-label="Instrument lifecycle status"
-      className="flex flex-wrap gap-2"
-    >
-      {instrumentStatuses.map((candidate) => (
-        <Link
-          activeOptions={{ exact: true, explicitUndefined: true }}
-          aria-current={candidate === status ? "page" : undefined}
-          className={buttonVariants({
-            variant: candidate === status ? "secondary" : "ghost",
-          })}
-          key={candidate}
-          search={{
+    <SegmentedControl
+      ariaLabel="Instrument lifecycle status"
+      onValueChange={(nextStatus) => {
+        void navigate({
+          search: (previous) => ({
+            ...previous,
             affiliation,
             cursor: undefined,
-            status: candidate === "active" ? undefined : candidate,
-          }}
-          to="/instruments"
-        >
-          {instrumentStatusLabel(candidate)}
-        </Link>
-      ))}
-    </nav>
+            status: nextStatus === "active" ? undefined : nextStatus,
+          }),
+          state: {},
+          to: "/instruments",
+        })
+      }}
+      options={options}
+      value={status}
+    />
   )
 }
 
 function InstrumentCollection({
   affiliation,
+  direction = "asc",
   hasNextPage,
   instruments,
   isLoadingMore,
   loadMoreError,
   onLoadMore,
+  onSortChange,
+  sort,
   status,
   total,
   updating,
 }: {
   affiliation?: "owner"
+  direction?: SortDirection
   hasNextPage: boolean
   instruments: readonly WorkspaceInstrument[]
   isLoadingMore: boolean
   loadMoreError: boolean
   onLoadMore: () => void
+  onSortChange: (field: InstrumentSortField, direction: SortDirection) => void
+  sort?: InstrumentSortField
   status: WorkspaceInstrumentStatus
   total: number | null
   updating: boolean
@@ -324,13 +370,33 @@ function InstrumentCollection({
               </colgroup>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Instrument</TableHead>
+                  <SortableTableHead
+                    active={sort === "name"}
+                    direction={direction}
+                    field="name"
+                    label="Instrument"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
                   <TableHead>Location</TableHead>
                   <TableHead>Manager</TableHead>
-                  <TableHead className="hidden xl:table-cell">
-                    Created
-                  </TableHead>
-                  <TableHead>Updated</TableHead>
+                  <SortableTableHead
+                    active={sort === "created"}
+                    className="hidden xl:table-cell"
+                    direction={direction}
+                    field="created"
+                    label="Created"
+                    onChange={onSortChange}
+                    preferredDirection="desc"
+                  />
+                  <SortableTableHead
+                    active={sort === "updated"}
+                    direction={direction}
+                    field="updated"
+                    label="Updated"
+                    onChange={onSortChange}
+                    preferredDirection="desc"
+                  />
                   <TableHead className="text-center">
                     <span className="sr-only">Open</span>
                   </TableHead>

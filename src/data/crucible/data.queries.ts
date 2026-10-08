@@ -136,10 +136,8 @@ function collectionScopedPreviousData<TData>(
     "visibility",
   ] as const
 
-  return queryKey?.[0] === scope[0] &&
-    queryKey[1] === scope[1] &&
-    queryKey[2] === scope[2] &&
-    queryKey[3] === scope[3] &&
+  return queryKey !== undefined &&
+    scope.every((part, index) => queryKey[index] === part) &&
     queryKey[4] === family &&
     queryKey[5] === "list" &&
     contextKeys.every(

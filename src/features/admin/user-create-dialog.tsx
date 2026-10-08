@@ -21,6 +21,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { checkWorkspaceUsername } from "@/data/crucible/account.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -189,42 +190,52 @@ export function UserCreateDialog({
               </form.Field>
               <div className="grid grid-cols-2 gap-4">
                 <form.Field name="first_name">
-                  {(field) => (
-                    <Field data-invalid={!field.state.meta.isValid}>
-                      <FieldLabel htmlFor={field.name}>First name</FieldLabel>
-                      <Input
-                        aria-invalid={!field.state.meta.isValid || undefined}
-                        id={field.name}
-                        maxLength={255}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        placeholder="e.g. Jane"
-                        value={field.state.value}
-                      />
-                      <FieldError errors={field.state.meta.errors} />
-                    </Field>
-                  )}
+                  {(field) => {
+                    const invalid = shouldShowFieldError(field)
+                    return (
+                      <Field data-invalid={invalid}>
+                        <FieldLabel htmlFor={field.name} required>
+                          First name
+                        </FieldLabel>
+                        <Input
+                          aria-invalid={invalid || undefined}
+                          id={field.name}
+                          maxLength={255}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                          placeholder="e.g. Jane"
+                          value={field.state.value}
+                        />
+                        <FieldError errors={fieldErrors(field)} />
+                      </Field>
+                    )
+                  }}
                 </form.Field>
                 <form.Field name="last_name">
-                  {(field) => (
-                    <Field data-invalid={!field.state.meta.isValid}>
-                      <FieldLabel htmlFor={field.name}>Last name</FieldLabel>
-                      <Input
-                        aria-invalid={!field.state.meta.isValid || undefined}
-                        id={field.name}
-                        maxLength={255}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        placeholder="e.g. Doe"
-                        value={field.state.value}
-                      />
-                      <FieldError errors={field.state.meta.errors} />
-                    </Field>
-                  )}
+                  {(field) => {
+                    const invalid = shouldShowFieldError(field)
+                    return (
+                      <Field data-invalid={invalid}>
+                        <FieldLabel htmlFor={field.name} required>
+                          Last name
+                        </FieldLabel>
+                        <Input
+                          aria-invalid={invalid || undefined}
+                          id={field.name}
+                          maxLength={255}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                          placeholder="e.g. Doe"
+                          value={field.state.value}
+                        />
+                        <FieldError errors={fieldErrors(field)} />
+                      </Field>
+                    )
+                  }}
                 </form.Field>
               </div>
               <form.Field name="email">
@@ -254,26 +265,29 @@ export function UserCreateDialog({
                 )}
               </form.Field>
               <form.Field name="unique_id">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} optional>
-                      Crucible ID or ORCID
-                    </FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      className="font-mono text-body"
-                      id={field.name}
-                      maxLength={255}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      placeholder="e.g. 0000-0002-1825-0097"
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} optional>
+                        Crucible ID or ORCID
+                      </FieldLabel>
+                      <Input
+                        aria-invalid={invalid || undefined}
+                        className="font-mono text-body"
+                        id={field.name}
+                        maxLength={255}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        placeholder="e.g. 0000-0002-1825-0097"
+                        value={field.state.value}
+                      />
+                      <FieldError errors={fieldErrors(field)} />
+                    </Field>
+                  )
+                }}
               </form.Field>
             </FieldGroup>
           </fieldset>
@@ -285,13 +299,12 @@ export function UserCreateDialog({
         </form>
         <form.Subscribe
           selector={(state) => [
-            state.canSubmit &&
-              !isSlugTakenOrRejected(
-                state.values.username,
-                liveTakenUsername,
-                rejectedUsername
-              ) &&
-              !isSlugTakenOrRejected(
+            isSlugTakenOrRejected(
+              state.values.username,
+              liveTakenUsername,
+              rejectedUsername
+            ) ||
+              isSlugTakenOrRejected(
                 state.values.email,
                 liveTakenEmail,
                 rejectedEmail
@@ -299,7 +312,7 @@ export function UserCreateDialog({
             state.isSubmitting,
           ]}
         >
-          {([canSubmit, isSubmitting]) => (
+          {([isTaken, isSubmitting]) => (
             <DialogFooter>
               <Button
                 disabled={isSubmitting}
@@ -310,7 +323,7 @@ export function UserCreateDialog({
                 Cancel
               </Button>
               <Button
-                disabled={!canSubmit || isSubmitting}
+                disabled={isTaken || isSubmitting}
                 form="user-create"
                 type="submit"
               >

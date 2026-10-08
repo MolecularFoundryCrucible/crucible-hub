@@ -1,4 +1,5 @@
-import { FilterIcon, RemoveFilterIcon } from "@/components/crucible/icons"
+import { FilterIcon } from "@/components/crucible/icons"
+import { RemovablePill } from "@/components/crucible/removable-pill"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -88,17 +89,12 @@ export function CollectionFilterPanel({
         </SheetContent>
       </Sheet>
       {visibleFilters.map((filter) => (
-        <Button
-          aria-label={`Remove filter: ${filter.label}`}
+        <RemovablePill
           key={filter.id}
-          onClick={() => onRemoveFilter(filter.id)}
-          size="pill"
-          type="button"
-          variant="outline"
-        >
-          <span className="truncate">{filter.label}</span>
-          <RemoveFilterIcon aria-hidden="true" />
-        </Button>
+          label={filter.label}
+          onRemove={() => onRemoveFilter(filter.id)}
+          removeAriaLabel={`Remove filter: ${filter.label}`}
+        />
       ))}
       {hiddenFilterCount > 0 ? (
         <Badge variant="outline">+{hiddenFilterCount} more</Badge>

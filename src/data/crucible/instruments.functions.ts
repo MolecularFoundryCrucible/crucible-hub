@@ -6,6 +6,7 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 import {
   collectionAffiliationSchema,
   collectionCursorSchema,
+  sortDirectionSchema,
 } from "./collection-query"
 
 import {
@@ -23,13 +24,22 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { instrumentIdSchema } from "./slugs"
 
+export const instrumentSortSchema = z.enum([
+  "instrument_id",
+  "name",
+  "created",
+  "updated",
+])
+
 export const instrumentListInputSchema = z.object({
   affiliation: collectionAffiliationSchema.optional(),
   cursor: collectionCursorSchema,
+  direction: sortDirectionSchema.optional(),
   includeOwner: z.boolean().optional(),
   includeTotal: z.boolean().optional(),
   limit: z.number().int().min(1).max(100),
   scenario: fixtureScenarioSchema.optional(),
+  sort: instrumentSortSchema.optional(),
   status: z.enum(instrumentStatuses).optional(),
 })
 

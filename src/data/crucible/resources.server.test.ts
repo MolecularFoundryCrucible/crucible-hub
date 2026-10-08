@@ -7,6 +7,7 @@ import { CrucibleResponseError } from "@/server/crucible/request-error.server"
 
 import {
   createWorkspaceFileDownload,
+  deleteWorkspaceResource,
   mutateWorkspaceRelationship,
   requestWorkspaceResourceDeletion,
   patchWorkspaceDatasetDescription,
@@ -1431,6 +1432,122 @@ describe("workspace resource sources", () => {
     expect(empty).toMatchObject({ links: [] })
   })
 
+  it("previews forced deletion of a blocked fixture project", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(
+      deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z3", false)
+    ).resolves.toMatchObject({
+      deleted: false,
+      blocking: { datasets: 3, samples: 2 },
+      memberships_removed: 3,
+      resource_type: "project",
+    })
+  })
+
+  it("refuses to confirm forced deletion of a blocked fixture project", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(
+      deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z3", true)
+    ).rejects.toMatchObject({ status: 409 })
+  })
+
+  it("deletes an empty fixture project after confirmation", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "")
+
+    await expect(
+      deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2ZB", true)
+    ).resolves.toMatchObject({
+      deleted: true,
+      blocking: {},
+      memberships_removed: 0,
+      resource_type: "project",
+    })
+    await expect(
+      deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z4", false)
+    ).resolves.toMatchObject({
+      deleted: false,
+      blocking: { datasets: 2 },
+      resource_type: "instrument",
+    })
+  })
+
+  it("requests forced deletion without confirm first and sends confirm to execute", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({
+          blocking: {},
+          deleted: requests.length === 2,
+          memberships_removed: 1,
+          resource_id: "resource-mfid",
+          resource_type: "project",
+        })
+      })
+    )
+
+    await deleteWorkspaceResource("resource-mfid", false)
+    await deleteWorkspaceResource("resource-mfid", true)
+
+    expect(
+      requests.map((request) => request.method + new URL(request.url).pathname)
+    ).toEqual([
+      "DELETE/resources/resource-mfid",
+      "DELETE/resources/resource-mfid",
+    ])
+    expect(
+      requests.map((request) =>
+        Object.fromEntries(new URL(request.url).searchParams)
+      )
+    ).toEqual([{ force: "true" }, { force: "true", confirm: "true" }])
+  })
+
+  it("rejects a deletion response that does not match the request", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        crucibleApiResponse({
+          deleted: false,
+          resource_id: "other-mfid",
+          resource_type: "project",
+        })
+      )
+    )
+
+    await expect(
+      deleteWorkspaceResource("resource-mfid", false)
+    ).rejects.toThrow("The deletion response identifies another resource.")
+  })
+
+  it("rejects an invalid deletion response", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => crucibleApiResponse({ resource_id: "resource-mfid" }))
+    )
+
+    await expect(
+      deleteWorkspaceResource("resource-mfid", false)
+    ).rejects.toThrow("The deletion response is invalid.")
+  })
+
   it("does not bypass the production fixture guard", async () => {
     vi.stubEnv("NODE_ENV", "production")
     vi.stubEnv("HUB_DATA_SOURCE", "")
@@ -1483,7 +1600,7 @@ describe("workspace resource sources", () => {
     })
   })
 
-  it("resolves a project MFID before previewing a project move by slug", async () => {
+  it("reassigns a project directly by project MFID", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -1493,18 +1610,11 @@ describe("workspace resource sources", () => {
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        const path = new URL(request.url).pathname
-        if (path === "/projects/project-mfid") {
-          return crucibleApiResponse({
-            organization: "Example Laboratory",
-            project_id: "project-slug",
-            project_lead_orcid: "person-mfid",
-            unique_id: "project-mfid",
-          })
-        }
         return crucibleApiResponse({
           new_project_id: "project-slug",
+          new_project_mfid: "project-mfid",
           resource_id: "resource-mfid",
+          resource_mfid: "resource-mfid",
         })
       })
     )
@@ -1516,14 +1626,13 @@ describe("workspace resource sources", () => {
     )
 
     expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
-      "/projects/project-mfid",
       "/resources/resource-mfid/project",
     ])
-    expect(Object.fromEntries(new URL(requests[1].url).searchParams)).toEqual({
+    expect(Object.fromEntries(new URL(requests[0].url).searchParams)).toEqual({
       confirm: "false",
     })
-    await expect(requests[1].json()).resolves.toEqual({
-      project_id: "project-slug",
+    await expect(requests[0].json()).resolves.toEqual({
+      project_mfid: "project-mfid",
     })
   })
 })

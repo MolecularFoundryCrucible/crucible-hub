@@ -64,13 +64,21 @@ const account = {
 const project = {
   capabilities: {
     can_change_status: false,
+    can_delete: false,
     can_edit: true,
     can_manage_access: true,
     can_transfer: true,
     max_grant_role: "editor",
   },
+  creation_time: "2026-06-12T18:30:00Z",
+  lead: null,
   members: [owner, account],
+  modification_time: "2026-08-30T21:14:00Z",
+  organization: "Example National Laboratory",
   project_id: "project-id",
+  project_lead_orcid: owner.unique_id,
+  scientific_metadata: null,
+  status: "active",
   title: "Catalyst mapping",
   unique_id: "project-mfid",
 } satisfies MembershipProject
@@ -194,10 +202,11 @@ describe("ProjectMembershipCard", () => {
       )
     )
 
-    fireEvent.change(screen.getByLabelText("Project role"), {
-      target: { value: "editor" },
-    })
-    fireEvent.click(screen.getByRole("option", { name: /Jamie Patel/ }))
+    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/ }))
+    const stagedRole = screen.getByLabelText<HTMLSelectElement>(
+      "Role for Jamie Patel"
+    )
+    expect(stagedRole.value).toBe("editor")
     const dialog = screen.getByRole("dialog", { name: "Add member" })
     fireEvent.click(within(dialog).getByRole("button", { name: "Add member" }))
 
@@ -223,7 +232,7 @@ describe("ProjectMembershipCard", () => {
     })
   })
 
-  it("keeps the add dialog and local error available after failure", async () => {
+  it("keeps the add dialog and staged member available after failure", async () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(searchResponse([jamie]))
     vi.mocked(addWorkspaceProjectMember).mockRejectedValue(
       new Error("fixture failure")
@@ -249,9 +258,306 @@ describe("ProjectMembershipCard", () => {
     )
 
     expect(
-      await screen.findByText("Could not add this member. Try again.")
+      await screen.findByText("1 member could not be added. Try again.")
     ).toBeTruthy()
     expect(screen.getByRole("dialog", { name: "Add member" })).toBeTruthy()
+    expect(screen.getByRole("list", { name: "Members to add" })).toBeTruthy()
+  })
+
+  it("commits multiple staged members through serial add calls", async () => {
+    const second = {
+      context: "avery.chen",
+      kind: "person" as const,
+      name: "Avery Chen",
+      unique_id: "avery-mfid",
+    }
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      searchResponse([jamie, second])
+    )
+    vi.mocked(addWorkspaceProjectMember).mockResolvedValue(ok(project.members))
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
+    const searchBox = screen.getByRole("combobox", { name: "Search people" })
+    fireEvent.click(searchBox)
+    fireEvent.change(searchBox, { target: { value: "jam" } })
+    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/ }))
+
+    fireEvent.change(searchBox, { target: { value: "ave" } })
+    fireEvent.click(await screen.findByRole("option", { name: /Avery Chen/ }))
+
+    const dialog = screen.getByRole("dialog", { name: "Add member" })
+    expect(
+      within(dialog).getByRole("button", { name: "Add 2 members" })
+    ).toBeTruthy()
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Add 2 members" })
+    )
+
+    await waitFor(() =>
+      expect(addWorkspaceProjectMember).toHaveBeenCalledTimes(2)
+    )
+    expect(addWorkspaceProjectMember).toHaveBeenNthCalledWith(1, {
+      data: {
+        projectMfid: "project-mfid",
+        role: "editor",
+        scenario: "populated",
+        userId: "jamie-mfid",
+      },
+    })
+    expect(addWorkspaceProjectMember).toHaveBeenNthCalledWith(2, {
+      data: {
+        projectMfid: "project-mfid",
+        role: "editor",
+        scenario: "populated",
+        userId: "avery-mfid",
+      },
+    })
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("caps staged service-account roles at viewer and contributor", async () => {
+    const serviceAccount = {
+      context: "beamline-collector",
+      is_service_account: true,
+      kind: "person" as const,
+      name: "Beamline Collector",
+      unique_id: "sa-mfid",
+    }
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      searchResponse([serviceAccount])
+    )
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
+    const searchBox = screen.getByRole("combobox", { name: "Search people" })
+    fireEvent.click(searchBox)
+    fireEvent.change(searchBox, { target: { value: "beam" } })
+    fireEvent.click(
+      await screen.findByRole("option", { name: /Beamline Collector/ })
+    )
+
+    const stagedRole = screen.getByLabelText<HTMLSelectElement>(
+      "Role for Beamline Collector"
+    )
+    expect(stagedRole.value).toBe("contributor")
+    expect(
+      Array.from(stagedRole.options).map((option) => option.value)
+    ).toEqual(["viewer", "contributor"])
+  })
+
+  it("shows locked removal state for non-removable members in managing mode", () => {
+    const colleague = {
+      first_name: "Tim",
+      is_service_account: false,
+      last_name: "Kodalle",
+      role: "viewer",
+      unique_id: "tim",
+      username: "timkodalle",
+    }
+    renderCard({
+      project: { ...project, members: [owner, account, colleague] },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+
+    expect(
+      screen.getByRole("img", { name: "The manager cannot be removed here" })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("img", {
+        name: "You cannot remove your own membership here",
+      })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Remove Tim Kodalle" })
+    ).toBeTruthy()
+  })
+
+  it("omits checkboxes from non-removable rows in managing mode", () => {
+    const colleague = {
+      first_name: "Tim",
+      is_service_account: false,
+      last_name: "Kodalle",
+      role: "viewer",
+      unique_id: "tim",
+      username: "timkodalle",
+    }
+    renderCard({
+      project: { ...project, members: [owner, account, colleague] },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+
+    expect(
+      screen.queryByRole("checkbox", {
+        name: "Select Ada Lovelace for removal",
+      })
+    ).toBeNull()
+    expect(
+      screen.queryByRole("checkbox", { name: "Select Morgan Lee for removal" })
+    ).toBeNull()
+    expect(
+      screen.getByRole("checkbox", { name: "Select Tim Kodalle for removal" })
+    ).toBeTruthy()
+  })
+
+  it("removes selected members through the batch dialog", async () => {
+    const colleague = {
+      first_name: "Tim",
+      is_service_account: false,
+      last_name: "Kodalle",
+      role: "viewer",
+      unique_id: "tim",
+      username: "timkodalle",
+    }
+    const second = {
+      first_name: "Robin",
+      is_service_account: false,
+      last_name: "Second",
+      role: "viewer",
+      unique_id: "second",
+      username: "robin",
+    }
+    vi.mocked(removeWorkspaceProjectMember).mockResolvedValue(
+      ok([owner, account])
+    )
+    renderCard({
+      project: { ...project, members: [owner, account, colleague, second] },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Select Tim Kodalle for removal" })
+    )
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Select Robin Second for removal" })
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Remove 2 members" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Remove members?" })
+    expect(within(dialog).getByText("Tim Kodalle")).toBeTruthy()
+    expect(within(dialog).getByText("Robin Second")).toBeTruthy()
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Remove 2 members" })
+    )
+
+    await waitFor(() =>
+      expect(removeWorkspaceProjectMember).toHaveBeenCalledTimes(2)
+    )
+    expect(removeWorkspaceProjectMember).toHaveBeenNthCalledWith(1, {
+      data: {
+        projectMfid: "project-mfid",
+        scenario: "populated",
+        userId: "tim",
+      },
+    })
+    expect(removeWorkspaceProjectMember).toHaveBeenNthCalledWith(2, {
+      data: {
+        projectMfid: "project-mfid",
+        scenario: "populated",
+        userId: "second",
+      },
+    })
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("keeps failed members selected and retries only the remainder", async () => {
+    const colleague = {
+      first_name: "Tim",
+      is_service_account: false,
+      last_name: "Kodalle",
+      role: "viewer",
+      unique_id: "tim",
+      username: "timkodalle",
+    }
+    const second = {
+      first_name: "Robin",
+      is_service_account: false,
+      last_name: "Second",
+      role: "viewer",
+      unique_id: "second",
+      username: "robin",
+    }
+    vi.mocked(removeWorkspaceProjectMember)
+      .mockResolvedValueOnce(ok([owner, account, second]))
+      .mockRejectedValueOnce(new Error("network down"))
+      .mockResolvedValueOnce(ok([owner, account]))
+    renderCard({
+      project: { ...project, members: [owner, account, colleague, second] },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Select Tim Kodalle for removal" })
+    )
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Select Robin Second for removal" })
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Remove 2 members" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Remove members?" })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Remove 2 members" })
+    )
+
+    expect(
+      await screen.findByText("1 member could not be removed. Try again.")
+    ).toBeTruthy()
+    expect(within(dialog).getByText("Robin Second")).toBeTruthy()
+    expect(within(dialog).queryByText("Tim Kodalle")).toBeNull()
+
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Remove member" })
+    )
+
+    await waitFor(() =>
+      expect(removeWorkspaceProjectMember).toHaveBeenCalledTimes(3)
+    )
+    expect(removeWorkspaceProjectMember).toHaveBeenLastCalledWith({
+      data: {
+        projectMfid: "project-mfid",
+        scenario: "populated",
+        userId: "second",
+      },
+    })
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("opens the removal dialog from the per-row remove control", async () => {
+    const colleague = {
+      first_name: "Tim",
+      is_service_account: false,
+      last_name: "Kodalle",
+      role: "viewer",
+      unique_id: "tim",
+      username: "timkodalle",
+    }
+    vi.mocked(removeWorkspaceProjectMember).mockResolvedValue(
+      ok([owner, account])
+    )
+    renderCard({
+      project: { ...project, members: [owner, account, colleague] },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Remove Tim Kodalle" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Remove member?" })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Remove member" })
+    )
+
+    await waitFor(() =>
+      expect(removeWorkspaceProjectMember).toHaveBeenCalledWith({
+        data: {
+          projectMfid: "project-mfid",
+          scenario: "populated",
+          userId: "tim",
+        },
+      })
+    )
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 
   it("keeps the prior role visible until a role update succeeds", async () => {

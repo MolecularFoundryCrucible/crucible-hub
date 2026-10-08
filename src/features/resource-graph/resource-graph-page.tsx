@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import type { RefObject } from "react"
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query"
 
@@ -75,7 +83,6 @@ import type {
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
-import { ResourceGraphCanvas } from "./resource-graph-canvas"
 import {
   graphExpansionKey,
   graphExpansionModeLabel,
@@ -94,6 +101,12 @@ import type {
 import { mergeResourceGraphs } from "./resource-graph-merge"
 import { graphWithoutAssociations } from "./resource-graph-display"
 import type { ResourceGraphDisplay } from "./resource-graph-display"
+
+const ResourceGraphCanvas = lazy(() =>
+  import("./resource-graph-canvas").then((module) => ({
+    default: module.ResourceGraphCanvas,
+  }))
+)
 
 type GraphExpansionQueryResult = {
   data?: WorkspaceResourceGraph
@@ -450,23 +463,25 @@ export function ResourceGraphPage({
           </EmptyHeader>
         </Empty>
       ) : (
-        <ResourceGraphCanvas
-          display={display}
-          expansionStates={expansionStates}
-          expansionModesByNode={expansionModesByNode}
-          graph={canvasGraph ?? displayedGraph}
-          loading={
-            query.isFetching ||
-            descendantQuery.isFetching ||
-            associationQuery.isFetching ||
-            isExpanding
-          }
-          onDisplayChange={onDisplayChange}
-          onExpand={expandNode}
-          rootContext={rootContext}
-          onInspect={inspectNode}
-          thumbnails={graphThumbnails}
-        />
+        <Suspense fallback={<ResourceGraphCanvasSkeleton />}>
+          <ResourceGraphCanvas
+            display={display}
+            expansionStates={expansionStates}
+            expansionModesByNode={expansionModesByNode}
+            graph={canvasGraph ?? displayedGraph}
+            loading={
+              query.isFetching ||
+              descendantQuery.isFetching ||
+              associationQuery.isFetching ||
+              isExpanding
+            }
+            onDisplayChange={onDisplayChange}
+            onExpand={expandNode}
+            rootContext={rootContext}
+            onInspect={inspectNode}
+            thumbnails={graphThumbnails}
+          />
+        </Suspense>
       )}
 
       {expansions.states.some((state) => state.isError) ? (
@@ -485,6 +500,15 @@ export function ResourceGraphPage({
         scope={scope}
       />
     </section>
+  )
+}
+
+function ResourceGraphCanvasSkeleton() {
+  return (
+    <Skeleton
+      aria-label="Loading graph visualization"
+      className="min-h-graph-canvas w-full"
+    />
   )
 }
 

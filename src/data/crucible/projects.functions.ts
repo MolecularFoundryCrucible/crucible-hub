@@ -6,6 +6,7 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 import {
   collectionAffiliationSchema,
   collectionCursorSchema,
+  sortDirectionSchema,
 } from "./collection-query"
 
 import {
@@ -22,12 +23,39 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { privilegeModeSchema } from "./privilege-mode"
 
+export const projectSortSchema = z.enum([
+  "project_id",
+  "title",
+  "created",
+  "updated",
+])
+
+export const projectMemberRoleFilterSchema = z.enum([
+  "viewer",
+  "contributor",
+  "editor",
+  "admin",
+  "owner",
+])
+
 export const projectListInputSchema = z.object({
   affiliation: collectionAffiliationSchema.optional(),
   cursor: collectionCursorSchema,
+  direction: sortDirectionSchema.optional(),
   includeTotal: z.boolean().optional(),
   limit: z.number().int().min(1).max(100),
+  memberRef: z
+    .union([z.string().trim().min(1), z.array(z.string().trim().min(1))])
+    .optional(),
+  memberRole: z
+    .union([
+      projectMemberRoleFilterSchema,
+      z.array(projectMemberRoleFilterSchema),
+    ])
+    .optional(),
+  privilegeMode: privilegeModeSchema.optional(),
   scenario: fixtureScenarioSchema.optional(),
+  sort: projectSortSchema.optional(),
 })
 
 export const projectDetailInputSchema = z.object({

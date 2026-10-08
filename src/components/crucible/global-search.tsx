@@ -192,8 +192,8 @@ function QuickSearchControl({
     navigatedResultRef.current = item.unique_id
     if (item.kind === "person") {
       void navigate({
-        to: "/people/$personId",
-        params: { personId: item.unique_id },
+        to: "/users/$userId",
+        params: { userId: item.unique_id },
       })
       return
     }
@@ -595,8 +595,8 @@ function quickSearchResultLink(
     return (
       <Link
         onClick={onSelect}
-        params={{ personId: item.unique_id }}
-        to="/people/$personId"
+        params={{ userId: item.unique_id }}
+        to="/users/$userId"
       />
     )
   }

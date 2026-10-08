@@ -5,6 +5,7 @@ test("renders the desktop workspace without development chrome", async ({
   page,
 }) => {
   await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     /^(Good (morning|afternoon|evening)|Welcome to (Crucible|the Crux)), Avery$/
@@ -30,11 +31,22 @@ test("renders the desktop workspace without development chrome", async ({
     page.getByRole("heading", { name: "Recently added data" })
   ).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Projects you lead" })
+    page.getByRole("heading", { name: "Your projects" })
+  ).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Your instruments" })
   ).toBeVisible()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
   await expect(page.getByText("Activated catalyst morphology")).toBeVisible()
   await expect(page.getByText(/^Updated Sep 1, 2026$/)).toHaveCount(0)
+
+  const yourProjectsSection = page.getByRole("region", {
+    name: "Your projects",
+  })
+  await expect(
+    yourProjectsSection.getByText("Operando Catalyst Mapping")
+  ).toBeVisible()
+  await expect(yourProjectsSection.getByText("Lead")).toBeVisible()
 })
 
 test("keeps the origin on a native logout form submission", async ({
@@ -111,17 +123,43 @@ test("keeps Home useful when one recent data source fails", async ({
   page,
 }) => {
   await page.goto("/hub/?scenario=partial")
+  await page.waitForLoadState("networkidle")
 
   await expect(
     page.getByText("Some recent data could not be loaded.")
   ).toBeVisible()
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Projects you lead" })
+    page.getByRole("heading", { name: "Your projects" })
   ).toBeVisible()
   await expect(
     page.getByText("Projects and navigation remain available.")
   ).toHaveCount(0)
+})
+
+test("toggles recent data between all and mine on Home", async ({ page }) => {
+  await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
+
+  const recentDataCard = page.getByRole("region", {
+    name: "Recently added data",
+  })
+  await expect(
+    recentDataCard.getByRole("button", { name: "All" })
+  ).toHaveAttribute("aria-pressed", "true")
+  await expect(recentDataCard.getByText("NiFe phase evolution")).toBeVisible()
+
+  await recentDataCard.getByRole("button", { name: "Mine" }).click()
+  await expect(
+    recentDataCard.getByRole("button", { name: "Mine" })
+  ).toHaveAttribute("aria-pressed", "true")
+  await expect(
+    recentDataCard.getByText("NiFe K-edge operando series")
+  ).toBeVisible()
+  await expect(recentDataCard.getByText("NiFe phase evolution")).toHaveCount(0)
+
+  await recentDataCard.getByRole("button", { name: "All" }).click()
+  await expect(recentDataCard.getByText("NiFe phase evolution")).toBeVisible()
 })
 
 test("fits Home within a compact browser viewport", async ({ page }) => {
@@ -195,13 +233,14 @@ test("fits prioritized data columns within a laptop viewport", async ({
 
 test("uses scientific subtypes in the wide data table", async ({ page }) => {
   await page.goto("/hub/data")
+  await page.waitForLoadState("networkidle")
 
   await expect(page.getByRole("columnheader", { name: "Type" })).toBeVisible()
   await expect(page.getByRole("columnheader", { name: "Size" })).toHaveCount(0)
   await expect(
     page.getByRole("cell", { name: "electrocatalyst" }).first()
   ).toBeVisible()
-  await page.getByRole("link", { name: /^Datasets/ }).click()
+  await page.getByRole("button", { name: /^Datasets/ }).click()
   await expect(
     page.getByRole("cell", { name: "X-ray fluorescence microscopy" })
   ).toBeVisible()
@@ -211,6 +250,7 @@ test("renders the independently queried instrument directory", async ({
   page,
 }) => {
   await page.goto("/hub/instruments")
+  await page.waitForLoadState("networkidle")
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Instrument directory"
@@ -221,8 +261,8 @@ test("renders the independently queried instrument directory", async ({
   await expect(page.getByText("Beamline 5.3.2")).toBeVisible()
 
   await page
-    .getByRole("navigation", { name: "Instrument lifecycle status" })
-    .getByRole("link", { name: "Maintenance" })
+    .getByRole("group", { name: "Instrument lifecycle status" })
+    .getByRole("button", { name: "Maintenance" })
     .click()
   await expect(page).toHaveURL(/status=maintenance/)
   await expect(
@@ -286,7 +326,7 @@ test("opens global search from the keyboard and restores URL-backed results", as
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
 
-  await page.getByRole("link", { name: "Samples" }).click()
+  await page.getByRole("button", { name: "Samples" }).click()
   await expect(page).toHaveURL(/kind=sample/)
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
   await expect(page.getByText("NiFe K-edge operando series")).toHaveCount(0)
@@ -380,7 +420,7 @@ test("searches public-safe people and opens canonical person detail", async ({
   await expect(page.getByText("1 result for “Morgan”")).toBeVisible()
   await page.getByRole("link", { name: "Morgan Lee" }).click()
 
-  await expect(page).toHaveURL(/\/hub\/people\/0000-0000-0000-0018/)
+  await expect(page).toHaveURL(/\/hub\/users\/0000-0000-0000-0018/)
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Morgan Lee")
   await expect(page.getByText("@morgan.lee")).toBeVisible()
   await expect(page.getByText("0000-0000-0000-0018")).toBeVisible()
@@ -611,7 +651,8 @@ test("navigates typed project routes and URL-backed data filters", async ({
   page,
 }) => {
   await page.goto("/hub/data")
-  await page.getByRole("link", { name: /^Datasets/ }).click()
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: /^Datasets/ }).click()
   await expect(page).toHaveURL(/kind=datasets/)
   await expect(page.getByText("NiFe oxide catalyst A")).toBeHidden()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
@@ -643,6 +684,26 @@ test("renders exact project detail from a direct canonical link", async ({
     "Operando Catalyst Mapping"
   )
   await expect(page.getByLabel("Project data type")).toBeVisible()
+
+  await page.getByRole("link", { name: "Overview" }).click()
+  await expect(page).toHaveURL(
+    /\/hub\/projects\/01J6Y8N4Q2R7M9K3T5V0W1X2Z3\/overview/
+  )
+  await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
+    "Summary",
+    "Identity",
+    "People",
+    "Scientific metadata",
+  ])
+  const identityCard = page.locator('main [data-slot="card"]').filter({
+    has: page.getByText("Identity", { exact: true }),
+  })
+  await expect(
+    identityCard.getByRole("term").filter({ hasText: "Lead" })
+  ).toBeVisible()
+  await expect(
+    identityCard.getByRole("term").filter({ hasText: "Your role" })
+  ).toBeVisible()
   expect(browserErrors).toEqual([])
 })
 
@@ -766,4 +827,57 @@ test("redirects a generic resource link to its typed canonical page", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "NiFe oxide catalyst A"
   )
+})
+
+test("renders ordered sidebar navigation with sub-navigation and creation actions", async ({
+  page,
+}) => {
+  await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
+
+  const nav = page.getByLabel("Primary navigation", { exact: true })
+  await expect(nav).toBeVisible()
+
+  const navLinks = nav.locator(
+    '[data-slot="sidebar-content"] ul[data-slot="sidebar-menu"] > li > [data-slot="sidebar-menu-button"]'
+  )
+  await expect(navLinks.nth(0)).toHaveText("Home")
+  await expect(navLinks.nth(1)).toHaveText("Data")
+  await expect(navLinks.nth(2)).toHaveText("Projects")
+  await expect(navLinks.nth(3)).toHaveText("Instruments")
+
+  const samplesSubLink = nav.getByRole("link", { name: "Browse samples" })
+  const datasetsSubLink = nav.getByRole("link", { name: "Browse datasets" })
+  await expect(samplesSubLink).toBeVisible()
+  await expect(datasetsSubLink).toBeVisible()
+
+  const createProjectAction = nav.getByRole("link", { name: "Create project" })
+  const registerInstrumentAction = nav.getByRole("link", {
+    name: "Register instrument",
+  })
+  const createSampleAction = nav.getByRole("link", { name: "Create sample" })
+  const createDatasetAction = nav.getByRole("link", { name: "Create dataset" })
+  await expect(createProjectAction).toHaveAttribute("href", "/hub/projects/new")
+  await expect(registerInstrumentAction).toHaveAttribute(
+    "href",
+    "/hub/instruments/new"
+  )
+  await expect(createSampleAction).toHaveAttribute("href", "/hub/samples/new")
+  await expect(createDatasetAction).toHaveAttribute("href", "/hub/datasets/new")
+
+  const dataBox = await navLinks.nth(1).boundingBox()
+  const samplesBox = await samplesSubLink.boundingBox()
+  expect(dataBox).not.toBeNull()
+  expect(samplesBox).not.toBeNull()
+  if (dataBox && samplesBox) {
+    expect(Math.round(samplesBox.x + samplesBox.width)).toBe(
+      Math.round(dataBox.x + dataBox.width)
+    )
+  }
+
+  await samplesSubLink.click()
+  await expect(page).toHaveURL(/\/hub\/data\?kind=samples/)
+
+  await datasetsSubLink.click()
+  await expect(page).toHaveURL(/\/hub\/data\?kind=datasets/)
 })

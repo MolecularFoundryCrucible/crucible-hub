@@ -6,6 +6,7 @@ import {
   ResourceOverviewPending,
   ResourceTabLoadError,
 } from "@/components/crucible/resource-tab-state"
+import { AccessRoleBadge } from "@/components/crucible/access-role-badge"
 import { EditResourceIcon } from "@/components/crucible/icons"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
@@ -193,27 +194,43 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
                   <MfidValue value={instrument.unique_id} />
                 </dd>
               </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Owner</dt>
-                <dd className="mt-1 flex items-start gap-2 text-body">
-                  <IdentityFieldIcon
-                    accountType={
-                      instrument.owner &&
-                      personIsServiceAccount(instrument.owner)
-                        ? "service-account"
-                        : "person"
-                    }
-                    type="owner"
-                  />
-                  {instrument.owner ? (
-                    <PersonLink
-                      nameStyle="abbreviated"
-                      person={instrument.owner}
+              <div
+                className={
+                  instrument.role ? "grid grid-cols-2 gap-4" : "min-w-0"
+                }
+              >
+                <div className="min-w-0">
+                  <dt className="text-label text-muted-foreground">Owner</dt>
+                  <dd className="mt-1 flex items-start gap-2 text-body">
+                    <IdentityFieldIcon
+                      accountType={
+                        instrument.owner &&
+                        personIsServiceAccount(instrument.owner)
+                          ? "service-account"
+                          : "person"
+                      }
+                      type="owner"
                     />
-                  ) : (
-                    "Unknown owner"
-                  )}
-                </dd>
+                    {instrument.owner ? (
+                      <PersonLink
+                        nameStyle="abbreviated"
+                        person={instrument.owner}
+                      />
+                    ) : (
+                      "Unknown owner"
+                    )}
+                  </dd>
+                </div>
+                {instrument.role ? (
+                  <div className="min-w-0">
+                    <dt className="text-label text-muted-foreground">
+                      Your role
+                    </dt>
+                    <dd className="mt-1 flex items-start gap-2 text-body">
+                      <AccessRoleBadge role={instrument.role} />
+                    </dd>
+                  </div>
+                ) : null}
               </div>
             </dl>
           </div>

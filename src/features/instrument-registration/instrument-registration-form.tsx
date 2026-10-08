@@ -27,6 +27,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -207,7 +208,6 @@ export function InstrumentRegistrationForm({
                           })
                           return unwrapHubResult(result)
                         }}
-                        description="Used in links and integrations."
                         entityLabel="Instrument ID"
                         field={field}
                         label="Instrument ID"
@@ -338,13 +338,17 @@ function RegistrationTextField({
   return (
     <form.Field name={fieldName}>
       {(field) => {
-        const invalid = !field.state.meta.isValid
+        const invalid = shouldShowFieldError(field)
         const descriptionId = `instrument-registration-${field.name}-description`
         const errorId = `instrument-registration-${field.name}-error`
         const hasDescription = Boolean(description)
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name} optional={!required}>
+            <FieldLabel
+              htmlFor={field.name}
+              optional={!required}
+              required={required}
+            >
               {label}
             </FieldLabel>
             <Input
@@ -355,7 +359,7 @@ function RegistrationTextField({
               aria-invalid={invalid || undefined}
               autoFocus={autoFocus}
               id={field.name}
-              maxLength={fieldName === "description" ? 10_000 : 255}
+              maxLength={255}
               name={field.name}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -367,7 +371,7 @@ function RegistrationTextField({
                 {description}
               </FieldDescription>
             ) : null}
-            <FieldError errors={field.state.meta.errors} id={errorId} />
+            <FieldError errors={fieldErrors(field)} id={errorId} />
           </Field>
         )
       }}
@@ -387,7 +391,7 @@ function RegistrationTextAreaField({
   return (
     <form.Field name={fieldName}>
       {(field) => {
-        const invalid = !field.state.meta.isValid
+        const invalid = shouldShowFieldError(field)
         const errorId = `instrument-registration-${field.name}-error`
         return (
           <Field data-invalid={invalid}>
@@ -405,7 +409,7 @@ function RegistrationTextAreaField({
               onChange={(event) => field.handleChange(event.target.value)}
               value={field.state.value}
             />
-            <FieldError errors={field.state.meta.errors} id={errorId} />
+            <FieldError errors={fieldErrors(field)} id={errorId} />
           </Field>
         )
       }}

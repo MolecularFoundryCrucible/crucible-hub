@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 
 import type { IdentityScope } from "./query-keys"
-import { crucibleKeys } from "./query-keys"
+import { crucibleKeys, privilegeModeFromScope } from "./query-keys"
 import {
   getWorkspaceDatasetFiles,
   getWorkspaceDatasetIngestionRequests,
@@ -33,7 +33,7 @@ export function resourceQueryOptions(
         await getWorkspaceResource({
           data: {
             projection: "overview",
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             resourceMfid,
             scenario: fixtureScenarioFromScope(scope),
           },
@@ -68,7 +68,7 @@ export function resourceSummaryQueryOptions(
         await getWorkspaceResource({
           data: {
             projection: "summary",
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             resourceMfid,
             scenario: fixtureScenarioFromScope(scope),
           },
@@ -90,7 +90,7 @@ export function datasetFilesQueryOptions(
         await getWorkspaceDatasetFiles({
           data: {
             datasetMfid,
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             scenario: fixtureScenarioFromScope(scope),
           },
           signal,

@@ -10,8 +10,32 @@ import {
 } from "./projects.functions"
 
 describe("project server-function inputs", () => {
-  it("accepts bounded cursor pagination", () => {
-    expect(projectListInputSchema.safeParse({ limit: 20 }).success).toBe(true)
+  it("accepts bounded cursor pagination and query parameters", () => {
+    expect(
+      projectListInputSchema.parse({
+        direction: "asc",
+        limit: 20,
+        memberRef: "user-123",
+        memberRole: "viewer",
+        sort: "title",
+      })
+    ).toEqual({
+      direction: "asc",
+      limit: 20,
+      memberRef: "user-123",
+      memberRole: "viewer",
+      sort: "title",
+    })
+  })
+
+  it("rejects invalid project sort or role filters", () => {
+    expect(
+      projectListInputSchema.safeParse({ limit: 20, sort: "invalid" }).success
+    ).toBe(false)
+    expect(
+      projectListInputSchema.safeParse({ limit: 20, memberRole: "invalid" })
+        .success
+    ).toBe(false)
   })
 
   it("rejects malformed pagination", () => {

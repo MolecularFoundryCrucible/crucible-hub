@@ -1,12 +1,12 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
   InstrumentStatusPendingIcon,
   UpdateInstrumentStatusIcon,
 } from "@/components/crucible/icons"
-import { InstrumentStatusBadge } from "@/components/crucible/instrument-status-badge"
+import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { ManagementAction } from "@/components/crucible/management-action"
 import { Button } from "@/components/ui/button"
 import {
@@ -202,7 +202,7 @@ export function InstrumentLifecycleCard({
         <div className="flex items-center gap-2 text-body">
           <span className="text-muted-foreground">Current status:</span>
           {instrument.status ? (
-            <InstrumentStatusBadge status={instrument.status} />
+            <ResourceStatusBadge status={instrument.status} />
           ) : (
             currentLabel
           )}
@@ -234,7 +234,7 @@ export function InstrumentLifecycleCard({
               <div className="flex items-center gap-2 text-body">
                 <span className="text-muted-foreground">Current status:</span>
                 {instrument.status ? (
-                  <InstrumentStatusBadge status={instrument.status} />
+                  <ResourceStatusBadge status={instrument.status} />
                 ) : (
                   currentLabel
                 )}
@@ -313,7 +313,8 @@ export function InstrumentLifecycleCard({
         </DialogContent>
       </Dialog>
 
-      <ConfirmationAlertDialog
+      <ConfirmationDialog
+        kind="alert"
         confirmLabel="Decommission"
         description={
           <>

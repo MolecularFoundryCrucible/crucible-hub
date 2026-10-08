@@ -168,16 +168,21 @@ export function SystemStatusPopover({
               Database {databaseBadgeLabel(statusQuery.data.database.status)}.
             </div>
             <div className="flex flex-col gap-2.5">
-              <div className="flex items-center justify-between rounded-md border border-border p-2.5">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 rounded-md border border-border p-2.5">
+                <div className="flex min-w-0 items-center gap-2">
                   <ServerIcon
                     aria-hidden="true"
                     className="size-4 shrink-0 text-muted-foreground"
                   />
-                  <div className="flex flex-col">
+                  <div className="flex min-w-0 flex-col">
                     <span className="text-label-compact text-foreground">
                       API
                     </span>
+                    {statusQuery.data.api.url ? (
+                      <span className="font-mono text-supporting break-all text-muted-foreground">
+                        {statusQuery.data.api.url}
+                      </span>
+                    ) : null}
                     <span className="text-supporting text-muted-foreground">
                       {statusQuery.data.api.latencyMs != null
                         ? `${statusQuery.data.api.latencyMs} ms`
@@ -189,6 +194,7 @@ export function SystemStatusPopover({
                   </div>
                 </div>
                 <Badge
+                  className="shrink-0"
                   variant={statusBadgeVariant(statusQuery.data.api.status)}
                 >
                   {statusBadgeLabel(statusQuery.data.api.status)}

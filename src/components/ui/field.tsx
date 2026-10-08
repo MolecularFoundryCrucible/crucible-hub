@@ -101,8 +101,12 @@ function FieldLabel({
   children,
   className,
   optional = false,
+  required = false,
   ...props
-}: React.ComponentProps<typeof Label> & { optional?: boolean }) {
+}: React.ComponentProps<typeof Label> & {
+  optional?: boolean
+  required?: boolean
+}) {
   return (
     <Label
       data-slot="field-label"
@@ -113,8 +117,18 @@ function FieldLabel({
       )}
       {...props}
     >
-      {children}
-      {optional ? (
+      <span>
+        {children}
+        {required ? (
+          <span
+            aria-hidden="true"
+            className="ml-0.5 font-normal text-destructive"
+          >
+            *
+          </span>
+        ) : null}
+      </span>
+      {!required && optional ? (
         <span className="font-normal text-muted-foreground">(optional)</span>
       ) : null}
     </Label>

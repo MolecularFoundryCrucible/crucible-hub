@@ -7,6 +7,7 @@ export interface SystemStatus {
   }
   api: {
     status: ServiceStatus
+    url?: string
     version?: string
     commit?: string
     branch?: string

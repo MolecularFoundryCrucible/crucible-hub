@@ -19,6 +19,7 @@ import {
   AdministratorViewEnabledIcon,
   AdministratorViewIcon,
   CollapseSidebarIcon,
+  CreateResourceIcon,
   DeletionRequestsIcon,
   ExpandSidebarIcon,
   RecentResourcesIcon,
@@ -31,7 +32,6 @@ import {
   PrincipalTypeIcon,
   ResourceTypeIcon,
 } from "@/components/crucible/resource-type-icon"
-import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { useTheme } from "@/components/theme-provider"
@@ -60,10 +60,17 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubAction,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
+  SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
@@ -74,6 +81,8 @@ import {
   canOpenPlatformAdministration,
   canOpenServiceAccountAdministration,
 } from "@/data/crucible/administration"
+import { pendingDeletionRequestsCountQueryOptions } from "@/data/crucible/deletion-requests.queries"
+import { identityScope } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
   projectQueryOptions,
@@ -86,34 +95,7 @@ import {
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 import { resourceDisplayName } from "@/lib/resource-name"
 
-type NavPath = "/" | "/data" | "/projects" | "/instruments"
 const sidebarRecentLimit = 4
-
-const primaryItems = [
-  { label: "Home", to: "/", kind: "home" },
-  {
-    label: "Projects",
-    to: "/projects",
-    kind: "resource",
-    resourceType: "project",
-  },
-  {
-    label: "Data",
-    to: "/data",
-    kind: "data",
-  },
-  {
-    label: "Instruments",
-    to: "/instruments",
-    kind: "resource",
-    resourceType: "instrument",
-  },
-] satisfies ReadonlyArray<{
-  kind: "data" | "home" | "resource"
-  label: string
-  resourceType?: ResourceType
-  to: NavPath
-}>
 
 export function AppShell({
   account,
@@ -137,6 +119,33 @@ export function AppShell({
   const recentlyViewedIdentity =
     scope?.slice(0, 3).join(":") ?? account?.unique_id ?? "anonymous"
 
+  const pendingCountQuery = useQuery({
+    ...pendingDeletionRequestsCountQueryOptions(
+      scope ?? identityScope("anonymous", "anonymous", "normal")
+    ),
+    enabled: Boolean(account && scope),
+  })
+  const pendingReviewCount = pendingCountQuery.data ?? 0
+
+  const isDataActive =
+    pathname === "/data" ||
+    pathname.startsWith("/datasets/") ||
+    pathname.startsWith("/samples/")
+  const isProjectsActive =
+    pathname === "/projects" || pathname.startsWith("/projects/")
+  const isInstrumentsActive =
+    pathname === "/instruments" || pathname.startsWith("/instruments/")
+
+  const dataKind = pathname.startsWith("/datasets/")
+    ? "datasets"
+    : pathname.startsWith("/samples/")
+      ? "samples"
+      : pathname === "/data"
+        ? (location.search as { kind?: string }).kind === "datasets"
+          ? "datasets"
+          : "samples"
+        : null
+
   const shell = (
     <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
       {sessionAuth && account ? (
@@ -156,40 +165,192 @@ export function AppShell({
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {primaryItems.map((item) => {
-                    const isActive =
-                      item.to === "/"
-                        ? pathname === "/"
-                        : item.to === "/data" &&
-                            (pathname.startsWith("/datasets/") ||
-                              pathname.startsWith("/samples/"))
-                          ? true
-                          : pathname === item.to ||
-                            pathname.startsWith(`${item.to}/`)
-                    return (
-                      <SidebarMenuItem key={item.to}>
-                        <SidebarMenuButton
-                          isActive={isActive}
-                          tooltip={item.label}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={pathname === "/"}
+                      tooltip="Home"
+                      render={
+                        <Link
+                          aria-current={pathname === "/" ? "page" : undefined}
+                          to="/"
+                        />
+                      }
+                    >
+                      <WorkspaceIcon aria-hidden="true" />
+                      <span>Home</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarSeparator className="my-1" />
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isDataActive}
+                      tooltip="Data"
+                      render={
+                        <Link
+                          aria-current={
+                            pathname === "/data" ? "page" : undefined
+                          }
+                          to="/data"
+                        />
+                      }
+                    >
+                      <DataCollectionIcon />
+                      <span>Data</span>
+                    </SidebarMenuButton>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          isActive={dataKind === "samples"}
                           render={
                             <Link
-                              aria-current={isActive ? "page" : undefined}
-                              to={item.to}
+                              aria-current={
+                                dataKind === "samples" ? "page" : undefined
+                              }
+                              aria-label="Browse samples"
+                              search={(prev: Record<string, unknown>) => ({
+                                ...prev,
+                                kind: "samples",
+                              })}
+                              to="/data"
                             />
                           }
                         >
-                          {item.kind === "resource" ? (
-                            <ResourceTypeIcon type={item.resourceType} />
-                          ) : item.kind === "data" ? (
-                            <DataCollectionIcon />
-                          ) : (
-                            <WorkspaceIcon aria-hidden="true" />
-                          )}
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
+                          <ResourceTypeIcon type="sample" />
+                          <span>Samples</span>
+                        </SidebarMenuSubButton>
+                        {account?.capabilities.can_create_sample ? (
+                          <SidebarMenuSubAction
+                            aria-label="Create sample"
+                            render={
+                              <Link
+                                aria-label="Create sample"
+                                search={{ projectMfid: undefined }}
+                                to="/samples/new"
+                              />
+                            }
+                            showOnHover
+                            title="Create sample"
+                          >
+                            <CreateResourceIcon aria-hidden="true" />
+                            <span className="sr-only">Create sample</span>
+                          </SidebarMenuSubAction>
+                        ) : null}
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          isActive={dataKind === "datasets"}
+                          render={
+                            <Link
+                              aria-current={
+                                dataKind === "datasets" ? "page" : undefined
+                              }
+                              aria-label="Browse datasets"
+                              search={(prev: Record<string, unknown>) => ({
+                                ...prev,
+                                kind: "datasets",
+                              })}
+                              to="/data"
+                            />
+                          }
+                        >
+                          <ResourceTypeIcon type="dataset" />
+                          <span>Datasets</span>
+                        </SidebarMenuSubButton>
+                        {account?.capabilities.can_create_dataset ? (
+                          <SidebarMenuSubAction
+                            aria-label="Create dataset"
+                            render={
+                              <Link
+                                aria-label="Create dataset"
+                                search={{
+                                  instrumentMfid: undefined,
+                                  projectMfid: undefined,
+                                }}
+                                to="/datasets/new"
+                              />
+                            }
+                            showOnHover
+                            title="Create dataset"
+                          >
+                            <CreateResourceIcon aria-hidden="true" />
+                            <span className="sr-only">Create dataset</span>
+                          </SidebarMenuSubAction>
+                        ) : null}
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isProjectsActive}
+                      tooltip="Projects"
+                      render={
+                        <Link
+                          aria-current={
+                            pathname === "/projects" ? "page" : undefined
+                          }
+                          to="/projects"
+                        />
+                      }
+                    >
+                      <ResourceTypeIcon type="project" />
+                      <span>Projects</span>
+                    </SidebarMenuButton>
+                    {account?.capabilities.can_create_project ? (
+                      <SidebarMenuAction
+                        aria-label="Create project"
+                        render={
+                          <Link
+                            aria-label="Create project"
+                            to="/projects/new"
+                          />
+                        }
+                        showOnHover
+                        title="Create project"
+                      >
+                        <CreateResourceIcon aria-hidden="true" />
+                        <span className="sr-only">Create project</span>
+                      </SidebarMenuAction>
+                    ) : null}
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isInstrumentsActive}
+                      tooltip="Instruments"
+                      render={
+                        <Link
+                          aria-current={
+                            pathname === "/instruments" ? "page" : undefined
+                          }
+                          to="/instruments"
+                        />
+                      }
+                    >
+                      <ResourceTypeIcon type="instrument" />
+                      <span>Instruments</span>
+                    </SidebarMenuButton>
+                    {account?.capabilities.can_register_instrument ? (
+                      <SidebarMenuAction
+                        aria-label="Register instrument"
+                        render={
+                          <Link
+                            aria-label="Register instrument"
+                            to="/instruments/new"
+                          />
+                        }
+                        showOnHover
+                        title="Register instrument"
+                      >
+                        <CreateResourceIcon aria-hidden="true" />
+                        <span className="sr-only">Register instrument</span>
+                      </SidebarMenuAction>
+                    ) : null}
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -266,6 +427,14 @@ export function AppShell({
                         <DeletionRequestsIcon aria-hidden="true" />
                         <span>Deletion requests</span>
                       </SidebarMenuButton>
+                      {pendingReviewCount > 0 ? (
+                        <SidebarMenuBadge
+                          aria-label={`${pendingReviewCount} pending deletion requests`}
+                          className="rounded-full border border-sidebar-border/60 bg-sidebar-accent px-1.5 text-label-compact text-sidebar-foreground"
+                        >
+                          {pendingReviewCount}
+                        </SidebarMenuBadge>
+                      ) : null}
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>

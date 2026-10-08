@@ -1,4 +1,6 @@
 import { Badge } from "@/components/ui/badge"
+import { grantName } from "@/data/crucible/resource-access"
+import type { WorkspaceResourceAccessGrant } from "@/data/crucible/workspace-source"
 
 export const accessRoles = [
   "owner",
@@ -31,6 +33,19 @@ export function accessRoleLabel(role: string) {
 export function accessRoleRank(role: string) {
   const rank = accessRoles.indexOf(role as AccessRole)
   return rank === -1 ? accessRoles.length : rank
+}
+
+export function sortAccessGrants(
+  grants: readonly WorkspaceResourceAccessGrant[]
+) {
+  return [...grants].sort((left, right) => {
+    const roleDifference =
+      accessRoleRank(left.permission) - accessRoleRank(right.permission)
+    if (roleDifference !== 0) return roleDifference
+    const nameDifference = grantName(left).localeCompare(grantName(right))
+    if (nameDifference !== 0) return nameDifference
+    return left.principal_id.localeCompare(right.principal_id)
+  })
 }
 
 export function isAccessRole(role: string): role is AccessRole {

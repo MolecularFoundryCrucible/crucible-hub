@@ -34,7 +34,7 @@ export function readFixtureSystemStatus(): SystemStatus {
   }
 }
 
-function unreachableStatus(latencyMs?: number): SystemStatus {
+function unreachableStatus(latencyMs?: number, url?: string): SystemStatus {
   return {
     status: "unreachable",
     hub: {
@@ -42,6 +42,7 @@ function unreachableStatus(latencyMs?: number): SystemStatus {
     },
     api: {
       status: "unreachable",
+      url,
       latencyMs,
     },
     database: {
@@ -103,6 +104,7 @@ export async function readSystemStatus(
         },
         api: {
           status: result.data.status,
+          url: configuration.baseUrl,
           version: result.data.build.api_version,
           commit: result.data.build.git_commit ?? undefined,
           branch: result.data.build.branch ?? undefined,
@@ -145,6 +147,7 @@ export async function readSystemStatus(
         },
         api: {
           status: "degraded",
+          url: configuration.baseUrl,
           version: errorData.build?.api_version,
           commit: errorData.build?.git_commit ?? undefined,
           branch: errorData.build?.branch ?? undefined,
@@ -165,7 +168,10 @@ export async function readSystemStatus(
     cachedStatus = { status, expiresAt: Date.now() + CACHE_TTL_MS }
     return status
   } catch {
-    const status = unreachableStatus(Math.round(Date.now() - startTime))
+    const status = unreachableStatus(
+      Math.round(Date.now() - startTime),
+      configuration.baseUrl
+    )
     cachedStatus = { status, expiresAt: Date.now() + CACHE_TTL_MS }
     return status
   }

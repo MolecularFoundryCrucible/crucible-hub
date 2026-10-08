@@ -9,11 +9,15 @@ import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
+import type { PersonIdentityProfile } from "@/components/crucible/person-identity"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
-import { IdentityDetailPending } from "@/components/crucible/route-content-pending"
+import { ContentBoundary } from "@/components/crucible/content-layout"
+import {
+  IdentityDetailContentPending,
+  IdentityDetailPending,
+} from "@/components/crucible/route-content-pending"
 import {
   useAdministrationScope,
-  useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import {
@@ -44,12 +48,12 @@ import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
 import { UserDetailView } from "@/features/admin/user-detail"
 import { hubPageTitle } from "@/lib/page-title"
 
-export const Route = createFileRoute("/_app/people/$personId")({
+export const Route = createFileRoute("/_app/users/$userId")({
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
     const person = await context.queryClient.ensureQueryData(
-      personQueryOptions(source.scope, params.personId)
+      personQueryOptions(source.scope, params.userId)
     )
     const account = await context.queryClient.ensureQueryData(
       accountQueryOptions(source.scope)
@@ -61,7 +65,7 @@ export const Route = createFileRoute("/_app/people/$personId")({
         "elevated"
       )
       adminUser = await context.queryClient.ensureQueryData(
-        userDetailQueryOptions(administrationScope, params.personId)
+        userDetailQueryOptions(administrationScope, params.userId)
       )
     }
     const name = person
@@ -77,23 +81,22 @@ export const Route = createFileRoute("/_app/people/$personId")({
     meta: [{ title: hubPageTitle(loaderData?.personName) }],
   }),
   pendingComponent: () => <IdentityDetailPending kind="person" />,
-  component: PersonPage,
+  component: UserPage,
 })
 
-function PersonPage() {
-  const { personId } = Route.useParams()
+function UserPage() {
+  const { userId } = Route.useParams()
   const scope = useWorkspaceScope()
   const administrationScope = useAdministrationScope()
-  const mode = useWorkspaceMode()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
-  const { data: person } = useSuspenseQuery(personQueryOptions(scope, personId))
+  const { data: person } = useSuspenseQuery(personQueryOptions(scope, userId))
 
   const canAdminUsers = canOpenUserAdministration(account)
   const isServiceAccount = Boolean(person?.is_service_account)
-  const isSelf = account.unique_id === personId
+  const isSelf = account.unique_id === userId
 
   const adminUserResult = useQuery({
-    ...userDetailQueryOptions(administrationScope, personId),
+    ...userDetailQueryOptions(administrationScope, userId),
     enabled: canAdminUsers && !isServiceAccount,
   })
 
@@ -106,9 +109,9 @@ function PersonPage() {
     return (
       <Card className="mx-auto mt-16 max-w-state">
         <CardHeader>
-          <CardTitle>Person not found</CardTitle>
+          <CardTitle>User not found</CardTitle>
           <CardDescription>
-            This public profile is not available in the current workspace.
+            This profile is not available in the current workspace.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -131,7 +134,7 @@ function PersonPage() {
                 <BreadcrumbLink
                   render={<Link search={{ kind: "person" }} to="/search" />}
                 >
-                  People
+                  Users
                 </BreadcrumbLink>
               )
             ) : canAdminUsers ? (
@@ -142,7 +145,7 @@ function PersonPage() {
               <BreadcrumbLink
                 render={<Link search={{ kind: "person" }} to="/search" />}
               >
-                People
+                Users
               </BreadcrumbLink>
             )}
           </BreadcrumbItem>
@@ -191,68 +194,49 @@ function PersonPage() {
 
       {canAdminUsers && !isServiceAccount ? (
         adminUserResult.isPending ? (
-          <IdentityDetailPending kind="person" />
+          <IdentityDetailContentPending kind="person" />
         ) : adminUserResult.data ? (
           <UserDetailView
             key={adminUserResult.data.unique_id}
-            mode={mode}
             scope={administrationScope}
             user={adminUserResult.data}
           />
         ) : (
-          <Card className="max-w-2xl">
-            <CardHeader>
-              <PersonIdentity
-                person={activePerson}
-                presentation="avatar"
-                size="lg"
-              />
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-1">
-                  <dt className="text-label">Username</dt>
-                  <dd className="text-body text-muted-foreground">
-                    {activePerson.username ?? "Not provided"}
-                  </dd>
-                </div>
-                <div className="flex flex-col gap-1 sm:col-span-2">
-                  <dt className="text-label">Crucible ID</dt>
-                  <dd>
-                    <MfidValue value={activePerson.unique_id} />
-                  </dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
+          <ReadOnlyPersonProfileCard person={activePerson} />
         )
       ) : (
-        <Card className="max-w-2xl">
-          <CardHeader>
-            <PersonIdentity
-              person={activePerson}
-              presentation="avatar"
-              size="lg"
-            />
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <dt className="text-label">Username</dt>
-                <dd className="text-body text-muted-foreground">
-                  {activePerson.username ?? "Not provided"}
-                </dd>
-              </div>
-              <div className="flex flex-col gap-1 sm:col-span-2">
-                <dt className="text-label">Crucible ID</dt>
-                <dd>
-                  <MfidValue value={activePerson.unique_id} />
-                </dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
+        <ReadOnlyPersonProfileCard person={activePerson} />
       )}
     </PageLayout>
+  )
+}
+
+function ReadOnlyPersonProfileCard({
+  person,
+}: {
+  person: PersonIdentityProfile
+}) {
+  return (
+    <ContentBoundary width="reading">
+      <Card>
+        <CardHeader>
+          <PersonIdentity person={person} presentation="avatar" size="lg" />
+        </CardHeader>
+        <CardContent>
+          <dl className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <dt className="text-label text-muted-foreground">Username</dt>
+              <dd className="text-body">{person.username ?? "Not provided"}</dd>
+            </div>
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <dt className="text-label text-muted-foreground">Crucible ID</dt>
+              <dd>
+                <MfidValue value={person.unique_id} />
+              </dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
+    </ContentBoundary>
   )
 }

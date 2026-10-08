@@ -134,3 +134,26 @@ export function invalidateDeletionRequestMutationQueries(
     ),
   ])
 }
+
+export function invalidateResourceDeletionQueries(
+  queryClient: QueryClient,
+  scope: IdentityScope,
+  kind: WorkspaceResourceDetail["kind"],
+  resourceMfid: string
+) {
+  return Promise.all([
+    invalidateResourceDiscoveryQueries(queryClient, scope),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.resourceDetails(scope, resourceMfid),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: resourceListKey(kind, scope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.deletionAuditQueries(scope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: crucibleKeys.userAdminQueries(scope),
+    }),
+  ])
+}

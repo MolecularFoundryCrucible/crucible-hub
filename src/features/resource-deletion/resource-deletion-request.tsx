@@ -27,6 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { invalidateDeletionRequestMutationQueries } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { createWorkspaceResourceDeletionRequest } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
@@ -74,7 +75,7 @@ export function ResourceDeletionRequestCard({
       unwrapHubResult(
         await createWorkspaceResourceDeletionRequest({
           data: {
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             reason: reason.trim() || undefined,
             resourceMfid: resource.unique_id,
             scenario: fixtureScenarioFromScope(scope),

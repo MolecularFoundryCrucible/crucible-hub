@@ -44,8 +44,8 @@ export async function readWorkspacePerson(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.GET("/users/{user_id}", {
-    params: { path: { user_id: personId } },
+  const result = await client.GET("/users/{user_ref}", {
+    params: { path: { user_ref: personId } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status === 404) return null

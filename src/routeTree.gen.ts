@@ -29,13 +29,13 @@ import { Route as AppDatasetsNewRouteImport } from './routes/_app.datasets.new'
 import { Route as AppInstrumentsIndexRouteImport } from './routes/_app.instruments.index'
 import { Route as AppInstrumentsInstrumentMfidRouteImport } from './routes/_app.instruments.$instrumentMfid'
 import { Route as AppInstrumentsNewRouteImport } from './routes/_app.instruments.new'
-import { Route as AppPeoplePersonIdRouteImport } from './routes/_app.people.$personId'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app.projects.index'
 import { Route as AppProjectsProjectMfidRouteImport } from './routes/_app.projects.$projectMfid'
 import { Route as AppProjectsNewRouteImport } from './routes/_app.projects.new'
 import { Route as AppResourcesResourceMfidRouteImport } from './routes/_app.resources.$resourceMfid'
 import { Route as AppSamplesSampleMfidRouteImport } from './routes/_app.samples.$sampleMfid'
 import { Route as AppSamplesNewRouteImport } from './routes/_app.samples.new'
+import { Route as AppUsersUserIdRouteImport } from './routes/_app.users.$userId'
 import { Route as AppAdminServiceAccountsIndexRouteImport } from './routes/_app.admin.service-accounts.index'
 import { Route as AppAdminServiceAccountsServiceAccountMfidRouteImport } from './routes/_app.admin.service-accounts.$serviceAccountMfid'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app.admin.users.index'
@@ -164,11 +164,6 @@ const AppInstrumentsNewRoute = AppInstrumentsNewRouteImport.update({
   path: '/instruments/new',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPeoplePersonIdRoute = AppPeoplePersonIdRouteImport.update({
-  id: '/people/$personId',
-  path: '/people/$personId',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppProjectsIndexRoute = AppProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -198,6 +193,11 @@ const AppSamplesSampleMfidRoute = AppSamplesSampleMfidRouteImport.update({
 const AppSamplesNewRoute = AppSamplesNewRouteImport.update({
   id: '/samples/new',
   path: '/samples/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUsersUserIdRoute = AppUsersUserIdRouteImport.update({
+  id: '/users/$userId',
+  path: '/users/$userId',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminServiceAccountsIndexRoute =
@@ -381,12 +381,12 @@ export interface FileRoutesByFullPath {
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
   '/instruments/new': typeof AppInstrumentsNewRoute
-  '/people/$personId': typeof AppPeoplePersonIdRoute
   '/projects/$projectMfid': typeof AppProjectsProjectMfidRouteWithChildren
   '/projects/new': typeof AppProjectsNewRoute
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/samples/new': typeof AppSamplesNewRoute
+  '/users/$userId': typeof AppUsersUserIdRoute
   '/instruments/': typeof AppInstrumentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -434,10 +434,10 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/new': typeof AppInstrumentsNewRoute
-  '/people/$personId': typeof AppPeoplePersonIdRoute
   '/projects/new': typeof AppProjectsNewRoute
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/new': typeof AppSamplesNewRoute
+  '/users/$userId': typeof AppUsersUserIdRoute
   '/instruments': typeof AppInstrumentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -487,12 +487,12 @@ export interface FileRoutesById {
   '/_app/datasets/new': typeof AppDatasetsNewRoute
   '/_app/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
   '/_app/instruments/new': typeof AppInstrumentsNewRoute
-  '/_app/people/$personId': typeof AppPeoplePersonIdRoute
   '/_app/projects/$projectMfid': typeof AppProjectsProjectMfidRouteWithChildren
   '/_app/projects/new': typeof AppProjectsNewRoute
   '/_app/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/_app/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/_app/samples/new': typeof AppSamplesNewRoute
+  '/_app/users/$userId': typeof AppUsersUserIdRoute
   '/_app/instruments/': typeof AppInstrumentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -544,12 +544,12 @@ export interface FileRouteTypes {
     | '/datasets/new'
     | '/instruments/$instrumentMfid'
     | '/instruments/new'
-    | '/people/$personId'
     | '/projects/$projectMfid'
     | '/projects/new'
     | '/resources/$resourceMfid'
     | '/samples/$sampleMfid'
     | '/samples/new'
+    | '/users/$userId'
     | '/instruments/'
     | '/projects/'
     | '/admin/service-accounts/$serviceAccountMfid'
@@ -597,10 +597,10 @@ export interface FileRouteTypes {
     | '/'
     | '/datasets/new'
     | '/instruments/new'
-    | '/people/$personId'
     | '/projects/new'
     | '/resources/$resourceMfid'
     | '/samples/new'
+    | '/users/$userId'
     | '/instruments'
     | '/projects'
     | '/admin/service-accounts/$serviceAccountMfid'
@@ -649,12 +649,12 @@ export interface FileRouteTypes {
     | '/_app/datasets/new'
     | '/_app/instruments/$instrumentMfid'
     | '/_app/instruments/new'
-    | '/_app/people/$personId'
     | '/_app/projects/$projectMfid'
     | '/_app/projects/new'
     | '/_app/resources/$resourceMfid'
     | '/_app/samples/$sampleMfid'
     | '/_app/samples/new'
+    | '/_app/users/$userId'
     | '/_app/instruments/'
     | '/_app/projects/'
     | '/_app/admin/service-accounts/$serviceAccountMfid'
@@ -841,13 +841,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInstrumentsNewRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/people/$personId': {
-      id: '/_app/people/$personId'
-      path: '/people/$personId'
-      fullPath: '/people/$personId'
-      preLoaderRoute: typeof AppPeoplePersonIdRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/projects/': {
       id: '/_app/projects/'
       path: '/projects'
@@ -888,6 +881,13 @@ declare module '@tanstack/react-router' {
       path: '/samples/new'
       fullPath: '/samples/new'
       preLoaderRoute: typeof AppSamplesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/users/$userId': {
+      id: '/_app/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/users/$userId'
+      preLoaderRoute: typeof AppUsersUserIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/service-accounts/': {
@@ -1222,12 +1222,12 @@ interface AppRouteChildren {
   AppDatasetsNewRoute: typeof AppDatasetsNewRoute
   AppInstrumentsInstrumentMfidRoute: typeof AppInstrumentsInstrumentMfidRouteWithChildren
   AppInstrumentsNewRoute: typeof AppInstrumentsNewRoute
-  AppPeoplePersonIdRoute: typeof AppPeoplePersonIdRoute
   AppProjectsProjectMfidRoute: typeof AppProjectsProjectMfidRouteWithChildren
   AppProjectsNewRoute: typeof AppProjectsNewRoute
   AppResourcesResourceMfidRoute: typeof AppResourcesResourceMfidRoute
   AppSamplesSampleMfidRoute: typeof AppSamplesSampleMfidRouteWithChildren
   AppSamplesNewRoute: typeof AppSamplesNewRoute
+  AppUsersUserIdRoute: typeof AppUsersUserIdRoute
   AppInstrumentsIndexRoute: typeof AppInstrumentsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
   AppAdminServiceAccountsServiceAccountMfidRoute: typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -1246,12 +1246,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppInstrumentsInstrumentMfidRoute:
     AppInstrumentsInstrumentMfidRouteWithChildren,
   AppInstrumentsNewRoute: AppInstrumentsNewRoute,
-  AppPeoplePersonIdRoute: AppPeoplePersonIdRoute,
   AppProjectsProjectMfidRoute: AppProjectsProjectMfidRouteWithChildren,
   AppProjectsNewRoute: AppProjectsNewRoute,
   AppResourcesResourceMfidRoute: AppResourcesResourceMfidRoute,
   AppSamplesSampleMfidRoute: AppSamplesSampleMfidRouteWithChildren,
   AppSamplesNewRoute: AppSamplesNewRoute,
+  AppUsersUserIdRoute: AppUsersUserIdRoute,
   AppInstrumentsIndexRoute: AppInstrumentsIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
   AppAdminServiceAccountsServiceAccountMfidRoute:

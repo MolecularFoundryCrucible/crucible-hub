@@ -1,4 +1,3 @@
-import { useState } from "react"
 import type { AnyFormApi } from "@tanstack/react-form"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -19,11 +18,11 @@ import {
 } from "@/components/ui/card"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
@@ -42,10 +41,7 @@ import {
 } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { unwrapHubResult } from "@/data/crucible/result"
-import type {
-  WorkspaceResourceDetail,
-  WorkspaceSearchResult,
-} from "@/data/crucible/workspace-source"
+import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 import { isValidLocalDateTime, localDateTimeToUtc } from "@/lib/format"
 
 import {
@@ -59,10 +55,7 @@ import {
   useCreationTimestampDefault,
   workspaceSelectionOf,
 } from "./creation-form"
-import {
-  creationFailureMessage,
-  isUncertainCreationError,
-} from "./creation-error"
+import { useStagedCreation } from "./creation-submission"
 
 const sampleSchema = z.object({
   description: z
@@ -110,10 +103,6 @@ export function SampleCreationForm({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [saveError, setSaveError] = useState<string>()
-  const [uncertainOutcome, setUncertainOutcome] = useState(false)
-  const [createdSample, setCreatedSample] =
-    useState<Extract<WorkspaceResourceDetail, { kind: "sample" }>>()
   const mutation = useMutation({
     mutationFn: async (value: SampleValues) =>
       unwrapHubResult(
@@ -134,57 +123,42 @@ export function SampleCreationForm({
   })
   const relationships = useCreationRelationshipSubmission({
     onApplied: (resource) => {
-      if (resource.kind === "sample") setCreatedSample(resource)
+      if (resource.kind === "sample") setCreated(resource)
     },
     resourceKind: "sample",
     scope,
   })
-  const form = useSampleForm(initialProject, async (value, submittedForm) => {
-    setSaveError(undefined)
-    if (createdSample) {
-      const complete = await relationships.apply(
-        createdSample.unique_id,
-        value.relationships
+  const {
+    created: createdSample,
+    saveError,
+    setCreated,
+    submit,
+    uncertainOutcome,
+  } = useStagedCreation<SampleValues>({
+    create: (value) => mutation.mutateAsync(value),
+    kind: "sample",
+    onCreated: (resource) => {
+      if (resource.kind !== "sample") return
+      queryClient.setQueryData(
+        resourceQueryOptions(scope, resource.unique_id).queryKey,
+        resource
       )
-      if (complete) {
-        await navigate({
-          params: { sampleMfid: createdSample.unique_id },
-          to: "/samples/$sampleMfid",
-        })
-      }
-      return
-    }
-    if (uncertainOutcome) return
-    try {
-      const resource = await mutation.mutateAsync(value)
-      if (resource.kind !== "sample") {
-        throw new Error("The sample creation response is invalid.")
-      }
-      setCreatedSample(resource)
-      const resourceQuery = resourceQueryOptions(scope, resource.unique_id)
-      queryClient.setQueryData(resourceQuery.queryKey, resource)
       void queryClient.invalidateQueries({
         queryKey: crucibleKeys.sampleLists(scope),
       })
       void queryClient.invalidateQueries({
         queryKey: crucibleKeys.searches(scope),
       })
-      submittedForm.reset(value)
-      const complete = await relationships.apply(
-        resource.unique_id,
-        value.relationships
-      )
-      if (complete) {
-        await navigate({
-          params: { sampleMfid: resource.unique_id },
-          to: "/samples/$sampleMfid",
-        })
-      }
-    } catch (error) {
-      const uncertain = isUncertainCreationError(error)
-      setUncertainOutcome(uncertain)
-      setSaveError(creationFailureMessage("sample", error))
-    }
+    },
+    relationships,
+  })
+  const form = useSampleForm(initialProject, async (value, submittedForm) => {
+    await submit(value, submittedForm, async (resource) => {
+      await navigate({
+        params: { sampleMfid: resource.unique_id },
+        to: "/samples/$sampleMfid",
+      })
+    })
   })
   useCreationTimestampDefault(form)
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
@@ -227,8 +201,7 @@ export function SampleCreationForm({
                   />
                   <form.Field name="project">
                     {(field) => {
-                      const invalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
+                      const invalid = shouldShowFieldError(field)
                       const errorId = `${field.name}-error`
                       return (
                         <Field data-invalid={invalid}>
@@ -246,29 +219,25 @@ export function SampleCreationForm({
                             triggerId={field.name}
                             value={field.state.value ?? undefined}
                           />
-                          {invalid ? (
-                            <FieldError
-                              errors={field.state.meta.errors}
-                              id={errorId}
-                            />
-                          ) : null}
+                          <FieldError
+                            errors={fieldErrors(field)}
+                            id={errorId}
+                          />
                         </Field>
                       )
                     }}
                   </form.Field>
                   <form.Field name="visibility">
                     {(field) => {
-                      const invalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
-                      const descriptionId = `${field.name}-description`
+                      const invalid = shouldShowFieldError(field)
                       const errorId = `${field.name}-error`
                       return (
                         <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name}>
+                          <FieldLabel htmlFor={field.name} required>
                             Visibility
                           </FieldLabel>
                           <NativeSelect
-                            aria-describedby={`${descriptionId} ${errorId}`}
+                            aria-describedby={invalid ? errorId : undefined}
                             aria-errormessage={invalid ? errorId : undefined}
                             aria-invalid={invalid || undefined}
                             id={field.name}
@@ -288,12 +257,8 @@ export function SampleCreationForm({
                               Public
                             </NativeSelectOption>
                           </NativeSelect>
-                          <FieldDescription id={descriptionId}>
-                            Public samples can be read outside their project
-                            grants.
-                          </FieldDescription>
                           <FieldError
-                            errors={field.state.meta.errors}
+                            errors={fieldErrors(field)}
                             id={errorId}
                           />
                         </Field>
@@ -308,13 +273,11 @@ export function SampleCreationForm({
                     />
                     <form.Field name="timestamp">
                       {(field) => {
-                        const invalid =
-                          field.state.meta.isTouched &&
-                          !field.state.meta.isValid
+                        const invalid = shouldShowFieldError(field)
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name} optional>
+                            <FieldLabel htmlFor={field.name} required>
                               Local date and time
                             </FieldLabel>
                             <Input
@@ -331,7 +294,7 @@ export function SampleCreationForm({
                               value={field.state.value}
                             />
                             <FieldError
-                              errors={field.state.meta.errors}
+                              errors={fieldErrors(field)}
                               id={errorId}
                             />
                           </Field>
@@ -340,9 +303,7 @@ export function SampleCreationForm({
                     </form.Field>
                     <form.Field name="description">
                       {(field) => {
-                        const invalid =
-                          field.state.meta.isTouched &&
-                          !field.state.meta.isValid
+                        const invalid = shouldShowFieldError(field)
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
@@ -364,7 +325,7 @@ export function SampleCreationForm({
                               value={field.state.value}
                             />
                             <FieldError
-                              errors={field.state.meta.errors}
+                              errors={fieldErrors(field)}
                               id={errorId}
                             />
                           </Field>
@@ -477,12 +438,16 @@ function SampleTextField({
   return (
     <form.Field name={fieldName}>
       {(field) => {
-        const invalid = field.state.meta.isTouched && !field.state.meta.isValid
+        const invalid = shouldShowFieldError(field)
         const errorId = `${field.name}-error`
         return (
           <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name} optional={!required}>
-              {label} {required ? <span aria-hidden="true">*</span> : null}
+            <FieldLabel
+              htmlFor={field.name}
+              optional={!required}
+              required={required}
+            >
+              {label}
             </FieldLabel>
             <Input
               aria-describedby={errorId}
@@ -500,7 +465,7 @@ function SampleTextField({
               onChange={(event) => field.handleChange(event.target.value)}
               value={field.state.value}
             />
-            <FieldError errors={field.state.meta.errors} id={errorId} />
+            <FieldError errors={fieldErrors(field)} id={errorId} />
           </Field>
         )
       }}

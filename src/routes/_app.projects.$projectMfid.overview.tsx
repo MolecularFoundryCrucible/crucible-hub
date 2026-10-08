@@ -24,13 +24,15 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import { ProjectMembers } from "@/components/crucible/project-members"
+import {
+  ProjectMembers,
+  ProjectRoleBadge,
+} from "@/components/crucible/project-members"
 import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -58,36 +60,15 @@ function ProjectOverviewPage() {
   )
 
   if (!project) return null
-  if (!("status" in project)) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Limited project details</CardTitle>
-          <CardDescription>
-            Only the project reference is available to this account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div className="min-w-0">
-              <dt className="text-label text-muted-foreground">Project ID</dt>
-              <dd className="mt-1 text-body break-words">
-                {project.project_id || "-"}
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-label text-muted-foreground">MFID</dt>
-              <dd className="mt-1">
-                <MfidValue value={project.unique_id} />
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
-    )
-  }
 
   const { canUseMembership } = projectMembershipActions(project, scope[2])
+  const userRole =
+    project.role ??
+    (scope[2] &&
+    (project.lead?.unique_id === scope[2] ||
+      project.project_lead_orcid === scope[2])
+      ? "owner"
+      : (project.members?.find((m) => m.unique_id === scope[2])?.role ?? null))
 
   return (
     <ContentGrid variant="detail">
@@ -113,19 +94,19 @@ function ProjectOverviewPage() {
       </ContentGridItem>
 
       <ContentGridItem span="narrow">
-        <ProjectIdentity project={project} />
+        <ProjectIdentity project={project} userRole={userRole} />
       </ContentGridItem>
 
-      <ContentGridItem span="full">
-        <ProjectMetadata metadata={project.scientific_metadata} />
-      </ContentGridItem>
-
-      <ContentGridItem span="full">
+      <ContentGridItem span="wide">
         <ProjectMembers
           manageMembers={canUseMembership}
           members={project.members}
           projectMfid={project.unique_id}
         />
+      </ContentGridItem>
+
+      <ContentGridItem span="narrow">
+        <ProjectMetadata metadata={project.scientific_metadata} />
       </ContentGridItem>
     </ContentGrid>
   )
@@ -177,7 +158,13 @@ function ProjectSummary({
   )
 }
 
-function ProjectIdentity({ project }: { project: ProjectDetail }) {
+function ProjectIdentity({
+  project,
+  userRole,
+}: {
+  project: ProjectDetail
+  userRole?: string | null
+}) {
   return (
     <Card>
       <CardContent>
@@ -201,24 +188,39 @@ function ProjectIdentity({ project }: { project: ProjectDetail }) {
                   <MfidValue value={project.unique_id} />
                 </dd>
               </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Lead</dt>
-                <dd className="mt-1 flex items-start gap-2 text-body">
-                  <IdentityFieldIcon type="owner" />
-                  {project.lead ? (
-                    <PersonLink nameStyle="abbreviated" person={project.lead} />
-                  ) : project.project_lead_orcid ? (
-                    <PersonLink
-                      nameStyle="abbreviated"
-                      person={{
-                        name: project.project_lead_orcid,
-                        unique_id: project.project_lead_orcid,
-                      }}
-                    />
-                  ) : (
-                    "Unknown lead"
-                  )}
-                </dd>
+              <div className={userRole ? "grid grid-cols-2 gap-4" : "min-w-0"}>
+                <div className="min-w-0">
+                  <dt className="text-label text-muted-foreground">Lead</dt>
+                  <dd className="mt-1 flex items-start gap-2 text-body">
+                    <IdentityFieldIcon type="owner" />
+                    {project.lead ? (
+                      <PersonLink
+                        nameStyle="abbreviated"
+                        person={project.lead}
+                      />
+                    ) : project.project_lead_orcid ? (
+                      <PersonLink
+                        nameStyle="abbreviated"
+                        person={{
+                          name: project.project_lead_orcid,
+                          unique_id: project.project_lead_orcid,
+                        }}
+                      />
+                    ) : (
+                      "Unknown lead"
+                    )}
+                  </dd>
+                </div>
+                {userRole ? (
+                  <div className="min-w-0">
+                    <dt className="text-label text-muted-foreground">
+                      Your role
+                    </dt>
+                    <dd className="mt-1 flex items-start gap-2 text-body">
+                      <ProjectRoleBadge role={userRole} />
+                    </dd>
+                  </div>
+                ) : null}
               </div>
             </dl>
           </div>

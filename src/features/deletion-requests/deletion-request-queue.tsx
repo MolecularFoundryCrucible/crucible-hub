@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
 import { SavingChangesIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
@@ -54,7 +54,10 @@ import type {
   WorkspaceDeletionReviewDecision,
 } from "@/data/crucible/deletion-requests.server"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { crucibleKeys } from "@/data/crucible/query-keys"
+import {
+  crucibleKeys,
+  privilegeModeFromScope,
+} from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
@@ -567,7 +570,7 @@ function BulkReviewDialog({
             await reviewWorkspaceDeletionRequestById({
               data: {
                 decision,
-                privilegeMode: scope[3],
+                privilegeMode: privilegeModeFromScope(scope),
                 requestId: request.id,
                 reviewerNotes: notes,
                 scenario: fixtureScenarioFromScope(scope),
@@ -642,7 +645,8 @@ function BulkReviewDialog({
   const action = decision === "approved" ? "Approving" : "Rejecting"
   const pending = mutation.isPending || finalizing
   return (
-    <ConfirmationAlertDialog
+    <ConfirmationDialog
+      kind="alert"
       confirmLabel={
         decision === "approved" ? "Approve deletion" : "Reject requests"
       }
@@ -711,7 +715,7 @@ function BulkReviewDialog({
           {reviewStatus}
         </p>
       ) : null}
-    </ConfirmationAlertDialog>
+    </ConfirmationDialog>
   )
 }
 
@@ -994,7 +998,7 @@ function DeletionRequestDialog({
         await reviewWorkspaceDeletionRequestById({
           data: {
             decision,
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             requestId: request.id,
             reviewerNotes: reviewerNotes.trim() || undefined,
             scenario: fixtureScenarioFromScope(scope),

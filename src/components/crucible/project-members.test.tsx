@@ -18,9 +18,9 @@ vi.mock("@tanstack/react-router", () => ({
   }: {
     "aria-label"?: string
     children: ReactNode
-    params: { personId: string }
+    params: { userId: string }
   }) => (
-    <a aria-label={ariaLabel} href={`/people/${params.personId}`}>
+    <a aria-label={ariaLabel} href={`/users/${params.userId}`}>
       {children}
     </a>
   ),
@@ -99,7 +99,7 @@ describe("ProjectMembers", () => {
 
     expect(
       screen.getByRole("link", { name: "Ada Lovelace" }).getAttribute("href")
-    ).toBe("/people/owner")
+    ).toBe("/users/owner")
     expect(screen.getByText("Lead").className).toContain("bg-access-role-owner")
     expect(screen.getByText("Admin").className).toContain(
       "bg-access-role-admin"

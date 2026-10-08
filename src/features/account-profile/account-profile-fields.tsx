@@ -133,7 +133,7 @@ export function ProfileField({
   }
   return (
     <Field data-invalid={invalid || !field.state.meta.isValid}>
-      <FieldLabel htmlFor={field.name} optional={!required}>
+      <FieldLabel htmlFor={field.name} optional={!required} required={required}>
         {label}
       </FieldLabel>
       {endAdornment ? (

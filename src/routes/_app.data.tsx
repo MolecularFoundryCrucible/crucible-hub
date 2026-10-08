@@ -4,7 +4,7 @@ import {
   useIsFetching,
   useQueryClient,
 } from "@tanstack/react-query"
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 
 import {
   CollectionGroupControl,
@@ -38,8 +38,9 @@ import {
   useRegisterResourceSiblings,
 } from "@/components/crucible/resource-sibling-navigation"
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -802,43 +803,25 @@ function DataTypeFilters({
   kind: DataKindFilter
   sampleLabel?: string
 }) {
-  return (
-    <div className="flex flex-wrap gap-2" aria-label="Data type filter">
-      <FilterLink
-        active={kind === "samples"}
-        kind="samples"
-        label={sampleLabel}
-      />
-      <FilterLink
-        active={kind === "datasets"}
-        kind="datasets"
-        label={datasetLabel}
-      />
-    </div>
-  )
-}
+  const navigate = Route.useNavigate()
+  const options = [
+    { label: sampleLabel, value: "samples" },
+    { label: datasetLabel, value: "datasets" },
+  ] as const
 
-function FilterLink({
-  active,
-  kind,
-  label,
-}: {
-  active: boolean
-  kind: "datasets" | "samples"
-  label: string
-}) {
   return (
-    <Link
-      className={buttonVariants({
-        variant: active ? "secondary" : "ghost",
-      })}
-      from="/data"
-      to="/data"
-      search={(previous) => switchDataKind(previous, kind)}
-      state={{}}
-    >
-      {label}
-    </Link>
+    <SegmentedControl
+      ariaLabel="Data type filter"
+      onValueChange={(nextKind) => {
+        void navigate({
+          search: (previous) => switchDataKind(previous, nextKind),
+          state: {},
+          to: "/data",
+        })
+      }}
+      options={options}
+      value={kind}
+    />
   )
 }
 

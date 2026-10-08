@@ -2,12 +2,17 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import type { CollectionAffiliation } from "./collection-query"
 import type { IdentityScope } from "./query-keys"
-import { crucibleKeys } from "./query-keys"
+import { crucibleKeys, privilegeModeFromScope } from "./query-keys"
 import { getWorkspaceProject, getWorkspaceProjects } from "./projects.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { collectionScopedPreviousData } from "./pagination"
 import { unwrapHubResult } from "./result"
-import type { WorkspaceProject } from "./workspace-source"
+import type {
+  WorkspaceProject,
+  WorkspaceProjectSort,
+  WorkspaceSortDirection,
+  WorkspaceAccessPermission,
+} from "./workspace-source"
 
 export const projectPageLimit = 100
 
@@ -16,8 +21,13 @@ export function projectsQueryOptions(
   filters: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    direction?: WorkspaceSortDirection
     includeTotal?: boolean
     limit: number
+    memberRef?: string | readonly string[]
+    memberRole?:
+      WorkspaceAccessPermission | readonly WorkspaceAccessPermission[]
+    sort?: WorkspaceProjectSort
   }
 ) {
   return queryOptions({
@@ -28,7 +38,23 @@ export function projectsQueryOptions(
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceProjects({
-          data: { ...filters, scenario: fixtureScenarioFromScope(scope) },
+          data: {
+            ...filters,
+            memberRef:
+              typeof filters.memberRef === "string"
+                ? filters.memberRef
+                : filters.memberRef
+                  ? [...filters.memberRef]
+                  : undefined,
+            memberRole:
+              typeof filters.memberRole === "string"
+                ? filters.memberRole
+                : filters.memberRole
+                  ? [...filters.memberRole]
+                  : undefined,
+            privilegeMode: privilegeModeFromScope(scope),
+            scenario: fixtureScenarioFromScope(scope),
+          },
           signal,
         })
       ),
@@ -37,7 +63,9 @@ export function projectsQueryOptions(
         scope,
         {
           affiliation: filters.affiliation,
+          direction: filters.direction,
           includeTotal: filters.includeTotal ?? true,
+          sort: filters.sort,
         },
         previousData,
         previousQuery
@@ -50,8 +78,13 @@ export function projectsCursorQueryOptions(
   filters: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    direction?: WorkspaceSortDirection
     includeTotal?: boolean
     limit: number
+    memberRef?: string | readonly string[]
+    memberRole?:
+      WorkspaceAccessPermission | readonly WorkspaceAccessPermission[]
+    sort?: WorkspaceProjectSort
   }
 ) {
   const scenario = fixtureScenarioFromScope(scope)
@@ -59,9 +92,13 @@ export function projectsCursorQueryOptions(
     initialPageParam: filters.cursor,
     queryKey: crucibleKeys.projectCursorChain(scope, {
       affiliation: filters.affiliation,
+      direction: filters.direction,
       includeTotal: filters.includeTotal ?? true,
       initialCursor: filters.cursor ?? null,
       limit: filters.limit,
+      memberRef: filters.memberRef,
+      memberRole: filters.memberRole,
+      sort: filters.sort,
     }),
     queryFn: async ({ pageParam, signal }) =>
       unwrapHubResult(
@@ -69,9 +106,24 @@ export function projectsCursorQueryOptions(
           data: {
             affiliation: filters.affiliation,
             cursor: pageParam,
+            direction: filters.direction,
             includeTotal: filters.includeTotal,
             limit: filters.limit,
+            memberRef:
+              typeof filters.memberRef === "string"
+                ? filters.memberRef
+                : filters.memberRef
+                  ? [...filters.memberRef]
+                  : undefined,
+            memberRole:
+              typeof filters.memberRole === "string"
+                ? filters.memberRole
+                : filters.memberRole
+                  ? [...filters.memberRole]
+                  : undefined,
+            privilegeMode: privilegeModeFromScope(scope),
             scenario,
+            sort: filters.sort,
           },
           signal,
         })
@@ -89,7 +141,7 @@ export function projectQueryOptions(scope: IdentityScope, projectMfid: string) {
         await getWorkspaceProject({
           data: {
             projection: "overview",
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             projectMfid,
             scenario: fixtureScenarioFromScope(scope),
           },
@@ -116,7 +168,7 @@ export function projectSummaryQueryOptions(
         await getWorkspaceProject({
           data: {
             projection: "summary",
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             projectMfid,
             scenario: fixtureScenarioFromScope(scope),
           },

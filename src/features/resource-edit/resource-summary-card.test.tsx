@@ -13,6 +13,7 @@ import {
 const sample: Extract<WorkspaceResourceDetail, { kind: "sample" }> = {
   capabilities: {
     can_change_status: false,
+    can_delete: false,
     can_edit: true,
     can_manage_access: false,
     can_transfer: false,
@@ -37,6 +38,7 @@ const sample: Extract<WorkspaceResourceDetail, { kind: "sample" }> = {
 const dataset: Extract<WorkspaceResourceDetail, { kind: "dataset" }> = {
   capabilities: {
     can_change_status: false,
+    can_delete: false,
     can_edit: true,
     can_manage_access: false,
     can_transfer: false,

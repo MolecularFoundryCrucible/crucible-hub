@@ -12,10 +12,8 @@ export function identityScopedPreviousData<TData>(
   previousQuery: PreviousQuery | undefined
 ) {
   const queryKey = previousQuery?.queryKey
-  return queryKey?.[0] === scope[0] &&
-    queryKey[1] === scope[1] &&
-    queryKey[2] === scope[2] &&
-    queryKey[3] === scope[3]
+  if (!queryKey) return undefined
+  return scope.every((part, index) => queryKey[index] === part)
     ? previousData
     : undefined
 }

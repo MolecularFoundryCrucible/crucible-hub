@@ -1,40 +1,52 @@
 import { useId, useState } from "react"
 
-import { PersonIdentity } from "@/components/crucible/person-identity"
-import { MfidText } from "@/components/crucible/mfid-text"
-import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
-import type { SearchableResourceKind } from "@/components/crucible/resource-search-combobox"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  ResourceComboboxContent,
+  useResourceComboboxState,
+} from "@/components/crucible/resource-search-combobox"
+import type { SearchableResourceKind } from "@/components/crucible/resource-search-combobox"
+import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { Combobox, ComboboxInput } from "@/components/ui/combobox"
 import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 
 export type ResourceChooserKind = Exclude<SearchableResourceKind, "dataset">
 
 const resourceLabels = {
-  instrument: { plural: "instruments", singular: "Instrument" },
-  person: { plural: "people", singular: "Person" },
-  project: { plural: "projects", singular: "Project" },
-  sample: { plural: "samples", singular: "Sample" },
-} satisfies Record<ResourceChooserKind, { plural: string; singular: string }>
+  instrument: {
+    plural: "instruments",
+    pluralTitle: "Instruments",
+    singular: "Instrument",
+  },
+  person: { plural: "people", pluralTitle: "People", singular: "Person" },
+  project: { plural: "projects", pluralTitle: "Projects", singular: "Project" },
+  sample: { plural: "samples", pluralTitle: "Samples", singular: "Sample" },
+} satisfies Record<
+  ResourceChooserKind,
+  { plural: string; pluralTitle: string; singular: string }
+>
 
 export function ResourceChooser({
+  allowBrowse = true,
+  ariaLabel,
   describedBy,
+  disabled = false,
   emptyLabel,
+  excludeServiceAccounts = false,
+  excludedIds = [],
   invalid = false,
   kind,
   onChange,
   triggerId,
   value,
 }: {
+  allowBrowse?: boolean
+  ariaLabel?: string
   describedBy?: string
+  disabled?: boolean
   emptyLabel?: string
+  excludeServiceAccounts?: boolean
+  excludedIds?: readonly string[]
   invalid?: boolean
   kind: ResourceChooserKind
   onChange: (value: WorkspaceSearchResult | undefined) => void
@@ -45,93 +57,107 @@ export function ResourceChooser({
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const scope = useWorkspaceScope()
+
   const labels = resourceLabels[kind]
-  const queryId = `${generatedId}-query`
+  const normalizedQuery = query.trim()
 
-  function resetSearch() {
-    setQuery("")
-  }
-
-  function changeOpen(nextOpen: boolean) {
-    setOpen(nextOpen)
-    if (!nextOpen) resetSearch()
-  }
-
-  function select(item: WorkspaceSearchResult) {
-    onChange(item)
-    setOpen(false)
-    resetSearch()
-  }
-
-  const triggerLabel = `${value ? "Change" : "Choose"} ${labels.singular.toLocaleLowerCase()}`
+  const state = useResourceComboboxState({
+    allowBrowse,
+    excludedIds,
+    excludeServiceAccounts,
+    kind,
+    normalizedQuery,
+    pinnedValue: value,
+    scope,
+  })
 
   return (
-    <div className="flex min-w-0 flex-col items-start gap-2">
-      {value ? (
-        <div className="max-w-full min-w-0">
-          {value.kind === "person" ? (
-            <PersonIdentity person={value} presentation="stacked" />
-          ) : (
-            <p className="truncate text-body" title={value.name}>
-              {value.name}
-            </p>
-          )}
-          <MfidText
-            className="block truncate text-muted-foreground"
-            presentation="supporting"
-            value={value.unique_id}
+    <Combobox<WorkspaceSearchResult>
+      autoHighlight
+      disabled={disabled}
+      filter={null}
+      isItemEqualToValue={(item, selected) =>
+        item.unique_id === selected.unique_id
+      }
+      itemToStringLabel={(item) => item.name}
+      items={state.items}
+      loopFocus
+      onInputValueChange={(nextQuery, details) => {
+        if (
+          details.reason !== "input-change" &&
+          details.reason !== "clear-press"
+        ) {
+          return
+        }
+        setQuery(nextQuery)
+        if (details.reason === "clear-press") {
+          onChange(undefined)
+          if (allowBrowse) setOpen(true)
+        } else {
+          if (value) {
+            onChange(undefined)
+          }
+          setOpen(allowBrowse ? true : nextQuery.trim().length > 0)
+        }
+      }}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen)
+        if (!nextOpen) {
+          setQuery("")
+        }
+      }}
+      onValueChange={(item) => {
+        const next = item ?? undefined
+        onChange(next)
+        setQuery("")
+        setOpen(false)
+      }}
+      open={open}
+      value={value ?? null}
+    >
+      <ComboboxInput
+        aria-describedby={describedBy}
+        aria-invalid={invalid || undefined}
+        aria-label={
+          ariaLabel ?? (triggerId ? undefined : `Search ${labels.plural}`)
+        }
+        autoComplete="off"
+        className="w-full"
+        clearLabel={`Clear ${labels.singular.toLowerCase()}`}
+        disabled={disabled}
+        endAdornment={
+          value ? (
+            <span className="text-label-compact text-muted-foreground select-none">
+              ({value.unique_id})
+            </span>
+          ) : null
+        }
+        id={triggerId ?? generatedId}
+        onClick={() => {
+          if (allowBrowse) setOpen(true)
+        }}
+        onFocus={() => {
+          if (allowBrowse) setOpen(true)
+        }}
+        placeholder={
+          emptyLabel ?? `Search or choose ${labels.singular.toLowerCase()}`
+        }
+        showClear={Boolean(value || query.length > 0)}
+        showTrigger
+        startAdornment={
+          <ResourceTypeIcon
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+            type={value?.kind ?? kind}
           />
-        </div>
-      ) : (
-        <p className="text-body text-muted-foreground">
-          {emptyLabel ?? `All ${labels.plural}`}
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <Dialog onOpenChange={changeOpen} open={open}>
-          <DialogTrigger
-            render={
-              <Button
-                aria-describedby={describedBy}
-                aria-invalid={invalid || undefined}
-                aria-label={triggerLabel}
-                id={triggerId}
-                type="button"
-                variant="outline"
-              />
-            }
-          >
-            {triggerLabel}
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                Choose {labels.singular.toLocaleLowerCase()}
-              </DialogTitle>
-            </DialogHeader>
-            <ResourceSearchCombobox
-              id={queryId}
-              kind={kind}
-              onQueryChange={setQuery}
-              onValueChange={(item) => {
-                if (item) select(item)
-              }}
-              query={query}
-              scope={scope}
-              value={undefined}
-            />
-          </DialogContent>
-        </Dialog>
-        {value ? (
-          <Button
-            onClick={() => onChange(undefined)}
-            type="button"
-            variant="ghost"
-          >
-            Clear {labels.singular.toLocaleLowerCase()}
-          </Button>
-        ) : null}
-      </div>
-    </div>
+        }
+      />
+      <ResourceComboboxContent
+        allowBrowse={allowBrowse}
+        labels={labels}
+        normalizedQuery={normalizedQuery}
+        state={state}
+      />
+    </Combobox>
   )
 }

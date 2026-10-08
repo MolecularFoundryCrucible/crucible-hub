@@ -1,15 +1,20 @@
 import { useQueries } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import type { ReactNode } from "react"
+import { useMemo, useState } from "react"
 
 import {
   PanelState,
   ResourceListPending,
 } from "@/components/crucible/collection-state"
-import { ForwardNavigationIcon } from "@/components/crucible/icons"
+import {
+  CreateResourceIcon,
+  ForwardNavigationIcon,
+} from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { ProjectRoleBadge } from "@/components/crucible/project-members"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
@@ -17,6 +22,7 @@ import {
   ResourceListItem,
   ResourceListItemContent,
 } from "@/components/crucible/resource-list"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -34,57 +40,65 @@ import {
 import { instrumentsQueryOptions } from "@/data/crucible/instruments.queries"
 import { projectsQueryOptions } from "@/data/crucible/projects.queries"
 import type { WorkspaceInstrument } from "@/data/crucible/workspace-source"
-import { useRecentResourcesSnapshot } from "@/features/home/home-data"
+import {
+  homeInstrumentQuery,
+  homeProjectLimit,
+  homeRecentResourceLimit,
+  homeRecentResourceQuery,
+  recentScopeOptions,
+  useRecentResourcesSnapshot,
+} from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { useHomeGreeting } from "@/features/home/home-greeting"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 import { resourceDisplayName } from "@/lib/resource-name"
 
-const homeOwnershipLimit = 8
-const homeRecentResourceLimit = 5
-const homeProjectQuery = {
-  affiliation: "owner",
-  includeTotal: false,
-  limit: homeOwnershipLimit,
-} as const
-const homeInstrumentQuery = {
-  affiliation: "owner",
-  includeOwner: false,
-  includeTotal: false,
-  limit: homeOwnershipLimit,
-  status: "active",
-} as const
-const homeRecentResourceQuery = {
-  direction: "desc",
-  includeTotal: false,
-  limit: homeRecentResourceLimit,
-  sort: "created",
-} as const
-
 export const Route = createFileRoute("/_app/")({
   loader: async ({ context, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    void context.queryClient.prefetchQuery(
-      projectsQueryOptions(source.scope, homeProjectQuery)
-    )
-    void context.queryClient.prefetchQuery(
-      instrumentsQueryOptions(source.scope, homeInstrumentQuery)
-    )
-    void context.queryClient.prefetchQuery(
-      samplesQueryOptions(source.scope, homeRecentResourceQuery)
-    )
-    void context.queryClient.prefetchQuery(
-      datasetsQueryOptions(source.scope, homeRecentResourceQuery)
-    )
+    await Promise.allSettled([
+      context.queryClient.prefetchQuery(
+        projectsQueryOptions(source.scope, {
+          includeTotal: false,
+          limit: homeProjectLimit,
+          memberRef: source.scope[2],
+        })
+      ),
+      context.queryClient.prefetchQuery(
+        instrumentsQueryOptions(source.scope, homeInstrumentQuery)
+      ),
+      context.queryClient.prefetchQuery(
+        samplesQueryOptions(source.scope, homeRecentResourceQuery)
+      ),
+      context.queryClient.prefetchQuery(
+        datasetsQueryOptions(source.scope, homeRecentResourceQuery)
+      ),
+    ])
   },
   component: HomePage,
 })
 
 function HomePage() {
   const scope = useWorkspaceScope()
+  const [recentScope, setRecentScope] = useState<"all" | "mine">("all")
+  const homeProjectQuery = useMemo(
+    () => ({
+      includeTotal: false,
+      limit: homeProjectLimit,
+      memberRef: scope[2],
+    }),
+    [scope]
+  )
+  const recentResourceFilters = useMemo(
+    () => ({
+      ...homeRecentResourceQuery,
+      ...(recentScope === "mine" ? { affiliation: "owner" as const } : {}),
+    }),
+    [recentScope]
+  )
   const [
     accountResult,
     projectResult,
@@ -96,8 +110,8 @@ function HomePage() {
       accountQueryOptions(scope),
       projectsQueryOptions(scope, homeProjectQuery),
       instrumentsQueryOptions(scope, homeInstrumentQuery),
-      samplesQueryOptions(scope, homeRecentResourceQuery),
-      datasetsQueryOptions(scope, homeRecentResourceQuery),
+      samplesQueryOptions(scope, recentResourceFilters),
+      datasetsQueryOptions(scope, recentResourceFilters),
     ],
   })
   const account = accountResult.data
@@ -110,7 +124,7 @@ function HomePage() {
   const recentSnapshot = useRecentResourcesSnapshot({
     datasets: datasetResult.data?.items,
     datasetsFetching: datasetResult.isFetching,
-    identity: JSON.stringify(scope),
+    identity: `${JSON.stringify(scope)}:${recentScope}`,
     limit: homeRecentResourceLimit,
     samples: sampleResult.data?.items,
     samplesFetching: sampleResult.isFetching,
@@ -135,14 +149,23 @@ function HomePage() {
         <div className="flex min-w-0 flex-col gap-6 xl:col-span-3">
           <section aria-labelledby="recent-research-title" className="min-w-0">
             <Card>
-              <CardHeader actionLayout="inline">
+              <CardHeader actionLayout="responsive">
                 <CardTitle>
                   <h2 id="recent-research-title">Recently added data</h2>
                 </CardTitle>
-                <CardAction>
+                <CardAction className="flex flex-wrap items-center gap-2">
+                  <SegmentedControl
+                    ariaLabel="Recent data scope"
+                    onValueChange={setRecentScope}
+                    options={recentScopeOptions}
+                    value={recentScope}
+                  />
                   <Link
                     className={buttonVariants({ variant: "ghost" })}
-                    search={{ kind: undefined }}
+                    search={{
+                      affiliation: recentScope === "mine" ? "owner" : undefined,
+                      kind: undefined,
+                    }}
                     to="/data"
                   >
                     View all
@@ -176,8 +199,16 @@ function HomePage() {
                   !recentDataUnavailable &&
                   recentResources.length === 0 && (
                     <PanelState
-                      description="New samples and datasets will appear here."
-                      title="No data is available yet"
+                      description={
+                        recentScope === "mine"
+                          ? "Samples and datasets you create will appear here."
+                          : "New samples and datasets will appear here."
+                      }
+                      title={
+                        recentScope === "mine"
+                          ? "You have not added any data yet"
+                          : "No data is available yet"
+                      }
                     />
                   )}
                 {recentDataPartial && (
@@ -262,17 +293,28 @@ function HomePage() {
 
         <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
           <HomeOwnershipCard
-            emptyDescription="Projects you lead will appear here."
-            emptyTitle="You do not lead any projects yet"
+            emptyAction={
+              account?.capabilities.can_create_project ? (
+                <Link
+                  className={buttonVariants({ size: "sm", variant: "outline" })}
+                  to="/projects/new"
+                >
+                  <CreateResourceIcon data-icon="inline-start" />
+                  Create project
+                </Link>
+              ) : undefined
+            }
+            emptyDescription="Projects you belong to will appear here."
+            emptyTitle="You do not belong to any projects yet"
             error={projectResult.isError && !projectResult.data}
-            label="projects you lead"
+            label="your projects"
             pending={projectResult.isPending}
             retry={() => void projectResult.refetch()}
-            title="Projects you lead"
+            title="Your projects"
             viewAll={
               <Link
                 className={buttonVariants({ variant: "ghost" })}
-                search={{ affiliation: "owner", cursor: undefined }}
+                search={{ cursor: undefined }}
                 to="/projects"
               >
                 View all
@@ -295,6 +337,7 @@ function HomePage() {
                       identifier: project.project_id,
                       mfid: project.unique_id,
                     })}
+                    role={project.role}
                   />
                 ))}
               </ResourceList>
@@ -302,13 +345,24 @@ function HomePage() {
           </HomeOwnershipCard>
 
           <HomeOwnershipCard
+            emptyAction={
+              account?.capabilities.can_register_instrument ? (
+                <Link
+                  className={buttonVariants({ size: "sm", variant: "outline" })}
+                  to="/instruments/new"
+                >
+                  <CreateResourceIcon data-icon="inline-start" />
+                  Register instrument
+                </Link>
+              ) : undefined
+            }
             emptyDescription="Active instruments you manage will appear here."
             emptyTitle="You do not manage any active instruments yet"
             error={instrumentResult.isError && !instrumentResult.data}
-            label="instruments you manage"
+            label="your instruments"
             pending={instrumentResult.isPending}
             retry={() => void instrumentResult.refetch()}
-            title="Instruments you manage"
+            title="Your instruments"
             viewAll={
               <Link
                 className={buttonVariants({ variant: "ghost" })}
@@ -336,6 +390,7 @@ function HomePage() {
                     key={instrument.unique_id}
                     mfid={instrument.unique_id}
                     name={instrumentName(instrument)}
+                    role={instrument.role}
                   />
                 ))}
               </ResourceList>
@@ -393,6 +448,7 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
 
 function HomeOwnershipCard({
   children,
+  emptyAction,
   emptyDescription,
   emptyTitle,
   error,
@@ -403,6 +459,7 @@ function HomeOwnershipCard({
   viewAll,
 }: {
   children: ReactNode
+  emptyAction?: ReactNode
   emptyDescription: string
   emptyTitle: string
   error: boolean
@@ -436,7 +493,11 @@ function HomeOwnershipCard({
             />
           ) : null}
           {!pending && !error && !hasContent ? (
-            <PanelState description={emptyDescription} title={emptyTitle} />
+            <PanelState
+              action={emptyAction}
+              description={emptyDescription}
+              title={emptyTitle}
+            />
           ) : null}
           {hasContent ? children : null}
         </CardContent>
@@ -450,11 +511,13 @@ function OwnershipResourceLink({
   kind,
   mfid,
   name,
+  role,
 }: {
   identifier?: string | null
   kind: "instrument" | "project"
   mfid: string
   name: string
+  role?: string | null
 }) {
   return (
     <ResourceListItem>
@@ -464,13 +527,18 @@ function OwnershipResourceLink({
         layout="row"
       >
         <ResourceIdentity
-          className="flex-1"
+          className="min-w-0 flex-1"
           context={identifier}
           kind={kind}
           name={name}
           nameContent={<ResourceNameLink kind={kind} mfid={mfid} name={name} />}
           presentation="collection"
         />
+        {role ? (
+          <div className="shrink-0">
+            <ProjectRoleBadge role={role} />
+          </div>
+        ) : null}
       </ResourceListItemContent>
     </ResourceListItem>
   )

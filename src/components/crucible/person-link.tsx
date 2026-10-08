@@ -36,7 +36,7 @@ export function PersonLink({
       }
       className={isCollection ? "block truncate" : "inline-block"}
       render={
-        <Link params={{ personId: person.unique_id }} to="/people/$personId" />
+        <Link params={{ userId: person.unique_id }} to="/users/$userId" />
       }
     >
       {label}

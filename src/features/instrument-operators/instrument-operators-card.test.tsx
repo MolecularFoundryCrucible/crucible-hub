@@ -65,6 +65,7 @@ const owner = {
 const instrument = {
   capabilities: {
     can_change_status: true,
+    can_delete: true,
     can_edit: true,
     can_manage_access: true,
     can_transfer: true,
@@ -127,6 +128,7 @@ const candidatePerson: WorkspaceSearchResult = {
 
 const candidateOperator: WorkspaceSearchResult = {
   context: "robot-operator",
+  is_service_account: true,
   kind: "person",
   name: "Robot Operator",
   unique_id: "sa-2",
@@ -221,6 +223,13 @@ describe("InstrumentAccessCard", () => {
     fireEvent.click(manageToggle)
 
     expect(screen.getByText("Role changes save automatically.")).toBeTruthy()
+
+    expect(
+      screen.getByRole("img", { name: "The manager cannot be revoked here" })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Revoke access for Tim Kodalle" })
+    ).toBeTruthy()
 
     const roleSelect = screen.getByLabelText<HTMLSelectElement>(
       "Role for Tim Kodalle"
@@ -319,6 +328,12 @@ describe("InstrumentAccessCard", () => {
     const option = await screen.findByRole("option", { name: /Jamie Patel/i })
     fireEvent.click(option)
 
+    const stagedRole = within(dialog).getByLabelText<HTMLSelectElement>(
+      "Role for Jamie Patel"
+    )
+    expect(stagedRole.value).toBe("viewer")
+    fireEvent.change(stagedRole, { target: { value: "contributor" } })
+
     const dialogAddButton = within(dialog).getByRole("button", {
       name: "Add member",
     })
@@ -329,13 +344,280 @@ describe("InstrumentAccessCard", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             kind: "users",
-            permission: "viewer",
+            permission: "contributor",
             principal: candidatePerson.unique_id,
             resourceMfid: instrument.unique_id,
           }),
         })
       )
     })
+  })
+
+  it("commits multiple staged members with serial calls", async () => {
+    const secondCandidate: WorkspaceSearchResult = {
+      context: "avery.chen",
+      kind: "person",
+      name: "Avery Chen",
+      unique_id: "0000-0000-0000-0042",
+    }
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      searchResponse([candidatePerson, secondCandidate])
+    )
+    vi.mocked(setWorkspaceResourceAccess).mockResolvedValue(
+      ok([...initialGrants])
+    )
+
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
+    const searchInput = within(dialog).getByRole("combobox", {
+      name: "Search people",
+    })
+    fireEvent.click(searchInput)
+    fireEvent.change(searchInput, { target: { value: "jam" } })
+
+    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
+
+    fireEvent.change(searchInput, { target: { value: "ave" } })
+    fireEvent.click(await screen.findByRole("option", { name: /Avery Chen/i }))
+
+    const stagedList = within(dialog).getByRole("list", {
+      name: "Members to add",
+    })
+    expect(within(stagedList).getAllByRole("listitem")).toHaveLength(2)
+    expect(
+      within(dialog).getByRole("button", { name: "Add 2 members" })
+    ).toBeTruthy()
+
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Add 2 members" })
+    )
+
+    await waitFor(() => {
+      expect(setWorkspaceResourceAccess).toHaveBeenCalledTimes(2)
+    })
+    expect(setWorkspaceResourceAccess).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          principal: candidatePerson.unique_id,
+        }),
+      })
+    )
+    expect(setWorkspaceResourceAccess).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          principal: secondCandidate.unique_id,
+        }),
+      })
+    )
+  })
+
+  it("keeps successful stages and retries only failures", async () => {
+    const secondCandidate: WorkspaceSearchResult = {
+      context: "avery.chen",
+      kind: "person",
+      name: "Avery Chen",
+      unique_id: "0000-0000-0000-0042",
+    }
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      searchResponse([candidatePerson, secondCandidate])
+    )
+    const grantedGrants: WorkspaceResourceAccessGrant[] = [
+      ...initialGrants,
+      {
+        display_name: "Jamie Patel",
+        permission: "viewer",
+        principal_id: candidatePerson.unique_id,
+        principal_type: "user",
+        slug: "jamie.patel",
+      },
+    ]
+    vi.mocked(setWorkspaceResourceAccess)
+      .mockResolvedValueOnce(ok(grantedGrants))
+      .mockRejectedValueOnce(new Error("network down"))
+
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
+    const searchInput = within(dialog).getByRole("combobox", {
+      name: "Search people",
+    })
+    fireEvent.click(searchInput)
+    fireEvent.change(searchInput, { target: { value: "jam" } })
+    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
+
+    fireEvent.change(searchInput, { target: { value: "ave" } })
+    fireEvent.click(await screen.findByRole("option", { name: /Avery Chen/i }))
+
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Add 2 members" })
+    )
+
+    await waitFor(() => {
+      expect(
+        within(dialog).getByRole("button", { name: "Add member" })
+      ).toBeTruthy()
+    })
+    expect(screen.getByText("1 member could not be added. Try again."))
+    expect(
+      queryClient.getQueryData(
+        resourceAccessQueryOptions(scope, instrument.unique_id).queryKey
+      )
+    ).toEqual(grantedGrants)
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Add member" }))
+
+    await waitFor(() => {
+      expect(setWorkspaceResourceAccess).toHaveBeenCalledTimes(3)
+    })
+    expect(setWorkspaceResourceAccess).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          principal: secondCandidate.unique_id,
+        }),
+      })
+    )
+  })
+
+  it("removes a staged member and resets the list when the kind changes", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      searchResponse([candidatePerson])
+    )
+
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
+    const searchInput = within(dialog).getByRole("combobox", {
+      name: "Search people",
+    })
+    fireEvent.click(searchInput)
+    fireEvent.change(searchInput, { target: { value: "jam" } })
+    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
+
+    expect(
+      within(dialog).getByRole("list", { name: "Members to add" })
+    ).toBeTruthy()
+
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Remove Jamie Patel" })
+    )
+    expect(screen.queryByRole("list", { name: "Members to add" })).toBeNull()
+
+    fireEvent.change(searchInput, { target: { value: "jam" } })
+    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
+
+    const principalSelect =
+      within(dialog).getByLabelText<HTMLSelectElement>("Principal type")
+    fireEvent.change(principalSelect, { target: { value: "1" } })
+    expect(screen.queryByRole("list", { name: "Members to add" })).toBeNull()
+  })
+
+  it("hides service accounts from the member search", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      searchResponse([candidatePerson, candidateOperator])
+    )
+
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
+    const searchInput = within(dialog).getByRole("combobox", {
+      name: "Search people",
+    })
+    fireEvent.click(searchInput)
+    fireEvent.change(searchInput, { target: { value: "jam" } })
+
+    await screen.findByRole("option", { name: /Jamie Patel/i })
+
+    expect(screen.queryByRole("option", { name: /Robot Operator/i })).toBeNull()
+  })
+
+  it("omits the checkbox from non-revocable rows in managing mode", () => {
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
+
+    expect(
+      screen.queryByRole("checkbox", {
+        name: "Select Fabrice Roncoroni for revocation",
+      })
+    ).toBeNull()
+    expect(
+      screen.getByRole("checkbox", {
+        name: "Select Tim Kodalle for revocation",
+      })
+    ).toBeTruthy()
+  })
+
+  it("revokes multiple selected members through the batch dialog", async () => {
+    const secondGrant: WorkspaceResourceAccessGrant = {
+      display_name: "Avery Chen",
+      permission: "viewer",
+      principal_id: "0000-0000-0000-000X",
+      principal_type: "user",
+      slug: "avery.chen",
+    }
+    queryClient.setQueryData(
+      resourceAccessQueryOptions(scope, instrument.unique_id).queryKey,
+      [...initialGrants, secondGrant]
+    )
+    vi.mocked(revokeWorkspaceResourceAccess).mockResolvedValue(
+      ok([initialGrants[0]])
+    )
+
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: "Select Tim Kodalle for revocation",
+      })
+    )
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Select Avery Chen for revocation" })
+    )
+    fireEvent.click(
+      screen.getByRole("button", { name: "Revoke access for 2 members" })
+    )
+
+    const dialog = screen.getByRole("dialog", { name: "Revoke access?" })
+    expect(within(dialog).getByText("Tim Kodalle")).toBeTruthy()
+    expect(within(dialog).getByText("Avery Chen")).toBeTruthy()
+    fireEvent.click(
+      within(dialog).getByRole("button", {
+        name: "Revoke access for 2 members",
+      })
+    )
+
+    await waitFor(() =>
+      expect(revokeWorkspaceResourceAccess).toHaveBeenCalledTimes(2)
+    )
+    expect(revokeWorkspaceResourceAccess).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          principal: "0000-0002-8792-9669",
+        }),
+      })
+    )
+    expect(revokeWorkspaceResourceAccess).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          principal: "0000-0000-0000-000X",
+        }),
+      })
+    )
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 
   it("unassigns an operator via confirmation dialog", async () => {
@@ -417,6 +699,61 @@ describe("InstrumentAccessCard", () => {
       name: /Robot Operator/i,
     })
     fireEvent.click(option)
+
+    const dialogAddButton = within(dialog).getByRole("button", {
+      name: "Add operator",
+    })
+    fireEvent.click(dialogAddButton)
+
+    await waitFor(() => {
+      expect(addWorkspaceInstrumentOperator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            instrumentMfid: instrument.unique_id,
+            serviceAccountId: candidateOperator.unique_id,
+          }),
+        })
+      )
+    })
+  })
+
+  it("adds an operator with arrow-key and enter selection", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      searchResponse([candidateOperator])
+    )
+    vi.mocked(addWorkspaceInstrumentOperator).mockResolvedValue(
+      ok([
+        ...initialOperators,
+        {
+          first_name: "Robot",
+          is_service_account: true,
+          last_name: "Operator",
+          role: "operator",
+          unique_id: candidateOperator.unique_id,
+          username: "robot-operator",
+        },
+      ])
+    )
+
+    renderCard()
+
+    fireEvent.click(screen.getByRole("button", { name: "Add operator" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Add operator" })
+    const searchInput = within(dialog).getByRole("combobox", {
+      name: "Search service accounts",
+    })
+    fireEvent.click(searchInput)
+    fireEvent.change(searchInput, { target: { value: "jam" } })
+
+    const option = await screen.findByRole("option", {
+      name: /Robot Operator/i,
+    })
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" })
+    expect(option.hasAttribute("data-highlighted")).toBe(true)
+    fireEvent.keyDown(searchInput, { key: "Enter" })
+
+    expect((searchInput as HTMLInputElement).value).toBe("Robot Operator")
 
     const dialogAddButton = within(dialog).getByRole("button", {
       name: "Add operator",

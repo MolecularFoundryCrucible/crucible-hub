@@ -124,8 +124,8 @@ export async function readWorkspaceServiceAccount(
   const client = createCrucibleClient(configuration, {
     privilegeMode: "elevated",
   })
-  const result = await client.GET("/service_accounts/{unique_id}", {
-    params: { path: { unique_id: serviceAccountMfid } },
+  const result = await client.GET("/service_accounts/{service_account_ref}", {
+    params: { path: { service_account_ref: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status === 404) return null
@@ -196,9 +196,9 @@ export async function patchWorkspaceServiceAccount(
   const client = createCrucibleClient(configuration, {
     privilegeMode: "elevated",
   })
-  const result = await client.PATCH("/users/{user_id}", {
+  const result = await client.PATCH("/users/{user_ref}", {
     body: changes,
-    params: { path: { user_id: serviceAccountMfid } },
+    params: { path: { user_ref: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
@@ -233,9 +233,9 @@ export async function patchWorkspaceServiceAccountPlatformRole(
   const client = createCrucibleClient(configuration, {
     privilegeMode: "elevated",
   })
-  const result = await client.PATCH("/service_accounts/{unique_id}", {
+  const result = await client.PATCH("/service_accounts/{service_account_ref}", {
     body: { platform_role: platformRole },
-    params: { path: { unique_id: serviceAccountMfid } },
+    params: { path: { service_account_ref: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
@@ -268,10 +268,13 @@ export async function rotateWorkspaceServiceAccountKey(
   const client = createCrucibleClient(configuration, {
     privilegeMode: "elevated",
   })
-  const result = await client.POST("/service_accounts/{unique_id}/rotate_key", {
-    params: { path: { unique_id: serviceAccountMfid } },
-    signal: crucibleRequestSignal(requestSignal),
-  })
+  const result = await client.POST(
+    "/service_accounts/{service_account_ref}/rotate_key",
+    {
+      params: { path: { service_account_ref: serviceAccountMfid } },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
   if (!result.data) throw new CrucibleResponseError(result.response.status)
   return result.data
 }

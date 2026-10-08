@@ -41,31 +41,36 @@ export type WorkspaceApiCredentialStatus = Pick<
 
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 
-export type WorkspaceProject =
-  | (Pick<
-      Schema<"ProjectMinimalRead">,
-      "project_id" | "title" | "unique_id"
-    > & {
-      capabilities: WorkspaceResourceCapabilities | null
-    })
-  | (Pick<
-      Schema<"ProjectWithLead">,
-      | "creation_time"
-      | "lead"
-      | "modification_time"
-      | "organization"
-      | "project_id"
-      | "project_lead_orcid"
-      | "scientific_metadata"
-      | "title"
-      | "unique_id"
-    > & {
-      capabilities: WorkspaceResourceCapabilities | null
-      lead: WorkspacePerson | null
-      members?: readonly Schema<"AccessGroupMemberRead">[] | null
-      scientific_metadata: WorkspaceScientificMetadata | null
-      status: string | null
-    })
+export type WorkspaceProject = Pick<
+  Schema<"ProjectWithLead">,
+  | "creation_time"
+  | "lead"
+  | "modification_time"
+  | "organization"
+  | "project_id"
+  | "project_lead_orcid"
+  | "scientific_metadata"
+  | "title"
+  | "unique_id"
+> & {
+  capabilities: WorkspaceResourceCapabilities | null
+  lead: WorkspacePerson | null
+  members?: Schema<"AccessGroupMemberRead">[] | null
+  role?: string | null
+  scientific_metadata: WorkspaceScientificMetadata | null
+  status: string | null
+}
+
+export type WorkspaceProjectSort = Schema<"ProjectSort">
+export type WorkspaceSortDirection = Schema<"SortDirection">
+
+export type WorkspaceUserProject = Omit<
+  Schema<"ProjectWithLead">,
+  "deletion_request" | "scientific_metadata"
+> & {
+  role?: string | null
+  scientific_metadata: WorkspaceScientificMetadata | null
+}
 
 export type WorkspaceProjectReference = Pick<
   Schema<"ProjectReferenceRead">,
@@ -121,6 +126,8 @@ export type WorkspaceDataset = Pick<
   project_relation?: WorkspaceProjectRelation | null
 }
 
+export type WorkspaceAccessPermission = Schema<"AccessPermission">
+
 export type WorkspaceInstrument = Pick<
   Schema<"InstrumentResponse">,
   | "creation_time"
@@ -134,6 +141,7 @@ export type WorkspaceInstrument = Pick<
   | "modification_time"
   | "other_id"
   | "other_id_source"
+  | "role"
   | "status"
   | "unique_id"
 > & {
@@ -162,6 +170,8 @@ export type WorkspaceInstrumentLifecycleUpdate = {
 }
 
 export type WorkspaceInstrumentStatus = Schema<"InstrumentStatus">
+
+export type WorkspaceInstrumentSort = Schema<"InstrumentSort">
 
 export type WorkspaceInstrumentOperator = Schema<"AccessGroupMemberRead">
 
@@ -200,6 +210,21 @@ export type WorkspaceDatasetCreate = {
 }
 
 export type WorkspaceOwnershipTransfer = Schema<"TransferOwnershipRead">
+
+export type WorkspaceDeletionPreview = Omit<
+  Schema<"DeletionPreviewRead">,
+  | "blocking"
+  | "join_requests_removed"
+  | "memberships_removed"
+  | "removed_grants"
+  | "service_accounts_unbound"
+> & {
+  blocking: Record<string, number>
+  join_requests_removed: number
+  memberships_removed: number
+  removed_grants: Schema<"DeletionGrantRead">[]
+  service_accounts_unbound: number
+}
 
 export type WorkspaceProjectReassignment = Schema<"ReassignProjectRead">
 
@@ -365,6 +390,7 @@ type WorkspaceResourceBase = {
   modification_time: string | null
   name: string
   owner: WorkspacePerson | null
+  role?: string | null
   scientific_metadata: WorkspaceScientificMetadata | null
   unique_id: string
 }
@@ -574,12 +600,12 @@ export type WorkspaceAdminUser = Schema<"UserRead"> & {
   platform_role?: components["schemas"]["PlatformRole"] | null
 }
 
-export type WorkspaceAdminUserPage = {
-  items: readonly WorkspaceAdminUser[]
-  limit: number
-  offset: number
-  total: number | null
-}
+export type WorkspaceUserSort = Schema<"UserSort">
+
+export type WorkspaceUserPlatformRole =
+  Schema<"UserPlatformRoleUpdate">["platform_role"]
+
+export type WorkspaceAdminUserPage = WorkspaceCursorPage<WorkspaceAdminUser>
 
 export type WorkspaceUserCreate = {
   email?: string | null

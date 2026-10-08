@@ -1,38 +1,54 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
-import {
-  getWorkspaceUserAccessGroups,
-  getWorkspaceUserApiKeyStatus,
-  getWorkspaceUserDetail,
-  getWorkspaceUserProjects,
-  getWorkspaceUsers,
-} from "./users.functions"
+import { getWorkspaceUserDetail, getWorkspaceUsers } from "./users.functions"
 
 export const userAdminPageLimit = 50
 
-export function usersListQueryOptions(
+export function usersCursorQueryOptions(
   scope: IdentityScope,
   filters: {
+    cursor?: string
+    direction?: "asc" | "desc"
+    includeTotal?: boolean
     is_service_account?: boolean
     limit: number
-    offset: number
     query?: string
+    sort?: "name" | "unique_id" | "email" | "username"
   }
 ) {
   const scenario = fixtureScenarioFromScope(scope)
-  return queryOptions({
-    queryKey: crucibleKeys.userAdminList(scope, filters),
-    queryFn: async ({ signal }) =>
+  return infiniteQueryOptions({
+    initialPageParam: filters.cursor,
+    queryFn: async ({ pageParam, signal }) =>
       unwrapHubResult(
         await getWorkspaceUsers({
-          data: { ...filters, scenario },
+          data: {
+            cursor: pageParam,
+            direction: filters.direction,
+            includeTotal: filters.includeTotal,
+            is_service_account: filters.is_service_account,
+            limit: filters.limit,
+            query: filters.query,
+            scenario,
+            sort: filters.sort,
+          },
           signal,
         })
       ),
+    queryKey: crucibleKeys.userAdminCursorChain(scope, {
+      direction: filters.direction,
+      includeTotal: filters.includeTotal ?? true,
+      initialCursor: filters.cursor ?? null,
+      is_service_account: filters.is_service_account,
+      limit: filters.limit,
+      query: filters.query,
+      sort: filters.sort,
+    }),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: scenario ? false : undefined,
   })
 }
@@ -44,57 +60,6 @@ export function userDetailQueryOptions(scope: IdentityScope, userId: string) {
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceUserDetail({
-          data: { scenario, userId },
-          signal,
-        })
-      ),
-    retry: scenario ? false : undefined,
-  })
-}
-
-export function userApiKeyStatusQueryOptions(
-  scope: IdentityScope,
-  userId: string
-) {
-  const scenario = fixtureScenarioFromScope(scope)
-  return queryOptions({
-    queryKey: crucibleKeys.userAdminApiKeyStatus(scope, userId),
-    queryFn: async ({ signal }) =>
-      unwrapHubResult(
-        await getWorkspaceUserApiKeyStatus({
-          data: { scenario, userId },
-          signal,
-        })
-      ),
-    retry: scenario ? false : undefined,
-  })
-}
-
-export function userAccessGroupsQueryOptions(
-  scope: IdentityScope,
-  userId: string
-) {
-  const scenario = fixtureScenarioFromScope(scope)
-  return queryOptions({
-    queryKey: crucibleKeys.userAdminAccessGroups(scope, userId),
-    queryFn: async ({ signal }) =>
-      unwrapHubResult(
-        await getWorkspaceUserAccessGroups({
-          data: { scenario, userId },
-          signal,
-        })
-      ),
-    retry: scenario ? false : undefined,
-  })
-}
-
-export function userProjectsQueryOptions(scope: IdentityScope, userId: string) {
-  const scenario = fixtureScenarioFromScope(scope)
-  return queryOptions({
-    queryKey: crucibleKeys.userAdminProjects(scope, userId),
-    queryFn: async ({ signal }) =>
-      unwrapHubResult(
-        await getWorkspaceUserProjects({
           data: { scenario, userId },
           signal,
         })

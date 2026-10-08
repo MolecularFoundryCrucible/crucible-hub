@@ -10,23 +10,29 @@ import { collectionScopedPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
-import type { WorkspaceInstrumentStatus } from "./workspace-source"
+import type {
+  WorkspaceInstrumentSort,
+  WorkspaceInstrumentStatus,
+  WorkspaceSortDirection,
+} from "./workspace-source"
 
 export const instrumentPageLimit = 100
 
 function instrumentStatusScopedPreviousData<TData>(
   scope: IdentityScope,
   affiliation: CollectionAffiliation | undefined,
-  status: WorkspaceInstrumentStatus,
+  direction: WorkspaceSortDirection | undefined,
   includeOwner: boolean,
   includeTotal: boolean,
+  sort: WorkspaceInstrumentSort | undefined,
+  status: WorkspaceInstrumentStatus,
   previousData: TData | undefined,
   previousQuery: { queryKey: readonly unknown[] } | undefined
 ) {
   if (
     collectionScopedPreviousData(
       scope,
-      { affiliation, includeOwner, includeTotal, status },
+      { affiliation, direction, includeOwner, includeTotal, sort, status },
       previousData,
       previousQuery
     ) === undefined
@@ -41,9 +47,11 @@ export function instrumentsQueryOptions(
   filters: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    direction?: WorkspaceSortDirection
     includeOwner?: boolean
     includeTotal?: boolean
     limit: number
+    sort?: WorkspaceInstrumentSort
     status: WorkspaceInstrumentStatus
   }
 ) {
@@ -65,9 +73,11 @@ export function instrumentsQueryOptions(
       instrumentStatusScopedPreviousData(
         scope,
         filters.affiliation,
-        filters.status,
+        filters.direction,
         filters.includeOwner ?? true,
         filters.includeTotal ?? true,
+        filters.sort,
+        filters.status,
         previousData,
         previousQuery
       ),
@@ -80,9 +90,11 @@ export function instrumentsCursorQueryOptions(
   filters: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    direction?: WorkspaceSortDirection
     includeOwner?: boolean
     includeTotal?: boolean
     limit: number
+    sort?: WorkspaceInstrumentSort
     status: WorkspaceInstrumentStatus
   }
 ) {
@@ -91,10 +103,12 @@ export function instrumentsCursorQueryOptions(
     initialPageParam: filters.cursor,
     queryKey: crucibleKeys.instrumentCursorChain(scope, {
       affiliation: filters.affiliation,
+      direction: filters.direction,
       includeOwner: filters.includeOwner ?? true,
       includeTotal: filters.includeTotal ?? true,
       initialCursor: filters.cursor ?? null,
       limit: filters.limit,
+      sort: filters.sort,
       status: filters.status,
     }),
     queryFn: async ({ pageParam, signal }) =>
@@ -103,10 +117,12 @@ export function instrumentsCursorQueryOptions(
           data: {
             affiliation: filters.affiliation,
             cursor: pageParam,
+            direction: filters.direction,
             includeOwner: filters.includeOwner,
             includeTotal: filters.includeTotal,
             limit: filters.limit,
             scenario,
+            sort: filters.sort,
             status: filters.status,
           },
           signal,

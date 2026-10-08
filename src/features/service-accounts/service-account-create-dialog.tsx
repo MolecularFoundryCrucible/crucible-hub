@@ -21,6 +21,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -68,7 +69,10 @@ export function ServiceAccountCreateDialog({
   })
   const form = useForm({
     defaultValues: { unique_id: "", username: "" },
-    validators: { onChange: createServiceAccountSchema },
+    validators: {
+      onChange: createServiceAccountSchema,
+      onSubmit: createServiceAccountSchema,
+    },
     onSubmit: async ({ value }) => {
       setError(undefined)
       try {
@@ -112,44 +116,52 @@ export function ServiceAccountCreateDialog({
           <fieldset disabled={pending}>
             <FieldGroup>
               <form.Field name="username">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      autoFocus
-                      id={field.name}
-                      maxLength={255}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} required>
+                        Username
+                      </FieldLabel>
+                      <Input
+                        aria-invalid={invalid || undefined}
+                        autoFocus
+                        id={field.name}
+                        maxLength={255}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        value={field.state.value}
+                      />
+                      <FieldError errors={fieldErrors(field)} />
+                    </Field>
+                  )
+                }}
               </form.Field>
               <form.Field name="unique_id">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} optional>
-                      MFID
-                    </FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      className="font-mono text-body"
-                      id={field.name}
-                      maxLength={26}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} optional>
+                        MFID
+                      </FieldLabel>
+                      <Input
+                        aria-invalid={invalid || undefined}
+                        className="font-mono text-body"
+                        id={field.name}
+                        maxLength={26}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        value={field.state.value}
+                      />
+                      <FieldError errors={fieldErrors(field)} />
+                    </Field>
+                  )
+                }}
               </form.Field>
             </FieldGroup>
           </fieldset>

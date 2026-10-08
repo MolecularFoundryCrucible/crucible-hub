@@ -18,3 +18,19 @@ export function isPrimaryProjectAccessGrant(
   }
   return Boolean(resource.project_id && grant.slug === resource.project_id)
 }
+
+export function principalKindFor(
+  grant: WorkspaceResourceAccessGrant
+): "users" | "projects" | undefined {
+  if (grant.principal_type === "user") return "users"
+  if (grant.principal_type === "project") return "projects"
+  return undefined
+}
+
+export function grantName(grant: WorkspaceResourceAccessGrant) {
+  return grant.display_name ?? grant.slug ?? grant.principal_id
+}
+
+export function grantKey(grant: WorkspaceResourceAccessGrant) {
+  return `${grant.principal_type}:${grant.principal_id}`
+}

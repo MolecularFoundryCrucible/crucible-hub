@@ -10,7 +10,12 @@ import { readWorkspaceFixture } from "./workspace-fixture.server"
 import { normalizeScientificMetadata } from "./scientific-metadata"
 import type { CollectionAffiliation } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
-import type { WorkspaceProject, WorkspaceProjectPage } from "./workspace-source"
+import type {
+  WorkspaceProject,
+  WorkspaceProjectPage,
+  WorkspaceProjectSort,
+  WorkspaceSortDirection,
+} from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
@@ -24,20 +29,8 @@ export type WorkspaceProjectMembershipRole = Exclude<
 >
 
 export function toWorkspaceProject(
-  project:
-    | Schema<"ProjectRead">
-    | Schema<"ProjectWithLead">
-    | Schema<"ProjectMinimalRead">
+  project: Schema<"ProjectRead"> | Schema<"ProjectWithLead">
 ): WorkspaceProject {
-  if (!("organization" in project)) {
-    return {
-      unique_id: project.unique_id,
-      project_id: project.project_id,
-      title: project.title,
-      capabilities: null,
-    }
-  }
-
   return {
     unique_id: project.unique_id,
     project_id: project.project_id,
@@ -45,6 +38,7 @@ export function toWorkspaceProject(
     organization: project.organization,
     lead: "lead" in project ? (project.lead ?? null) : null,
     project_lead_orcid: project.project_lead_orcid,
+    role: "role" in project ? (project.role ?? null) : null,
     scientific_metadata:
       "scientific_metadata" in project
         ? normalizeScientificMetadata(project.scientific_metadata)
@@ -71,15 +65,27 @@ export async function readWorkspaceProjects(
   {
     affiliation,
     cursor,
+    direction,
     includeTotal,
     limit,
+    memberRef,
+    memberRole,
+    privilegeMode,
     scenario,
+    sort,
   }: {
     affiliation?: CollectionAffiliation
     cursor?: string
+    direction?: WorkspaceSortDirection
     includeTotal?: boolean
     limit: number
+    memberRef?: string | readonly string[]
+    memberRole?:
+      | components["schemas"]["AccessPermission"]
+      | components["schemas"]["AccessPermission"][]
+    privilegeMode?: WorkspacePrivilegeMode
     scenario?: FixtureScenario
+    sort?: WorkspaceProjectSort
   },
   requestSignal?: AbortSignal
 ): Promise<WorkspaceProjectPage> {
@@ -88,27 +94,106 @@ export async function readWorkspaceProjects(
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
-    const source = readWorkspaceFixture(scenario)
+    const source = readWorkspaceFixture(scenario, privilegeMode)
     if (source.status === "unavailable") throw new Error(source.reason)
-    const projects = affiliation
-      ? source.workspace.projects.filter(
-          (project) =>
-            "lead" in project &&
-            project.lead?.unique_id === source.workspace.account.unique_id
+    let projects = source.workspace.projects
+    if (memberRef) {
+      const matchRefs = Array.isArray(memberRef) ? memberRef : [memberRef]
+      const matchRoles = memberRole
+        ? Array.isArray(memberRole)
+          ? memberRole
+          : [memberRole]
+        : null
+      projects = projects.filter((project) => {
+        return matchRefs.every((ref) => {
+          const isAccount = ref === source.workspace.account.unique_id
+          if (!("members" in project) || !project.members) {
+            return (
+              project.lead?.unique_id === ref ||
+              project.project_lead_orcid === ref ||
+              (isAccount && Boolean(project.role))
+            )
+          }
+          return (
+            project.lead?.unique_id === ref ||
+            project.project_lead_orcid === ref ||
+            project.members.some(
+              (m) =>
+                m.unique_id === ref &&
+                (!matchRoles || matchRoles.includes(m.role as any))
+            ) ||
+            (isAccount && Boolean(project.role))
+          )
+        })
+      })
+      if (typeof memberRef === "string") {
+        projects = projects.map((project) => {
+          const member =
+            "members" in project
+              ? project.members?.find((m) => m.unique_id === memberRef)
+              : undefined
+          const role =
+            member?.role ??
+            (project.lead?.unique_id === memberRef ||
+            project.project_lead_orcid === memberRef
+              ? "owner"
+              : (project.role ?? null))
+          return {
+            ...project,
+            role,
+          }
+        })
+      }
+    } else if (affiliation) {
+      projects = projects.filter(
+        (project) =>
+          "lead" in project &&
+          project.lead?.unique_id === source.workspace.account.unique_id
+      )
+    }
+    if (sort) {
+      const dir = direction === "desc" ? -1 : 1
+      projects = [...projects].sort((a, b) => {
+        if (sort === "title")
+          return dir * (a.title || "").localeCompare(b.title || "")
+        if (sort === "project_id")
+          return dir * (a.project_id || "").localeCompare(b.project_id || "")
+        if (sort === "created")
+          return (
+            dir * ((a.creation_time || "") > (b.creation_time || "") ? 1 : -1)
+          )
+        return (
+          dir *
+          ((a.modification_time || "") > (b.modification_time || "") ? 1 : -1)
         )
-      : source.workspace.projects
+      })
+    }
     const page = fixtureCursorPage(projects, { cursor, limit })
     return includeTotal === false ? { ...page, total: null } : page
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, { privilegeMode })
+  const memberRefs = memberRef
+    ? Array.isArray(memberRef)
+      ? [...memberRef]
+      : [memberRef]
+    : undefined
+  const memberRoles = memberRole
+    ? Array.isArray(memberRole)
+      ? [...memberRole]
+      : [memberRole]
+    : undefined
   const projectsResult = await client.GET("/projects", {
     params: {
       query: {
         affiliation: affiliation ? [affiliation] : undefined,
         cursor,
+        direction: sort ? direction : undefined,
         include_total: includeTotal ?? true,
         limit,
+        member_ref: memberRefs,
+        member_role: memberRoles,
+        sort: sort ?? undefined,
       },
     },
     signal: crucibleRequestSignal(requestSignal),
@@ -290,9 +375,9 @@ export async function addWorkspaceProjectMember(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.POST("/projects/{project_ref}/users/{orcid}", {
+  const result = await client.POST("/projects/{project_ref}/users/{user_ref}", {
     params: {
-      path: { orcid: userId, project_ref: projectMfid },
+      path: { project_ref: projectMfid, user_ref: userId },
       query: { role },
     },
     signal: crucibleRequestSignal(requestSignal),
@@ -332,13 +417,16 @@ export async function updateWorkspaceProjectMemberRole(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.PATCH("/projects/{project_ref}/users/{orcid}", {
-    params: {
-      path: { orcid: userId, project_ref: projectMfid },
-      query: { role },
-    },
-    signal: crucibleRequestSignal(requestSignal),
-  })
+  const result = await client.PATCH(
+    "/projects/{project_ref}/users/{user_ref}",
+    {
+      params: {
+        path: { project_ref: projectMfid, user_ref: userId },
+        query: { role },
+      },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
   }
@@ -364,10 +452,13 @@ export async function removeWorkspaceProjectMember(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.DELETE("/projects/{project_ref}/users/{orcid}", {
-    params: { path: { orcid: userId, project_ref: projectMfid } },
-    signal: crucibleRequestSignal(requestSignal),
-  })
+  const result = await client.DELETE(
+    "/projects/{project_ref}/users/{user_ref}",
+    {
+      params: { path: { project_ref: projectMfid, user_ref: userId } },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
   if (!result.data) {
     throw new CrucibleResponseError(result.response.status)
   }

@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
   cleanup,
@@ -9,7 +10,6 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
-import type { ResourceChooserKind } from "@/components/crucible/resource-chooser"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { identityScope } from "@/data/crucible/query-keys"
 import { getWorkspaceSearch } from "@/data/crucible/search.functions"
@@ -57,24 +57,35 @@ function renderChooser(
     defaultOptions: { queries: { retry: false } },
   })
   const onChange = vi.fn()
-  render(
-    <QueryClientProvider client={queryClient}>
-      <WorkspaceProvider mode="fixture" scope={scope}>
-        <ResourceChooser
-          kind="instrument"
-          onChange={onChange}
-          value={undefined}
-          {...props}
-        />
-      </WorkspaceProvider>
-    </QueryClientProvider>
-  )
-  return onChange
-}
 
-async function openChooser(kind: ResourceChooserKind = "instrument") {
-  fireEvent.click(screen.getByRole("button", { name: `Choose ${kind}` }))
-  await screen.findByRole("dialog", { name: `Choose ${kind}` })
+  function Wrapper({
+    initialValue,
+  }: {
+    initialValue: WorkspaceSearchResult | undefined
+  }) {
+    const [val, setVal] = useState<WorkspaceSearchResult | undefined>(
+      initialValue
+    )
+    return (
+      <QueryClientProvider client={queryClient}>
+        <WorkspaceProvider mode="fixture" scope={scope}>
+          <ResourceChooser
+            kind="instrument"
+            {...props}
+            onChange={(next) => {
+              setVal(next)
+              onChange(next)
+              props.onChange?.(next)
+            }}
+            value={val}
+          />
+        </WorkspaceProvider>
+      </QueryClientProvider>
+    )
+  }
+
+  const utils = render(<Wrapper initialValue={props.value} />)
+  return { ...utils, onChange }
 }
 
 describe("ResourceChooser", () => {
@@ -88,14 +99,11 @@ describe("ResourceChooser", () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(
       response("instrument", [instrument])
     )
-    const onChange = renderChooser()
+    const { onChange } = renderChooser({ allowBrowse: false })
 
-    await openChooser()
     const input = screen.getByRole("combobox", { name: "Search instruments" })
-    fireEvent.click(input)
+    fireEvent.focus(input)
     fireEvent.change(input, { target: { value: "be" } })
-    expect(getWorkspaceSearch).not.toHaveBeenCalled()
-
     expect(getWorkspaceSearch).not.toHaveBeenCalled()
 
     fireEvent.change(input, { target: { value: "beam" } })
@@ -118,51 +126,69 @@ describe("ResourceChooser", () => {
 
     fireEvent.click(screen.getByRole("option", { name: /Beamline 5.3.2/ }))
     expect(onChange).toHaveBeenCalledWith(instrument)
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-
-    await openChooser()
-    expect(
-      screen.getByRole<HTMLInputElement>("combobox", {
-        name: "Search instruments",
-      }).value
-    ).toBe("")
-    expect(screen.queryByText("Synchrotron beamline")).toBeNull()
-    expect(getWorkspaceSearch).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull())
+    expect(screen.getByDisplayValue("Beamline 5.3.2")).toBeTruthy()
   })
 
-  it("keeps pending and error feedback inside the dialog", async () => {
-    let rejectSearch: ((reason?: unknown) => void) | undefined
-    vi.mocked(getWorkspaceSearch).mockImplementation(
-      () =>
-        new Promise((_, reject) => {
-          rejectSearch = reject
-        })
+  it("allows browsing and selecting without typing a search query", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      response("instrument", [instrument])
     )
+    const { onChange } = renderChooser()
+
+    const input = screen.getByRole("combobox", { name: "Search instruments" })
+    fireEvent.focus(input)
+
+    expect(
+      await screen.findByText(
+        "Available instruments (enter at least 3 characters to search all)"
+      )
+    ).toBeTruthy()
+    expect(await screen.findByText("Synchrotron beamline")).toBeTruthy()
+
+    fireEvent.click(screen.getByRole("option", { name: /Beamline 5.3.2/ }))
+    expect(onChange).toHaveBeenCalledWith(instrument)
+    expect(screen.getByDisplayValue("Beamline 5.3.2")).toBeTruthy()
+  })
+
+  it("keeps pending and error feedback inside the dropdown", async () => {
+    let rejectSearch: ((reason?: unknown) => void) | undefined
+    vi.mocked(getWorkspaceSearch).mockImplementation((opts) => {
+      if (!opts.data.query) {
+        return Promise.resolve(response("project", []))
+      }
+      return new Promise((_, reject) => {
+        rejectSearch = reject
+      })
+    })
     renderChooser({ kind: "project" })
 
-    await openChooser("project")
     const input = screen.getByRole("combobox", { name: "Search projects" })
-    fireEvent.click(input)
+    fireEvent.focus(input)
     fireEvent.change(input, { target: { value: "catalyst" } })
     fireEvent.keyDown(input, { key: "ArrowDown" })
     expect((await screen.findByRole("status")).textContent).toBe(
       "Searching projects…"
     )
-    await waitFor(() => expect(getWorkspaceSearch).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(getWorkspaceSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ query: "catalyst" }),
+        })
+      )
+    )
     rejectSearch?.(new Error("search failed"))
     expect((await screen.findByRole("alert")).textContent).toBe(
       "Projects could not be searched."
     )
-    expect(screen.getAllByText("Choose project")).toHaveLength(2)
   })
 
   it("shows a kind-specific empty state without changing the selection", async () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(response("project", []))
-    const onChange = renderChooser({ kind: "project" })
+    const { onChange } = renderChooser({ kind: "project" })
 
-    await openChooser("project")
     const input = screen.getByRole("combobox", { name: "Search projects" })
-    fireEvent.click(input)
+    fireEvent.focus(input)
     fireEvent.change(input, { target: { value: "missing" } })
     fireEvent.keyDown(input, { key: "ArrowDown" })
     expect(
@@ -171,29 +197,29 @@ describe("ResourceChooser", () => {
     expect(onChange).not.toHaveBeenCalled()
   })
 
-  it("clears a confirmed selection without opening the dialog", () => {
-    const onChange = renderChooser({ value: instrument })
+  it("clears a confirmed selection", () => {
+    const { onChange } = renderChooser({ value: instrument })
 
-    expect(screen.getByText("Beamline 5.3.2")).toBeTruthy()
+    expect(screen.getByDisplayValue("Beamline 5.3.2")).toBeTruthy()
+    expect(screen.getByText(`(${instrument.unique_id})`)).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Clear instrument" }))
 
     expect(onChange).toHaveBeenCalledWith(undefined)
-    expect(screen.queryByRole("dialog")).toBeNull()
   })
 
   it("supports people and custom empty labels", async () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(
       response("person", [person])
     )
-    const onChange = renderChooser({
+    const { onChange } = renderChooser({
       emptyLabel: "Not selected",
       kind: "person",
     })
 
-    expect(screen.getByText("Not selected")).toBeTruthy()
-    await openChooser("person")
     const input = screen.getByRole("combobox", { name: "Search people" })
-    fireEvent.click(input)
+    expect(input.getAttribute("placeholder")).toBe("Not selected")
+
+    fireEvent.focus(input)
     fireEvent.change(input, {
       target: { value: "ada" },
     })
@@ -201,5 +227,30 @@ describe("ResourceChooser", () => {
     expect(await screen.findByText("Ada Lovelace")).toBeTruthy()
     fireEvent.click(screen.getByRole("option", { name: /Ada Lovelace/ }))
     expect(onChange).toHaveBeenCalledWith(person)
+  })
+
+  it("shows browse suggestions immediately after clearing an existing selection", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      response("person", [person])
+    )
+    const { onChange } = renderChooser({
+      emptyLabel: "Choose a project lead",
+      excludeServiceAccounts: true,
+      kind: "person",
+      value: person,
+    })
+
+    expect(screen.getByDisplayValue("Ada Lovelace")).toBeTruthy()
+    expect(screen.getByText(`(${person.unique_id})`)).toBeTruthy()
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear person" }))
+    expect(onChange).toHaveBeenCalledWith(undefined)
+
+    expect(
+      await screen.findByText(
+        "Available people (enter at least 3 characters to search all)"
+      )
+    ).toBeTruthy()
+    expect(screen.getByRole("option", { name: /Ada Lovelace/ })).toBeTruthy()
   })
 })

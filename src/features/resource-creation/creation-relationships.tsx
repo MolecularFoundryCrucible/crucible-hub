@@ -257,6 +257,7 @@ export function CreationRelationshipsField({
               </Field>
             )}
             <ResourceSearchCombobox
+              allowBrowse
               excludedIds={value.map((draft) => draft.target.unique_id)}
               id={inputId}
               kind={choice.targetKind}

@@ -79,3 +79,27 @@ function creationTime(value: string | null | undefined) {
   const timestamp = Date.parse(value)
   return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp
 }
+
+export const homeProjectLimit = 7
+export const homeInstrumentLimit = 7
+export const homeRecentResourceLimit = 5
+
+export const homeInstrumentQuery = {
+  affiliation: "owner",
+  includeOwner: false,
+  includeTotal: false,
+  limit: homeInstrumentLimit,
+  status: "active",
+} as const
+
+export const homeRecentResourceQuery = {
+  direction: "desc",
+  includeTotal: false,
+  limit: homeRecentResourceLimit,
+  sort: "created",
+} as const
+
+export const recentScopeOptions = [
+  { label: "All", value: "all" },
+  { label: "Mine", value: "mine" },
+] as const

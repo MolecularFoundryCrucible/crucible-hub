@@ -3,17 +3,18 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import {
   EditResourceIcon,
   RotateCredentialIcon,
-  SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
+import { PlatformRoleDialog } from "@/components/crucible/platform-role-dialog"
+import type { PlatformRole } from "@/components/crucible/platform-role-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -29,15 +30,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { applyPersonProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -70,8 +62,6 @@ const serviceAccountProfileSchema = z.object({
 })
 
 type ProfileValues = z.infer<typeof serviceAccountProfileSchema>
-
-const assignablePlatformRoles = ["none", "contributor", "admin"] as const
 
 const platformRoleDescriptions = {
   admin: "Full platform administration.",
@@ -144,10 +134,7 @@ function ServiceAccountIdentityCard({
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string>()
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
-  const [roleError, setRoleError] = useState<string>()
   const [roleUpdated, setRoleUpdated] = useState(false)
-  const [selectedRole, setSelectedRole] =
-    useState<WorkspaceServiceAccountPlatformRole>()
   const mutation = useMutation({
     mutationFn: async (changes: WorkspaceServiceAccountProfileUpdate) =>
       unwrapHubResult(
@@ -218,46 +205,20 @@ function ServiceAccountIdentityCard({
   const formId = `service-account-profile-${account.unique_id}`
 
   function openRoleDialog() {
-    setSelectedRole(
-      isAssignablePlatformRole(account.platform_role)
-        ? account.platform_role
-        : undefined
-    )
-    setRoleError(undefined)
     setRoleUpdated(false)
     setRoleDialogOpen(true)
   }
 
-  function changeRoleDialogOpen(open: boolean) {
-    if (!open && roleMutation.isPending) return
-    setRoleDialogOpen(open)
-    if (!open) {
-      setSelectedRole(undefined)
-      setRoleError(undefined)
-    }
-  }
-
-  async function changePlatformRole() {
-    if (!selectedRole || selectedRole === account.platform_role) return
-    setRoleError(undefined)
-    try {
-      const updated = await roleMutation.mutateAsync(selectedRole)
-      queryClient.setQueryData(
-        crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
-        updated
-      )
-      void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.serviceAccountLists(scope),
-        refetchType: mode === "api" ? "active" : "none",
-      })
-      setRoleDialogOpen(false)
-      setSelectedRole(undefined)
-      setRoleUpdated(true)
-    } catch (cause) {
-      setRoleError(
-        hubErrorMessage(cause, "The platform role could not be changed.")
-      )
-    }
+  async function changePlatformRole(role: PlatformRole) {
+    const updated = await roleMutation.mutateAsync(role)
+    queryClient.setQueryData(
+      crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
+      updated
+    )
+    void queryClient.invalidateQueries({
+      queryKey: crucibleKeys.serviceAccountLists(scope),
+      refetchType: mode === "api" ? "active" : "none",
+    })
   }
 
   if (!editing) {
@@ -317,82 +278,15 @@ function ServiceAccountIdentityCard({
             </dl>
           </CardContent>
         </Card>
-        <Dialog onOpenChange={changeRoleDialogOpen} open={roleDialogOpen}>
-          <DialogContent showCloseButton={!roleMutation.isPending}>
-            <DialogHeader>
-              <DialogTitle>Change platform role</DialogTitle>
-              <DialogDescription>
-                Access changes may take about a minute to reach every API
-                process.
-              </DialogDescription>
-            </DialogHeader>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="service-account-platform-role">
-                  Platform role
-                </FieldLabel>
-                <NativeSelect
-                  className="w-full"
-                  disabled={roleMutation.isPending}
-                  id="service-account-platform-role"
-                  onChange={(event) => {
-                    if (isAssignablePlatformRole(event.target.value)) {
-                      setSelectedRole(event.target.value)
-                    }
-                  }}
-                  value={selectedRole ?? ""}
-                >
-                  <NativeSelectOption disabled value="">
-                    Select role
-                  </NativeSelectOption>
-                  {assignablePlatformRoles.map((role) => (
-                    <NativeSelectOption key={role} value={role}>
-                      {platformRoleLabel(role)}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Field>
-              {selectedRole ? (
-                <p className="text-body text-muted-foreground">
-                  {platformRoleDescriptions[selectedRole]}
-                </p>
-              ) : null}
-            </FieldGroup>
-            {roleError ? (
-              <p className="text-body text-destructive" role="alert">
-                {roleError}
-              </p>
-            ) : null}
-            <DialogFooter>
-              <Button
-                disabled={roleMutation.isPending}
-                onClick={() => changeRoleDialogOpen(false)}
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={
-                  !selectedRole ||
-                  selectedRole === account.platform_role ||
-                  roleMutation.isPending
-                }
-                onClick={() => void changePlatformRole()}
-                type="button"
-              >
-                {roleMutation.isPending ? (
-                  <SavingChangesIcon
-                    aria-hidden="true"
-                    className="motion-safe:animate-spin"
-                    data-icon="inline-start"
-                  />
-                ) : null}
-                {roleMutation.isPending ? "Changing role" : "Change role"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <PlatformRoleDialog
+          currentRole={account.platform_role}
+          id="service-account-platform-role"
+          onChanged={() => setRoleUpdated(true)}
+          onChange={changePlatformRole}
+          onOpenChange={setRoleDialogOpen}
+          open={roleDialogOpen}
+          roleDescriptions={platformRoleDescriptions}
+        />
       </>
     )
   }
@@ -423,6 +317,7 @@ function ServiceAccountIdentityCard({
                           <FieldLabel
                             htmlFor={field.name}
                             optional={name !== "username"}
+                            required={name === "username"}
                           >
                             {profileFieldLabel(name)}
                           </FieldLabel>
@@ -526,7 +421,8 @@ function ServiceAccountCredentialCard({
         }
         status={status}
       />
-      <ConfirmationAlertDialog
+      <ConfirmationDialog
+        kind="alert"
         confirmLabel="Rotate key"
         description="The current key will stop working immediately. Existing integrations must be updated with the replacement key."
         error={error}
@@ -551,15 +447,4 @@ function profileFieldLabel(field: keyof ProfileValues) {
   if (field === "first_name") return "First name"
   if (field === "last_name") return "Last name"
   return "Username"
-}
-
-function isAssignablePlatformRole(
-  role: string
-): role is WorkspaceServiceAccountPlatformRole {
-  return assignablePlatformRoles.some((candidate) => candidate === role)
-}
-
-function platformRoleLabel(role: WorkspaceServiceAccountPlatformRole) {
-  if (role === "none") return "No platform role"
-  return role === "admin" ? "Admin" : "Contributor"
 }

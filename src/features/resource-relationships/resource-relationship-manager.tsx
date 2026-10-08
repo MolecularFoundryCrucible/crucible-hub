@@ -11,7 +11,7 @@ import {
   ResourceGraphIcon,
   UnlinkRelationshipIcon,
 } from "@/components/crucible/icons"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
   ResourceRelationships,
   groupResourceRelationships,
@@ -259,7 +259,8 @@ export function ResourceRelationshipManager({
           scope={scope}
         />
       ) : null}
-      <ConfirmationAlertDialog
+      <ConfirmationDialog
+        kind="alert"
         confirmLabel="Unlink"
         description={
           <>

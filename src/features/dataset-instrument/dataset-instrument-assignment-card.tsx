@@ -2,7 +2,7 @@ import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
 
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { ManagementAction } from "@/components/crucible/management-action"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { useClearResourceSiblingNavigation } from "@/components/crucible/resource-sibling-navigation"
@@ -159,7 +159,8 @@ export function DatasetInstrumentAssignmentCard({
           />
         </DialogContent>
       </Dialog>
-      <ConfirmationAlertDialog
+      <ConfirmationDialog
+        kind="alert"
         confirmLabel="Change instrument"
         description={
           selectedInstrument ? (

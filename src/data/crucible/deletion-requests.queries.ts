@@ -1,4 +1,4 @@
-import { infiniteQueryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import type {
   WorkspaceDeletionAuditFilters,
@@ -10,7 +10,7 @@ import {
 } from "./deletion-requests.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import type { IdentityScope } from "./query-keys"
-import { crucibleKeys } from "./query-keys"
+import { crucibleKeys, privilegeModeFromScope } from "./query-keys"
 import { unwrapHubResult } from "./result"
 
 export const deletionRequestPageLimit = 50
@@ -58,13 +58,46 @@ export function deletionRequestsInfiniteQueryOptions(
           data: {
             ...filters,
             cursor: pageParam ?? undefined,
-            privilegeMode: scope[3],
+            privilegeMode: privilegeModeFromScope(scope),
             scenario,
           },
           signal,
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    retry: scenario ? false : undefined,
+  })
+}
+
+export function pendingDeletionRequestsCountQueryOptions(scope: IdentityScope) {
+  const scenario = fixtureScenarioFromScope(scope)
+  const filters = {
+    direction: "desc" as const,
+    limit: 1,
+    scope: "reviewable" as const,
+    sort: "request_time" as const,
+    status: "pending" as const,
+  }
+  return queryOptions({
+    queryKey: [
+      ...crucibleKeys.deletionRequests(scope, filters),
+      "pending-count",
+    ] as const,
+    queryFn: async ({ signal }) => {
+      const result = unwrapHubResult(
+        await getWorkspaceDeletionRequests({
+          data: {
+            ...filters,
+            privilegeMode: privilegeModeFromScope(scope),
+            scenario,
+          },
+          signal,
+        })
+      )
+      return result.total ?? (result.items.length > 0 ? result.items.length : 0)
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
     retry: scenario ? false : undefined,
   })
 }

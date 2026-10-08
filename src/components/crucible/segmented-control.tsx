@@ -1,12 +1,15 @@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { cn } from "@/lib/utils"
 
 export function SegmentedControl<TValue extends string>({
   ariaLabel,
+  className,
   onValueChange,
   options,
   value,
 }: {
   ariaLabel: string
+  className?: string
   onValueChange: (value: TValue) => void
   options: readonly { label: string; value: TValue }[]
   value: TValue
@@ -14,7 +17,7 @@ export function SegmentedControl<TValue extends string>({
   return (
     <ToggleGroup
       aria-label={ariaLabel}
-      className="gap-1 rounded-lg bg-muted p-1"
+      className={cn("gap-1 rounded-lg bg-muted p-1", className)}
       onValueChange={(values) => {
         const selected = values.at(-1)
         const selectedOption = options.find(

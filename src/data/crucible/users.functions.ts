@@ -8,17 +8,14 @@ import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { usernameSchema } from "./slugs"
 import {
-  addUserToAccessGroup,
   checkWorkspaceEmailExactMatch,
   createWorkspaceUser,
   patchWorkspaceUser,
   provisionWorkspaceUserApiKey,
-  readWorkspaceUserAccessGroups,
-  readWorkspaceUserApiKeyStatus,
   readWorkspaceUserDetail,
-  readWorkspaceUserProjects,
   readWorkspaceUsers,
-  removeUserFromAccessGroup,
+  revokeWorkspaceUserApiKey,
+  updateWorkspaceUserPlatformRole,
 } from "./users.server"
 
 const userIdSchema = z.string().trim().min(1).max(255)
@@ -28,16 +25,27 @@ const profileUsernameSchema = usernameSchema.nullable()
 
 export const userListInputSchema = z
   .object({
+    cursor: z.string().trim().min(1).max(2048).optional(),
+    direction: z.enum(["asc", "desc"]).optional(),
+    includeTotal: z.boolean().optional(),
     is_service_account: z.boolean().optional(),
     limit: z.number().int().min(1).max(1000),
-    offset: z.number().int().min(0),
     query: z.string().trim().min(1).max(200).optional(),
     scenario: fixtureScenarioSchema.optional(),
+    sort: z.enum(["name", "unique_id", "email", "username"]).optional(),
   })
   .strict()
 
 export const userDetailInputSchema = z
   .object({
+    scenario: fixtureScenarioSchema.optional(),
+    userId: userIdSchema,
+  })
+  .strict()
+
+export const userPlatformRoleInputSchema = z
+  .object({
+    platformRole: z.enum(["none", "contributor", "admin"]),
     scenario: fixtureScenarioSchema.optional(),
     userId: userIdSchema,
   })
@@ -71,14 +79,6 @@ export const userCreateInputSchema = z
     scenario: fixtureScenarioSchema.optional(),
     unique_id: z.string().trim().max(255).optional(),
     username: usernameSchema,
-  })
-  .strict()
-
-export const userGroupActionInputSchema = z
-  .object({
-    groupName: z.string().trim().min(1).max(255),
-    scenario: fixtureScenarioSchema.optional(),
-    userId: userIdSchema,
   })
   .strict()
 
@@ -127,20 +127,6 @@ export const createWorkspaceUserFn = createServerFn({ method: "POST" })
     )
   })
 
-export const getWorkspaceUserApiKeyStatus = createServerFn({ method: "GET" })
-  .middleware([queryCancellationMiddleware])
-  .validator(userDetailInputSchema)
-  .handler(async ({ context, data }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      readWorkspaceUserApiKeyStatus(
-        data.userId,
-        data.scenario,
-        context.requestSignal
-      )
-    )
-  })
-
 export const provisionWorkspaceUserApiKeyFn = createServerFn({ method: "POST" })
   .middleware([queryCancellationMiddleware])
   .validator(userDetailInputSchema)
@@ -155,57 +141,30 @@ export const provisionWorkspaceUserApiKeyFn = createServerFn({ method: "POST" })
     )
   })
 
-export const getWorkspaceUserAccessGroups = createServerFn({ method: "GET" })
+export const updateWorkspaceUserPlatformRoleFn = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(userPlatformRoleInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      updateWorkspaceUserPlatformRole(
+        data.userId,
+        data.platformRole,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const revokeWorkspaceUserApiKeyFn = createServerFn({ method: "POST" })
   .middleware([queryCancellationMiddleware])
   .validator(userDetailInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
-      readWorkspaceUserAccessGroups(
-        data.userId,
-        data.scenario,
-        context.requestSignal
-      )
-    )
-  })
-
-export const addUserToAccessGroupFn = createServerFn({ method: "POST" })
-  .middleware([queryCancellationMiddleware])
-  .validator(userGroupActionInputSchema)
-  .handler(async ({ context, data }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      addUserToAccessGroup(
-        data.userId,
-        data.groupName,
-        data.scenario,
-        context.requestSignal
-      )
-    )
-  })
-
-export const removeUserFromAccessGroupFn = createServerFn({ method: "POST" })
-  .middleware([queryCancellationMiddleware])
-  .validator(userGroupActionInputSchema)
-  .handler(async ({ context, data }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      removeUserFromAccessGroup(
-        data.userId,
-        data.groupName,
-        data.scenario,
-        context.requestSignal
-      )
-    )
-  })
-
-export const getWorkspaceUserProjects = createServerFn({ method: "GET" })
-  .middleware([queryCancellationMiddleware])
-  .validator(userDetailInputSchema)
-  .handler(async ({ context, data }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      readWorkspaceUserProjects(
+      revokeWorkspaceUserApiKey(
         data.userId,
         data.scenario,
         context.requestSignal

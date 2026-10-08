@@ -30,6 +30,7 @@ import type {
   WorkspaceDatasetThumbnail,
   WorkspaceDatasetThumbnailOperation,
   WorkspaceDatasetDescriptiveUpdate,
+  WorkspaceDeletionPreview,
   WorkspaceDeletionRequest,
   WorkspaceFileDownload,
   WorkspaceLinkedResource,
@@ -263,6 +264,44 @@ function workspaceDeletionRequest(
   }
 }
 
+const deletionGrantSchema = z
+  .object({
+    permission: z.string(),
+    resource_mfid: z.string(),
+    resource_type: z.string(),
+  })
+  .passthrough()
+
+const workspaceDeletionPreviewSchema = z
+  .object({
+    blocking: z.record(z.string(), z.number()).optional(),
+    deleted: z.boolean(),
+    join_requests_removed: z.number().optional().default(0),
+    memberships_removed: z.number().optional().default(0),
+    removed_grants: z.array(deletionGrantSchema).optional(),
+    resource_id: z.string(),
+    resource_type: z.enum(["dataset", "instrument", "project", "sample"]),
+    service_accounts_unbound: z.number().optional().default(0),
+  })
+  .passthrough()
+
+function workspaceDeletionPreview(
+  value: unknown
+): WorkspaceDeletionPreview | null {
+  const result = workspaceDeletionPreviewSchema.safeParse(value)
+  if (!result.success) return null
+  return {
+    blocking: result.data.blocking ?? {},
+    deleted: result.data.deleted,
+    join_requests_removed: result.data.join_requests_removed,
+    memberships_removed: result.data.memberships_removed,
+    removed_grants: result.data.removed_grants ?? [],
+    resource_id: result.data.resource_id,
+    resource_type: result.data.resource_type,
+    service_accounts_unbound: result.data.service_accounts_unbound,
+  }
+}
+
 function isDataset(
   resource: ApiResource
 ): resource is Schema<"DatasetResponse"> {
@@ -313,6 +352,7 @@ function commonResource(
     name,
     capabilities: resource.capabilities ?? null,
     owner: safeOwner(owner),
+    role: "role" in resource ? (resource.role ?? null) : null,
     creation_time: resource.creation_time ?? null,
     modification_time: resource.modification_time ?? null,
     scientific_metadata: normalizeScientificMetadata(
@@ -498,9 +538,9 @@ export async function readWorkspaceResource(
   }
 
   const client = createCrucibleClient(configuration, { privilegeMode })
-  const result = await client.GET("/resources/{resource_id}", {
+  const result = await client.GET("/resources/{mfid}", {
     params: {
-      path: { resource_id: resourceMfid },
+      path: { mfid: resourceMfid },
       query: {
         include_datasets: false,
         include_links: projection === "overview",
@@ -534,8 +574,8 @@ export async function readWorkspaceDatasetFiles(
   }
 
   const client = createCrucibleClient(configuration, { privilegeMode })
-  const result = await client.GET("/datasets/{dsid}/files", {
-    params: { path: { dsid: datasetMfid } },
+  const result = await client.GET("/datasets/{dataset_mfid}/files", {
+    params: { path: { dataset_mfid: datasetMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
@@ -779,8 +819,8 @@ export async function readWorkspaceDatasetThumbnails(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.GET("/datasets/{dsid}/thumbnails", {
-    params: { path: { dsid: datasetMfid } },
+  const result = await client.GET("/datasets/{dataset_mfid}/thumbnails", {
+    params: { path: { dataset_mfid: datasetMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
@@ -885,23 +925,23 @@ export async function mutateWorkspaceDatasetThumbnails(
 
   const client = createCrucibleClient(configuration)
   if (operation.action === "add") {
-    const result = await client.POST("/datasets/{dsid}/thumbnails", {
+    const result = await client.POST("/datasets/{dataset_mfid}/thumbnails", {
       body: {
         thumbnail_b64str: operation.thumbnail_b64str,
         thumbnail_name: operation.thumbnail_name,
       },
-      params: { path: { dsid: operation.datasetMfid } },
+      params: { path: { dataset_mfid: operation.datasetMfid } },
       signal: crucibleRequestSignal(requestSignal),
     })
     if (!result.data) throw new CrucibleResponseError(result.response.status)
   } else if (operation.action === "rename") {
     const result = await client.PATCH(
-      "/datasets/{dsid}/thumbnails/{thumbnail_id}",
+      "/datasets/{dataset_mfid}/thumbnails/{thumbnail_id}",
       {
         body: { thumbnail_name: operation.thumbnail_name },
         params: {
           path: {
-            dsid: operation.datasetMfid,
+            dataset_mfid: operation.datasetMfid,
             thumbnail_id: operation.thumbnailId,
           },
         },
@@ -911,11 +951,11 @@ export async function mutateWorkspaceDatasetThumbnails(
     if (!result.data) throw new CrucibleResponseError(result.response.status)
   } else {
     const result = await client.DELETE(
-      "/datasets/{dsid}/thumbnails/{thumbnail_id}",
+      "/datasets/{dataset_mfid}/thumbnails/{thumbnail_id}",
       {
         params: {
           path: {
-            dsid: operation.datasetMfid,
+            dataset_mfid: operation.datasetMfid,
             thumbnail_id: operation.thumbnailId,
           },
         },
@@ -1268,7 +1308,6 @@ export async function reassignWorkspaceResourceProject(
   if (configuration.mode === "unavailable") {
     throw new Error(configuration.reason)
   }
-  let projectId: string
   if (configuration.mode === "fixture") {
     const resource = await readWorkspaceResource(
       resourceMfid,
@@ -1285,36 +1324,27 @@ export async function reassignWorkspaceResourceProject(
       (candidate) => candidate.unique_id === projectMfid
     )
     if (!project) throw new CrucibleResponseError(404)
-    projectId = project.project_id
     return {
       resource_id: resourceMfid,
+      resource_mfid: resourceMfid,
       previous_project_id: resource.project_id,
-      new_project_id: projectId,
+      previous_project_mfid: resource.project_id,
+      new_project_id: project.project_id,
+      new_project_mfid: projectMfid,
     }
   }
 
   const client = createCrucibleClient(configuration)
-  const projectResult = await client.GET("/projects/{project_ref}", {
-    params: {
-      path: { project_ref: projectMfid },
-      query: {
-        include_members: false,
-        include_metadata: false,
-      },
-    },
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (!projectResult.data) {
-    throw new CrucibleResponseError(projectResult.response.status)
-  }
-  projectId = projectResult.data.project_id
   const result = await client.POST("/resources/{mfid}/project", {
-    body: { project_id: projectId },
+    body: { project_mfid: projectMfid },
     params: { path: { mfid: resourceMfid }, query: { confirm } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
-  if (result.data.resource_id !== resourceMfid) {
+  if (
+    result.data.resource_id !== resourceMfid &&
+    result.data.resource_mfid !== resourceMfid
+  ) {
     throw new Error(
       "The project assignment response identifies another resource."
     )
@@ -1358,9 +1388,9 @@ export async function setWorkspaceDatasetInstrument(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.PUT("/datasets/{dsid}/instrument", {
+  const result = await client.PUT("/datasets/{dataset_mfid}/instrument", {
     body: { instrument_mfid: instrumentMfid },
-    params: { path: { dsid: datasetMfid } },
+    params: { path: { dataset_mfid: datasetMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response.status)
@@ -1491,9 +1521,9 @@ export async function patchWorkspaceSampleDescription(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.PATCH("/samples/{sample_id}", {
+  const result = await client.PATCH("/samples/{sample_mfid}", {
     body: changes,
-    params: { path: { sample_id: resourceMfid } },
+    params: { path: { sample_mfid: resourceMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
@@ -1566,9 +1596,9 @@ export async function patchWorkspaceDatasetDescription(
   }
 
   const client = createCrucibleClient(configuration)
-  const result = await client.PATCH("/datasets/{dsid}", {
+  const result = await client.PATCH("/datasets/{dataset_mfid}", {
     body: changes,
-    params: { path: { dsid: resourceMfid } },
+    params: { path: { dataset_mfid: resourceMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
@@ -1635,9 +1665,9 @@ export async function requestWorkspaceResourceDeletion(
   }
 
   const client = createCrucibleClient(configuration, { privilegeMode })
-  const result = await client.POST("/resources/{resource_id}/delete", {
+  const result = await client.POST("/resources/{mfid}/delete", {
     params: {
-      path: { resource_id: resourceMfid },
+      path: { mfid: resourceMfid },
       ...(reason === undefined ? {} : { query: { reason } }),
     },
     signal: crucibleRequestSignal(requestSignal),
@@ -1655,6 +1685,158 @@ export async function requestWorkspaceResourceDeletion(
     throw new Error("The deletion request response is invalid.")
   }
   return deletionRequest
+}
+
+export async function deleteWorkspaceResource(
+  resourceMfid: string,
+  confirm: boolean,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal,
+  privilegeMode?: WorkspacePrivilegeMode
+): Promise<WorkspaceDeletionPreview> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    return fixtureDeletionPreview(resourceMfid, confirm, scenario)
+  }
+
+  const client = createCrucibleClient(configuration, { privilegeMode })
+  const result = await client.DELETE("/resources/{mfid}", {
+    params: {
+      path: { mfid: resourceMfid },
+      query: { force: true, ...(confirm ? { confirm: true } : {}) },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  const preview = workspaceDeletionPreview(result.data)
+  if (!preview) {
+    throw new Error("The deletion response is invalid.")
+  }
+  if (preview.resource_id !== resourceMfid) {
+    throw new Error("The deletion response identifies another resource.")
+  }
+  if (preview.deleted !== confirm) {
+    throw new Error("The deletion response does not match the request.")
+  }
+  return preview
+}
+
+function fixtureDeletionPreview(
+  resourceMfid: string,
+  confirm: boolean,
+  scenario?: FixtureScenario
+): WorkspaceDeletionPreview {
+  const source = readWorkspaceFixture(scenario)
+  if (source.status === "unavailable") throw new Error(source.reason)
+  const { datasets, instruments, projects, samples } = source.workspace
+  const project = projects.find(
+    (candidate) => candidate.unique_id === resourceMfid
+  )
+  if (project) {
+    const blockingDatasets = datasets.filter(
+      (dataset) => dataset.project_id === project.project_id
+    ).length
+    const blockingSamples = samples.filter(
+      (sample) => sample.project_id === project.project_id
+    ).length
+    const blocking: Record<string, number> = {}
+    if (blockingDatasets > 0) blocking.datasets = blockingDatasets
+    if (blockingSamples > 0) blocking.samples = blockingSamples
+    if (!confirm) {
+      return {
+        blocking,
+        deleted: false,
+        join_requests_removed: 0,
+        memberships_removed: project.members?.length ?? 0,
+        removed_grants: [],
+        resource_id: project.unique_id,
+        resource_type: "project",
+        service_accounts_unbound: 0,
+      }
+    }
+    if (Object.keys(blocking).length > 0) {
+      throw new CrucibleResponseError(409)
+    }
+    return {
+      blocking: {},
+      deleted: true,
+      join_requests_removed: 0,
+      memberships_removed: project.members?.length ?? 0,
+      removed_grants: [],
+      resource_id: project.unique_id,
+      resource_type: "project",
+      service_accounts_unbound: 0,
+    }
+  }
+  const instrument = instruments.find(
+    (candidate) => candidate.unique_id === resourceMfid
+  )
+  if (instrument) {
+    const blockingDatasets = datasets.filter(
+      (dataset) => dataset.instrument_id === instrument.instrument_id
+    ).length
+    const blocking: Record<string, number> =
+      blockingDatasets > 0 ? { datasets: blockingDatasets } : {}
+    if (!confirm) {
+      return {
+        blocking,
+        deleted: false,
+        join_requests_removed: 0,
+        memberships_removed: 0,
+        removed_grants: [],
+        resource_id: instrument.unique_id,
+        resource_type: "instrument",
+        service_accounts_unbound: 0,
+      }
+    }
+    if (Object.keys(blocking).length > 0) {
+      throw new CrucibleResponseError(409)
+    }
+    return {
+      blocking: {},
+      deleted: true,
+      join_requests_removed: 0,
+      memberships_removed: 0,
+      removed_grants: [],
+      resource_id: instrument.unique_id,
+      resource_type: "instrument",
+      service_accounts_unbound: 0,
+    }
+  }
+  const dataset = datasets.find(
+    (candidate) => candidate.unique_id === resourceMfid
+  )
+  if (dataset) {
+    return {
+      blocking: {},
+      deleted: true,
+      join_requests_removed: 0,
+      memberships_removed: 0,
+      removed_grants: [],
+      resource_id: dataset.unique_id,
+      resource_type: "dataset",
+      service_accounts_unbound: 0,
+    }
+  }
+  const sample = samples.find(
+    (candidate) => candidate.unique_id === resourceMfid
+  )
+  if (sample) {
+    return {
+      blocking: {},
+      deleted: true,
+      join_requests_removed: 0,
+      memberships_removed: 0,
+      removed_grants: [],
+      resource_id: sample.unique_id,
+      resource_type: "sample",
+      service_accounts_unbound: 0,
+    }
+  }
+  throw new CrucibleResponseError(404)
 }
 
 function workspaceScientificMetadataUpdate(
@@ -1704,15 +1886,15 @@ export async function writeWorkspaceResourceMetadata(
   const client = createCrucibleClient(configuration)
   const result =
     update.kind === "merge"
-      ? await client.PATCH("/resources/{unique_id}/metadata", {
+      ? await client.PATCH("/resources/{mfid}/metadata", {
           body: update.metadata,
-          params: { path: { unique_id: resourceMfid } },
+          params: { path: { mfid: resourceMfid } },
           signal: crucibleRequestSignal(requestSignal),
         })
-      : await client.POST("/resources/{unique_id}/metadata", {
+      : await client.POST("/resources/{mfid}/metadata", {
           body: update.metadata,
           params: {
-            path: { unique_id: resourceMfid },
+            path: { mfid: resourceMfid },
             query: { overwrite: true },
           },
           signal: crucibleRequestSignal(requestSignal),
@@ -1850,12 +2032,12 @@ export async function mutateWorkspaceRelationship(
     normalized.kind === "sample-lineage"
       ? operation.action === "link"
         ? await client.POST(
-            "/samples/{parent_sample_id}/children/{child_sample_id}",
+            "/samples/{parent_sample_mfid}/children/{child_sample_mfid}",
             {
               params: {
                 path: {
-                  parent_sample_id: normalized.parentMfid,
-                  child_sample_id: normalized.childMfid,
+                  parent_sample_mfid: normalized.parentMfid,
+                  child_sample_mfid: normalized.childMfid,
                 },
                 ...(normalized.relationshipType
                   ? {
@@ -1869,12 +2051,12 @@ export async function mutateWorkspaceRelationship(
             }
           )
         : await client.DELETE(
-            "/samples/{parent_sample_id}/children/{child_sample_id}",
+            "/samples/{parent_sample_mfid}/children/{child_sample_mfid}",
             {
               params: {
                 path: {
-                  parent_sample_id: normalized.parentMfid,
-                  child_sample_id: normalized.childMfid,
+                  parent_sample_mfid: normalized.parentMfid,
+                  child_sample_mfid: normalized.childMfid,
                 },
               },
               signal: crucibleRequestSignal(requestSignal),
@@ -1883,12 +2065,12 @@ export async function mutateWorkspaceRelationship(
       : normalized.kind === "dataset-lineage"
         ? operation.action === "link"
           ? await client.POST(
-              "/datasets/{parent_dataset_id}/children/{child_dataset_id}",
+              "/datasets/{parent_dataset_mfid}/children/{child_dataset_mfid}",
               {
                 params: {
                   path: {
-                    parent_dataset_id: normalized.parentMfid,
-                    child_dataset_id: normalized.childMfid,
+                    parent_dataset_mfid: normalized.parentMfid,
+                    child_dataset_mfid: normalized.childMfid,
                   },
                   ...(normalized.relationshipType
                     ? {
@@ -1902,36 +2084,42 @@ export async function mutateWorkspaceRelationship(
               }
             )
           : await client.DELETE(
-              "/datasets/{parent_dataset_id}/children/{child_dataset_id}",
+              "/datasets/{parent_dataset_mfid}/children/{child_dataset_mfid}",
               {
                 params: {
                   path: {
-                    parent_dataset_id: normalized.parentMfid,
-                    child_dataset_id: normalized.childMfid,
+                    parent_dataset_mfid: normalized.parentMfid,
+                    child_dataset_mfid: normalized.childMfid,
                   },
                 },
                 signal: crucibleRequestSignal(requestSignal),
               }
             )
         : operation.action === "link"
-          ? await client.POST("/datasets/{dsid}/samples/{sample_id}", {
-              params: {
-                path: {
-                  dsid: normalized.datasetMfid,
-                  sample_id: normalized.sampleMfid,
+          ? await client.POST(
+              "/datasets/{dataset_mfid}/samples/{sample_mfid}",
+              {
+                params: {
+                  path: {
+                    dataset_mfid: normalized.datasetMfid,
+                    sample_mfid: normalized.sampleMfid,
+                  },
                 },
-              },
-              signal: crucibleRequestSignal(requestSignal),
-            })
-          : await client.DELETE("/datasets/{dsid}/samples/{sample_id}", {
-              params: {
-                path: {
-                  dsid: normalized.datasetMfid,
-                  sample_id: normalized.sampleMfid,
+                signal: crucibleRequestSignal(requestSignal),
+              }
+            )
+          : await client.DELETE(
+              "/datasets/{dataset_mfid}/samples/{sample_mfid}",
+              {
+                params: {
+                  path: {
+                    dataset_mfid: normalized.datasetMfid,
+                    sample_mfid: normalized.sampleMfid,
+                  },
                 },
-              },
-              signal: crucibleRequestSignal(requestSignal),
-            })
+                signal: crucibleRequestSignal(requestSignal),
+              }
+            )
   if (!result.response.ok) {
     throw new CrucibleResponseError(result.response.status)
   }

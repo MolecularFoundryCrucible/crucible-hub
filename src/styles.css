@@ -119,11 +119,14 @@
   --spacing-directory-project-name-column: calc(
     100% - var(--spacing-directory-action-column) -
       var(--spacing-directory-date-columns) -
-      var(--spacing-directory-project-person-column)
+      var(--spacing-directory-project-person-column) -
+      var(--spacing-directory-role-columns)
   );
   --spacing-directory-project-person-column: var(
     --spacing-resource-person-column
   );
+  --spacing-directory-role-column: 7rem;
+  --spacing-directory-role-columns: 0px;
   --spacing-deletion-action-column: 5rem;
   --spacing-deletion-date-column: var(--spacing-resource-date-column);
   --spacing-deletion-project-column: 16rem;
@@ -398,6 +401,7 @@
     --spacing-directory-date-columns: calc(
       var(--spacing-directory-date-column) * 2
     );
+    --spacing-directory-role-columns: var(--spacing-directory-role-column);
   }
 }
 
@@ -1476,6 +1480,10 @@ body {
 
 .resource-directory-project-table .resource-directory-person-column {
   width: var(--spacing-directory-project-person-column);
+}
+
+.resource-directory-project-table .resource-directory-role-column {
+  width: var(--spacing-directory-role-column);
 }
 
 .resource-directory-instrument-table .resource-directory-name-column {

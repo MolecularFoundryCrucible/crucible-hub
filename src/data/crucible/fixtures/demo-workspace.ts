@@ -8,12 +8,7 @@ type DemoWorkspaceContract = {
   referenceTime: string
   account: Schema<"AccountProfileRead">
   people: readonly Schema<"UserPublicRead">[]
-  projects: readonly (
-    | Schema<"ProjectWithLead">
-    | (Schema<"ProjectMinimalRead"> & {
-        capabilities?: Schema<"ResourceCapabilities"> | null
-      })
-  )[]
+  projects: readonly Schema<"ProjectWithLead">[]
   instruments: readonly Schema<"InstrumentResponse">[]
   samples: readonly Schema<"SampleResponse">[]
   datasets: readonly Schema<"DatasetResponse">[]
@@ -32,6 +27,7 @@ const account = {
     can_create_project: true,
     can_create_sample: true,
     can_manage_service_accounts: false,
+    can_manage_users: true,
     can_register_instrument: true,
   },
   unique_id: "0000-0000-0000-000X",
@@ -80,6 +76,7 @@ const instrumentReference = {
 
 const capabilities = {
   can_change_status: true,
+  can_delete: true,
   can_edit: true,
   can_manage_access: true,
   can_transfer: true,
@@ -132,6 +129,7 @@ export const demoWorkspace = {
       status: "active",
       capabilities,
       lead: account,
+      role: "owner",
       scientific_metadata: {
         research_area: "electrocatalysis",
         beamtime_cycle: "2026-2",
@@ -159,7 +157,15 @@ export const demoWorkspace = {
       unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2ZB",
       project_id: "porous-framework-screening",
       title: "Porous Framework Screening",
+      organization: "Example National Laboratory",
+      project_lead_orcid: collaborator.unique_id,
+      status: "active",
       capabilities: null,
+      lead: collaborator,
+      role: "contributor",
+      scientific_metadata: null,
+      creation_time: "2026-07-02T09:45:00Z",
+      modification_time: "2026-07-02T09:45:00Z",
     },
   ],
   instruments: [
@@ -236,6 +242,7 @@ export const demoWorkspace = {
       owner: collaborator,
       capabilities: {
         can_change_status: false,
+        can_delete: false,
         can_edit: false,
         can_manage_access: false,
         can_transfer: false,

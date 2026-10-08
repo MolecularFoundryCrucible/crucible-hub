@@ -696,7 +696,7 @@ function SettingsTextField({
 }) {
   return (
     <Field data-invalid={!field.state.meta.isValid}>
-      <FieldLabel htmlFor={field.name} optional={!required}>
+      <FieldLabel htmlFor={field.name} optional={!required} required={required}>
         {label}
       </FieldLabel>
       <Input

@@ -25,6 +25,7 @@ type ConfirmationProps = {
   confirmLabel: string
   description: React.ReactNode
   error?: React.ReactNode
+  kind?: "dialog" | "alert"
   onCancelPending?: () => void
   onConfirm: () => void
   onOpenChange: (open: boolean) => void
@@ -37,12 +38,13 @@ type ConfirmationProps = {
   variant?: "default" | "destructive"
 }
 
-export function DismissibleConfirmationDialog({
+export function ConfirmationDialog({
   cancelLabel = "Cancel",
   children,
   confirmLabel,
   description,
   error,
+  kind = "dialog",
   onCancelPending,
   onConfirm,
   onOpenChange,
@@ -54,6 +56,51 @@ export function DismissibleConfirmationDialog({
   title,
   variant = "default",
 }: ConfirmationProps) {
+  const activeCancelLabel =
+    pending && onCancelPending ? pendingCancelLabel : cancelLabel
+  const cancelDisabled = pending && (!onCancelPending || pendingCancelDisabled)
+  if (kind === "alert") {
+    return (
+      <AlertDialog
+        onOpenChange={(nextOpen) => {
+          if (!pending) onOpenChange(nextOpen)
+        }}
+        open={open}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          {children}
+          <ConfirmationError>{error}</ConfirmationError>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={cancelDisabled}
+              onClick={(event) => {
+                if (!pending || !onCancelPending) return
+                event.preventDefault()
+                onCancelPending()
+              }}
+            >
+              {activeCancelLabel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={pending}
+              onClick={(event) => {
+                event.preventDefault()
+                onConfirm()
+              }}
+              variant={variant}
+            >
+              {pending ? <ConfirmationPendingIcon /> : null}
+              {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    )
+  }
   return (
     <Dialog
       onOpenChange={(nextOpen) => {
@@ -70,7 +117,7 @@ export function DismissibleConfirmationDialog({
         <ConfirmationError>{error}</ConfirmationError>
         <DialogFooter>
           <Button
-            disabled={pending && (!onCancelPending || pendingCancelDisabled)}
+            disabled={cancelDisabled}
             onClick={() => {
               if (pending) onCancelPending?.()
               else onOpenChange(false)
@@ -78,7 +125,7 @@ export function DismissibleConfirmationDialog({
             type="button"
             variant="outline"
           >
-            {pending && onCancelPending ? pendingCancelLabel : cancelLabel}
+            {activeCancelLabel}
           </Button>
           <Button
             disabled={pending}
@@ -92,65 +139,6 @@ export function DismissibleConfirmationDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
-
-export function ConfirmationAlertDialog({
-  cancelLabel = "Cancel",
-  children,
-  confirmLabel,
-  description,
-  error,
-  onCancelPending,
-  onConfirm,
-  onOpenChange,
-  open,
-  pending = false,
-  pendingCancelDisabled = false,
-  pendingCancelLabel = "Stop",
-  pendingLabel,
-  title,
-  variant = "default",
-}: ConfirmationProps) {
-  return (
-    <AlertDialog
-      onOpenChange={(nextOpen) => {
-        if (!pending) onOpenChange(nextOpen)
-      }}
-      open={open}
-    >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        {children}
-        <ConfirmationError>{error}</ConfirmationError>
-        <AlertDialogFooter>
-          <AlertDialogCancel
-            disabled={pending && (!onCancelPending || pendingCancelDisabled)}
-            onClick={(event) => {
-              if (!pending || !onCancelPending) return
-              event.preventDefault()
-              onCancelPending()
-            }}
-          >
-            {pending && onCancelPending ? pendingCancelLabel : cancelLabel}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            disabled={pending}
-            onClick={(event) => {
-              event.preventDefault()
-              onConfirm()
-            }}
-            variant={variant}
-          >
-            {pending ? <ConfirmationPendingIcon /> : null}
-            {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   )
 }
 

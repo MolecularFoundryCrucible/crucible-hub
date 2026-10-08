@@ -1,29 +1,25 @@
-import { useMemo, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import {
-  AddMemberIcon,
   EditResourceIcon,
-  PersonIcon,
   ProjectIcon,
-  RemoveMemberIcon,
   RotateCredentialIcon,
   SavingChangesIcon,
-  UserGroupIcon,
 } from "@/components/crucible/icons"
-import { MfidText } from "@/components/crucible/mfid-text"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
-import {
-  PersonIdentity,
-  personDisplayName,
-} from "@/components/crucible/person-identity"
+import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
+import { PlatformRoleDialog } from "@/components/crucible/platform-role-dialog"
+import type { PlatformRole } from "@/components/crucible/platform-role-dialog"
+import { ProjectRoleBadge } from "@/components/crucible/project-members"
 import {
   ResourceCreatedCell,
   ResourceOpenCell,
@@ -68,20 +64,16 @@ import {
 } from "@/data/crucible/result"
 import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
 import {
-  addUserToAccessGroupFn,
   checkWorkspaceEmail,
   provisionWorkspaceUserApiKeyFn,
-  removeUserFromAccessGroupFn,
+  revokeWorkspaceUserApiKeyFn,
   updateWorkspaceUser,
+  updateWorkspaceUserPlatformRoleFn,
 } from "@/data/crucible/users.functions"
-import {
-  userAccessGroupsQueryOptions,
-  userApiKeyStatusQueryOptions,
-  userProjectsQueryOptions,
-} from "@/data/crucible/users.queries"
+import { projectsQueryOptions } from "@/data/crucible/projects.queries"
 import type {
   WorkspaceAdminUser,
-  WorkspaceMode,
+  WorkspaceUserPlatformRole,
   WorkspaceUserUpdate,
 } from "@/data/crucible/workspace-source"
 import {
@@ -101,6 +93,24 @@ const userEmailSchema = z
   .trim()
   .max(320, "Use 320 characters or fewer for email.")
   .email("Enter a valid email address.")
+
+const platformRoleDescriptions = {
+  admin: "Full platform administration.",
+  contributor: "Platform-wide read and create access.",
+  none: "No platform-wide role. Resource-specific access remains unchanged.",
+} satisfies Record<WorkspaceUserPlatformRole, string>
+
+function mergeAdminUserDetail(
+  updated: WorkspaceAdminUser,
+  current: WorkspaceAdminUser | undefined
+): WorkspaceAdminUser {
+  return {
+    ...updated,
+    api_key_status: updated.api_key_status ?? current?.api_key_status ?? null,
+    user_capabilities:
+      updated.user_capabilities ?? current?.user_capabilities ?? null,
+  }
+}
 
 const editUserSchema = z.object({
   email: userEmailSchema.or(z.literal("")),
@@ -158,7 +168,6 @@ export function UserDetailView({
   scope,
   user,
 }: {
-  mode?: WorkspaceMode
   scope: IdentityScope
   user: WorkspaceAdminUser
 }) {
@@ -167,16 +176,24 @@ export function UserDetailView({
     unique_id: string
     username: string | null
   }>()
+  const canManageApiKey = user.user_capabilities?.can_manage_api_key !== false
 
   return (
     <div className="flex flex-col gap-6">
-      <UserProfileCard scope={scope} user={user} />
-      <UserApiCredentialSection
-        onCredentialMinted={setCredential}
-        scope={scope}
-        user={user}
-      />
-      <UserAccessGroupsSection scope={scope} user={user} />
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <UserProfileCard
+          className={!canManageApiKey ? "lg:col-span-2" : undefined}
+          scope={scope}
+          user={user}
+        />
+        {canManageApiKey ? (
+          <UserApiCredentialSection
+            onCredentialMinted={setCredential}
+            scope={scope}
+            user={user}
+          />
+        ) : null}
+      </div>
       <UserProjectsSection scope={scope} user={user} />
       <OneTimeCredentialDialog
         credential={credential}
@@ -188,9 +205,11 @@ export function UserDetailView({
 }
 
 function UserProfileCard({
+  className,
   scope,
   user,
 }: {
+  className?: string
   scope: IdentityScope
   user: WorkspaceAdminUser
 }) {
@@ -201,6 +220,21 @@ function UserProfileCard({
   const [rejectedUsername, setRejectedUsername] = useState<string>()
   const [liveTakenEmail, setLiveTakenEmail] = useState<string>()
   const [rejectedEmail, setRejectedEmail] = useState<string>()
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false)
+  const [roleUpdated, setRoleUpdated] = useState(false)
+
+  const roleMutation = useMutation({
+    mutationFn: async (platformRole: WorkspaceUserPlatformRole) =>
+      unwrapHubResult(
+        await updateWorkspaceUserPlatformRoleFn({
+          data: {
+            platformRole,
+            scenario: fixtureScenarioFromScope(scope),
+            userId: user.unique_id,
+          },
+        })
+      ),
+  })
 
   const mutation = useMutation({
     mutationFn: async (changes: WorkspaceUserUpdate) =>
@@ -232,7 +266,8 @@ function UserProfileCard({
         const updated = await mutation.mutateAsync(changes)
         queryClient.setQueryData(
           crucibleKeys.userAdminDetail(scope, user.unique_id),
-          updated
+          (current: WorkspaceAdminUser | undefined) =>
+            mergeAdminUserDetail(updated, current)
         )
         void Promise.all([
           applyPersonProfileUpdate(queryClient, scope, {
@@ -283,94 +318,141 @@ function UserProfileCard({
     setEditing(false)
   })
 
+  const userRef = useRef(user.unique_id)
+  useEffect(() => {
+    if (userRef.current !== user.unique_id) {
+      userRef.current = user.unique_id
+      form.reset(userFormValues(user))
+      setEditing(false)
+      setSaveError(undefined)
+      setLiveTakenUsername(undefined)
+      setRejectedUsername(undefined)
+      setLiveTakenEmail(undefined)
+      setRejectedEmail(undefined)
+      setRoleDialogOpen(false)
+      setRoleUpdated(false)
+    } else if (!editing) {
+      form.reset(userFormValues(user))
+    }
+  }, [editing, form, user])
+
   const formId = `user-profile-${user.unique_id}`
+
+  function openRoleDialog() {
+    setRoleUpdated(false)
+    setRoleDialogOpen(true)
+  }
+
+  async function changePlatformRole(role: PlatformRole) {
+    const updated = await roleMutation.mutateAsync(role)
+    queryClient.setQueryData(
+      crucibleKeys.userAdminDetail(scope, user.unique_id),
+      (current: WorkspaceAdminUser | undefined) =>
+        mergeAdminUserDetail(updated, current)
+    )
+    void queryClient.invalidateQueries({
+      queryKey: crucibleKeys.userAdminLists(scope),
+    })
+  }
 
   if (!editing) {
     return (
-      <Card>
-        <CardHeader actionLayout="inline">
-          <CardTitle className="flex items-center gap-2">
-            <PersonIcon aria-hidden="true" />
-            Profile
-          </CardTitle>
-          <CardAction>
-            <Button
-              onClick={() => setEditing(true)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <EditResourceIcon data-icon="inline-start" />
-              Edit profile
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <dt className="text-label text-muted-foreground">User</dt>
-              <dd className="mt-1">
-                <PersonIdentity person={user} presentation="avatar" size="sm" />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-label text-muted-foreground">Username</dt>
-              <dd className="mt-1 font-mono text-body">
-                {formatUsername(user.username, "raw")}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-label text-muted-foreground">
-                Platform role
-              </dt>
-              <dd className="mt-1">
-                {user.platform_role ? (
-                  <PlatformRoleBadge role={user.platform_role} />
-                ) : (
-                  <span className="text-body text-muted-foreground">None</span>
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-label text-muted-foreground">Email</dt>
-              <dd className="mt-1 text-body">
-                {user.email || (
-                  <span className="text-muted-foreground">None</span>
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-label text-muted-foreground">
-                Crucible ID / ORCID
-              </dt>
-              <dd className="mt-1">
-                <MfidText value={user.unique_id} />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-label text-muted-foreground">Account type</dt>
-              <dd className="mt-1">
-                <Badge
-                  variant={user.is_service_account ? "secondary" : "default"}
-                >
-                  {user.is_service_account ? "Service account" : "Regular user"}
-                </Badge>
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+      <>
+        <Card className={className}>
+          <CardHeader actionLayout="inline">
+            <CardTitle>Identity</CardTitle>
+            <CardAction>
+              <div className="flex flex-wrap justify-end gap-2">
+                {user.user_capabilities?.can_change_platform_role === true ? (
+                  <Button
+                    onClick={openRoleDialog}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    Change role
+                  </Button>
+                ) : null}
+                {user.user_capabilities?.can_edit_profile !== false ? (
+                  <Button
+                    onClick={() => setEditing(true)}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <EditResourceIcon data-icon="inline-start" />
+                    Edit profile
+                  </Button>
+                ) : null}
+              </div>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-5">
+            {roleUpdated ? (
+              <p aria-live="polite" className="text-body text-success">
+                Platform role updated. Access changes may take about a minute to
+                propagate.
+              </p>
+            ) : null}
+            <PersonIdentity person={user} presentation="avatar" size="lg" />
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-label text-muted-foreground">Username</dt>
+                <dd className="mt-1 font-mono text-body">
+                  {formatUsername(user.username, "raw")}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-label text-muted-foreground">
+                  Platform role
+                </dt>
+                <dd className="mt-1">
+                  {user.platform_role ? (
+                    <PlatformRoleBadge role={user.platform_role} />
+                  ) : (
+                    <span className="text-body text-muted-foreground">
+                      None
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-label text-muted-foreground">Email</dt>
+                <dd className="mt-1 text-body">
+                  {user.email || (
+                    <span className="text-muted-foreground">None</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-label text-muted-foreground">
+                  Crucible ID / ORCID
+                </dt>
+                <dd className="mt-1">
+                  <MfidValue value={user.unique_id} />
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+        <PlatformRoleDialog
+          currentRole={user.platform_role}
+          id="user-platform-role"
+          onChanged={() => setRoleUpdated(true)}
+          onChange={changePlatformRole}
+          onOpenChange={setRoleDialogOpen}
+          open={roleDialogOpen}
+          roleDescriptions={platformRoleDescriptions}
+        />
+      </>
     )
   }
 
   return (
     <>
-      <Card aria-busy={isSubmitting}>
+      <Card aria-busy={isSubmitting} className={className}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PersonIcon aria-hidden="true" />
-            Edit profile
-          </CardTitle>
+          <CardTitle>Edit identity</CardTitle>
         </CardHeader>
         <CardContent>
           <form
@@ -414,7 +496,9 @@ function UserProfileCard({
                   <form.Field name="first_name">
                     {(field) => (
                       <Field data-invalid={!field.state.meta.isValid}>
-                        <FieldLabel htmlFor={field.name}>First name</FieldLabel>
+                        <FieldLabel htmlFor={field.name} required>
+                          First name
+                        </FieldLabel>
                         <Input
                           aria-invalid={!field.state.meta.isValid || undefined}
                           id={field.name}
@@ -432,7 +516,9 @@ function UserProfileCard({
                   <form.Field name="last_name">
                     {(field) => (
                       <Field data-invalid={!field.state.meta.isValid}>
-                        <FieldLabel htmlFor={field.name}>Last name</FieldLabel>
+                        <FieldLabel htmlFor={field.name} required>
+                          Last name
+                        </FieldLabel>
                         <Input
                           aria-invalid={!field.state.meta.isValid || undefined}
                           id={field.name}
@@ -476,7 +562,7 @@ function UserProfileCard({
                 </form.Field>
               </FieldGroup>
             </fieldset>
-            <dl className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3">
+            <dl className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2">
               <div>
                 <dt className="text-label text-muted-foreground">
                   Platform role
@@ -496,21 +582,7 @@ function UserProfileCard({
                   Crucible ID / ORCID
                 </dt>
                 <dd className="mt-1">
-                  <MfidText value={user.unique_id} />
-                </dd>
-              </div>
-              <div>
-                <dt className="text-label text-muted-foreground">
-                  Account type
-                </dt>
-                <dd className="mt-1">
-                  <Badge
-                    variant={user.is_service_account ? "secondary" : "default"}
-                  >
-                    {user.is_service_account
-                      ? "Service account"
-                      : "Regular user"}
-                  </Badge>
+                  <MfidValue value={user.unique_id} />
                 </dd>
               </div>
             </dl>
@@ -569,10 +641,14 @@ function UserApiCredentialSection({
 }) {
   const queryClient = useQueryClient()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false)
   const [actionError, setActionError] = useState<string>()
-  const statusQuery = useQuery(
-    userApiKeyStatusQueryOptions(scope, user.unique_id)
-  )
+
+  useEffect(() => {
+    setConfirmOpen(false)
+    setRevokeConfirmOpen(false)
+    setActionError(undefined)
+  }, [user.unique_id])
 
   const mutation = useMutation({
     mutationFn: async () =>
@@ -591,7 +667,7 @@ function UserApiCredentialSection({
         username: user.username ?? null,
       })
       void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.userAdminApiKeyStatus(scope, user.unique_id),
+        queryKey: crucibleKeys.userAdminDetail(scope, user.unique_id),
       })
     },
     onError: (err) => {
@@ -599,207 +675,105 @@ function UserApiCredentialSection({
     },
   })
 
+  const revokeMutation = useMutation({
+    mutationFn: async () =>
+      unwrapHubResult(
+        await revokeWorkspaceUserApiKeyFn({
+          data: {
+            scenario: fixtureScenarioFromScope(scope),
+            userId: user.unique_id,
+          },
+        })
+      ),
+    onSuccess: () => {
+      setRevokeConfirmOpen(false)
+      void queryClient.invalidateQueries({
+        queryKey: crucibleKeys.userAdminDetail(scope, user.unique_id),
+      })
+    },
+    onError: (err) => {
+      setActionError(hubErrorMessage(err, "Failed to revoke API key."))
+    },
+  })
+
+  const hasValidKey = user.api_key_status?.valid === true
+
   return (
     <>
       <ApiCredentialCard
         action={
-          <Button
-            disabled={mutation.isPending}
-            onClick={() => {
-              setActionError(undefined)
-              setConfirmOpen(true)
-            }}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {mutation.isPending ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : (
-              <RotateCredentialIcon data-icon="inline-start" />
-            )}
-            {statusQuery.data?.valid ? "Rotate API key" : "Provision API key"}
-          </Button>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              disabled={mutation.isPending}
+              onClick={() => {
+                setActionError(undefined)
+                setConfirmOpen(true)
+              }}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {mutation.isPending ? (
+                <SavingChangesIcon
+                  aria-hidden="true"
+                  className="motion-safe:animate-spin"
+                  data-icon="inline-start"
+                />
+              ) : (
+                <RotateCredentialIcon data-icon="inline-start" />
+              )}
+              {hasValidKey ? "Rotate API key" : "Provision API key"}
+            </Button>
+            {hasValidKey ? (
+              <Button
+                disabled={revokeMutation.isPending}
+                onClick={() => {
+                  setActionError(undefined)
+                  setRevokeConfirmOpen(true)
+                }}
+                size="sm"
+                type="button"
+                variant="destructive"
+              >
+                Revoke API key
+              </Button>
+            ) : null}
+          </div>
         }
-        error={
-          actionError ||
-          (statusQuery.isError
-            ? "Could not read API credential status."
-            : undefined)
-        }
-        loading={statusQuery.isPending}
-        onRetry={() => void statusQuery.refetch()}
-        status={statusQuery.data}
+        error={actionError}
+        status={user.api_key_status}
       />
-      <ConfirmationAlertDialog
-        confirmLabel={statusQuery.data?.valid ? "Rotate key" : "Provision key"}
+      <ConfirmationDialog
+        kind="alert"
+        confirmLabel={hasValidKey ? "Rotate key" : "Provision key"}
         description={
-          statusQuery.data?.valid
+          hasValidKey
             ? "Rotating will immediately invalidate the existing API key for this user. Any scripts using it will stop working until updated."
             : "This will generate a new active API credential for this user."
         }
         onConfirm={() => void mutation.mutateAsync()}
         onOpenChange={setConfirmOpen}
         open={confirmOpen}
-        title={
-          statusQuery.data?.valid
-            ? "Rotate user API key"
-            : "Provision user API key"
-        }
+        title={hasValidKey ? "Rotate user API key" : "Provision user API key"}
+      />
+      <ConfirmationDialog
+        kind="alert"
+        confirmLabel="Revoke key"
+        description="The API key will stop working immediately. Any scripts using it must be provisioned with a replacement credential."
+        error={actionError}
+        onConfirm={() => void revokeMutation.mutateAsync()}
+        onOpenChange={setRevokeConfirmOpen}
+        open={revokeConfirmOpen}
+        pending={revokeMutation.isPending}
+        pendingLabel="Revoking key"
+        title="Revoke user API key?"
+        variant="destructive"
       />
     </>
   )
 }
 
-function UserAccessGroupsSection({
-  scope,
-  user,
-}: {
-  scope: IdentityScope
-  user: WorkspaceAdminUser
-}) {
-  const queryClient = useQueryClient()
-  const groupsQuery = useQuery(
-    userAccessGroupsQueryOptions(scope, user.unique_id)
-  )
-  const [newGroupInput, setNewGroupInput] = useState("")
-  const [actionError, setActionError] = useState<string>()
-
-  const addMutation = useMutation({
-    mutationFn: async (groupName: string) =>
-      unwrapHubResult(
-        await addUserToAccessGroupFn({
-          data: {
-            groupName,
-            scenario: fixtureScenarioFromScope(scope),
-            userId: user.unique_id,
-          },
-        })
-      ),
-    onSuccess: () => {
-      setNewGroupInput("")
-      setActionError(undefined)
-      void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.userAdminAccessGroups(scope, user.unique_id),
-      })
-    },
-    onError: (err) => {
-      setActionError(
-        hubErrorMessage(err, "Could not add user to access group.")
-      )
-    },
-  })
-
-  const removeMutation = useMutation({
-    mutationFn: async (groupName: string) =>
-      unwrapHubResult(
-        await removeUserFromAccessGroupFn({
-          data: {
-            groupName,
-            scenario: fixtureScenarioFromScope(scope),
-            userId: user.unique_id,
-          },
-        })
-      ),
-    onSuccess: () => {
-      setActionError(undefined)
-      void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.userAdminAccessGroups(scope, user.unique_id),
-      })
-    },
-    onError: (err) => {
-      setActionError(
-        hubErrorMessage(err, "Could not remove user from access group.")
-      )
-    },
-  })
-
-  function handleAdd(e: React.FormEvent) {
-    e.preventDefault()
-    const trimmed = newGroupInput.trim()
-    if (!trimmed) return
-    addMutation.mutate(trimmed)
-  }
-
-  const groups = groupsQuery.data ?? []
-
-  return (
-    <Card aria-busy={groupsQuery.isPending}>
-      <CardHeader actionLayout="inline">
-        <CardTitle className="flex items-center gap-2">
-          <UserGroupIcon aria-hidden="true" />
-          Access groups
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <form className="flex max-w-sm gap-2" onSubmit={handleAdd}>
-          <Input
-            aria-label="New group name"
-            disabled={addMutation.isPending}
-            onChange={(e) => setNewGroupInput(e.target.value)}
-            placeholder="e.g. spectroscopy-core"
-            value={newGroupInput}
-          />
-          <Button
-            disabled={!newGroupInput.trim() || addMutation.isPending}
-            size="sm"
-            type="submit"
-            variant="outline"
-          >
-            {addMutation.isPending ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : (
-              <AddMemberIcon data-icon="inline-start" />
-            )}
-            Add
-          </Button>
-        </form>
-        {actionError ? (
-          <p className="text-body text-destructive" role="alert">
-            {actionError}
-          </p>
-        ) : null}
-        {groups.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {groups.map((groupName) => (
-              <Badge
-                className="flex items-center gap-1.5 py-1 text-body"
-                key={groupName}
-                variant="outline"
-              >
-                <span>{groupName}</span>
-                <Button
-                  aria-label={`Remove from ${groupName}`}
-                  disabled={removeMutation.isPending}
-                  onClick={() => removeMutation.mutate(groupName)}
-                  size="icon-xs"
-                  type="button"
-                  variant="ghost"
-                >
-                  <RemoveMemberIcon aria-hidden="true" />
-                </Button>
-              </Badge>
-            ))}
-          </div>
-        ) : (
-          <p className="text-body text-muted-foreground">
-            This user does not belong to any access groups.
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-type ProjectSortColumn = "name" | "lead" | "created" | "updated"
+type ProjectSortColumn = "name" | "created" | "updated"
 
 function UserProjectsSection({
   scope,
@@ -810,10 +784,23 @@ function UserProjectsSection({
 }) {
   const [sortColumn, setSortColumn] = useState<ProjectSortColumn>("name")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+
+  useEffect(() => {
+    setSortColumn("name")
+    setSortDirection("asc")
+  }, [user.unique_id])
+
+  const apiSort = sortColumn === "name" ? "title" : sortColumn
+
   const projectsQuery = useQuery(
-    userProjectsQueryOptions(scope, user.unique_id)
+    projectsQueryOptions(scope, {
+      direction: sortDirection,
+      limit: 100,
+      memberRef: user.unique_id,
+      sort: apiSort,
+    })
   )
-  const projects = projectsQuery.data ?? []
+  const projects = projectsQuery.data?.items ?? []
 
   function handleSortChange(
     column: ProjectSortColumn,
@@ -822,53 +809,6 @@ function UserProjectsSection({
     setSortColumn(column)
     setSortDirection(direction)
   }
-
-  const sortedProjects = useMemo(() => {
-    return [...projects].sort((a, b) => {
-      let aVal = ""
-      let bVal = ""
-      switch (sortColumn) {
-        case "name":
-          aVal = a.title?.trim() || a.project_id
-          bVal = b.title?.trim() || b.project_id
-          break
-        case "lead":
-          aVal =
-            "lead" in a && a.lead
-              ? personDisplayName(a.lead, "abbreviated")
-              : ""
-          bVal =
-            "lead" in b && b.lead
-              ? personDisplayName(b.lead, "abbreviated")
-              : ""
-          break
-        case "created":
-          aVal =
-            "creation_time" in a && typeof a.creation_time === "string"
-              ? a.creation_time
-              : ""
-          bVal =
-            "creation_time" in b && typeof b.creation_time === "string"
-              ? b.creation_time
-              : ""
-          break
-        case "updated":
-          aVal =
-            "modification_time" in a && typeof a.modification_time === "string"
-              ? a.modification_time
-              : ""
-          bVal =
-            "modification_time" in b && typeof b.modification_time === "string"
-              ? b.modification_time
-              : ""
-          break
-      }
-      const cmp = aVal.localeCompare(bVal, undefined, {
-        sensitivity: "base",
-      })
-      return sortDirection === "asc" ? cmp : -cmp
-    })
-  }, [projects, sortColumn, sortDirection])
 
   return (
     <Card aria-busy={projectsQuery.isPending}>
@@ -882,7 +822,7 @@ function UserProjectsSection({
         </CardAction>
       </CardHeader>
       <CardContent className="px-0">
-        {sortedProjects.length > 0 ? (
+        {projects.length > 0 ? (
           <Table
             aria-label="User projects"
             className="resource-directory-table resource-directory-project-table table-fixed"
@@ -890,6 +830,7 @@ function UserProjectsSection({
             <colgroup>
               <col className="resource-directory-name-column" />
               <col className="resource-directory-person-column" />
+              <col className="resource-directory-role-column hidden xl:table-column" />
               <col className="resource-directory-date-column hidden xl:table-column" />
               <col className="resource-directory-date-column" />
               <col className="resource-directory-action-column" />
@@ -904,14 +845,8 @@ function UserProjectsSection({
                   onChange={handleSortChange}
                   preferredDirection="asc"
                 />
-                <SortableTableHead
-                  active={sortColumn === "lead"}
-                  direction={sortDirection}
-                  field="lead"
-                  label="Lead"
-                  onChange={handleSortChange}
-                  preferredDirection="asc"
-                />
+                <TableHead>Lead</TableHead>
+                <TableHead className="hidden xl:table-cell">Role</TableHead>
                 <SortableTableHead
                   active={sortColumn === "created"}
                   className="hidden xl:table-cell"
@@ -935,13 +870,19 @@ function UserProjectsSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedProjects.map((project) => {
+              {projects.map((project) => {
                 const complete = "status" in project
                 const title = project.title?.trim()
                 const name = resourceDisplayName("project", project.title, {
                   identifier: project.project_id,
                   mfid: project.unique_id,
                 })
+                const effectiveRole =
+                  project.role ??
+                  (project.lead?.unique_id === user.unique_id ||
+                  project.project_lead_orcid === user.unique_id
+                    ? "owner"
+                    : null)
                 return (
                   <TableRow key={project.unique_id}>
                     <ResourceDirectoryNameCell
@@ -960,6 +901,16 @@ function UserProjectsSection({
                           person={project.lead}
                           presentation="collection"
                         />
+                      ) : (
+                        <span aria-label="Not available">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell
+                      className="hidden xl:table-cell"
+                      data-label="Role"
+                    >
+                      {effectiveRole ? (
+                        <ProjectRoleBadge role={effectiveRole} />
                       ) : (
                         <span aria-label="Not available">-</span>
                       )}

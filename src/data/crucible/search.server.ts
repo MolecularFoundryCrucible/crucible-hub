@@ -85,6 +85,18 @@ function detailResult(
   }
 }
 
+function personSearchName(person: {
+  first_name: string
+  last_name: string
+  unique_id: string
+  username?: string | null
+}) {
+  const name = [person.first_name, person.last_name]
+    .filter((value) => value.trim())
+    .join(" ")
+  return name || formatUsername(person.username, "raw") || person.unique_id
+}
+
 function fixtureItems(
   workspace: Workspace,
   kind: WorkspaceSearchKind
@@ -94,7 +106,7 @@ function fixtureItems(
       context: formatUsername(item.username, "handle") || null,
       is_service_account: item.is_service_account,
       kind,
-      name: `${item.first_name} ${item.last_name}`,
+      name: personSearchName(item),
       projectId: null,
       unique_id: item.unique_id,
     }))
@@ -130,7 +142,7 @@ function fixtureItems(
     }))
   }
   return workspace.projects.map((item) => ({
-    context: "organization" in item ? item.organization : item.project_id,
+    context: item.organization,
     kind,
     name: resourceDisplayName("project", item.title, {
       identifier: item.project_id,
@@ -305,7 +317,9 @@ function fixtureMetadataSearch(
   }
 }
 
-function projectResult(project: Schema<"ProjectRead">): WorkspaceSearchResult {
+function projectResult(
+  project: Schema<"ProjectRead"> | Schema<"ProjectWithLead">
+): WorkspaceSearchResult {
   return {
     context: project.organization,
     kind: "project",
@@ -318,12 +332,14 @@ function projectResult(project: Schema<"ProjectRead">): WorkspaceSearchResult {
   }
 }
 
-function personResult(person: Schema<"UserPublicRead">): WorkspaceSearchResult {
+function personResult(
+  person: Schema<"UserPublicRead"> | Schema<"UserRead">
+): WorkspaceSearchResult {
   return {
     context: formatUsername(person.username, "handle") || null,
     is_service_account: person.is_service_account,
     kind: "person",
-    name: `${person.first_name} ${person.last_name}`,
+    name: personSearchName(person),
     projectId: null,
     unique_id: person.unique_id,
   }
@@ -366,6 +382,201 @@ function datasetResult(
   }
 }
 
+type SearchOutcome = {
+  items: readonly WorkspaceSearchResult[]
+  total: number | null
+}
+
+type SearchKindRequest = (
+  client: ReturnType<typeof createCrucibleClient>,
+  input: SearchInput,
+  signal: AbortSignal
+) => Promise<SearchOutcome>
+
+function searchOutcome<T>(
+  data:
+    | {
+        items: T[]
+        total?: number | null | undefined
+      }
+    | undefined,
+  message: string,
+  map: (item: T) => WorkspaceSearchResult
+): SearchOutcome {
+  if (!data) throw new Error(message)
+  return {
+    items: data.items.map(map),
+    total: data.total ?? null,
+  }
+}
+
+const kindSearches: Record<
+  WorkspaceSearchKind,
+  { browse: SearchKindRequest; search: SearchKindRequest }
+> = {
+  person: {
+    browse: async (client, input, signal) => {
+      const result = await client.GET("/users", {
+        params: {
+          query: {
+            is_service_account: input.serviceAccountsOnly || undefined,
+            limit: input.limit,
+          },
+        },
+        signal,
+      })
+      if (!result.data) throw new Error("people browse failed")
+      return {
+        items: result.data.items.map(personResult),
+        total: result.data.total ?? null,
+      }
+    },
+    search: async (client, input, signal) => {
+      const result = await client.GET("/users/search", {
+        params: {
+          query: {
+            is_service_account: input.serviceAccountsOnly || undefined,
+            limit: input.limit,
+            q: input.query,
+          },
+        },
+        signal,
+      })
+      if (!result.data) throw new Error("people search failed")
+      const items = result.data.map(personResult)
+      return { items, total: items.length }
+    },
+  },
+  project: {
+    browse: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/projects", {
+            params: { query: { limit: input.limit } },
+            signal,
+          })
+        ).data,
+        "project browse failed",
+        projectResult
+      ),
+    search: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/projects/search", {
+            params: { query: { limit: input.limit, q: input.query } },
+            signal,
+          })
+        ).data,
+        "project search failed",
+        projectResult
+      ),
+  },
+  instrument: {
+    browse: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/instruments", {
+            params: { query: { limit: input.limit } },
+            signal,
+          })
+        ).data,
+        "instrument browse failed",
+        instrumentResult
+      ),
+    search: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/instruments/search", {
+            params: {
+              query: {
+                include_owner: false,
+                limit: input.limit,
+                q: input.query,
+              },
+            },
+            signal,
+          })
+        ).data,
+        "instrument search failed",
+        instrumentResult
+      ),
+  },
+  sample: {
+    browse: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/samples", {
+            params: {
+              query: {
+                limit: input.limit,
+                project_mfid: input.projectMfid,
+                project_scope: input.projectMfid ? "all" : undefined,
+              },
+            },
+            signal,
+          })
+        ).data,
+        "sample browse failed",
+        sampleResult
+      ),
+    search: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/samples/search", {
+            params: {
+              query: {
+                limit: input.limit,
+                project_mfid: input.projectMfid,
+                project_scope: input.projectMfid ? "all" : undefined,
+                q: input.query,
+              },
+            },
+            signal,
+          })
+        ).data,
+        "sample search failed",
+        sampleResult
+      ),
+  },
+  dataset: {
+    browse: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/datasets", {
+            params: {
+              query: {
+                limit: input.limit,
+                project_mfid: input.projectMfid,
+                project_scope: input.projectMfid ? "all" : undefined,
+              },
+            },
+            signal,
+          })
+        ).data,
+        "dataset browse failed",
+        datasetResult
+      ),
+    search: async (client, input, signal) =>
+      searchOutcome(
+        (
+          await client.GET("/datasets/search", {
+            params: {
+              query: {
+                limit: input.limit,
+                project_mfid: input.projectMfid,
+                project_scope: input.projectMfid ? "all" : undefined,
+                q: input.query,
+              },
+            },
+            signal,
+          })
+        ).data,
+        "dataset search failed",
+        datasetResult
+      ),
+  },
+}
+
 export async function searchWorkspace(
   input: SearchInput,
   requestSignal?: AbortSignal
@@ -391,85 +602,21 @@ export async function searchWorkspace(
     }
   }
 
+  const isBrowse = !input.query.trim()
+  if (!isBrowse && input.query.trim().length < 3) {
+    return {
+      groups: input.kinds.map((kind) => group(kind, [])),
+      query: input.query,
+    }
+  }
   const client = createCrucibleClient(configuration)
   const signal = crucibleRequestSignal(requestSignal)
   const requests = input.kinds.map(async (kind) => {
-    if (kind === "person") {
-      const result = await client.GET("/users/search", {
-        params: {
-          query: {
-            is_service_account: input.serviceAccountsOnly || undefined,
-            limit: input.limit,
-            q: input.query,
-          },
-        },
-        signal,
-      })
-      if (!result.data) throw new Error("people search failed")
-      return group(kind, result.data.map(personResult))
-    }
-    if (kind === "project") {
-      const result = await client.GET("/projects/search", {
-        params: { query: { limit: input.limit, q: input.query } },
-        signal,
-      })
-      if (!result.data) throw new Error("project search failed")
-      return group(
-        kind,
-        result.data.items.map(projectResult),
-        result.data.total ?? null
-      )
-    }
-    if (kind === "instrument") {
-      const result = await client.GET("/instruments/search", {
-        params: {
-          query: { include_owner: false, limit: input.limit, q: input.query },
-        },
-        signal,
-      })
-      if (!result.data) throw new Error("instrument search failed")
-      return group(
-        kind,
-        result.data.items.map(instrumentResult),
-        result.data.total ?? null
-      )
-    }
-    if (kind === "sample") {
-      const result = await client.GET("/samples/search", {
-        params: {
-          query: {
-            limit: input.limit,
-            project_mfid: input.projectMfid,
-            project_scope: input.projectMfid ? "all" : undefined,
-            q: input.query,
-          },
-        },
-        signal,
-      })
-      if (!result.data) throw new Error("sample search failed")
-      return group(
-        kind,
-        result.data.items.map(sampleResult),
-        result.data.total ?? null
-      )
-    }
-    const result = await client.GET("/datasets/search", {
-      params: {
-        query: {
-          limit: input.limit,
-          project_mfid: input.projectMfid,
-          project_scope: input.projectMfid ? "all" : undefined,
-          q: input.query,
-        },
-      },
-      signal,
-    })
-    if (!result.data) throw new Error("dataset search failed")
-    return group(
-      kind,
-      result.data.items.map(datasetResult),
-      result.data.total ?? null
-    )
+    const spec = kindSearches[kind]
+    const outcome = isBrowse
+      ? await spec.browse(client, input, signal)
+      : await spec.search(client, input, signal)
+    return group(kind, outcome.items, outcome.total)
   })
   const settled = await Promise.allSettled(requests)
   return {

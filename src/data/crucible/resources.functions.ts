@@ -6,6 +6,7 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import {
   createWorkspaceFileDownload,
+  deleteWorkspaceResource,
   mutateWorkspaceDatasetThumbnails,
   mutateWorkspaceRelationship,
   requestWorkspaceFileIngestion,
@@ -413,6 +414,15 @@ export const resourceDeletionRequestInputSchema = z
   })
   .strict()
 
+const resourceDeletionInputSchema = z
+  .object({
+    confirm: z.boolean(),
+    privilegeMode: privilegeModeSchema,
+    resourceMfid: canonicalResourceMfidSchema,
+    scenario: fixtureScenarioSchema.optional(),
+  })
+  .strict()
+
 const ownershipTransferInputSchema = z
   .object({
     newOwner: z.string().trim().min(1).max(255),
@@ -716,6 +726,42 @@ export const createWorkspaceResourceDeletionRequest = createServerFn({
       requestWorkspaceResourceDeletion(
         data.resourceMfid,
         data.reason,
+        data.scenario,
+        context.requestSignal,
+        data.privilegeMode
+      )
+    )
+  })
+
+export const previewWorkspaceResourceDeletion = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(resourceDeletionInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      deleteWorkspaceResource(
+        data.resourceMfid,
+        false,
+        data.scenario,
+        context.requestSignal,
+        data.privilegeMode
+      )
+    )
+  })
+
+export const confirmWorkspaceResourceDeletion = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(resourceDeletionInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      deleteWorkspaceResource(
+        data.resourceMfid,
+        true,
         data.scenario,
         context.requestSignal,
         data.privilegeMode

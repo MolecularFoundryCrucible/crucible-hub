@@ -1,12 +1,18 @@
-import { useEffect, useId, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import {
   ProjectRoleBadge,
   sortProjectMembers,
 } from "@/components/crucible/project-members"
+import { accessRoleLabel } from "@/components/crucible/access-role-badge"
+import { AccessGrantRow } from "@/components/crucible/access-grant-row"
+import { useAccessListManagement } from "@/components/crucible/access-list-management"
 import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
+import type { AddMembersPrincipalKind } from "@/components/crucible/add-members-dialog"
+import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
+import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import {
@@ -15,7 +21,6 @@ import {
   SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -24,25 +29,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import {
   addWorkspaceProjectMember,
   removeWorkspaceProjectMember,
@@ -54,10 +41,8 @@ import { crucibleKeys } from "@/data/crucible/query-keys"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type { components } from "@/generated/crucible-api"
-import type {
-  WorkspaceProject,
-  WorkspaceSearchResult,
-} from "@/data/crucible/workspace-source"
+import { resourceDisplayName } from "@/lib/resource-name"
+import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
 type GrantRole = "viewer" | "contributor" | "editor" | "admin"
@@ -66,7 +51,7 @@ const grantRoles = ["viewer", "contributor", "editor", "admin"] as const
 
 export type MembershipProject = WorkspaceProject & {
   capabilities: components["schemas"]["ResourceCapabilities"] | null
-  members: readonly ProjectMember[] | null
+  members: ProjectMember[] | null
 }
 
 export function ProjectMembershipCard({
@@ -81,27 +66,25 @@ export function ProjectMembershipCard({
   scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
-  const searchInputId = useId()
-  const roleInputId = useId()
   const [members, setMembers] = useState(project.members)
-  const [editingRoles, setEditingRoles] = useState(false)
-  const [addOpen, setAddOpen] = useState(false)
-  const [personQuery, setPersonQuery] = useState("")
-  const [selectedPerson, setSelectedPerson] = useState<WorkspaceSearchResult>()
-  const [selectedRole, setSelectedRole] = useState<GrantRole>("viewer")
-  const [addError, setAddError] = useState<string>()
-  const [pendingMember, setPendingMember] = useState<string>()
+  const [addMemberOpen, setAddMemberOpen] = useState(false)
   const [memberErrors, setMemberErrors] = useState<Record<string, string>>({})
-  const [removingMember, setRemovingMember] = useState<ProjectMember>()
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
+  const {
+    managing,
+    setManaging,
+    savingAnything,
+    selection: selectedForRemoval,
+    isSaving,
+    stageOne,
+    startSaving,
+    stopSaving,
+    toggleSelection,
+  } = useAccessListManagement()
   const capabilities = project.capabilities
   const roles = useMemo(
     () => permittedRoles(capabilities?.max_grant_role),
     [capabilities?.max_grant_role]
-  )
-  const selectedRoles = useMemo(
-    () =>
-      permittedTargetRoles(roles, selectedPerson?.is_service_account === true),
-    [roles, selectedPerson?.is_service_account]
   )
   const canManage = Boolean(
     members !== null && capabilities?.can_manage_access && roles.length
@@ -110,30 +93,19 @@ export function ProjectMembershipCard({
     members !== null && (canManage || capabilities?.can_transfer)
   )
   const memberList = members ?? []
-  const mutationPending = pendingMember !== undefined
+  const mutationPending = savingAnything
+  const selectedMembers = sortProjectMembers(memberList).filter((member) =>
+    selectedForRemoval.has(member.unique_id)
+  )
+  const removableSelection: readonly RemovableMember[] = selectedMembers.map(
+    (member) => ({ id: member.unique_id, label: memberName(member) })
+  )
 
   useEffect(() => {
     setMembers(project.members)
   }, [project.members])
 
-  useEffect(() => {
-    if (!selectedRoles.includes(selectedRole)) {
-      setSelectedRole(selectedRoles[0] ?? "viewer")
-    }
-  }, [selectedRole, selectedRoles])
-
-  function closeAddDialog(nextOpen: boolean) {
-    if (!nextOpen && mutationPending) return
-    setAddOpen(nextOpen)
-    if (!nextOpen) {
-      setAddError(undefined)
-      setPersonQuery("")
-      setSelectedPerson(undefined)
-      setSelectedRole(roles[0] ?? "viewer")
-    }
-  }
-
-  function replaceMembers(nextMembers: readonly ProjectMember[]) {
+  function replaceMembers(nextMembers: ProjectMember[]) {
     setMembers(nextMembers)
     const detailQuery = projectQueryOptions(scope, project.unique_id)
     queryClient.setQueryData<WorkspaceProject>(
@@ -157,33 +129,28 @@ export function ProjectMembershipCard({
     }
   }
 
-  async function addMember(userId: string) {
-    setPendingMember(userId)
-    setAddError(undefined)
-    try {
-      replaceMembers(
-        unwrapHubResult(
-          await addWorkspaceProjectMember({
-            data: {
-              projectMfid: project.unique_id,
-              role: selectedRole,
-              scenario: fixtureScenarioFromScope(scope),
-              userId,
-            },
-          })
-        )
+  async function addStagedMember(
+    _kind: AddMembersPrincipalKind,
+    userId: string,
+    role: GrantRole
+  ) {
+    replaceMembers(
+      unwrapHubResult(
+        await addWorkspaceProjectMember({
+          data: {
+            projectMfid: project.unique_id,
+            role,
+            scenario: fixtureScenarioFromScope(scope),
+            userId,
+          },
+        })
       )
-      closeAddDialog(false)
-    } catch (error) {
-      setAddError(membershipErrorMessage(error, "add this member"))
-    } finally {
-      setPendingMember(undefined)
-    }
+    )
   }
 
   async function changeRole(member: ProjectMember, role: GrantRole) {
     if (role === member.role) return
-    setPendingMember(member.unique_id)
+    startSaving(member.unique_id)
     setMemberErrors((current) => withoutMemberError(current, member.unique_id))
     try {
       replaceMembers(
@@ -204,35 +171,24 @@ export function ProjectMembershipCard({
         [member.unique_id]: membershipErrorMessage(error, "change this role"),
       }))
     } finally {
-      setPendingMember(undefined)
+      stopSaving()
     }
   }
 
-  async function removeMember(member: ProjectMember) {
-    setPendingMember(member.unique_id)
-    setMemberErrors((current) => withoutMemberError(current, member.unique_id))
-    try {
-      replaceMembers(
-        unwrapHubResult(
-          await removeWorkspaceProjectMember({
-            data: {
-              projectMfid: project.unique_id,
-              scenario: fixtureScenarioFromScope(scope),
-              userId: member.unique_id,
-            },
-          })
-        )
+  async function commitMemberRemoval(userId: string) {
+    replaceMembers(
+      unwrapHubResult(
+        await removeWorkspaceProjectMember({
+          data: {
+            projectMfid: project.unique_id,
+            scenario: fixtureScenarioFromScope(scope),
+            userId,
+          },
+        })
       )
-      return true
-    } catch (error) {
-      setMemberErrors((current) => ({
-        ...current,
-        [member.unique_id]: membershipErrorMessage(error, "remove this member"),
-      }))
-      return false
-    } finally {
-      setPendingMember(undefined)
-    }
+    )
+    toggleSelection(userId, false)
+    setMemberErrors((current) => withoutMemberError(current, userId))
   }
 
   return (
@@ -242,24 +198,25 @@ export function ProjectMembershipCard({
         {canManageMembers ? (
           <CardAction>
             <AccessManagementToggle
-              active={editingRoles}
+              active={managing}
               disabled={mutationPending}
-              onChange={setEditingRoles}
+              onChange={setManaging}
               subject="members"
             />
           </CardAction>
         ) : null}
       </CardHeader>
       <CardContent>
-        <h3 className="mb-3 font-heading text-label">Direct members</h3>
-        {editingRoles && canManage ? (
-          <p
-            className="mb-3 text-supporting text-muted-foreground"
-            role="status"
-          >
+        <h3 className="font-heading text-label">Direct members</h3>
+        {managing && canManage ? (
+          <p className="mb-3 text-body text-muted-foreground" role="status">
             Role changes save automatically.
           </p>
-        ) : null}
+        ) : (
+          <p className="mb-3 text-body text-muted-foreground">
+            Direct members of this project.
+          </p>
+        )}
         {members === null ? (
           <div className="flex items-center gap-2 text-body text-muted-foreground">
             <ResourceTypeIcon type="person" />
@@ -278,190 +235,151 @@ export function ProjectMembershipCard({
               )
               const canChangeRole =
                 canManage &&
-                editingRoles &&
+                managing &&
                 member.role !== "owner" &&
                 isGrantRole(member.role) &&
                 memberRoles.includes(member.role)
               const canRemove =
-                editingRoles &&
+                managing &&
                 Boolean(capabilities?.can_transfer) &&
                 member.role !== "owner" &&
                 member.unique_id !== accountId
-              const pending = pendingMember === member.unique_id
+              const removeBlockedReason =
+                member.role === "owner"
+                  ? "The manager cannot be removed here"
+                  : member.unique_id === accountId
+                    ? "You cannot remove your own membership here"
+                    : "This member cannot be removed here"
               return (
-                <li className="flex flex-col gap-1" key={member.unique_id}>
-                  <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
-                    <MemberIdentity member={member} />
-                    <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
-                      {canChangeRole ? (
-                        <NativeSelect
-                          aria-label={`Role for ${memberName(member)}`}
-                          className="w-full sm:w-fit"
-                          disabled={mutationPending}
-                          onChange={(event) => {
-                            if (isGrantRole(event.target.value)) {
-                              void changeRole(member, event.target.value)
-                            }
-                          }}
-                          size="sm"
-                          value={member.role}
-                        >
-                          {memberRoles.map((role) => (
-                            <NativeSelectOption key={role} value={role}>
-                              {roleLabel(role)}
-                            </NativeSelectOption>
-                          ))}
-                        </NativeSelect>
-                      ) : (
-                        <ProjectRoleBadge role={member.role} />
-                      )}
-                      {pending ? (
-                        <SavingChangesIcon
-                          aria-label={`Saving ${memberName(member)}'s membership`}
-                          className="motion-safe:animate-spin"
-                        />
-                      ) : null}
-                      {canRemove ? (
-                        <Tooltip>
-                          <TooltipTrigger
-                            render={
-                              <Button
-                                aria-label={`Remove ${memberName(member)}`}
-                                disabled={mutationPending}
-                                onClick={() => setRemovingMember(member)}
-                                size="icon-sm"
-                                type="button"
-                                variant="destructive"
-                              />
-                            }
-                          >
-                            <RemoveMemberIcon aria-hidden="true" />
-                          </TooltipTrigger>
-                          <TooltipContent>Remove member</TooltipContent>
-                        </Tooltip>
-                      ) : null}
-                    </div>
-                  </div>
-                  {memberErrors[member.unique_id] ? (
-                    <p className="text-body text-destructive" role="alert">
-                      {memberErrors[member.unique_id]}
-                    </p>
-                  ) : null}
-                </li>
+                <AccessGrantRow
+                  error={memberErrors[member.unique_id]}
+                  identity={<MemberIdentity member={member} />}
+                  key={member.unique_id}
+                  lockedReason={removeBlockedReason}
+                  managing={managing}
+                  mutationPending={mutationPending}
+                  onRevoke={() => {
+                    stageOne(member.unique_id)
+                    setRemoveDialogOpen(true)
+                  }}
+                  pending={isSaving(member.unique_id)}
+                  pendingAriaLabel={`Saving ${memberName(member)}'s membership`}
+                  PendingIcon={SavingChangesIcon}
+                  revocable={canRemove}
+                  revokeAriaLabel={`Remove ${memberName(member)}`}
+                  revokeTooltipLabel="Remove member"
+                  roleBadge={<ProjectRoleBadge role={member.role} />}
+                  roleEditor={
+                    canChangeRole ? (
+                      <NativeSelect
+                        aria-label={`Role for ${memberName(member)}`}
+                        className="w-full sm:w-fit"
+                        disabled={mutationPending}
+                        onChange={(event) => {
+                          if (isGrantRole(event.target.value)) {
+                            void changeRole(member, event.target.value)
+                          }
+                        }}
+                        size="sm"
+                        value={member.role}
+                      >
+                        {memberRoles.map((role) => (
+                          <NativeSelectOption key={role} value={role}>
+                            {accessRoleLabel(role)}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                    ) : undefined
+                  }
+                  selectable={canRemove}
+                  selected={selectedForRemoval.has(member.unique_id)}
+                  selectionLabel={`Select ${memberName(member)} for removal`}
+                  onSelectionChange={(checked) =>
+                    toggleSelection(member.unique_id, checked)
+                  }
+                />
               )
             })}
           </ul>
         )}
-        {canManage ? (
-          <div className="mt-4 flex justify-end">
-            <Button
-              data-project-membership-add=""
-              disabled={mutationPending}
-              className="max-sm:w-full"
-              onClick={() => setAddOpen(true)}
-              type="button"
-            >
-              <AddMemberIcon data-icon="inline-start" />
-              Add member
-            </Button>
+        {canManage || removableSelection.length > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+            {removableSelection.length > 0 ? (
+              <Button
+                disabled={mutationPending}
+                onClick={() => setRemoveDialogOpen(true)}
+                type="button"
+                variant="destructive"
+              >
+                <RemoveMemberIcon data-icon="inline-start" />
+                {removableSelection.length > 1
+                  ? `Remove ${removableSelection.length} members`
+                  : "Remove member"}
+              </Button>
+            ) : null}
+            {canManage ? (
+              <Button
+                disabled={mutationPending}
+                className="max-sm:w-full"
+                onClick={() => setAddMemberOpen(true)}
+                type="button"
+              >
+                <AddMemberIcon data-icon="inline-start" />
+                Add member
+              </Button>
+            ) : null}
           </div>
         ) : null}
       </CardContent>
-      <Dialog onOpenChange={closeAddDialog} open={addOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add member</DialogTitle>
-          </DialogHeader>
-          <FieldGroup>
-            <ResourceSearchCombobox
-              disabled={mutationPending}
-              excludedIds={memberList.map((member) => member.unique_id)}
-              id={searchInputId}
-              kind="person"
-              onQueryChange={setPersonQuery}
-              onValueChange={(person) => {
-                setSelectedPerson(person)
-                setAddError(undefined)
-              }}
-              query={personQuery}
-              scope={scope}
-              value={selectedPerson}
-            />
-            <Field>
-              <FieldLabel htmlFor={roleInputId}>Project role</FieldLabel>
-              <NativeSelect
-                id={roleInputId}
-                onChange={(event) => {
-                  if (isGrantRole(event.target.value)) {
-                    setSelectedRole(event.target.value)
-                  }
-                }}
-                value={selectedRole}
-              >
-                {selectedRoles.map((role) => (
-                  <NativeSelectOption key={role} value={role}>
-                    {roleLabel(role)}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </Field>
-          </FieldGroup>
-          {addError ? <FieldError role="alert">{addError}</FieldError> : null}
-          <DialogFooter>
-            <Button
-              disabled={mutationPending}
-              onClick={() => closeAddDialog(false)}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={!selectedPerson || mutationPending}
-              onClick={() => {
-                if (selectedPerson) void addMember(selectedPerson.unique_id)
-              }}
-              type="button"
-            >
-              {mutationPending ? (
-                <SavingChangesIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
-              Add member
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <ConfirmationAlertDialog
-        confirmLabel="Remove member"
+      <AddMembersDialog
+        disabled={mutationPending}
+        existingIds={() => memberList.map((member) => member.unique_id)}
+        onAdd={addStagedMember}
+        onOpenChange={setAddMemberOpen}
+        open={addMemberOpen}
+        principalKinds={["users"]}
+        resourceName={resourceDisplayName("project", project.title, {
+          identifier: project.project_id,
+          mfid: project.unique_id,
+        })}
+        roleLabel="Project role"
+        roles={roles}
+        rolesForPrincipal={(member) =>
+          permittedTargetRoles(roles, member.is_service_account === true)
+        }
+        scope={scope}
+        title="Add member"
+      />
+      <RemoveMembersDialog
+        confirmLabel={(count) =>
+          count > 1 ? `Remove ${count} members` : "Remove member"
+        }
         description={
-          removingMember
-            ? `${memberName(removingMember)} will no longer have access to this project.`
-            : null
+          removableSelection.length > 1 ? (
+            <>
+              These {removableSelection.length} members will no longer have
+              access to this project.
+            </>
+          ) : removableSelection[0] ? (
+            <>
+              {removableSelection[0].label} will no longer have access to this
+              project.
+            </>
+          ) : null
         }
-        error={
-          removingMember ? memberErrors[removingMember.unique_id] : undefined
+        disabled={mutationPending}
+        errorLabel={(count) =>
+          count === 1
+            ? "1 member could not be removed. Try again."
+            : `${count} members could not be removed. Try again.`
         }
-        onOpenChange={(open) => {
-          if (!open && pendingMember === removingMember?.unique_id) return
-          if (!open) setRemovingMember(undefined)
-        }}
-        onConfirm={() => {
-          if (!removingMember) return
-          const member = removingMember
-          void removeMember(member).then((success) => {
-            if (success) setRemovingMember(undefined)
-          })
-        }}
-        open={Boolean(removingMember)}
-        pending={Boolean(
-          removingMember && pendingMember === removingMember.unique_id
-        )}
-        title="Remove member?"
-        variant="destructive"
+        members={removableSelection}
+        onOpenChange={setRemoveDialogOpen}
+        onRemove={commitMemberRemoval}
+        open={removeDialogOpen}
+        title={
+          removableSelection.length > 1 ? "Remove members?" : "Remove member?"
+        }
       />
     </Card>
   )
@@ -487,10 +405,6 @@ function permittedTargetRoles(
 
 function isGrantRole(role: string): role is GrantRole {
   return grantRoles.some((candidate) => candidate === role)
-}
-
-function roleLabel(role: GrantRole) {
-  return `${role.at(0)?.toUpperCase() ?? ""}${role.slice(1)}`
 }
 
 function memberName(member: ProjectMember) {

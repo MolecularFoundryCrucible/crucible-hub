@@ -7,6 +7,10 @@ export type IdentityScope = readonly [
   privilegeMode: WorkspacePrivilegeMode,
 ]
 
+export function privilegeModeFromScope(scope: IdentityScope) {
+  return scope[3]
+}
+
 export type ListFilters = Readonly<
   Record<
     string,
@@ -86,16 +90,17 @@ export const crucibleKeys = {
     [...scope, "admin", "users"] as const,
   userAdminLists: (scope: IdentityScope) =>
     [...scope, "admin", "users", "list"] as const,
-  userAdminList: (scope: IdentityScope, filters: ListFilters) =>
-    [...scope, "admin", "users", "list", normalizeFilters(filters)] as const,
+  userAdminCursorChain: (scope: IdentityScope, filters: ListFilters) =>
+    [
+      ...scope,
+      "admin",
+      "users",
+      "list",
+      "cursor-chain",
+      normalizeFilters(filters),
+    ] as const,
   userAdminDetail: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "detail", userId] as const,
-  userAdminApiKeyStatus: (scope: IdentityScope, userId: string) =>
-    [...scope, "admin", "users", "detail", userId, "apikey"] as const,
-  userAdminAccessGroups: (scope: IdentityScope, userId: string) =>
-    [...scope, "admin", "users", "detail", userId, "access-groups"] as const,
-  userAdminProjects: (scope: IdentityScope, userId: string) =>
-    [...scope, "admin", "users", "detail", userId, "projects"] as const,
   deletionRequestQueries: (scope: IdentityScope) =>
     [...scope, "deletion-requests"] as const,
   deletionRequests: (scope: IdentityScope, filters: ListFilters) =>

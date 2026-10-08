@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+
 import { Button } from "@/components/ui/button"
 import {
   ResourceList,
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/card"
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
@@ -93,6 +96,11 @@ const pendingColumns: Record<
       className: "resource-directory-person",
       columnClassName: "resource-directory-person-column",
       label: "Lead",
+    },
+    {
+      className: "hidden xl:table-cell",
+      columnClassName: "resource-directory-role-column hidden xl:table-column",
+      label: "Role",
     },
     {
       className: "resource-directory-date hidden xl:table-cell",
@@ -393,12 +401,16 @@ export function CollectionUpdateError({
 }
 
 export function PanelState({
+  action,
+  children,
   description,
   retry,
   retryLabel = "Try again",
   role,
   title,
 }: {
+  action?: ReactNode
+  children?: ReactNode
   description?: string
   retry?: () => void
   retryLabel?: string
@@ -418,6 +430,8 @@ export function PanelState({
           {retryLabel}
         </Button>
       ) : null}
+      {action ? <EmptyContent>{action}</EmptyContent> : null}
+      {children}
     </Empty>
   )
 }

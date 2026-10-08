@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 
 import {
   ResourceManagementPending,
@@ -18,6 +18,7 @@ import {
 import { InstrumentLifecycleCard } from "@/features/instrument-lifecycle/instrument-lifecycle-card"
 import { InstrumentOperatorsCard } from "@/features/instrument-operators/instrument-operators-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
+import { ResourceForcedDeletionCard } from "@/features/resource-deletion/resource-forced-deletion"
 
 export const Route = createFileRoute(
   "/_app/instruments/$instrumentMfid/settings/"
@@ -40,6 +41,9 @@ function InstrumentManagePage() {
   const { instrumentMfid } = Route.useParams()
   const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
+  const navigate = useNavigate({
+    from: "/instruments/$instrumentMfid/settings/",
+  })
   const { data: resource } = useSuspenseQuery(
     resourceQueryOptions(scope, instrumentMfid)
   )
@@ -49,7 +53,8 @@ function InstrumentManagePage() {
   const canChangeStatus = resource.capabilities?.can_change_status === true
   const canManageAccess = resource.capabilities?.can_manage_access === true
   const canTransfer = resource.capabilities?.can_transfer === true
-  const hasResourceManagement = canChangeStatus || canTransfer
+  const canDelete = resource.capabilities?.can_delete === true
+  const hasResourceManagement = canChangeStatus || canTransfer || canDelete
 
   if (!canManageAccess && !hasResourceManagement) {
     return <ManagementUnavailable />
@@ -80,6 +85,20 @@ function InstrumentManagePage() {
               {canTransfer ? (
                 <OwnershipTransferCard
                   mode={mode}
+                  presentation="row"
+                  resource={resource}
+                  scope={scope}
+                />
+              ) : null}
+              {canDelete ? (
+                <ResourceForcedDeletionCard
+                  onSuccess={() =>
+                    void navigate({
+                      replace: true,
+                      search: { cursor: undefined },
+                      to: "/instruments",
+                    })
+                  }
                   presentation="row"
                   resource={resource}
                   scope={scope}

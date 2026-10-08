@@ -6,6 +6,42 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Pinned the Crucible API contract to staging revision `1dd6077` (pull requests 300 and 301): enabled server-side sorting by ID, name/title, created, and updated on project and instrument listings, added member reference and role filtering to projects, returned caller roles directly on project and instrument items, displayed caller roles on instrument overviews, and updated the home dashboard and project directory to use direct role-bearing queries.
+
+- Updated the project overview page to display the authenticated user's role on the same line to the right of the project lead, and balanced the secondary grid row with project members on the left sharing the layout with scientific metadata on the right.
+
+- Streamlined the user detail page by removing the redundant account type field, balancing identity metadata across a two-by-two grid with Crucible ID / ORCID alongside email.
+
+- Reinforced the Home dashboard: updated Your projects to display up to seven projects the authenticated user belongs to with role badges, updated Your instruments to display up to seven active managed instruments, added capability-gated creation buttons to empty project and instrument states, and added an All versus Mine segmented control toggle to Recently added data.
+
+- Reorganized left sidebar navigation: separated Home from core entities with a visual divider, ordered primary entity navigation to Data, Projects, and Instruments, added nested sub-navigation for Samples and Datasets under Data with resource-specific colors and hover creation shortcuts, aligned sub-item hover highlight bounds to the sidebar edge, added hover creation shortcuts for new projects and instrument registration, and added a pending review count badge to Deletion requests.
+
+- Renamed the canonical user profile route from /people/$personId to /users/$userId, aligning user detail navigation with the API user contract and the admin users directory, and updated global search, member listings, and directory links accordingly.
+
+- Added visible required asterisks to FieldLabel for mandatory fields across resource creation forms, resource edit forms, profile settings, and administrative dialogs, with aria-hidden indicators to preserve accessible name calculations and automatic suppression of redundant optional tags.
+
+- Reinforced form field validation timing across resource creation forms and administrative dialogs: pristine untouched fields remain neutral upon initial load and autofocus blur, clearing required values or submitting displays validation errors immediately, and valid corrections clear error states without premature flashes while typing.
+
+- Standardized resource picker controls with input styling, resource type icons, unique IDs, and an inline clear trigger across creation forms, enabled browse mode in the search combobox to discover available resources without a minimum query length, ensured browse suggestions display immediately on open and after clearing selections, and removed redundant field descriptions from instrument, project, sample, and dataset creation.
+
+- Aligned user detail administration to the two-column split layout used by service accounts, pairing a prominent Identity card on the left with the API credential card on the right, matching route loading skeletons, and removing the incomplete access groups section.
+
+- Displayed caller and member project roles with ProjectRoleBadge across user project listings, the global projects directory, and the project overview identity card, resolving non-lead memberships against the user's projects query, narrowing the role column to maximize title space, and enabling interactive column sorting across Project, Lead, Role, Created, and Updated headers.
+
+- Unified directory navigation and active filter controls across instruments, search, and admin user screens using SegmentedControl and RemovablePill components, resolved design token violations in removal checkboxes and the application footer, deduplicated read-only people profile markup with semantic ContentBoundary containers, and code-split the resource graph canvas and its layout engine dependencies behind a Suspense boundary.
+
+- Added staged multi-member addition to the shared direct-access dialog on instrument settings, project membership, and resource manage pages: searching and selecting stages people or projects with per-member roles in a removable list, and one confirmation commits them through sequential grant or membership operations that preserve confirmed successes and retain failed members for retry. The instrument member search excludes service accounts, which are assigned as instrument operators instead, while contextual project membership caps staged service-account roles at Viewer and Contributor. Non-removable project members and unrevocable dataset and sample grants show a locked indicator with the reason in managing mode.
+
+- Added capability-gated permanent deletion for empty projects and instruments on their manage pages: the interface reviews what the deletion removes (unlinked members, removed join requests, unbound operators, and grants held by the deleted group on other resources) before typing DELETE and an explicit confirmation executes it, surfaces blocking assignments locally, and states that stored files are not deleted.
+
+- Added selection-based batch removal in managing mode on the instrument access, project membership, and resource manage pages: removable rows gain checkboxes, one confirmation commits selected removals through sequential operations that preserve confirmed successes and retain failed members for retry, and the per-row remove control opens the same dialog pre-staged with that member.
+
+- Added platform-role editing and API-key revocation to the user detail page: eligible administrators change a user's platform role to None, Contributor, or Admin through a preview-then-confirm dialog with the propagation note, and revoke a valid API key through a destructive confirmation. Project listings on the user detail page now show the user's standing role in each project's access group.
+
+- Moved the users directory to the server's search query with keyset cursor pagination, requested totals, and API-owned sorting, mapping the alphabetical account default to name order, dropping the separate search endpoint and offset pagination, and keeping the Platform role column readable without sorting.
+
+- Pinned the Crucible API contract to staging revision `336aa26` (pull requests 297-299): user project listings now return full project details with per-user roles for the person themselves and platform administrators, `ResourceCapabilities` gained `can_delete`, forced deletion of empty projects and instruments is available through a preview-then-confirm endpoint, and user records gained platform roles, API key status, and caller-relative capabilities. The contract also deprecates the separate user search endpoint in favor of query parameters on `GET /users`.
+
 - Added sortable Account, Crucible ID, and Platform role headers to the service-accounts directory, defaulting to alphabetical account order, with the sort state in the URL.
 
 - Fired users and service-account directory searches as typing pauses with the shared 250 ms debounce and three-character minimum, committed immediately on Enter, replaced the search and clear buttons with an in-field clear action, and reset the directory to the full list below the minimum instead of showing an error.
@@ -46,7 +82,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Replaced the static Crucible logo with theme-aware light and dark Crucible icons across the workspace shell and authentication views without corner clipping.
 
-- Replaced the static API health link in the application footer with an interactive status popover providing on-demand readiness probe diagnostics, Hub health links, close controls, and WCAG-compliant footer touch targets.
+- Replaced the static API health link in the application footer with an interactive status popover providing on-demand readiness probe diagnostics, the configured Crucible API URL, Hub health links, close controls, and WCAG-compliant footer touch targets.
 
 - Truncated long resource and person names with ellipses in collection and directory tables to prevent column overflow.
 
@@ -92,7 +128,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Added a local API-owned ORCID sign-in flow with a dedicated sign-in page, return-to navigation, state and PKCE validation, opaque server-side sessions, bearer-token refresh and revocation, and an updated pinned OpenAPI client; production sign-in remains gated on shared session storage.
 
-- Standardized missing resource names across Home, collections, search, previews, graphs, sibling navigation, and resource pages: samples and datasets use Untitled labels, while projects and instruments fall back to their IDs and then MFIDs. Stored names remain unchanged for editing.
+- Standardized missing resource names across Home, collections, search, previews, graphs, sibling navigation, and resource pages: samples and datasets use Untitled labels, while projects and instruments fall back to their IDs and then MFIDs, and people in search results fall back to their username and then MFID. Stored names remain unchanged for editing.
 
 - Added a Data toolbar Refresh action that reloads the active group directory and selected resource list without clearing filters or readable rows.
 

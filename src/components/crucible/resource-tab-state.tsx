@@ -152,11 +152,11 @@ function ProjectOverviewPending() {
       <ContentGridItem span="narrow">
         <ResourceCardPending title="Identity" />
       </ContentGridItem>
-      <ContentGridItem span="full">
-        <ResourceCardPending title="Scientific metadata" />
-      </ContentGridItem>
-      <ContentGridItem span="full">
+      <ContentGridItem span="wide">
         <ResourceCardPending title="People" />
+      </ContentGridItem>
+      <ContentGridItem span="narrow">
+        <ResourceCardPending title="Scientific metadata" />
       </ContentGridItem>
     </ContentGrid>
   )

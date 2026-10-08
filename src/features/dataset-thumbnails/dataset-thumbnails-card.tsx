@@ -9,7 +9,7 @@ import {
 } from "@/components/crucible/icons"
 import { PanelState } from "@/components/crucible/collection-state"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -392,7 +392,8 @@ function ThumbnailEditor({
         </p>
       ) : null}
 
-      <ConfirmationAlertDialog
+      <ConfirmationDialog
+        kind="alert"
         confirmLabel="Delete thumbnail"
         description={
           <>

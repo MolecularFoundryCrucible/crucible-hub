@@ -25,6 +25,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import type { FormFieldLike } from "./field-state"
+import { fieldErrors, shouldShowFieldError } from "./field-state"
 
 export type SlugAvailabilityStatus =
   "checking" | "no-exact-match" | "taken" | "error"
@@ -227,13 +229,15 @@ export function SlugAvailabilityField({
   descriptionId?: string
   entityLabel?: string
   errorId?: string
-  field: {
+  field: FormFieldLike & {
     handleBlur: () => void
     handleChange: (value: string) => void
     name: string
     state: {
       meta: {
-        errors: Array<{ message?: string } | undefined>
+        errors?: Array<{ message?: string } | undefined>
+        isBlurred?: boolean
+        isDirty?: boolean
         isTouched?: boolean
         isValid: boolean
       }
@@ -267,17 +271,14 @@ export function SlugAvailabilityField({
   const descriptionId = explicitDescriptionId ?? `${fieldId}-description`
   const errorId = explicitErrorId ?? `${fieldId}-error`
   const hasDescription = Boolean(description)
+  const hasFormatError = Boolean(field.state.value && !field.state.meta.isValid)
   const isInvalid = Boolean(
-    invalid ||
-    isTaken ||
-    (field.state.meta.isTouched
-      ? !field.state.meta.isValid
-      : field.state.value.length > 0 && !field.state.meta.isValid)
+    invalid || isTaken || hasFormatError || shouldShowFieldError(field)
   )
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldLabel htmlFor={fieldId} optional={!required}>
+      <FieldLabel htmlFor={fieldId} optional={!required} required={required}>
         {label}
       </FieldLabel>
       <InputGroup>
@@ -304,7 +305,15 @@ export function SlugAvailabilityField({
       {description ? (
         <FieldDescription id={descriptionId}>{description}</FieldDescription>
       ) : null}
-      <FieldError errors={field.state.meta.errors} id={errorId} />
+      <FieldError
+        errors={fieldErrors(field, {
+          extraErrors: isTaken
+            ? [{ message: `${entityLabel ?? label} already taken.` }]
+            : undefined,
+          invalid: isInvalid,
+        })}
+        id={errorId}
+      />
     </Field>
   )
 }

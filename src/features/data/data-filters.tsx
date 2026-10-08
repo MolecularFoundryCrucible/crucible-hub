@@ -16,7 +16,13 @@ import {
   DatasetFacetFilter,
   SampleFacetFilter,
 } from "@/components/crucible/collection-facet-filter"
-import type { FacetSelection } from "@/components/crucible/collection-facet-filter"
+import {
+  capitalize,
+  facetSelection,
+  facetSummary,
+  setFacetDraft,
+  sortLabel,
+} from "@/data/crucible/filter-draft"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -641,57 +647,6 @@ function filterDraft(values: DataSearch): DataFilterSearch {
   }
 }
 
-function facetSummary(
-  label: string,
-  value: string | undefined,
-  isNull: true | undefined
-) {
-  if (isNull) return `${label}: Unspecified`
-  if (value === undefined) return undefined
-  return `${label}: ${value || "Empty value"}`
-}
-
-function facetSelection(
-  value: string | undefined,
-  selected: true | undefined,
-  isNull: true | undefined
-): FacetSelection {
-  if (isNull) return { kind: "null" }
-  return selected ? { kind: "value", value: value ?? "" } : { kind: "all" }
-}
-
-function setFacetDraft(
-  filters: DataFilterSearch,
-  valueKey:
-    "dataFormat" | "measurement" | "ownerId" | "sampleType" | "sessionName",
-  selectedKey:
-    | "dataFormatSet"
-    | "measurementSet"
-    | "ownerIdSet"
-    | "sampleTypeSet"
-    | "sessionNameSet",
-  nullKey:
-    | "dataFormatIsNull"
-    | "measurementIsNull"
-    | "ownerIdIsNull"
-    | "sampleTypeIsNull"
-    | "sessionNameIsNull",
-  selection: FacetSelection
-): DataFilterSearch {
-  return {
-    ...filters,
-    [nullKey]: selection.kind === "null" || undefined,
-    [selectedKey]: selection.kind === "value" || undefined,
-    [valueKey]: selection.kind === "value" ? selection.value : undefined,
-  }
-}
-
-function sortLabel(sort: string) {
-  if (sort === "created") return "Created"
-  if (sort === "updated") return "Updated"
-  return "Name"
-}
-
 function dataKind(kind: string | undefined): DataKindFilter {
   return kind === "datasets" ? "datasets" : "samples"
 }
@@ -707,8 +662,4 @@ function chooserValue(
     name: name ?? mfid,
     unique_id: mfid,
   }
-}
-
-function capitalize(value: string) {
-  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`
 }

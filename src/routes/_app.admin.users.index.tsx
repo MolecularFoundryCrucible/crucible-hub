@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import {
+  useInfiniteQuery,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
@@ -27,6 +28,7 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -49,39 +51,45 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
-import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { canOpenUserAdministration } from "@/data/crucible/administration"
 import type { SortDirection } from "@/data/crucible/collection-query"
-import { sortDirectionSchema } from "@/data/crucible/collection-query"
+import {
+  collectionCursorSchema,
+  sortDirectionSchema,
+} from "@/data/crucible/collection-query"
 import {
   crucibleKeys,
   identityScopeWithPrivilegeMode,
 } from "@/data/crucible/query-keys"
 import {
+  cursorPageTotal,
+  flattenCursorPages,
+} from "@/data/crucible/cursor-pages"
+import {
   userAdminPageLimit,
-  usersListQueryOptions,
+  usersCursorQueryOptions,
 } from "@/data/crucible/users.queries"
 import type {
   WorkspaceAccount,
   WorkspaceAdminUser,
-  WorkspaceAdminUserPage,
 } from "@/data/crucible/workspace-source"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import { UserCreateDialog } from "@/features/admin/user-create-dialog"
 import { formatUsername } from "@/lib/username"
 
-const userSortFieldSchema = z.enum([
-  "account",
-  "unique_id",
-  "email",
-  "platform_role",
-])
+const userSortFieldSchema = z.enum(["account", "unique_id", "email"])
 export type UserSortField = z.infer<typeof userSortFieldSchema>
+
+function apiUserSort(sort: UserSortField | undefined) {
+  if (sort === "account") return "name" as const
+  return sort
+}
 
 const userSearchSchema = z.object({
   create: z.boolean().optional().catch(undefined),
+  cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional().catch(undefined),
-  offset: z.coerce.number().int().min(0).optional().catch(undefined),
   q: z.string().trim().min(3).max(200).optional().catch(undefined),
   sort: userSortFieldSchema.optional().catch(undefined),
 })
@@ -90,8 +98,8 @@ export const Route = createFileRoute("/_app/admin/users/")({
   head: () => ({ meta: [{ title: "Users | Crucible Hub" }] }),
   validateSearch: userSearchSchema,
   loaderDeps: ({ search }) => ({
+    cursor: search.cursor,
     direction: search.direction,
-    offset: search.offset ?? 0,
     query: search.q,
     sort: search.sort,
   }),
@@ -106,20 +114,20 @@ export const Route = createFileRoute("/_app/admin/users/")({
       source.scope,
       "elevated"
     )
-    const options = usersListQueryOptions(administrationScope, {
+    const options = usersCursorQueryOptions(administrationScope, {
+      cursor: deps.cursor,
+      direction: deps.direction,
+      includeTotal: true,
       is_service_account: false,
       limit: userAdminPageLimit,
-      offset: deps.offset,
       query: deps.query,
+      sort: apiUserSort(deps.sort),
     })
-    const hasData =
-      context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchQuery(options)
-    if (cause === "stay" || hasData) {
-      void request
-      return
-    }
-    await request
+    const request = prefetchInfiniteQueryWithReadableCache(
+      context.queryClient,
+      options
+    )
+    if (cause !== "stay" && request) await request
   },
   pendingComponent: UsersPending,
   component: UsersAdminPage,
@@ -133,45 +141,36 @@ function UsersAdminPage() {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const offset = search.offset ?? 0
   const sort = search.sort ?? "account"
   const direction = search.direction ?? "asc"
-  const options = usersListQueryOptions(administrationScope, {
-    is_service_account: false,
-    limit: userAdminPageLimit,
-    offset,
-    query: search.q,
-  })
-  const result = useQuery({
-    ...options,
-    enabled: canOpenUserAdministration(account),
-  })
+  const result = useInfiniteQuery(
+    usersCursorQueryOptions(administrationScope, {
+      cursor: search.cursor,
+      direction,
+      includeTotal: true,
+      is_service_account: false,
+      limit: userAdminPageLimit,
+      query: search.q,
+      sort: apiUserSort(sort),
+    })
+  )
+  const users = useMemo(
+    () => flattenCursorPages(result.data?.pages),
+    [result.data]
+  )
+  const total = cursorPageTotal(result.data?.pages)
+  const updating = result.isFetching && !result.isFetchingNextPage
   const createOpen = search.create === true
 
   if (!canOpenUserAdministration(account)) {
     return <Navigate replace to="/" />
   }
 
-  function handleCreated(created: WorkspaceAdminUser) {
-    if (mode === "api") {
-      void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.userAdminQueries(administrationScope),
-      })
-      return
-    }
-    if (offset === 0 && !search.q) {
-      queryClient.setQueryData<WorkspaceAdminUserPage>(
-        options.queryKey,
-        (current) =>
-          current
-            ? {
-                ...current,
-                items: [created, ...current.items],
-                total: current.total === null ? null : current.total + 1,
-              }
-            : current
-      )
-    }
+  function handleCreated() {
+    if (mode !== "api") return
+    void queryClient.invalidateQueries({
+      queryKey: crucibleKeys.userAdminQueries(administrationScope),
+    })
   }
 
   function handleSortChange(
@@ -182,8 +181,8 @@ function UsersAdminPage() {
       replace: true,
       search: {
         ...search,
+        cursor: undefined,
         direction: nextDirection,
-        offset: undefined,
         sort: nextField,
       },
       state: {},
@@ -196,8 +195,8 @@ function UsersAdminPage() {
       replace: true,
       search: {
         create: open ? true : undefined,
+        cursor: search.cursor,
         direction: search.direction,
-        offset: search.offset,
         q: search.q,
         sort: search.sort,
       },
@@ -219,7 +218,7 @@ function UsersAdminPage() {
         />
       ) : (
         <>
-          {result.isError ? (
+          {result.isError && !result.isFetchNextPageError ? (
             <CollectionUpdateError
               label="Users"
               preserved
@@ -227,13 +226,17 @@ function UsersAdminPage() {
             />
           ) : null}
           <UserCollection
-            account={account}
             direction={direction}
+            hasNextPage={Boolean(result.hasNextPage)}
+            isLoadingMore={result.isFetchingNextPage}
+            loadMoreError={result.isFetchNextPageError}
             onSortChange={handleSortChange}
-            page={result.data}
+            onLoadMore={() => void result.fetchNextPage()}
             query={search.q}
             sort={sort}
-            updating={result.isFetching}
+            total={total}
+            updating={updating}
+            users={users}
           />
         </>
       )}
@@ -271,8 +274,8 @@ function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
             className={buttonVariants()}
             search={{
               create: true,
+              cursor: undefined,
               direction: search.direction,
-              offset: search.offset,
               q: search.q,
               sort: search.sort,
             }}
@@ -299,8 +302,8 @@ function UserSearchField() {
         void navigate({
           replace: true,
           search: {
+            cursor: undefined,
             direction: search.direction,
-            offset: undefined,
             q: query,
             sort: search.sort,
           },
@@ -315,66 +318,34 @@ function UserSearchField() {
 }
 
 function UserCollection({
-  account,
   direction = "asc",
+  hasNextPage,
+  isLoadingMore,
+  loadMoreError,
   onSortChange,
-  page,
+  onLoadMore,
   query,
   sort,
+  total,
   updating,
+  users,
 }: {
-  account: WorkspaceAccount
   direction?: SortDirection
+  hasNextPage: boolean
+  isLoadingMore: boolean
+  loadMoreError: boolean
   onSortChange: (field: UserSortField, direction: SortDirection) => void
-  page?: WorkspaceAdminUserPage
+  onLoadMore: () => void
   query?: string
   sort?: UserSortField
+  total: number | null
   updating: boolean
+  users: readonly WorkspaceAdminUser[]
 }) {
-  if (!page) return null
-  const hasPrevious = page.offset > 0
-  const hasNext =
-    page.total === null
-      ? page.items.length === page.limit
-      : page.offset + page.items.length < page.total
-
-  const filteredItems = useMemo(
-    () => page.items.filter((u) => !u.is_service_account),
-    [page.items]
-  )
-
-  const sortedItems = useMemo(() => {
-    const items = [...filteredItems]
-    if (!sort) return items
-    return items.sort((a, b) => {
-      let comparison = 0
-      if (sort === "account") {
-        comparison = personDisplayName(a).localeCompare(personDisplayName(b))
-      } else if (sort === "unique_id") {
-        comparison = a.unique_id.localeCompare(b.unique_id)
-      } else if (sort === "platform_role") {
-        const roleA =
-          a.unique_id === account.unique_id
-            ? account.authorization.platform_role
-            : (a.platform_role ?? "")
-        const roleB =
-          b.unique_id === account.unique_id
-            ? account.authorization.platform_role
-            : (b.platform_role ?? "")
-        comparison = roleA.localeCompare(roleB)
-      } else {
-        const emailA = a.email ?? ""
-        const emailB = b.email ?? ""
-        comparison = emailA.localeCompare(emailB)
-      }
-      return direction === "desc" ? -comparison : comparison
-    })
-  }, [filteredItems, sort, direction, account])
-
   return (
     <>
       <CollectionUpdateStatus label="users" updating={updating} />
-      {sortedItems.length > 0 ? (
+      {users.length > 0 ? (
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             <Table
@@ -407,25 +378,14 @@ function UserCollection({
                     onChange={onSortChange}
                     preferredDirection="asc"
                   />
-                  <SortableTableHead
-                    active={sort === "platform_role"}
-                    direction={direction}
-                    field="platform_role"
-                    label="Platform role"
-                    onChange={onSortChange}
-                    preferredDirection="asc"
-                  />
+                  <TableHead>Platform role</TableHead>
                   <TableHead className="text-center">
                     <span className="sr-only">Open</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedItems.map((user) => {
-                  const effectivePlatformRole =
-                    user.unique_id === account.unique_id
-                      ? account.authorization.platform_role
-                      : user.platform_role
+                {users.map((user) => {
                   return (
                     <TableRow key={user.unique_id}>
                       <TableCell className="identity-directory-account">
@@ -436,8 +396,8 @@ function UserCollection({
                               className="block"
                               render={
                                 <Link
-                                  params={{ personId: user.unique_id }}
-                                  to="/people/$personId"
+                                  params={{ userId: user.unique_id }}
+                                  to="/users/$userId"
                                 />
                               }
                             >
@@ -468,8 +428,8 @@ function UserCollection({
                         className="identity-directory-role"
                         data-label="Platform role"
                       >
-                        {effectivePlatformRole ? (
-                          <PlatformRoleBadge role={effectivePlatformRole} />
+                        {user.platform_role ? (
+                          <PlatformRoleBadge role={user.platform_role} />
                         ) : (
                           <span className="text-body text-muted-foreground">
                             None
@@ -483,8 +443,8 @@ function UserCollection({
                             size: "table-action",
                             variant: "ghost",
                           })}
-                          params={{ personId: user.unique_id }}
-                          to="/people/$personId"
+                          params={{ userId: user.unique_id }}
+                          to="/users/$userId"
                         >
                           <OpenFullPageIcon aria-hidden="true" />
                         </Link>
@@ -506,41 +466,18 @@ function UserCollection({
           </EmptyHeader>
         </Empty>
       )}
-      <CollectionPageNavigation
-        label="User pages"
-        previous={
-          hasPrevious ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                direction,
-                offset: Math.max(0, page.offset - page.limit) || undefined,
-                q: query,
-                sort,
-              }}
-              to="/admin/users"
-            >
-              Previous
-            </Link>
-          ) : undefined
-        }
-        next={
-          hasNext ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                direction,
-                offset: page.offset + page.limit,
-                q: query,
-                sort,
-              }}
-              to="/admin/users"
-            >
-              Next
-            </Link>
-          ) : undefined
-        }
-      />
+      {users.length ? (
+        <CollectionPagination
+          disabled={updating}
+          hasNextPage={hasNextPage}
+          isError={loadMoreError}
+          isLoading={isLoadingMore}
+          label="users"
+          loaded={users.length}
+          onLoadMore={onLoadMore}
+          total={total}
+        />
+      ) : null}
     </>
   )
 }

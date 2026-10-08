@@ -2,15 +2,20 @@ import { useEffect, useId, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
+import { AccessGrantRow } from "@/components/crucible/access-grant-row"
+import { useAccessListManagement } from "@/components/crucible/access-list-management"
 import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
 import {
   AccessRoleBadge,
   accessRoleLabel,
-  accessRoleRank,
   isAccessGrantRole,
   permittedAccessGrantRoles,
+  sortAccessGrants,
 } from "@/components/crucible/access-role-badge"
-import { ConfirmationAlertDialog } from "@/components/crucible/confirmation-dialog"
+import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
+import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
+import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
 import {
   AccessPendingIcon,
   AddMemberIcon,
@@ -33,12 +38,10 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Tooltip,
@@ -56,6 +59,11 @@ import {
 } from "@/data/crucible/instruments.functions"
 import { instrumentOperatorsQueryOptions } from "@/data/crucible/instruments.queries"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import {
+  grantKey,
+  grantName,
+  principalKindFor,
+} from "@/data/crucible/resource-access"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
@@ -70,35 +78,6 @@ type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 type GrantRole = "viewer" | "contributor" | "editor" | "admin"
 type PrincipalKind = WorkspaceResourceAccessPrincipalKind
 
-const principalChoices: readonly {
-  kind: PrincipalKind
-  label: string
-  searchKind: "person" | "project"
-}[] = [
-  { kind: "users", label: "Person", searchKind: "person" },
-  { kind: "projects", label: "Project", searchKind: "project" },
-]
-
-function principalKindFor(
-  grant: WorkspaceResourceAccessGrant
-): PrincipalKind | undefined {
-  if (grant.principal_type === "user") return "users"
-  if (grant.principal_type === "project") return "projects"
-  return undefined
-}
-
-function grantName(grant: WorkspaceResourceAccessGrant) {
-  return grant.display_name ?? grant.slug ?? grant.principal_id
-}
-
-function grantKey(grant: WorkspaceResourceAccessGrant) {
-  return `${grant.principal_type}:${grant.principal_id}`
-}
-
-function defaultGrantRole(roles: readonly GrantRole[]): GrantRole {
-  return roles.at(-1) ?? "viewer"
-}
-
 function operatorName(
   operator: Pick<
     WorkspaceInstrumentOperator,
@@ -106,17 +85,6 @@ function operatorName(
   >
 ) {
   return personDisplayName(operator)
-}
-
-function sortGrants(grants: readonly WorkspaceResourceAccessGrant[]) {
-  return [...grants].sort((left, right) => {
-    const roleDifference =
-      accessRoleRank(left.permission) - accessRoleRank(right.permission)
-    if (roleDifference !== 0) return roleDifference
-    const nameDifference = grantName(left).localeCompare(grantName(right))
-    if (nameDifference !== 0) return nameDifference
-    return left.principal_id.localeCompare(right.principal_id)
-  })
 }
 
 export function InstrumentAccessCard({
@@ -134,15 +102,23 @@ export function InstrumentAccessCard({
   const canGrant = canManage && roles.length > 0
   const scenario = fixtureScenarioFromScope(scope)
 
-  const [managing, setManaging] = useState(false)
   const [addMemberOpen, setAddMemberOpen] = useState(false)
   const [addOperatorOpen, setAddOperatorOpen] = useState(false)
-  const [pendingMemberAction, setPendingMemberAction] = useState<string>()
-  const [pendingRevoke, setPendingRevoke] =
-    useState<WorkspaceResourceAccessGrant>()
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
   const [removingOperator, setRemovingOperator] =
     useState<WorkspaceInstrumentOperator>()
   const [error, setError] = useState<string>()
+  const {
+    managing,
+    setManaging,
+    savingAnything,
+    selection: selectedForRevoke,
+    isSaving,
+    stageOne,
+    startSaving,
+    stopSaving,
+    toggleSelection,
+  } = useAccessListManagement()
 
   const grantsQuery = useQuery({
     ...resourceAccessQueryOptions(scope, instrument.unique_id),
@@ -182,7 +158,7 @@ export function InstrumentAccessCard({
 
   const operators = operatorsQuery.data ?? []
   const mutationPending =
-    pendingMemberAction !== undefined ||
+    savingAnything ||
     addOperatorMutation.isPending ||
     removeOperatorMutation.isPending
 
@@ -197,7 +173,7 @@ export function InstrumentAccessCard({
         (grant) => grant.principal_id === instrument.owner?.unique_id
       )
     ) {
-      return sortGrants([
+      return sortAccessGrants([
         {
           display_name:
             `${instrument.owner.first_name} ${instrument.owner.last_name}`.trim(),
@@ -209,8 +185,15 @@ export function InstrumentAccessCard({
         ...loaded,
       ])
     }
-    return sortGrants(loaded)
+    return sortAccessGrants(loaded)
   }, [canManage, grantsQuery.data, grantsQuery.isLoading, instrument.owner])
+
+  const selectedGrants = directGrants.filter((grant) =>
+    selectedForRevoke.has(grantKey(grant))
+  )
+  const removableSelection: readonly RemovableMember[] = selectedGrants.map(
+    (grant) => ({ id: grantKey(grant), label: grantName(grant) })
+  )
 
   function replaceGrants(nextGrants: readonly WorkspaceResourceAccessGrant[]) {
     queryClient.setQueryData(
@@ -226,27 +209,36 @@ export function InstrumentAccessCard({
     )
   }
 
-  async function handleSetGrant(
+  async function commitGrant(
     kind: PrincipalKind,
     principalId: string,
     role: GrantRole
+  ): Promise<readonly WorkspaceResourceAccessGrant[]> {
+    const nextGrants = unwrapHubResult(
+      await setWorkspaceResourceAccess({
+        data: {
+          kind,
+          permission: role,
+          principal: principalId,
+          resourceMfid: instrument.unique_id,
+          scenario,
+        },
+      })
+    )
+    replaceGrants(nextGrants)
+    return nextGrants
+  }
+
+  async function handleSetGrant(
+    grant: WorkspaceResourceAccessGrant,
+    role: GrantRole
   ) {
-    setPendingMemberAction(`set:${kind}:${principalId}`)
+    const kind = principalKindFor(grant)
+    if (!kind) return
+    startSaving(grantKey(grant))
     setError(undefined)
     try {
-      const nextGrants = unwrapHubResult(
-        await setWorkspaceResourceAccess({
-          data: {
-            kind,
-            permission: role,
-            principal: principalId,
-            resourceMfid: instrument.unique_id,
-            scenario,
-          },
-        })
-      )
-      replaceGrants(nextGrants)
-      return true
+      await commitGrant(kind, grant.principal_id, role)
     } catch (mutationError) {
       setError(
         hubErrorMessage(
@@ -254,19 +246,21 @@ export function InstrumentAccessCard({
           "Could not update this access grant. Try again."
         )
       )
-      return false
     } finally {
-      setPendingMemberAction(undefined)
+      stopSaving()
     }
   }
 
-  async function handleRevokeGrant(grant: WorkspaceResourceAccessGrant) {
+  async function commitRevoke(key: string) {
+    const grant = directGrants.find((candidate) => grantKey(candidate) === key)
+    if (!grant) {
+      toggleSelection(key, false)
+      return
+    }
     const kind = principalKindFor(grant)
     if (!kind) return
-    setPendingMemberAction(`revoke:${kind}:${grant.principal_id}`)
-    setError(undefined)
-    try {
-      const nextGrants = unwrapHubResult(
+    replaceGrants(
+      unwrapHubResult(
         await revokeWorkspaceResourceAccess({
           data: {
             kind,
@@ -276,18 +270,8 @@ export function InstrumentAccessCard({
           },
         })
       )
-      replaceGrants(nextGrants)
-      setPendingRevoke(undefined)
-    } catch (mutationError) {
-      setError(
-        hubErrorMessage(
-          mutationError,
-          "Could not revoke this access grant. Try again."
-        )
-      )
-    } finally {
-      setPendingMemberAction(undefined)
-    }
+    )
+    toggleSelection(key, false)
   }
 
   async function handleAddOperator(serviceAccountId: string) {
@@ -336,10 +320,7 @@ export function InstrumentAccessCard({
         <CardContent>
           <h3 className="font-heading text-label">Direct access</h3>
           {managing ? (
-            <p
-              className="mb-3 text-supporting text-muted-foreground"
-              role="status"
-            >
+            <p className="mb-3 text-body text-muted-foreground" role="status">
               Role changes save automatically.
             </p>
           ) : (
@@ -365,115 +346,106 @@ export function InstrumentAccessCard({
                   kind !== undefined &&
                   isAccessGrantRole(grant.permission) &&
                   roles.includes(grant.permission)
-                const revocable = managing && !isOwner && kind !== undefined
-                const pending =
-                  pendingMemberAction ===
-                  `set:${kind ?? ""}:${grant.principal_id}`
+                const revocable =
+                  managing && !isOwner && kind !== undefined && canGrant
+                const revokeBlockedReason = isOwner
+                  ? "The manager cannot be revoked here"
+                  : kind === undefined
+                    ? "This grant is read-only"
+                    : "This member cannot be revoked here"
 
                 return (
-                  <li
-                    className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
-                    key={grantKey(grant)}
-                  >
-                    {grant.principal_type === "project" ? (
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <div className="min-w-0 flex-1">
-                          <Link
-                            className="truncate text-label hover:underline"
-                            params={{ projectMfid: grant.principal_id }}
-                            search={{ preview: undefined }}
-                            state={{}}
-                            to="/projects/$projectMfid"
-                          >
-                            {grantName(grant)}
-                          </Link>
-                          <p className="flex min-w-0 items-center gap-1.5 text-body text-muted-foreground">
-                            <PrincipalTypeIcon label="Project" type="project" />
-                            <span className="truncate">
-                              {grant.slug ?? grant.principal_id}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <PersonLink
-                        className="flex-1"
-                        person={
-                          isOwner && instrument.owner
-                            ? instrument.owner
-                            : {
-                                is_service_account: false,
-                                name: grant.display_name,
-                                unique_id: grant.principal_id,
-                                username: grant.slug,
-                              }
-                        }
-                        presentation="avatar"
-                      />
-                    )}
-
-                    <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
-                      {pending ? (
-                        <AccessPendingIcon
-                          aria-label={`Saving access for ${grantName(grant)}`}
-                          className="motion-safe:animate-spin"
-                        />
-                      ) : null}
-                      <span className="flex min-w-0 flex-1 justify-end sm:w-access-role-control sm:flex-none">
-                        {editable ? (
-                          <NativeSelect
-                            aria-label={`Role for ${grantName(grant)}`}
-                            className="w-full sm:w-fit"
-                            disabled={mutationPending}
-                            onChange={(event) => {
-                              if (isAccessGrantRole(event.target.value)) {
-                                void handleSetGrant(
-                                  kind,
-                                  grant.principal_id,
-                                  event.target.value
-                                )
-                              }
-                            }}
-                            size="sm"
-                            value={grant.permission}
-                          >
-                            {roles.map((role) => (
-                              <NativeSelectOption key={role} value={role}>
-                                {accessRoleLabel(role)}
-                              </NativeSelectOption>
-                            ))}
-                          </NativeSelect>
-                        ) : (
-                          <AccessRoleBadge
-                            label={isOwner ? "Manager" : undefined}
-                            role={grant.permission}
-                          />
-                        )}
-                      </span>
-                      {revocable ? (
-                        <Tooltip>
-                          <TooltipTrigger
-                            render={
-                              <Button
-                                aria-label={`Revoke access for ${grantName(grant)}`}
-                                disabled={mutationPending}
-                                onClick={() => {
-                                  setError(undefined)
-                                  setPendingRevoke(grant)
-                                }}
-                                size="icon-sm"
-                                type="button"
-                                variant="destructive"
+                  <AccessGrantRow
+                    identity={
+                      grant.principal_type === "project" ? (
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              className="truncate text-label hover:underline"
+                              params={{ projectMfid: grant.principal_id }}
+                              search={{ preview: undefined }}
+                              state={{}}
+                              to="/projects/$projectMfid"
+                            >
+                              {grantName(grant)}
+                            </Link>
+                            <p className="flex min-w-0 items-center gap-1.5 text-body text-muted-foreground">
+                              <PrincipalTypeIcon
+                                label="Project"
+                                type="project"
                               />
+                              <span className="truncate">
+                                {grant.slug ?? grant.principal_id}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <PersonLink
+                          className="flex-1"
+                          person={
+                            isOwner && instrument.owner
+                              ? instrument.owner
+                              : {
+                                  is_service_account: false,
+                                  name: grant.display_name,
+                                  unique_id: grant.principal_id,
+                                  username: grant.slug,
+                                }
+                          }
+                          presentation="avatar"
+                        />
+                      )
+                    }
+                    key={grantKey(grant)}
+                    lockedReason={revokeBlockedReason}
+                    managing={managing}
+                    mutationPending={mutationPending}
+                    onRevoke={() => {
+                      stageOne(grantKey(grant))
+                      setRemoveDialogOpen(true)
+                    }}
+                    pending={isSaving(grantKey(grant))}
+                    pendingAriaLabel={`Saving access for ${grantName(grant)}`}
+                    PendingIcon={AccessPendingIcon}
+                    revocable={revocable}
+                    revokeAriaLabel={`Revoke access for ${grantName(grant)}`}
+                    revokeTooltipLabel="Revoke access"
+                    roleBadge={
+                      <AccessRoleBadge
+                        label={isOwner ? "Manager" : undefined}
+                        role={grant.permission}
+                      />
+                    }
+                    roleEditor={
+                      editable ? (
+                        <NativeSelect
+                          aria-label={`Role for ${grantName(grant)}`}
+                          className="w-full sm:w-fit"
+                          disabled={mutationPending}
+                          onChange={(event) => {
+                            if (isAccessGrantRole(event.target.value)) {
+                              void handleSetGrant(grant, event.target.value)
                             }
-                          >
-                            <RemoveMemberIcon aria-hidden="true" />
-                          </TooltipTrigger>
-                          <TooltipContent>Revoke access</TooltipContent>
-                        </Tooltip>
-                      ) : null}
-                    </div>
-                  </li>
+                          }}
+                          size="sm"
+                          value={grant.permission}
+                        >
+                          {roles.map((role) => (
+                            <NativeSelectOption key={role} value={role}>
+                              {accessRoleLabel(role)}
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelect>
+                      ) : undefined
+                    }
+                    selectable={revocable}
+                    selected={selectedForRevoke.has(grantKey(grant))}
+                    selectionLabel={`Select ${grantName(grant)} for revocation`}
+                    onSelectionChange={(checked) =>
+                      toggleSelection(grantKey(grant), checked)
+                    }
+                  />
                 )
               })}
             </ul>
@@ -506,7 +478,20 @@ export function InstrumentAccessCard({
           )}
 
           {canGrant ? (
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+              {removableSelection.length > 0 ? (
+                <Button
+                  disabled={mutationPending}
+                  onClick={() => setRemoveDialogOpen(true)}
+                  type="button"
+                  variant="destructive"
+                >
+                  <RemoveMemberIcon data-icon="inline-start" />
+                  {removableSelection.length > 1
+                    ? `Revoke access for ${removableSelection.length} members`
+                    : "Revoke access"}
+                </Button>
+              ) : null}
               <Button
                 className="max-sm:w-full"
                 disabled={mutationPending}
@@ -628,11 +613,7 @@ export function InstrumentAccessCard({
             ) : null}
           </div>
 
-          {error &&
-          !addMemberOpen &&
-          !addOperatorOpen &&
-          !pendingRevoke &&
-          !removingOperator ? (
+          {error && !addMemberOpen && !addOperatorOpen ? (
             <p className="mt-4 text-body text-destructive" role="alert">
               {error}
             </p>
@@ -640,41 +621,54 @@ export function InstrumentAccessCard({
         </CardContent>
       </Card>
 
-      <AddMemberDialog
+      <AddMembersDialog
         disabled={mutationPending}
-        existingGrants={directGrants}
-        instrumentName={instrument.name}
-        onAdd={handleSetGrant}
+        excludeServiceAccounts
+        existingIds={(kind) =>
+          directGrants
+            .filter((grant) => principalKindFor(grant) === kind)
+            .map((grant) => grant.principal_id)
+        }
+        onAdd={commitGrant}
         onOpenChange={setAddMemberOpen}
         open={addMemberOpen}
+        principalKinds={["users", "projects"]}
+        resourceName={instrument.name}
+        roleLabel="Access role"
         roles={roles}
         scope={scope}
+        title="Add direct access"
       />
 
-      <ConfirmationAlertDialog
-        confirmLabel="Revoke access"
+      <RemoveMembersDialog
+        confirmLabel={(count) =>
+          count > 1 ? `Revoke access for ${count} members` : "Revoke access"
+        }
         description={
-          pendingRevoke ? (
+          removableSelection.length > 1 ? (
             <>
-              <ResourceName>{grantName(pendingRevoke)}</ResourceName> will no
+              These {removableSelection.length} members will no longer have
+              direct access to <ResourceName>{instrument.name}</ResourceName>.
+            </>
+          ) : removableSelection[0] ? (
+            <>
+              <ResourceName>{removableSelection[0].label}</ResourceName> will no
               longer have direct access to{" "}
               <ResourceName>{instrument.name}</ResourceName>.
             </>
           ) : null
         }
-        error={pendingRevoke ? error : undefined}
-        onOpenChange={(open) => {
-          if (!open && pendingMemberAction === undefined) {
-            setPendingRevoke(undefined)
-          }
-        }}
-        onConfirm={() => {
-          if (pendingRevoke) void handleRevokeGrant(pendingRevoke)
-        }}
-        open={pendingRevoke !== undefined}
-        pending={pendingMemberAction !== undefined}
+        disabled={mutationPending}
+        errorLabel={(count) =>
+          count === 1
+            ? "1 member could not be revoked. Try again."
+            : `${count} members could not be revoked. Try again.`
+        }
+        members={removableSelection}
+        onOpenChange={setRemoveDialogOpen}
+        onRemove={commitRevoke}
+        open={removeDialogOpen}
         title="Revoke access?"
-        variant="destructive"
       />
 
       <AddOperatorDialog
@@ -686,7 +680,8 @@ export function InstrumentAccessCard({
         scope={scope}
       />
 
-      <ConfirmationAlertDialog
+      <ConfirmationDialog
+        kind="alert"
         confirmLabel="Unassign operator"
         description={
           removingOperator
@@ -710,196 +705,6 @@ export function InstrumentAccessCard({
 }
 
 export const InstrumentOperatorsCard = InstrumentAccessCard
-
-function AddMemberDialog({
-  disabled,
-  existingGrants,
-  instrumentName,
-  onAdd,
-  onOpenChange,
-  open,
-  roles,
-  scope,
-}: {
-  disabled: boolean
-  existingGrants: readonly WorkspaceResourceAccessGrant[]
-  instrumentName: string
-  onAdd: (
-    kind: PrincipalKind,
-    principalId: string,
-    role: GrantRole
-  ) => Promise<boolean>
-  onOpenChange: (open: boolean) => void
-  open: boolean
-  roles: readonly GrantRole[]
-  scope: IdentityScope
-}) {
-  const queryInputId = useId()
-  const principalInputId = useId()
-  const roleInputId = useId()
-  const [principalIndex, setPrincipalIndex] = useState(0)
-  const [query, setQuery] = useState("")
-  const [role, setRole] = useState<GrantRole>(defaultGrantRole(roles))
-  const [selected, setSelected] = useState<WorkspaceSearchResult>()
-  const [validationError, setValidationError] = useState<string>()
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string>()
-
-  const choice = principalChoices[principalIndex] ?? principalChoices[0]
-  const existing = existingGrants
-    .filter((grant) => principalKindFor(grant) === choice.kind)
-    .map((grant) => grant.principal_id)
-
-  useEffect(() => {
-    if (!open) {
-      setPrincipalIndex(0)
-      setQuery("")
-      setRole(defaultGrantRole(roles))
-      setSelected(undefined)
-      setValidationError(undefined)
-      setSubmitError(undefined)
-      setSubmitting(false)
-    }
-  }, [open, roles])
-
-  useEffect(() => {
-    if (!roles.includes(role)) setRole(defaultGrantRole(roles))
-  }, [role, roles])
-
-  async function handleAdd() {
-    if (!selected) {
-      setValidationError("Choose a person or project.")
-      return
-    }
-    setSubmitting(true)
-    setSubmitError(undefined)
-    try {
-      const ok = await onAdd(choice.kind, selected.unique_id, role)
-      if (ok) {
-        onOpenChange(false)
-      } else {
-        setSubmitError("The access grant could not be added.")
-      }
-    } catch (err) {
-      setSubmitError(
-        hubErrorMessage(err, "The access grant could not be added.")
-      )
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <Dialog
-      onOpenChange={(nextOpen) => {
-        if (!submitting) onOpenChange(nextOpen)
-      }}
-      open={open}
-    >
-      <DialogContent showCloseButton={!submitting}>
-        <DialogHeader>
-          <DialogTitle>Add direct access</DialogTitle>
-          <DialogDescription>
-            Choose a person or project, then set the access role for{" "}
-            <ResourceName>{instrumentName}</ResourceName>.
-          </DialogDescription>
-        </DialogHeader>
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={principalInputId}>Principal type</FieldLabel>
-            <NativeSelect
-              disabled={disabled || submitting}
-              id={principalInputId}
-              onChange={(event) => {
-                setPrincipalIndex(Number(event.target.value))
-                setQuery("")
-                setSelected(undefined)
-                setValidationError(undefined)
-              }}
-              value={String(principalIndex)}
-            >
-              {principalChoices.map((candidate, index) => (
-                <NativeSelectOption key={candidate.kind} value={String(index)}>
-                  {candidate.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </Field>
-          <ResourceSearchCombobox
-            disabled={disabled || submitting}
-            excludedIds={existing}
-            id={queryInputId}
-            kind={choice.searchKind}
-            onQueryChange={(nextQuery) => {
-              setQuery(nextQuery)
-              setValidationError(undefined)
-            }}
-            onValueChange={(item) => {
-              setSelected(item)
-              setValidationError(undefined)
-            }}
-            query={query}
-            scope={scope}
-            value={selected}
-          />
-          <Field>
-            <FieldLabel htmlFor={roleInputId}>Access role</FieldLabel>
-            <NativeSelect
-              disabled={disabled || submitting}
-              id={roleInputId}
-              onChange={(event) => {
-                if (isAccessGrantRole(event.target.value)) {
-                  setRole(event.target.value)
-                }
-              }}
-              value={role}
-            >
-              {roles.map((candidate) => (
-                <NativeSelectOption key={candidate} value={candidate}>
-                  {accessRoleLabel(candidate)}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </Field>
-          {validationError ? (
-            <p className="text-body text-destructive" role="alert">
-              {validationError}
-            </p>
-          ) : null}
-          {submitError ? (
-            <p className="text-body text-destructive" role="alert">
-              {submitError}
-            </p>
-          ) : null}
-        </FieldGroup>
-        <DialogFooter>
-          <Button
-            disabled={disabled || submitting}
-            onClick={() => onOpenChange(false)}
-            type="button"
-            variant="outline"
-          >
-            Cancel
-          </Button>
-          <Button
-            disabled={!selected || disabled || submitting}
-            onClick={() => void handleAdd()}
-            type="button"
-          >
-            {submitting ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : null}
-            Add member
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 function AddOperatorDialog({
   disabled,
@@ -971,7 +776,10 @@ function AddOperatorDialog({
             setQuery(nextQuery)
             setSubmitError(undefined)
           }}
-          onValueChange={setCandidate}
+          onValueChange={(item) => {
+            setCandidate(item)
+            if (item) setQuery(item.name)
+          }}
           query={query}
           scope={scope}
           serviceAccountsOnly

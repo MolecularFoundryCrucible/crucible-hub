@@ -16,6 +16,7 @@ import { BackToProjectIcon, SearchIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
@@ -218,27 +219,36 @@ function SearchPage() {
           </Button>
         </form>
       </ContentBoundary>
-      <nav className="flex flex-wrap gap-2" aria-label="Resource type filter">
-        <KindLink
-          active={
-            !metadataMode &&
-            (search.projectMfid ? !selectedProjectKind : !search.kind)
-          }
-          kind={undefined}
-          label="All"
+      <div className="overflow-x-auto pb-1">
+        <SegmentedControl
+          ariaLabel="Resource type filter"
+          className="flex-wrap"
+          onValueChange={(nextValue) => {
+            void navigate({
+              search: (previous) => ({
+                ...previous,
+                kind:
+                  nextValue === "all" || nextValue === "metadata"
+                    ? undefined
+                    : (nextValue as WorkspaceSearchKind),
+                mode: nextValue === "metadata" ? "metadata" : undefined,
+              }),
+              to: "/search",
+            })
+          }}
+          options={[
+            { label: "All", value: "all" },
+            ...(search.projectMfid ? projectKinds : kinds).map((kind) => ({
+              label: kindLabel(kind),
+              value: kind,
+            })),
+            ...(!search.projectMfid
+              ? [{ label: "Scientific metadata", value: "metadata" }]
+              : []),
+          ]}
+          value={metadataMode ? "metadata" : (search.kind ?? "all")}
         />
-        {(search.projectMfid ? projectKinds : kinds).map((kind) => (
-          <KindLink
-            active={!metadataMode && search.kind === kind}
-            key={kind}
-            kind={kind}
-            label={kindLabel(kind)}
-          />
-        ))}
-        {!search.projectMfid ? (
-          <ModeLink active={metadataMode} label="Scientific metadata" />
-        ) : null}
-      </nav>
+      </div>
       {validQuery ? (
         <SearchResults
           kinds={selectedKinds}
@@ -487,44 +497,6 @@ function SearchResult({
         />
       </ResourceListItemContent>
     </ResourceListItem>
-  )
-}
-
-function KindLink({
-  active,
-  kind,
-  label,
-}: {
-  active: boolean
-  kind: WorkspaceSearchKind | undefined
-  label: string
-}) {
-  return (
-    <Link
-      className={buttonVariants({ variant: active ? "secondary" : "ghost" })}
-      from="/search"
-      search={(previous) => ({ ...previous, kind, mode: undefined })}
-      to="/search"
-    >
-      {label}
-    </Link>
-  )
-}
-
-function ModeLink({ active, label }: { active: boolean; label: string }) {
-  return (
-    <Link
-      className={buttonVariants({ variant: active ? "secondary" : "ghost" })}
-      from="/search"
-      search={(previous) => ({
-        ...previous,
-        kind: undefined,
-        mode: active ? undefined : "metadata",
-      })}
-      to="/search"
-    >
-      {label}
-    </Link>
   )
 }
 

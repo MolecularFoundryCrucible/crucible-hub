@@ -26,6 +26,7 @@ describe("system-status server source", () => {
 
     expect(status.status).toBe("ok")
     expect(status.api.status).toBe("ok")
+    expect(status.api.url).toBeUndefined()
     expect(status.api.version).toBe("0.1.0-fixture")
     expect(status.database.status).toBe("ok")
     expect(status.database.schemaRevisions).toContain("20260401_01_fixture")
@@ -68,6 +69,7 @@ describe("system-status server source", () => {
 
     expect(status.status).toBe("ok")
     expect(status.api.status).toBe("ok")
+    expect(status.api.url).toBe("https://api.example.test")
     expect(status.api.version).toBe("1.2.3")
     expect(status.api.commit).toBe("abc1234")
     expect(status.database.status).toBe("ok")
@@ -105,6 +107,7 @@ describe("system-status server source", () => {
 
     expect(status.status).toBe("degraded")
     expect(status.api.status).toBe("degraded")
+    expect(status.api.url).toBe("https://api.example.test")
     expect(status.database.status).toBe("error")
   })
 
@@ -123,6 +126,7 @@ describe("system-status server source", () => {
 
     expect(status.status).toBe("unreachable")
     expect(status.api.status).toBe("unreachable")
+    expect(status.api.url).toBe("https://api.example.test")
     expect(status.database.status).toBe("unknown")
   })
 
@@ -138,6 +142,7 @@ describe("system-status server source", () => {
 
     expect(status.status).toBe("unreachable")
     expect(status.api.status).toBe("unreachable")
+    expect(status.api.url).toBeUndefined()
     expect(status.api.version).toBeUndefined()
     expect(status.api.commit).toBeUndefined()
     expect(status.database.status).toBe("unknown")

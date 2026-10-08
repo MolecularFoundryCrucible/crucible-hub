@@ -4,7 +4,7 @@ test("retains the selected scenario during workspace navigation", async ({
   page,
 }) => {
   await page.goto("/hub/?scenario=empty")
-  await page.getByRole("link", { name: "Data" }).click()
+  await page.getByRole("link", { exact: true, name: "Data" }).click()
   await expect(page).toHaveURL(/\/hub\/data\?scenario=empty$/)
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Samples and datasets"

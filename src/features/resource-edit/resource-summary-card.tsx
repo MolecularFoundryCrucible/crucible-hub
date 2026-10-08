@@ -549,7 +549,9 @@ function SampleSummaryForm({
               <form.Field name="sample_name">
                 {(field) => (
                   <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+                    <FieldLabel htmlFor={field.name} required>
+                      Name
+                    </FieldLabel>
                     <Input
                       aria-invalid={!field.state.meta.isValid || undefined}
                       autoFocus
@@ -776,6 +778,7 @@ function DatasetSummaryForm({
                       <FieldLabel
                         htmlFor={field.name}
                         optional={!definition.required}
+                        required={definition.required}
                       >
                         {definition.label}
                       </FieldLabel>
@@ -943,20 +946,7 @@ function summaryFields(
       ],
     ]
   }
-  if (resource.kind === "instrument") {
-    return [
-      ["Instrument type", resource.instrument_type, "type"],
-      ["Location", resource.location, "location"],
-      ["Manufacturer", resource.manufacturer, "manufacturer"],
-      ["Model", resource.model, "model"],
-      ["Status", resource.status, "status"],
-    ]
-  }
-  return [
-    ["Project ID", resource.project_id, "project"],
-    ["Organization", resource.organization, "organization"],
-    ["Status", resource.status, "status"],
-  ]
+  return []
 }
 
 function contextFields(
