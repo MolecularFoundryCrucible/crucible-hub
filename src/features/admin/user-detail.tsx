@@ -10,9 +10,9 @@ import {
   EditResourceIcon,
   ProjectIcon,
   RotateCredentialIcon,
-  SavingChangesIcon,
 } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -714,11 +714,7 @@ function UserApiCredentialSection({
               variant="outline"
             >
               {mutation.isPending ? (
-                <SavingChangesIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
+                <PendingIcon data-icon="inline-start" />
               ) : (
                 <RotateCredentialIcon data-icon="inline-start" />
               )}

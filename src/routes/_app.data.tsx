@@ -487,7 +487,8 @@ function DataResults({
         refreshAction={
           <Button
             aria-label="Refresh data"
-            disabled={refreshing}
+            aria-pressed={refreshing || undefined}
+            className={refreshing ? "translate-y-px" : undefined}
             onClick={refreshVisibleData}
             variant="outline"
           >
@@ -500,7 +501,7 @@ function DataResults({
               }
               data-icon="inline-start"
             />
-            {refreshing ? "Refreshing" : "Refresh"}
+            Refresh
           </Button>
         }
         toolbarActions={<DataFilters errors={[]} values={search} />}

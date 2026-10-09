@@ -1,9 +1,10 @@
-import type { ComponentType, ReactNode } from "react"
+import type { ReactNode } from "react"
 
 import {
   RemoveMemberIcon,
   RemoveUnavailableIcon,
 } from "@/components/crucible/icons"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { RemovalCheckbox } from "@/components/crucible/removal-checkbox"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +22,6 @@ export function AccessGrantRow({
   onRevoke,
   pending = false,
   pendingAriaLabel,
-  PendingIcon,
   revocable,
   revokeAriaLabel,
   revokeTooltipLabel,
@@ -40,7 +40,6 @@ export function AccessGrantRow({
   onRevoke: () => void
   pending?: boolean
   pendingAriaLabel?: string
-  PendingIcon?: ComponentType<{ className?: string }>
   revocable: boolean
   revokeAriaLabel: string
   revokeTooltipLabel: string
@@ -65,11 +64,8 @@ export function AccessGrantRow({
         ) : null}
         {identity}
         <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
-          {pending && PendingIcon && pendingAriaLabel ? (
-            <PendingIcon
-              aria-label={pendingAriaLabel}
-              className="motion-safe:animate-spin"
-            />
+          {pending && pendingAriaLabel ? (
+            <PendingIcon label={pendingAriaLabel} />
           ) : null}
           <span className="flex min-w-0 flex-1 justify-end sm:w-access-role-control sm:flex-none">
             {roleEditor ?? roleBadge}

@@ -5,11 +5,9 @@ import {
   accessRoleLabel,
   isAccessGrantRole,
 } from "@/components/crucible/access-role-badge"
-import {
-  RemoveMemberIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
+import { RemoveMemberIcon } from "@/components/crucible/icons"
 import { PersonIdentity } from "@/components/crucible/person-identity"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
@@ -94,31 +92,25 @@ export function AddMembersDialog({
   const [query, setQuery] = useState("")
   const [staged, setStaged] = useState<StagedMember[]>([])
   const kind = principalKinds[principalIndex] ?? "users"
-  const {
-    activeId: savingId,
-    clearError,
-    commit,
-    commitError,
-    committing,
-    reset,
-  } = useStagedCommit({
-    errorLabel: (count) =>
-      count === 1
-        ? "1 member could not be added. Try again."
-        : `${count} members could not be added. Try again.`,
-    items: staged.map((entry) => ({ id: entry.member.unique_id })),
-    onAction: async (id) => {
-      const entry = staged.find(
-        (candidate) => candidate.member.unique_id === id
-      )
-      if (!entry) return
-      await onAdd(kind, id, entry.role)
-      setStaged((current) =>
-        current.filter((candidate) => candidate.member.unique_id !== id)
-      )
-    },
-    onDone: () => onOpenChange(false),
-  })
+  const { clearError, commit, commitError, committing, reset } =
+    useStagedCommit({
+      errorLabel: (count) =>
+        count === 1
+          ? "1 member could not be added. Try again."
+          : `${count} members could not be added. Try again.`,
+      items: staged.map((entry) => ({ id: entry.member.unique_id })),
+      onAction: async (id) => {
+        const entry = staged.find(
+          (candidate) => candidate.member.unique_id === id
+        )
+        if (!entry) return
+        await onAdd(kind, id, entry.role)
+        setStaged((current) =>
+          current.filter((candidate) => candidate.member.unique_id !== id)
+        )
+      },
+      onDone: () => onOpenChange(false),
+    })
 
   const stagedIds = staged.map((entry) => entry.member.unique_id)
 
@@ -270,12 +262,6 @@ export function AddMembersDialog({
                         </NativeSelectOption>
                       ))}
                     </NativeSelect>
-                    {savingId === entry.member.unique_id ? (
-                      <SavingChangesIcon
-                        aria-label={`Adding ${name}`}
-                        className="motion-safe:animate-spin"
-                      />
-                    ) : null}
                     <Tooltip>
                       <TooltipTrigger
                         render={
@@ -326,13 +312,7 @@ export function AddMembersDialog({
             onClick={() => void commit()}
             type="button"
           >
-            {committing ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : null}
+            {committing ? <PendingIcon data-icon="inline-start" /> : null}
             {staged.length > 1 ? `Add ${staged.length} members` : "Add member"}
           </Button>
         </DialogFooter>

@@ -136,9 +136,6 @@ export function ResourceChooser({
         onClick={() => {
           if (allowBrowse) setOpen(true)
         }}
-        onFocus={() => {
-          if (allowBrowse) setOpen(true)
-        }}
         placeholder={
           emptyLabel ?? `Search or choose ${labels.singular.toLowerCase()}`
         }

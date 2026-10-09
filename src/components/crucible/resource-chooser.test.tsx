@@ -137,7 +137,7 @@ describe("ResourceChooser", () => {
     const { onChange } = renderChooser()
 
     const input = screen.getByRole("combobox", { name: "Search instruments" })
-    fireEvent.focus(input)
+    fireEvent.click(input)
 
     expect(
       await screen.findByText(
@@ -149,6 +149,18 @@ describe("ResourceChooser", () => {
     fireEvent.click(screen.getByRole("option", { name: /Beamline 5.3.2/ }))
     expect(onChange).toHaveBeenCalledWith(instrument)
     expect(screen.getByDisplayValue("Beamline 5.3.2")).toBeTruthy()
+  })
+
+  it("does not open the browse popup on focus alone", () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      response("instrument", [instrument])
+    )
+    renderChooser()
+
+    const input = screen.getByRole("combobox", { name: "Search instruments" })
+    fireEvent.focus(input)
+
+    expect(screen.queryByRole("listbox")).toBeNull()
   })
 
   it("keeps pending and error feedback inside the dropdown", async () => {

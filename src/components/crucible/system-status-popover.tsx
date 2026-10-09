@@ -272,7 +272,8 @@ export function SystemStatusPopover({
                     <ExternalLinkIcon aria-hidden="true" className="size-3" />
                   </a>
                   <Button
-                    disabled={isFetching}
+                    aria-pressed={isFetching || undefined}
+                    className={isFetching ? "translate-y-px" : undefined}
                     onClick={() => void handleRefresh()}
                     size="xs"
                     variant="outline"
@@ -286,7 +287,7 @@ export function SystemStatusPopover({
                       }
                       data-icon="inline-start"
                     />
-                    {isFetching ? "Refreshing" : "Refresh"}
+                    Refresh
                   </Button>
                 </div>
               </div>

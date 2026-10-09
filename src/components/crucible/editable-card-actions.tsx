@@ -1,8 +1,5 @@
-import {
-  CancelChangesIcon,
-  SaveChangesIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
+import { CancelChangesIcon, SaveChangesIcon } from "@/components/crucible/icons"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import { CardFooter } from "@/components/ui/card"
 import {
@@ -41,9 +38,7 @@ export function EditableCardActions({
       type="submit"
     >
       {pending ? (
-        <SavingChangesIcon
-          aria-hidden="true"
-          className="motion-safe:animate-spin"
+        <PendingIcon
           data-icon={presentation === "text" ? "inline-start" : undefined}
         />
       ) : (

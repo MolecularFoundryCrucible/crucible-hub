@@ -12,12 +12,10 @@ export function useStagedCommit({
   onDone: () => void
 }) {
   const [committing, setCommitting] = useState(false)
-  const [activeId, setActiveId] = useState<string>()
   const [commitError, setCommitError] = useState<string>()
 
   const reset = useCallback(() => {
     setCommitting(false)
-    setActiveId(undefined)
     setCommitError(undefined)
   }, [])
 
@@ -32,14 +30,12 @@ export function useStagedCommit({
     const pending = items
     const failures: string[] = []
     for (const item of pending) {
-      setActiveId(item.id)
       try {
         await onAction(item.id)
       } catch {
         failures.push(item.id)
       }
     }
-    setActiveId(undefined)
     setCommitting(false)
     if (failures.length === 0) {
       onDone()
@@ -48,5 +44,5 @@ export function useStagedCommit({
     }
   }
 
-  return { activeId, clearError, commit, commitError, committing, reset }
+  return { clearError, commit, commitError, committing, reset }
 }

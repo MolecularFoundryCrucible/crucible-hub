@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { SavingChangesIcon } from "@/components/crucible/icons"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -141,13 +141,7 @@ export function PlatformRoleDialog({
             onClick={() => void confirm()}
             type="button"
           >
-            {pending ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : null}
+            {pending ? <PendingIcon data-icon="inline-start" /> : null}
             {pending ? "Changing role" : "Change role"}
           </Button>
         </DialogFooter>

@@ -142,7 +142,7 @@ export function ResourceComboboxContent({
   } = state
 
   return (
-    <ComboboxContent>
+    <ComboboxContent className="sm:min-w-md">
       {!allowBrowse && normalizedQuery.length < searchMinQueryLength ? (
         <ComboboxStatus>Enter at least 3 characters.</ComboboxStatus>
       ) : isBrowseMode && normalizedQuery.length === 0 ? (

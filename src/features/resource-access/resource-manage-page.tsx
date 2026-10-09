@@ -21,7 +21,6 @@ import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
-  AccessPendingIcon,
   AddAccessGrantIcon,
   RemoveMemberIcon,
 } from "@/components/crucible/icons"
@@ -456,7 +455,6 @@ function ManagedResourceAccess({
                     }}
                     pending={isSaving(grantKey(grant))}
                     pendingAriaLabel={`Saving access for ${grantName(grant)}`}
-                    PendingIcon={AccessPendingIcon}
                     revocable={revocable}
                     revokeAriaLabel={`Revoke access for ${grantName(grant)}`}
                     revokeTooltipLabel="Revoke access"

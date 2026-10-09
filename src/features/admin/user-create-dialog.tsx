@@ -3,10 +3,8 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import {
-  CreateResourceIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
+import { CreateResourceIcon } from "@/components/crucible/icons"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -328,11 +326,7 @@ export function UserCreateDialog({
                 type="submit"
               >
                 {isSubmitting ? (
-                  <SavingChangesIcon
-                    aria-hidden="true"
-                    className="motion-safe:animate-spin"
-                    data-icon="inline-start"
-                  />
+                  <PendingIcon data-icon="inline-start" />
                 ) : (
                   <CreateResourceIcon data-icon="inline-start" />
                 )}

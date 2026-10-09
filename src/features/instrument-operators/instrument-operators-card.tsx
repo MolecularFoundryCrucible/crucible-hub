@@ -16,13 +16,9 @@ import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
-import {
-  AccessPendingIcon,
-  AddMemberIcon,
-  RemoveMemberIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
+import { AddMemberIcon, RemoveMemberIcon } from "@/components/crucible/icons"
 import { personDisplayName } from "@/components/crucible/person-identity"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
@@ -407,7 +403,6 @@ export function InstrumentAccessCard({
                     }}
                     pending={isSaving(grantKey(grant))}
                     pendingAriaLabel={`Saving access for ${grantName(grant)}`}
-                    PendingIcon={AccessPendingIcon}
                     revocable={revocable}
                     revokeAriaLabel={`Revoke access for ${grantName(grant)}`}
                     revokeTooltipLabel="Revoke access"
@@ -534,9 +529,8 @@ export function InstrumentAccessCard({
                       />
                       <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
                         {pending ? (
-                          <SavingChangesIcon
-                            aria-label={`Unassigning ${operatorName(operator)}`}
-                            className="motion-safe:animate-spin"
+                          <PendingIcon
+                            label={`Unassigning ${operatorName(operator)}`}
                           />
                         ) : null}
                         <AccessRoleBadge label="Operator" role="editor" />
@@ -804,13 +798,7 @@ function AddOperatorDialog({
             onClick={() => void handleAdd()}
             type="button"
           >
-            {submitting ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : null}
+            {submitting ? <PendingIcon data-icon="inline-start" /> : null}
             Add operator
           </Button>
         </DialogFooter>

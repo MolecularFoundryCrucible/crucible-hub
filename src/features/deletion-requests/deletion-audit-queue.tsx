@@ -2,7 +2,6 @@ import { useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
-import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -124,7 +123,6 @@ function DeletionAuditColgroup() {
       <col className="w-deletion-project-column" />
       <col className="w-deletion-requester-column" />
       <col className="w-deletion-date-column" />
-      <col className="w-deletion-status-column" />
       <col className="w-deletion-action-column" />
     </colgroup>
   )
@@ -138,7 +136,6 @@ function DeletionAuditHeader() {
         <TableHead>Project</TableHead>
         <TableHead>Requested by</TableHead>
         <TableHead>Deleted</TableHead>
-        <TableHead>Status</TableHead>
         <TableHead>
           <span className="sr-only">Actions</span>
         </TableHead>
@@ -177,9 +174,6 @@ function DeletionAuditPending() {
               </TableCell>
               <TableCell className="deletion-request-date">
                 <Skeleton className="h-4 w-4/5" />
-              </TableCell>
-              <TableCell className="deletion-request-status">
-                <Skeleton className="h-6 w-16 rounded-full" />
               </TableCell>
               <TableCell className="deletion-request-action text-center">
                 <Skeleton className="mx-auto h-7 w-16 rounded-lg" />
@@ -237,9 +231,6 @@ function DeletionAuditTable({
             </TableCell>
             <TableCell className="deletion-request-date" data-label="Deleted">
               <LocalDateTime value={audit.deleted_at} />
-            </TableCell>
-            <TableCell className="deletion-request-status" data-label="Status">
-              <DeletionRequestStatusBadge status="approved" />
             </TableCell>
             <TableCell className="deletion-request-action text-center">
               <Button onClick={() => onOpen(audit)} size="sm" variant="outline">

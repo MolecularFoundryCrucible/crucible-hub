@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 
-import { SavingChangesIcon } from "@/components/crucible/icons"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -39,7 +39,7 @@ export function RemoveMembersDialog({
   open: boolean
   title: string
 }) {
-  const { activeId, commit, commitError, committing, reset } = useStagedCommit({
+  const { commit, commitError, committing, reset } = useStagedCommit({
     errorLabel,
     items: members,
     onAction: onRemove,
@@ -70,12 +70,6 @@ export function RemoveMembersDialog({
                 key={member.id}
               >
                 <span className="min-w-0 flex-1 truncate">{member.label}</span>
-                {activeId === member.id ? (
-                  <SavingChangesIcon
-                    aria-label={`Removing ${member.label}`}
-                    className="motion-safe:animate-spin"
-                  />
-                ) : null}
               </li>
             ))}
           </ul>
@@ -100,13 +94,7 @@ export function RemoveMembersDialog({
             type="button"
             variant="destructive"
           >
-            {committing ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
-            ) : null}
+            {committing ? <PendingIcon data-icon="inline-start" /> : null}
             {confirmLabel(members.length)}
           </Button>
         </DialogFooter>

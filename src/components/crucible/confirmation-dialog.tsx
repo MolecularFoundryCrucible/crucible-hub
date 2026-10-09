@@ -1,4 +1,3 @@
-import { SavingChangesIcon } from "@/components/crucible/icons"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 type ConfirmationProps = {
   cancelLabel?: string
@@ -93,7 +93,7 @@ export function ConfirmationDialog({
               }}
               variant={variant}
             >
-              {pending ? <ConfirmationPendingIcon /> : null}
+              {pending ? <PendingIcon data-icon="inline-start" /> : null}
               {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -133,7 +133,7 @@ export function ConfirmationDialog({
             type="button"
             variant={variant}
           >
-            {pending ? <ConfirmationPendingIcon /> : null}
+            {pending ? <PendingIcon data-icon="inline-start" /> : null}
             {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
           </Button>
         </DialogFooter>
@@ -148,15 +148,5 @@ function ConfirmationError({ children }: { children?: React.ReactNode }) {
     <div className="text-body text-destructive" role="alert">
       {children}
     </div>
-  )
-}
-
-function ConfirmationPendingIcon() {
-  return (
-    <SavingChangesIcon
-      aria-hidden="true"
-      className="motion-safe:animate-spin"
-      data-icon="inline-start"
-    />
   )
 }

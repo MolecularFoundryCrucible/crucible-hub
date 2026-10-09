@@ -92,7 +92,7 @@ Implemented with fixture and unit coverage for local development. Route-backed s
 
 #### Deletion-request review
 
-Implemented locally against pinned API revision `f9fb3c723308e56a33804d5cf4306e4f3e3db7ce`. One shared route presents newest-first submitted history and oldest-first capability-guided pending review with URL-backed project scope and opaque cursor continuation. Approved history uses the permanent audit's submitted or administrator-wide scope, embedded actors, canonical project links when retained, and opaque cursor continuation. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
+Implemented locally against pinned API revision `f9fb3c723308e56a33804d5cf4306e4f3e3db7ce`. One shared route presents newest-first request-time ordering in submitted history and pending review with URL-backed project scope and opaque cursor continuation. Approved history uses the permanent audit's submitted or administrator-wide scope, embedded actors, canonical project links when retained, and opaque cursor continuation. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
 
 #### Deferred: join requests
 

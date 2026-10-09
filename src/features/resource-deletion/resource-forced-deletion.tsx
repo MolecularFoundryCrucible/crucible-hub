@@ -2,11 +2,9 @@ import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
 
-import {
-  SavingChangesIcon,
-  RequestDeletionIcon,
-} from "@/components/crucible/icons"
+import { RequestDeletionIcon } from "@/components/crucible/icons"
 import { ManagementAction } from "@/components/crucible/management-action"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { Button } from "@/components/ui/button"
 import {
@@ -151,11 +149,7 @@ export function ResourceForcedDeletionCard({
             variant="destructive"
           >
             {opening ? (
-              <SavingChangesIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
+              <PendingIcon data-icon="inline-start" />
             ) : (
               <RequestDeletionIcon
                 aria-hidden="true"
@@ -265,13 +259,7 @@ export function ResourceForcedDeletionCard({
               type="button"
               variant="destructive"
             >
-              {pending ? (
-                <SavingChangesIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                  data-icon="inline-start"
-                />
-              ) : null}
+              {pending ? <PendingIcon data-icon="inline-start" /> : null}
               Delete permanently
             </Button>
           </DialogFooter>

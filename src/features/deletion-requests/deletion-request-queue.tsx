@@ -8,8 +8,8 @@ import {
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
-import { SavingChangesIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -130,10 +130,8 @@ export function DeletionRequestQueue({
             bulkReview={bulkReview}
             direction={filters.direction}
             onSortChange={onSortChange}
-            requestTimePreferredDirection={
-              filters.status === "pending" ? "asc" : "desc"
-            }
             showProject={!filters.projectMfid}
+            showStatus={filters.status !== "pending"}
             sort={filters.sort}
           />
         ) : result.isError && !result.data ? (
@@ -178,12 +176,10 @@ export function DeletionRequestQueue({
                   items={items}
                   onSortChange={onSortChange}
                   onOpen={setSelected}
-                  requestTimePreferredDirection={
-                    filters.status === "pending" ? "asc" : "desc"
-                  }
                   onSelectionChange={setSelectedRequestIds}
                   selectedRequestIds={selectedRequestIds}
                   showProject={!filters.projectMfid}
+                  showStatus={filters.status !== "pending"}
                   sort={filters.sort}
                 />
               )}
@@ -219,8 +215,8 @@ function DeletionRequestPending({
   bulkReview,
   direction,
   onSortChange,
-  requestTimePreferredDirection,
   showProject,
+  showStatus,
   sort,
 }: {
   bulkReview: boolean
@@ -229,8 +225,8 @@ function DeletionRequestPending({
     sort: WorkspaceDeletionRequestSort,
     direction: "asc" | "desc"
   ) => void
-  requestTimePreferredDirection: "asc" | "desc"
   showProject: boolean
+  showStatus: boolean
   sort: WorkspaceDeletionRequestSort
 }) {
   return (
@@ -257,13 +253,14 @@ function DeletionRequestPending({
         <DeletionRequestColgroup
           bulkReview={bulkReview}
           showProject={showProject}
+          showStatus={showStatus}
         />
         <DeletionRequestTableHeader
           bulkReview={bulkReview}
           direction={direction}
           onSortChange={onSortChange}
-          requestTimePreferredDirection={requestTimePreferredDirection}
           showProject={showProject}
+          showStatus={showStatus}
           sort={sort}
         />
         <TableBody>
@@ -303,12 +300,14 @@ function DeletionRequestPending({
               >
                 <Skeleton className="h-4 w-4/5" />
               </TableCell>
-              <TableCell
-                className="deletion-request-status"
-                data-label="Status"
-              >
-                <Skeleton className="h-6 w-16 rounded-full" />
-              </TableCell>
+              {showStatus ? (
+                <TableCell
+                  className="deletion-request-status"
+                  data-label="Status"
+                >
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </TableCell>
+              ) : null}
               <TableCell className="deletion-request-action text-center">
                 <Skeleton className="mx-auto h-7 w-16 rounded-lg" />
               </TableCell>
@@ -323,9 +322,11 @@ function DeletionRequestPending({
 function DeletionRequestColgroup({
   bulkReview,
   showProject,
+  showStatus,
 }: {
   bulkReview: boolean
   showProject: boolean
+  showStatus: boolean
 }) {
   return (
     <colgroup>
@@ -344,7 +345,7 @@ function DeletionRequestColgroup({
       {showProject ? <col className="w-deletion-project-column" /> : null}
       <col className="w-deletion-requester-column" />
       <col className="w-deletion-date-column" />
-      <col className="w-deletion-status-column" />
+      {showStatus ? <col className="w-deletion-status-column" /> : null}
       <col className="w-deletion-action-column" />
     </colgroup>
   )
@@ -356,10 +357,10 @@ function DeletionRequestTableHeader({
   direction,
   onSelectAll,
   onSortChange,
-  requestTimePreferredDirection,
   selectableCount = 0,
   selectedCount = 0,
   showProject,
+  showStatus,
   sort,
 }: {
   bulkReview: boolean
@@ -370,10 +371,10 @@ function DeletionRequestTableHeader({
     sort: WorkspaceDeletionRequestSort,
     direction: "asc" | "desc"
   ) => void
-  requestTimePreferredDirection: "asc" | "desc"
   selectableCount?: number
   selectedCount?: number
   showProject: boolean
+  showStatus: boolean
   sort: WorkspaceDeletionRequestSort
 }) {
   return (
@@ -394,7 +395,7 @@ function DeletionRequestTableHeader({
           </TableHead>
         ) : null}
         {bulkReviewActions ? (
-          <TableHead colSpan={showProject ? 6 : 5}>
+          <TableHead colSpan={4 + (showProject ? 1 : 0) + (showStatus ? 1 : 0)}>
             {bulkReviewActions}
           </TableHead>
         ) : onSortChange ? (
@@ -445,13 +446,13 @@ function DeletionRequestTableHeader({
               field="request_time"
               label="Requested"
               onChange={onSortChange}
-              preferredDirection={requestTimePreferredDirection}
+              preferredDirection="desc"
             />
           ) : (
             <TableHead>Requested</TableHead>
           )
         ) : null}
-        {!bulkReviewActions ? (
+        {!bulkReviewActions && showStatus ? (
           onSortChange ? (
             <SortableTableHead
               active={sort === "status"}
@@ -698,10 +699,7 @@ function BulkReviewDialog({
           className="flex items-center gap-2 text-body text-muted-foreground"
           role="status"
         >
-          <SavingChangesIcon
-            aria-hidden="true"
-            className="motion-safe:animate-spin"
-          />
+          <PendingIcon />
           <span>
             {finalizing
               ? "Refreshing deletion requests"
@@ -754,9 +752,9 @@ function DeletionRequestTable({
   onSortChange,
   onOpen,
   onSelectionChange,
-  requestTimePreferredDirection,
   selectedRequestIds,
   showProject,
+  showStatus,
   sort,
 }: {
   account: WorkspaceAccount
@@ -770,9 +768,9 @@ function DeletionRequestTable({
   ) => void
   onOpen: (request: WorkspaceDeletionRequest) => void
   onSelectionChange: React.Dispatch<React.SetStateAction<Set<number>>>
-  requestTimePreferredDirection: "asc" | "desc"
   selectedRequestIds: ReadonlySet<number>
   showProject: boolean
+  showStatus: boolean
   sort: WorkspaceDeletionRequestSort
 }) {
   const selectableRequests = bulkReview
@@ -824,6 +822,7 @@ function DeletionRequestTable({
         <DeletionRequestColgroup
           bulkReview={bulkReview}
           showProject={showProject}
+          showStatus={showStatus}
         />
         <DeletionRequestTableHeader
           bulkReviewActions={bulkReviewActions}
@@ -831,10 +830,10 @@ function DeletionRequestTable({
           direction={direction}
           onSelectAll={selectAll}
           onSortChange={onSortChange}
-          requestTimePreferredDirection={requestTimePreferredDirection}
           selectedCount={selectedCount}
           selectableCount={selectableRequests.length}
           showProject={showProject}
+          showStatus={showStatus}
           sort={sort}
         />
         <TableBody>
@@ -906,12 +905,14 @@ function DeletionRequestTable({
                 >
                   <LocalDateTime value={request.request_time} />
                 </TableCell>
-                <TableCell
-                  className="deletion-request-status"
-                  data-label="Status"
-                >
-                  <DeletionRequestStatusBadge status={request.status} />
-                </TableCell>
+                {showStatus ? (
+                  <TableCell
+                    className="deletion-request-status"
+                    data-label="Status"
+                  >
+                    <DeletionRequestStatusBadge status={request.status} />
+                  </TableCell>
+                ) : null}
                 <TableCell className="deletion-request-action text-center">
                   <Button
                     onClick={() => onOpen(request)}

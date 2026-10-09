@@ -91,8 +91,7 @@ export const Route = createFileRoute("/_app/deletion-requests")({
       return
     }
     const options = deletionRequestsInfiniteQueryOptions(scope, {
-      direction:
-        deps.direction ?? defaultDeletionRequestDirection(deps.view, deps.sort),
+      direction: deps.direction ?? defaultDeletionRequestDirection(deps.sort),
       limit: deletionRequestPageLimit,
       projectMfid: deps.projectMfid,
       scope: deletionRequestScope(deps.view),
@@ -132,8 +131,7 @@ function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
       ? "submitted"
       : requestedView
   const sort = search.sort ?? "request_time"
-  const direction =
-    search.direction ?? defaultDeletionRequestDirection(view, sort)
+  const direction = search.direction ?? defaultDeletionRequestDirection(sort)
   const views = canViewDeletionAudit
     ? [...requestViews, { label: "Approved", value: "approved" } as const]
     : requestViews
@@ -254,12 +252,9 @@ function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
   )
 }
 
-function defaultDeletionRequestDirection(
-  view: "approved" | "reviewable" | "submitted",
-  sort: WorkspaceDeletionRequestSort
-) {
+function defaultDeletionRequestDirection(sort: WorkspaceDeletionRequestSort) {
   if (sort !== "request_time") return "asc" as const
-  return view === "reviewable" ? ("asc" as const) : ("desc" as const)
+  return "desc" as const
 }
 
 function deletionRequestScope(view: "approved" | "reviewable" | "submitted") {

@@ -98,7 +98,6 @@ export {
   ShieldPlus as AddAccessGrantIcon,
   Globe2 as PublicAccessIcon,
   LockKeyhole as PrivateAccessIcon,
-  LoaderCircle as AccessPendingIcon,
   RefreshCw as UpdateInstrumentStatusIcon,
   RefreshCw as RefreshResourceIcon,
   LoaderCircle as InstrumentStatusPendingIcon,

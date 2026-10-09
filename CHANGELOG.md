@@ -6,6 +6,18 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Simplified staged member addition and removal dialogs to show progress only on the commit button: the per-member spinner next to the entry being processed is gone, and the shared pending icon now renders the in-flight indicator across dialogs, editable cards, and access rows.
+
+- Raised the resource picker popup floor on wide screens so option names and identifiers stay readable when the field is narrow, matching the application-bar search popup.
+
+- Widened the collection filter panel sheet so its project chooser and other fields render at the intended width: the shared sheet now honors consumer width overrides instead of the variant-scoped default, and the resource chooser no longer opens its popup from focus alone, so opening a filter panel or tabbing through forms does not pop the option list open (clicking, typing, ArrowDown, and the clear action still do).
+
+- Kept refresh actions readable while in flight: the entity section navigation Refresh, the global data toolbar Refresh, and the system status popover Refresh keep their label, show a pressed state, and spin their icon instead of disabling with a Refreshing label.
+
+- Defaulted the reviewable deletion-request queue to newest-first request-time ordering so both views show the newest requests on top, while non-time sorts keep ascending order and the Requested column still reverses either view.
+
+- Removed the redundant Status column from the reviewable and approved deletion-request views and the project review preview, where every listed request already shares one status.
+
 - Pinned the Crucible API contract to staging revision `1dd6077` (pull requests 300 and 301): enabled server-side sorting by ID, name/title, created, and updated on project and instrument listings, added member reference and role filtering to projects, returned caller roles directly on project and instrument items, displayed caller roles on instrument overviews, and updated the home dashboard and project directory to use direct role-bearing queries.
 
 - Updated the project overview page to display the authenticated user's role on the same line to the right of the project lead, and balanced the secondary grid row with project members on the left sharing the layout with scientific metadata on the right.

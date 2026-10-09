@@ -15,11 +15,7 @@ import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personDisplayName } from "@/components/crucible/person-identity"
-import {
-  AddMemberIcon,
-  RemoveMemberIcon,
-  SavingChangesIcon,
-} from "@/components/crucible/icons"
+import { AddMemberIcon, RemoveMemberIcon } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Button } from "@/components/ui/button"
 import {
@@ -264,7 +260,6 @@ export function ProjectMembershipCard({
                   }}
                   pending={isSaving(member.unique_id)}
                   pendingAriaLabel={`Saving ${memberName(member)}'s membership`}
-                  PendingIcon={SavingChangesIcon}
                   revocable={canRemove}
                   revokeAriaLabel={`Remove ${memberName(member)}`}
                   revokeTooltipLabel="Remove member"

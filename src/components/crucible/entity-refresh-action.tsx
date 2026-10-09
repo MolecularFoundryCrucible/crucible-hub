@@ -50,7 +50,8 @@ export function EntityRefreshAction({
         <TooltipTrigger render={<span className="inline-flex" />}>
           <Button
             aria-label={failed ? `${label}. Refresh failed. Try again.` : label}
-            disabled={refreshing}
+            aria-pressed={refreshing || undefined}
+            className={refreshing ? "translate-y-px" : undefined}
             onClick={() => void refresh()}
             variant={failed ? "destructive" : "outline"}
           >
@@ -63,7 +64,7 @@ export function EntityRefreshAction({
               }
               data-icon="inline-start"
             />
-            {refreshing ? "Refreshing" : "Refresh"}
+            Refresh
           </Button>
         </TooltipTrigger>
         <TooltipContent>
