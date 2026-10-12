@@ -54,6 +54,7 @@ import {
 } from "@/features/forms/discard-changes"
 import { formatUsername } from "@/lib/username"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
+import { hubActionError } from "@/components/crucible/reauthentication"
 
 const serviceAccountProfileSchema = z.object({
   first_name: z.string().trim().max(255),
@@ -382,7 +383,7 @@ function ServiceAccountCredentialCard({
   const [confirming, setConfirming] = useState(false)
   const [credential, setCredential] =
     useState<WorkspaceServiceAccountCredential>()
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<React.ReactNode>()
   const mutation = useMutation({
     mutationFn: async () =>
       unwrapHubResult(
@@ -406,7 +407,7 @@ function ServiceAccountCredentialCard({
         queryKey: crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
       })
     } catch (cause) {
-      setError(hubErrorMessage(cause, "The API key could not be rotated."))
+      setError(hubActionError(cause, "The API key could not be rotated."))
     }
   }
 

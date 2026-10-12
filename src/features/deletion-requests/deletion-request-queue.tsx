@@ -608,7 +608,7 @@ function BulkReviewDialog({
       await invalidateDeletionRequestMutationQueries(
         queryClient,
         scope,
-        outcome.reviewed.map((request) => request.resource_id)
+        outcome.reviewed.map((request) => request.resource_mfid)
       )
       if (outcome.stopped) {
         setFinalizing(false)
@@ -947,7 +947,7 @@ function DeletionRequestResource({
       nameContent={
         <ResourceNameLink
           kind={kind}
-          mfid={request.resource_id}
+          mfid={request.resource_mfid}
           name={name}
           navigation="preview"
         />
@@ -1016,7 +1016,7 @@ function DeletionRequestDialog({
       await invalidateDeletionRequestMutationQueries(
         queryClient,
         scope,
-        reviewed.resource_id
+        reviewed.resource_mfid
       )
       notifySuccess(
         decision === "approved"
@@ -1058,7 +1058,7 @@ function DeletionRequestDialog({
             </DialogHeader>
             <ResourceIdentity
               kind={resourceKind(request.resource_type)}
-              mfid={request.resource_id}
+              mfid={request.resource_mfid}
               name={request.resource_name?.trim() || "Untitled resource"}
               projectId={request.project_id}
             />

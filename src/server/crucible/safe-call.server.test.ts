@@ -26,6 +26,49 @@ describe("safe Crucible calls", () => {
     })
   })
 
+  it("surfaces a numeric Retry-After from a rate-limited response", async () => {
+    const result = await safeCrucibleCall("retry-after", async () => {
+      throw new CrucibleResponseError(
+        new Response(null, {
+          status: 429,
+          headers: { "Retry-After": "5" },
+        })
+      )
+    })
+
+    expect(result).toMatchObject({
+      status: "error",
+      error: {
+        kind: "rate-limited",
+        retryable: true,
+        retryAfterSeconds: 5,
+      },
+    })
+  })
+
+  it.each([
+    ["an HTTP-date", "Fri, 09 Oct 2026 12:00:00 GMT"],
+    ["a non-numeric value", "soon"],
+    ["an empty value", ""],
+  ])("ignores %s in Retry-After", async (_label, value) => {
+    const result = await safeCrucibleCall("retry-after", async () => {
+      throw new CrucibleResponseError(
+        new Response(null, {
+          status: 429,
+          headers: { "Retry-After": value },
+        })
+      )
+    })
+
+    expect(result).toMatchObject({
+      status: "error",
+      error: { kind: "rate-limited" },
+    })
+    expect(result.status === "error" && result.error.retryAfterSeconds).toBe(
+      undefined
+    )
+  })
+
   it.each([
     ["AbortError", "cancelled", false],
     ["TimeoutError", "timeout", true],
@@ -59,5 +102,64 @@ describe("safe Crucible calls", () => {
       },
     })
     expect(JSON.stringify(result)).not.toContain("private response body")
+  })
+
+  it("reports which fields conflicted without exposing the API message", async () => {
+    const body = {
+      detail: {
+        code: "already_in_use",
+        fields: ["email", "unknown"],
+        message: "Email is already in use",
+      },
+    }
+    const result = await safeCrucibleCall("conflict", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 409 }), body)
+    })
+
+    expect(result).toEqual({
+      status: "error",
+      error: {
+        kind: "conflict",
+        message: "The request conflicts with the current Crucible state.",
+        correlationId: "conflict",
+        retryable: false,
+        conflictFields: ["email"],
+      },
+    })
+  })
+
+  it("ignores conflict bodies without the structured code", async () => {
+    const result = await safeCrucibleCall("plain-conflict", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 409 }), {
+        detail: "Username already taken",
+      })
+    })
+
+    expect(result.status === "error" && result.error.conflictFields).toBe(
+      undefined
+    )
+  })
+
+  it("asks for a fresh sign-in on a step-up challenge", async () => {
+    const result = await safeCrucibleCall("step-up", async () => {
+      throw new CrucibleResponseError(
+        new Response(null, {
+          headers: {
+            "WWW-Authenticate":
+              'Bearer error="insufficient_user_authentication", max_age="600"',
+          },
+          status: 401,
+        })
+      )
+    })
+
+    expect(result).toMatchObject({
+      status: "error",
+      error: {
+        kind: "reauthentication-required",
+        message: "Sign in again to continue.",
+        retryable: false,
+      },
+    })
   })
 })

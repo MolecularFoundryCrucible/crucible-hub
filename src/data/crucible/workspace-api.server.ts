@@ -6,6 +6,10 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { createCrucibleClient } from "@/server/crucible/client.server"
 import { crucibleRequestSignal } from "@/server/crucible/request-signal.server"
+import {
+  readUploadIngestionEnabled,
+  readUploadsEnabled,
+} from "./workspace-config.server"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type ApiWorkspaceConfiguration = {
@@ -96,7 +100,14 @@ export async function readWorkspaceFromApi({
       files: [],
     }
 
-    return { status: "ready", mode: "api", privilegeMode, workspace }
+    return {
+      status: "ready",
+      mode: "api",
+      privilegeMode,
+      uploadIngestionEnabled: readUploadIngestionEnabled("api"),
+      uploadsEnabled: readUploadsEnabled("api"),
+      workspace,
+    }
   } catch (error) {
     return unavailable(error)
   }

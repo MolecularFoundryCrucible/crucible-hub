@@ -1,9 +1,7 @@
 import type { WorkspaceAccount } from "./workspace-source"
 
-export function accountNeedsSetup(
-  account: Pick<WorkspaceAccount, "email" | "username">
-) {
-  return !account.email?.trim() || !account.username?.trim()
+export function accountNeedsSetup(account: Pick<WorkspaceAccount, "username">) {
+  return !account.username?.trim()
 }
 
 export function accountSetupDestination(value?: string) {

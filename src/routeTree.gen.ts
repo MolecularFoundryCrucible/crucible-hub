@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as FixtureUploadsRouteImport } from './routes/fixture-uploads'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAccountRouteImport } from './routes/_app.account'
@@ -66,6 +67,11 @@ import { Route as AppProjectsProjectMfidSettingsOwnershipRouteImport } from './r
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FixtureUploadsRoute = FixtureUploadsRouteImport.update({
+  id: '/fixture-uploads',
+  path: '/fixture-uploads',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HealthRoute = HealthRouteImport.update({
@@ -364,6 +370,7 @@ const AppProjectsProjectMfidSettingsOwnershipRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/fixture-uploads': typeof FixtureUploadsRoute
   '/health': typeof HealthRoute
   '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectMfid/settings/': typeof AppProjectsProjectMfidSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/fixture-uploads': typeof FixtureUploadsRoute
   '/health': typeof HealthRoute
   '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
@@ -469,6 +477,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/fixture-uploads': typeof FixtureUploadsRoute
   '/health': typeof HealthRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/data': typeof AppDataRoute
@@ -527,6 +536,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/fixture-uploads'
     | '/health'
     | '/account'
     | '/data'
@@ -581,6 +591,7 @@ export interface FileRouteTypes {
     | '/projects/$projectMfid/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/fixture-uploads'
     | '/health'
     | '/account'
     | '/data'
@@ -631,6 +642,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/fixture-uploads'
     | '/health'
     | '/_app/account'
     | '/_app/data'
@@ -688,6 +700,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  FixtureUploadsRoute: typeof FixtureUploadsRoute
   HealthRoute: typeof HealthRoute
   AccountSetupRoute: typeof AccountSetupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -706,6 +719,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fixture-uploads': {
+      id: '/fixture-uploads'
+      path: '/fixture-uploads'
+      fullPath: '/fixture-uploads'
+      preLoaderRoute: typeof FixtureUploadsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/health': {
@@ -1264,6 +1284,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  FixtureUploadsRoute: FixtureUploadsRoute,
   HealthRoute: HealthRoute,
   AccountSetupRoute: AccountSetupRoute,
   AuthCallbackRoute: AuthCallbackRoute,

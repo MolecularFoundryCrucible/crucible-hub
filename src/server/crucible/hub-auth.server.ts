@@ -31,6 +31,7 @@ import {
   touchSession,
 } from "./hub-session-store.server"
 import type { SharedSession } from "./hub-session-store.server"
+import { isStepUpChallenge } from "./request-error.server"
 
 const clientId = "crucible-hub"
 const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
@@ -242,11 +243,14 @@ function randomValue() {
   return randomBytes(32).toString("base64url")
 }
 
+const loopbackHosts = new Set(["127.0.0.1", "localhost", "[::1]"])
+
 function configuredCallbackUri() {
   const value = process.env.HUB_AUTH_CALLBACK_URI ?? localCallbackUri
   const url = new URL(value)
   if (
-    (url.protocol !== "https:" && value !== localCallbackUri) ||
+    (url.protocol !== "https:" &&
+      !(url.protocol === "http:" && loopbackHosts.has(url.hostname))) ||
     url.pathname !== "/hub/auth/callback" ||
     url.search ||
     url.hash ||
@@ -349,7 +353,10 @@ async function tokenRequest(path: string, body: object): Promise<Tokens> {
   return tokenSchema.parse(await response.json())
 }
 
-export async function beginHubLogin(returnTo: string | null) {
+export async function beginHubLogin(
+  returnTo: string | null,
+  maxAge: number | null = null
+) {
   const { publicBaseUrl, callbackUri } = config()
   if (!sharedMode()) {
     for (const [id, transaction] of store.transactions) {
@@ -381,6 +388,7 @@ export async function beginHubLogin(returnTo: string | null) {
   url.searchParams.set("state", state)
   url.searchParams.set("code_challenge", challenge)
   url.searchParams.set("code_challenge_method", "S256")
+  if (maxAge !== null) url.searchParams.set("max_age", String(maxAge))
   return url.toString()
 }
 
@@ -587,7 +595,7 @@ function sharedSessionApiFetch(sessionId: string): typeof fetch {
     }
     const usedToken = current.session.tokens.access_token
     let response = await execute(usedToken)
-    if (response.status === 401) {
+    if (response.status === 401 && !isStepUpChallenge(response)) {
       const latest = await readSession(sessionId)
       if (!latest) {
         clearSharedRequestSession()
@@ -602,7 +610,7 @@ function sharedSessionApiFetch(sessionId: string): typeof fetch {
             )
       if (!tokens) throw new Error("The Hub session has ended.")
       response = await execute(tokens.access_token)
-      if (response.status === 401) {
+      if (response.status === 401 && !isStepUpChallenge(response)) {
         await closeSession(sessionId)
         clearSharedRequestSession()
       }
@@ -662,13 +670,15 @@ export function sessionApiFetch(): typeof fetch {
     }
     const usedToken = current.tokens.access_token
     let response = await execute(usedToken)
-    if (response.status === 401) {
+    if (response.status === 401 && !isStepUpChallenge(response)) {
       const latest = localSession(sessionId)?.tokens
       const tokens =
         latest?.access_token !== usedToken ? latest : await refresh(sessionId)
       if (!tokens) throw new Error("The Hub session has expired.")
       response = await execute(tokens.access_token)
-      if (response.status === 401) store.sessions.delete(sessionId)
+      if (response.status === 401 && !isStepUpChallenge(response)) {
+        store.sessions.delete(sessionId)
+      }
     }
     return response
   }

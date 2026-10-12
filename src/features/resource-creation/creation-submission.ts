@@ -14,11 +14,13 @@ type StagedValues = { relationships: CreationRelationshipDraft[] }
 
 export function useStagedCreation<TValues extends StagedValues>({
   create,
+  files,
   kind,
   onCreated,
   relationships,
 }: {
   create: (value: TValues) => Promise<WorkspaceResourceDetail>
+  files?: { apply: (resourceMfid: string) => Promise<boolean> }
   kind: StagedCreationKind
   onCreated?: (resource: WorkspaceResourceDetail) => void
   relationships: {
@@ -39,10 +41,7 @@ export function useStagedCreation<TValues extends StagedValues>({
   ) {
     setSaveError(undefined)
     if (created) {
-      const complete = await relationships.apply(
-        created.unique_id,
-        value.relationships
-      )
+      const complete = await applyStages(created.unique_id, value)
       if (complete) await onApplied(created)
       return
     }
@@ -55,15 +54,21 @@ export function useStagedCreation<TValues extends StagedValues>({
       setCreated(resource)
       onCreated?.(resource)
       formApi.reset(value)
-      const complete = await relationships.apply(
-        resource.unique_id,
-        value.relationships
-      )
+      const complete = await applyStages(resource.unique_id, value)
       if (complete) await onApplied(resource)
     } catch (error) {
       setUncertainOutcome(isUncertainCreationError(error))
       setSaveError(creationFailureMessage(kind, error))
     }
+  }
+
+  async function applyStages(resourceMfid: string, value: TValues) {
+    const relationshipsComplete = await relationships.apply(
+      resourceMfid,
+      value.relationships
+    )
+    const filesComplete = files ? await files.apply(resourceMfid) : true
+    return relationshipsComplete && filesComplete
   }
 
   return { created, saveError, setCreated, submit, uncertainOutcome }

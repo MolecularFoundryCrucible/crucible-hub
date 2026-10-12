@@ -38,7 +38,7 @@ export async function readWorkspaceAccount(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response.status)
+    throw new CrucibleResponseError(result.response)
   }
 
   return toWorkspaceAccount(result.data)
@@ -67,7 +67,7 @@ export async function readWorkspaceAccountCredentialStatus(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response.status)
+    throw new CrucibleResponseError(result.response)
   }
   return result.data
 }
@@ -98,7 +98,7 @@ export async function patchWorkspaceAccount(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response.status)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   const account = await readWorkspaceAccount(scenario, requestSignal)
   return account
@@ -130,7 +130,7 @@ export async function checkWorkspaceUsernameExactMatch(
     params: { query: { username, limit: 1 } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data.items.length > 0
 }
 

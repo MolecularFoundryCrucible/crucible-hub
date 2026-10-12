@@ -1,5 +1,6 @@
 export type HubApiErrorKind =
   | "unauthenticated"
+  | "reauthentication-required"
   | "forbidden"
   | "not-found"
   | "conflict"
@@ -10,6 +11,8 @@ export type HubApiErrorKind =
   | "upstream"
   | "unexpected"
 
+export type HubConflictField = "email" | "username"
+
 export type HubApiError = {
   kind: HubApiErrorKind
   message: string
@@ -17,4 +20,5 @@ export type HubApiError = {
   retryable: boolean
   fieldErrors?: Record<string, string[]>
   retryAfterSeconds?: number
+  conflictFields?: HubConflictField[]
 }

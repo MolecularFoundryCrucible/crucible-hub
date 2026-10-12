@@ -26,7 +26,7 @@ import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import {
-  HubApiClientError,
+  hubConflictFields,
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
@@ -112,16 +112,12 @@ export function UserCreateDialog({
         onOpenChange(false)
         onCreated(user)
       } catch (cause) {
-        if (
-          cause instanceof HubApiClientError &&
-          cause.details.kind === "conflict"
-        ) {
-          if (value.username) {
-            setRejectedUsername(value.username)
-          }
-          if (value.email) {
-            setRejectedEmail(value.email)
-          }
+        const conflicts = hubConflictFields(cause, ["username", "email"])
+        if (conflicts.includes("username") && value.username) {
+          setRejectedUsername(value.username)
+        }
+        if (conflicts.includes("email") && value.email) {
+          setRejectedEmail(value.email)
         }
         setError(hubErrorMessage(cause, "The user could not be created."))
       }

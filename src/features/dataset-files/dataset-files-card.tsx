@@ -6,6 +6,7 @@ import {
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
 import {
+  AddFilesIcon,
   DownloadFileIcon,
   DownloadUnavailableIcon,
   PreparingDownloadIcon,
@@ -13,7 +14,13 @@ import {
 } from "@/components/crucible/icons"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -28,7 +35,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  useUploadsEnabled,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { requestWorkspaceFileDownload } from "@/data/crucible/resources.functions"
 import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
@@ -36,15 +46,38 @@ import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
 import { formatBytes } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { UploadFilesDialog } from "./upload-dialog"
 
-export function DatasetFiles({ datasetMfid }: { datasetMfid: string }) {
+export function DatasetFiles({
+  canEdit,
+  datasetMfid,
+}: {
+  canEdit: boolean
+  datasetMfid: string
+}) {
+  const uploadsEnabled = useUploadsEnabled()
+  const [uploadOpen, setUploadOpen] = useState(false)
   const scope = useWorkspaceScope()
   const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
   const files = filesResult.data
+  const uploadAvailable = canEdit && uploadsEnabled
   return (
     <Card aria-busy={filesResult.isFetching}>
       <CardHeader>
         <CardTitle>Files</CardTitle>
+        {uploadAvailable ? (
+          <CardAction>
+            <Button
+              onClick={() => setUploadOpen(true)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <AddFilesIcon aria-hidden="true" data-icon="inline-start" />
+              Add files
+            </Button>
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent
         className={filesResult.isPending || files?.length ? "px-0" : undefined}
@@ -85,6 +118,13 @@ export function DatasetFiles({ datasetMfid }: { datasetMfid: string }) {
           />
         )}
       </CardContent>
+      {uploadAvailable ? (
+        <UploadFilesDialog
+          datasetMfid={datasetMfid}
+          onClose={() => setUploadOpen(false)}
+          open={uploadOpen}
+        />
+      ) : null}
     </Card>
   )
 }

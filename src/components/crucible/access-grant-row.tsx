@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip"
 
 export function AccessGrantRow({
+  badge,
   error,
   identity,
   lockedReason,
@@ -32,6 +33,7 @@ export function AccessGrantRow({
   selected,
   onSelectionChange,
 }: {
+  badge?: ReactNode
   error?: ReactNode
   identity: ReactNode
   lockedReason: string
@@ -67,6 +69,7 @@ export function AccessGrantRow({
           {pending && pendingAriaLabel ? (
             <PendingIcon label={pendingAriaLabel} />
           ) : null}
+          {badge}
           <span className="flex min-w-0 flex-1 justify-end sm:w-access-role-control sm:flex-none">
             {roleEditor ?? roleBadge}
           </span>

@@ -289,7 +289,10 @@ export function ResourceOverview({
         </div>
         {resource.kind === "dataset" ? (
           <div className="order-4 min-w-0 xl:order-none">
-            <DatasetFiles datasetMfid={resource.unique_id} />
+            <DatasetFiles
+              canEdit={resource.capabilities?.can_edit === true}
+              datasetMfid={resource.unique_id}
+            />
           </div>
         ) : null}
       </ContentGridItem>

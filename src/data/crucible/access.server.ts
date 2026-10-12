@@ -213,7 +213,7 @@ export async function readWorkspaceResourceAccess(
     params: { path: { mfid: resourceMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data
 }
 
@@ -260,7 +260,7 @@ export async function setWorkspaceResourceAccessGrant(
     }
   )
   if (!result.response.ok) {
-    throw new CrucibleResponseError(result.response.status)
+    throw new CrucibleResponseError(result.response)
   }
   return readWorkspaceResourceAccess(resourceMfid, scenario, requestSignal)
 }
@@ -304,7 +304,7 @@ export async function revokeWorkspaceResourceAccessGrant(
     }
   )
   if (!result.response.ok) {
-    throw new CrucibleResponseError(result.response.status)
+    throw new CrucibleResponseError(result.response)
   }
   return readWorkspaceResourceAccess(resourceMfid, scenario, requestSignal)
 }
@@ -348,7 +348,7 @@ async function mutateWorkspaceResourcePublicAccess(
         signal: crucibleRequestSignal(requestSignal),
       })
   if (!result.response.ok) {
-    throw new CrucibleResponseError(result.response.status)
+    throw new CrucibleResponseError(result.response)
   }
   const [grants, resource] = await Promise.all([
     readWorkspaceResourceAccess(resourceMfid, scenario, requestSignal),

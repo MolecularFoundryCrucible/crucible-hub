@@ -52,12 +52,15 @@ import {
   useCreationRelationshipSubmission,
 } from "./creation-relationships"
 import type { CreationRelationshipDraft } from "./creation-relationships"
+import { CreationFilesField, useCreationFileSubmission } from "./creation-files"
 import {
   CreationFormSection,
   useCreationTimestampDefault,
   workspaceSelectionOf,
 } from "./creation-form"
 import { useStagedCreation } from "./creation-submission"
+import { useUploadsEnabled } from "@/components/crucible/workspace-provider"
+import { UploadLeaveDialog } from "@/features/dataset-files/upload-leave-guard"
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -127,6 +130,8 @@ export function DatasetCreationForm({
     resourceKind: "dataset",
     scope,
   })
+  const files = useCreationFileSubmission()
+  const uploadsEnabled = useUploadsEnabled()
   const {
     created: createdDataset,
     saveError,
@@ -135,6 +140,7 @@ export function DatasetCreationForm({
     uncertainOutcome,
   } = useStagedCreation<DatasetFormValues>({
     create: (value) => createMutation.mutateAsync(value),
+    files: uploadsEnabled ? files : undefined,
     kind: "dataset",
     onCreated: (resource) => {
       if (resource.kind === "dataset") cacheDataset(resource)
@@ -163,14 +169,20 @@ export function DatasetCreationForm({
   useCreationTimestampDefault(form)
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(
-    () => form.state.isDirty,
+    () =>
+      form.state.isDirty || (!createdDataset && files.batch.items.length > 0),
     () => {
       void navigate({ search: { kind: "datasets" }, to: "/data" })
     },
     true
   )
+  const incompleteStages =
+    relationships.failures.length > 0 || files.failures.length > 0
   const busy =
-    isSubmitting || createMutation.isPending || relationships.isPending
+    isSubmitting ||
+    createMutation.isPending ||
+    relationships.isPending ||
+    files.isPending
   const formId = "dataset-creation"
 
   function cacheDataset(dataset: DatasetResource) {
@@ -386,6 +398,15 @@ export function DatasetCreationForm({
                       maxLength={DATASET_DATA_TYPE_MAX_LENGTH}
                     />
                   </CreationFormSection>
+                  {uploadsEnabled ? (
+                    <CreationFormSection title="Files">
+                      <CreationFilesField
+                        batch={files.batch}
+                        datasetMfid={createdDataset?.unique_id}
+                        disabled={busy}
+                      />
+                    </CreationFormSection>
+                  ) : null}
                   <CreationFormSection title="Relationships">
                     <form.Field name="relationships">
                       {(field) => (
@@ -407,13 +428,24 @@ export function DatasetCreationForm({
                     {saveError}
                   </p>
                 ) : null}
-                {createdDataset && relationships.failures.length ? (
+                {createdDataset && incompleteStages ? (
                   <div className="flex flex-col gap-2" role="alert">
                     <p className="text-destructive">
-                      The dataset was created, but relationships with{" "}
-                      {relationships.failures
-                        .map((draft) => draft.target.name)
-                        .join(", ")}{" "}
+                      The dataset was created, but{" "}
+                      {[
+                        relationships.failures.length
+                          ? `relationships with ${relationships.failures
+                              .map((draft) => draft.target.name)
+                              .join(", ")}`
+                          : null,
+                        files.failures.length
+                          ? `files ${files.failures
+                              .map((failure) => failure.filename)
+                              .join(", ")}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" and ")}{" "}
                       still need recovery.
                     </p>
                   </div>
@@ -434,20 +466,20 @@ export function DatasetCreationForm({
               aria-disabled={
                 busy ||
                 uncertainOutcome ||
-                (Boolean(createdDataset) && relationships.failures.length === 0)
+                (Boolean(createdDataset) && !incompleteStages)
               }
               disabled={
                 busy ||
                 uncertainOutcome ||
-                (Boolean(createdDataset) && relationships.failures.length === 0)
+                (Boolean(createdDataset) && !incompleteStages)
               }
               className="min-w-52"
               form={formId}
               type="submit"
             >
               {createdDataset
-                ? relationships.failures.length
-                  ? "Retry missing relationships"
+                ? incompleteStages
+                  ? "Retry missing stages"
                   : "Dataset created"
                 : uncertainOutcome
                   ? "Create dataset"
@@ -459,6 +491,7 @@ export function DatasetCreationForm({
         </Card>
       </ContentBoundary>
       <DiscardChangesDialog {...discard.dialog} />
+      <UploadLeaveDialog {...files.batch.leaveGuard} />
     </>
   )
 }

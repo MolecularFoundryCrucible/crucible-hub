@@ -27,8 +27,9 @@ import {
   createWorkspaceServiceAccount,
   serviceAccountUsernameSchema,
 } from "@/data/crucible/service-accounts.functions"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import { unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
+import { hubActionError } from "@/components/crucible/reauthentication"
 
 const createServiceAccountSchema = z.object({
   unique_id: z
@@ -52,7 +53,7 @@ export function ServiceAccountCreateDialog({
   open: boolean
   scope: IdentityScope
 }) {
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<React.ReactNode>()
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof createServiceAccountSchema>) =>
       unwrapHubResult(
@@ -80,7 +81,7 @@ export function ServiceAccountCreateDialog({
         onCreated(credential)
       } catch (cause) {
         setError(
-          hubErrorMessage(cause, "The service account could not be created.")
+          hubActionError(cause, "The service account could not be created.")
         )
       }
     },

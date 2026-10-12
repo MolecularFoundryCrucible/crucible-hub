@@ -16,7 +16,7 @@ describe("workspace account source", () => {
 
   it("returns the fixture account outside production", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const account = await readWorkspaceAccount()
 
@@ -26,7 +26,7 @@ describe("workspace account source", () => {
 
   it("matches the account username when checking username availability", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(checkWorkspaceUsernameExactMatch("avery.chen")).resolves.toBe(
       true
@@ -44,7 +44,7 @@ describe("workspace account source", () => {
 
   it("returns a confirmed fixture profile update", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       patchWorkspaceAccount({
@@ -112,7 +112,7 @@ describe("workspace account source", () => {
 
   it("does not bypass the production fixture guard", async () => {
     vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     vi.stubEnv("HUB_ENABLE_FIXTURES", "")
 
     await expect(readWorkspaceAccount()).rejects.toThrow(

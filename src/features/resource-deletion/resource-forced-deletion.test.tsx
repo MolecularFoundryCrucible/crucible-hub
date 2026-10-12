@@ -57,7 +57,7 @@ function preview(overrides: Partial<WorkspaceDeletionPreview> = {}) {
     join_requests_removed: 0,
     memberships_removed: 2,
     removed_grants: [],
-    resource_id: "project-mfid",
+    resource_mfid: "project-mfid",
     resource_type: "project" as const,
     service_accounts_unbound: 0,
     ...overrides,

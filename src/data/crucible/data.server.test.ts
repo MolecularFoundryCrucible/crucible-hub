@@ -13,7 +13,7 @@ describe("workspace data sources", () => {
 
   it("uses opaque cursor pagination for fixture samples", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const first = await readWorkspaceSamples({ limit: 1 })
     const second = await readWorkspaceSamples({
@@ -31,7 +31,7 @@ describe("workspace data sources", () => {
 
   it("uses independent cursor pagination for fixture datasets", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const first = await readWorkspaceDatasets({ limit: 2 })
     const second = await readWorkspaceDatasets({
@@ -59,7 +59,7 @@ describe("workspace data sources", () => {
 
   it("rejects cursors that were not issued by the fixture source", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       readWorkspaceSamples({ cursor: "invalid", limit: 1 })
@@ -68,7 +68,7 @@ describe("workspace data sources", () => {
 
   it("filters dense datasets by expanded instrument before cursor paging", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const first = await readWorkspaceDatasets({
       limit: 50,
@@ -116,7 +116,7 @@ describe("workspace data sources", () => {
 
   it("filters explicit fixture project relationships before cursor paging", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const assigned = await readWorkspaceSamples({
       limit: 2,
@@ -173,7 +173,7 @@ describe("workspace data sources", () => {
 
   it("combines collection filters with project and instrument filters before paging", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const assignedSamples = await readWorkspaceSamples({
       createdFrom: "2026-08-27",
@@ -381,7 +381,7 @@ describe("workspace data sources", () => {
 
   it("rejects explicit blank instrument filters at the direct server boundary", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       readWorkspaceDatasets({ instrumentMfid: " ", limit: 50 })

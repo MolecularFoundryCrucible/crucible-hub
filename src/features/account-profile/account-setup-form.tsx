@@ -10,7 +10,7 @@ import {
   accountSetupDestination,
 } from "@/data/crucible/account-setup"
 import {
-  HubApiClientError,
+  hubConflictFields,
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
@@ -20,6 +20,9 @@ import {
   accountProfileChanges,
   accountProfileSchema,
   accountProfileValues,
+  matchesRejectedValue,
+  profileNameMissing,
+  ProfileNameHint,
 } from "./account-profile-fields"
 import { isSlugTakenOrRejected } from "@/features/forms/slug-availability"
 import { UsernameAvailability } from "./username-availability"
@@ -34,6 +37,7 @@ export function AccountSetupForm({
   const [saveError, setSaveError] = useState<string>()
   const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
   const [rejectedUsername, setRejectedUsername] = useState<string>()
+  const [rejectedEmail, setRejectedEmail] = useState<string>()
   const form = useForm({
     defaultValues: accountProfileValues(account),
     validators: {
@@ -51,17 +55,18 @@ export function AccountSetupForm({
               )
             : account
         if (accountNeedsSetup(updated)) {
-          setSaveError("Email and username are required to continue.")
+          setSaveError("A username is required to continue.")
           return
         }
         window.location.replace(accountSetupDestination(returnTo))
       } catch (error) {
-        if (
-          error instanceof HubApiClientError &&
-          error.details.kind === "conflict"
-        ) {
-          setRejectedUsername(value.username.trim())
-          notifyError("Username already taken")
+        const conflicts = hubConflictFields(error, ["username"])
+        if (conflicts.length) {
+          if (conflicts.includes("username")) {
+            setRejectedUsername(value.username.trim())
+            notifyError("Username already taken")
+          }
+          if (conflicts.includes("email")) setRejectedEmail(value.email.trim())
         } else {
           setSaveError(
             hubErrorMessage(
@@ -100,7 +105,16 @@ export function AccountSetupForm({
           </form.Field>
           <form.Field name="email">
             {(field) => (
-              <ProfileField field={field} label="Email" required type="email" />
+              <ProfileField
+                field={field}
+                label="Email"
+                rejectedMessage={
+                  "This email is already used by another account."
+                }
+                rejectedValue={rejectedEmail}
+                required
+                type="email"
+              />
             )}
           </form.Field>
           <form.Field name="first_name">
@@ -109,6 +123,9 @@ export function AccountSetupForm({
           <form.Field name="last_name">
             {(field) => <ProfileField field={field} label="Last name" />}
           </form.Field>
+          <form.Subscribe selector={profileNameMissing}>
+            {(missing) => (missing ? <ProfileNameHint /> : null)}
+          </form.Subscribe>
         </FieldGroup>
       </fieldset>
       {saveError ? (
@@ -119,6 +136,7 @@ export function AccountSetupForm({
       <form.Subscribe
         selector={(state) =>
           state.canSubmit &&
+          !matchesRejectedValue(state.values.email, rejectedEmail) &&
           !isSlugTakenOrRejected(
             state.values.username,
             liveTakenUsername,

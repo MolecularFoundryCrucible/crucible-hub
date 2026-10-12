@@ -152,7 +152,7 @@ export async function readWorkspaceUsers(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return {
     items: result.data.items.map(toWorkspaceAdminUser),
     limit: result.data.limit,
@@ -207,7 +207,7 @@ export async function readWorkspaceUserDetail(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status === 404) return null
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -245,7 +245,8 @@ export async function patchWorkspaceUser(
     params: { path: { user_ref: userId } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -282,7 +283,7 @@ export async function updateWorkspaceUserPlatformRole(
     params: { path: { user_ref: userId } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -307,7 +308,7 @@ export async function revokeWorkspaceUserApiKey(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status >= 400) {
-    throw new CrucibleResponseError(result.response.status)
+    throw new CrucibleResponseError(result.response)
   }
 }
 
@@ -350,7 +351,8 @@ export async function createWorkspaceUser(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -372,11 +374,11 @@ export async function provisionWorkspaceUserApiKey(
   const client = createCrucibleClient(configuration, {
     privilegeMode: "elevated",
   })
-  const result = await client.POST("/users/{user_ref}/apikey", {
+  const result = await client.POST("/users/{user_ref}/apikey/regenerate", {
     params: { path: { user_ref: userId } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data
 }
 
@@ -403,6 +405,6 @@ export async function checkWorkspaceEmailExactMatch(
     params: { query: { email, limit: 1 } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data.items.length > 0
 }

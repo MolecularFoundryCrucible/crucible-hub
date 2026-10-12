@@ -19,7 +19,7 @@ A decision record does not override a contract owned by another Crucible reposit
 | [0002](0002-server-side-session-boundary.md)                   | Accepted   | Server-side Hub session and API authentication boundary                           |
 | [0003](0003-owned-design-system.md)                            | Accepted   | Owned shadcn/ui design system with semantic tokens                                |
 | [0004](0004-openapi-generated-client.md)                       | Accepted   | OpenAPI-generated TypeScript client                                               |
-| [0005](0005-direct-object-storage-uploads.md)                  | Proposed   | Direct browser-to-object-storage upload flow                                      |
+| [0005](0005-direct-object-storage-uploads.md)                  | Accepted   | Direct browser-to-object-storage upload flow                                      |
 | [0006](0006-use-base-ui-primitives.md)                         | Accepted   | Base UI primitives for shadcn/ui                                                  |
 | [0007](0007-coordinate-route-and-query-loading.md)             | Accepted   | Route entry and in-page Query loading ownership                                   |
 | [0008](0008-inspect-linked-resources-in-place.md)              | Accepted   | In-place resource inspection with separate full-page navigation                   |

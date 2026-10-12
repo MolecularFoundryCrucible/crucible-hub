@@ -21,7 +21,7 @@ describe("workspace instrument source", () => {
 
   it("paginates fixture instruments", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const first = await readWorkspaceInstruments({ limit: 1 })
     const second = await readWorkspaceInstruments({
@@ -39,7 +39,7 @@ describe("workspace instrument source", () => {
 
   it("filters fixture instruments by lifecycle status before pagination", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       readWorkspaceInstruments({
@@ -133,7 +133,7 @@ describe("workspace instrument source", () => {
 
   it("does not bypass the production fixture guard", async () => {
     vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     vi.stubEnv("HUB_ENABLE_FIXTURES", "")
 
     await expect(readWorkspaceInstruments({ limit: 20 })).rejects.toThrow(
@@ -143,7 +143,7 @@ describe("workspace instrument source", () => {
 
   it("returns a non-persistent fixture instrument descriptive update", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const instrumentMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z4"
 
     await expect(
@@ -245,7 +245,7 @@ describe("workspace instrument source", () => {
 
   it("changes fixture instrument status without persisting the fixture", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const instrumentMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z4"
 
     await expect(
@@ -405,7 +405,7 @@ describe("workspace instrument source", () => {
 
   it("checks instrument_id availability in fixture and API mode", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       checkWorkspaceInstrumentIdExactMatch("hard-xray-microprobe")

@@ -419,21 +419,21 @@ function ManagedResourceAccess({
                       : "This member cannot be revoked here"
                 return (
                   <AccessGrantRow
+                    badge={
+                      primaryProject ? (
+                        <Badge
+                          aria-label="Primary project. Managed through project assignment."
+                          variant="outline"
+                        >
+                          Primary project
+                        </Badge>
+                      ) : undefined
+                    }
                     identity={
                       <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <p className="min-w-0 truncate text-label">
-                            <PrincipalName grant={grant} />
-                          </p>
-                          {primaryProject ? (
-                            <Badge
-                              aria-label="Primary project. Managed through project assignment."
-                              variant="outline"
-                            >
-                              Primary project
-                            </Badge>
-                          ) : null}
-                        </div>
+                        <p className="min-w-0 truncate text-label">
+                          <PrincipalName grant={grant} />
+                        </p>
                         <p className="flex min-w-0 items-center gap-1.5 text-body text-muted-foreground">
                           <PrincipalTypeIcon
                             label={principalLabel(grant)}

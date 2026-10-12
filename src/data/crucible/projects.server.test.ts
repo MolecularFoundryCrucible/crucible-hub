@@ -20,7 +20,7 @@ describe("workspace project source", () => {
 
   it("paginates fixture projects", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const first = await readWorkspaceProjects({ limit: 1 })
     const second = await readWorkspaceProjects({
@@ -36,7 +36,7 @@ describe("workspace project source", () => {
 
   it("resolves fixture project detail by canonical MFID", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const project = await readWorkspaceProject("01J6Y8N4Q2R7M9K3T5V0W1X2Z3")
 
@@ -103,7 +103,7 @@ describe("workspace project source", () => {
 
   it("normalizes fixture project updates without exposing lifecycle fields", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const project = await patchWorkspaceProject("01J6Y8N4Q2R7M9K3T5V0W1X2Z3", {
       organization: "Updated Example Lab",
@@ -232,7 +232,7 @@ describe("workspace project source", () => {
 
   it("does not bypass the production fixture guard", async () => {
     vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     vi.stubEnv("HUB_ENABLE_FIXTURES", "")
 
     await expect(readWorkspaceProjects({ limit: 20 })).rejects.toThrow(
@@ -336,7 +336,7 @@ describe("workspace project source", () => {
 
   it("returns deterministic fixture member changes without mutating fixtures", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const projectMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z3"
 
     const added = await addWorkspaceProjectMember(
@@ -382,7 +382,7 @@ describe("workspace project source", () => {
 
   it("matches API duplicate-member behavior in fixture mode", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const projectMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z3"
 
     await expect(
@@ -395,7 +395,7 @@ describe("workspace project source", () => {
 
   it("rejects duplicate project_id updates with 409 conflict in fixture mode", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       patchWorkspaceProject("01J6Y8N4Q2R7M9K3T5V0W1X2Z3", {
@@ -406,7 +406,7 @@ describe("workspace project source", () => {
 
   it("checks project_id availability in fixture and API mode", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       checkWorkspaceProjectIdExactMatch("operando-catalyst-mapping")

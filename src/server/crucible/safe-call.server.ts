@@ -44,6 +44,17 @@ export async function safeCrucibleCall<T>(
         cancelled,
         timedOut:
           error instanceof DOMException && error.name === "TimeoutError",
+        retryAfterSeconds:
+          error instanceof CrucibleResponseError
+            ? error.retryAfterSeconds
+            : undefined,
+        conflictFields:
+          error instanceof CrucibleResponseError
+            ? error.conflictFields
+            : undefined,
+        reauthenticationRequired:
+          error instanceof CrucibleResponseError &&
+          error.reauthenticationRequired,
       }),
     }
   }

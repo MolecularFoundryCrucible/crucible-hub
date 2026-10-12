@@ -12,6 +12,8 @@ type WorkspaceContextValue = {
   mode: WorkspaceMode
   privilegeMode: WorkspacePrivilegeMode
   scope: IdentityScope
+  uploadIngestionEnabled: boolean
+  uploadsEnabled: boolean
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(
@@ -23,14 +25,26 @@ export function WorkspaceProvider({
   mode,
   scope,
   privilegeMode = privilegeModeFromScope(scope),
+  uploadIngestionEnabled = false,
+  uploadsEnabled = false,
 }: {
   children: React.ReactNode
   mode: WorkspaceMode
   privilegeMode?: WorkspacePrivilegeMode
   scope: IdentityScope
+  uploadIngestionEnabled?: boolean
+  uploadsEnabled?: boolean
 }) {
   return (
-    <WorkspaceContext.Provider value={{ mode, privilegeMode, scope }}>
+    <WorkspaceContext.Provider
+      value={{
+        mode,
+        privilegeMode,
+        scope,
+        uploadIngestionEnabled,
+        uploadsEnabled,
+      }}
+    >
       {children}
     </WorkspaceContext.Provider>
   )
@@ -60,6 +74,24 @@ export function useWorkspacePrivilegeMode() {
     )
   }
   return context.privilegeMode
+}
+
+export function useUploadsEnabled() {
+  const context = useContext(WorkspaceContext)
+  if (!context) {
+    throw new Error("useUploadsEnabled must be used within WorkspaceProvider")
+  }
+  return context.uploadsEnabled
+}
+
+export function useUploadIngestionEnabled() {
+  const context = useContext(WorkspaceContext)
+  if (!context) {
+    throw new Error(
+      "useUploadIngestionEnabled must be used within WorkspaceProvider"
+    )
+  }
+  return context.uploadIngestionEnabled
 }
 
 export function useAdministrationScope() {

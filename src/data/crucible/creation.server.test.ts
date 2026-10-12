@@ -25,7 +25,7 @@ describe("workspace creation source", () => {
 
   it("creates a fixture project led by the selected account", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const project = await createWorkspaceProjectResource({
       organization: "Molecular Foundry",

@@ -6,6 +6,10 @@ import type {
   Workspace,
   WorkspaceSource,
 } from "@/data/crucible/workspace-source"
+import {
+  readUploadIngestionEnabled,
+  readUploadsEnabled,
+} from "./workspace-config.server"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type ApiLinkedResource = components["schemas"]["LinkedResource"]
@@ -236,6 +240,8 @@ export function readWorkspaceFixture(
     status: "ready",
     mode: "fixture",
     privilegeMode,
+    uploadIngestionEnabled: readUploadIngestionEnabled("fixture"),
+    uploadsEnabled: readUploadsEnabled("fixture"),
     workspace: {
       ...workspace,
       account: {

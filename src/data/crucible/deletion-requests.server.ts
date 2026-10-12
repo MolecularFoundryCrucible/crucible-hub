@@ -54,7 +54,7 @@ const deletionRequestSchema = z
     request_time: z.string().nullable().optional(),
     requester: workspacePersonSchema.nullable(),
     requester_id: z.string().min(1),
-    resource_id: z.string().min(1),
+    resource_mfid: z.string().min(1),
     resource_name: z.string().nullable().optional(),
     resource_type: z.enum(["dataset", "sample"]).nullable().optional(),
     review_time: z.string().nullable().optional(),
@@ -122,7 +122,7 @@ function workspaceDeletionRequest(value: unknown): WorkspaceDeletionRequest {
     request_time: result.data.request_time ?? null,
     requester: result.data.requester,
     requester_id: result.data.requester_id,
-    resource_id: result.data.resource_id,
+    resource_mfid: result.data.resource_mfid,
     resource_name: result.data.resource_name ?? null,
     resource_type: result.data.resource_type ?? null,
     review_time: result.data.review_time ?? null,
@@ -150,7 +150,7 @@ function fixtureDeletionRequests(
     request_time: "2026-08-31T18:10:00Z",
     requester,
     requester_id: requester.unique_id,
-    resource_id: resource.unique_id,
+    resource_mfid: resource.unique_id,
     resource_name: resource.dataset_name ?? null,
     resource_type: "dataset",
     review_time: null,
@@ -173,7 +173,7 @@ function fixtureDeletionRequests(
     request_time: "2026-08-25T15:40:00Z",
     requester: source.workspace.account,
     requester_id: source.workspace.account.unique_id,
-    resource_id: submittedResource.unique_id,
+    resource_mfid: submittedResource.unique_id,
     resource_name: submittedResource.sample_name,
     resource_type: "sample",
     review_time: "2026-08-26T17:20:00Z",
@@ -227,7 +227,7 @@ export async function readWorkspaceDeletionRequests(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   const page = deletionRequestPageSchema.safeParse(result.data)
   if (!page.success) throw new Error("The deletion request list is invalid.")
   return {
@@ -292,7 +292,7 @@ export async function readWorkspaceDeletionAudit(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   const page = deletionAuditPageSchema.safeParse(result.data)
   if (!page.success) throw new Error("The deletion audit list is invalid.")
   return {
@@ -443,6 +443,6 @@ export async function reviewWorkspaceDeletionRequest(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return workspaceDeletionRequest(result.data)
 }

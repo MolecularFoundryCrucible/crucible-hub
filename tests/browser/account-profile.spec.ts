@@ -41,6 +41,16 @@ test("opens profile management from the account avatar and saves changes", async
     "avery.chen@example.invalid"
   )
 
+  const nameHint = page.getByText(
+    "Add your name so collaborators can recognize you."
+  )
+  await expect(nameHint).toHaveCount(0)
+  await page.getByLabel("First name").fill("")
+  await page.getByLabel("Last name").fill("")
+  await expect(nameHint).toBeVisible()
+  await page.getByLabel("Last name").fill("Chen")
+  await expect(nameHint).toHaveCount(0)
+
   await page.getByLabel("First name").fill("Averie")
   await page.getByLabel("Username").fill("averie_chen")
   await page.getByRole("button", { name: "Save changes" }).click()

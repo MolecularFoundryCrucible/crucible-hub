@@ -6,13 +6,17 @@ import {
   PanelState,
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
-import { RequestIngestionIcon } from "@/components/crucible/icons"
+import { AddFilesIcon, RequestIngestionIcon } from "@/components/crucible/icons"
+import { UploadFilesDialog } from "@/features/dataset-files/upload-dialog"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  useUploadsEnabled,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -56,6 +60,7 @@ import {
   datasetFilesQueryOptions,
   datasetIngestionRequestsQueryOptions,
   ingestionClassesQueryOptions,
+  resourceQueryOptions,
 } from "@/data/crucible/resources.queries"
 import {
   HubApiClientError,
@@ -76,6 +81,7 @@ export function DatasetProcessingPage({
   datasetMfid: string
 }) {
   const scope = useWorkspaceScope()
+  const resourceResult = useQuery(resourceQueryOptions(scope, datasetMfid))
   const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
   const requestsResult = useQuery(
     datasetIngestionRequestsQueryOptions(scope, datasetMfid)
@@ -84,6 +90,7 @@ export function DatasetProcessingPage({
   return (
     <div className="flex min-w-0 flex-col gap-6">
       <FilesAndIngestionCard
+        canEdit={resourceResult.data?.capabilities?.can_edit === true}
         datasetMfid={datasetMfid}
         filesResult={filesResult}
         requestsResult={requestsResult}
@@ -101,10 +108,12 @@ export function DatasetProcessingPage({
 }
 
 function FilesAndIngestionCard({
+  canEdit,
   datasetMfid,
   filesResult,
   requestsResult,
 }: {
+  canEdit: boolean
   datasetMfid: string
   filesResult: UseQueryResult<readonly WorkspaceDatasetFile[]>
   requestsResult: UseQueryResult<WorkspaceIngestionRequestPage>
@@ -113,21 +122,36 @@ function FilesAndIngestionCard({
   const requestPage = requestsResult.data
   const requests = requestPage?.items
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const uploadsEnabled = useUploadsEnabled()
+  const uploadAvailable = canEdit && uploadsEnabled
   const eligibleFiles = files?.filter((file) => file.storage_backend === "gcs")
 
   return (
     <Card aria-busy={filesResult.isFetching || requestsResult.isFetching}>
       <CardHeader>
         <CardTitle>Files and ingestion</CardTitle>
-        {eligibleFiles?.length ? (
-          <CardAction>
-            <Button onClick={() => setDialogOpen(true)} type="button">
-              <RequestIngestionIcon
-                aria-hidden="true"
-                data-icon="inline-start"
-              />
-              Request ingestion
-            </Button>
+        {uploadAvailable || eligibleFiles?.length ? (
+          <CardAction className="flex flex-wrap gap-2">
+            {uploadAvailable ? (
+              <Button
+                onClick={() => setUploadOpen(true)}
+                type="button"
+                variant="outline"
+              >
+                <AddFilesIcon aria-hidden="true" data-icon="inline-start" />
+                Add files
+              </Button>
+            ) : null}
+            {eligibleFiles?.length ? (
+              <Button onClick={() => setDialogOpen(true)} type="button">
+                <RequestIngestionIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
+                Request ingestion
+              </Button>
+            ) : null}
           </CardAction>
         ) : null}
       </CardHeader>
@@ -247,6 +271,13 @@ function FilesAndIngestionCard({
           )}
         </section>
       </CardContent>
+      {uploadAvailable ? (
+        <UploadFilesDialog
+          datasetMfid={datasetMfid}
+          onClose={() => setUploadOpen(false)}
+          open={uploadOpen}
+        />
+      ) : null}
       {files?.length ? (
         <IngestionRequestDialog
           datasetMfid={datasetMfid}

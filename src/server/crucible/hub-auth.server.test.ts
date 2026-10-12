@@ -3,7 +3,13 @@ import type { AsyncLocalStorage } from "node:async_hooks"
 import { H3Event } from "h3-v2"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { beginHubLogin, finishHubLogin } from "./hub-auth.server"
+import {
+  beginHubLogin,
+  finishHubLogin,
+  hasHubSession,
+  hubAuthPublicOrigin,
+  sessionApiFetch,
+} from "./hub-auth.server"
 
 const storageKey = Symbol.for("tanstack-start:event-storage")
 const eventStorage = (
@@ -203,6 +209,95 @@ describe("hub login exchange", () => {
     )
     await expect(finishLogin(transactionCookie, "code", state)).rejects.toThrow(
       "The Crucible sign-in request failed."
+    )
+  })
+
+  it("forwards max_age to force ORCID re-authentication", async () => {
+    stubHubAuthEnv()
+    const h3Event = new H3Event(
+      new Request("http://127.0.0.1:3000/hub/auth/login")
+    )
+    const location = await eventStorage.run({ h3Event }, () =>
+      beginHubLogin("/hub/account", 0)
+    )
+    expect(new URL(location).searchParams.get("max_age")).toBe("0")
+  })
+
+  it("keeps the session when the API requires a recent sign-in", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
+    stubHubAuthEnv()
+    const { h3Event, location } = await beginLogin("/hub/")
+    const state = new URL(location).searchParams.get("state")!
+    const requests: string[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request) => {
+        const url = new URL(
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.href
+              : input.url
+        )
+        requests.push(url.pathname)
+        if (url.pathname === "/auth/hub/token") {
+          return Response.json(tokenResponse)
+        }
+        return new Response(null, {
+          headers: {
+            "WWW-Authenticate":
+              'Bearer error="insufficient_user_authentication", max_age="600"',
+          },
+          status: 401,
+        })
+      })
+    )
+    const { cookies } = await finishLogin(loginCookie(h3Event), "code", state)
+    const sessionCookie = cookies
+      .find((value) => value.startsWith("crucible_hub_session="))!
+      .split(";")[0]
+
+    const apiEvent = new H3Event(
+      new Request("http://127.0.0.1:3000/hub/account", {
+        headers: { cookie: sessionCookie },
+      })
+    )
+    await eventStorage.run({ h3Event: apiEvent }, async () => {
+      const response = await sessionApiFetch()(
+        "https://api.example.test/service_accounts",
+        { method: "POST" }
+      )
+      expect(response.status).toBe(401)
+      expect(hasHubSession()).toBe(true)
+    })
+    expect(requests).toEqual(["/auth/hub/token", "/service_accounts"])
+  })
+
+  it.each([
+    ["http://localhost:3000/hub/auth/callback", "http://localhost:3000"],
+    ["http://[::1]:3000/hub/auth/callback", "http://[::1]:3000"],
+  ])(
+    "accepts a loopback HTTP callback %s for local development",
+    async (callback, origin) => {
+      stubHubAuthEnv()
+      vi.stubEnv("HUB_AUTH_CALLBACK_URI", callback)
+      const { h3Event, location } = await beginLogin("/hub/data")
+
+      expect(new URL(location).searchParams.get("redirect_uri")).toBe(callback)
+      expect(hubAuthPublicOrigin()).toBe(origin)
+      expect(loginCookie(h3Event)).not.toContain("Secure")
+    }
+  )
+
+  it("rejects a plain HTTP callback on a non-loopback host", async () => {
+    stubHubAuthEnv()
+    vi.stubEnv(
+      "HUB_AUTH_CALLBACK_URI",
+      "http://hub.example.test/hub/auth/callback"
+    )
+    await expect(beginLogin("/hub/data")).rejects.toThrow(
+      "Hub sign-in callback is not configured correctly."
     )
   })
 })

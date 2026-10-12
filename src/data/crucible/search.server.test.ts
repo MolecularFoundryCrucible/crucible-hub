@@ -20,7 +20,7 @@ describe("workspace search source", () => {
 
   it("groups ranked fixture matches and respects selected kinds", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const result = await searchWorkspace({
       kinds: ["sample", "dataset"],
@@ -43,7 +43,7 @@ describe("workspace search source", () => {
 
   it("restricts fixture data search to the selected project", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const result = await searchWorkspace({
       kinds: ["sample"],
@@ -61,7 +61,7 @@ describe("workspace search source", () => {
 
   it("reports one fixture search failure without hiding other groups", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const result = await searchWorkspace({
       kinds: allKinds,
@@ -83,7 +83,7 @@ describe("workspace search source", () => {
 
   it("resolves a complete MFID directly", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const result = await searchWorkspace({
       kinds: allKinds,
@@ -202,7 +202,7 @@ describe("workspace search source", () => {
 
   it("browses initial collections when query is empty in fixture mode", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const result = await searchWorkspace({
       kinds: ["instrument", "project"],

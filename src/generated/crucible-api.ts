@@ -4,7 +4,63 @@
  */
 
 export interface paths {
-    "/metrics": {
+    "/access_groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Access Group */
+        post: operations["create_access_group_access_groups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access_groups/{group_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Access Group */
+        get: operations["read_access_group_access_groups__group_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access_groups/{group_name}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request To Join Access Group
+         * @description Request to join an access group (currently only projects). Blocked if the
+         *     caller is already a member or already has a pending request for this group.
+         *     Resubmission is allowed after a request has been rejected or approved.
+         */
+        post: operations["request_to_join_access_group_access_groups__group_name__join_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access_groups/{group_name}/users": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,10 +68,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Metrics
-         * @description Endpoint that serves Prometheus metrics.
+         * List Access Group Users
+         * @description List all users who are members of the given access group, with their role. Admin only.
          */
-        get: operations["metrics_metrics_get"];
+        get: operations["list_access_group_users_access_groups__group_name__users_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -36,6 +92,71 @@ export interface paths {
          * @description Return auth context for the authenticated caller: ORCID, access groups, and profile.
          */
         get: operations["get_account_info_account_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/apikey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Account Apikey
+         * @deprecated
+         * @description Return the authenticated caller's current API key.
+         *
+         *     Deprecated: API keys will be stored hashed and become unreadable. Use
+         *     POST /account/apikey/regenerate, which returns a new key once.
+         */
+        get: operations["get_account_apikey_account_apikey_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/apikey/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Regenerate Account Apikey
+         * @description Issue a new API key for the caller and revoke the previous one. The key is returned only once.
+         */
+        post: operations["regenerate_account_apikey_account_apikey_regenerate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/join_requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Account Join Requests
+         * @description Return the authenticated caller's own join request history across all groups.
+         *     Filter by ?status=pending|approved|rejected.
+         */
+        get: operations["get_account_join_requests_account_join_requests_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -88,47 +209,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/account/join_requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Account Join Requests
-         * @description Return the authenticated caller's own join request history across all groups.
-         *     Filter by ?status=pending|approved|rejected.
-         */
-        get: operations["get_account_join_requests_account_join_requests_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/account/apikey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Account Apikey
-         * @description Return the authenticated caller's current API key.
-         */
-        get: operations["get_account_apikey_account_apikey_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/account/verify": {
         parameters: {
             query?: never;
@@ -150,7 +230,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/login": {
+    "/auth": {
         parameters: {
             query?: never;
             header?: never;
@@ -158,38 +238,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Orcid Login
-         * @description Redirect the user to the ORCID login page to begin authentication.
+         * Redirect Exchange Deprecated
+         * @deprecated
+         * @description Deprecated: use GET /auth/callback.
          */
-        get: operations["orcid_login_auth_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Redirect Exchange
-         * @description Exchange the ORCID authorization code for an access token and user information.
-         *
-         *     Args:
-         *         request: Request object containing the HTTP request
-         *         code: ORCID authorization code
-         *         state: Optional state parameter (default is None)
-         *
-         *     Returns:
-         *         RedirectResponse to the appropriate page after successful authentication
-         */
-        get: operations["redirect_exchange_auth_callback_get"];
+        get: operations["redirect_exchange_deprecated_auth_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -238,7 +291,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/login": {
+    "/auth/callback": {
         parameters: {
             query?: never;
             header?: never;
@@ -246,91 +299,18 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Orcid Login Deprecated
-         * @deprecated
-         * @description Deprecated: use GET /auth/login.
+         * Redirect Exchange
+         * @description Exchange the ORCID authorization code for an access token and user information.
+         *
+         *     Args:
+         *         request: Request object containing the HTTP request
+         *         code: ORCID authorization code
+         *         state: Optional state parameter (default is None)
+         *
+         *     Returns:
+         *         RedirectResponse to the appropriate page after successful authentication
          */
-        get: operations["orcid_login_deprecated_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Redirect Exchange Deprecated
-         * @deprecated
-         * @description Deprecated: use GET /auth/callback.
-         */
-        get: operations["redirect_exchange_deprecated_auth_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user_apikey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Apikey Deprecated
-         * @deprecated
-         * @description Deprecated: use GET /auth/apikey.
-         */
-        get: operations["get_apikey_deprecated_user_apikey_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/regenerate_apikey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Regenerate Apikey Deprecated
-         * @deprecated
-         * @description Deprecated: use POST /auth/apikey/regenerate.
-         */
-        get: operations["regenerate_apikey_deprecated_regenerate_apikey_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/hub/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Begin Hub Login */
-        get: operations["begin_hub_login_auth_hub_login_get"];
+        get: operations["redirect_exchange_auth_callback_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -356,17 +336,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/hub/token": {
+    "/auth/hub/login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Begin Hub Login */
+        get: operations["begin_hub_login_auth_hub_login_get"];
         put?: never;
-        /** Exchange Hub Code */
-        post: operations["exchange_hub_code_auth_hub_token_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -404,6 +384,951 @@ export interface paths {
          * @description Requires HTTP Basic Hub client authentication and JSON containing token. Revokes the entire login token family, including all access and refresh generations. A previously rotated refresh token can revoke the family. Repeated requests, unknown tokens, and tokens belonging to another client return 204 without disclosing token validity. Subsequent authentication checks reject revoked tokens; already-authorized requests may finish. Other login sessions, legacy API keys, and the ORCID session are unaffected. The Hub must also delete its own session and browser cookie.
          */
         post: operations["revoke_hub_credential_auth_hub_revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange Hub Code */
+        post: operations["exchange_hub_code_auth_hub_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Orcid Login
+         * @description Redirect the user to the ORCID login page to begin authentication.
+         */
+        get: operations["orcid_login_auth_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Datasets
+         * @description Returns a paginated list of datasets the requesting user is authorized to view.
+         *     Default limit is 100, max is 1000.
+         *
+         *     By default, results are ordered by unique_id descending. To fetch a keyset page,
+         *     pass cursor=<next_cursor from the previous response>. The first page omits cursor.
+         *     next_cursor is null when there are no further pages. total is included only when
+         *     cursor is omitted and offset is zero. Pass include_total=true to request it on
+         *     any page or include_total=false to suppress it.
+         *
+         *     Offset pagination is supported for backward compatibility: pass offset=<n> instead
+         *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
+         *     result sets, since deep offsets are slower.
+         *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
+         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
+         *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
+         *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
+         *     within the authorized, filtered, and ordered collection.
+         *     Pass include_links=true to include parent, child, and associated resources for each dataset.
+         *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
+         *     Pass instrument_mfid to filter by the instrument's canonical stable identity.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
+         *     Pass sample_mfid to filter by a readable sample's canonical stable identity.
+         *     Faceted nullable fields also accept field-specific is_null=true or false filters.
+         *     Access selectors use AND semantics and only narrow resources readable by the caller.
+         */
+        get: operations["list_datasets_datasets_get"];
+        put?: never;
+        /** Create Dataset */
+        post: operations["create_dataset_datasets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dataset Facets */
+        get: operations["get_dataset_facets_datasets_facets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/first_thumbnails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get First Thumbnails
+         * @description Given a list of dataset unique_ids, returns a dict mapping each unique_id
+         *     to its first (lowest-id) thumbnail. Datasets with no thumbnail or that the
+         *     caller cannot access are omitted from the response.
+         *
+         *     Intended for bulk thumbnail fetching after an entity_graph call.
+         */
+        post: operations["get_first_thumbnails_datasets_first_thumbnails_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Datasets
+         * @description Search readable datasets by name and return results ordered by match quality.
+         *     Use owner_id for an exact owner match.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
+         */
+        get: operations["search_datasets_datasets_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{child_dataset_mfid}/parents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Parent Datasets
+         * @description Returns a paginated list of parent datasets for a given dataset.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
+         */
+        get: operations["list_parent_datasets_datasets__child_dataset_mfid__parents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Dataset
+         * @description Returns the dataset with the provided MFID.
+         *     Pass include_links=true to include parent, child, and associated resources.
+         *     The owner identity is resolved by default. Pass include_owner=false to omit it.
+         */
+        get: operations["read_dataset_datasets__dataset_mfid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Dataset
+         * @description Partially update a dataset record. Only provided fields are modified.
+         *     No owner_orcid/project_id — use POST /resources/{mfid}/transfer_ownership
+         *     and POST /resources/{mfid}/project.
+         */
+        patch: operations["update_dataset_datasets__dataset_mfid__patch"];
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/carrier_segmentation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Carrier Segmentation */
+        post: operations["request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/dataset_graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dataset Graph
+         * @description Returns a NetworkX node-link graph of all datasets connected (via parent/child
+         *     relationships) to the given dataset. Loads all authorized datasets in the
+         *     project and returns the directed lineage subgraph (ancestors + descendants) of the target.
+         */
+        get: operations["dataset_graph_datasets__dataset_mfid__dataset_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/dataset_graph_cte": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dataset Graph Cte
+         * @description CTE-based implementation (kept for reference). Prefer /dataset_graph.
+         *     Returns a NetworkX node-link graph of all datasets connected (via parent/child
+         *     relationships) to the given dataset, i.e. its full lineage subgraph.
+         */
+        get: operations["dataset_graph_cte_datasets__dataset_mfid__dataset_graph_cte_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/download_links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Generate Dataset Download Links
+         * @description Returns signed GCS download URLs (1-hour expiry) for all files in the dataset,
+         *     keyed by AssociatedFile mfid. Backfills missing storage_path records on the fly.
+         */
+        get: operations["generate_dataset_download_links_datasets__dataset_mfid__download_links_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Associated Files
+         * @description Returns a list of the files associated with the dataset ID provided.
+         */
+        get: operations["read_associated_files_datasets__dataset_mfid__files_get"];
+        put?: never;
+        /**
+         * Add Associated File
+         * @description Adds a file record to a dataset.
+         *     Creates the record if one with the same sha256_hash and dataset does not already exist.
+         *     Use POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.
+         *     Requires contributor access. A repeated hash returns the existing record unchanged.
+         */
+        post: operations["add_associated_file_datasets__dataset_mfid__files_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/files/{file_id}/ingest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Ds File Ingestion Request
+         * @deprecated
+         * @description Creates an ingestion request for a file.
+         *     Returns error if the dataset associated with the file is not found, or the user does not have access.
+         *     Requires write access to the dataset.
+         */
+        post: operations["create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/insitu_spec_aggregation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Insitu Aggregation */
+        post: operations["request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/instrument": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Assign Dataset Instrument
+         * @description Assign or reassign the dataset's instrument, by slug or MFID.
+         *
+         *     The three instrument columns are written from one resolved instrument row,
+         *     so instrument_id (the integer FK), instrument_mfid, and the instrument_name
+         *     label cannot drift apart. Nothing about the instrument is taken from the
+         *     request body beyond the identifier used to look it up.
+         *
+         *     The instrument's access group is granted contributor on the dataset, the
+         *     same grant dataset creation makes. Reassignment removes the grant belonging
+         *     to the outgoing instrument's group only — resourceacl records no provenance,
+         *     so a broader sweep could not tell a derived grant from a deliberate one.
+         *
+         *     Resubmitting the dataset's current instrument changes no columns but still
+         *     ensures the ACL row exists, which repairs datasets whose instrument columns
+         *     were backfilled without the accompanying grant.
+         */
+        put: operations["assign_dataset_instrument_datasets__dataset_mfid__instrument_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/keywords": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Keywords For Dataset */
+        get: operations["list_keywords_for_dataset_datasets__dataset_mfid__keywords_get"];
+        put?: never;
+        /**
+         * Add Keyword
+         * @description Adds a keyword to a dataset. If the keyword exists, it will simply add the existing keyword to the dataset object.
+         *     Otherwise, the keyword will be created and then added to the dataset.
+         *     Requires contributor access.
+         */
+        post: operations["add_keyword_datasets__dataset_mfid__keywords_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/mosaic_stitch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Mosaic Stitch */
+        post: operations["request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/rga_analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Rga Analysis */
+        post: operations["request_rga_analysis_datasets__dataset_mfid__rga_analysis_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Samples In Dataset
+         * @deprecated
+         * @description Returns a paginated list of samples associated with the dataset ID provided.
+         *     Deprecated: use GET /samples?dataset_mfid={dataset_mfid}.
+         */
+        get: operations["read_samples_in_dataset_datasets__dataset_mfid__samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/samples/{sample_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link Dataset Sample
+         * @description Links a dataset to a readable sample in the same project with contributor access.
+         *
+         *     Cross-project links retain the editor requirement on both resources.
+         */
+        post: operations["link_dataset_sample_datasets__dataset_mfid__samples__sample_mfid__post"];
+        /** Unlink Dataset Sample */
+        delete: operations["unlink_dataset_sample_datasets__dataset_mfid__samples__sample_mfid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/thumbnails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Thumbnails
+         * @description Returns a list of thumbnail objects associated with the dataset ID provided
+         */
+        get: operations["read_thumbnails_datasets__dataset_mfid__thumbnails_get"];
+        put?: never;
+        /**
+         * Add Thumbnail
+         * @description Adds a thumbnail to a dataset. Repeated uploads of the same normalized image
+         *     to one dataset update that thumbnail's name.
+         *
+         *     Raises:
+         *         HTTPException: If required thumbnail fields are missing or dataset not found
+         */
+        post: operations["add_thumbnail_datasets__dataset_mfid__thumbnails_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/thumbnails/{thumbnail_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Thumbnail
+         * @description Removes a thumbnail from a dataset and deletes it.
+         */
+        delete: operations["delete_thumbnail_datasets__dataset_mfid__thumbnails__thumbnail_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Thumbnail */
+        patch: operations["update_thumbnail_datasets__dataset_mfid__thumbnails__thumbnail_id__patch"];
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/upload/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete Resumable Upload
+         * @description Finalise a GCS resumable upload.
+         *     Requires contributor access to the dataset and ownership of the upload session.
+         *     Verifies the blob landed in GCS, registers it as an AssociatedFile on the dataset,
+         *     and deletes the upload session record.
+         */
+        post: operations["complete_resumable_upload_datasets__dataset_mfid__upload_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/upload/initiate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate Resumable Upload
+         * @description Initiate a GCS resumable upload session for a large file.
+         *     Requires contributor access to the dataset.
+         *     Returns an upload_id and a resumable_uri the client uses to PUT chunks directly to GCS
+         *     (no API credentials needed for the chunk transfers).
+         *     Call POST /datasets/{dataset_mfid}/upload/complete when all chunks are uploaded.
+         */
+        post: operations["initiate_resumable_upload_datasets__dataset_mfid__upload_initiate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/upload/initiate/multipart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate Multipart Upload
+         * @description Vend a short-lived GCS OAuth2 access token for parallel client-side uploads.
+         *     Requires contributor access to the dataset.
+         *     The client uses this token with google-cloud-storage transfer_manager.upload_chunks_concurrently().
+         *     Returns upload_id — pass it to POST /datasets/{dataset_mfid}/upload/complete after the transfer.
+         *     If existing_file is set, the file already exists; skip the upload entirely.
+         */
+        post: operations["initiate_multipart_upload_datasets__dataset_mfid__upload_initiate_multipart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/upload/multipart/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete */
+        post: operations["complete_datasets__dataset_mfid__upload_multipart_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/upload/multipart/initiate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Initiate */
+        post: operations["initiate_datasets__dataset_mfid__upload_multipart_initiate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/upload/multipart/{upload_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Status */
+        get: operations["get_status_datasets__dataset_mfid__upload_multipart__upload_id__get"];
+        put?: never;
+        post?: never;
+        /** Abort */
+        delete: operations["abort_datasets__dataset_mfid__upload_multipart__upload_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/upload/multipart/{upload_id}/parts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign Parts */
+        post: operations["sign_parts_datasets__dataset_mfid__upload_multipart__upload_id__parts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{parent_dataset_mfid}/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Child Datasets
+         * @description Returns a paginated list of child datasets for a given parent dataset.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
+         */
+        get: operations["list_child_datasets_datasets__parent_dataset_mfid__children_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{parent_dataset_mfid}/children/{child_dataset_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link Dataset Parent Child
+         * @description Link two datasets as parent and child.
+         *
+         *     relationship_type describes the child relative to the parent, so
+         *     is_part_of means "child is_part_of parent". Omit it to leave the kind
+         *     unspecified; on a link that already exists, omitting it preserves the
+         *     type already stored rather than clearing it.
+         *     Same-project links require contributor access to the parent and read access
+         *     to the child. Cross-project links and relationship-type changes require
+         *     editor access to both datasets.
+         */
+        post: operations["link_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__post"];
+        /** Unlink Dataset Parent Child */
+        delete: operations["unlink_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/deletion_audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Deletion Audit
+         * @description List permanent deletion records visible to the authenticated human user.
+         */
+        get: operations["list_deletion_audit_deletion_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/deletion_audit/{audit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Deletion Audit */
+        get: operations["get_deletion_audit_deletion_audit__audit_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/deletion_requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Deletion Requests
+         * @description List deletion requests visible to or actionable by the caller.
+         */
+        get: operations["list_deletion_requests_deletion_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/deletion_requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Deletion Request
+         * @description Return a request to its submitter or a caller with deletion-review authority.
+         */
+        get: operations["get_deletion_request_deletion_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Review Deletion Request
+         * @description Review a pending request with effective Admin or Owner access.
+         *
+         *     Non-administrator service accounts cannot review deletion requests.
+         */
+        patch: operations["review_deletion_request_deletion_requests__request_id__patch"];
+        trace?: never;
+    };
+    "/embeddings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Resource Embeddings
+         * @description Return a cursor-paginated, filtered list of visible resource embeddings.
+         *
+         *     Results are ordered by embedding row ID ascending. Pass the returned
+         *     next_cursor to retrieve the next stable keyset page. Offset pagination
+         *     remains available for compatibility; cursor takes precedence when both
+         *     are supplied.
+         */
+        get: operations["list_resource_embeddings_embeddings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/embeddings/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Resource Chunks
+         * @description Search 768-dimensional resource text chunks visible to the caller.
+         */
+        post: operations["search_resource_chunks_embeddings_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/entity_graph/{entity_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Entity Graph
+         * @description Returns a NetworkX node-link graph of all samples and datasets connected to
+         *     the given entity via sample lineage, dataset lineage, and sample-dataset
+         *     associations. entity_id may be a sample or dataset unique_id.
+         *     Nodes carry entity_type ('sample' or 'dataset') and name attributes.
+         *
+         *     Loads all samples and datasets in the root entity's project in a small number
+         *     of broad queries, builds the combined graph in Python, then returns the weakly
+         *     connected component containing the root entity.
+         */
+        get: operations["entity_graph_entity_graph__entity_mfid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/entity_graph_bfs/{entity_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Entity Graph Bfs
+         * @description BFS-based implementation (kept for reference). Prefer /entity_graph/{entity_id}.
+         *     Returns a NetworkX node-link graph of all samples and datasets connected to
+         *     the given entity via sample lineage, dataset lineage, and sample-dataset
+         *     associations. entity_id may be a sample or dataset unique_id.
+         *     Nodes carry entity_type ('sample' or 'dataset') and name attributes.
+         */
+        get: operations["entity_graph_bfs_entity_graph_bfs__entity_mfid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/entity_graph_cte/{entity_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Entity Graph Cte
+         * @description Returns the graph of entities connected to entity_id.
+         *     By default returns only first-degree neighbours (direct parents, children,
+         *     and cross-linked entities). Pass recursive=true for the full connected component.
+         *     Use /project_graph/{project_ref} to get all entities in a project.
+         */
+        get: operations["entity_graph_cte_entity_graph_cte__entity_mfid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/extract_metadata": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extract Metadata
+         * @description Extract scientific metadata from one or more lab notebook images using Claude vision.
+         *     Returns a free-form JSON object with the extracted metadata.
+         *     Pass an optional context string to guide the extraction (e.g. instrument type, experiment class).
+         */
+        post: operations["extract_metadata_extract_metadata_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -496,9 +1421,69 @@ export interface paths {
          *
          *     Only 'requested' (dispatch to the ingestion queue) and 'not_requested' (record
          *     the file without dispatching) may be set here. Terminal states are written
-         *     afterwards via PATCH /ingestion_requests/{reqid}.
+         *     afterwards via PATCH /ingestion_requests/{request_id}.
          */
         post: operations["create_file_ingestion_request_files__file_id__ingest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health
+         * @description Compatibility alias for /health/ready.
+         */
+        get: operations["health_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Liveness
+         * @description Liveness probe. Returns 200 when the process is running.
+         */
+        get: operations["liveness_health_live_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Readiness
+         * @description Readiness probe with database, schema, and build provenance.
+         */
+        get: operations["readiness_health_ready_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -515,6 +1500,10 @@ export interface paths {
         /**
          * List Ingestion Requests
          * @description List ingestion requests for datasets the caller is authorized to view.
+         *
+         *     file_mfid and dataset_mfid are the preferred filters; both accept MFIDs.
+         *     file_id and dataset_id remain as deprecated aliases accepting the same
+         *     values. Passing a file filter together with a dataset filter selects by file.
          */
         get: operations["list_ingestion_requests_ingestion_requests_get"];
         put?: never;
@@ -525,7 +1514,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/ingestion_requests/{reqid}": {
+    "/ingestion_requests/{request_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -536,7 +1525,7 @@ export interface paths {
          * Get Ingestion Request
          * @description Returns a specific ingestion request. Requires read access to the parent dataset.
          */
-        get: operations["get_ingestion_request_ingestion_requests__reqid__get"];
+        get: operations["get_ingestion_request_ingestion_requests__request_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -546,78 +1535,10 @@ export interface paths {
          * Patch Ingestion Request
          * @description Updates an ingestion request. Requires edit access to the parent dataset.
          */
-        patch: operations["patch_ingestion_request_ingestion_requests__reqid__patch"];
+        patch: operations["patch_ingestion_request_ingestion_requests__request_id__patch"];
         trace?: never;
     };
-    "/datasets/{dataset_mfid}/carrier_segmentation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request Carrier Segmentation */
-        post: operations["request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/insitu_spec_aggregation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request Insitu Aggregation */
-        post: operations["request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/rga_analysis": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request Rga Analysis */
-        post: operations["request_rga_analysis_datasets__dataset_mfid__rga_analysis_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/mosaic_stitch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request Mosaic Stitch */
-        post: operations["request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets": {
+    "/ingestors": {
         parameters: {
             query?: never;
             header?: never;
@@ -625,1131 +1546,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Datasets
-         * @description Returns a paginated list of datasets the requesting user is authorized to view.
-         *     Default limit is 100, max is 1000.
-         *
-         *     By default, results are ordered by unique_id descending. To fetch a keyset page,
-         *     pass cursor=<next_cursor from the previous response>. The first page omits cursor.
-         *     next_cursor is null when there are no further pages. total is included only when
-         *     cursor is omitted and offset is zero. Pass include_total=true to request it on
-         *     any page or include_total=false to suppress it.
-         *
-         *     Offset pagination is supported for backward compatibility: pass offset=<n> instead
-         *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
-         *     result sets, since deep offsets are slower.
-         *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
-         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
-         *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
-         *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
-         *     within the authorized, filtered, and ordered collection.
-         *     Pass include_links=true to include parent, child, and associated resources for each dataset.
-         *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
-         *     Pass instrument_mfid to filter by the instrument's canonical stable identity.
-         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
-         *     Pass sample_mfid to filter by a readable sample's canonical stable identity.
-         *     Faceted nullable fields also accept field-specific is_null=true or false filters.
-         *     Access selectors use AND semantics and only narrow resources readable by the caller.
+         * List Ingestors
+         * @description Returns a list of all ingestor options to use when making an ingestion request.
          */
-        get: operations["list_datasets_datasets_get"];
-        put?: never;
-        /** Create Dataset */
-        post: operations["create_dataset_datasets_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Dataset
-         * @description Returns the dataset with the provided MFID.
-         *     Pass include_links=true to include parent, child, and associated resources.
-         *     The owner identity is resolved by default. Pass include_owner=false to omit it.
-         */
-        get: operations["read_dataset_datasets__dataset_mfid__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Dataset
-         * @description Partially update a dataset record. Only provided fields are modified.
-         *     No owner_orcid/project_id — use POST /resources/{mfid}/transfer_ownership
-         *     and POST /resources/{mfid}/project.
-         */
-        patch: operations["update_dataset_datasets__dataset_mfid__patch"];
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/instrument": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Assign Dataset Instrument
-         * @description Assign or reassign the dataset's instrument, by slug or MFID.
-         *
-         *     The three instrument columns are written from one resolved instrument row,
-         *     so instrument_id (the integer FK), instrument_mfid, and the instrument_name
-         *     label cannot drift apart. Nothing about the instrument is taken from the
-         *     request body beyond the identifier used to look it up.
-         *
-         *     The instrument's access group is granted contributor on the dataset, the
-         *     same grant dataset creation makes. Reassignment removes the grant belonging
-         *     to the outgoing instrument's group only — resourceacl records no provenance,
-         *     so a broader sweep could not tell a derived grant from a deliberate one.
-         *
-         *     Resubmitting the dataset's current instrument changes no columns but still
-         *     ensures the ACL row exists, which repairs datasets whose instrument columns
-         *     were backfilled without the accompanying grant.
-         */
-        put: operations["assign_dataset_instrument_datasets__dataset_mfid__instrument_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/facets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Dataset Facets */
-        get: operations["get_dataset_facets_datasets_facets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search Datasets
-         * @description Search readable datasets by name and return results ordered by match quality.
-         *     Use owner_id for an exact owner match.
-         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
-         */
-        get: operations["search_datasets_datasets_search_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{parent_dataset_mfid}/children/{child_dataset_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Link Dataset Parent Child
-         * @description Link two datasets as parent and child.
-         *
-         *     relationship_type describes the child relative to the parent, so
-         *     is_part_of means "child is_part_of parent". Omit it to leave the kind
-         *     unspecified; on a link that already exists, omitting it preserves the
-         *     type already stored rather than clearing it.
-         *     Same-project links require contributor access to the parent and read access
-         *     to the child. Cross-project links and relationship-type changes require
-         *     editor access to both datasets.
-         */
-        post: operations["link_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__post"];
-        /** Unlink Dataset Parent Child */
-        delete: operations["unlink_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{child_dataset_mfid}/parents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Parent Datasets
-         * @description Returns a paginated list of parent datasets for a given dataset.
-         *
-         *     relationship_type restricts the result to links of that kind. Links with no
-         *     recorded type are excluded when the filter is set.
-         */
-        get: operations["list_parent_datasets_datasets__child_dataset_mfid__parents_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{parent_dataset_mfid}/children": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Child Datasets
-         * @description Returns a paginated list of child datasets for a given parent dataset.
-         *
-         *     relationship_type restricts the result to links of that kind. Links with no
-         *     recorded type are excluded when the filter is set.
-         */
-        get: operations["list_child_datasets_datasets__parent_dataset_mfid__children_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/samples/{sample_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Link Dataset Sample
-         * @description Links a dataset to a readable sample in the same project with contributor access.
-         *
-         *     Cross-project links retain the editor requirement on both resources.
-         */
-        post: operations["link_dataset_sample_datasets__dataset_mfid__samples__sample_mfid__post"];
-        /** Unlink Dataset Sample */
-        delete: operations["unlink_dataset_sample_datasets__dataset_mfid__samples__sample_mfid__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/thumbnails": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Thumbnails
-         * @description Returns a list of thumbnail objects associated with the dataset ID provided
-         */
-        get: operations["read_thumbnails_datasets__dataset_mfid__thumbnails_get"];
-        put?: never;
-        /**
-         * Add Thumbnail
-         * @description Adds a thumbnail to a dataset. Repeated uploads of the same normalized image
-         *     to one dataset update that thumbnail's name.
-         *
-         *     Raises:
-         *         HTTPException: If required thumbnail fields are missing or dataset not found
-         */
-        post: operations["add_thumbnail_datasets__dataset_mfid__thumbnails_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/first_thumbnails": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get First Thumbnails
-         * @description Given a list of dataset unique_ids, returns a dict mapping each unique_id
-         *     to its first (lowest-id) thumbnail. Datasets with no thumbnail or that the
-         *     caller cannot access are omitted from the response.
-         *
-         *     Intended for bulk thumbnail fetching after an entity_graph call.
-         */
-        post: operations["get_first_thumbnails_datasets_first_thumbnails_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/thumbnails/{thumbnail_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Thumbnail
-         * @description Removes a thumbnail from a dataset and deletes it.
-         */
-        delete: operations["delete_thumbnail_datasets__dataset_mfid__thumbnails__thumbnail_id__delete"];
-        options?: never;
-        head?: never;
-        /** Update Thumbnail */
-        patch: operations["update_thumbnail_datasets__dataset_mfid__thumbnails__thumbnail_id__patch"];
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/download_links": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Generate Dataset Download Links
-         * @description Returns signed GCS download URLs (1-hour expiry) for all files in the dataset,
-         *     keyed by AssociatedFile mfid. Backfills missing storage_path records on the fly.
-         */
-        get: operations["generate_dataset_download_links_datasets__dataset_mfid__download_links_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/files": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Associated Files
-         * @description Returns a list of the files associated with the dataset ID provided.
-         */
-        get: operations["read_associated_files_datasets__dataset_mfid__files_get"];
-        put?: never;
-        /**
-         * Add Associated File
-         * @description Adds a file record to a dataset.
-         *     Creates the record if one with the same sha256_hash and dataset does not already exist.
-         *     Use POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.
-         *     Requires contributor access. A repeated hash returns the existing record unchanged.
-         */
-        post: operations["add_associated_file_datasets__dataset_mfid__files_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/files/{file_id}/ingest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Ds File Ingestion Request
-         * @deprecated
-         * @description Creates an ingestion request for a file.
-         *     Returns error if the dataset associated with the file is not found, or the user does not have access.
-         *     Requires write access to the dataset.
-         */
-        post: operations["create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/keywords": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Keywords For Dataset */
-        get: operations["list_keywords_for_dataset_datasets__dataset_mfid__keywords_get"];
-        put?: never;
-        /**
-         * Add Keyword
-         * @description Adds a keyword to a dataset. If the keyword exists, it will simply add the existing keyword to the dataset object.
-         *     Otherwise, the keyword will be created and then added to the dataset.
-         *     Requires contributor access.
-         */
-        post: operations["add_keyword_datasets__dataset_mfid__keywords_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Samples In Dataset
-         * @deprecated
-         * @description Returns a paginated list of samples associated with the dataset ID provided.
-         *     Deprecated: use GET /samples?dataset_mfid={dataset_mfid}.
-         */
-        get: operations["read_samples_in_dataset_datasets__dataset_mfid__samples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/dataset_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dataset Graph
-         * @description Returns a NetworkX node-link graph of all datasets connected (via parent/child
-         *     relationships) to the given dataset. Loads all authorized datasets in the
-         *     project and returns the directed lineage subgraph (ancestors + descendants) of the target.
-         */
-        get: operations["dataset_graph_datasets__dataset_mfid__dataset_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/dataset_graph_cte": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dataset Graph Cte
-         * @description CTE-based implementation (kept for reference). Prefer /dataset_graph.
-         *     Returns a NetworkX node-link graph of all datasets connected (via parent/child
-         *     relationships) to the given dataset, i.e. its full lineage subgraph.
-         */
-        get: operations["dataset_graph_cte_datasets__dataset_mfid__dataset_graph_cte_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/upload/initiate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Initiate Resumable Upload
-         * @description Initiate a GCS resumable upload session for a large file.
-         *     Requires contributor access to the dataset.
-         *     Returns an upload_id and a resumable_uri the client uses to PUT chunks directly to GCS
-         *     (no API credentials needed for the chunk transfers).
-         *     Call POST /datasets/{dataset_mfid}/upload/complete when all chunks are uploaded.
-         */
-        post: operations["initiate_resumable_upload_datasets__dataset_mfid__upload_initiate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/upload/initiate/multipart": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Initiate Multipart Upload
-         * @description Vend a short-lived GCS OAuth2 access token for parallel client-side uploads.
-         *     Requires contributor access to the dataset.
-         *     The client uses this token with google-cloud-storage transfer_manager.upload_chunks_concurrently().
-         *     Returns upload_id — pass it to POST /datasets/{dataset_mfid}/upload/complete after the transfer.
-         *     If existing_file is set, the file already exists; skip the upload entirely.
-         */
-        post: operations["initiate_multipart_upload_datasets__dataset_mfid__upload_initiate_multipart_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/upload/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Complete Resumable Upload
-         * @description Finalise a GCS resumable upload.
-         *     Requires contributor access to the dataset and ownership of the upload session.
-         *     Verifies the blob landed in GCS, registers it as an AssociatedFile on the dataset,
-         *     and deletes the upload session record.
-         */
-        post: operations["complete_resumable_upload_datasets__dataset_mfid__upload_complete_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/embeddings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Resource Embeddings
-         * @description Return a cursor-paginated, filtered list of visible resource embeddings.
-         *
-         *     Results are ordered by embedding row ID ascending. Pass the returned
-         *     next_cursor to retrieve the next stable keyset page. Offset pagination
-         *     remains available for compatibility; cursor takes precedence when both
-         *     are supplied.
-         */
-        get: operations["list_resource_embeddings_embeddings_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/embeddings/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Search Resource Chunks
-         * @description Search 768-dimensional resource text chunks visible to the caller.
-         */
-        post: operations["search_resource_chunks_embeddings_search_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/metadata/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search Resource Metadata V2
-         * @description Search resources by scientific metadata content using full-text search.
-         *     Returns a unified structure compatible with other search endpoints, including scientific_metadata.
-         */
-        get: operations["search_resource_metadata_v2_resources_metadata_search_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Resource
-         * @description Fetch a dataset, sample, instrument, or project by ID without knowing its type in advance.
-         *     Resolves the type from idtype, then returns the full resource record.
-         *     Pass include_metadata=true to include scientific metadata.
-         *     Pass include_links=true to include parent/child/associated resources (datasets and samples only).
-         *     Sample dataset objects remain embedded by default for compatibility. Pass include_datasets=false to omit them.
-         *     The owner identity is resolved by default for datasets, samples, and instruments. Pass include_owner=false to omit it.
-         */
-        get: operations["get_resource_resources__mfid__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Hard Delete Resource Route
-         * @description Permanently delete a resource from the database without a deletion request.
-         *     Requires force=true and resource owner or platform-admin authority.
-         *     Datasets and samples delete immediately. Projects and instruments first
-         *     return a preview; pass confirm=true to execute the deletion, which still
-         *     requires them to be empty. Stored GCS objects are not deleted.
-         */
-        delete: operations["hard_delete_resource_route_resources__mfid__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/links": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Resource Links
-         * @description Returns the immediate links for a resource (dataset or sample):
-         *     parent/child via lineage and associated resources.
-         */
-        get: operations["get_resource_links_resources__mfid__links_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/metadata": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read Resource Metadata */
-        get: operations["read_resource_metadata_resources__mfid__metadata_get"];
-        put?: never;
-        /**
-         * Create Resource Metadata
-         * @description Creates initial metadata with contributor access. Replacing metadata requires editor access.
-         */
-        post: operations["create_resource_metadata_resources__mfid__metadata_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Resource Metadata */
-        patch: operations["update_resource_metadata_resources__mfid__metadata_patch"];
-        trace?: never;
-    };
-    "/resources/{mfid}/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Deletion Request
-         * @description Request deletion of a resource. Requires contributor access for datasets and
-         *     samples, admin for projects and instruments. Pending requests hide the
-         *     resource from ordinary discovery until rejected.
-         *     Returns 409 if an active deletion request already exists for this resource,
-         *     or if a project or instrument still has assigned datasets or samples.
-         */
-        post: operations["create_deletion_request_resources__mfid__delete_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/access_groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Resource Acl
-         * @deprecated
-         */
-        get: operations["read_resource_acl_resources__mfid__access_groups_get"];
-        put?: never;
-        /**
-         * Create Resource Acl
-         * @deprecated
-         */
-        post: operations["create_resource_acl_resources__mfid__access_groups_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/access": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Resource Access
-         * @description List the grants on a resource. Requires permission to manage its ACL.
-         */
-        get: operations["list_resource_access_resources__mfid__access_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/access/{kind}/{principal}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Set Resource Access
-         * @description Grant or change a principal's access. Idempotent.
-         *
-         *     `kind` is `users` or `projects`. Requires admin on the resource, and you
-         *     may not grant above your own role nor overwrite a grant above it. Owner
-         *     grants and changes to an existing owner require transfer_ownership.
-         */
-        put: operations["set_resource_access_resources__mfid__access__kind___principal__put"];
-        post?: never;
-        /**
-         * Revoke Resource Access
-         * @description Revoke a principal's access.
-         *
-         *     Refuses to remove an `owner` grant: that would leave the resource with
-         *     nobody able to transfer it or manage its ACL again. Use transfer_ownership.
-         */
-        delete: operations["revoke_resource_access_resources__mfid__access__kind___principal__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/access/public": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Publish Resource
-         * @description Make a resource publicly readable.
-         *
-         *     No role parameter: standing in the public group is viewer, so min() caps
-         *     any grant there. A world-writable resource is unrepresentable, and offering
-         *     a role would invent an error case the model does not have.
-         */
-        put: operations["publish_resource_resources__mfid__access_public_put"];
-        post?: never;
-        /**
-         * Unpublish Resource
-         * @description Withdraw public access.
-         */
-        delete: operations["unpublish_resource_resources__mfid__access_public_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/transfer_ownership": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Transfer Ownership
-         * @description Move ownership of a resource to another user. Requires owner.
-         *
-         *     Defaults to a preview: resolves new_owner and reports the current owner
-         *     without changing anything. Pass ?confirm=true to actually execute. This
-         *     is the safety net against a typo'd identifier resolving to some other
-         *     real person — worth having because whatever happens to the previous
-         *     owner (demoted for a project, removed outright for a dataset/sample —
-         *     see the module comment above), they lose the owner standing that would
-         *     let them undo it themselves. Recovery needs the (possibly wrong) new
-         *     owner's cooperation or a platform admin.
-         *
-         *     This is the only way to change who owns a resource. Project, dataset,
-         *     sample, and instrument PATCH schemas reject ownership fields.
-         */
-        post: operations["transfer_ownership_resources__mfid__transfer_ownership_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/project": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reassign Resource Project */
-        post: operations["reassign_resource_project_resources__mfid__project_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{resource_mfid}/graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Resource Graph
-         * @description Return a bounded, authorization-filtered sample and dataset graph.
-         */
-        get: operations["read_resource_graph_resources__resource_mfid__graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{parent_sample_mfid}/children/{child_sample_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Link Sample Parent Child
-         * @description Link two samples as parent and child.
-         *
-         *     relationship_type describes the child relative to the parent, so
-         *     is_part_of means "child is_part_of parent". Omit it to leave the kind
-         *     unspecified; on a link that already exists, omitting it preserves the
-         *     type already stored rather than clearing it.
-         *     Same-project links require contributor access to the parent and read access
-         *     to the child. Cross-project links and relationship-type changes require
-         *     editor access to both samples.
-         */
-        post: operations["link_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__post"];
-        /** Unlink Sample Parent Child */
-        delete: operations["unlink_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{sample_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Sample
-         * @description Returns the sample for the provided MFID.
-         *     Pass include_links=true to include parent, child, and associated resources.
-         *     Embedded dataset objects are retained by default for compatibility. New clients should pass include_datasets=false and use include_links or GET /datasets?sample_mfid=... instead.
-         *     The owner identity is resolved by default. Pass include_owner=false to omit it.
-         */
-        get: operations["read_sample_samples__sample_mfid__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Sample
-         * @description Partially update a sample record. Only provided fields are modified.
-         *     No project_id — use POST /resources/{mfid}/project.
-         */
-        patch: operations["update_sample_samples__sample_mfid__patch"];
-        trace?: never;
-    };
-    "/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Samples
-         * @description Returns a paginated list of samples the requesting user is authorized to view.
-         *     Default limit is 100, max is 1000.
-         *
-         *     By default, results are ordered by unique_id descending. To fetch a keyset page,
-         *     pass cursor=<next_cursor from the previous response>. The first page omits cursor.
-         *     next_cursor is null when there are no further pages. total is included only when
-         *     cursor is omitted and offset is zero. Pass include_total=true to request it on
-         *     any page or include_total=false to suppress it.
-         *
-         *     Offset pagination is supported for backward compatibility: pass offset=<n> instead
-         *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
-         *     result sets, since deep offsets are slower.
-         *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
-         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
-         *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
-         *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
-         *     within the authorized, filtered, and ordered collection.
-         *     Pass include_links=true to include parent, child, and associated resources for each sample.
-         *     include_datasets is deprecated; use include_links instead.
-         *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
-         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
-         *     Pass dataset_mfid to filter by a readable dataset's canonical stable identity.
-         *     Faceted nullable fields also accept field-specific is_null=true or false filters.
-         *     Access selectors use AND semantics and only narrow resources readable by the caller.
-         */
-        get: operations["list_samples_samples_get"];
-        put?: never;
-        /**
-         * Create Sample
-         * @description Create a new sample. Sample names are not unique within a project, so repeating one
-         *     creates a second sample.
-         */
-        post: operations["create_sample_samples_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/facets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Sample Facets */
-        get: operations["get_sample_facets_samples_facets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search Samples
-         * @description Search readable samples by name and return results ordered by match quality.
-         *     Use owner_id for an exact owner match.
-         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
-         */
-        get: operations["search_samples_samples_search_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{sample_mfid}/datasets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Sample Datasets
-         * @deprecated
-         * @description Returns a list of all datasets linked to a given sample.
-         *     Deprecated: use GET /datasets?sample_mfid={sample_id}.
-         */
-        get: operations["list_sample_datasets_samples__sample_mfid__datasets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{child_sample_mfid}/parents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Parent Samples
-         * @description Returns a paginated list of parent samples for a given child sample.
-         *
-         *     relationship_type restricts the result to links of that kind. Links with no
-         *     recorded type are excluded when the filter is set.
-         */
-        get: operations["list_parent_samples_samples__child_sample_mfid__parents_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{parent_sample_mfid}/children": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Child Samples
-         * @description Returns a paginated list of child samples for a given parent sample.
-         *
-         *     relationship_type restricts the result to links of that kind. Links with no
-         *     recorded type are excluded when the filter is set.
-         */
-        get: operations["list_child_samples_samples__parent_sample_mfid__children_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{sample_mfid}/sample_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Sample Graph
-         * @description Returns a NetworkX node-link graph of all samples connected (via parent/child
-         *     relationships) to the given sample. Loads all samples in the project and
-         *     returns the directed lineage subgraph (ancestors + descendants) of the target.
-         */
-        get: operations["sample_graph_samples__sample_mfid__sample_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{sample_mfid}/sample_graph_cte": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Sample Graph Cte
-         * @description CTE-based implementation (kept for reference). Prefer /sample_graph.
-         *     Returns a NetworkX node-link graph of all samples connected (via parent/child
-         *     relationships) to the given sample, i.e. its full lineage subgraph.
-         */
-        get: operations["sample_graph_cte_samples__sample_mfid__sample_graph_cte_get"];
+        get: operations["list_ingestors_ingestors_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1840,30 +1640,6 @@ export interface paths {
         patch: operations["update_instrument_instruments__instrument_ref__patch"];
         trace?: never;
     };
-    "/instruments/{instrument_ref}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Set Instrument Status
-         * @description Change an instrument's lifecycle status.
-         *
-         *     Its own route rather than a field on PATCH: decommissioning is a lifecycle
-         *     transition, not a metadata edit, and carries a higher bar. Instruments are
-         *     never deleted, so this is how one is retired.
-         */
-        post: operations["set_instrument_status_instruments__instrument_ref__status_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/instruments/{instrument_ref}/service_accounts": {
         parameters: {
             query?: never;
@@ -1907,33 +1683,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Users
-         * @description Returns a paginated list of users. Platform administrators receive the full
-         *     directory with email and platform roles; other callers receive public-safe
-         *     profiles scoped to users who share an access group with them.
-         *     Exact unique_id, username, and email filters return the same authorized
-         *     representation as GET /users/{user_ref}. Any other query parameter is ignored
-         *     and reported through the Deprecation response header.
-         */
-        get: operations["list_users_users_get"];
-        put?: never;
-        /** Create User */
-        post: operations["create_user_users_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/resolve": {
+    "/instruments/{instrument_ref}/status": {
         parameters: {
             query?: never;
             header?: never;
@@ -1943,19 +1693,21 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Resolve Users
-         * @description Batch-resolve users by any mix of ORCIDs, usernames, or emails.
-         *     Returns a dict keyed by ORCID: {orcid: UserPublicRead}. No email included.
-         *     Any authenticated user can call this. Admins needing email should use GET /users/{user_ref}.
+         * Set Instrument Status
+         * @description Change an instrument's lifecycle status.
+         *
+         *     Its own route rather than a field on PATCH: decommissioning is a lifecycle
+         *     transition, not a metadata edit, and carries a higher bar. Instruments are
+         *     never deleted, so this is how one is retired.
          */
-        post: operations["resolve_users_users_resolve_post"];
+        post: operations["set_instrument_status_instruments__instrument_ref__status_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/users/me": {
+    "/join_requests": {
         parameters: {
             query?: never;
             header?: never;
@@ -1963,37 +1715,17 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Current User
-         * @deprecated
-         * @description Deprecated: use GET /account/profile.
+         * List Join Requests
+         * @description List join requests.
+         *     - Admins can list across all groups, optionally filtered by ?group_name=.
+         *     - A non-admin caller who passes ?group_name= must be the lead of that
+         *       group, otherwise 403.
+         *     - A non-admin caller who omits ?group_name= gets requests scoped to every
+         *       group they lead (empty list if they lead none) — this is the cheap way
+         *       for someone leading multiple projects to fetch all their pending
+         *       requests in one call instead of one request per project.
          */
-        get: operations["get_current_user_users_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Current User
-         * @deprecated
-         * @description Deprecated: use GET /account/profile and PATCH /account/profile.
-         */
-        patch: operations["update_current_user_users_me_patch"];
-        trace?: never;
-    };
-    "/users/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search Users
-         * @description Search users by username, first name, or last name. Returns public profiles only (no email).
-         *     Minimum query length: 3 characters. Maximum results: 50.
-         */
-        get: operations["search_users_users_search_get"];
+        get: operations["list_join_requests_join_requests_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2002,7 +1734,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users/by-username/{username}": {
+    "/join_requests/{request_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2010,11 +1742,38 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get User By Username
-         * @deprecated
-         * @description Deprecated: use GET /users/{user_ref}. Email is visible only to self and platform administrators.
+         * Get Join Request
+         * @description Fetch a single join request by id. Visible to admins, the lead of the
+         *     request's group, or the user who submitted it.
          */
-        get: operations["get_user_by_username_users_by_username__username__get"];
+        get: operations["get_join_request_join_requests__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Review Join Request
+         * @description Approve or reject a pending join request. Admin or the lead of the
+         *     request's group only. Approving adds the requester to the group's
+         *     project membership and access group.
+         */
+        patch: operations["review_join_request_join_requests__request_id__patch"];
+        trace?: never;
+    };
+    "/keywords": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List All Keywords
+         * @description Returns a list of all keywords in the database.
+         *     Each keyword includes the num_datasets field showing how many datasets use that keyword.
+         */
+        get: operations["list_all_keywords_keywords_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2023,28 +1782,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users/{user_ref}": {
+    "/keywords/{keyword}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Read User */
-        get: operations["read_user_users__user_ref__get"];
+        /**
+         * Read Keyword
+         * @description Returns a list of all keyword entries that match the provided keyword.
+         *     If permissive is set to False, then all returned entries will be an exact match to the provided string.
+         *     Otherwise, keywords will be searched as case insensitive.  The default configuration has permissive set to True.
+         */
+        get: operations["read_keyword_keywords__keyword__get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Update User
-         * @description Partially update a user record. Only fields provided in the request body are modified.
-         */
-        patch: operations["update_user_users__user_ref__patch"];
+        patch?: never;
         trace?: never;
     };
-    "/users/{user_ref}/apikey": {
+    "/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Orcid Login Deprecated
+         * @deprecated
+         * @description Deprecated: use GET /auth/login.
+         */
+        get: operations["orcid_login_deprecated_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Metrics
+         * @description Endpoint that serves Prometheus metrics.
+         */
+        get: operations["metrics_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print/barcode": {
         parameters: {
             query?: never;
             header?: never;
@@ -2054,61 +1855,23 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Get Or Provision User Apikey
-         * @description Return the user's API key, minting one if they don't have it yet. Admin only. 404 if the user doesn't exist.
+         * Print Barcode
+         * @description Publishes a barcode print job and waits briefly for a print result.
+         *
+         *     Always returns 200; `status` distinguishes confirmed success ("ok") from
+         *     an explicit printer-reported failure ("error") or no result within the
+         *     wait window ("timeout"). On "error"/"timeout", `detail` may note whether
+         *     the requested printer's retained MQTT status currently looks online, to
+         *     help diagnose typos vs. offline hardware.
          */
-        post: operations["get_or_provision_user_apikey_users__user_ref__apikey_post"];
-        /**
-         * Delete User Apikey
-         * @description Revoke every API key held by the user. Platform administrators only. 204 on success.
-         */
-        delete: operations["delete_user_apikey_users__user_ref__apikey_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/apikey/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Verify User Apikey
-         * @description Returns validity and expiry info for the given user's API key. Admin only.
-         */
-        get: operations["verify_user_apikey_users__user_ref__apikey_verify_get"];
-        put?: never;
-        post?: never;
+        post: operations["print_barcode_print_barcode_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/users/{user_ref}/platform_role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update User Platform Role
-         * @description Change a human user's platform role. Human platform administrators only.
-         */
-        patch: operations["update_user_platform_role_users__user_ref__platform_role_patch"];
-        trace?: never;
-    };
-    "/users/{user_ref}/datasets": {
+    "/project_graph/{project_ref}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2116,124 +1879,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Read User Datasets
-         * @deprecated
-         * @description Deprecated compatibility route returning dataset MFIDs. Use GET /datasets?accessible_to_user={user_ref}.
+         * Project Graph
+         * @description Returns all authorized samples and datasets belonging to the project
+         *     as a single node-link graph.
          */
-        get: operations["read_user_datasets_users__user_ref__datasets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read User Samples
-         * @deprecated
-         * @description Deprecated compatibility route returning sample MFIDs. Use GET /samples?accessible_to_user={user_ref}.
-         */
-        get: operations["read_user_samples_users__user_ref__samples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/datasets/{dataset_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read User Access To Dataset
-         * @description Returns the user's effective role on one dataset. Limited to self and platform administrators.
-         */
-        get: operations["read_user_access_to_dataset_users__user_ref__datasets__dataset_mfid__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/access_groups/{group_name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add User To Access Group
-         * @deprecated
-         * @description Add a user to an access group. Not for project groups. Use
-         *     POST /projects/{project_ref}/users/{user_ref}, which applies the project's own
-         *     role cap instead of platform-admin-only.
-         */
-        post: operations["add_user_to_access_group_users__user_ref__access_groups__group_name__post"];
-        /**
-         * Remove User From Access Group
-         * @deprecated
-         * @description Remove a user from an access group. Not for project groups. Use
-         *     DELETE /projects/{project_ref}/users/{user_ref}, which keeps membership records
-         *     in step instead of only revoking access-group standing.
-         */
-        delete: operations["remove_user_from_access_group_users__user_ref__access_groups__group_name__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/access_groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List User Access Groups */
-        get: operations["list_user_access_groups_users__user_ref__access_groups_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/projects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Projects For User
-         * @description Returns a paginated list of the projects the user is a member of, each with
-         *     the user's standing role in that project's access group.
-         *     Available to the user themselves and to callers with platform_role
-         *     contributor or admin, the same rule as accessible_to_user on GET /projects.
-         *     Membership only: unlike GET /projects?accessible_to_user=, projects reached
-         *     only through explicit resource grants are not included.
-         */
-        get: operations["read_projects_for_user_users__user_ref__projects_get"];
+        get: operations["project_graph_project_graph__project_ref__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2339,6 +1989,62 @@ export interface paths {
         patch: operations["update_project_projects__project_ref__patch"];
         trace?: never;
     };
+    "/projects/{project_ref}/dataset_graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Project Dataset Graph */
+        get: operations["project_dataset_graph_projects__project_ref__dataset_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_ref}/entity_graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Project Entity Graph
+         * @description Returns a NetworkX node-link graph of all samples and datasets in the
+         *     project, connected via sample lineage, dataset lineage, and sample-dataset
+         *     associations. Nodes carry entity_type ('sample' or 'dataset') and name.
+         */
+        get: operations["project_entity_graph_projects__project_ref__entity_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_ref}/sample_graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Project Sample Graph */
+        get: operations["project_sample_graph_projects__project_ref__sample_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{project_ref}/users": {
         parameters: {
             query?: never;
@@ -2403,41 +2109,7 @@ export interface paths {
         patch: operations["set_project_user_role_projects__project_ref__users__user_ref__patch"];
         trace?: never;
     };
-    "/projects/{project_ref}/sample_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Project Sample Graph */
-        get: operations["project_sample_graph_projects__project_ref__sample_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{project_ref}/dataset_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Project Dataset Graph */
-        get: operations["project_dataset_graph_projects__project_ref__dataset_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{project_ref}/entity_graph": {
+    "/regenerate_apikey": {
         parameters: {
             query?: never;
             header?: never;
@@ -2445,12 +2117,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Project Entity Graph
-         * @description Returns a NetworkX node-link graph of all samples and datasets in the
-         *     project, connected via sample lineage, dataset lineage, and sample-dataset
-         *     associations. Nodes carry entity_type ('sample' or 'dataset') and name.
+         * Regenerate Apikey Deprecated
+         * @deprecated
+         * @description Deprecated: use POST /auth/apikey/regenerate.
          */
-        get: operations["project_entity_graph_projects__project_ref__entity_graph_get"];
+        get: operations["regenerate_apikey_deprecated_regenerate_apikey_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2459,7 +2130,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/access_groups": {
+    "/resources/metadata/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Resource Metadata V2
+         * @description Search resources by scientific metadata content using full-text search.
+         *     Returns a unified structure compatible with other search endpoints, including scientific_metadata.
+         */
+        get: operations["search_resource_metadata_v2_resources_metadata_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/{mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Resource
+         * @description Fetch a dataset, sample, instrument, or project by ID without knowing its type in advance.
+         *     Resolves the type from idtype, then returns the full resource record.
+         *     Pass include_metadata=true to include scientific metadata.
+         *     Pass include_links=true to include parent/child/associated resources (datasets and samples only).
+         *     Sample dataset objects remain embedded by default for compatibility. Pass include_datasets=false to omit them.
+         *     The owner identity is resolved by default for datasets, samples, and instruments. Pass include_owner=false to omit it.
+         */
+        get: operations["get_resource_resources__mfid__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Hard Delete Resource Route
+         * @description Permanently delete a resource from the database without a deletion request.
+         *     Requires force=true and resource owner or platform-admin authority.
+         *     Datasets and samples delete immediately. Projects and instruments first
+         *     return a preview; pass confirm=true to execute the deletion, which still
+         *     requires them to be empty. Stored GCS objects are not deleted.
+         */
+        delete: operations["hard_delete_resource_route_resources__mfid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/{mfid}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Resource Access
+         * @description List the grants on a resource. Requires permission to manage its ACL.
+         */
+        get: operations["list_resource_access_resources__mfid__access_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/{mfid}/access/public": {
         parameters: {
             query?: never;
             header?: never;
@@ -2467,393 +2212,58 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Create Access Group */
-        post: operations["create_access_group_access_groups_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/access_groups/{group_name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read Access Group */
-        get: operations["read_access_group_access_groups__group_name__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/access_groups/{group_name}/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
         /**
-         * List Access Group Users
-         * @description List all users who are members of the given access group, with their role. Admin only.
-         */
-        get: operations["list_access_group_users_access_groups__group_name__users_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/access_groups/{group_name}/join": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Request To Join Access Group
-         * @description Request to join an access group (currently only projects). Blocked if the
-         *     caller is already a member or already has a pending request for this group.
-         *     Resubmission is allowed after a request has been rejected or approved.
-         */
-        post: operations["request_to_join_access_group_access_groups__group_name__join_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/join_requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Join Requests
-         * @description List join requests.
-         *     - Admins can list across all groups, optionally filtered by ?group_name=.
-         *     - A non-admin caller who passes ?group_name= must be the lead of that
-         *       group, otherwise 403.
-         *     - A non-admin caller who omits ?group_name= gets requests scoped to every
-         *       group they lead (empty list if they lead none) — this is the cheap way
-         *       for someone leading multiple projects to fetch all their pending
-         *       requests in one call instead of one request per project.
-         */
-        get: operations["list_join_requests_join_requests_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/join_requests/{request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Join Request
-         * @description Fetch a single join request by id. Visible to admins, the lead of the
-         *     request's group, or the user who submitted it.
-         */
-        get: operations["get_join_request_join_requests__request_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Review Join Request
-         * @description Approve or reject a pending join request. Admin or the lead of the
-         *     request's group only. Approving adds the requester to the group's
-         *     project membership and access group.
-         */
-        patch: operations["review_join_request_join_requests__request_id__patch"];
-        trace?: never;
-    };
-    "/entity_graph/{entity_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Entity Graph
-         * @description Returns a NetworkX node-link graph of all samples and datasets connected to
-         *     the given entity via sample lineage, dataset lineage, and sample-dataset
-         *     associations. entity_id may be a sample or dataset unique_id.
-         *     Nodes carry entity_type ('sample' or 'dataset') and name attributes.
+         * Publish Resource
+         * @description Make a resource publicly readable.
          *
-         *     Loads all samples and datasets in the root entity's project in a small number
-         *     of broad queries, builds the combined graph in Python, then returns the weakly
-         *     connected component containing the root entity.
+         *     No role parameter: standing in the public group is viewer, so min() caps
+         *     any grant there. A world-writable resource is unrepresentable, and offering
+         *     a role would invent an error case the model does not have.
          */
-        get: operations["entity_graph_entity_graph__entity_mfid__get"];
-        put?: never;
+        put: operations["publish_resource_resources__mfid__access_public_put"];
         post?: never;
-        delete?: never;
+        /**
+         * Unpublish Resource
+         * @description Withdraw public access.
+         */
+        delete: operations["unpublish_resource_resources__mfid__access_public_delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/entity_graph_bfs/{entity_mfid}": {
+    "/resources/{mfid}/access/{kind}/{principal}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        get?: never;
         /**
-         * Entity Graph Bfs
-         * @description BFS-based implementation (kept for reference). Prefer /entity_graph/{entity_id}.
-         *     Returns a NetworkX node-link graph of all samples and datasets connected to
-         *     the given entity via sample lineage, dataset lineage, and sample-dataset
-         *     associations. entity_id may be a sample or dataset unique_id.
-         *     Nodes carry entity_type ('sample' or 'dataset') and name attributes.
-         */
-        get: operations["entity_graph_bfs_entity_graph_bfs__entity_mfid__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/entity_graph_cte/{entity_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Entity Graph Cte
-         * @description Returns the graph of entities connected to entity_id.
-         *     By default returns only first-degree neighbours (direct parents, children,
-         *     and cross-linked entities). Pass recursive=true for the full connected component.
-         *     Use /project_graph/{project_ref} to get all entities in a project.
-         */
-        get: operations["entity_graph_cte_entity_graph_cte__entity_mfid__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/project_graph/{project_ref}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Project Graph
-         * @description Returns all authorized samples and datasets belonging to the project
-         *     as a single node-link graph.
-         */
-        get: operations["project_graph_project_graph__project_ref__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/health/live": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Liveness
-         * @description Liveness probe. Returns 200 when the process is running.
-         */
-        get: operations["liveness_health_live_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/health/ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Readiness
-         * @description Readiness probe with database, schema, and build provenance.
-         */
-        get: operations["readiness_health_ready_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Health
-         * @description Compatibility alias for /health/ready.
-         */
-        get: operations["health_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/keywords": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List All Keywords
-         * @description Returns a list of all keywords in the database.
-         *     Each keyword includes the num_datasets field showing how many datasets use that keyword.
-         */
-        get: operations["list_all_keywords_keywords_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/keywords/{keyword}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Keyword
-         * @description Returns a list of all keyword entries that match the provided keyword.
-         *     If permissive is set to False, then all returned entries will be an exact match to the provided string.
-         *     Otherwise, keywords will be searched as case insensitive.  The default configuration has permissive set to True.
-         */
-        get: operations["read_keyword_keywords__keyword__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/ingestors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Ingestors
-         * @description Returns a list of all ingestor options to use when making an ingestion request.
-         */
-        get: operations["list_ingestors_ingestors_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/deletion_requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Deletion Requests
-         * @description List deletion requests visible to or actionable by the caller.
-         */
-        get: operations["list_deletion_requests_deletion_requests_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/deletion_requests/{request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Deletion Request
-         * @description Return a request to its submitter or a caller with deletion-review authority.
-         */
-        get: operations["get_deletion_request_deletion_requests__request_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Review Deletion Request
-         * @description Review a pending request with effective Admin or Owner access.
+         * Set Resource Access
+         * @description Grant or change a principal's access. Idempotent.
          *
-         *     Non-administrator service accounts cannot review deletion requests.
+         *     `kind` is `users` or `projects`. Requires admin on the resource, and you
+         *     may not grant above your own role nor overwrite a grant above it. Owner
+         *     grants and changes to an existing owner require transfer_ownership.
          */
-        patch: operations["review_deletion_request_deletion_requests__request_id__patch"];
+        put: operations["set_resource_access_resources__mfid__access__kind___principal__put"];
+        post?: never;
+        /**
+         * Revoke Resource Access
+         * @description Revoke a principal's access.
+         *
+         *     Refuses to remove an `owner` grant: that would leave the resource with
+         *     nobody able to transfer it or manage its ACL again. Use transfer_ownership.
+         */
+        delete: operations["revoke_resource_access_resources__mfid__access__kind___principal__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
-    "/deletion_audit": {
+    "/resources/{mfid}/access_groups": {
         parameters: {
             query?: never;
             header?: never;
@@ -2861,36 +2271,23 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Deletion Audit
-         * @description List permanent deletion records visible to the authenticated human user.
+         * Read Resource Acl
+         * @deprecated
          */
-        get: operations["list_deletion_audit_deletion_audit_get"];
+        get: operations["read_resource_acl_resources__mfid__access_groups_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Resource Acl
+         * @deprecated
+         */
+        post: operations["create_resource_acl_resources__mfid__access_groups_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/deletion_audit/{audit_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Deletion Audit */
-        get: operations["get_deletion_audit_deletion_audit__audit_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/extract_metadata": {
+    "/resources/{mfid}/delete": {
         parameters: {
             query?: never;
             header?: never;
@@ -2900,12 +2297,382 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Extract Metadata
-         * @description Extract scientific metadata from one or more lab notebook images using Claude vision.
-         *     Returns a free-form JSON object with the extracted metadata.
-         *     Pass an optional context string to guide the extraction (e.g. instrument type, experiment class).
+         * Create Deletion Request
+         * @description Request deletion of a resource. Requires contributor access for datasets and
+         *     samples, admin for projects and instruments. Pending requests hide the
+         *     resource from ordinary discovery until rejected.
+         *     Returns 409 if an active deletion request already exists for this resource,
+         *     or if a project or instrument still has assigned datasets or samples.
          */
-        post: operations["extract_metadata_extract_metadata_post"];
+        post: operations["create_deletion_request_resources__mfid__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/{mfid}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Resource Links
+         * @description Returns the immediate links for a resource (dataset or sample):
+         *     parent/child via lineage and associated resources.
+         */
+        get: operations["get_resource_links_resources__mfid__links_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/{mfid}/metadata": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Resource Metadata */
+        get: operations["read_resource_metadata_resources__mfid__metadata_get"];
+        put?: never;
+        /**
+         * Create Resource Metadata
+         * @description Creates initial metadata with contributor access. Replacing metadata requires editor access.
+         */
+        post: operations["create_resource_metadata_resources__mfid__metadata_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Resource Metadata */
+        patch: operations["update_resource_metadata_resources__mfid__metadata_patch"];
+        trace?: never;
+    };
+    "/resources/{mfid}/project": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reassign Resource Project */
+        post: operations["reassign_resource_project_resources__mfid__project_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/{mfid}/transfer_ownership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transfer Ownership
+         * @description Move ownership of a resource to another user. Requires owner.
+         *
+         *     Defaults to a preview: resolves new_owner and reports the current owner
+         *     without changing anything. Pass ?confirm=true to actually execute. This
+         *     is the safety net against a typo'd identifier resolving to some other
+         *     real person — worth having because whatever happens to the previous
+         *     owner (demoted for a project, removed outright for a dataset/sample —
+         *     see the module comment above), they lose the owner standing that would
+         *     let them undo it themselves. Recovery needs the (possibly wrong) new
+         *     owner's cooperation or a platform admin.
+         *
+         *     This is the only way to change who owns a resource. Project, dataset,
+         *     sample, and instrument PATCH schemas reject ownership fields.
+         */
+        post: operations["transfer_ownership_resources__mfid__transfer_ownership_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resources/{resource_mfid}/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Resource Graph
+         * @description Return a bounded, authorization-filtered sample and dataset graph.
+         */
+        get: operations["read_resource_graph_resources__resource_mfid__graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Samples
+         * @description Returns a paginated list of samples the requesting user is authorized to view.
+         *     Default limit is 100, max is 1000.
+         *
+         *     By default, results are ordered by unique_id descending. To fetch a keyset page,
+         *     pass cursor=<next_cursor from the previous response>. The first page omits cursor.
+         *     next_cursor is null when there are no further pages. total is included only when
+         *     cursor is omitted and offset is zero. Pass include_total=true to request it on
+         *     any page or include_total=false to suppress it.
+         *
+         *     Offset pagination is supported for backward compatibility: pass offset=<n> instead
+         *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
+         *     result sets, since deep offsets are slower.
+         *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
+         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
+         *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
+         *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
+         *     within the authorized, filtered, and ordered collection.
+         *     Pass include_links=true to include parent, child, and associated resources for each sample.
+         *     include_datasets is deprecated; use include_links instead.
+         *     Pass visibility=public or visibility=private to narrow by the resource's public ACL entry.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.
+         *     Pass dataset_mfid to filter by a readable dataset's canonical stable identity.
+         *     Faceted nullable fields also accept field-specific is_null=true or false filters.
+         *     Access selectors use AND semantics and only narrow resources readable by the caller.
+         */
+        get: operations["list_samples_samples_get"];
+        put?: never;
+        /**
+         * Create Sample
+         * @description Create a new sample. Sample names are not unique within a project, so repeating one
+         *     creates a second sample.
+         */
+        post: operations["create_sample_samples_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sample Facets */
+        get: operations["get_sample_facets_samples_facets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Samples
+         * @description Search readable samples by name and return results ordered by match quality.
+         *     Use owner_id for an exact owner match.
+         *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
+         */
+        get: operations["search_samples_samples_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/{child_sample_mfid}/parents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Parent Samples
+         * @description Returns a paginated list of parent samples for a given child sample.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
+         */
+        get: operations["list_parent_samples_samples__child_sample_mfid__parents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/{parent_sample_mfid}/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Child Samples
+         * @description Returns a paginated list of child samples for a given parent sample.
+         *
+         *     relationship_type restricts the result to links of that kind. Links with no
+         *     recorded type are excluded when the filter is set.
+         */
+        get: operations["list_child_samples_samples__parent_sample_mfid__children_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/{parent_sample_mfid}/children/{child_sample_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link Sample Parent Child
+         * @description Link two samples as parent and child.
+         *
+         *     relationship_type describes the child relative to the parent, so
+         *     is_part_of means "child is_part_of parent". Omit it to leave the kind
+         *     unspecified; on a link that already exists, omitting it preserves the
+         *     type already stored rather than clearing it.
+         *     Same-project links require contributor access to the parent and read access
+         *     to the child. Cross-project links and relationship-type changes require
+         *     editor access to both samples.
+         */
+        post: operations["link_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__post"];
+        /** Unlink Sample Parent Child */
+        delete: operations["unlink_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/{sample_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Sample
+         * @description Returns the sample for the provided MFID.
+         *     Pass include_links=true to include parent, child, and associated resources.
+         *     Embedded dataset objects are retained by default for compatibility. New clients should pass include_datasets=false and use include_links or GET /datasets?sample_mfid=... instead.
+         *     The owner identity is resolved by default. Pass include_owner=false to omit it.
+         */
+        get: operations["read_sample_samples__sample_mfid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Sample
+         * @description Partially update a sample record. Only provided fields are modified.
+         *     No project_id — use POST /resources/{mfid}/project.
+         */
+        patch: operations["update_sample_samples__sample_mfid__patch"];
+        trace?: never;
+    };
+    "/samples/{sample_mfid}/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sample Datasets
+         * @deprecated
+         * @description Returns a list of all datasets linked to a given sample.
+         *     Deprecated: use GET /datasets?sample_mfid={sample_id}.
+         */
+        get: operations["list_sample_datasets_samples__sample_mfid__datasets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/{sample_mfid}/sample_graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sample Graph
+         * @description Returns a NetworkX node-link graph of all samples connected (via parent/child
+         *     relationships) to the given sample. Loads all samples in the project and
+         *     returns the directed lineage subgraph (ancestors + descendants) of the target.
+         */
+        get: operations["sample_graph_samples__sample_mfid__sample_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/{sample_mfid}/sample_graph_cte": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sample Graph Cte
+         * @description CTE-based implementation (kept for reference). Prefer /sample_graph.
+         *     Returns a NetworkX node-link graph of all samples connected (via parent/child
+         *     relationships) to the given sample, i.e. its full lineage subgraph.
+         */
+        get: operations["sample_graph_cte_samples__sample_mfid__sample_graph_cte_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2985,7 +2752,101 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/print/barcode": {
+    "/user_apikey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Apikey Deprecated
+         * @deprecated
+         * @description Deprecated: use GET /auth/apikey.
+         */
+        get: operations["get_apikey_deprecated_user_apikey_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Users
+         * @description Returns a paginated list of users. Platform administrators receive the full
+         *     directory with email and platform roles; other callers receive public-safe
+         *     profiles scoped to users who share an access group with them.
+         *     Exact unique_id, username, and email filters return the same authorized
+         *     representation as GET /users/{user_ref}. Any other query parameter is ignored
+         *     and reported through the Deprecation response header.
+         */
+        get: operations["list_users_users_get"];
+        put?: never;
+        /** Create User */
+        post: operations["create_user_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/by-username/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User By Username
+         * @deprecated
+         * @description Deprecated: use GET /users/{user_ref}. Email is visible only to self and platform administrators.
+         */
+        get: operations["get_user_by_username_users_by_username__username__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current User
+         * @deprecated
+         * @description Deprecated: use GET /account/profile.
+         */
+        get: operations["get_current_user_users_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Current User
+         * @deprecated
+         * @description Deprecated: use GET /account/profile and PATCH /account/profile.
+         */
+        patch: operations["update_current_user_users_me_patch"];
+        trace?: never;
+    };
+    "/users/resolve": {
         parameters: {
             query?: never;
             header?: never;
@@ -2995,17 +2856,277 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Print Barcode
-         * @description Publishes a barcode print job and waits briefly for a print result.
-         *
-         *     Always returns 200; `status` distinguishes confirmed success ("ok") from
-         *     an explicit printer-reported failure ("error") or no result within the
-         *     wait window ("timeout"). On "error"/"timeout", `detail` may note whether
-         *     the requested printer currently appears online, via
-         *     crucible-label-printer-status, to help diagnose typos vs. offline
-         *     hardware.
+         * Resolve Users
+         * @description Batch-resolve users by any mix of ORCIDs, usernames, or emails.
+         *     `orcids` is matched against unique_id, so it also accepts service-account
+         *     MFIDs; the response is keyed by unique_id. No email included.
+         *     Any authenticated user can call this. Admins needing email should use GET /users/{user_ref}.
          */
-        post: operations["print_barcode_print_barcode_post"];
+        post: operations["resolve_users_users_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Users
+         * @description Search users by username, first name, or last name. Returns public profiles only (no email).
+         *     Minimum query length: 3 characters. Maximum results: 50.
+         */
+        get: operations["search_users_users_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read User */
+        get: operations["read_user_users__user_ref__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update User
+         * @description Partially update a user record. Only fields provided in the request body are modified.
+         */
+        patch: operations["update_user_users__user_ref__patch"];
+        trace?: never;
+    };
+    "/users/{user_ref}/access_groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List User Access Groups */
+        get: operations["list_user_access_groups_users__user_ref__access_groups_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/access_groups/{group_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add User To Access Group
+         * @deprecated
+         * @description Add a user to an access group. Not for project groups. Use
+         *     POST /projects/{project_ref}/users/{user_ref}, which applies the project's own
+         *     role cap instead of platform-admin-only.
+         */
+        post: operations["add_user_to_access_group_users__user_ref__access_groups__group_name__post"];
+        /**
+         * Remove User From Access Group
+         * @deprecated
+         * @description Remove a user from an access group. Not for project groups. Use
+         *     DELETE /projects/{project_ref}/users/{user_ref}, which keeps membership records
+         *     in step instead of only revoking access-group standing.
+         */
+        delete: operations["remove_user_from_access_group_users__user_ref__access_groups__group_name__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/apikey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get Or Provision User Apikey
+         * @deprecated
+         * @description Return the user's API key, minting one if they don't have it yet. Admin only. 404 if the user doesn't exist.
+         *
+         *     Deprecated: returning an existing key will stop when keys are stored hashed. Use
+         *     POST /users/{user_ref}/apikey/regenerate. Hub sessions already receive 409 when a key exists.
+         */
+        post: operations["get_or_provision_user_apikey_users__user_ref__apikey_post"];
+        /**
+         * Delete User Apikey
+         * @description Revoke every API key held by the user. Platform administrators only. 204 on success.
+         */
+        delete: operations["delete_user_apikey_users__user_ref__apikey_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/apikey/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Regenerate User Apikey
+         * @description Issue a new API key for the user and revoke the previous one. Admin only. The key is returned only once.
+         */
+        post: operations["regenerate_user_apikey_users__user_ref__apikey_regenerate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/apikey/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify User Apikey
+         * @description Returns validity and expiry info for the given user's API key. Admin only.
+         */
+        get: operations["verify_user_apikey_users__user_ref__apikey_verify_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read User Datasets
+         * @deprecated
+         * @description Deprecated compatibility route returning dataset MFIDs. Use GET /datasets?accessible_to_user={user_ref}.
+         */
+        get: operations["read_user_datasets_users__user_ref__datasets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/datasets/{dataset_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read User Access To Dataset
+         * @description Returns the user's effective role on one dataset. Limited to self and platform administrators.
+         */
+        get: operations["read_user_access_to_dataset_users__user_ref__datasets__dataset_mfid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/platform_role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update User Platform Role
+         * @description Change a human user's platform role. Human platform administrators only.
+         */
+        patch: operations["update_user_platform_role_users__user_ref__platform_role_patch"];
+        trace?: never;
+    };
+    "/users/{user_ref}/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Projects For User
+         * @description Returns a paginated list of the projects the user is a member of, each with
+         *     the user's standing role in that project's access group.
+         *     Available to the user themselves and to callers with platform_role
+         *     contributor or admin, the same rule as accessible_to_user on GET /projects.
+         *     Membership only: unlike GET /projects?accessible_to_user=, projects reached
+         *     only through explicit resource grants are not included.
+         */
+        get: operations["read_projects_for_user_users__user_ref__projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read User Samples
+         * @deprecated
+         * @description Deprecated compatibility route returning sample MFIDs. Use GET /samples?accessible_to_user={user_ref}.
+         */
+        get: operations["read_user_samples_users__user_ref__samples_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3021,14 +3142,14 @@ export interface components {
          * @description One canonical principal grant on a resource.
          */
         AccessGrantRead: {
+            /** Display Name */
+            display_name?: string | null;
+            permission: components["schemas"]["AccessPermission"];
             /** Principal Id */
             principal_id: string;
             principal_type: components["schemas"]["AccessPrincipalType"];
-            permission: components["schemas"]["AccessPermission"];
             /** Slug */
             slug?: string | null;
-            /** Display Name */
-            display_name?: string | null;
         };
         /**
          * AccessGrantWrite
@@ -3050,32 +3171,32 @@ export interface components {
          * @description A public-safe group member profile plus their standing role.
          */
         AccessGroupMemberRead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Username */
-            username?: string | null;
             /** First Name */
             first_name: string;
-            /** Last Name */
-            last_name: string;
             /**
              * Is Service Account
              * @default false
              */
             is_service_account: boolean | null;
-            user_capabilities?: components["schemas"]["UserCapabilities"] | null;
+            /** Last Name */
+            last_name: string;
             /** Role */
             role: string;
+            /** Unique Id */
+            unique_id: string;
+            user_capabilities?: components["schemas"]["UserCapabilities"] | null;
+            /** Username */
+            username?: string | null;
         };
         /**
          * AccessGroupRead
          * @description Response model for AccessGroup.
          */
         AccessGroupRead: {
-            /** Id */
-            id: number;
             /** Group Name */
             group_name: string;
+            /** Id */
+            id: number;
         };
         /**
          * AccessPermission
@@ -3089,70 +3210,70 @@ export interface components {
         AccessPrincipalType: "user" | "service_account" | "project" | "instrument" | "public" | "system" | "unknown";
         /** AccountAuthorizationRead */
         AccountAuthorizationRead: {
-            platform_role: components["schemas"]["PlatformRole"];
-            effective_privilege_mode: components["schemas"]["PrivilegeMode"];
             /** Can Elevate */
             can_elevate: boolean;
+            effective_privilege_mode: components["schemas"]["PrivilegeMode"];
+            platform_role: components["schemas"]["PlatformRole"];
         };
         /** AccountCapabilities */
         AccountCapabilities: {
-            /** Can Manage Service Accounts */
-            can_manage_service_accounts: boolean;
-            /** Can Manage Users */
-            can_manage_users: boolean;
-            /** Can Create Project */
-            can_create_project: boolean;
-            /** Can Register Instrument */
-            can_register_instrument: boolean;
-            /** Can Create Sample */
-            can_create_sample: boolean;
             /** Can Create Dataset */
             can_create_dataset: boolean;
             /** Can Create For Others */
             can_create_for_others: boolean;
+            /** Can Create Project */
+            can_create_project: boolean;
+            /** Can Create Sample */
+            can_create_sample: boolean;
+            /** Can Manage Service Accounts */
+            can_manage_service_accounts: boolean;
+            /** Can Manage Users */
+            can_manage_users: boolean;
+            /** Can Register Instrument */
+            can_register_instrument: boolean;
         };
         /** AccountInfo */
         AccountInfo: {
-            /** User Unique Id */
-            user_unique_id: string;
             /** Access Group Ids */
             access_group_ids: number[];
             user_info?: components["schemas"]["UserRead"] | null;
+            /** User Unique Id */
+            user_unique_id: string;
         };
         /** AccountProfileRead */
         AccountProfileRead: {
-            /** First Name */
-            first_name: string;
-            /** Last Name */
-            last_name: string;
+            api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
+            authorization: components["schemas"]["AccountAuthorizationRead"];
+            capabilities: components["schemas"]["AccountCapabilities"];
             /** Email */
             email?: string | null;
-            /** Unique Id */
-            unique_id: string;
-            /** Username */
-            username?: string | null;
+            /** First Name */
+            first_name: string;
             /**
              * Is Service Account
              * @default false
              */
             is_service_account: boolean | null;
+            /** Last Name */
+            last_name: string;
             platform_role?: components["schemas"]["PlatformRole"] | null;
+            /** Unique Id */
+            unique_id: string;
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
-            api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
-            authorization: components["schemas"]["AccountAuthorizationRead"];
-            capabilities: components["schemas"]["AccountCapabilities"];
+            /** Username */
+            username?: string | null;
         };
         /**
          * AccountProfileUpdate
          * @description Self-service profile update. Does not allow changing is_service_account.
          */
         AccountProfileUpdate: {
+            /** Email */
+            email?: string | null;
             /** First Name */
             first_name?: string | null;
             /** Last Name */
             last_name?: string | null;
-            /** Email */
-            email?: string | null;
             /** Username */
             username?: string | null;
         };
@@ -3168,12 +3289,12 @@ export interface components {
         };
         /** ApiKeyVerify */
         ApiKeyVerify: {
-            /** Valid */
-            valid: boolean;
             /** Created At */
             created_at: string;
             /** Expires At */
             expires_at: string;
+            /** Valid */
+            valid: boolean;
         };
         /**
          * AssociatedFileCreate
@@ -3185,12 +3306,14 @@ export interface components {
          *     Crucible does not verify existence or broker access for non-gcs files.
          */
         AssociatedFileCreate: {
+            /** Access Note */
+            access_note?: string | null;
             /** Filename */
             filename: string;
-            /** Size */
-            size: number;
             /** Sha256 Hash */
             sha256_hash: string;
+            /** Size */
+            size: number;
             /**
              * Storage Backend
              * @default gcs
@@ -3201,79 +3324,72 @@ export interface components {
              * @description Backend-specific location for a non-GCS catalog-only file.
              */
             storage_path?: string | null;
-            /** Access Note */
-            access_note?: string | null;
         };
         /**
          * AssociatedFileRead
          * @description Response model for AssociatedFile.
          */
         AssociatedFileRead: {
-            /** Mfid */
-            mfid: string;
+            /** Access Note */
+            access_note?: string | null;
             /** Dataset Id */
             dataset_id: number;
             /** Dataset Mfid */
             dataset_mfid: string;
             /** Filename */
             filename: string;
-            /** Storage Path */
-            storage_path?: string | null;
-            /** Storage Backend */
-            storage_backend: string;
-            /** Access Note */
-            access_note?: string | null;
-            /** Size */
-            size: number;
+            /** Mfid */
+            mfid: string;
             /** Sha256 Hash */
             sha256_hash: string;
+            /** Size */
+            size: number;
+            /** Storage Backend */
+            storage_backend: string;
+            /** Storage Path */
+            storage_path?: string | null;
         };
         /**
          * AssociatedFileUpdate
          * @description Partial update schema for AssociatedFile. Only provided fields are modified.
          */
         AssociatedFileUpdate: {
-            /** Filename */
-            filename?: string | null;
-            /** Storage Path */
-            storage_path?: string | null;
-            /** Storage Backend */
-            storage_backend?: string | null;
             /** Access Note */
             access_note?: string | null;
-            /** Size */
-            size?: number | null;
+            /** Filename */
+            filename?: string | null;
             /** Sha256 Hash */
             sha256_hash?: string | null;
+            /** Size */
+            size?: number | null;
+            /** Storage Backend */
+            storage_backend?: string | null;
+            /** Storage Path */
+            storage_path?: string | null;
         };
         /** AssociationGraphEdge */
         AssociationGraphEdge: {
-            /** Id */
-            id: string;
-            /** Source Mfid */
-            source_mfid: string;
-            /** Target Mfid */
-            target_mfid: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "association";
             /**
              * Directed
              * @constant
              */
             directed: false;
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "association";
             /** Relationship Type */
             relationship_type: null;
+            /** Source Mfid */
+            source_mfid: string;
+            /** Target Mfid */
+            target_mfid: string;
         };
         /** BarcodePrintRequest */
         BarcodePrintRequest: {
-            /**
-             * Printer Id
-             * @description Target printer identifier, e.g. 'spinbot'.
-             */
-            printer_id: string;
             /**
              * Mfid
              * @description MFID of the resource to print.
@@ -3284,83 +3400,88 @@ export interface components {
              * @description Human-readable label text.
              */
             name: string;
+            /**
+             * Printer Id
+             * @description Target printer identifier, e.g. 'spinbot'.
+             */
+            printer_id: string;
         };
         /** BarcodePrintResponse */
         BarcodePrintResponse: {
+            /** Detail */
+            detail?: string | null;
             /** Job Id */
             job_id: string;
-            /** Printer Id */
-            printer_id: string;
             /** Mfid */
             mfid: string;
             /** Name */
             name: string;
-            /** Ts */
-            ts: number;
+            /** Printer Id */
+            printer_id: string;
             /**
              * Status
              * @enum {string}
              */
             status: "ok" | "error" | "timeout";
-            /** Detail */
-            detail?: string | null;
+            /** Ts */
+            ts: number;
         };
         /** Body_create_user_users_post */
         Body_create_user_users_post: {
-            user_info: components["schemas"]["UserCreate"];
             /** Project Ids */
             project_ids?: string[] | null;
+            user_info: components["schemas"]["UserCreate"];
         };
         /** Body_resolve_users_users_resolve_post */
         Body_resolve_users_users_resolve_post: {
+            /** Emails */
+            emails?: string[] | null;
             /** Orcids */
             orcids?: string[] | null;
             /** Usernames */
             usernames?: string[] | null;
-            /** Emails */
-            emails?: string[] | null;
         };
         /** BuildInfoResponse */
         BuildInfoResponse: {
             /** Api Version */
             api_version: string;
-            /** Git Commit */
-            git_commit: string | null;
             /** Branch */
             branch: string | null;
+            /** Git Commit */
+            git_commit: string | null;
         };
         /** ChunkHit */
         ChunkHit: {
-            /** Resource Mfid */
-            resource_mfid: string;
             /** Chunk Index */
             chunk_index: number;
             /** Chunk Text */
             chunk_text: string;
             /** Distance */
             distance: number;
+            /** Resource Mfid */
+            resource_mfid: string;
             /** Similarity */
             readonly similarity: number;
         };
         /** ChunkSearchRequest */
         ChunkSearchRequest: {
             /**
-             * Query Vector
-             * @description Query embedding; it must match the table's 768 dimensions.
-             */
-            query_vector: number[];
-            /**
              * K
              * @default 20
              */
             k: number;
+            /** Model Name */
+            model_name?: string | null;
             /**
              * Probes
              * @default 10
              */
             probes: number;
-            /** Model Name */
-            model_name?: string | null;
+            /**
+             * Query Vector
+             * @description Query embedding; it must match the table's 768 dimensions.
+             */
+            query_vector: number[];
             /**
              * Resource Mfids
              * @description Optionally restrict results to these resource MFIDs.
@@ -3369,22 +3490,53 @@ export interface components {
         };
         /** DatabaseReadinessResponse */
         DatabaseReadinessResponse: {
+            /** Latency Ms */
+            latency_ms: number | null;
+            /** Schema Revisions */
+            schema_revisions: string[];
             /**
              * Status
              * @enum {string}
              */
             status: "ok" | "error";
-            /** Latency Ms */
-            latency_ms: number | null;
-            /** Schema Revisions */
-            schema_revisions: string[];
         };
         /** DatasetCreate */
         DatasetCreate: {
-            /** Unique Id */
-            unique_id?: string | null;
+            /** Data Format */
+            data_format?: string | null;
+            /** Data Type */
+            data_type?: string | null;
             /** Dataset Name */
             dataset_name?: string | null;
+            /**
+             * Instrument Id
+             * @description Registered instrument slug. May be combined with a matching instrument_mfid.
+             */
+            instrument_id?: string | null;
+            /**
+             * Instrument Mfid
+             * @description Canonical registered instrument MFID. May be combined with a matching instrument_id.
+             */
+            instrument_mfid?: string | null;
+            /**
+             * Instrument Name
+             * @deprecated
+             * @description Deprecated. Display-name lookup used only when instrument_id and instrument_mfid are omitted; returns 409 when the name matches more than one instrument. Use instrument_id or instrument_mfid.
+             */
+            instrument_name?: string | null;
+            /** Measurement */
+            measurement?: string | null;
+            /**
+             * Owner
+             * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
+             */
+            owner?: string | null;
+            /**
+             * Owner Orcid
+             * @deprecated
+             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
+             */
+            owner_orcid?: string | null;
             /**
              * Project Id
              * @description Project slug. May be combined with a matching project_mfid.
@@ -3396,47 +3548,16 @@ export interface components {
              */
             project_mfid?: string | null;
             /**
-             * Instrument Name
-             * @deprecated
-             * @description Deprecated. Display-name lookup used only when instrument_id and instrument_mfid are omitted; returns 409 when the name matches more than one instrument. Use instrument_id or instrument_mfid.
-             */
-            instrument_name?: string | null;
-            /**
-             * Instrument Id
-             * @description Registered instrument slug. May be combined with a matching instrument_mfid.
-             */
-            instrument_id?: string | null;
-            /**
-             * Instrument Mfid
-             * @description Canonical registered instrument MFID. May be combined with a matching instrument_id.
-             */
-            instrument_mfid?: string | null;
-            /** Data Format */
-            data_format?: string | null;
-            /** Measurement */
-            measurement?: string | null;
-            /** Data Type */
-            data_type?: string | null;
-            /** Session Name */
-            session_name?: string | null;
-            /** Timestamp */
-            timestamp?: string | null;
-            /**
              * Public
              * @default false
              */
             public: boolean;
-            /**
-             * Owner Orcid
-             * @deprecated
-             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
-             */
-            owner_orcid?: string | null;
-            /**
-             * Owner
-             * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
-             */
-            owner?: string | null;
+            /** Session Name */
+            session_name?: string | null;
+            /** Timestamp */
+            timestamp?: string | null;
+            /** Unique Id */
+            unique_id?: string | null;
         };
         /**
          * DatasetFacetField
@@ -3445,26 +3566,26 @@ export interface components {
         DatasetFacetField: "session" | "measurement" | "data_format" | "owner" | "instrument" | "project";
         /** DatasetGraphNode */
         DatasetGraphNode: {
+            /** Data Format */
+            data_format: string | null;
+            expansion_availability: components["schemas"]["GraphExpansionAvailability"];
+            /** Has More Relationships */
+            has_more_relationships: boolean | null;
+            instrument: components["schemas"]["InstrumentReferenceRead"] | null;
+            /** Measurement */
+            measurement: string | null;
             /** Mfid */
             mfid: string;
             /** Name */
             name: string | null;
-            /** Traversal Depth */
-            traversal_depth: number;
-            /** Has More Relationships */
-            has_more_relationships: boolean | null;
-            expansion_availability: components["schemas"]["GraphExpansionAvailability"];
             project: components["schemas"]["ProjectReferenceRead"] | null;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             resource_type: "dataset";
-            /** Measurement */
-            measurement: string | null;
-            /** Data Format */
-            data_format: string | null;
-            instrument: components["schemas"]["InstrumentReferenceRead"] | null;
+            /** Traversal Depth */
+            traversal_depth: number;
         };
         /**
          * DatasetInstrumentAssign
@@ -3494,13 +3615,13 @@ export interface components {
         DatasetInstrumentRead: {
             /** Dataset Mfid */
             dataset_mfid: string;
+            instrument: components["schemas"]["InstrumentReferenceRead"];
             previous_instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
             /**
              * Previous Instrument Name
              * @description The dataset's instrument_name before the change. For datasets whose name never named a registered instrument, this is the only record of it.
              */
             previous_instrument_name?: string | null;
-            instrument: components["schemas"]["InstrumentReferenceRead"];
         };
         /** DatasetLink */
         DatasetLink: {
@@ -3516,91 +3637,91 @@ export interface components {
          * @description Response model for Dataset. Includes all server-generated fields.
          */
         DatasetRead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Public */
-            public: boolean;
-            /** Dataset Name */
-            dataset_name?: string | null;
-            /** Owner Orcid */
-            owner_orcid?: string | null;
-            /** Project Id */
-            project_id?: string | null;
-            /** Instrument Name */
-            instrument_name?: string | null;
-            /** Instrument Id */
-            instrument_id?: string | null;
-            instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
-            project?: components["schemas"]["ProjectReferenceRead"] | null;
-            /** Timestamp */
-            timestamp?: string | null;
-            /** Size */
-            size?: number | null;
             /** Data Format */
             data_format?: string | null;
-            /** Measurement */
-            measurement?: string | null;
             /** Data Type */
             data_type?: string | null;
+            /** Dataset Name */
+            dataset_name?: string | null;
+            instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
+            /** Instrument Id */
+            instrument_id?: string | null;
+            /** Instrument Name */
+            instrument_name?: string | null;
+            /** Measurement */
+            measurement?: string | null;
+            /** Owner Orcid */
+            owner_orcid?: string | null;
+            project?: components["schemas"]["ProjectReferenceRead"] | null;
+            /** Project Id */
+            project_id?: string | null;
+            /** Public */
+            public: boolean;
             /** Session Name */
             session_name?: string | null;
+            /** Size */
+            size?: number | null;
+            /** Timestamp */
+            timestamp?: string | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /**
          * DatasetResponse
          * @description DatasetRead extended with Resource timestamps, optional scientific metadata, and deletion status.
          */
         DatasetResponse: {
-            /** Unique Id */
-            unique_id: string;
-            /** Public */
-            public: boolean;
-            /** Dataset Name */
-            dataset_name?: string | null;
-            /** Owner Orcid */
-            owner_orcid?: string | null;
-            /** Project Id */
-            project_id?: string | null;
-            /** Instrument Name */
-            instrument_name?: string | null;
-            /** Instrument Id */
-            instrument_id?: string | null;
-            instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
-            project?: components["schemas"]["ProjectReferenceRead"] | null;
-            /** Timestamp */
-            timestamp?: string | null;
-            /** Size */
-            size?: number | null;
+            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
+            /** Creation Time */
+            creation_time?: string | null;
             /** Data Format */
             data_format?: string | null;
-            /** Measurement */
-            measurement?: string | null;
             /** Data Type */
             data_type?: string | null;
-            /** Session Name */
-            session_name?: string | null;
+            /** Dataset Name */
+            dataset_name?: string | null;
+            /** Deletion Request */
+            deletion_request?: {
+                [key: string]: unknown;
+            } | null;
+            instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
+            /** Instrument Id */
+            instrument_id?: string | null;
+            /** Instrument Name */
+            instrument_name?: string | null;
+            /** Links */
+            links?: components["schemas"]["LinkedResource"][] | null;
+            /** Measurement */
+            measurement?: string | null;
+            /** Modification Time */
+            modification_time?: string | null;
+            owner?: components["schemas"]["UserPublicRead"] | null;
+            /** Owner Orcid */
+            owner_orcid?: string | null;
+            project?: components["schemas"]["ProjectReferenceRead"] | null;
+            /** Project Id */
+            project_id?: string | null;
+            /** Project Relation */
+            project_relation?: ("assigned" | "shared") | null;
+            /** Public */
+            public: boolean;
             /**
              * Resource Type
              * @default dataset
              */
             resource_type: string | null;
-            /** Creation Time */
-            creation_time?: string | null;
-            /** Modification Time */
-            modification_time?: string | null;
             /** Scientific Metadata */
             scientific_metadata?: {
                 [key: string]: unknown;
             } | null;
-            /** Deletion Request */
-            deletion_request?: {
-                [key: string]: unknown;
-            } | null;
-            /** Links */
-            links?: components["schemas"]["LinkedResource"][] | null;
-            owner?: components["schemas"]["UserPublicRead"] | null;
-            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
-            /** Project Relation */
-            project_relation?: ("assigned" | "shared") | null;
+            /** Session Name */
+            session_name?: string | null;
+            /** Size */
+            size?: number | null;
+            /** Timestamp */
+            timestamp?: string | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /** DatasetSampleLinkResponse */
         DatasetSampleLinkResponse: {
@@ -3635,32 +3756,32 @@ export interface components {
          *     POST /resources/{mfid}/transfer_ownership.
          */
         DatasetUpdate: {
+            /** Data Format */
+            data_format?: string | null;
+            /** Data Type */
+            data_type?: string | null;
             /** Dataset Name */
             dataset_name?: string | null;
-            /**
-             * Instrument Name
-             * @deprecated
-             * @description Deprecated for dataset updates. Only the current value is accepted. Use PUT /datasets/{dataset_mfid}/instrument.
-             */
-            instrument_name?: string | null;
             /**
              * Instrument Id
              * @deprecated
              * @description Deprecated for dataset updates. Only the current value is accepted. Use PUT /datasets/{dataset_mfid}/instrument.
              */
             instrument_id?: string | null;
-            /** Data Format */
-            data_format?: string | null;
+            /**
+             * Instrument Name
+             * @deprecated
+             * @description Deprecated for dataset updates. Only the current value is accepted. Use PUT /datasets/{dataset_mfid}/instrument.
+             */
+            instrument_name?: string | null;
             /** Measurement */
             measurement?: string | null;
-            /** Data Type */
-            data_type?: string | null;
+            /** Public */
+            public?: boolean | null;
             /** Session Name */
             session_name?: string | null;
             /** Timestamp */
             timestamp?: string | null;
-            /** Public */
-            public?: boolean | null;
         };
         /**
          * DeletableResourceType
@@ -3672,13 +3793,10 @@ export interface components {
          * @description Response model for DeletionAuditLog.
          */
         DeletionAuditLogRead: {
+            /** Deleted At */
+            deleted_at: string;
             /** Id */
             id: number;
-            /** Resource Id */
-            resource_id: string;
-            resource_type?: components["schemas"]["DeletableResourceType"] | null;
-            /** Resource Name */
-            resource_name?: string | null;
             /** Project Id */
             project_id?: string | null;
             /**
@@ -3686,24 +3804,27 @@ export interface components {
              * @description Canonical project MFID captured when the resource was deleted. Entries created before this field was introduced may be null.
              */
             project_mfid?: string | null;
-            /** Requester Id */
-            requester_id: string;
-            /** @description Current public-safe requester identity when the account still exists. */
-            requester?: components["schemas"]["UserPublicRead"] | null;
             /** Reason */
             reason?: string | null;
             /** Request Time */
             request_time?: string | null;
-            /** Reviewer Id */
-            reviewer_id: string;
-            /** @description Current public-safe reviewer identity when the account still exists. */
-            reviewer?: components["schemas"]["UserPublicRead"] | null;
-            /** Reviewer Notes */
-            reviewer_notes?: string | null;
+            /** @description Current public-safe requester identity when the account still exists. */
+            requester?: components["schemas"]["UserPublicRead"] | null;
+            /** Requester Id */
+            requester_id: string;
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Name */
+            resource_name?: string | null;
+            resource_type?: components["schemas"]["DeletableResourceType"] | null;
             /** Review Time */
             review_time?: string | null;
-            /** Deleted At */
-            deleted_at: string;
+            /** @description Current public-safe reviewer identity when the account still exists. */
+            reviewer?: components["schemas"]["UserPublicRead"] | null;
+            /** Reviewer Id */
+            reviewer_id: string;
+            /** Reviewer Notes */
+            reviewer_notes?: string | null;
         };
         /**
          * DeletionAuditScope
@@ -3712,26 +3833,18 @@ export interface components {
         DeletionAuditScope: "all" | "submitted";
         /** DeletionGrantRead */
         DeletionGrantRead: {
+            /** Permission */
+            permission: string;
             /** Resource Mfid */
             resource_mfid: string;
             /** Resource Type */
             resource_type: string;
-            /** Permission */
-            permission: string;
         };
         /**
          * DeletionPreviewRead
          * @description What deleting a project or instrument removes, or why it is blocked.
          */
         DeletionPreviewRead: {
-            /** Resource Id */
-            resource_id: string;
-            resource_type: components["schemas"]["DeletableResourceType"];
-            /**
-             * Deleted
-             * @description False for a preview, true when the deletion executed.
-             */
-            deleted: boolean;
             /**
              * Blocking
              * @description Assigned datasets and samples that block deletion, keyed by entity type. Empty when the resource is deletable.
@@ -3740,17 +3853,10 @@ export interface components {
                 [key: string]: number;
             };
             /**
-             * Memberships Removed
-             * @description Project group members unlinked when a project is deleted.
-             * @default 0
+             * Deleted
+             * @description False for a preview, true when the deletion executed.
              */
-            memberships_removed: number;
-            /**
-             * Service Accounts Unbound
-             * @description Operator group service accounts unbound when an instrument is deleted.
-             * @default 0
-             */
-            service_accounts_unbound: number;
+            deleted: boolean;
             /**
              * Join Requests Removed
              * @description Pending and reviewed join requests removed with a project's access group.
@@ -3758,10 +3864,31 @@ export interface components {
              */
             join_requests_removed: number;
             /**
+             * Memberships Removed
+             * @description Project group members unlinked when a project is deleted.
+             * @default 0
+             */
+            memberships_removed: number;
+            /**
              * Removed Grants
              * @description Access grants held by the deleted access group on resources other than the deleted resource itself.
              */
             removed_grants?: components["schemas"]["DeletionGrantRead"][];
+            /**
+             * Resource Id
+             * @deprecated
+             * @description Deprecated. Use resource_mfid.
+             */
+            resource_id: string;
+            /** Resource Mfid */
+            resource_mfid: string;
+            resource_type: components["schemas"]["DeletableResourceType"];
+            /**
+             * Service Accounts Unbound
+             * @description Operator group service accounts unbound when an instrument is deleted.
+             * @default 0
+             */
+            service_accounts_unbound: number;
         };
         /** DeletionRequestCapabilities */
         DeletionRequestCapabilities: {
@@ -3776,36 +3903,42 @@ export interface components {
          * @description Deletion request with resource, project, and caller capability context.
          */
         DeletionRequestRead: {
+            capabilities: components["schemas"]["DeletionRequestCapabilities"];
             /** Id */
             id: number;
-            /** Resource Id */
-            resource_id: string;
-            /** Resource Type */
-            resource_type?: string | null;
-            /** Resource Name */
-            resource_name?: string | null;
+            /** @description Project and instrument deletions only: what deleting the resource removes, or why it is blocked. Null for datasets and samples. */
+            preview?: components["schemas"]["DeletionPreviewRead"] | null;
             /** Project Id */
             project_id?: string | null;
             /** Project Mfid */
             project_mfid?: string | null;
-            /** Requester Id */
-            requester_id: string;
-            requester: components["schemas"]["UserPublicRead"] | null;
             /** Reason */
             reason?: string | null;
-            status: components["schemas"]["DeletionRequestStatus"];
             /** Request Time */
             request_time?: string | null;
+            requester: components["schemas"]["UserPublicRead"] | null;
+            /** Requester Id */
+            requester_id: string;
+            /**
+             * Resource Id
+             * @deprecated
+             * @description Deprecated. Use resource_mfid.
+             */
+            resource_id: string;
+            /** Resource Mfid */
+            resource_mfid: string;
+            /** Resource Name */
+            resource_name?: string | null;
+            /** Resource Type */
+            resource_type?: string | null;
             /** Review Time */
             review_time?: string | null;
+            reviewer: components["schemas"]["UserPublicRead"] | null;
             /** Reviewer Id */
             reviewer_id?: string | null;
-            reviewer: components["schemas"]["UserPublicRead"] | null;
             /** Reviewer Notes */
             reviewer_notes?: string | null;
-            capabilities: components["schemas"]["DeletionRequestCapabilities"];
-            /** @description Project and instrument deletions only: what deleting the resource removes, or why it is blocked. Null for datasets and samples. */
-            preview?: components["schemas"]["DeletionPreviewRead"] | null;
+            status: components["schemas"]["DeletionRequestStatus"];
         };
         /**
          * DeletionRequestScope
@@ -3834,43 +3967,43 @@ export interface components {
         EffectiveAccess: "none" | "viewer" | "contributor" | "editor" | "admin" | "owner" | "platform_admin";
         /** EffectiveResourceAccessRead */
         EffectiveResourceAccessRead: {
+            effective_access: components["schemas"]["EffectiveAccess"];
             /** Resource Mfid */
             resource_mfid: string;
             /** User Id */
             user_id: string;
-            effective_access: components["schemas"]["EffectiveAccess"];
         };
         /** ExtractMetadataRequest */
         ExtractMetadataRequest: {
-            /** Images */
-            images: components["schemas"]["ImageInput"][];
-            /** Context */
-            context?: string | null;
             /** Api Key */
             api_key?: string | null;
             /** Api Url */
             api_url?: string | null;
+            /** Context */
+            context?: string | null;
+            /** Images */
+            images: components["schemas"]["ImageInput"][];
         };
         /** FacetBucket */
         FacetBucket: {
-            /** Value */
-            value: string | null;
+            /** Count */
+            count: number;
             /**
              * Label
              * @description Canonical display label. Null only for the null bucket.
              */
             label?: string | null;
-            /** Count */
-            count: number;
+            /** Value */
+            value: string | null;
         };
         /** FacetResponse */
         FacetResponse: {
             /** Field */
             field: string;
-            /** Limit */
-            limit: number;
             /** Items */
             items: (components["schemas"]["FacetBucket"] | components["schemas"]["OwnerFacetBucket"] | components["schemas"]["ProjectFacetBucket"] | components["schemas"]["InstrumentFacetBucket"])[];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
         };
@@ -3886,12 +4019,12 @@ export interface components {
         GraphDirection: "both" | "upstream" | "downstream";
         /** GraphExpansionAvailability */
         GraphExpansionAvailability: {
-            /** Upstream Lineage */
-            upstream_lineage: boolean;
-            /** Downstream Lineage */
-            downstream_lineage: boolean;
             /** Associations */
             associations: boolean;
+            /** Downstream Lineage */
+            downstream_lineage: boolean;
+            /** Upstream Lineage */
+            upstream_lineage: boolean;
         };
         /**
          * GraphRelationshipKind
@@ -3934,8 +4067,18 @@ export interface components {
         };
         /** HubTokenResponse */
         HubTokenResponse: {
+            /**
+             * Access Expires At
+             * Format: date-time
+             */
+            access_expires_at: string;
             /** Access Token */
             access_token: string;
+            /**
+             * Refresh Expires At
+             * Format: date-time
+             */
+            refresh_expires_at: string;
             /** Refresh Token */
             refresh_token: string;
             /**
@@ -3943,16 +4086,6 @@ export interface components {
              * @default Bearer
              */
             token_type: string;
-            /**
-             * Access Expires At
-             * Format: date-time
-             */
-            access_expires_at: string;
-            /**
-             * Refresh Expires At
-             * Format: date-time
-             */
-            refresh_expires_at: string;
             /** User Unique Id */
             user_unique_id: string;
         };
@@ -3968,24 +4101,24 @@ export interface components {
         };
         /** IngestionRequest */
         IngestionRequest: {
-            /** Id */
-            id?: number | null;
             /** Dataset Mfid */
             dataset_mfid?: string | null;
             /** File Mfid */
             file_mfid?: string | null;
             /** File To Upload */
             file_to_upload?: string | null;
-            /** Ingestion Githash */
-            ingestion_githash?: string | null;
+            /** Id */
+            id?: number | null;
             /** Ingestion Class */
             ingestion_class?: string | null;
-            /** Time Created */
-            time_created?: string | null;
-            /** Time Completed */
-            time_completed?: string | null;
+            /** Ingestion Githash */
+            ingestion_githash?: string | null;
             /** Status */
             status?: string | null;
+            /** Time Completed */
+            time_completed?: string | null;
+            /** Time Created */
+            time_created?: string | null;
         };
         /**
          * InstrumentAffiliation
@@ -3997,10 +4130,24 @@ export interface components {
          * @description Fields required to register a new instrument.
          */
         InstrumentCreate: {
+            /** Description */
+            description?: string | null;
             /** Instrument Id */
             instrument_id: string;
             /** Instrument Name */
             instrument_name: string;
+            /** Instrument Type */
+            instrument_type?: string | null;
+            /** Location */
+            location: string;
+            /** Manufacturer */
+            manufacturer?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Other Id */
+            other_id?: string | null;
+            /** Other Id Source */
+            other_id_source?: string | null;
             /**
              * Owner
              * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
@@ -4012,101 +4159,87 @@ export interface components {
              * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
              */
             owner_orcid?: string | null;
-            /** Location */
-            location: string;
-            /** Other Id */
-            other_id?: string | null;
-            /** Other Id Source */
-            other_id_source?: string | null;
-            /** Manufacturer */
-            manufacturer?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Instrument Type */
-            instrument_type?: string | null;
         };
         /** InstrumentFacetBucket */
         InstrumentFacetBucket: {
-            /** Value */
-            value: string | null;
+            /** Count */
+            count: number;
+            instrument: components["schemas"]["InstrumentReferenceRead"] | null;
             /**
              * Label
              * @description Canonical display label. Null only for the null bucket.
              */
             label?: string | null;
-            /** Count */
-            count: number;
-            instrument: components["schemas"]["InstrumentReferenceRead"] | null;
+            /** Value */
+            value: string | null;
         };
         /** InstrumentReferenceRead */
         InstrumentReferenceRead: {
-            /** Unique Id */
-            unique_id: string;
             /** Instrument Id */
             instrument_id?: string | null;
             /** Instrument Name */
             instrument_name: string;
+            /** Unique Id */
+            unique_id: string;
         };
         /**
          * InstrumentResponse
          * @description InstrumentRead extended with Resource timestamps.
          */
         InstrumentResponse: {
-            /** Unique Id */
-            unique_id: string;
+            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
+            /** Creation Time */
+            creation_time?: string | null;
+            /** Deletion Request */
+            deletion_request?: {
+                [key: string]: unknown;
+            } | null;
+            /** Description */
+            description?: string | null;
             /** Instrument Id */
             instrument_id?: string | null;
             /** Instrument Name */
             instrument_name: string;
+            /** Instrument Type */
+            instrument_type?: string | null;
+            /** Location */
+            location: string;
+            /** Manufacturer */
+            manufacturer?: string | null;
+            /**
+             * Members
+             * @description People and projects holding a role on the instrument record. Null unless requested and visible to the caller.
+             */
+            members?: components["schemas"]["AccessGrantRead"][] | null;
+            /** Model */
+            model?: string | null;
+            /** Modification Time */
+            modification_time?: string | null;
+            /** Other Id */
+            other_id?: string | null;
+            /** Other Id Source */
+            other_id_source?: string | null;
+            owner?: components["schemas"]["UserPublicRead"] | null;
             /**
              * Owner Orcid
              * @description Canonical owner identity: human ORCID or service-account MFID.
              */
             owner_orcid: string;
-            owner?: components["schemas"]["UserPublicRead"] | null;
-            /** Location */
-            location: string;
-            /** Other Id */
-            other_id?: string | null;
-            /** Other Id Source */
-            other_id_source?: string | null;
-            /** Manufacturer */
-            manufacturer?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Instrument Type */
-            instrument_type?: string | null;
             /**
              * Resource Type
              * @default instrument
              */
             resource_type: string | null;
-            /** Creation Time */
-            creation_time?: string | null;
-            /** Modification Time */
-            modification_time?: string | null;
+            /** @description The caller's effective role on the instrument record. Null when the caller holds none; bound service accounts are operators, not record roles. */
+            role?: components["schemas"]["AccessPermission"] | null;
             /** Scientific Metadata */
             scientific_metadata?: {
                 [key: string]: unknown;
             } | null;
             /** Status */
             status?: string | null;
-            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
-            /** Deletion Request */
-            deletion_request?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Members
-             * @description People and projects holding a role on the instrument record. Null unless requested and visible to the caller.
-             */
-            members?: components["schemas"]["AccessGrantRead"][] | null;
-            /** @description The caller's effective role on the instrument record. Null when the caller holds none; bound service accounts are operators, not record roles. */
-            role?: components["schemas"]["AccessPermission"] | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /**
          * InstrumentSort
@@ -4123,24 +4256,24 @@ export interface components {
          * @description Partial update schema for Instrument. Only provided fields are modified.
          */
         InstrumentUpdate: {
+            /** Description */
+            description?: string | null;
             /** Instrument Id */
             instrument_id?: string;
             /** Instrument Name */
             instrument_name?: string;
+            /** Instrument Type */
+            instrument_type?: string | null;
             /** Location */
             location?: string;
-            /** Other Id */
-            other_id?: string | null;
-            /** Other Id Source */
-            other_id_source?: string | null;
             /** Manufacturer */
             manufacturer?: string | null;
             /** Model */
             model?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Instrument Type */
-            instrument_type?: string | null;
+            /** Other Id */
+            other_id?: string | null;
+            /** Other Id Source */
+            other_id_source?: string | null;
         };
         /**
          * JoinRequestCreate
@@ -4155,34 +4288,34 @@ export interface components {
          * @description Response model for AccessGroupJoinRequest.
          */
         JoinRequestRead: {
-            /** Id */
-            id: number;
             /** Group Name */
             group_name: string;
-            /** Requester Id */
-            requester_id: string;
+            /** Id */
+            id: number;
             /** Reason */
             reason?: string | null;
-            /** Status */
-            status: string;
             /** Request Time */
             request_time?: string | null;
+            /** Requester Id */
+            requester_id: string;
             /** Review Time */
             review_time?: string | null;
             /** Reviewer Id */
             reviewer_id?: string | null;
             /** Reviewer Notes */
             reviewer_notes?: string | null;
+            /** Status */
+            status: string;
         };
         /**
          * JoinRequestReview
          * @description Body for PATCH /projects/{proj_id}/join_requests/{request_id}.
          */
         JoinRequestReview: {
-            /** Status */
-            status: string;
             /** Reviewer Notes */
             reviewer_notes?: string | null;
+            /** Status */
+            status: string;
         };
         /** Keyword */
         Keyword: {
@@ -4195,23 +4328,23 @@ export interface components {
         };
         /** LineageGraphEdge */
         LineageGraphEdge: {
-            /** Id */
-            id: string;
-            /** Source Mfid */
-            source_mfid: string;
-            /** Target Mfid */
-            target_mfid: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "lineage";
             /**
              * Directed
              * @constant
              */
             directed: true;
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "lineage";
             relationship_type: components["schemas"]["LinkRelationshipType"] | null;
+            /** Source Mfid */
+            source_mfid: string;
+            /** Target Mfid */
+            target_mfid: string;
         };
         /**
          * LinkRelationshipType
@@ -4220,19 +4353,19 @@ export interface components {
         LinkRelationshipType: "is_derived_from" | "is_part_of";
         /** LinkedResource */
         LinkedResource: {
-            /** Unique Id */
-            unique_id: string;
-            /** Resource Type */
-            resource_type: string;
-            /** Name */
-            name?: string | null;
             /**
              * Direction
              * @enum {string}
              */
             direction: "source" | "target" | "undirected";
+            /** Name */
+            name?: string | null;
             /** Relationship Type */
             relationship_type?: string | null;
+            /** Resource Type */
+            resource_type: string;
+            /** Unique Id */
+            unique_id: string;
         };
         /** LivenessResponse */
         LivenessResponse: {
@@ -4242,239 +4375,295 @@ export interface components {
              */
             status: "ok";
         };
+        /** MultipartComplete */
+        MultipartComplete: {
+            /** Crc32C */
+            crc32c: string;
+            /** Sha256 Hash */
+            sha256_hash: string;
+            /** Upload Id */
+            upload_id: string;
+        };
+        /** MultipartInitiate */
+        MultipartInitiate: {
+            /** Filename */
+            filename: string;
+            /** Sha256 Hash */
+            sha256_hash?: string | null;
+            /** Size */
+            size: number;
+        };
+        /** MultipartPart */
+        MultipartPart: {
+            /** Crc32C */
+            crc32c: string;
+            /** Part Number */
+            part_number: number;
+        };
+        /** MultipartParts */
+        MultipartParts: {
+            /** Parts */
+            parts: components["schemas"]["MultipartPart"][];
+        };
+        /** MultipartStatus */
+        MultipartStatus: {
+            existing_file?: components["schemas"]["AssociatedFileRead"] | null;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Failure Code */
+            failure_code?: string | null;
+            /** Next Part Number Marker */
+            next_part_number_marker?: number | null;
+            /** Part Count */
+            part_count?: number | null;
+            /** Part Size */
+            part_size?: number | null;
+            /** Parts */
+            parts?: components["schemas"]["UploadedPart"][];
+            /** State */
+            state: string;
+            /** Upload Id */
+            upload_id?: string | null;
+            /**
+             * Upload Protocol
+             * @default xml-multipart-signed-v1
+             * @constant
+             */
+            upload_protocol: "xml-multipart-signed-v1";
+        };
         /** OwnerFacetBucket */
         OwnerFacetBucket: {
-            /** Value */
-            value: string | null;
+            /** Count */
+            count: number;
             /**
              * Label
              * @description Canonical display label. Null only for the null bucket.
              */
             label?: string | null;
-            /** Count */
-            count: number;
             owner: components["schemas"]["UserPublicRead"] | null;
+            /** Value */
+            value: string | null;
         };
         /** PaginatedResponse[AccessGroupMemberRead] */
         PaginatedResponse_AccessGroupMemberRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["AccessGroupMemberRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[AssociatedFileRead] */
         PaginatedResponse_AssociatedFileRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["AssociatedFileRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[DatasetRead] */
         PaginatedResponse_DatasetRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["DatasetRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[DatasetResponse] */
         PaginatedResponse_DatasetResponse_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["DatasetResponse"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[DeletionAuditLogRead] */
         PaginatedResponse_DeletionAuditLogRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["DeletionAuditLogRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[DeletionRequestRead] */
         PaginatedResponse_DeletionRequestRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["DeletionRequestRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[IngestionRequest] */
         PaginatedResponse_IngestionRequest_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["IngestionRequest"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[InstrumentResponse] */
         PaginatedResponse_InstrumentResponse_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["InstrumentResponse"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[JoinRequestRead] */
         PaginatedResponse_JoinRequestRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["JoinRequestRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[ProjectRead] */
         PaginatedResponse_ProjectRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["ProjectRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[ProjectWithLead] */
         PaginatedResponse_ProjectWithLead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["ProjectWithLead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[ResourceEmbeddingRead] */
         PaginatedResponse_ResourceEmbeddingRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["ResourceEmbeddingRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[ResourceSearchResult] */
         PaginatedResponse_ResourceSearchResult_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["ResourceSearchResult"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[SampleRead] */
         PaginatedResponse_SampleRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["SampleRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[SampleResponse] */
         PaginatedResponse_SampleResponse_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["SampleResponse"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[ServiceAccountAdminRead] */
         PaginatedResponse_ServiceAccountAdminRead_: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: components["schemas"]["ServiceAccountAdminRead"][];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /** PaginatedResponse[Union[UserRead, UserPublicRead]] */
         PaginatedResponse_Union_UserRead__UserPublicRead__: {
-            /** Total */
-            total?: number | null;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset?: number | null;
             /** Items */
             items: (components["schemas"]["UserRead"] | components["schemas"]["UserPublicRead"])[];
+            /** Limit */
+            limit: number;
             /** Next Cursor */
             next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
         };
         /**
          * PlatformRole
@@ -4492,16 +4681,16 @@ export interface components {
          *     project_lead_email, or project_lead_username must be provided.
          */
         ProjectCreate: {
-            /** Project Id */
-            project_id: string;
             /** Organization */
             organization: string;
+            /** Project Id */
+            project_id: string;
             /** Project Lead */
             project_lead?: string | null;
-            /** Project Lead Orcid */
-            project_lead_orcid?: string | null;
             /** Project Lead Email */
             project_lead_email?: string | null;
+            /** Project Lead Orcid */
+            project_lead_orcid?: string | null;
             /** Project Lead Username */
             project_lead_username?: string | null;
             /** Status */
@@ -4511,16 +4700,16 @@ export interface components {
         };
         /** ProjectFacetBucket */
         ProjectFacetBucket: {
-            /** Value */
-            value: string | null;
+            /** Count */
+            count: number;
             /**
              * Label
              * @description Canonical display label. Null only for the null bucket.
              */
             label?: string | null;
-            /** Count */
-            count: number;
             project: components["schemas"]["ProjectReferenceRead"] | null;
+            /** Value */
+            value: string | null;
         };
         /**
          * ProjectMembershipRole
@@ -4532,28 +4721,28 @@ export interface components {
          * @description Response model for Project.
          */
         ProjectRead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Project Id */
-            project_id: string;
+            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
             /** Organization */
             organization: string;
+            /** Project Id */
+            project_id: string;
             /** Project Lead Orcid */
             project_lead_orcid?: string | null;
             /** Status */
             status?: string | null;
             /** Title */
             title?: string | null;
-            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /** ProjectReferenceRead */
         ProjectReferenceRead: {
-            /** Unique Id */
-            unique_id: string;
             /** Project Id */
             project_id: string;
             /** Title */
             title?: string | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /**
          * ProjectSort
@@ -4592,10 +4781,10 @@ export interface components {
          *     being silently dropped or requiring a runtime check in the route.
          */
         ProjectUpdate: {
-            /** Project Id */
-            project_id?: string | null;
             /** Organization */
             organization?: string | null;
+            /** Project Id */
+            project_id?: string | null;
             /** Status */
             status?: string | null;
             /** Title */
@@ -4607,64 +4796,64 @@ export interface components {
          *     members remain restricted to project members and platform administrators.
          */
         ProjectWithLead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Project Id */
-            project_id: string;
-            /** Organization */
-            organization: string;
-            /** Project Lead Orcid */
-            project_lead_orcid?: string | null;
-            /** Status */
-            status?: string | null;
-            /** Title */
-            title?: string | null;
             capabilities?: components["schemas"]["ResourceCapabilities"] | null;
-            lead?: components["schemas"]["UserPublicRead"] | null;
-            /** Scientific Metadata */
-            scientific_metadata?: {
-                [key: string]: unknown;
-            } | null;
             /** Creation Time */
             creation_time?: string | null;
-            /** Modification Time */
-            modification_time?: string | null;
-            /** Members */
-            members?: components["schemas"]["AccessGroupMemberRead"][] | null;
             /** Deletion Request */
             deletion_request?: {
                 [key: string]: unknown;
             } | null;
+            lead?: components["schemas"]["UserPublicRead"] | null;
+            /** Members */
+            members?: components["schemas"]["AccessGroupMemberRead"][] | null;
+            /** Modification Time */
+            modification_time?: string | null;
+            /** Organization */
+            organization: string;
+            /** Project Id */
+            project_id: string;
+            /** Project Lead Orcid */
+            project_lead_orcid?: string | null;
             /**
              * Role
              * @description Project membership role. On GET /projects and project singletons it is the caller's role; on GET /users/{user_id}/projects it is that user's role. Null when not a member.
              */
             role?: string | null;
+            /** Scientific Metadata */
+            scientific_metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /** Status */
+            status?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /** ReadinessResponse */
         ReadinessResponse: {
+            build: components["schemas"]["BuildInfoResponse"];
+            database: components["schemas"]["DatabaseReadinessResponse"];
             /**
              * Status
              * @enum {string}
              */
             status: "ok" | "degraded";
-            build: components["schemas"]["BuildInfoResponse"];
-            database: components["schemas"]["DatabaseReadinessResponse"];
         };
         /** ReassignProjectRead */
         ReassignProjectRead: {
-            /** Resource Id */
-            resource_id: string;
-            /** Resource Mfid */
-            resource_mfid: string;
-            /** Previous Project Id */
-            previous_project_id?: string | null;
-            /** Previous Project Mfid */
-            previous_project_mfid?: string | null;
             /** New Project Id */
             new_project_id: string;
             /** New Project Mfid */
             new_project_mfid: string;
+            /** Previous Project Id */
+            previous_project_id?: string | null;
+            /** Previous Project Mfid */
+            previous_project_mfid?: string | null;
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Mfid */
+            resource_mfid: string;
         };
         /**
          * ReassignProjectRequest
@@ -4684,72 +4873,72 @@ export interface components {
         };
         /** ResourceACL */
         ResourceACL: {
-            /** Mfid */
-            mfid: string;
             /** Accessgroup Id */
             accessgroup_id?: number | null;
+            /** Mfid */
+            mfid: string;
+            /** Permission */
+            permission: string;
             /** Read */
             read: boolean;
             /** Write */
             write: boolean;
-            /** Permission */
-            permission: string;
         };
         /** ResourceCapabilities */
         ResourceCapabilities: {
-            /** Can Edit */
-            can_edit: boolean;
-            /** Can Manage Access */
-            can_manage_access: boolean;
             /** Can Change Status */
             can_change_status: boolean;
-            /** Can Transfer */
-            can_transfer: boolean;
             /**
              * Can Delete
              * @default false
              */
             can_delete: boolean;
+            /** Can Edit */
+            can_edit: boolean;
+            /** Can Manage Access */
+            can_manage_access: boolean;
+            /** Can Transfer */
+            can_transfer: boolean;
             /** Max Grant Role */
             max_grant_role?: ("viewer" | "contributor" | "editor" | "admin") | null;
         };
         /** ResourceEmbeddingRead */
         ResourceEmbeddingRead: {
-            /** Id */
-            id: number;
-            /** Resource Mfid */
-            resource_mfid: string;
             /** Chunk Index */
             chunk_index: number;
             /** Chunk Text */
             chunk_text: string;
             /** Embedding */
             embedding: number[] | null;
+            /** Id */
+            id: number;
             /** Model Name */
             model_name: string;
+            /** Resource Mfid */
+            resource_mfid: string;
         };
         /** ResourceGraphResponse */
         ResourceGraphResponse: {
-            /** Root Mfid */
-            root_mfid: string;
-            /** Nodes */
-            nodes: (components["schemas"]["SampleGraphNode"] | components["schemas"]["DatasetGraphNode"])[];
+            /** Edge Limit */
+            edge_limit: number;
             /** Edges */
             edges: (components["schemas"]["LineageGraphEdge"] | components["schemas"]["AssociationGraphEdge"])[];
+            /** Has More */
+            has_more: boolean;
+            /** Node Limit */
+            node_limit: number;
+            /** Nodes */
+            nodes: (components["schemas"]["SampleGraphNode"] | components["schemas"]["DatasetGraphNode"])[];
             /** Requested Depth */
             requested_depth: number;
             /** Returned Depth */
             returned_depth: number;
-            /** Has More */
-            has_more: boolean;
+            /** Root Mfid */
+            root_mfid: string;
             /** Truncated */
             truncated: boolean;
             /** Truncation Reasons */
             truncation_reasons: components["schemas"]["GraphTruncationReason"][];
-            /** Node Limit */
-            node_limit: number;
-            /** Edge Limit */
-            edge_limit: number;
         };
         /**
          * ResourceSearchResult
@@ -4757,22 +4946,22 @@ export interface components {
          *     scientific_metadata is populated by GET /resources/metadata/search; null on name-based endpoints.
          */
         ResourceSearchResult: {
-            /** Unique Id */
-            unique_id: string;
-            /** Resource Type */
-            resource_type?: string | null;
-            /** Name */
-            name?: string | null;
-            /** Owner Orcid */
-            owner_orcid?: string | null;
             /** Creation Time */
             creation_time?: string | null;
             /** Modification Time */
             modification_time?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Owner Orcid */
+            owner_orcid?: string | null;
             /** Rank */
             rank?: number | null;
+            /** Resource Type */
+            resource_type?: string | null;
             /** Scientific Metadata */
             scientific_metadata?: unknown | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /**
          * ResourceSort
@@ -4781,12 +4970,19 @@ export interface components {
         ResourceSort: "created" | "updated" | "name";
         /** SampleCreate */
         SampleCreate: {
-            /** Unique Id */
-            unique_id?: string | null;
-            /** Sample Name */
-            sample_name: string;
-            /** Sample Type */
-            sample_type?: string | null;
+            /** Description */
+            description?: string | null;
+            /**
+             * Owner
+             * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
+             */
+            owner?: string | null;
+            /**
+             * Owner Orcid
+             * @deprecated
+             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
+             */
+            owner_orcid?: string | null;
             /**
              * Project Id
              * @description Project slug. May be combined with a matching project_mfid.
@@ -4797,26 +4993,19 @@ export interface components {
              * @description Canonical project MFID. May be combined with a matching project_id.
              */
             project_mfid?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Timestamp */
-            timestamp?: string | null;
             /**
              * Public
              * @default false
              */
             public: boolean;
-            /**
-             * Owner Orcid
-             * @deprecated
-             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
-             */
-            owner_orcid?: string | null;
-            /**
-             * Owner
-             * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
-             */
-            owner?: string | null;
+            /** Sample Name */
+            sample_name: string;
+            /** Sample Type */
+            sample_type?: string | null;
+            /** Timestamp */
+            timestamp?: string | null;
+            /** Unique Id */
+            unique_id?: string | null;
         };
         /**
          * SampleFacetField
@@ -4825,15 +5014,13 @@ export interface components {
         SampleFacetField: "sample_type" | "owner" | "project";
         /** SampleGraphNode */
         SampleGraphNode: {
+            expansion_availability: components["schemas"]["GraphExpansionAvailability"];
+            /** Has More Relationships */
+            has_more_relationships: boolean | null;
             /** Mfid */
             mfid: string;
             /** Name */
             name: string | null;
-            /** Traversal Depth */
-            traversal_depth: number;
-            /** Has More Relationships */
-            has_more_relationships: boolean | null;
-            expansion_availability: components["schemas"]["GraphExpansionAvailability"];
             project: components["schemas"]["ProjectReferenceRead"] | null;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -4842,80 +5029,52 @@ export interface components {
             resource_type: "sample";
             /** Sample Type */
             sample_type: string | null;
+            /** Traversal Depth */
+            traversal_depth: number;
         };
         /** SampleLink */
         SampleLink: {
-            /** Sample Id */
-            sample_id?: number | null;
             /** Parent Sample Id */
             parent_sample_id?: number | null;
             /** Relationship Type */
             relationship_type?: string | null;
+            /** Sample Id */
+            sample_id?: number | null;
         };
         /**
          * SampleRead
          * @description Response model for Sample. Includes server-generated fields.
          */
         SampleRead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Sample Name */
-            sample_name: string;
-            /** Sample Type */
-            sample_type?: string | null;
-            /** Owner Orcid */
-            owner_orcid?: string | null;
-            /** Project Id */
-            project_id?: string | null;
-            project?: components["schemas"]["ProjectReferenceRead"] | null;
             /** Description */
             description?: string | null;
-            /** Timestamp */
-            timestamp?: string | null;
+            /** Owner Orcid */
+            owner_orcid?: string | null;
+            project?: components["schemas"]["ProjectReferenceRead"] | null;
+            /** Project Id */
+            project_id?: string | null;
             /**
              * Public
              * @default false
              */
             public: boolean;
+            /** Sample Name */
+            sample_name: string;
+            /** Sample Type */
+            sample_type?: string | null;
+            /** Timestamp */
+            timestamp?: string | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /**
          * SampleResponse
          * @description SampleRead extended with Resource timestamps, associated datasets, and deletion status.
          */
         SampleResponse: {
-            /** Unique Id */
-            unique_id: string;
-            /** Sample Name */
-            sample_name: string;
-            /** Sample Type */
-            sample_type?: string | null;
-            /** Owner Orcid */
-            owner_orcid?: string | null;
-            /** Project Id */
-            project_id?: string | null;
-            project?: components["schemas"]["ProjectReferenceRead"] | null;
-            /** Description */
-            description?: string | null;
-            /** Timestamp */
-            timestamp?: string | null;
-            /**
-             * Public
-             * @default false
-             */
-            public: boolean;
-            /**
-             * Resource Type
-             * @default sample
-             */
-            resource_type: string | null;
+            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
             /** Creation Time */
             creation_time?: string | null;
-            /** Modification Time */
-            modification_time?: string | null;
-            /** Scientific Metadata */
-            scientific_metadata?: {
-                [key: string]: unknown;
-            } | null;
             /**
              * Datasets
              * @deprecated
@@ -4926,12 +5085,42 @@ export interface components {
             deletion_request?: {
                 [key: string]: unknown;
             } | null;
+            /** Description */
+            description?: string | null;
             /** Links */
             links?: components["schemas"]["LinkedResource"][] | null;
+            /** Modification Time */
+            modification_time?: string | null;
             owner?: components["schemas"]["UserPublicRead"] | null;
-            capabilities?: components["schemas"]["ResourceCapabilities"] | null;
+            /** Owner Orcid */
+            owner_orcid?: string | null;
+            project?: components["schemas"]["ProjectReferenceRead"] | null;
+            /** Project Id */
+            project_id?: string | null;
             /** Project Relation */
             project_relation?: ("assigned" | "shared") | null;
+            /**
+             * Public
+             * @default false
+             */
+            public: boolean;
+            /**
+             * Resource Type
+             * @default sample
+             */
+            resource_type: string | null;
+            /** Sample Name */
+            sample_name: string;
+            /** Sample Type */
+            sample_type?: string | null;
+            /** Scientific Metadata */
+            scientific_metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /** Timestamp */
+            timestamp?: string | null;
+            /** Unique Id */
+            unique_id: string;
         };
         /**
          * SampleUpdate
@@ -4940,64 +5129,64 @@ export interface components {
          *     No project_id — use POST /resources/{mfid}/project.
          */
         SampleUpdate: {
+            /** Description */
+            description?: string | null;
+            /** Public */
+            public?: boolean | null;
             /** Sample Name */
             sample_name?: string | null;
             /** Sample Type */
             sample_type?: string | null;
-            /** Description */
-            description?: string | null;
             /** Timestamp */
             timestamp?: string | null;
-            /** Public */
-            public?: boolean | null;
         };
         /** ScientificMetadataBinaryRead */
         ScientificMetadataBinaryRead: {
-            /** Unique Id */
-            unique_id: string;
             /** Scientific Metadata */
             scientific_metadata: {
                 [key: string]: unknown;
             };
+            /** Unique Id */
+            unique_id: string;
         };
         /** ServiceAccountAdminDetail */
         ServiceAccountAdminDetail: {
-            /** Unique Id */
-            unique_id: string;
-            /** Username */
-            username: string;
-            /** First Name */
-            first_name: string;
-            /** Last Name */
-            last_name: string;
+            api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
             /** Email */
             email?: string | null;
+            /** First Name */
+            first_name: string;
             /**
              * Is Service Account
              * @default true
              */
             is_service_account: boolean;
+            /** Last Name */
+            last_name: string;
             platform_role: components["schemas"]["PlatformRole"];
-            api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
+            /** Unique Id */
+            unique_id: string;
+            /** Username */
+            username: string;
         };
         /** ServiceAccountAdminRead */
         ServiceAccountAdminRead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Username */
-            username: string;
-            /** First Name */
-            first_name: string;
-            /** Last Name */
-            last_name: string;
             /** Email */
             email?: string | null;
+            /** First Name */
+            first_name: string;
             /**
              * Is Service Account
              * @default true
              */
             is_service_account: boolean;
+            /** Last Name */
+            last_name: string;
             platform_role: components["schemas"]["PlatformRole"];
+            /** Unique Id */
+            unique_id: string;
+            /** Username */
+            username: string;
         };
         /**
          * ServiceAccountCreate
@@ -5006,19 +5195,19 @@ export interface components {
          *     unique_id is optional and must be an MFID; if omitted the server generates one.
          */
         ServiceAccountCreate: {
-            /** Username */
-            username: string;
             /** Unique Id */
             unique_id?: string | null;
+            /** Username */
+            username: string;
         };
         /** ServiceAccountKeyStatus */
         ServiceAccountKeyStatus: {
-            /** Valid */
-            valid: boolean;
             /** Created At */
             created_at: string;
             /** Expires At */
             expires_at: string;
+            /** Valid */
+            valid: boolean;
         };
         /** ServiceAccountPlatformRoleUpdate */
         ServiceAccountPlatformRoleUpdate: {
@@ -5034,17 +5223,42 @@ export interface components {
          *     api_key is only returned once — store it securely.
          */
         ServiceAccountRead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Username */
-            username: string;
+            /** Api Key */
+            api_key: string;
             /**
              * Is Service Account
              * @default true
              */
             is_service_account: boolean;
-            /** Api Key */
-            api_key: string;
+            /** Unique Id */
+            unique_id: string;
+            /** Username */
+            username: string;
+        };
+        /** SignedPart */
+        SignedPart: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Headers */
+            headers: {
+                [key: string]: string;
+            };
+            /** Offset */
+            offset: number;
+            /** Part Number */
+            part_number: number;
+            /** Size */
+            size: number;
+            /** Url */
+            url: string;
+        };
+        /** SignedParts */
+        SignedParts: {
+            /** Parts */
+            parts: components["schemas"]["SignedPart"][];
         };
         /**
          * SortDirection
@@ -5056,10 +5270,10 @@ export interface components {
          * @description Fields required to attach a thumbnail to a dataset.
          */
         ThumbnailCreate: {
-            /** Thumbnail Name */
-            thumbnail_name: string;
             /** Thumbnail B64Str */
             thumbnail_b64str: string;
+            /** Thumbnail Name */
+            thumbnail_name: string;
         };
         /**
          * ThumbnailPreviewRead
@@ -5068,24 +5282,22 @@ export interface components {
         ThumbnailPreviewRead: {
             /** Id */
             id: number;
-            /** Thumbnail Name */
-            thumbnail_name: string;
-            /** Thumbnail B64Str */
-            thumbnail_b64str: string;
             /**
              * Mime Type
              * @default image/jpeg
              * @constant
              */
             mime_type: "image/jpeg";
+            /** Thumbnail B64Str */
+            thumbnail_b64str: string;
+            /** Thumbnail Name */
+            thumbnail_name: string;
         };
         /**
          * ThumbnailRead
          * @description Response model for Thumbnail.
          */
         ThumbnailRead: {
-            /** Id */
-            id: number;
             /**
              * Dataset Id
              * @deprecated
@@ -5094,33 +5306,41 @@ export interface components {
             dataset_id: number;
             /** Dataset Mfid */
             dataset_mfid: string;
-            /** Thumbnail Name */
-            thumbnail_name: string;
-            /** Thumbnail B64Str */
-            thumbnail_b64str: string;
+            /** Id */
+            id: number;
             /**
              * Mime Type
              * @default image/jpeg
              * @constant
              */
             mime_type: "image/jpeg";
+            /** Thumbnail B64Str */
+            thumbnail_b64str: string;
+            /** Thumbnail Name */
+            thumbnail_name: string;
         };
         /**
          * ThumbnailUpdate
          * @description Fields accepted when updating a thumbnail.
          */
         ThumbnailUpdate: {
-            /** Thumbnail Name */
-            thumbnail_name?: string | null;
             /** Thumbnail B64Str */
             thumbnail_b64str?: string | null;
+            /** Thumbnail Name */
+            thumbnail_name?: string | null;
         };
         /** TransferOwnershipRead */
         TransferOwnershipRead: {
-            /** Resource Id */
-            resource_id: string;
-            previous_owner?: components["schemas"]["UserPublicRead"] | null;
             new_owner: components["schemas"]["UserPublicRead"];
+            previous_owner?: components["schemas"]["UserPublicRead"] | null;
+            /**
+             * Resource Id
+             * @deprecated
+             * @description Deprecated. Use resource_mfid.
+             */
+            resource_id: string;
+            /** Resource Mfid */
+            resource_mfid: string;
         };
         /**
          * TransferOwnershipRequest
@@ -5139,10 +5359,10 @@ export interface components {
          * @description Body for POST /datasets/{dataset_mfid}/upload/complete.
          */
         UploadComplete: {
-            /** Upload Id */
-            upload_id: string;
             /** Sha256 Hash */
             sha256_hash: string;
+            /** Upload Id */
+            upload_id: string;
         };
         /**
          * UploadInitiate
@@ -5151,10 +5371,10 @@ export interface components {
         UploadInitiate: {
             /** Filename */
             filename: string;
-            /** Size */
-            size: number;
             /** Sha256 Hash */
             sha256_hash?: string | null;
+            /** Size */
+            size: number;
         };
         /**
          * UploadInitiateRead
@@ -5163,13 +5383,13 @@ export interface components {
          *     dataset; skip the upload and /complete call and use existing_file directly.
          */
         UploadInitiateRead: {
-            /** Upload Id */
-            upload_id?: string | null;
-            /** Resumable Uri */
-            resumable_uri?: string | null;
             /** Chunk Size Hint */
             chunk_size_hint?: number | null;
             existing_file?: components["schemas"]["AssociatedFileRead"] | null;
+            /** Resumable Uri */
+            resumable_uri?: string | null;
+            /** Upload Id */
+            upload_id?: string | null;
         };
         /**
          * UploadMultipartInitiateRead
@@ -5178,19 +5398,28 @@ export interface components {
          *     Pass upload_id to POST /datasets/{dataset_mfid}/upload/complete after the transfer finishes.
          */
         UploadMultipartInitiateRead: {
-            /** Upload Id */
-            upload_id?: string | null;
             /** Access Token */
             access_token?: string | null;
-            /** Token Expiry */
-            token_expiry?: string | null;
             /** Bucket */
             bucket?: string | null;
+            existing_file?: components["schemas"]["AssociatedFileRead"] | null;
             /** Object Prefix */
             object_prefix?: string | null;
             /** Project */
             project?: string | null;
-            existing_file?: components["schemas"]["AssociatedFileRead"] | null;
+            /** Token Expiry */
+            token_expiry?: string | null;
+            /** Upload Id */
+            upload_id?: string | null;
+        };
+        /** UploadedPart */
+        UploadedPart: {
+            /** Etag */
+            etag: string;
+            /** Part Number */
+            part_number: number;
+            /** Size */
+            size: number;
         };
         /**
          * UserCapabilities
@@ -5199,20 +5428,22 @@ export interface components {
          *     objects into a different required-field type.
          */
         UserCapabilities: {
-            /** Can View Private */
-            can_view_private: boolean;
+            /** Can Change Platform Role */
+            can_change_platform_role: boolean;
             /** Can Edit Profile */
             can_edit_profile: boolean;
             /** Can Manage Api Key */
             can_manage_api_key: boolean;
-            /** Can Change Platform Role */
-            can_change_platform_role: boolean;
+            /** Can View Private */
+            can_view_private: boolean;
         };
         /**
          * UserCreate
          * @description Input schema for creating a user.
          */
         UserCreate: {
+            /** Email */
+            email?: string | null;
             /** First Name */
             first_name: string;
             /** Last Name */
@@ -5222,8 +5453,6 @@ export interface components {
              * @description Human ORCID. When omitted, the server assigns an MFID.
              */
             unique_id?: string | null;
-            /** Email */
-            email?: string | null;
             /** Username */
             username: string;
         };
@@ -5241,41 +5470,41 @@ export interface components {
          *     Used in search results and any context where a user views another user's info.
          */
         UserPublicRead: {
-            /** Unique Id */
-            unique_id: string;
-            /** Username */
-            username?: string | null;
             /** First Name */
             first_name: string;
-            /** Last Name */
-            last_name: string;
             /**
              * Is Service Account
              * @default false
              */
             is_service_account: boolean;
+            /** Last Name */
+            last_name: string;
+            /** Unique Id */
+            unique_id: string;
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
+            /** Username */
+            username?: string | null;
         };
         /** UserRead */
         UserRead: {
-            /** First Name */
-            first_name: string;
-            /** Last Name */
-            last_name: string;
+            api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
             /** Email */
             email?: string | null;
-            /** Unique Id */
-            unique_id: string;
-            /** Username */
-            username?: string | null;
+            /** First Name */
+            first_name: string;
             /**
              * Is Service Account
              * @default false
              */
             is_service_account: boolean | null;
+            /** Last Name */
+            last_name: string;
             platform_role?: components["schemas"]["PlatformRole"] | null;
+            /** Unique Id */
+            unique_id: string;
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
-            api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
+            /** Username */
+            username?: string | null;
         };
         /**
          * UserSearchField
@@ -5292,12 +5521,12 @@ export interface components {
          * @description Admin partial update schema for mutable user profile fields.
          */
         UserUpdate: {
+            /** Email */
+            email?: string | null;
             /** First Name */
             first_name?: string | null;
             /** Last Name */
             last_name?: string | null;
-            /** Email */
-            email?: string | null;
             /** Username */
             username?: string | null;
         };
@@ -5328,11 +5557,56 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    metrics_metrics_get: {
+    create_access_group_access_groups_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
             path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessGroupCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_access_group_access_groups__group_name__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                group_name: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5340,11 +5614,103 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AccessGroupRead"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_to_join_access_group_access_groups__group_name__join_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                group_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_access_group_users_access_groups__group_name__users_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                group_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -5364,14 +5730,140 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["AccountInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_account_apikey_account_apikey_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyRead"];
+                };
+            };
+            /** @description Hub sessions cannot read API keys (`api_key_read_not_allowed`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    regenerate_account_apikey_account_apikey_regenerate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyRead"];
+                };
+            };
+            /** @description Hub sessions need an ORCID sign-in within the last 10 minutes (`insufficient_user_authentication`, RFC 9470 challenge) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_account_join_requests_account_join_requests_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_JoinRequestRead_"];
                 };
             };
             /** @description Validation Error */
@@ -5400,10 +5892,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -5440,15 +5932,22 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"];
                 };
+            };
+            /** @description Username or email already held by another user: `{"detail": {"code": "already_in_use", "fields": ["username", "email"], "message": ...}}`, listing every conflicting field */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -5476,90 +5975,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectSyncResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_account_join_requests_account_join_requests_get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_JoinRequestRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_account_apikey_account_apikey_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
                 };
             };
             /** @description Validation Error */
@@ -5588,10 +6011,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -5609,28 +6032,7 @@ export interface operations {
             };
         };
     };
-    orcid_login_auth_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    redirect_exchange_auth_callback_get: {
+    redirect_exchange_deprecated_auth_get: {
         parameters: {
             query: {
                 code: string;
@@ -5705,28 +6107,7 @@ export interface operations {
             };
         };
     };
-    orcid_login_deprecated_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    redirect_exchange_deprecated_auth_get: {
+    redirect_exchange_auth_callback_get: {
         parameters: {
             query: {
                 code: string;
@@ -5756,127 +6137,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-        };
-    };
-    get_apikey_deprecated_user_apikey_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    regenerate_apikey_deprecated_regenerate_apikey_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    begin_hub_login_auth_hub_login_get: {
-        parameters: {
-            query: {
-                client_id: string;
-                redirect_uri: string;
-                state: string;
-                code_challenge: string;
-                code_challenge_method: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            302: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid sign-in request */
-            400: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid authentication request; submitted values and validation context are omitted */
-            422: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Authentication request failed; response contains no internal error details */
-            500: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Hub sign-in unavailable */
-            503: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -5945,21 +6205,25 @@ export interface operations {
             };
         };
     };
-    exchange_hub_code_auth_hub_token_post: {
+    begin_hub_login_auth_hub_login_get: {
         parameters: {
-            query?: never;
+            query: {
+                client_id: string;
+                redirect_uri: string;
+                state: string;
+                code_challenge: string;
+                code_challenge_method: string;
+                /** @description Maximum seconds since the user's last ORCID authentication. 0 forces ORCID to re-authenticate; use it before credential-creating operations that require a recent sign-in. */
+                max_age?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HubCodeExchangeRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            302: {
                 headers: {
                     "Cache-Control"?: "no-store";
                     Pragma?: "no-cache";
@@ -5968,12 +6232,10 @@ export interface operations {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HubTokenResponse"];
-                };
+                content?: never;
             };
-            /** @description Invalid client or sign-in code */
-            401: {
+            /** @description Invalid sign-in request */
+            400: {
                 headers: {
                     "Cache-Control"?: "no-store";
                     Pragma?: "no-cache";
@@ -6180,17 +6442,89 @@ export interface operations {
             };
         };
     };
-    list_files_files_get: {
+    exchange_hub_code_auth_hub_token_post: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-                sha256_hash?: string | null;
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HubCodeExchangeRequest"];
             };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubTokenResponse"];
+                };
             };
+            /** @description Invalid client or sign-in code */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    orcid_login_auth_login_get: {
+        parameters: {
+            query?: never;
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -6200,496 +6534,10 @@ export interface operations {
             200: {
                 headers: {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_AssociatedFileRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_file_files__file_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssociatedFileRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_file_files__file_id__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_file_files__file_id__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssociatedFileUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssociatedFileRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_file_download_link_files__file_id__download_link_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_file_ingestion_request_files__file_id__ingest_post: {
-        parameters: {
-            query?: {
-                ingestion_class?: string | null;
-                status?: "requested" | "not_requested";
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_ingestion_requests_ingestion_requests_get: {
-        parameters: {
-            query?: {
-                file_id?: string | null;
-                dataset_id?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_IngestionRequest_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_ingestion_request_ingestion_requests__reqid__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                reqid: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    patch_ingestion_request_ingestion_requests__reqid__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                reqid: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IngestionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_rga_analysis_datasets__dataset_mfid__rga_analysis_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -6788,10 +6636,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -6828,142 +6676,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["DatasetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_dataset_datasets__dataset_mfid__get: {
-        parameters: {
-            query?: {
-                include_metadata?: boolean;
-                include_links?: boolean;
-                include_owner?: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_dataset_datasets__dataset_mfid__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DatasetUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    assign_dataset_instrument_datasets__dataset_mfid__instrument_put: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DatasetInstrumentAssign"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetInstrumentRead"];
                 };
             };
             /** @description Validation Error */
@@ -7046,14 +6766,56 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["FacetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_first_thumbnails_datasets_first_thumbnails_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string[];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["ThumbnailPreviewRead"];
+                    };
                 };
             };
             /** @description Validation Error */
@@ -7096,98 +6858,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_DatasetResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    link_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__post: {
-        parameters: {
-            query?: {
-                relationship_type?: ("is_derived_from" | "is_part_of") | null;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Parent dataset MFID. */
-                parent_dataset_mfid: string;
-                /** @description Child dataset MFID. */
-                child_dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetLink"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unlink_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Parent dataset MFID. */
-                parent_dataset_mfid: string;
-                /** @description Child dataset MFID. */
-                child_dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -7223,10 +6901,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -7244,20 +6922,19 @@ export interface operations {
             };
         };
     };
-    list_child_datasets_datasets__parent_dataset_mfid__children_get: {
+    read_dataset_datasets__dataset_mfid__get: {
         parameters: {
             query?: {
-                limit?: number;
-                offset?: number;
-                relationship_type?: ("is_derived_from" | "is_part_of") | null;
+                include_metadata?: boolean;
+                include_links?: boolean;
+                include_owner?: boolean;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
-                /** @description Parent dataset MFID. */
-                parent_dataset_mfid: string;
+                dataset_mfid: string;
             };
             cookie?: never;
         };
@@ -7266,14 +6943,620 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_DatasetRead_"];
+                    "application/json": components["schemas"]["DatasetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_dataset_datasets__dataset_mfid__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatasetUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dataset_graph_datasets__dataset_mfid__dataset_graph_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dataset_graph_cte_datasets__dataset_mfid__dataset_graph_cte_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_dataset_download_links_datasets__dataset_mfid__download_links_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_associated_files_datasets__dataset_mfid__files_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssociatedFileRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_associated_file_datasets__dataset_mfid__files_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssociatedFileCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssociatedFileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post: {
+        parameters: {
+            query?: {
+                ingestion_class?: string | null;
+                status?: "requested" | "not_requested";
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestionRequest"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_dataset_instrument_datasets__dataset_mfid__instrument_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatasetInstrumentAssign"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetInstrumentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_keywords_for_dataset_datasets__dataset_mfid__keywords_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Keyword"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_keyword_datasets__dataset_mfid__keywords_post: {
+        parameters: {
+            query: {
+                keyword: string;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Keyword"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_rga_analysis_datasets__dataset_mfid__rga_analysis_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_samples_in_dataset_datasets__dataset_mfid__samples_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_SampleRead_"];
                 };
             };
             /** @description Validation Error */
@@ -7307,10 +7590,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -7348,10 +7631,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -7387,10 +7670,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -7430,56 +7713,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ThumbnailRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_first_thumbnails_datasets_first_thumbnails_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": string[];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: components["schemas"]["ThumbnailPreviewRead"];
-                    };
                 };
             };
             /** @description Validation Error */
@@ -7512,10 +7753,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -7558,10 +7799,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -7579,85 +7820,7 @@ export interface operations {
             };
         };
     };
-    generate_dataset_download_links_datasets__dataset_mfid__download_links_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_associated_files_datasets__dataset_mfid__files_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssociatedFileRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_associated_file_datasets__dataset_mfid__files_post: {
+    complete_resumable_upload_datasets__dataset_mfid__upload_complete_post: {
         parameters: {
             query?: never;
             header?: {
@@ -7672,264 +7835,21 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AssociatedFileCreate"];
+                "application/json": components["schemas"]["UploadComplete"];
             };
         };
         responses: {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["AssociatedFileRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post: {
-        parameters: {
-            query?: {
-                ingestion_class?: string | null;
-                status?: "requested" | "not_requested";
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-                file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_keywords_for_dataset_datasets__dataset_mfid__keywords_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Keyword"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_keyword_datasets__dataset_mfid__keywords_post: {
-        parameters: {
-            query: {
-                keyword: string;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Keyword"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_samples_in_dataset_datasets__dataset_mfid__samples_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_SampleRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dataset_graph_datasets__dataset_mfid__dataset_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dataset_graph_cte_datasets__dataset_mfid__dataset_graph_cte_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -7965,10 +7885,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8008,10 +7928,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8029,7 +7949,7 @@ export interface operations {
             };
         };
     };
-    complete_resumable_upload_datasets__dataset_mfid__upload_complete_post: {
+    complete_datasets__dataset_mfid__upload_multipart_complete_post: {
         parameters: {
             query?: never;
             header?: {
@@ -8044,21 +7964,543 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UploadComplete"];
+                "application/json": components["schemas"]["MultipartComplete"];
             };
         };
         responses: {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["AssociatedFileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    initiate_datasets__dataset_mfid__upload_multipart_initiate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MultipartInitiate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MultipartStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_status_datasets__dataset_mfid__upload_multipart__upload_id__get: {
+        parameters: {
+            query?: {
+                part_number_marker?: number;
+                limit?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MultipartStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abort_datasets__dataset_mfid__upload_multipart__upload_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sign_parts_datasets__dataset_mfid__upload_multipart__upload_id__parts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MultipartParts"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedParts"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_child_datasets_datasets__parent_dataset_mfid__children_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Parent dataset MFID. */
+                parent_dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_DatasetRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__post: {
+        parameters: {
+            query?: {
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Parent dataset MFID. */
+                parent_dataset_mfid: string;
+                /** @description Child dataset MFID. */
+                child_dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetLink"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_dataset_parent_child_datasets__parent_dataset_mfid__children__child_dataset_mfid__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Parent dataset MFID. */
+                parent_dataset_mfid: string;
+                /** @description Child dataset MFID. */
+                child_dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_deletion_audit_deletion_audit_get: {
+        parameters: {
+            query?: {
+                /** @description Select the platform-wide administrator audit or deletion history submitted by the authenticated human user. */
+                scope?: components["schemas"]["DeletionAuditScope"];
+                /** @description Exact MFID of the deleted resource. */
+                resource_id?: string | null;
+                /** @description Type of deleted resource. */
+                resource_type?: components["schemas"]["DeletableResourceType"] | null;
+                /** @description Exact project slug captured when the resource was deleted. */
+                project_id?: string | null;
+                /** @description Exact canonical project MFID captured when the resource was deleted. Entries created before project MFID snapshots were introduced do not match. */
+                project_mfid?: string | null;
+                /** @description Exact stable requester user ID. */
+                requester_id?: string | null;
+                /** @description Exact stable reviewer user ID. */
+                reviewer_id?: string | null;
+                /** @description Sort direction for deletion time. Audit ID is the deterministic final tie-breaker. */
+                direction?: components["schemas"]["SortDirection"];
+                limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_DeletionAuditLogRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_deletion_audit_deletion_audit__audit_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                audit_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionAuditLogRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_deletion_requests_deletion_requests_get: {
+        parameters: {
+            query?: {
+                /** @description Select accessible, caller-submitted, or currently reviewable requests. Service accounts without platform-administrator authority cannot review. */
+                scope?: components["schemas"]["DeletionRequestScope"];
+                status?: components["schemas"]["DeletionRequestStatus"] | null;
+                /** @description Limit requests to resources assigned to this canonical project MFID. */
+                project_mfid?: string | null;
+                /** @description Field used to order deletion requests. String fields are ordered case-insensitively, nulls are last, and request ID is the final tie-breaker. requester_name orders by last name, first name, username, and unique ID. Status order is pending, approved, rejected. */
+                sort?: components["schemas"]["DeletionRequestSort"];
+                /** @description Sort direction for deletion requests. */
+                direction?: components["schemas"]["SortDirection"];
+                limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_DeletionRequestRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_deletion_request_deletion_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                request_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_deletion_request_deletion_requests__request_id__patch: {
+        parameters: {
+            query: {
+                status: components["schemas"]["DeletionReviewDecision"];
+                reviewer_notes?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                request_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionRequestRead"];
                 };
             };
             /** @description Validation Error */
@@ -8103,10 +8545,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8143,10 +8585,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8160,6 +8602,1898 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_graph_entity_graph__entity_mfid__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Sample or dataset MFID. */
+                entity_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_graph_bfs_entity_graph_bfs__entity_mfid__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Sample or dataset MFID. */
+                entity_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_graph_cte_entity_graph_cte__entity_mfid__get: {
+        parameters: {
+            query?: {
+                recursive?: boolean;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Sample or dataset MFID. */
+                entity_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extract_metadata_extract_metadata_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtractMetadataRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_files_files_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                sha256_hash?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_AssociatedFileRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_file_files__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssociatedFileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_file_files__file_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_file_files__file_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssociatedFileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssociatedFileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_file_download_link_files__file_id__download_link_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_file_ingestion_request_files__file_id__ingest_post: {
+        parameters: {
+            query?: {
+                ingestion_class?: string | null;
+                status?: "requested" | "not_requested";
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestionRequest"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    health_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessResponse"];
+                };
+            };
+        };
+    };
+    liveness_health_live_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LivenessResponse"];
+                };
+            };
+        };
+    };
+    readiness_health_ready_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessResponse"];
+                };
+            };
+        };
+    };
+    list_ingestion_requests_ingestion_requests_get: {
+        parameters: {
+            query?: {
+                file_mfid?: string | null;
+                dataset_mfid?: string | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated. Use file_mfid.
+                 */
+                file_id?: string | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated. Use dataset_mfid.
+                 */
+                dataset_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_IngestionRequest_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ingestion_request_ingestion_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                request_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestionRequest"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_ingestion_request_ingestion_requests__request_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                request_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IngestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestionRequest"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_ingestors_ingestors_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    list_instruments_instruments_get: {
+        parameters: {
+            query?: {
+                /** @description Exact instrument slug. */
+                instrument_id?: string | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
+                affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
+                include_metadata?: boolean;
+                include_owner?: boolean;
+                /** @description Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. Requires an exact instrument_id filter. */
+                include_members?: boolean;
+                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
+                include_total?: boolean | null;
+                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. Omit to keep the default newest-first order. */
+                sort?: components["schemas"]["InstrumentSort"] | null;
+                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
+                direction?: components["schemas"]["SortDirection"] | null;
+                limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
+                offset?: number;
+                other_id?: string | null;
+                other_id_source?: string | null;
+                instrument_name?: string | null;
+                manufacturer?: string | null;
+                model?: string | null;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
+                 */
+                owner?: string | null;
+                location?: string | null;
+                description?: string | null;
+                instrument_type?: string | null;
+                /** @description Restrict results to one lifecycle status. */
+                status?: components["schemas"]["InstrumentStatus"] | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_InstrumentResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_instrument_instruments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstrumentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_instruments_instruments_search_get: {
+        parameters: {
+            query: {
+                /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
+                q: string;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
+                affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
+                limit?: number;
+                /** @description Exact stable owner identifier for a human or service account. */
+                owner_id?: string | null;
+                /** @description Restrict results to one lifecycle status. */
+                status?: components["schemas"]["InstrumentStatus"] | null;
+                include_owner?: boolean;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_InstrumentResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_instrument_instruments__instrument_ref__get: {
+        parameters: {
+            query?: {
+                include_metadata?: boolean;
+                include_owner?: boolean;
+                /** @description Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. */
+                include_members?: boolean;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_instrument_instruments__instrument_ref__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstrumentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_instrument_service_accounts_instruments__instrument_ref__service_accounts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_instrument_service_account_instruments__instrument_ref__service_accounts__service_account_ref__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+                /** @description Service-account MFID or username. */
+                service_account_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_instrument_service_account_instruments__instrument_ref__service_accounts__service_account_ref__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+                /** @description Service-account MFID or username. */
+                service_account_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_instrument_status_instruments__instrument_ref__status_post: {
+        parameters: {
+            query: {
+                status: string;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_join_requests_join_requests_get: {
+        parameters: {
+            query?: {
+                group_name?: string | null;
+                status?: string | null;
+                requester_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_JoinRequestRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_join_request_join_requests__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                request_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_join_request_join_requests__request_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                request_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinRequestReview"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_all_keywords_keywords_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Keyword"][];
+                };
+            };
+        };
+    };
+    read_keyword_keywords__keyword__get: {
+        parameters: {
+            query?: {
+                permissive?: boolean;
+            };
+            header?: never;
+            path: {
+                keyword: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Keyword"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    orcid_login_deprecated_login_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    metrics_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    print_barcode_print_barcode_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BarcodePrintRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BarcodePrintResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    project_graph_project_graph__project_ref__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_projects_projects_get: {
+        parameters: {
+            query?: {
+                /** @description Exact project slug. */
+                project_id?: string | null;
+                /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
+                accessible_to_user?: string[] | null;
+                /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
+                accessible_to_project?: string[] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
+                affiliation?: components["schemas"]["Affiliation"][] | null;
+                include_metadata?: boolean;
+                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
+                include_total?: boolean | null;
+                /** @description Include members for an exact project_id lookup when authorized. */
+                include_members?: boolean;
+                /** @description Projects where every listed user is a member. Accepts an ORCID, service-account MFID, username, or email. Repeated values use AND semantics, like accessible_to_user. Platform contributors and administrators may select another user; other callers only themselves. */
+                member_ref?: string[] | null;
+                /** @description Restrict member_ref to these project roles. Repeated values use OR semantics. Requires member_ref. */
+                member_role?: components["schemas"]["AccessPermission"][] | null;
+                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order. */
+                sort?: components["schemas"]["ProjectSort"] | null;
+                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
+                direction?: components["schemas"]["SortDirection"] | null;
+                limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_ProjectWithLead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_project_projects_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_projects_projects_search_get: {
+        parameters: {
+            query: {
+                /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
+                q: string;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
+                affiliation?: components["schemas"]["Affiliation"][] | null;
+                limit?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_ProjectRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_project_projects__project_ref__get: {
+        parameters: {
+            query?: {
+                include_metadata?: boolean;
+                include_members?: boolean;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectWithLead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_project_projects__project_ref__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectWithLead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    project_dataset_graph_projects__project_ref__dataset_graph_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    project_entity_graph_projects__project_ref__entity_graph_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    project_sample_graph_projects__project_ref__sample_graph_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_users_on_project_projects__project_ref__users_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_AccessGroupMemberRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_users_to_project_projects__project_ref__users__user_ref__post: {
+        parameters: {
+            query?: {
+                /**
+                 * @deprecated
+                 * @description Deprecated. Put the username in the path instead; email in URLs is discouraged.
+                 */
+                email?: string | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated. Put the username in the path instead.
+                 */
+                username?: string | null;
+                role?: components["schemas"]["ProjectMembershipRole"];
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_user_from_project_projects__project_ref__users__user_ref__delete: {
+        parameters: {
+            query?: {
+                /**
+                 * @deprecated
+                 * @description Deprecated. Put the username in the path instead; email in URLs is discouraged.
+                 */
+                email?: string | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated. Put the username in the path instead.
+                 */
+                username?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_project_user_role_projects__project_ref__users__user_ref__patch: {
+        parameters: {
+            query: {
+                role: components["schemas"]["ProjectMembershipRole"];
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    regenerate_apikey_deprecated_regenerate_apikey_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };
@@ -8183,10 +10517,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8228,10 +10562,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8272,14 +10606,333 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_resource_access_resources__mfid__access_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGrantRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_resource_resources__mfid__access_public_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGrantRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_resource_resources__mfid__access_public_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_resource_access_resources__mfid__access__kind___principal__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+                kind: string;
+                principal: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessGrantWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGrantRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_resource_access_resources__mfid__access__kind___principal__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+                kind: string;
+                principal: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_resource_acl_resources__mfid__access_groups_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_resource_acl_resources__mfid__access_groups_post: {
+        parameters: {
+            query: {
+                group_name: string;
+                read: boolean;
+                write: boolean;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceACL"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_deletion_request_resources__mfid__delete_post: {
+        parameters: {
+            query?: {
+                reason?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Resource MFID. */
+                mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionRequestRead"];
                 };
             };
             /** @description Validation Error */
@@ -8311,10 +10964,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8350,10 +11003,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8397,10 +11050,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8442,377 +11095,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ScientificMetadataBinaryRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_deletion_request_resources__mfid__delete_post: {
-        parameters: {
-            query?: {
-                reason?: string | null;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Resource MFID. */
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeletionRequestRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_resource_acl_resources__mfid__access_groups_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_resource_acl_resources__mfid__access_groups_post: {
-        parameters: {
-            query: {
-                group_name: string;
-                read: boolean;
-                write: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResourceACL"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_resource_access_resources__mfid__access_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGrantRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_resource_access_resources__mfid__access__kind___principal__put: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-                kind: string;
-                principal: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AccessGrantWrite"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGrantRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    revoke_resource_access_resources__mfid__access__kind___principal__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-                kind: string;
-                principal: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    publish_resource_resources__mfid__access_public_put: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGrantRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unpublish_resource_resources__mfid__access_public_delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    transfer_ownership_resources__mfid__transfer_ownership_post: {
-        parameters: {
-            query?: {
-                confirm?: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TransferOwnershipRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransferOwnershipRead"];
                 };
             };
             /** @description Validation Error */
@@ -8849,14 +11139,58 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ReassignProjectRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transfer_ownership_resources__mfid__transfer_ownership_post: {
+        parameters: {
+            query?: {
+                confirm?: boolean;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferOwnershipRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferOwnershipRead"];
                 };
             };
             /** @description Validation Error */
@@ -8896,10 +11230,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -8912,177 +11246,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    link_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__post: {
-        parameters: {
-            query?: {
-                relationship_type?: ("is_derived_from" | "is_part_of") | null;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Parent sample MFID. */
-                parent_sample_mfid: string;
-                /** @description Child sample MFID. */
-                child_sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SampleLink"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unlink_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Parent sample MFID. */
-                parent_sample_mfid: string;
-                /** @description Child sample MFID. */
-                child_sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_sample_samples__sample_mfid__get: {
-        parameters: {
-            query?: {
-                include_metadata?: boolean;
-                include_links?: boolean;
-                include_owner?: boolean;
-                /** @description Include legacy embedded dataset objects. Set false and use include_links or GET /datasets?sample_mfid=... for efficient relationship access. */
-                include_datasets?: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SampleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_sample_samples__sample_mfid__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample MFID. */
-                sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SampleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SampleResponse"];
-                };
             };
             /** @description Validation Error */
             422: {
@@ -9175,10 +11338,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -9215,10 +11378,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -9293,10 +11456,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -9343,56 +11506,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_SampleResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_sample_datasets_samples__sample_mfid__datasets_get: {
-        parameters: {
-            query?: {
-                include_metadata?: boolean;
-                limit?: number | null;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample MFID. */
-                sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -9428,10 +11549,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -9471,14 +11592,227 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_SampleRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__post: {
+        parameters: {
+            query?: {
+                relationship_type?: ("is_derived_from" | "is_part_of") | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Parent sample MFID. */
+                parent_sample_mfid: string;
+                /** @description Child sample MFID. */
+                child_sample_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SampleLink"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_sample_parent_child_samples__parent_sample_mfid__children__child_sample_mfid__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Parent sample MFID. */
+                parent_sample_mfid: string;
+                /** @description Child sample MFID. */
+                child_sample_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_sample_samples__sample_mfid__get: {
+        parameters: {
+            query?: {
+                include_metadata?: boolean;
+                include_links?: boolean;
+                include_owner?: boolean;
+                /** @description Include legacy embedded dataset objects. Set false and use include_links or GET /datasets?sample_mfid=... for efficient relationship access. */
+                include_datasets?: boolean;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                sample_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SampleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_sample_samples__sample_mfid__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Sample MFID. */
+                sample_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SampleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SampleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sample_datasets_samples__sample_mfid__datasets_get: {
+        parameters: {
+            query?: {
+                include_metadata?: boolean;
+                limit?: number | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Sample MFID. */
+                sample_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -9510,10 +11844,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -9549,10 +11883,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -9570,44 +11904,12 @@ export interface operations {
             };
         };
     };
-    list_instruments_instruments_get: {
+    list_service_accounts_service_accounts_get: {
         parameters: {
             query?: {
-                /** @description Exact instrument slug. */
-                instrument_id?: string | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
-                affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
-                include_metadata?: boolean;
-                include_owner?: boolean;
-                /** @description Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. Requires an exact instrument_id filter. */
-                include_members?: boolean;
-                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
-                include_total?: boolean | null;
-                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. Omit to keep the default newest-first order. */
-                sort?: components["schemas"]["InstrumentSort"] | null;
-                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
-                direction?: components["schemas"]["SortDirection"] | null;
+                q?: string | null;
                 limit?: number;
-                /** @description Opaque continuation cursor returned by a previous page. */
-                cursor?: string | null;
                 offset?: number;
-                other_id?: string | null;
-                other_id_source?: string | null;
-                instrument_name?: string | null;
-                manufacturer?: string | null;
-                model?: string | null;
-                /** @description Exact stable owner identifier for a human or service account. */
-                owner_id?: string | null;
-                /**
-                 * @deprecated
-                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
-                 */
-                owner?: string | null;
-                location?: string | null;
-                description?: string | null;
-                instrument_type?: string | null;
-                /** @description Restrict results to one lifecycle status. */
-                status?: components["schemas"]["InstrumentStatus"] | null;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
@@ -9621,14 +11923,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_InstrumentResponse_"];
+                    "application/json": components["schemas"]["PaginatedResponse_ServiceAccountAdminRead_"];
                 };
             };
             /** @description Validation Error */
@@ -9642,7 +11944,7 @@ export interface operations {
             };
         };
     };
-    create_instrument_instruments_post: {
+    create_service_account_service_accounts_post: {
         parameters: {
             query?: never;
             header?: {
@@ -9654,21 +11956,67 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["InstrumentCreate"];
+                "application/json": components["schemas"]["ServiceAccountCreate"];
             };
         };
         responses: {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InstrumentResponse"];
+                    "application/json": components["schemas"]["ServiceAccountRead"];
+                };
+            };
+            /** @description Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_service_account_service_accounts__service_account_ref__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Service-account MFID or username. */
+                service_account_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceAccountAdminDetail"];
                 };
             };
             /** @description Validation Error */
@@ -9682,24 +12030,99 @@ export interface operations {
             };
         };
     };
-    search_instruments_instruments_search_get: {
+    update_service_account_platform_role_service_accounts__service_account_ref__patch: {
         parameters: {
-            query: {
-                /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
-                q: string;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
-                affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
-                limit?: number;
-                /** @description Exact stable owner identifier for a human or service account. */
-                owner_id?: string | null;
-                /** @description Restrict results to one lifecycle status. */
-                status?: components["schemas"]["InstrumentStatus"] | null;
-                include_owner?: boolean;
-            };
+            query?: never;
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
+            path: {
+                /** @description Service-account MFID or username. */
+                service_account_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceAccountPlatformRoleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceAccountAdminDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rotate_service_account_key_service_accounts__service_account_ref__rotate_key_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Service-account MFID or username. */
+                service_account_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceAccountRead"];
+                };
+            };
+            /** @description Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_apikey_deprecated_user_apikey_get: {
+        parameters: {
+            query?: never;
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -9709,271 +12132,10 @@ export interface operations {
             200: {
                 headers: {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_InstrumentResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_instrument_instruments__instrument_ref__get: {
-        parameters: {
-            query?: {
-                include_metadata?: boolean;
-                include_owner?: boolean;
-                /** @description Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. */
-                include_members?: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
-                instrument_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstrumentResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_instrument_instruments__instrument_ref__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
-                instrument_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InstrumentUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstrumentResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_instrument_status_instruments__instrument_ref__status_post: {
-        parameters: {
-            query: {
-                status: string;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
-                instrument_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstrumentResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_instrument_service_accounts_instruments__instrument_ref__service_accounts_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
-                instrument_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_instrument_service_account_instruments__instrument_ref__service_accounts__service_account_ref__post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
-                instrument_ref: string;
-                /** @description Service-account MFID or username. */
-                service_account_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    remove_instrument_service_account_instruments__instrument_ref__service_accounts__service_account_ref__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
-                instrument_ref: string;
-                /** @description Service-account MFID or username. */
-                service_account_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": unknown;
                 };
             };
         };
@@ -10023,10 +12185,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -10063,15 +12225,22 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"];
                 };
+            };
+            /** @description Identifier, username, or email already in use; username and email conflicts use `{"detail": {"code": "already_in_use", "fields": [...], "message": ...}}` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -10084,35 +12253,31 @@ export interface operations {
             };
         };
     };
-    resolve_users_users_resolve_post: {
+    get_user_by_username_users_by_username__username__get: {
         parameters: {
             query?: never;
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
-            path?: never;
+            path: {
+                username: string;
+            };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["Body_resolve_users_users_resolve_post"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: components["schemas"]["UserPublicRead"];
-                    };
+                    "application/json": components["schemas"]["UserRead"] | components["schemas"]["UserPublicRead"];
                 };
             };
             /** @description Validation Error */
@@ -10141,10 +12306,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -10181,14 +12346,56 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_users_users_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_resolve_users_users_resolve_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["UserPublicRead"];
+                    };
                 };
             };
             /** @description Validation Error */
@@ -10223,52 +12430,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["UserPublicRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_user_by_username_users_by_username__username__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                username: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"] | components["schemas"]["UserPublicRead"];
                 };
             };
             /** @description Validation Error */
@@ -10300,10 +12469,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -10343,14 +12512,140 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description Username or email already held by another user: `{"detail": {"code": "already_in_use", "fields": ["username", "email"], "message": ...}}`, listing every conflicting field */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_access_groups_users__user_ref__access_groups_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_user_to_access_group_users__user_ref__access_groups__group_name__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+                group_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_user_from_access_group_users__user_ref__access_groups__group_name__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+                group_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -10382,15 +12677,29 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ApiKeyRead"];
                 };
+            };
+            /** @description Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sessions cannot read an existing key (`api_key_exists`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -10421,10 +12730,56 @@ export interface operations {
             /** @description Successful Response */
             204: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    regenerate_user_apikey_users__user_ref__apikey_regenerate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyRead"];
+                };
+            };
+            /** @description Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -10458,57 +12813,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ApiKeyVerify"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_user_platform_role_users__user_ref__platform_role_patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserPlatformRoleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"];
                 };
             };
             /** @description Validation Error */
@@ -10540,49 +12852,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string[];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_user_samples_users__user_ref__samples_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -10620,10 +12893,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -10641,87 +12914,7 @@ export interface operations {
             };
         };
     };
-    add_user_to_access_group_users__user_ref__access_groups__group_name__post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    remove_user_from_access_group_users__user_ref__access_groups__group_name__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_user_access_groups_users__user_ref__access_groups_get: {
+    update_user_platform_role_users__user_ref__platform_role_patch: {
         parameters: {
             query?: never;
             header?: {
@@ -10734,19 +12927,23 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPlatformRoleUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string[];
+                    "application/json": components["schemas"]["UserRead"];
                 };
             };
             /** @description Validation Error */
@@ -10781,10 +12978,10 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -10802,193 +12999,7 @@ export interface operations {
             };
         };
     };
-    list_projects_projects_get: {
-        parameters: {
-            query?: {
-                /** @description Exact project slug. */
-                project_id?: string | null;
-                /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
-                accessible_to_user?: string[] | null;
-                /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
-                accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
-                include_metadata?: boolean;
-                /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
-                include_total?: boolean | null;
-                /** @description Include members for an exact project_id lookup when authorized. */
-                include_members?: boolean;
-                /** @description Projects where every listed user is a member. Accepts an ORCID, service-account MFID, username, or email. Repeated values use AND semantics, like accessible_to_user. Platform contributors and administrators may select another user; other callers only themselves. */
-                member_ref?: string[] | null;
-                /** @description Restrict member_ref to these project roles. Repeated values use OR semantics. Requires member_ref. */
-                member_role?: components["schemas"]["AccessPermission"][] | null;
-                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order. */
-                sort?: components["schemas"]["ProjectSort"] | null;
-                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
-                direction?: components["schemas"]["SortDirection"] | null;
-                limit?: number;
-                /** @description Opaque continuation cursor returned by a previous page. */
-                cursor?: string | null;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_ProjectWithLead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_project_projects_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    search_projects_projects_search_get: {
-        parameters: {
-            query: {
-                /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
-                q: string;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
-                limit?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_ProjectRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_project_projects__project_ref__get: {
-        parameters: {
-            query?: {
-                include_metadata?: boolean;
-                include_members?: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectWithLead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_project_projects__project_ref__patch: {
+    read_user_samples_users__user_ref__samples_get: {
         parameters: {
             query?: never;
             header?: {
@@ -10996,105 +13007,6 @@ export interface operations {
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectWithLead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_users_on_project_projects__project_ref__users_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_AccessGroupMemberRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_users_to_project_projects__project_ref__users__user_ref__post: {
-        parameters: {
-            query?: {
-                /**
-                 * @deprecated
-                 * @description Deprecated. Put the username in the path instead; email in URLs is discouraged.
-                 */
-                email?: string | null;
-                /**
-                 * @deprecated
-                 * @description Deprecated. Put the username in the path instead.
-                 */
-                username?: string | null;
-                role?: components["schemas"]["ProjectMembershipRole"];
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
                 /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
                 user_ref: string;
             };
@@ -11105,1328 +13017,14 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    remove_user_from_project_projects__project_ref__users__user_ref__delete: {
-        parameters: {
-            query?: {
-                /**
-                 * @deprecated
-                 * @description Deprecated. Put the username in the path instead; email in URLs is discouraged.
-                 */
-                email?: string | null;
-                /**
-                 * @deprecated
-                 * @description Deprecated. Put the username in the path instead.
-                 */
-                username?: string | null;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
                     Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_project_user_role_projects__project_ref__users__user_ref__patch: {
-        parameters: {
-            query: {
-                role: components["schemas"]["ProjectMembershipRole"];
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    project_sample_graph_projects__project_ref__sample_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    project_dataset_graph_projects__project_ref__dataset_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    project_entity_graph_projects__project_ref__entity_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_access_group_access_groups_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AccessGroupCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_access_group_access_groups__group_name__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"] | null;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_access_group_users_access_groups__group_name__users_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_to_join_access_group_access_groups__group_name__join_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinRequestCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinRequestRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_join_requests_join_requests_get: {
-        parameters: {
-            query?: {
-                group_name?: string | null;
-                status?: string | null;
-                requester_id?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_JoinRequestRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_join_request_join_requests__request_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinRequestRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    review_join_request_join_requests__request_id__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinRequestReview"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinRequestRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    entity_graph_entity_graph__entity_mfid__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample or dataset MFID. */
-                entity_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    entity_graph_bfs_entity_graph_bfs__entity_mfid__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample or dataset MFID. */
-                entity_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    entity_graph_cte_entity_graph_cte__entity_mfid__get: {
-        parameters: {
-            query?: {
-                recursive?: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample or dataset MFID. */
-                entity_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    project_graph_project_graph__project_ref__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    liveness_health_live_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LivenessResponse"];
-                };
-            };
-        };
-    };
-    readiness_health_ready_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReadinessResponse"];
-                };
-            };
-            /** @description Service Unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReadinessResponse"];
-                };
-            };
-        };
-    };
-    health_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReadinessResponse"];
-                };
-            };
-            /** @description Service Unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReadinessResponse"];
-                };
-            };
-        };
-    };
-    list_all_keywords_keywords_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Keyword"][];
-                };
-            };
-        };
-    };
-    read_keyword_keywords__keyword__get: {
-        parameters: {
-            query?: {
-                permissive?: boolean;
-            };
-            header?: never;
-            path: {
-                keyword: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Keyword"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_ingestors_ingestors_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": string[];
-                };
-            };
-        };
-    };
-    list_deletion_requests_deletion_requests_get: {
-        parameters: {
-            query?: {
-                /** @description Select accessible, caller-submitted, or currently reviewable requests. Service accounts without platform-administrator authority cannot review. */
-                scope?: components["schemas"]["DeletionRequestScope"];
-                status?: components["schemas"]["DeletionRequestStatus"] | null;
-                /** @description Limit requests to resources assigned to this canonical project MFID. */
-                project_mfid?: string | null;
-                /** @description Field used to order deletion requests. String fields are ordered case-insensitively, nulls are last, and request ID is the final tie-breaker. requester_name orders by last name, first name, username, and unique ID. Status order is pending, approved, rejected. */
-                sort?: components["schemas"]["DeletionRequestSort"];
-                /** @description Sort direction for deletion requests. */
-                direction?: components["schemas"]["SortDirection"];
-                limit?: number;
-                /** @description Opaque continuation cursor returned by a previous page. */
-                cursor?: string | null;
-                /** @description Compatibility offset. A supplied cursor takes precedence. */
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_DeletionRequestRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_deletion_request_deletion_requests__request_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeletionRequestRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    review_deletion_request_deletion_requests__request_id__patch: {
-        parameters: {
-            query: {
-                status: components["schemas"]["DeletionReviewDecision"];
-                reviewer_notes?: string | null;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                request_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeletionRequestRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_deletion_audit_deletion_audit_get: {
-        parameters: {
-            query?: {
-                /** @description Select the platform-wide administrator audit or deletion history submitted by the authenticated human user. */
-                scope?: components["schemas"]["DeletionAuditScope"];
-                /** @description Exact MFID of the deleted resource. */
-                resource_id?: string | null;
-                /** @description Type of deleted resource. */
-                resource_type?: components["schemas"]["DeletableResourceType"] | null;
-                /** @description Exact project slug captured when the resource was deleted. */
-                project_id?: string | null;
-                /** @description Exact canonical project MFID captured when the resource was deleted. Entries created before project MFID snapshots were introduced do not match. */
-                project_mfid?: string | null;
-                /** @description Exact stable requester user ID. */
-                requester_id?: string | null;
-                /** @description Exact stable reviewer user ID. */
-                reviewer_id?: string | null;
-                /** @description Sort direction for deletion time. Audit ID is the deterministic final tie-breaker. */
-                direction?: components["schemas"]["SortDirection"];
-                limit?: number;
-                /** @description Opaque continuation cursor returned by a previous page. */
-                cursor?: string | null;
-                /** @description Compatibility offset. A supplied cursor takes precedence. */
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_DeletionAuditLogRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_deletion_audit_deletion_audit__audit_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                audit_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeletionAuditLogRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    extract_metadata_extract_metadata_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtractMetadataRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_service_accounts_service_accounts_get: {
-        parameters: {
-            query?: {
-                q?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_ServiceAccountAdminRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_service_account_service_accounts_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ServiceAccountCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceAccountRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_service_account_service_accounts__service_account_ref__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Service-account MFID or username. */
-                service_account_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceAccountAdminDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_service_account_platform_role_service_accounts__service_account_ref__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Service-account MFID or username. */
-                service_account_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ServiceAccountPlatformRoleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceAccountAdminDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    rotate_service_account_key_service_accounts__service_account_ref__rotate_key_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Service-account MFID or username. */
-                service_account_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceAccountRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    print_barcode_print_barcode_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BarcodePrintRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BarcodePrintResponse"];
                 };
             };
             /** @description Validation Error */

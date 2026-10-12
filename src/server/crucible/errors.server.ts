@@ -1,6 +1,10 @@
 import "@tanstack/react-start/server-only"
 
-import type { HubApiError, HubApiErrorKind } from "@/data/crucible/errors"
+import type {
+  HubApiError,
+  HubApiErrorKind,
+  HubConflictField,
+} from "@/data/crucible/errors"
 
 type ErrorInput = {
   status?: number
@@ -9,6 +13,8 @@ type ErrorInput = {
   timedOut?: boolean
   fieldErrors?: Record<string, string[]>
   retryAfterSeconds?: number
+  conflictFields?: HubConflictField[]
+  reauthenticationRequired?: boolean
 }
 
 const statusKinds: Partial<Record<number, HubApiErrorKind>> = {
@@ -24,6 +30,7 @@ const statusKinds: Partial<Record<number, HubApiErrorKind>> = {
 
 const messages: Record<HubApiErrorKind, string> = {
   unauthenticated: "Sign in is required.",
+  "reauthentication-required": "Sign in again to continue.",
   forbidden: "You do not have permission to perform this action.",
   "not-found": "The requested Crucible resource was not found.",
   conflict: "The request conflicts with the current Crucible state.",
@@ -40,9 +47,11 @@ export function toHubApiError(input: ErrorInput): HubApiError {
     ? "cancelled"
     : input.timedOut
       ? "timeout"
-      : input.status
-        ? (statusKinds[input.status] ?? "upstream")
-        : "unexpected"
+      : input.reauthenticationRequired
+        ? "reauthentication-required"
+        : input.status
+          ? (statusKinds[input.status] ?? "upstream")
+          : "unexpected"
 
   return {
     kind,
@@ -55,5 +64,6 @@ export function toHubApiError(input: ErrorInput): HubApiError {
     ...(input.retryAfterSeconds === undefined
       ? {}
       : { retryAfterSeconds: input.retryAfterSeconds }),
+    ...(input.conflictFields ? { conflictFields: input.conflictFields } : {}),
   }
 }

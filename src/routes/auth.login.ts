@@ -12,11 +12,19 @@ export const Route = createFileRoute("/auth/login")({
       GET: async ({ request }) => {
         try {
           enforceHubLoginRateLimit()
-          const returnTo = new URL(request.url).searchParams.get("returnTo")
+          const search = new URL(request.url).searchParams
+          const maxAge = search.get("max_age")
           return new Response(null, {
             status: 302,
             headers: {
-              Location: await beginHubLogin(returnTo),
+              Location: await beginHubLogin(
+                search.get("returnTo"),
+                maxAge !== null &&
+                  /^\d{1,5}$/.test(maxAge) &&
+                  Number(maxAge) <= 86_400
+                  ? Number(maxAge)
+                  : null
+              ),
               "Cache-Control": "no-store",
               "Referrer-Policy": "no-referrer",
             },

@@ -52,7 +52,7 @@ function renderFiles() {
   render(
     <QueryClientProvider client={queryClient}>
       <WorkspaceProvider mode="fixture" scope={scope}>
-        <DatasetFiles datasetMfid={datasetMfid} />
+        <DatasetFiles canEdit={false} datasetMfid={datasetMfid} />
       </WorkspaceProvider>
     </QueryClientProvider>
   )

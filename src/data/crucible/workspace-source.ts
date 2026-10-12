@@ -209,7 +209,10 @@ export type WorkspaceDatasetCreate = {
   timestamp: string | null
 }
 
-export type WorkspaceOwnershipTransfer = Schema<"TransferOwnershipRead">
+export type WorkspaceOwnershipTransfer = Omit<
+  Schema<"TransferOwnershipRead">,
+  "resource_id"
+>
 
 export type WorkspaceDeletionPreview = Omit<
   Schema<"DeletionPreviewRead">,
@@ -217,6 +220,7 @@ export type WorkspaceDeletionPreview = Omit<
   | "join_requests_removed"
   | "memberships_removed"
   | "removed_grants"
+  | "resource_id"
   | "service_accounts_unbound"
 > & {
   blocking: Record<string, number>
@@ -355,7 +359,7 @@ export type WorkspaceDeletionRequest = Pick<
   | "request_time"
   | "requester"
   | "requester_id"
-  | "resource_id"
+  | "resource_mfid"
   | "resource_name"
   | "resource_type"
   | "review_time"
@@ -639,11 +643,36 @@ export type WorkspaceSearchResponse = {
 
 export type WorkspaceMode = "api" | "fixture"
 
+export type WorkspaceUploadSessionState =
+  "uploading" | "completed" | "failed" | "aborted"
+
+export type WorkspaceUploadSession = {
+  acknowledgedPartNumbers: number[]
+  datasetMfid: string
+  failureCode?: string
+  file?: WorkspaceDatasetFile
+  partSize?: number
+  state: WorkspaceUploadSessionState
+  uploadId: string
+}
+
+export type WorkspaceUploadInitiation =
+  | { state: WorkspaceUploadSessionState; uploadId: string }
+  | { file: WorkspaceDatasetFile; state: "completed" }
+
+export type WorkspaceUploadSignedPart = {
+  headers: Record<string, string>
+  partNumber: number
+  url: string
+}
+
 export type WorkspaceSource =
   | {
       status: "ready"
       mode: WorkspaceMode
       privilegeMode: WorkspacePrivilegeMode
+      uploadIngestionEnabled: boolean
+      uploadsEnabled: boolean
       workspace: Workspace
       sessionAuth?: boolean
     }

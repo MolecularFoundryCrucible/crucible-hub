@@ -21,7 +21,7 @@ describe("workspace user source", () => {
 
   it("resolves fixture user detail by unique_id", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const account = await readWorkspaceUserDetail("0000-0000-0000-000X")
 
@@ -35,7 +35,7 @@ describe("workspace user source", () => {
 
   it("paginates and filters fixture users", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const page = await readWorkspaceUsers({ limit: 2 })
     const serviceAccounts = await readWorkspaceUsers({
@@ -134,7 +134,7 @@ describe("workspace user source", () => {
 
   it("checks email availability in fixture and API mode", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       checkWorkspaceEmailExactMatch("avery.chen@example.invalid")
@@ -206,7 +206,7 @@ describe("workspace user source", () => {
 
   it("carries API key status on user records and provisions keys without exposing secrets", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const account = await readWorkspaceUserDetail("0000-0000-0000-000X")
     expect(account).toMatchObject({
@@ -223,7 +223,9 @@ describe("workspace user source", () => {
 
     const fetchMock = vi.fn(async (request: Request) => {
       expect(request.method).toBe("POST")
-      expect(new URL(request.url).pathname).toBe("/users/user-1/apikey")
+      expect(new URL(request.url).pathname).toBe(
+        "/users/user-1/apikey/regenerate"
+      )
       expect(request.headers.get("Crucible-Privilege-Mode")).toBe("elevated")
       return crucibleApiResponse(
         { api_key: "crucible_live_key" },
@@ -332,7 +334,7 @@ describe("workspace user source", () => {
 
   it("changes user platform roles through the dedicated endpoint", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       updateWorkspaceUserPlatformRole("0000-0000-0000-0018", "contributor")
@@ -388,7 +390,7 @@ describe("workspace user source", () => {
 
   it("revokes user API keys without returning secrets", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       revokeWorkspaceUserApiKey("0000-0000-0000-0018")
@@ -417,7 +419,7 @@ describe("workspace user source", () => {
 
   it("does not bypass the production fixture guard", async () => {
     vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     vi.stubEnv("HUB_ENABLE_FIXTURES", "")
 
     await expect(readWorkspaceUsers({ limit: 20 })).rejects.toThrow(

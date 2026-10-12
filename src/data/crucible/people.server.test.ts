@@ -12,7 +12,7 @@ describe("workspace person source", () => {
 
   it("resolves fixture people by stable identity", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       readWorkspacePerson("0000-0000-0000-0018")

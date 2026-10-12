@@ -45,6 +45,7 @@ const child = spawn(process.execPath, [".output/server/index.mjs"], {
   env: {
     ...process.env,
     HOST: "127.0.0.1",
+    HUB_DATA_SOURCE: "fixture",
     HUB_ENABLE_FIXTURES: "true",
     NODE_ENV: "production",
     PORT: String(port),

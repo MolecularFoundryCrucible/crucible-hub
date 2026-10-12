@@ -9,6 +9,7 @@ import {
   sharedSessionsRequested,
   sharedSessionsConfigured,
 } from "@/server/crucible/hub-session-store.server"
+import type { WorkspaceMode } from "@/data/crucible/workspace-source"
 
 export type WorkspaceConfiguration =
   | { mode: "fixture" }
@@ -63,7 +64,14 @@ export function readWorkspaceConfiguration(): WorkspaceConfiguration {
       }
     return { mode: "api", baseUrl, fetch: sessionApiFetch() }
   }
-  if (process.env.HUB_DATA_SOURCE !== "api") return { mode: "fixture" }
+  if (process.env.HUB_DATA_SOURCE === "fixture") return { mode: "fixture" }
+  if (process.env.HUB_DATA_SOURCE !== "api") {
+    return {
+      mode: "unavailable",
+      reason:
+        "Set HUB_DATA_SOURCE to fixture, api, or hub-auth to choose a data source.",
+    }
+  }
 
   if (process.env.NODE_ENV === "production") {
     return {
@@ -92,4 +100,15 @@ export function readWorkspaceConfiguration(): WorkspaceConfiguration {
   }
 
   return { mode: "api", baseUrl, bearerToken }
+}
+
+export function readUploadsEnabled(mode: WorkspaceMode): boolean {
+  if (mode === "fixture") return true
+  return process.env.HUB_UPLOADS_ENABLED === "true"
+}
+
+export function readUploadIngestionEnabled(mode: WorkspaceMode): boolean {
+  if (!readUploadsEnabled(mode)) return false
+  if (mode === "fixture") return true
+  return process.env.HUB_UPLOAD_INGESTION_ENABLED === "true"
 }

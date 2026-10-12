@@ -87,6 +87,8 @@ export const Route = createFileRoute("/_app")({
       privilegeMode: source.privilegeMode,
       sessionAuth: source.sessionAuth ?? false,
       scope,
+      uploadIngestionEnabled: source.uploadIngestionEnabled,
+      uploadsEnabled: source.uploadsEnabled,
     }
   },
   staleTime: Infinity,
@@ -117,6 +119,8 @@ function WorkspaceLayout() {
       privilegeMode={source.privilegeMode}
       sessionAuth={source.sessionAuth}
       scope={source.scope}
+      uploadIngestionEnabled={source.uploadIngestionEnabled}
+      uploadsEnabled={source.uploadsEnabled}
     />
   )
 }
@@ -126,16 +130,26 @@ function ReadyWorkspace({
   privilegeMode,
   sessionAuth,
   scope,
+  uploadIngestionEnabled,
+  uploadsEnabled,
 }: {
   mode: "api" | "fixture"
   privilegeMode: "elevated" | "normal"
   sessionAuth: boolean
   scope: ReturnType<typeof identityScope>
+  uploadIngestionEnabled: boolean
+  uploadsEnabled: boolean
 }) {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
 
   return (
-    <WorkspaceProvider mode={mode} privilegeMode={privilegeMode} scope={scope}>
+    <WorkspaceProvider
+      mode={mode}
+      privilegeMode={privilegeMode}
+      scope={scope}
+      uploadIngestionEnabled={uploadIngestionEnabled}
+      uploadsEnabled={uploadsEnabled}
+    >
       <AppShell
         account={account}
         privilegeMode={privilegeMode}

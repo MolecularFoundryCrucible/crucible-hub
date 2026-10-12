@@ -58,7 +58,7 @@ import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import {
-  HubApiClientError,
+  hubConflictFields,
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
@@ -87,6 +87,7 @@ import {
 import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-credential-dialog"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { formatUsername } from "@/lib/username"
+import { hubActionError } from "@/components/crucible/reauthentication"
 
 const userEmailSchema = z
   .string()
@@ -282,16 +283,12 @@ function UserProfileCard({
         notifySuccess("User profile saved")
         setEditing(false)
       } catch (cause) {
-        if (
-          cause instanceof HubApiClientError &&
-          cause.details.kind === "conflict"
-        ) {
-          if (changes.username) {
-            setRejectedUsername(changes.username)
-          }
-          if (changes.email) {
-            setRejectedEmail(changes.email)
-          }
+        const conflicts = hubConflictFields(cause, ["username", "email"])
+        if (conflicts.includes("username") && changes.username) {
+          setRejectedUsername(changes.username)
+        }
+        if (conflicts.includes("email") && changes.email) {
+          setRejectedEmail(changes.email)
         }
         setSaveError(
           hubErrorMessage(
@@ -642,7 +639,7 @@ function UserApiCredentialSection({
   const queryClient = useQueryClient()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false)
-  const [actionError, setActionError] = useState<string>()
+  const [actionError, setActionError] = useState<React.ReactNode>()
 
   useEffect(() => {
     setConfirmOpen(false)
@@ -671,7 +668,7 @@ function UserApiCredentialSection({
       })
     },
     onError: (err) => {
-      setActionError(hubErrorMessage(err, "Failed to provision API key."))
+      setActionError(hubActionError(err, "Failed to provision API key."))
     },
   })
 

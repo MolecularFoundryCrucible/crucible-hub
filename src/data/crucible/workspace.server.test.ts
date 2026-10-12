@@ -7,15 +7,32 @@ describe("workspace source selection", () => {
     vi.unstubAllEnvs()
   })
 
-  it("uses fixtures by default during development", async () => {
+  it("uses fixtures when they are selected explicitly", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const source = await readWorkspace()
 
     expect(source.status).toBe("ready")
     if (source.status === "ready") expect(source.mode).toBe("fixture")
   })
+
+  it.each(["", "fixtures"])(
+    "never falls back to fixtures for data source %j",
+    async (dataSource) => {
+      vi.stubEnv("NODE_ENV", "development")
+      vi.stubEnv("HUB_DATA_SOURCE", dataSource)
+
+      const source = await readWorkspace()
+
+      expect(source).toEqual({
+        status: "unavailable",
+        reason:
+          "Set HUB_DATA_SOURCE to fixture, api, or hub-auth to choose a data source.",
+        authRequired: false,
+      })
+    }
+  )
 
   it("rejects API-key mode in production", async () => {
     vi.stubEnv("NODE_ENV", "production")

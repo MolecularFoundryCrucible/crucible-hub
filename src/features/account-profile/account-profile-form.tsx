@@ -21,7 +21,7 @@ import { applyAccountProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
-  HubApiClientError,
+  hubConflictFields,
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
@@ -39,6 +39,9 @@ import {
   accountProfileHasChanges,
   accountProfileSchema,
   accountProfileValues,
+  matchesRejectedValue,
+  profileNameMissing,
+  ProfileNameHint,
 } from "./account-profile-fields"
 import { isSlugTakenOrRejected } from "@/features/forms/slug-availability"
 import { UsernameAvailability } from "./username-availability"
@@ -55,6 +58,7 @@ export function AccountProfileForm({
   const [saveError, setSaveError] = useState<string>()
   const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
   const [rejectedUsername, setRejectedUsername] = useState<string>()
+  const [rejectedEmail, setRejectedEmail] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (changes: WorkspaceAccountProfileUpdate) =>
       unwrapHubResult(
@@ -86,13 +90,18 @@ export function AccountProfileForm({
         notifySuccess("Profile saved")
         setEditing(false)
       } catch (error) {
-        if (
-          error instanceof HubApiClientError &&
-          error.details.kind === "conflict" &&
-          changes.username
-        ) {
-          setRejectedUsername(changes.username)
-          notifyError("Username already taken")
+        const conflicts = hubConflictFields(
+          error,
+          changes.username ? ["username"] : []
+        )
+        if (conflicts.length) {
+          if (conflicts.includes("username") && changes.username) {
+            setRejectedUsername(changes.username)
+            notifyError("Username already taken")
+          }
+          if (conflicts.includes("email") && changes.email) {
+            setRejectedEmail(changes.email)
+          }
         } else {
           setSaveError(
             hubErrorMessage(
@@ -179,11 +188,16 @@ export function AccountProfileForm({
                 <form.Field name="last_name">
                   {(field) => <ProfileField field={field} label="Last name" />}
                 </form.Field>
+                <form.Subscribe selector={profileNameMissing}>
+                  {(missing) => (missing ? <ProfileNameHint /> : null)}
+                </form.Subscribe>
                 <form.Field name="email">
                   {(field) => (
                     <ProfileField
                       field={field}
                       label="Email"
+                      rejectedMessage="This email is already used by another account."
+                      rejectedValue={rejectedEmail}
                       required
                       type="email"
                     />
@@ -212,6 +226,7 @@ export function AccountProfileForm({
         <form.Subscribe
           selector={(state) => [
             state.canSubmit &&
+              !matchesRejectedValue(state.values.email, rejectedEmail) &&
               !isSlugTakenOrRejected(
                 state.values.username,
                 liveTakenUsername,

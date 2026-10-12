@@ -89,7 +89,7 @@ export async function readWorkspaceServiceAccounts(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return {
     items: result.data.items,
     limit: result.data.limit,
@@ -129,7 +129,7 @@ export async function readWorkspaceServiceAccount(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status === 404) return null
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data
 }
 
@@ -157,7 +157,8 @@ export async function createWorkspaceServiceAccount(
     body: account,
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data
 }
 
@@ -201,7 +202,8 @@ export async function patchWorkspaceServiceAccount(
     params: { path: { user_ref: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   const account = await readWorkspaceServiceAccount(
     serviceAccountMfid,
     scenario,
@@ -238,7 +240,7 @@ export async function patchWorkspaceServiceAccountPlatformRole(
     params: { path: { service_account_ref: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data
 }
 
@@ -275,6 +277,6 @@ export async function rotateWorkspaceServiceAccountKey(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data
 }

@@ -43,7 +43,7 @@ describe("workspace resource access source", () => {
 
   it("returns deterministic fixture grants and preserves owner grants", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(readWorkspaceResourceAccess(sampleMfid)).resolves.toEqual([
       expect.objectContaining({
@@ -61,7 +61,7 @@ describe("workspace resource access source", () => {
 
   it("returns full deterministic fixture grant lists for set and revoke", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const added = await setWorkspaceResourceAccessGrant(
       sampleMfid,
@@ -133,7 +133,7 @@ describe("workspace resource access source", () => {
 
   it("returns exact fixture resource details with authoritative public grants", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(publishWorkspaceResourceAccess(sampleMfid)).resolves.toEqual(
       expect.objectContaining({
@@ -309,7 +309,7 @@ describe("workspace resource access source", () => {
 
   it("maps missing fixture resources to not found", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       readWorkspaceResourceAccess("missing-resource")

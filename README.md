@@ -17,7 +17,7 @@ npm ci
 npm run dev:fixtures
 ```
 
-Open `http://127.0.0.1:3000/hub/`. The server fails if port 3000 is occupied. `npm run dev` also uses fixtures by default.
+Open `http://127.0.0.1:3000/hub/`. The server fails if port 3000 is occupied. Plain `npm run dev` has no data source and shows a configuration error; set `HUB_DATA_SOURCE` or use a named scenario.
 
 To test against the staging API as your own account, put your user-scoped key in the gitignored `.env.api-staging.local` file as `CRUCIBLE_API_KEY`, then run:
 

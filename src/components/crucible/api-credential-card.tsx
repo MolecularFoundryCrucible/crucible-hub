@@ -20,7 +20,7 @@ export function ApiCredentialCard({
   status,
 }: {
   action?: React.ReactNode
-  error?: string
+  error?: React.ReactNode
   loading?: boolean
   onRetry?: () => void
   status?: WorkspaceApiCredentialStatus | null

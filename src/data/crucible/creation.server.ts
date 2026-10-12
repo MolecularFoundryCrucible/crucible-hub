@@ -88,7 +88,7 @@ export async function createWorkspaceProjectResource(
     body: { ...project, status: "active" },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response.status)
+  if (!result.data) throw new CrucibleResponseError(result.response)
   return toWorkspaceProject(result.data)
 }
 
@@ -133,7 +133,7 @@ export async function createWorkspaceSampleResource(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.data) return toWorkspaceResourceDetail(result.data)
-  throw new CrucibleResponseError(result.response.status)
+  throw new CrucibleResponseError(result.response)
 }
 
 export async function createWorkspaceDatasetResource(
@@ -200,5 +200,5 @@ export async function createWorkspaceDatasetResource(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.data) return toWorkspaceResourceDetail(result.data)
-  throw new CrucibleResponseError(result.response.status)
+  throw new CrucibleResponseError(result.response)
 }

@@ -6,6 +6,30 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Pinned the Crucible API contract to staging revision `a831c2e` (pull request 305, inline multipart uploads) and connected dataset uploads to the signed multipart API behind `HUB_UPLOADS_ENABLED`: part PUTs forward every signed header except `Content-Length`, up to eight parts transfer concurrently with 32-part signing calls, initiation sends an idempotency key, session status follows part-listing pages, completion is verified inline with a 120-second upstream timeout and safe retries, and deletion previews, deletion requests, and ownership transfers now read `resource_mfid` instead of the deprecated `resource_id`.
+
+- Switched the `orcid-staging` development scenario to the `http://localhost:3000/hub/auth/callback` callback that the staging API now accepts instead of the personal tailnet URL; reach a remote workstation through `ssh -L 3000:127.0.0.1:3000` and browse `http://localhost:3000/hub/`.
+
+- Allowed `HUB_AUTH_CALLBACK_URI` to use plain HTTP on any loopback host (`127.0.0.1`, `localhost`, `[::1]`) during development, so ORCID sign-in works through a forwarded `http://localhost:3000` port; production still requires an HTTPS callback.
+
+- Pinned the Crucible API contract to staging revision `b3523b5` (pull request 306) for structured username and email conflicts, the step-up challenge, and the administrator key regenerate operation; administrator Provision and Rotate key now use `POST /users/{user_ref}/apikey/regenerate`, which issues a replacement and returns it once.
+
+- Handled the API's recent-sign-in requirement for issuing credentials: a step-up challenge no longer refreshes or ends the Hub session, and API key provisioning, service-account creation, and key rotation show a Sign in again action that forces a fresh ORCID sign-in (`max_age=0`) and returns to the same page.
+
+- Reported username and email conflicts on the field that conflicted: the setup, profile, and administrator user forms read the API's structured `already_in_use` conflict and show "This email is already used by another account" or the username message only where it applies, falling back to the previous behavior against API versions without it.
+
+- Changed first-time account completion to require only a username: ORCID-signed-in accounts without one see the setup page with all profile fields prefilled and editable, and the setup and profile forms now prompt, without blocking, for a name when both first and last name are empty.
+
+- Reworked dataset file upload: the Add files dialog now matches Hub layout with drag and drop of files and folders, per-file and batch ingestor selection (behind `HUB_UPLOAD_INGESTION_ENABLED`), overall and per-file progress, duplicate-name checks against the batch and the dataset, and a list that starts empty each time it opens. Add files is also available on the dataset Processing tab, and dataset creation uses the same file list.
+
+- Removed the implicit fixture data source: the Hub now serves fixtures only when `HUB_DATA_SOURCE=fixture` is set (`npm run dev:fixtures`), and an unset or unknown data source shows a configuration error instead of demo data.
+
+- Added dataset file uploads behind a default-off rollout flag: an Add files action on the dataset Overview Files card and an optional Files stage in dataset creation, with direct-to-storage part transfers, streaming checksums, per-file recovery, and fixture-backed development pending the API's multipart upload gate.
+
+- Mapped numeric `Retry-After` headers from rate-limited Crucible API responses into Hub error envelopes so browser retry timing honors the API backoff, and added the hash-wasm dependency for streaming upload checksums ahead of dataset file uploads.
+
+- Moved the Primary project indicator in Direct access from the project name to the trailing action cluster, so it sits left of the role badge like other grant-level markers.
+
 - Simplified staged member addition and removal dialogs to show progress only on the commit button: the per-member spinner next to the entry being processed is gone, and the shared pending icon now renders the in-flight indicator across dialogs, editable cards, and access rows.
 
 - Raised the resource picker popup floor on wide screens so option names and identifiers stay readable when the field is narrow, matching the application-bar search popup.

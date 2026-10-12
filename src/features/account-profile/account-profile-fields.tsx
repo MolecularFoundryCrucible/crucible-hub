@@ -71,6 +71,20 @@ export function accountProfileChanges(
   return changes
 }
 
+export function profileNameMissing(state: {
+  values: Pick<AccountProfileValues, "first_name" | "last_name">
+}) {
+  return !state.values.first_name.trim() && !state.values.last_name.trim()
+}
+
+export function ProfileNameHint() {
+  return (
+    <p className="text-supporting text-muted-foreground">
+      Add your name so collaborators can recognize you.
+    </p>
+  )
+}
+
 export function accountProfileHasChanges(
   account: WorkspaceAccount,
   values: AccountProfileValues
@@ -81,6 +95,13 @@ export function accountProfileHasChanges(
   )
 }
 
+export function matchesRejectedValue(value: string, rejected?: string) {
+  return (
+    rejected !== undefined &&
+    value.trim().toLowerCase() === rejected.trim().toLowerCase()
+  )
+}
+
 export function ProfileField({
   description,
   endAdornment,
@@ -88,6 +109,8 @@ export function ProfileField({
   invalid = false,
   label,
   maxLength = 255,
+  rejectedMessage = "This value is already used by another account.",
+  rejectedValue,
   required = false,
   type = "text",
 }: {
@@ -108,11 +131,15 @@ export function ProfileField({
   invalid?: boolean
   label: string
   maxLength?: number
+  rejectedMessage?: string
+  rejectedValue?: string
   required?: boolean
   type?: "email" | "text"
 }) {
+  const rejected = matchesRejectedValue(field.state.value, rejectedValue)
+  const fieldInvalid = invalid || rejected
   const inputProps = {
-    "aria-invalid": invalid || !field.state.meta.isValid || undefined,
+    "aria-invalid": fieldInvalid || !field.state.meta.isValid || undefined,
     autoComplete:
       field.name === "first_name"
         ? "given-name"
@@ -132,7 +159,7 @@ export function ProfileField({
     value: field.state.value,
   }
   return (
-    <Field data-invalid={invalid || !field.state.meta.isValid}>
+    <Field data-invalid={fieldInvalid || !field.state.meta.isValid}>
       <FieldLabel htmlFor={field.name} optional={!required} required={required}>
         {label}
       </FieldLabel>
@@ -145,7 +172,13 @@ export function ProfileField({
         <Input {...inputProps} />
       )}
       {description ? <FieldDescription>{description}</FieldDescription> : null}
-      <FieldError errors={field.state.meta.errors} />
+      <FieldError
+        errors={
+          rejected
+            ? [...field.state.meta.errors, { message: rejectedMessage }]
+            : field.state.meta.errors
+        }
+      />
     </Field>
   )
 }

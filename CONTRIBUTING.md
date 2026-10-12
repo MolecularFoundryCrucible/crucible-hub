@@ -8,12 +8,12 @@ Use Node.js 22.22 and npm 10.9. `package.json` defines supported ranges and `pac
 
 ```bash
 npm ci
-npm run dev
+npm run dev:fixtures
 ```
 
 Development serves `http://127.0.0.1:3000/hub/` with strict port handling. Do not add another package-manager lockfile. Direct dependency changes require deliberate review of package and generated-skill changes.
 
-Fixtures are the default data source. Use the [named development scenarios](README.md#quick-start) to select fixture, API-key, or ORCID mode and its local or staging API target. The temporary API bridge uses a user-scoped `CRUCIBLE_API_KEY` on the server process. Do not use a `VITE_` prefix, expose credentials to browser code or storage, print them, or commit them. API-key mode fails closed in production.
+There is no default data source: `HUB_DATA_SOURCE` must be `fixture`, `api`, or `hub-auth`. Use the [named development scenarios](README.md#quick-start) to select fixture, API-key, or ORCID mode and its local or staging API target. The temporary API bridge uses a user-scoped `CRUCIBLE_API_KEY` on the server process. Do not use a `VITE_` prefix, expose credentials to browser code or storage, print them, or commit them. API-key mode fails closed in production.
 
 ## Change workflow
 

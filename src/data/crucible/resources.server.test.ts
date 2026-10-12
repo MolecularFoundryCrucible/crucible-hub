@@ -28,7 +28,7 @@ describe("workspace resource sources", () => {
 
   it("builds a bounded fixture graph from immediate resource links", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       readWorkspaceResourceGraph("01J6Y8N4Q2R7M9K3T5V0W1X2Z5")
@@ -264,7 +264,7 @@ describe("workspace resource sources", () => {
 
   it("creates a fixture deletion request without using edit capabilities", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       requestWorkspaceResourceDeletion(
@@ -273,7 +273,7 @@ describe("workspace resource sources", () => {
       )
     ).resolves.toMatchObject({
       reason: "  no longer needed  ",
-      resource_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
+      resource_mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z5",
       resource_type: "sample",
       status: "pending",
     })
@@ -281,7 +281,7 @@ describe("workspace resource sources", () => {
 
   it("returns exact fixture relationship details with inverse directions without mutating fixtures", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const result = await mutateWorkspaceRelationship({
       action: "link",
@@ -319,7 +319,7 @@ describe("workspace resource sources", () => {
 
   it("does not duplicate fixture relationships and rejects a missing unlink", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const operation = {
       action: "link" as const,
       relationship: "associated" as const,
@@ -528,7 +528,7 @@ describe("workspace resource sources", () => {
           deletion_request: {
             id: 12,
             requester_id: "user-1",
-            resource_id: "sample-1",
+            resource_mfid: "sample-1",
             status: "pending",
             extra: "discarded",
           },
@@ -552,7 +552,7 @@ describe("workspace resource sources", () => {
       deletion_request: {
         id: 12,
         requester_id: "user-1",
-        resource_id: "sample-1",
+        resource_mfid: "sample-1",
         status: "pending",
       },
     })
@@ -574,7 +574,7 @@ describe("workspace resource sources", () => {
           reason: "cleanup",
           request_time: "2026-09-06T01:00:00Z",
           requester_id: "user-1",
-          resource_id: "sample-1",
+          resource_mfid: "sample-1",
           resource_name: "Sample",
           resource_type: "sample",
           review_time: null,
@@ -587,7 +587,7 @@ describe("workspace resource sources", () => {
 
     await expect(
       requestWorkspaceResourceDeletion("sample-1", "cleanup")
-    ).resolves.toMatchObject({ id: 12, resource_id: "sample-1" })
+    ).resolves.toMatchObject({ id: 12, resource_mfid: "sample-1" })
     expect(requests[0].method).toBe("POST")
     expect(new URL(requests[0].url).pathname).toBe("/resources/sample-1/delete")
     expect(new URL(requests[0].url).search).toBe("?reason=cleanup")
@@ -618,7 +618,7 @@ describe("workspace resource sources", () => {
         crucibleApiResponse({
           id: 12,
           requester_id: "user-1",
-          resource_id: "other-resource",
+          resource_mfid: "other-resource",
           status: "pending",
         })
       )
@@ -630,7 +630,7 @@ describe("workspace resource sources", () => {
 
   it("resolves discriminated fixture resource detail by canonical MFID", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const dataset = await readWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z7")
     const sample = await readWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z5")
@@ -680,7 +680,7 @@ describe("workspace resource sources", () => {
 
   it("returns a non-persistent fixture sample descriptive update", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const sampleMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z5"
 
     await expect(
@@ -767,7 +767,7 @@ describe("workspace resource sources", () => {
 
   it("returns a non-persistent fixture dataset descriptive update", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const datasetMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
 
     await expect(
@@ -863,7 +863,7 @@ describe("workspace resource sources", () => {
 
   it("merges fixture scientific metadata without persisting it", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const sampleMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z5"
 
     await expect(
@@ -892,7 +892,7 @@ describe("workspace resource sources", () => {
 
   it("replaces fixture scientific metadata and supports clearing it", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     const datasetMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
 
     await expect(
@@ -1225,7 +1225,7 @@ describe("workspace resource sources", () => {
 
   it("returns only file metadata associated with the requested dataset", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const files = await readWorkspaceDatasetFiles("01J6Y8N4Q2R7M9K3T5V0W1X2Z7")
 
@@ -1242,7 +1242,7 @@ describe("workspace resource sources", () => {
 
   it("returns deterministic fixture download availability and maps missing files to 404", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       createWorkspaceFileDownload("01J6Y8N4Q2R7M9K3T5V0W1X2ZC")
@@ -1364,7 +1364,7 @@ describe("workspace resource sources", () => {
 
   it("resolves dense fixture instrument and dataset links", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const instrument = await readWorkspaceResource(
       "fixture-instrument-1",
@@ -1386,7 +1386,7 @@ describe("workspace resource sources", () => {
 
   it("provides branching, cyclic, unnamed, unavailable, and empty relationships", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     const sample = await readWorkspaceResource("fixture-sample-1", "dense")
     const parent = await readWorkspaceResource("fixture-sample-2", "dense")
@@ -1434,7 +1434,7 @@ describe("workspace resource sources", () => {
 
   it("previews forced deletion of a blocked fixture project", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z3", false)
@@ -1448,7 +1448,7 @@ describe("workspace resource sources", () => {
 
   it("refuses to confirm forced deletion of a blocked fixture project", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z3", true)
@@ -1457,7 +1457,7 @@ describe("workspace resource sources", () => {
 
   it("deletes an empty fixture project after confirmation", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
     await expect(
       deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2ZB", true)
@@ -1490,7 +1490,7 @@ describe("workspace resource sources", () => {
           blocking: {},
           deleted: requests.length === 2,
           memberships_removed: 1,
-          resource_id: "resource-mfid",
+          resource_mfid: "resource-mfid",
           resource_type: "project",
         })
       })
@@ -1522,7 +1522,7 @@ describe("workspace resource sources", () => {
       vi.fn(async () =>
         crucibleApiResponse({
           deleted: false,
-          resource_id: "other-mfid",
+          resource_mfid: "other-mfid",
           resource_type: "project",
         })
       )
@@ -1540,7 +1540,7 @@ describe("workspace resource sources", () => {
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => crucibleApiResponse({ resource_id: "resource-mfid" }))
+      vi.fn(async () => crucibleApiResponse({ resource_mfid: "resource-mfid" }))
     )
 
     await expect(
@@ -1550,7 +1550,7 @@ describe("workspace resource sources", () => {
 
   it("does not bypass the production fixture guard", async () => {
     vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
     vi.stubEnv("HUB_ENABLE_FIXTURES", "")
 
     await expect(
@@ -1574,7 +1574,7 @@ describe("workspace resource sources", () => {
             last_name: "Lee",
             unique_id: "person-mfid",
           },
-          resource_id: "resource-mfid",
+          resource_mfid: "resource-mfid",
         })
       })
     )

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { HubApiClientError, unwrapHubResult } from "./result"
+import { HubApiClientError, hubConflictFields, unwrapHubResult } from "./result"
 
 describe("Hub API results", () => {
   it("returns successful data unchanged", () => {
@@ -30,5 +30,24 @@ describe("Hub API results", () => {
           "You do not have permission to perform this action. Reference: request-42",
       })
     }
+  })
+})
+
+describe("hub conflict fields", () => {
+  const conflict = (conflictFields?: ("email" | "username")[]) =>
+    new HubApiClientError({
+      correlationId: "request",
+      kind: "conflict",
+      message: "Conflict",
+      retryable: false,
+      ...(conflictFields ? { conflictFields } : {}),
+    })
+
+  it("uses reported fields and falls back for older responses", () => {
+    expect(hubConflictFields(conflict(["email"]), ["username"])).toEqual([
+      "email",
+    ])
+    expect(hubConflictFields(conflict(), ["username"])).toEqual(["username"])
+    expect(hubConflictFields(new Error("other"), ["username"])).toEqual([])
   })
 })

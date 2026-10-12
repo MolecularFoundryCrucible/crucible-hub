@@ -19,6 +19,7 @@ export default defineConfig({
     command: "npm run start",
     env: {
       HOST: "127.0.0.1",
+      HUB_DATA_SOURCE: "fixture",
       HUB_ENABLE_FIXTURES: "true",
       NODE_ENV: "production",
       PORT: "4174",
