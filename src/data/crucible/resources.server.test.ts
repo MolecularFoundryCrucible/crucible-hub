@@ -14,6 +14,7 @@ import {
   writeWorkspaceResourceMetadata,
   patchWorkspaceSampleDescription,
   readWorkspaceDatasetFiles,
+  readWorkspaceIngestionClasses,
   readWorkspaceResource,
   readWorkspaceResourceGraph,
   reassignWorkspaceResourceProject,
@@ -1634,5 +1635,23 @@ describe("workspace resource sources", () => {
     await expect(requests[0].json()).resolves.toEqual({
       project_mfid: "project-mfid",
     })
+  })
+
+  it("reads the public ingestor list without a privilege-mode echo", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const fetchMock = vi.fn(async (request: Request) => {
+      expect(new URL(request.url).pathname).toBe("/ingestors")
+      expect(request.headers.has("Crucible-Privilege-Mode")).toBe(false)
+      return Response.json([" AFMIngestor ", "BioGlowIngestor", "AFMIngestor"])
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(readWorkspaceIngestionClasses()).resolves.toEqual([
+      "AFMIngestor",
+      "BioGlowIngestor",
+    ])
   })
 })

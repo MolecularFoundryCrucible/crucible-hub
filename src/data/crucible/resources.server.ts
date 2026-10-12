@@ -678,7 +678,7 @@ export async function readWorkspaceIngestionClasses(
     return ["H5Ingestor", "ImageIngestor"]
   }
 
-  const client = createCrucibleClient(configuration)
+  const client = createCrucibleClient(configuration, { privilegeMode: null })
   const result = await client.GET("/ingestors", {
     signal: crucibleRequestSignal(requestSignal),
   })
