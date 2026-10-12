@@ -69,6 +69,8 @@ if (scenario.startsWith("api-")) {
   }
 }
 
+let callbackOverride
+
 if (scenario.startsWith("orcid-")) {
   const specificCredentialFile = resolve(root, `.env.${scenario}.local`)
   const credentialFile = existsSync(specificCredentialFile)
@@ -80,6 +82,9 @@ if (scenario.startsWith("orcid-")) {
     )
   }
   const credentials = parseEnv(readFileSync(credentialFile, "utf8"))
+  if (credentialFile === specificCredentialFile) {
+    callbackOverride = credentials.HUB_AUTH_CALLBACK_URI
+  }
   environment.HUB_AUTH_CLIENT_SECRET = credentials.HUB_AUTH_CLIENT_SECRET || ""
   if (!environment.HUB_AUTH_CLIENT_SECRET) {
     throw new Error(
@@ -97,6 +102,7 @@ if (scenario.endsWith("local") && !environment.NODE_EXTRA_CA_CERTS) {
 }
 
 Object.assign(environment, scenarioValues)
+if (callbackOverride) environment.HUB_AUTH_CALLBACK_URI = callbackOverride
 
 const child = spawn(
   process.execPath,

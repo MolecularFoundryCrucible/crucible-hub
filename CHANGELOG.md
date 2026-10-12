@@ -8,7 +8,7 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Pinned the Crucible API contract to staging revision `a831c2e` (pull request 305, inline multipart uploads) and connected dataset uploads to the signed multipart API behind `HUB_UPLOADS_ENABLED`: part PUTs forward every signed header except `Content-Length`, up to eight parts transfer concurrently with 32-part signing calls, initiation sends an idempotency key, session status follows part-listing pages, completion is verified inline with a 120-second upstream timeout and safe retries, and deletion previews, deletion requests, and ownership transfers now read `resource_mfid` instead of the deprecated `resource_id`.
 
-- Switched the `orcid-staging` development scenario to the `http://localhost:3000/hub/auth/callback` callback that the staging API now accepts instead of the personal tailnet URL; reach a remote workstation through `ssh -L 3000:127.0.0.1:3000` and browse `http://localhost:3000/hub/`.
+- Switched the `orcid-staging` development scenario to the `http://localhost:3000/hub/auth/callback` callback that the staging API now accepts instead of the personal tailnet URL; reach a remote workstation through `ssh -L 3000:127.0.0.1:3000` and browse `http://localhost:3000/hub/`. A personal Tailscale callback can be set as `HUB_AUTH_CALLBACK_URI` in the scenario's gitignored `.env.orcid-*.local` file.
 
 - Allowed `HUB_AUTH_CALLBACK_URI` to use plain HTTP on any loopback host (`127.0.0.1`, `localhost`, `[::1]`) during development, so ORCID sign-in works through a forwarded `http://localhost:3000` port; production still requires an HTTPS callback.
 
