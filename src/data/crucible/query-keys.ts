@@ -57,6 +57,8 @@ export const crucibleKeys = {
       "cursor-chain",
       normalizeFilters(filters),
     ] as const,
+  userProjects: (scope: IdentityScope, userRef: string, filters: ListFilters) =>
+    [...scope, "projects", "user", userRef, normalizeFilters(filters)] as const,
   projectLists: (scope: IdentityScope) =>
     [...scope, "projects", "list"] as const,
   project: (scope: IdentityScope, projectMfid: string) =>

@@ -3102,6 +3102,9 @@ export interface paths {
          *     contributor or admin, the same rule as accessible_to_user on GET /projects.
          *     Membership only: unlike GET /projects?accessible_to_user=, projects reached
          *     only through explicit resource grants are not included.
+         *     Pass role to restrict to the listed roles.
+         *     Pass sort=project_id|title|created|updated with direction=asc|desc to change the order.
+         *     Pass include_total=false to omit the exact count.
          */
         get: operations["read_projects_for_user_users__user_ref__projects_get"];
         put?: never;
@@ -12960,7 +12963,18 @@ export interface operations {
     read_projects_for_user_users__user_ref__projects_get: {
         parameters: {
             query?: {
+                /** @description Restrict to projects where the user holds one of these roles. Repeated values use OR semantics. */
+                role?: components["schemas"]["AccessPermission"][] | null;
+                include_metadata?: boolean;
+                /** @description Exact total. Computed unless include_total=false. */
+                include_total?: boolean | null;
+                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order. */
+                sort?: components["schemas"]["ProjectSort"] | null;
+                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
+                direction?: components["schemas"]["SortDirection"] | null;
                 limit?: number;
+                /** @description Opaque continuation cursor returned by a previous page. */
+                cursor?: string | null;
                 offset?: number;
             };
             header?: {

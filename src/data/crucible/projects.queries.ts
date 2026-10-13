@@ -3,7 +3,11 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import type { CollectionAffiliation } from "./collection-query"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys, privilegeModeFromScope } from "./query-keys"
-import { getWorkspaceProject, getWorkspaceProjects } from "./projects.functions"
+import {
+  getWorkspaceProject,
+  getWorkspaceProjects,
+  getWorkspaceUserProjects,
+} from "./projects.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { collectionScopedPreviousData } from "./pagination"
 import { unwrapHubResult } from "./result"
@@ -15,6 +19,32 @@ import type {
 } from "./workspace-source"
 
 export const projectPageLimit = 100
+
+export function userProjectsQueryOptions(
+  scope: IdentityScope,
+  userRef: string,
+  filters: {
+    direction?: WorkspaceSortDirection
+    limit: number
+    sort?: WorkspaceProjectSort
+  }
+) {
+  return queryOptions({
+    queryKey: crucibleKeys.userProjects(scope, userRef, filters),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceUserProjects({
+          data: {
+            ...filters,
+            privilegeMode: privilegeModeFromScope(scope),
+            scenario: fixtureScenarioFromScope(scope),
+            userRef,
+          },
+          signal,
+        })
+      ),
+  })
+}
 
 export function projectsQueryOptions(
   scope: IdentityScope,

@@ -70,7 +70,7 @@ import {
   updateWorkspaceUser,
   updateWorkspaceUserPlatformRoleFn,
 } from "@/data/crucible/users.functions"
-import { projectsQueryOptions } from "@/data/crucible/projects.queries"
+import { userProjectsQueryOptions } from "@/data/crucible/projects.queries"
 import type {
   WorkspaceAdminUser,
   WorkspaceUserPlatformRole,
@@ -797,10 +797,9 @@ function UserProjectsSection({
   const apiSort = sortColumn === "name" ? "title" : sortColumn
 
   const projectsQuery = useQuery(
-    projectsQueryOptions(scope, {
+    userProjectsQueryOptions(scope, user.unique_id, {
       direction: sortDirection,
       limit: 100,
-      memberRef: user.unique_id,
       sort: apiSort,
     })
   )

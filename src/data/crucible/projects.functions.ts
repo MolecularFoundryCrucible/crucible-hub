@@ -15,6 +15,7 @@ import {
   patchWorkspaceProject,
   readWorkspaceProject,
   readWorkspaceProjects,
+  readWorkspaceUserProjects,
   removeWorkspaceProjectMember as removeWorkspaceProjectMemberServer,
   updateWorkspaceProjectMemberRole as updateWorkspaceProjectMemberRoleServer,
 } from "./projects.server"
@@ -57,6 +58,24 @@ export const projectListInputSchema = z.object({
   scenario: fixtureScenarioSchema.optional(),
   sort: projectSortSchema.optional(),
 })
+
+export const userProjectListInputSchema = z
+  .object({
+    cursor: collectionCursorSchema,
+    direction: sortDirectionSchema.optional(),
+    includeTotal: z.boolean().optional(),
+    limit: z.number().int().min(1).max(100),
+    privilegeMode: privilegeModeSchema.optional(),
+    scenario: fixtureScenarioSchema.optional(),
+    sort: projectSortSchema.optional(),
+    userRef: z
+      .string()
+      .trim()
+      .min(1)
+      .max(255)
+      .regex(/^[a-zA-Z0-9_-]+$/),
+  })
+  .strict()
 
 export const projectDetailInputSchema = z.object({
   privilegeMode: privilegeModeSchema,
@@ -141,6 +160,16 @@ export const getWorkspaceProjects = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceProjects(data, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceUserProjects = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(userProjectListInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceUserProjects(data, context.requestSignal)
     )
   })
 

@@ -210,6 +210,73 @@ export async function readWorkspaceProjects(
   }
 }
 
+export async function readWorkspaceUserProjects(
+  {
+    cursor,
+    direction,
+    includeTotal,
+    limit,
+    privilegeMode,
+    scenario,
+    sort,
+    userRef,
+  }: {
+    cursor?: string
+    direction?: WorkspaceSortDirection
+    includeTotal?: boolean
+    limit: number
+    privilegeMode?: WorkspacePrivilegeMode
+    scenario?: FixtureScenario
+    sort?: WorkspaceProjectSort
+    userRef: string
+  },
+  requestSignal?: AbortSignal
+): Promise<WorkspaceProjectPage> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    return readWorkspaceProjects(
+      {
+        cursor,
+        direction,
+        includeTotal,
+        limit,
+        memberRef: userRef,
+        privilegeMode,
+        scenario,
+        sort,
+      },
+      requestSignal
+    )
+  }
+
+  const result = await createCrucibleClient(configuration, {
+    privilegeMode,
+  }).GET("/users/{user_ref}/projects", {
+    params: {
+      path: { user_ref: userRef },
+      query: {
+        cursor,
+        direction: sort ? direction : undefined,
+        include_total: includeTotal ?? true,
+        limit,
+        sort: sort ?? undefined,
+      },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response)
+
+  return {
+    items: result.data.items.map(toWorkspaceProject),
+    limit: result.data.limit,
+    nextCursor: result.data.next_cursor ?? null,
+    total: result.data.total ?? null,
+  }
+}
+
 export async function readWorkspaceProject(
   projectMfid: string,
   scenario?: FixtureScenario,

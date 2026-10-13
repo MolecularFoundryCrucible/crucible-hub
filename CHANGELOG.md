@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Pinned the Crucible API contract to staging revision `d9ff79c` (pull request 309) and fixed the administrator person view listing projects with the administrator's own role: it now reads `GET /users/{user_ref}/projects`, which returns that user's role, with server sorting.
+
 - Removed duplicated UI: the three in-flight Refresh buttons share a `RefreshButton` that reports `aria-busy` instead of a toggle state; seven form error blocks share `SaveError`/`FormErrorRegion` with a single alert region so errors are no longer announced twice; the relationships Manage control uses the shared `ManagementToggle` (renamed from `AccessManagementToggle`), which now keeps a constant accessible name with `aria-pressed` and shows its selected state; conflict toasts that duplicated inline field errors are gone; the access-mode toasts use the shared notification helpers; a shared `hubOperationError` replaces four copies; search results announce only their count; and sortable headers rely on `aria-sort` alone.
 
 - Made confirmations consistent: Discard unsaved changes, Replace scientific metadata, Request deletion, and Delete permanently now use the shared confirmation dialog (destructive ones as alert dialogs); every confirmation that shows progress names its pending action, enforced by the dialog type; confirm buttons use verb-object labels such as Transfer ownership, Assign project, Decommission instrument, and Publish resource; and the permanent-deletion button says Checking impact while the preview loads instead of Deleting.

@@ -8,6 +8,7 @@ import {
   patchWorkspaceProject,
   readWorkspaceProject,
   readWorkspaceProjects,
+  readWorkspaceUserProjects,
   removeWorkspaceProjectMember,
   updateWorkspaceProjectMemberRole,
 } from "./projects.server"
@@ -99,6 +100,60 @@ describe("workspace project source", () => {
         context: { technique: "XAS", values: [1, true, null] },
       },
     })
+  })
+
+  it("lists a user's projects with that user's role from the user route", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const fetchMock = vi.fn(async (request: Request) => {
+      const url = new URL(request.url)
+      expect(url.pathname).toBe("/users/user-mfid/projects")
+      expect(url.searchParams.get("sort")).toBe("created")
+      expect(url.searchParams.get("direction")).toBe("desc")
+      expect(url.searchParams.get("limit")).toBe("100")
+      expect(url.searchParams.has("member_ref")).toBe(false)
+      return crucibleApiResponse(
+        {
+          items: [
+            {
+              lead: {
+                first_name: "Ada",
+                last_name: "Lovelace",
+                unique_id: "lead-mfid",
+                username: "ada",
+              },
+              organization: "Example Lab",
+              project_id: "project",
+              role: "viewer",
+              title: "Project",
+              unique_id: "project-mfid",
+            },
+          ],
+          limit: 100,
+          next_cursor: null,
+          offset: 0,
+          total: 1,
+        },
+        {},
+        "elevated"
+      )
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const page = await readWorkspaceUserProjects({
+      direction: "desc",
+      limit: 100,
+      privilegeMode: "elevated",
+      sort: "created",
+      userRef: "user-mfid",
+    })
+    expect(page.items[0]).toMatchObject({
+      role: "viewer",
+      unique_id: "project-mfid",
+    })
+    expect(page.total).toBe(1)
   })
 
   it("normalizes fixture project updates without exposing lifecycle fields", async () => {

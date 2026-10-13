@@ -26834,7 +26834,7 @@
     },
     "/users/{user_ref}/projects": {
       "get": {
-        "description": "Returns a paginated list of the projects the user is a member of, each with\nthe user's standing role in that project's access group.\nAvailable to the user themselves and to callers with platform_role\ncontributor or admin, the same rule as accessible_to_user on GET /projects.\nMembership only: unlike GET /projects?accessible_to_user=, projects reached\nonly through explicit resource grants are not included.",
+        "description": "Returns a paginated list of the projects the user is a member of, each with\nthe user's standing role in that project's access group.\nAvailable to the user themselves and to callers with platform_role\ncontributor or admin, the same rule as accessible_to_user on GET /projects.\nMembership only: unlike GET /projects?accessible_to_user=, projects reached\nonly through explicit resource grants are not included.\nPass role to restrict to the listed roles.\nPass sort=project_id|title|created|updated with direction=asc|desc to change the order.\nPass include_total=false to omit the exact count.",
         "operationId": "read_projects_for_user_users__user_ref__projects_get",
         "parameters": [
           {
@@ -26849,6 +26849,93 @@
             }
           },
           {
+            "description": "Restrict to projects where the user holds one of these roles. Repeated values use OR semantics.",
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/AccessPermission"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to projects where the user holds one of these roles. Repeated values use OR semantics.",
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_metadata",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Metadata",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Exact total. Computed unless include_total=false.",
+            "in": "query",
+            "name": "include_total",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact total. Computed unless include_total=false.",
+              "title": "Include Total"
+            }
+          },
+          {
+            "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProjectSort"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order.",
+              "title": "Sort"
+            }
+          },
+          {
+            "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SortDirection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+              "title": "Direction"
+            }
+          },
+          {
             "in": "query",
             "name": "limit",
             "required": false,
@@ -26858,6 +26945,26 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque continuation cursor returned by a previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor returned by a previous page.",
+              "title": "Cursor"
             }
           },
           {

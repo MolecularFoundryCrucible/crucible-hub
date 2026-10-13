@@ -92,8 +92,9 @@ const mockProjects: WorkspaceUserProject[] = [
 ]
 
 vi.mock("@/data/crucible/projects.queries", () => ({
-  projectsQueryOptions: (
+  userProjectsQueryOptions: (
     _scope: unknown,
+    _userRef: string,
     filters: { direction?: "asc" | "desc"; sort?: string }
   ) => ({
     queryFn: () => {
@@ -154,10 +155,7 @@ function renderUserDetail() {
     },
   })
   queryClient.setQueryData(
-    [
-      "projects",
-      { direction: "asc", limit: 100, memberRef: "test-user", sort: "title" },
-    ],
+    ["projects", { direction: "asc", limit: 100, sort: "title" }],
     {
       items: mockProjects,
       limit: 100,
