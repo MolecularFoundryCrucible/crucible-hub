@@ -97,6 +97,7 @@ export function ResourceCollectionTable({
             className="hidden xl:table-cell"
             direction={direction}
             field="created"
+            kind="date"
             label="Created"
             onChange={onSort}
           />
@@ -104,10 +105,11 @@ export function ResourceCollectionTable({
             active={sort === "updated"}
             direction={direction}
             field="updated"
+            kind="date"
             label="Updated"
             onChange={onSort}
           />
-          <TableHead className="text-center">
+          <TableHead kind="action">
             <span className="sr-only">Open</span>
           </TableHead>
         </TableRow>

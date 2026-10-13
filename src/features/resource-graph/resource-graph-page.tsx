@@ -654,7 +654,7 @@ function ResourceGraphTable({
                 <TableRow>
                   <TableHead>Relationship</TableHead>
                   <TableHead>Resource</TableHead>
-                  <TableHead>
+                  <TableHead kind="action">
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
@@ -706,7 +706,10 @@ function ResourceGraphTable({
                           />
                         </span>
                       </TableCell>
-                      <TableCell className="resource-graph-action">
+                      <TableCell
+                        className="resource-graph-action"
+                        kind="action"
+                      >
                         <span className="flex justify-end gap-1">
                           <GraphExpansionAction
                             availableModes={expansionModesByNode.get(

@@ -138,8 +138,8 @@ function FilesTablePending() {
           <TableRow>
             <TableHead>Filename</TableHead>
             <TableHead>Storage</TableHead>
-            <TableHead className="text-right">Size</TableHead>
-            <TableHead>
+            <TableHead kind="numeric">Size</TableHead>
+            <TableHead kind="action">
               <span className="sr-only">File action</span>
             </TableHead>
           </TableRow>
@@ -153,10 +153,10 @@ function FilesTablePending() {
               <TableCell>
                 <Skeleton className="h-4 w-16" />
               </TableCell>
-              <TableCell>
+              <TableCell kind="numeric">
                 <Skeleton className="ml-auto h-4 w-12" />
               </TableCell>
-              <TableCell>
+              <TableCell kind="action">
                 <Skeleton className="ml-auto size-8" />
               </TableCell>
             </TableRow>
@@ -237,13 +237,13 @@ export function FilesTable({
             />
             <SortableTableHead
               active={sort.field === "size"}
-              className="text-right"
               direction={sort.direction}
               field="size"
+              kind="numeric"
               label="Size"
               onChange={onSortChange}
             />
-            <TableHead className="text-right">
+            <TableHead kind="action">
               <span className="sr-only">File action</span>
             </TableHead>
           </TableRow>
@@ -260,10 +260,8 @@ export function FilesTable({
                 />
               </TableCell>
               <TableCell>{file.storage_backend}</TableCell>
-              <TableCell className="text-right tabular-nums">
-                {formatBytes(file.size)}
-              </TableCell>
-              <TableCell className="text-right">
+              <TableCell kind="numeric">{formatBytes(file.size)}</TableCell>
+              <TableCell kind="action">
                 <FileDownloadAction
                   file={file}
                   identity={identity}

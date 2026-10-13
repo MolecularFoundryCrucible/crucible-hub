@@ -1,4 +1,5 @@
 import { TableHead } from "@/components/ui/table"
+import type { TableColumnKind } from "@/components/ui/table"
 import type { SortDirection } from "@/data/crucible/collection-query"
 import { SortableHeaderButton, sortAria } from "./sortable-header-button"
 
@@ -7,12 +8,14 @@ export function SortableTableHead<TField extends string>({
   className,
   direction,
   field,
+  kind,
   label,
   onChange,
   preferredDirection,
 }: {
   active: boolean
   className?: string
+  kind?: TableColumnKind
   direction: SortDirection
   field: TField
   label: string
@@ -23,6 +26,7 @@ export function SortableTableHead<TField extends string>({
     <TableHead
       aria-sort={active ? sortAria(direction) : "none"}
       className={className}
+      kind={kind}
     >
       <SortableHeaderButton
         active={active}

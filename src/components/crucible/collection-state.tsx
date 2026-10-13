@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { TableColumnKind } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
 const rowPlaceholders = ["first", "second", "third", "fourth"] as const
@@ -44,6 +45,7 @@ type CollectionTablePendingPresentation =
 type PendingColumn = {
   className?: string
   columnClassName?: string
+  kind?: TableColumnKind
   label: string
   name?: boolean
 }
@@ -73,16 +75,19 @@ const pendingColumns: Record<
       className: "resource-directory-date hidden xl:table-cell",
       columnClassName: "resource-directory-date-column hidden xl:table-column",
       label: "Created",
+      kind: "date",
     },
     {
       className: "resource-directory-date",
       columnClassName: "resource-directory-date-column",
       label: "Updated",
+      kind: "date",
     },
     {
       className: "resource-directory-action",
       columnClassName: "resource-directory-action-column",
       label: "Open",
+      kind: "action",
     },
   ],
   projects: [
@@ -106,16 +111,19 @@ const pendingColumns: Record<
       className: "resource-directory-date hidden xl:table-cell",
       columnClassName: "resource-directory-date-column hidden xl:table-column",
       label: "Created",
+      kind: "date",
     },
     {
       className: "resource-directory-date",
       columnClassName: "resource-directory-date-column",
       label: "Updated",
+      kind: "date",
     },
     {
       className: "resource-directory-action",
       columnClassName: "resource-directory-action-column",
       label: "Open",
+      kind: "action",
     },
   ],
   resources: [
@@ -149,17 +157,20 @@ const pendingColumns: Record<
       columnClassName:
         "hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action",
       label: "Created",
+      kind: "date",
     },
     {
       className: "resource-collection-date",
       columnClassName:
         "w-data-date-column-with-action xl:w-data-date-column-wide-with-action",
       label: "Updated",
+      kind: "date",
     },
     {
       className: "resource-collection-action",
       columnClassName: "w-data-action-column",
       label: "Open",
+      kind: "action",
     },
   ],
   "resources-scoped": [
@@ -187,17 +198,20 @@ const pendingColumns: Record<
       columnClassName:
         "hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action",
       label: "Created",
+      kind: "date",
     },
     {
       className: "resource-collection-date",
       columnClassName:
         "w-data-date-column-with-action xl:w-data-date-column-wide-with-action",
       label: "Updated",
+      kind: "date",
     },
     {
       className: "resource-collection-action",
       columnClassName: "w-data-action-column",
       label: "Open",
+      kind: "action",
     },
   ],
   "service-accounts": [
@@ -245,10 +259,10 @@ export function CollectionTablePending({
                 <TableHead
                   className={cn(
                     column.className?.includes("hidden") &&
-                      "hidden xl:table-cell",
-                    column.label === "Open" && "text-center"
+                      "hidden xl:table-cell"
                   )}
                   key={column.label}
+                  kind={column.kind}
                 >
                   {column.label === "Open" ? (
                     <span className="sr-only">Open</span>
@@ -267,6 +281,7 @@ export function CollectionTablePending({
                     className={column.className}
                     data-label={column.label}
                     key={column.label}
+                    kind={column.kind}
                   >
                     {column.name ? (
                       <div className="flex min-w-0 items-start gap-2">
@@ -277,7 +292,7 @@ export function CollectionTablePending({
                         </div>
                       </div>
                     ) : column.label === "Open" ? (
-                      <Skeleton className="mx-auto size-7" />
+                      <Skeleton className="ml-auto size-7" />
                     ) : (
                       <Skeleton className="h-4 w-3/4" />
                     )}

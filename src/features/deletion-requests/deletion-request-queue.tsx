@@ -267,7 +267,7 @@ function DeletionRequestPending({
           {pendingRows.map((row) => (
             <TableRow key={row}>
               {bulkReview ? (
-                <TableCell className="deletion-request-select text-center">
+                <TableCell kind="select" className="deletion-request-select">
                   <Skeleton className="mx-auto size-4 rounded-sm" />
                 </TableCell>
               ) : null}
@@ -295,6 +295,7 @@ function DeletionRequestPending({
                 <Skeleton className="h-4 w-3/4" />
               </TableCell>
               <TableCell
+                kind="date"
                 className="deletion-request-date"
                 data-label="Requested"
               >
@@ -308,7 +309,7 @@ function DeletionRequestPending({
                   <Skeleton className="h-6 w-16 rounded-full" />
                 </TableCell>
               ) : null}
-              <TableCell className="deletion-request-action text-center">
+              <TableCell kind="action" className="deletion-request-action">
                 <Skeleton className="mx-auto h-7 w-16 rounded-lg" />
               </TableCell>
             </TableRow>
@@ -381,7 +382,7 @@ function DeletionRequestTableHeader({
     <TableHeader>
       <TableRow>
         {bulkReview ? (
-          <TableHead className="text-center">
+          <TableHead kind="select">
             <Checkbox
               aria-label="Select all loaded reviewable requests"
               className="mx-auto"
@@ -449,7 +450,7 @@ function DeletionRequestTableHeader({
               preferredDirection="desc"
             />
           ) : (
-            <TableHead>Requested</TableHead>
+            <TableHead kind="date">Requested</TableHead>
           )
         ) : null}
         {!bulkReviewActions && showStatus ? (
@@ -467,7 +468,7 @@ function DeletionRequestTableHeader({
           )
         ) : null}
         {!bulkReviewActions ? (
-          <TableHead className="text-center">
+          <TableHead kind="action">
             <span className="sr-only">Actions</span>
           </TableHead>
         ) : null}
@@ -857,7 +858,7 @@ function DeletionRequestTable({
                 key={request.id}
               >
                 {bulkReview ? (
-                  <TableCell className="deletion-request-select text-center">
+                  <TableCell kind="select" className="deletion-request-select">
                     <Checkbox
                       aria-label={`Select deletion request for ${request.resource_name?.trim() || "untitled resource"}`}
                       checked={selectedRequestIds.has(request.id)}
@@ -907,6 +908,7 @@ function DeletionRequestTable({
                   )}
                 </TableCell>
                 <TableCell
+                  kind="date"
                   className="deletion-request-date"
                   data-label="Requested"
                 >
@@ -920,7 +922,7 @@ function DeletionRequestTable({
                     <DeletionRequestStatusBadge status={request.status} />
                   </TableCell>
                 ) : null}
-                <TableCell className="deletion-request-action text-center">
+                <TableCell kind="action" className="deletion-request-action">
                   <Button
                     onClick={() => onOpen(request)}
                     size="sm"

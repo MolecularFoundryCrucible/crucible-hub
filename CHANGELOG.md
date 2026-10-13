@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Made table column alignment consistent and rule-based: text, status, and dates align to the start, sizes and other quantities to the end with tabular numerals, row actions sit at the end of the row (previously centered in several directories and queues), and only selection checkboxes are centered. Tables declare this through a `kind` prop on the shared table cells, documented in the design system and enforced by the design-token check.
+
 - Gave file names more room in the dataset Processing files table: the file MFID now sits under the name instead of in its own column, storage and size have their own columns on wide screens, and column widths use semantic tokens so status, ingestor, and update times keep comfortable space.
 
 - Fixed the Create service account workflow: the username field now applies the API rule up front (3 to 24 characters, lowercase letters, numbers, hyphens, and underscores, starting with a letter) with clear messages instead of a generic error after submitting, checks availability as you type, and blocks Create for a taken name; renaming a service account applies the same rule. When credentials need a recent sign-in, Sign in with ORCID now opens in a pop-up and returns to a new Signed in again page, so the dialog and what you typed are kept; a blocked pop-up falls back to the previous full-page sign-in.

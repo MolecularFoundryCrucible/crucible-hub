@@ -379,7 +379,7 @@ function UserCollection({
                     preferredDirection="asc"
                   />
                   <TableHead>Platform role</TableHead>
-                  <TableHead className="text-center">
+                  <TableHead kind="action">
                     <span className="sr-only">Open</span>
                   </TableHead>
                 </TableRow>
@@ -436,7 +436,10 @@ function UserCollection({
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="identity-directory-action text-center">
+                      <TableCell
+                        kind="action"
+                        className="identity-directory-action"
+                      >
                         <Link
                           aria-label={`Open user ${formatUsername(user.username, "raw")}`}
                           className={buttonVariants({

@@ -84,6 +84,10 @@ const primitivePatterns = patterns.filter(({ label }) =>
 const buttonStyleUtility =
   /^(?:bg|border(?:-[trblxy])?|font|gap(?:-[xy])?|h|max-h|min-h|p[trblxy]?|ring|rounded|shadow|size|tracking|whitespace)(?:-|$)/
 
+const tableCellTags = new Set(["TableHead", "TableCell", "SortableTableHead"])
+const tableAlignmentUtility =
+  /^(?:[a-z0-9-]+:)*(?:text-(?:left|right|center|start|end)|tabular-nums)$/
+
 function classNames(node) {
   const values = []
   function visit(current) {
@@ -129,6 +133,21 @@ function scanButtonUsage(path, localPath, content) {
       const tag = node.tagName.getText(source)
       if (tag === "button")
         violations.push(`${localPath}: raw button outside shared UI primitives`)
+      if (tableCellTags.has(tag)) {
+        const className = node.attributes.properties.find(
+          (property) =>
+            ts.isJsxAttribute(property) && property.name.text === "className"
+        )
+        const alignment = className?.initializer
+          ? classNames(className.initializer).find((name) =>
+              tableAlignmentUtility.test(name)
+            )
+          : undefined
+        if (alignment)
+          violations.push(
+            `${localPath}: ${tag} className sets ${alignment}; use the kind prop`
+          )
+      }
       if (tag === "Button") {
         const className = node.attributes.properties.find(
           (property) =>

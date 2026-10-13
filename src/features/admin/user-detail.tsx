@@ -799,6 +799,7 @@ function UserProjectsSection({
                   className="hidden xl:table-cell"
                   direction={sortDirection}
                   field="created"
+                  kind="date"
                   label="Created"
                   onChange={handleSortChange}
                   preferredDirection="desc"
@@ -807,11 +808,12 @@ function UserProjectsSection({
                   active={sortColumn === "updated"}
                   direction={sortDirection}
                   field="updated"
+                  kind="date"
                   label="Updated"
                   onChange={handleSortChange}
                   preferredDirection="desc"
                 />
-                <TableHead className="text-center">
+                <TableHead kind="action">
                   <span className="sr-only">Open</span>
                 </TableHead>
               </TableRow>

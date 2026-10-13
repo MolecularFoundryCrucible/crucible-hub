@@ -385,6 +385,7 @@ function InstrumentCollection({
                     className="hidden xl:table-cell"
                     direction={direction}
                     field="created"
+                    kind="date"
                     label="Created"
                     onChange={onSortChange}
                     preferredDirection="desc"
@@ -393,11 +394,12 @@ function InstrumentCollection({
                     active={sort === "updated"}
                     direction={direction}
                     field="updated"
+                    kind="date"
                     label="Updated"
                     onChange={onSortChange}
                     preferredDirection="desc"
                   />
-                  <TableHead className="text-center">
+                  <TableHead kind="action">
                     <span className="sr-only">Open</span>
                   </TableHead>
                 </TableRow>

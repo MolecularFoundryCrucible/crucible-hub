@@ -135,8 +135,8 @@ function DeletionAuditHeader() {
         <TableHead>Resource</TableHead>
         <TableHead>Project</TableHead>
         <TableHead>Requested by</TableHead>
-        <TableHead>Deleted</TableHead>
-        <TableHead>
+        <TableHead kind="date">Deleted</TableHead>
+        <TableHead kind="action">
           <span className="sr-only">Actions</span>
         </TableHead>
       </TableRow>
@@ -172,10 +172,10 @@ function DeletionAuditPending() {
               <TableCell className="deletion-request-requester">
                 <Skeleton className="h-4 w-3/4" />
               </TableCell>
-              <TableCell className="deletion-request-date">
+              <TableCell kind="date" className="deletion-request-date">
                 <Skeleton className="h-4 w-4/5" />
               </TableCell>
-              <TableCell className="deletion-request-action text-center">
+              <TableCell kind="action" className="deletion-request-action">
                 <Skeleton className="mx-auto h-7 w-16 rounded-lg" />
               </TableCell>
             </TableRow>
@@ -229,10 +229,14 @@ function DeletionAuditTable({
                 person={audit.requester}
               />
             </TableCell>
-            <TableCell className="deletion-request-date" data-label="Deleted">
+            <TableCell
+              kind="date"
+              className="deletion-request-date"
+              data-label="Deleted"
+            >
               <LocalDateTime value={audit.deleted_at} />
             </TableCell>
-            <TableCell className="deletion-request-action text-center">
+            <TableCell kind="action" className="deletion-request-action">
               <Button onClick={() => onOpen(audit)} size="sm" variant="outline">
                 View
               </Button>

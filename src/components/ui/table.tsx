@@ -63,12 +63,29 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   )
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+const tableColumnKinds = {
+  text: "text-left",
+  numeric: "text-right tabular-nums",
+  date: "text-left tabular-nums",
+  action: "text-right",
+  select: "text-center",
+} as const
+
+type TableColumnKind = keyof typeof tableColumnKinds
+
+type TableColumnProps = { kind?: TableColumnKind }
+
+function TableHead({
+  className,
+  kind = "text",
+  ...props
+}: React.ComponentProps<"th"> & TableColumnProps) {
   return (
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle text-label whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        "h-10 px-2 align-middle text-label whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        tableColumnKinds[kind],
         className
       )}
       {...props}
@@ -76,12 +93,17 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   )
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+function TableCell({
+  className,
+  kind = "text",
+  ...props
+}: React.ComponentProps<"td"> & TableColumnProps) {
   return (
     <td
       data-slot="table-cell"
       className={cn(
         "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        tableColumnKinds[kind],
         className
       )}
       {...props}
@@ -102,6 +124,7 @@ function TableCaption({
   )
 }
 
+export type { TableColumnKind }
 export {
   Table,
   TableHeader,

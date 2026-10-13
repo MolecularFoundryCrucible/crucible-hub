@@ -59,6 +59,7 @@ function ResourceDateCell({
 }) {
   return (
     <TableCell
+      kind="date"
       className={cn(
         "resource-collection-date resource-directory-date",
         className
@@ -82,7 +83,10 @@ export function ResourceOpenCell({
   name: string
 }) {
   return (
-    <TableCell className="resource-collection-action resource-directory-action text-center">
+    <TableCell
+      kind="action"
+      className="resource-collection-action resource-directory-action"
+    >
       <ResourceFullPageLink
         fromProject={fromProject}
         kind={kind}

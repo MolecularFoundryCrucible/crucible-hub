@@ -59,6 +59,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { TableColumnKind } from "@/components/ui/table"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import { requestWorkspaceIngestion } from "@/data/crucible/resources.functions"
@@ -176,7 +177,15 @@ function FilesAndIngestionCard({
           </h3>
           {filesResult.isPending || requestsResult.isPending ? (
             <ProcessingTablePending
-              alignEnd={[2, 5, 6]}
+              kinds={[
+                "text",
+                "text",
+                "numeric",
+                "text",
+                "text",
+                "date",
+                "action",
+              ]}
               className="min-w-processing-files-table table-fixed xl:min-w-processing-files-table-wide"
               wideOnly={[1, 2]}
               colgroup={<ProcessingFilesColumns />}
@@ -323,17 +332,17 @@ function ProcessingFilesColumns() {
 }
 
 function ProcessingTablePending({
-  alignEnd = [],
   className,
   colgroup,
   columns,
+  kinds = [],
   label,
   wideOnly = [],
 }: {
-  alignEnd?: readonly number[]
   className?: string
   colgroup?: ReactNode
   columns: readonly string[]
+  kinds?: readonly TableColumnKind[]
   label: string
   wideOnly?: readonly number[]
 }) {
@@ -346,9 +355,9 @@ function ProcessingTablePending({
             {columns.map((column, index) => (
               <TableHead
                 className={cn(
-                  alignEnd.includes(index) && "text-right",
                   wideOnly.includes(index) && "hidden xl:table-cell"
                 )}
+                kind={kinds[index]}
                 key={`${column}-${index}`}
               >
                 {column || <span className="sr-only">File action</span>}
@@ -367,10 +376,12 @@ function ProcessingTablePending({
                       : undefined
                   }
                   key={`${column}-${columnIndex}`}
+                  kind={kinds[columnIndex]}
                 >
                   <Skeleton
                     className={
-                      alignEnd.includes(columnIndex)
+                      kinds[columnIndex] === "numeric" ||
+                      kinds[columnIndex] === "action"
                         ? "ml-auto h-4 w-20"
                         : "h-4 w-24 max-w-full"
                     }
@@ -409,13 +420,13 @@ function ProcessingFilesTable({
         <TableRow>
           <TableHead>File</TableHead>
           <TableHead className="hidden xl:table-cell">Storage</TableHead>
-          <TableHead className="hidden pr-4 text-right xl:table-cell">
+          <TableHead kind="numeric" className="hidden pr-4 xl:table-cell">
             Size
           </TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Ingestor</TableHead>
-          <TableHead className="text-right">Updated</TableHead>
-          <TableHead className="text-right">
+          <TableHead kind="date">Updated</TableHead>
+          <TableHead kind="action">
             <span className="sr-only">File action</span>
           </TableHead>
         </TableRow>
@@ -437,7 +448,7 @@ function ProcessingFilesTable({
               <TableCell className="hidden truncate xl:table-cell">
                 {file.storage_backend}
               </TableCell>
-              <TableCell className="hidden pr-4 text-right tabular-nums xl:table-cell">
+              <TableCell kind="numeric" className="hidden pr-4 xl:table-cell">
                 {formatBytes(file.size)}
               </TableCell>
               <TableCell>
@@ -451,13 +462,13 @@ function ProcessingFilesTable({
               <TableCell className="truncate">
                 {request?.ingestionClass ?? "Auto-detect"}
               </TableCell>
-              <TableCell className="text-right tabular-nums">
+              <TableCell kind="date">
                 <LocalDateTime
                   fallback="-"
                   value={request?.timeCompleted ?? request?.timeCreated}
                 />
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell kind="action">
                 <FileDownloadAction
                   file={file}
                   identity={identity}
@@ -493,8 +504,8 @@ function IngestionRequestHistory({
             <TableHead>File MFID</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Ingestor</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Completed</TableHead>
+            <TableHead kind="date">Created</TableHead>
+            <TableHead kind="date">Completed</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -502,9 +513,7 @@ function IngestionRequestHistory({
             <TableRow
               key={request.id ?? `${request.fileMfid ?? "request"}-${index}`}
             >
-              <TableCell className="tabular-nums">
-                {request.id ?? "-"}
-              </TableCell>
+              <TableCell>{request.id ?? "-"}</TableCell>
               <TableCell>
                 {request.fileMfid ? <MfidText value={request.fileMfid} /> : "-"}
               </TableCell>
@@ -519,10 +528,10 @@ function IngestionRequestHistory({
                   </span>
                 ) : null}
               </TableCell>
-              <TableCell>
+              <TableCell kind="date">
                 <LocalDateTime fallback="-" value={request.timeCreated} />
               </TableCell>
-              <TableCell>
+              <TableCell kind="date">
                 <LocalDateTime fallback="-" value={request.timeCompleted} />
               </TableCell>
             </TableRow>

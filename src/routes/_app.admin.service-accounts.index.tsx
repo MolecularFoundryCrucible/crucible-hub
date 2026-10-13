@@ -406,7 +406,7 @@ function ServiceAccountCollection({
                     onChange={onSortChange}
                     preferredDirection="asc"
                   />
-                  <TableHead className="text-center">
+                  <TableHead kind="action">
                     <span className="sr-only">Open</span>
                   </TableHead>
                 </TableRow>
@@ -449,7 +449,10 @@ function ServiceAccountCollection({
                     >
                       <PlatformRoleBadge role={serviceAccount.platform_role} />
                     </TableCell>
-                    <TableCell className="identity-directory-action text-center">
+                    <TableCell
+                      kind="action"
+                      className="identity-directory-action"
+                    >
                       <Link
                         aria-label={`Open service account ${formatUsername(serviceAccount.username, "raw")}`}
                         className={buttonVariants({
