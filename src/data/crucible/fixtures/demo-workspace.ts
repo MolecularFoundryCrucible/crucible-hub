@@ -341,6 +341,7 @@ export const demoWorkspace = {
     {
       mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2ZC",
       dataset_id: 101,
+      etag: '"bc047a74a3dd847754cc5f3cd04ae2cc"',
       dataset_mfid: spectroscopyDatasetSummary.unique_id,
       filename: "operando-cycle-04.h5",
       storage_backend: "gcs",
@@ -353,6 +354,7 @@ export const demoWorkspace = {
     {
       mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2ZD",
       dataset_id: 101,
+      etag: '"5e0b32e8a7dae59d122dbc14bc3800a0"',
       dataset_mfid: spectroscopyDatasetSummary.unique_id,
       filename: "run-notes.txt",
       storage_backend: "local",
@@ -365,6 +367,7 @@ export const demoWorkspace = {
     {
       mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2ZE",
       dataset_id: 103,
+      etag: '"e7f0df3eff9ee56f6c5e690473d7ac5b"',
       dataset_mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z9",
       filename: "activated-catalyst-map.ome.tiff",
       storage_backend: "gcs",

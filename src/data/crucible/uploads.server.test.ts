@@ -179,6 +179,177 @@ describe("dataset upload transport", () => {
     })
   })
 
+  it("replaces a file through its own initiate route with If-Match", async () => {
+    stubApiMode()
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({
+          parts: [],
+          state: "uploading",
+          upload_id: "upload-2",
+        })
+      })
+    )
+
+    await expect(
+      initializeWorkspaceUploadSession({
+        datasetMfid,
+        filename: "runs/data.csv",
+        idempotencyKey: "4b1d5c6e-2f3a-4b5c-8d9e-0f1a2b3c4d5e",
+        replace: { etag: '"abc"', fileMfid: "file-1" },
+        size: 256,
+      })
+    ).resolves.toEqual({ state: "uploading", uploadId: "upload-2" })
+    expect(new URL(requests[0].url).pathname).toBe(
+      "/files/file-1/upload/multipart/initiate"
+    )
+    expect(requests[0].headers.get("if-match")).toBe('"abc"')
+    expect(requests[0].headers.get("idempotency-key")).toBe(
+      "4b1d5c6e-2f3a-4b5c-8d9e-0f1a2b3c4d5e"
+    )
+    await expect(requests[0].json()).resolves.toEqual({ size: 256 })
+  })
+
+  it("returns actionable results for an existing name or a changed file", async () => {
+    stubApiMode()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        crucibleApiResponse(
+          {
+            detail: {
+              code: "filename_exists",
+              etag: '"abc"',
+              file_mfid: "file-1",
+              message: "Filename already exists",
+            },
+          },
+          { status: 409 }
+        )
+      )
+    )
+    await expect(
+      initializeWorkspaceUploadSession({
+        datasetMfid,
+        filename: "runs/data.csv",
+        size: 128,
+      })
+    ).resolves.toEqual({
+      etag: '"abc"',
+      fileMfid: "file-1",
+      state: "filename_exists",
+    })
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        crucibleApiResponse(
+          { detail: { code: "etag_mismatch", etag: '"new"' } },
+          { status: 412 }
+        )
+      )
+    )
+    await expect(
+      initializeWorkspaceUploadSession({
+        datasetMfid,
+        filename: "runs/data.csv",
+        replace: { etag: '"abc"', fileMfid: "file-1" },
+        size: 128,
+      })
+    ).resolves.toEqual({ state: "file_changed" })
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        crucibleApiResponse(
+          { detail: { code: "replace_in_progress", upload_id: "u" } },
+          { status: 409 }
+        )
+      )
+    )
+    await expect(
+      initializeWorkspaceUploadSession({
+        datasetMfid,
+        filename: "runs/data.csv",
+        replace: { etag: '"abc"', fileMfid: "file-1" },
+        size: 128,
+      })
+    ).rejects.toMatchObject({
+      conflictCode: "replace_in_progress",
+      status: 409,
+    })
+  })
+
+  it("recognizes a replacement that could not be published", async () => {
+    stubApiMode()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        crucibleApiResponse(
+          { detail: "Upload could not be published: file_changed" },
+          { status: 409 }
+        )
+      )
+    )
+    await expect(
+      completeWorkspaceUpload({
+        crc32cBase64: "AAAAAA==",
+        datasetMfid,
+        sha256Hex: "0".repeat(64),
+        uploadId: "upload-2",
+      })
+    ).rejects.toMatchObject({ conflictCode: "file_changed", status: 409 })
+  })
+
+  it("replaces a fixture file in place and keeps its MFID", async () => {
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+    const existing = await initializeWorkspaceUploadSession({
+      datasetMfid,
+      filename: "operando-cycle-04.h5",
+      size: 10,
+    })
+    expect(existing).toMatchObject({
+      fileMfid: "01J6Y8N4Q2R7M9K3T5V0W1X2ZC",
+      state: "filename_exists",
+    })
+    if (existing.state !== "filename_exists") return
+    const replacement = await initializeWorkspaceUploadSession({
+      datasetMfid,
+      filename: "operando-cycle-04.h5",
+      replace: { etag: existing.etag, fileMfid: existing.fileMfid },
+      size: 10,
+    })
+    if (!("uploadId" in replacement)) throw new Error("expected a session")
+    await signWorkspaceUploadParts({
+      datasetMfid,
+      parts: [{ crc32cBase64: "AAAAAA==", partNumber: 1 }],
+      uploadId: replacement.uploadId,
+    })
+    const file = await completeWorkspaceUpload({
+      crc32cBase64: "AAAAAA==",
+      datasetMfid,
+      sha256Hex: "1".repeat(64),
+      uploadId: replacement.uploadId,
+    })
+    expect(file).toMatchObject({
+      filename: "operando-cycle-04.h5",
+      mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2ZC",
+      size: 10,
+    })
+    expect(file.etag).not.toBe(existing.etag)
+    await expect(
+      initializeWorkspaceUploadSession({
+        datasetMfid,
+        filename: "operando-cycle-04.h5",
+        replace: { etag: existing.etag, fileMfid: existing.fileMfid },
+        size: 10,
+      })
+    ).resolves.toEqual({ state: "file_changed" })
+  })
+
   it("treats a deduplicated API initiation as a completed upload", async () => {
     stubApiMode()
     vi.stubGlobal(

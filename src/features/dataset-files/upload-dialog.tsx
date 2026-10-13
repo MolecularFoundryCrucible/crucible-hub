@@ -28,11 +28,11 @@ export function UploadFilesDialog({
 }) {
   const scope = useWorkspaceScope()
   const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
-  const existingFilenames = useMemo(
-    () => new Set(filesResult.data?.map((file) => file.filename)),
+  const existingFiles = useMemo(
+    () => new Map(filesResult.data?.map((file) => [file.filename, file])),
     [filesResult.data]
   )
-  const batch = useUploadBatch({ existingFilenames })
+  const batch = useUploadBatch({ existingFiles })
   const [confirmingCancel, setConfirmingCancel] = useState(false)
   const closeAfterUpload = useRef(false)
 

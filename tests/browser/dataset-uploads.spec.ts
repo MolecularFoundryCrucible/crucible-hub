@@ -257,3 +257,58 @@ test("keeps a failed part transfer local with per-file recovery", async ({
     violations: [],
   })
 })
+
+test("replaces an existing file only after explicit confirmation", async ({
+  page,
+}) => {
+  const filename = `operando-cycle-08-${runId}.h5`
+  await page.goto(datasetPath)
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: "Add files" }).click()
+  await chooseFiles(page, [{ name: filename, text: "first version" }])
+  await dialog(page).getByRole("button", { name: "Upload 1 file" }).click()
+  await expect(dialog(page).getByText(/^fixture-file-/)).toHaveCount(1, {
+    timeout: 15000,
+  })
+  const firstMfid = await dialog(page)
+    .getByText(/^fixture-file-/)
+    .innerText()
+  await dialog(page).getByRole("button", { name: "Done" }).click()
+
+  await page.getByRole("button", { name: "Add files" }).click()
+  await chooseFiles(page, [
+    { name: filename, text: "second, longer version of the file" },
+  ])
+  await expect(
+    dialog(page).getByText("A file with this name is already in the dataset.")
+  ).toBeVisible()
+  await expect(
+    dialog(page).getByRole("button", { name: "Upload 1 file" })
+  ).toBeDisabled()
+
+  await dialog(page)
+    .getByRole("button", { name: `Replace the existing ${filename}` })
+    .click()
+  await expect(
+    dialog(page).getByText(/Replaces the existing file/)
+  ).toBeVisible()
+  await dialog(page)
+    .getByRole("button", { name: `Keep the existing ${filename}` })
+    .click()
+  await expect(
+    dialog(page).getByText("A file with this name is already in the dataset.")
+  ).toBeVisible()
+  await dialog(page)
+    .getByRole("button", { name: `Replace the existing ${filename}` })
+    .click()
+
+  await dialog(page).getByRole("button", { name: "Upload 1 file" }).click()
+  await expect(dialog(page).getByText("· Replaced existing file")).toBeVisible({
+    timeout: 15000,
+  })
+  await expect(dialog(page).getByText(firstMfid)).toBeVisible()
+  await dialog(page).getByRole("button", { name: "Done" }).click()
+  await expect(page.getByRole("row").filter({ hasText: filename })).toHaveCount(
+    1
+  )
+})

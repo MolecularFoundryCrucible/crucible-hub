@@ -31,6 +31,23 @@ const PROGRESS_INTERVAL_MS = 250
 const DEFAULT_COMPLETION_RETRY_SECONDS = 5
 const MAX_COMPLETION_ATTEMPTS = 3
 
+export class UploadFilenameExistsError extends Error {
+  constructor(
+    readonly fileMfid: string,
+    readonly etag: string
+  ) {
+    super("A file with this name was added to the dataset.")
+    this.name = "UploadFilenameExistsError"
+  }
+}
+
+export class UploadReplaceTargetChangedError extends Error {
+  constructor() {
+    super("The existing file changed since you chose to replace it.")
+    this.name = "UploadReplaceTargetChangedError"
+  }
+}
+
 export class UploadEmptyFileError extends Error {
   constructor() {
     super("Empty files cannot be uploaded.")
@@ -148,10 +165,12 @@ export async function uploadDatasetFile(options: {
   file: File
   filename: string
   onProgress: (progress: UploadProgress) => void
+  replace?: { etag: string; fileMfid: string }
   scenario?: FixtureScenario
   signal: AbortSignal
 }): Promise<WorkspaceDatasetFile> {
-  const { datasetMfid, file, filename, onProgress, scenario, signal } = options
+  const { datasetMfid, file, filename, onProgress, replace, scenario, signal } =
+    options
 
   const filenameIssues = validateUploadFilename(filename)
   if (filenameIssues.length > 0) {
@@ -188,12 +207,19 @@ export async function uploadDatasetFile(options: {
         datasetMfid,
         filename,
         idempotencyKey: crypto.randomUUID(),
+        ...(replace ? { replace } : {}),
         scenario,
         size: file.size,
       },
       signal,
     })
   )
+  if (initiation.state === "filename_exists") {
+    throw new UploadFilenameExistsError(initiation.fileMfid, initiation.etag)
+  }
+  if (initiation.state === "file_changed") {
+    throw new UploadReplaceTargetChangedError()
+  }
   if ("file" in initiation) {
     onProgress({
       phase: "done",

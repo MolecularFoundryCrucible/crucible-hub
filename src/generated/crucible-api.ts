@@ -1364,7 +1364,7 @@ export interface paths {
         };
         /**
          * Get File
-         * @description Returns a single file by its MFID.
+         * @description Returns a single file by its MFID, with its content ETag in the ETag header.
          */
         get: operations["get_file_files__file_id__get"];
         put?: never;
@@ -1424,6 +1424,26 @@ export interface paths {
          *     afterwards via PATCH /ingestion_requests/{request_id}.
          */
         post: operations["create_file_ingestion_request_files__file_id__ingest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/files/{file_mfid}/upload/multipart/initiate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate Replace
+         * @description Start replacing an existing GCS file's content. Requires EDIT on its dataset. Upload parts and complete through the dataset's multipart routes; completion keeps the file MFID and filename. Send If-Match with the file's ETag to refuse the replace when the file has changed; `If-Match: *` matches any ETag.
+         */
+        post: operations["initiate_replace_files__file_mfid__upload_multipart_initiate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3339,6 +3359,8 @@ export interface components {
             dataset_id: number;
             /** Dataset Mfid */
             dataset_mfid: string;
+            /** Etag */
+            readonly etag: string;
             /** Filename */
             filename: string;
             /** Mfid */
@@ -4407,6 +4429,13 @@ export interface components {
         MultipartParts: {
             /** Parts */
             parts: components["schemas"]["MultipartPart"][];
+        };
+        /** MultipartReplace */
+        MultipartReplace: {
+            /** Sha256 Hash */
+            sha256_hash?: string | null;
+            /** Size */
+            size: number;
         };
         /** MultipartStatus */
         MultipartStatus: {
@@ -8038,6 +8067,13 @@ export interface operations {
                     "application/json": components["schemas"]["MultipartStatus"];
                 };
             };
+            /** @description A file with this filename already exists in the dataset: `{"detail": {"code": "filename_exists", "file_mfid": ..., "etag": ..., "message": ...}}`; replace it through `POST /files/{file_mfid}/upload/multipart/initiate`. Other conflicts (filename reserved, reused Idempotency-Key) return a plain string detail */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -8837,6 +8873,8 @@ export interface operations {
                 headers: {
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
                     "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    /** @description Content ETag of the file, the same value as the `etag` field; send it as `If-Match` when replacing the file */
+                    ETag?: string;
                     Vary: components["headers"]["PrivilegeModeVary"];
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
@@ -9016,6 +9054,71 @@ export interface operations {
             };
             /** @description Stored file location is outside the file's own dataset or an allowed bucket: `{"detail": {"code": "storage_location_invalid", "reason": ..., "message": ...}}` */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    initiate_replace_files__file_mfid__upload_multipart_initiate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+                "if-match"?: string | null;
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                file_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MultipartReplace"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MultipartStatus"];
+                };
+            };
+            /** @description The file is a catalog-only (non-GCS) record; edit it with `PATCH /files/{file_id}` */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Another replace of this file is in progress: `{"detail": {"code": "replace_in_progress", "upload_id": ..., "message": ...}}`. A reused Idempotency-Key with a different request returns a plain string detail */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description If-Match does not match the file's current ETag: `{"detail": {"code": "etag_mismatch", "etag": ..., "message": ...}}` */
+            412: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -18,13 +18,29 @@ const conflictCodeBodySchema = z.object({
   detail: z.object({ code: z.string() }),
 })
 
+const publicationFailureSchema = z.object({
+  detail: z.string().regex(/^Upload could not be published: [a-z_]+$/),
+})
+
 function readConflictCode(body: unknown) {
   const parsed = conflictCodeBodySchema.safeParse(body)
-  return parsed.success ? parsed.data.detail.code : undefined
+  if (parsed.success) return parsed.data.detail.code
+  const publication = publicationFailureSchema.safeParse(body)
+  return publication.success
+    ? publication.data.detail.slice(
+        publication.data.detail.lastIndexOf(" ") + 1
+      )
+    : undefined
 }
 
+const hubConflictCodes = new Set<string>([
+  "storage_location_invalid",
+  "replace_in_progress",
+  "file_changed",
+])
+
 export function isHubConflictCode(code: unknown): code is HubConflictCode {
-  return code === "storage_location_invalid"
+  return typeof code === "string" && hubConflictCodes.has(code)
 }
 
 function readConflictFields(body: unknown): HubConflictField[] | undefined {

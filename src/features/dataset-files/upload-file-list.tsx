@@ -6,8 +6,10 @@ import {
   ClearFinishedUploadsIcon,
   CloseIcon,
   DropFilesIcon,
-  RetryIngestionIcon,
+  KeepExistingFileIcon,
   RenameUploadIcon,
+  ReplaceFileIcon,
+  RetryIngestionIcon,
   UploadCompleteIcon,
   UploadFailureIcon,
 } from "@/components/crucible/icons"
@@ -28,11 +30,16 @@ import { formatDuration } from "@/lib/transfer-rate"
 import type { TransferEstimate } from "@/lib/transfer-rate"
 import { cn } from "@/lib/utils"
 
-import { uploadItemIssues } from "./upload-batch"
+import {
+  EXISTING_FILE_ISSUE,
+  uploadItemIssues,
+  uploadReplaceTarget,
+} from "./upload-batch"
 import type {
   UploadBatch,
   UploadBatchProgress,
   UploadItem,
+  UploadReplaceTarget,
   UploadSource,
 } from "./upload-batch"
 
@@ -355,17 +362,20 @@ export function UploadFileList({
             issues={uploadItemIssues(
               item,
               batch.items,
-              batch.existingFilenames,
+              batch.existingFiles,
               batch.filenameCounts
             )}
             item={item}
             key={item.id}
+            onCancelReplace={batch.cancelReplace}
+            onConfirmReplace={batch.confirmReplace}
             onRemove={batch.remove}
             onRename={batch.rename}
             onRenameChange={handleRenameChange}
             onRetryIngestion={batch.retryIngestion}
             onSetIngestor={batch.setIngestor}
             renaming={renaming === item.id}
+            replaceTarget={uploadReplaceTarget(item, batch.existingFiles)}
             uploading={batch.uploading}
           />
         ))}
@@ -399,12 +409,15 @@ const UploadFileRow = memo(function UploadFileRowItem({
   ingestionEnabled,
   issues,
   item,
+  onCancelReplace,
+  onConfirmReplace,
   onRemove,
   onRename,
   onRenameChange,
   onRetryIngestion,
   onSetIngestor,
   renaming,
+  replaceTarget,
   uploading,
 }: {
   classes: readonly string[]
@@ -412,12 +425,15 @@ const UploadFileRow = memo(function UploadFileRowItem({
   ingestionEnabled: boolean
   issues: readonly string[]
   item: UploadItem
+  onCancelReplace: (id: string) => void
+  onConfirmReplace: (id: string, target: UploadReplaceTarget) => void
   onRemove: (id: string) => void
   onRename: (id: string, filename: string) => void
   onRenameChange: (id: string, editing: boolean) => void
   onRetryIngestion: (datasetMfid: string, id: string) => Promise<void>
   onSetIngestor: (id: string, ingestor: IngestorChoice) => void
   renaming: boolean
+  replaceTarget?: UploadReplaceTarget
   uploading: boolean
 }) {
   const { state } = item
@@ -504,7 +520,10 @@ const UploadFileRow = memo(function UploadFileRowItem({
           datasetMfid={datasetMfid}
           issues={issues}
           item={item}
+          onCancelReplace={onCancelReplace}
+          onConfirmReplace={onConfirmReplace}
           onRetryIngestion={onRetryIngestion}
+          replaceTarget={replaceTarget}
           size={size}
           uploading={uploading}
         />
@@ -513,18 +532,47 @@ const UploadFileRow = memo(function UploadFileRowItem({
   )
 })
 
+function ReplaceExistingAction({
+  item,
+  onConfirmReplace,
+  target,
+}: {
+  item: UploadItem
+  onConfirmReplace: (id: string, target: UploadReplaceTarget) => void
+  target: UploadReplaceTarget
+}) {
+  return (
+    <Button
+      aria-label={`Replace the existing ${item.filename}`}
+      onClick={() => onConfirmReplace(item.id, target)}
+      size="xs"
+      type="button"
+      variant="outline"
+    >
+      <ReplaceFileIcon aria-hidden="true" data-icon="inline-start" />
+      Replace existing file
+    </Button>
+  )
+}
+
 function RowDetail({
   datasetMfid,
   issues,
   item,
+  onCancelReplace,
+  onConfirmReplace,
   onRetryIngestion,
+  replaceTarget,
   size,
   uploading,
 }: {
   datasetMfid?: string
   issues: readonly string[]
   item: UploadItem
+  onCancelReplace: (id: string) => void
+  onConfirmReplace: (id: string, target: UploadReplaceTarget) => void
   onRetryIngestion: (datasetMfid: string, id: string) => Promise<void>
+  replaceTarget?: UploadReplaceTarget
   size: number
   uploading: boolean
 }) {
@@ -570,6 +618,7 @@ function RowDetail({
       >
         <MfidText presentation="supporting" value={state.file.mfid} />
         <span className="tabular-nums">· {formatBytes(size)}</span>
+        {item.replace ? <span>· Replaced existing file</span> : null}
         {state.ingestion === "requested" ? (
           <span>· Ingestion requested</span>
         ) : state.ingestion ? (
@@ -598,16 +647,53 @@ function RowDetail({
   }
   if (state.status === "error") {
     return (
-      <p className="text-supporting text-destructive" role="alert">
-        {state.message}
-      </p>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p className="text-supporting text-destructive" role="alert">
+          {state.message}
+        </p>
+        {state.replaceable && replaceTarget && !uploading ? (
+          <ReplaceExistingAction
+            item={item}
+            onConfirmReplace={onConfirmReplace}
+            target={replaceTarget}
+          />
+        ) : null}
+      </div>
     )
   }
   if (issues.length && !uploading) {
     return (
-      <p className="text-supporting text-destructive" role="alert">
-        {issues[0]}
-      </p>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p className="text-supporting text-destructive" role="alert">
+          {issues[0]}
+        </p>
+        {issues[0] === EXISTING_FILE_ISSUE && replaceTarget ? (
+          <ReplaceExistingAction
+            item={item}
+            onConfirmReplace={onConfirmReplace}
+            target={replaceTarget}
+          />
+        ) : null}
+      </div>
+    )
+  }
+  if (item.replace && !uploading && state.status === "staged") {
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-supporting text-muted-foreground">
+        <span className="tabular-nums">
+          {formatBytes(size)} · Replaces the existing file
+        </span>
+        <Button
+          aria-label={`Keep the existing ${item.filename}`}
+          onClick={() => onCancelReplace(item.id)}
+          size="xs"
+          type="button"
+          variant="ghost"
+        >
+          <KeepExistingFileIcon aria-hidden="true" data-icon="inline-start" />
+          Keep existing
+        </Button>
+      </div>
     )
   }
   return (

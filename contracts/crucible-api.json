@@ -567,6 +567,11 @@
             "title": "Dataset Mfid",
             "type": "string"
           },
+          "etag": {
+            "readOnly": true,
+            "title": "Etag",
+            "type": "string"
+          },
           "filename": {
             "title": "Filename",
             "type": "string"
@@ -606,7 +611,8 @@
           "filename",
           "storage_backend",
           "size",
-          "sha256_hash"
+          "sha256_hash",
+          "etag"
         ],
         "title": "AssociatedFileRead",
         "type": "object"
@@ -3907,6 +3913,34 @@
           "parts"
         ],
         "title": "MultipartParts",
+        "type": "object"
+      },
+      "MultipartReplace": {
+        "additionalProperties": false,
+        "properties": {
+          "sha256_hash": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256 Hash"
+          },
+          "size": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 536870912000.0,
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "size"
+        ],
+        "title": "MultipartReplace",
         "type": "object"
       },
       "MultipartStatus": {
@@ -14085,6 +14119,9 @@
               }
             }
           },
+          "409": {
+            "description": "A file with this filename already exists in the dataset: `{\"detail\": {\"code\": \"filename_exists\", \"file_mfid\": ..., \"etag\": ..., \"message\": ...}}`; replace it through `POST /files/{file_mfid}/upload/multipart/initiate`. Other conflicts (filename reserved, reused Idempotency-Key) return a plain string detail"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -16231,7 +16268,7 @@
         ]
       },
       "get": {
-        "description": "Returns a single file by its MFID.",
+        "description": "Returns a single file by its MFID, with its content ETag in the ETag header.",
         "operationId": "get_file_files__file_id__get",
         "parameters": [
           {
@@ -16278,6 +16315,12 @@
               },
               "Crucible-Privilege-Mode": {
                 "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "ETag": {
+                "description": "Content ETag of the file, the same value as the `etag` field; send it as `If-Match` when replacing the file",
+                "schema": {
+                  "type": "string"
+                }
               },
               "Vary": {
                 "$ref": "#/components/headers/PrivilegeModeVary"
@@ -16604,6 +16647,139 @@
         "summary": "Create File Ingestion Request",
         "tags": [
           "files"
+        ]
+      }
+    },
+    "/files/{file_mfid}/upload/multipart/initiate": {
+      "post": {
+        "description": "Start replacing an existing GCS file's content. Requires EDIT on its dataset. Upload parts and complete through the dataset's multipart routes; completion keeps the file MFID and filename. Send If-Match with the file's ETag to refuse the replace when the file has changed; `If-Match: *` matches any ETag.",
+        "operationId": "initiate_replace_files__file_mfid__upload_multipart_initiate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_mfid",
+            "required": true,
+            "schema": {
+              "title": "File Mfid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultipartReplace"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultipartStatus"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "description": "The file is a catalog-only (non-GCS) record; edit it with `PATCH /files/{file_id}`"
+          },
+          "409": {
+            "description": "Another replace of this file is in progress: `{\"detail\": {\"code\": \"replace_in_progress\", \"upload_id\": ..., \"message\": ...}}`. A reused Idempotency-Key with a different request returns a plain string detail"
+          },
+          "412": {
+            "description": "If-Match does not match the file's current ETag: `{\"detail\": {\"code\": \"etag_mismatch\", \"etag\": ..., \"message\": ...}}`"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Initiate Replace",
+        "tags": [
+          "storage"
         ]
       }
     },

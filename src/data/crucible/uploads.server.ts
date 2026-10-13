@@ -32,12 +32,45 @@ type FixtureUploadSession = {
   datasetMfid: string
   file?: WorkspaceDatasetFile
   filename: string
+  replaceFileMfid?: string
   size: number
   state: WorkspaceUploadSession["state"]
 }
 
 const fixtureUploadSessions = new Map<string, FixtureUploadSession>()
 const fixtureUploadedFiles = new Map<string, WorkspaceDatasetFile[]>()
+const fixtureReplacedFiles = new Map<string, WorkspaceDatasetFile>()
+
+export function fixtureCurrentFile(
+  file: WorkspaceDatasetFile
+): WorkspaceDatasetFile {
+  return fixtureReplacedFiles.get(file.mfid) ?? file
+}
+
+function fixtureDatasetFiles(datasetMfid: string, scenario?: FixtureScenario) {
+  return [
+    ...fixtureWorkspace(scenario)
+      .files.filter((file) => file.dataset_mfid === datasetMfid)
+      .map(fixtureCurrentFile),
+    ...fixtureUploadedFilesFor(datasetMfid),
+  ]
+}
+
+function fixtureEtag() {
+  return `"${crypto.randomUUID().replaceAll("-", "")}"`
+}
+
+const filenameExistsSchema = z.object({
+  detail: z.object({
+    code: z.literal("filename_exists"),
+    etag: z.string().min(1).max(255),
+    file_mfid: z.string().min(1).max(255),
+  }),
+})
+
+const etagMismatchSchema = z.object({
+  detail: z.object({ code: z.literal("etag_mismatch") }),
+})
 
 function fixtureUploadKey(datasetMfid: string, uploadId: string) {
   return `${datasetMfid}\0${uploadId}`
@@ -145,6 +178,7 @@ export async function initializeWorkspaceUploadSession(
     datasetMfid: string
     filename: string
     idempotencyKey?: string
+    replace?: { etag: string; fileMfid: string }
     size: number
   },
   scenario?: FixtureScenario,
@@ -152,18 +186,48 @@ export async function initializeWorkspaceUploadSession(
 ): Promise<WorkspaceUploadInitiation> {
   const configuration = readUploadConfiguration()
   if (configuration.mode === "api") {
-    const result = await apiUploadClient(configuration).POST(
-      "/datasets/{dataset_mfid}/upload/multipart/initiate",
-      {
-        body: { filename: input.filename, size: input.size },
-        params: {
-          header: { "idempotency-key": input.idempotencyKey },
-          path: { dataset_mfid: input.datasetMfid },
-        },
-        signal: crucibleRequestSignal(requestSignal),
+    const client = apiUploadClient(configuration)
+    const result = input.replace
+      ? await client.POST("/files/{file_mfid}/upload/multipart/initiate", {
+          body: { size: input.size },
+          headers: {
+            "If-Match": input.replace.etag,
+            ...(input.idempotencyKey
+              ? { "Idempotency-Key": input.idempotencyKey }
+              : {}),
+          },
+          params: { path: { file_mfid: input.replace.fileMfid } },
+          signal: crucibleRequestSignal(requestSignal),
+        })
+      : await client.POST(
+          "/datasets/{dataset_mfid}/upload/multipart/initiate",
+          {
+            body: { filename: input.filename, size: input.size },
+            params: {
+              header: { "idempotency-key": input.idempotencyKey },
+              path: { dataset_mfid: input.datasetMfid },
+            },
+            signal: crucibleRequestSignal(requestSignal),
+          }
+        )
+    if (!result.data) {
+      if (result.response.status === 412 && input.replace) {
+        if (etagMismatchSchema.safeParse(result.error).success) {
+          return { state: "file_changed" }
+        }
       }
-    )
-    if (!result.data) throw new CrucibleResponseError(result.response)
+      if (result.response.status === 409 && !input.replace) {
+        const exists = filenameExistsSchema.safeParse(result.error)
+        if (exists.success) {
+          return {
+            etag: exists.data.detail.etag,
+            fileMfid: exists.data.detail.file_mfid,
+            state: "filename_exists",
+          }
+        }
+      }
+      throw new CrucibleResponseError(result.response, result.error)
+    }
     const status = parseApiStatus(result.data)
     if (apiUploadState(status.state) === "completed" && status.existing_file) {
       return { file: status.existing_file, state: "completed" }
@@ -185,12 +249,31 @@ export async function initializeWorkspaceUploadSession(
   ) {
     throw new CrucibleResponseError(404)
   }
+  const existing = fixtureDatasetFiles(input.datasetMfid, scenario)
+  if (input.replace) {
+    const target = existing.find(
+      (file) => file.mfid === input.replace?.fileMfid
+    )
+    if (!target) throw new CrucibleResponseError(404)
+    if (target.storage_backend !== "gcs") throw new CrucibleResponseError(400)
+    if (target.etag !== input.replace.etag) return { state: "file_changed" }
+  } else {
+    const conflict = existing.find((file) => file.filename === input.filename)
+    if (conflict?.etag) {
+      return {
+        etag: conflict.etag,
+        fileMfid: conflict.mfid,
+        state: "filename_exists",
+      }
+    }
+  }
 
   const uploadId = `fixture-upload-${crypto.randomUUID()}`
   fixtureUploadSessions.set(fixtureUploadKey(input.datasetMfid, uploadId), {
     acknowledgedPartNumbers: [],
     datasetMfid: input.datasetMfid,
     filename: input.filename,
+    ...(input.replace ? { replaceFileMfid: input.replace.fileMfid } : {}),
     size: input.size,
     state: "uploading",
   })
@@ -343,7 +426,9 @@ export async function completeWorkspaceUpload(
         signal: crucibleRequestSignal(requestSignal, COMPLETION_TIMEOUT_MS),
       }
     )
-    if (!result.data) throw new CrucibleResponseError(result.response)
+    if (!result.data) {
+      throw new CrucibleResponseError(result.response, result.error)
+    }
     const file = apiDatasetFileSchema.safeParse(result.data)
     if (!file.success) {
       throw new CrucibleContractError("multipart-complete", file.error.issues)
@@ -357,11 +442,38 @@ export async function completeWorkspaceUpload(
   if (!session) throw new CrucibleResponseError(404)
   if (session.state === "completed" && session.file) return session.file
   if (session.state === "uploading") {
+    if (session.replaceFileMfid) {
+      const target = fixtureDatasetFiles(input.datasetMfid).find(
+        (file) => file.mfid === session.replaceFileMfid
+      )
+      if (!target) throw new CrucibleResponseError(404)
+      const replaced = {
+        ...target,
+        etag: fixtureEtag(),
+        sha256_hash: input.sha256Hex,
+        size: session.size,
+      }
+      session.state = "completed"
+      session.file = replaced
+      const uploaded = fixtureUploadedFiles.get(input.datasetMfid) ?? []
+      if (uploaded.some((file) => file.mfid === replaced.mfid)) {
+        fixtureUploadedFiles.set(
+          input.datasetMfid,
+          uploaded.map((file) =>
+            file.mfid === replaced.mfid ? replaced : file
+          )
+        )
+      } else {
+        fixtureReplacedFiles.set(replaced.mfid, replaced)
+      }
+      return replaced
+    }
     session.state = "completed"
     session.file = {
       access_note: null,
       dataset_id: 0,
       dataset_mfid: input.datasetMfid,
+      etag: fixtureEtag(),
       filename: session.filename,
       mfid: `fixture-file-${crypto.randomUUID()}`,
       sha256_hash: input.sha256Hex,

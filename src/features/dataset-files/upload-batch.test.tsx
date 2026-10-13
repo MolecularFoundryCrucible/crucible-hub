@@ -8,8 +8,10 @@ import { identityScope } from "@/data/crucible/query-keys"
 import {
   MAX_PARALLEL_FILES,
   uploadItemIssues,
+  uploadReplaceTarget,
   useUploadBatch,
 } from "./upload-batch"
+import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
 import type { UploadItem } from "./upload-batch"
 import { uploadDatasetFile } from "./upload-orchestrator"
 
@@ -21,6 +23,26 @@ vi.mock("./upload-leave-guard", () => ({
     open: false,
   }),
 }))
+
+function stored(
+  filename: string,
+  overrides: Partial<WorkspaceDatasetFile> = {}
+): [string, WorkspaceDatasetFile] {
+  return [
+    filename,
+    {
+      dataset_id: 1,
+      dataset_mfid: "d",
+      etag: '"etag-1"',
+      filename,
+      mfid: `file-${filename}`,
+      sha256_hash: "",
+      size: 1,
+      storage_backend: "gcs",
+      ...overrides,
+    },
+  ]
+}
 
 function item(id: string, filename: string, size = 1): UploadItem {
   return {
@@ -35,12 +57,14 @@ function item(id: string, filename: string, size = 1): UploadItem {
 describe("upload item issues", () => {
   it("accepts a valid unique relative path", () => {
     const items = [item("a", "runs/a.h5")]
-    expect(uploadItemIssues(items[0], items, new Set())).toEqual([])
+    expect(uploadItemIssues(items[0], items, new Map())).toEqual([])
   })
 
   it("flags duplicates within the batch and in the dataset", () => {
     const items = [item("a", "a.h5"), item("b", "a.h5")]
-    expect(uploadItemIssues(items[0], items, new Set(["a.h5"]))).toEqual([
+    expect(
+      uploadItemIssues(items[0], items, new Map([stored("a.h5")]))
+    ).toEqual([
       "Another file in this list has the same name.",
       "A file with this name is already in the dataset.",
     ])
@@ -48,10 +72,49 @@ describe("upload item issues", () => {
 
   it("flags empty files and invalid names", () => {
     const items = [item("a", "../a.h5", 0)]
-    expect(uploadItemIssues(items[0], items, new Set())).toEqual([
+    expect(uploadItemIssues(items[0], items, new Map())).toEqual([
       "File names must not contain dot path segments.",
       "Empty files cannot be uploaded.",
     ])
+  })
+
+  it("clears the existing-name issue only for a confirmed replacement of that file", () => {
+    const existing = new Map([stored("a.h5")])
+    const staged = item("a", "a.h5")
+    expect(uploadReplaceTarget(staged, existing)).toEqual({
+      etag: '"etag-1"',
+      fileMfid: "file-a.h5",
+    })
+    expect(
+      uploadItemIssues(
+        { ...staged, replace: { etag: '"etag-1"', fileMfid: "file-a.h5" } },
+        [staged],
+        existing
+      )
+    ).toEqual([])
+    expect(
+      uploadItemIssues(
+        { ...staged, replace: { etag: '"etag-1"', fileMfid: "other" } },
+        [staged],
+        existing
+      )
+    ).toEqual(["A file with this name is already in the dataset."])
+  })
+
+  it("never offers to replace catalog-only files or files without an etag", () => {
+    const staged = item("a", "a.h5")
+    expect(
+      uploadReplaceTarget(
+        staged,
+        new Map([stored("a.h5", { storage_backend: "globus" })])
+      )
+    ).toBeUndefined()
+    expect(
+      uploadReplaceTarget(
+        staged,
+        new Map([stored("a.h5", { etag: undefined })])
+      )
+    ).toBeUndefined()
   })
 
   it("ignores finished uploads", () => {
@@ -70,7 +133,9 @@ describe("upload item issues", () => {
         status: "done",
       },
     }
-    expect(uploadItemIssues(done, [done], new Set(["a.h5"]))).toEqual([])
+    expect(uploadItemIssues(done, [done], new Map([stored("a.h5")]))).toEqual(
+      []
+    )
   })
 })
 

@@ -70,6 +70,8 @@ export {
   LoaderCircle as PreparingDownloadIcon,
   Pencil as EditResourceIcon,
   Pencil as RenameUploadIcon,
+  Replace as ReplaceFileIcon,
+  Undo2 as KeepExistingFileIcon,
   Pencil as EditScientificMetadataIcon,
   RotateCcw as RetryDownloadIcon,
   CircleAlert as UploadFailureIcon,

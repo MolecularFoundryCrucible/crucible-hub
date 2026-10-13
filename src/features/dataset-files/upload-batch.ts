@@ -20,13 +20,23 @@ import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
 import { createTransferRate } from "@/lib/transfer-rate"
 import type { TransferEstimate } from "@/lib/transfer-rate"
 
-import { uploadDatasetFile } from "./upload-orchestrator"
+import {
+  UploadFilenameExistsError,
+  UploadReplaceTargetChangedError,
+  uploadDatasetFile,
+} from "./upload-orchestrator"
 import type { UploadPhase } from "./upload-orchestrator"
 import { useUploadLeaveGuard } from "./upload-leave-guard"
 
 export const MAX_PARALLEL_FILES = 3
 const EMPTY_ISSUES: readonly string[] = []
-const EMPTY_FILENAME_SET: ReadonlySet<string> = new Set<string>()
+const EMPTY_EXISTING_FILES: ReadonlyMap<string, WorkspaceDatasetFile> =
+  new Map()
+
+export const EXISTING_FILE_ISSUE =
+  "A file with this name is already in the dataset."
+
+export type UploadReplaceTarget = { etag: string; fileMfid: string }
 
 export type UploadItemStatus =
   | { status: "staged" }
@@ -42,7 +52,7 @@ export type UploadItemStatus =
       ingestion?: "requested" | { message: string }
       status: "done"
     }
-  | { message: string; status: "error" }
+  | { message: string; replaceable?: UploadReplaceTarget; status: "error" }
   | { status: "aborted" }
 
 export type UploadItem = {
@@ -50,6 +60,7 @@ export type UploadItem = {
   filename: string
   id: string
   ingestor: IngestorChoice
+  replace?: UploadReplaceTarget
   state: UploadItemStatus
 }
 
@@ -82,10 +93,21 @@ export function uploadFilenameCounts(
   return counts
 }
 
+export function uploadReplaceTarget(
+  item: UploadItem,
+  existingFiles: ReadonlyMap<string, WorkspaceDatasetFile>
+): UploadReplaceTarget | undefined {
+  const existing = existingFiles.get(item.filename)
+  if (existing?.storage_backend === "gcs" && existing.etag) {
+    return { etag: existing.etag, fileMfid: existing.mfid }
+  }
+  return item.state.status === "error" ? item.state.replaceable : undefined
+}
+
 export function uploadItemIssues(
   item: UploadItem,
   items: readonly UploadItem[],
-  existingFilenames: ReadonlySet<string>,
+  existingFiles: ReadonlyMap<string, WorkspaceDatasetFile>,
   filenameCounts?: ReadonlyMap<string, number>
 ): readonly string[] {
   if (item.state.status === "done") return EMPTY_ISSUES
@@ -99,15 +121,16 @@ export function uploadItemIssues(
   if (hasDuplicate) {
     issues.push("Another file in this list has the same name.")
   }
-  if (existingFilenames.has(item.filename)) {
-    issues.push("A file with this name is already in the dataset.")
+  const existing = existingFiles.get(item.filename)
+  if (existing && item.replace?.fileMfid !== existing.mfid) {
+    issues.push(EXISTING_FILE_ISSUE)
   }
   return issues.length > 0 ? issues : EMPTY_ISSUES
 }
 
 export function useUploadBatch({
-  existingFilenames = EMPTY_FILENAME_SET,
-}: { existingFilenames?: ReadonlySet<string> } = {}) {
+  existingFiles = EMPTY_EXISTING_FILES,
+}: { existingFiles?: ReadonlyMap<string, WorkspaceDatasetFile> } = {}) {
   const scope = useWorkspaceScope()
   const ingestionEnabled = useUploadIngestionEnabled()
   const queryClient = useQueryClient()
@@ -159,9 +182,28 @@ export function useUploadBatch({
       update(id, (item) => ({
         ...item,
         filename,
+        replace: undefined,
         state:
           item.state.status === "error" ? { status: "staged" } : item.state,
       }))
+    },
+    [update]
+  )
+
+  const confirmReplace = useCallback(
+    (id: string, target: UploadReplaceTarget) => {
+      update(id, (item) => ({
+        ...item,
+        replace: target,
+        state: { status: "staged" },
+      }))
+    },
+    [update]
+  )
+
+  const cancelReplace = useCallback(
+    (id: string) => {
+      update(id, (item) => ({ ...item, replace: undefined }))
     },
     [update]
   )
@@ -255,8 +297,8 @@ export function useUploadBatch({
     const queue = items.filter(
       (item) =>
         item.state.status !== "done" &&
-        uploadItemIssues(item, items, existingFilenames, filenameCounts)
-          .length === 0
+        uploadItemIssues(item, items, existingFiles, filenameCounts).length ===
+          0
     )
     let complete =
       queue.length ===
@@ -288,6 +330,7 @@ export function useUploadBatch({
           datasetMfid,
           file: item.file,
           filename: item.filename,
+          ...(item.replace ? { replace: item.replace } : {}),
           onProgress: (next) => {
             if (next.phase === "done") return
             transferred.set(item.id, next.uploadedBytes)
@@ -330,11 +373,51 @@ export function useUploadBatch({
           setState(item.id, { status: "aborted" })
           return
         }
+        const conflictCode =
+          error instanceof HubApiClientError
+            ? error.details.conflictCode
+            : undefined
+        if (
+          error instanceof UploadFilenameExistsError ||
+          error instanceof UploadReplaceTargetChangedError ||
+          conflictCode === "file_changed"
+        ) {
+          void queryClient.invalidateQueries({
+            exact: true,
+            queryKey: crucibleKeys.datasetFiles(scope, datasetMfid),
+          })
+        }
+        if (error instanceof UploadFilenameExistsError) {
+          setState(item.id, {
+            message:
+              "A file with this name was added to the dataset. Replace it or rename this file.",
+            replaceable: { etag: error.etag, fileMfid: error.fileMfid },
+            status: "error",
+          })
+          return
+        }
+        if (
+          error instanceof UploadReplaceTargetChangedError ||
+          conflictCode === "file_changed"
+        ) {
+          update(item.id, (changed) => ({
+            ...changed,
+            replace: undefined,
+            state: {
+              message:
+                "The existing file changed since you chose to replace it. Review it and choose Replace again.",
+              status: "error",
+            },
+          }))
+          return
+        }
         setState(item.id, {
           message:
-            error instanceof HubApiClientError
-              ? error.message
-              : errorMessage(error, "The upload failed."),
+            conflictCode === "replace_in_progress"
+              ? "Another replacement of this file is already in progress. Try again when it finishes."
+              : error instanceof HubApiClientError
+                ? error.message
+                : errorMessage(error, "The upload failed."),
           status: "error",
         })
       } finally {
@@ -371,8 +454,7 @@ export function useUploadBatch({
   const pending = items.filter((item) => item.state.status !== "done")
   const blocked = pending.some(
     (item) =>
-      uploadItemIssues(item, items, existingFilenames, filenameCounts).length >
-      0
+      uploadItemIssues(item, items, existingFiles, filenameCounts).length > 0
   )
   const totalBytes = items.reduce((sum, item) => sum + item.file.size, 0)
 
@@ -380,8 +462,10 @@ export function useUploadBatch({
     add,
     blocked,
     cancel,
+    cancelReplace,
     clearFinished,
-    existingFilenames,
+    confirmReplace,
+    existingFiles,
     filenameCounts,
     ingestionEnabled,
     items,

@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Pinned the Crucible API contract to staging revision `d12b998` (pull request 315) and added file replacement to the upload dialog: a file whose name matches a stored file in the dataset can replace it after you choose Replace existing file for that row (undo with Keep existing). The replaced file keeps its MFID and gets the new content; if the file changed in the meantime, another replacement is running, or the name was taken during the upload, the row explains it and asks again. Catalog-only files can still only be renamed.
+
 - Optimized client bundle splitting, rendering performance, pagination smoothness, and keyboard/screen-reader accessibility: moved the dataset upload workflow and `hash-wasm` checksum library out of initial route chunks; eliminated redundant table row, scientific metadata, resource graph, and upload batch work; preserved previous rows across cursor pagination when optional filter parameters are omitted; gated inline form errors on field touch or submit and removed dangling `aria-describedby` references; enabled keyboard node inspection on the resource graph canvas; guarded global keyboard shortcuts inside alert dialogs and editable fields; and removed duplicate tab stops on icon-button tooltips.
 
 - Pinned the Crucible API contract to staging revision `10ce235` (pull requests 312 and 313). Invalid file storage locations are now recognized by the API's structured `storage_location_invalid` code, with the plain `409` kept as a fallback, and requesting ingestion for such a file explains that its stored copy is not in a valid location instead of showing a generic conflict.

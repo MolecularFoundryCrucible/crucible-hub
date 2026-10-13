@@ -13,7 +13,8 @@ export type HubApiErrorKind =
 
 export type HubConflictField = "email" | "username"
 
-export type HubConflictCode = "storage_location_invalid"
+export type HubConflictCode =
+  "storage_location_invalid" | "replace_in_progress" | "file_changed"
 
 export type HubApiError = {
   kind: HubApiErrorKind

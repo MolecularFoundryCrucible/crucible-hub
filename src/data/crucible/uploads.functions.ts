@@ -68,6 +68,13 @@ export const initializeWorkspaceDatasetUpload = createServerFn({
         datasetMfid: datasetMfidSchema,
         filename: uploadFilenameSchema,
         idempotencyKey: z.string().uuid().optional(),
+        replace: z
+          .object({
+            etag: z.string().min(1).max(255),
+            fileMfid: datasetMfidSchema,
+          })
+          .strict()
+          .optional(),
         scenario: fixtureScenarioSchema.optional(),
         size: z.number().int().min(1).max(MAX_UPLOAD_SIZE),
       })
@@ -83,6 +90,7 @@ export const initializeWorkspaceDatasetUpload = createServerFn({
             datasetMfid: data.datasetMfid,
             filename: data.filename,
             idempotencyKey: data.idempotencyKey,
+            ...(data.replace ? { replace: data.replace } : {}),
             size: data.size,
           },
           data.scenario,

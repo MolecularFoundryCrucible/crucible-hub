@@ -17,6 +17,7 @@ import { readWorkspaceFixture } from "./workspace-fixture.server"
 import { apiDatasetFileSchema } from "./dataset-files.schema"
 import {
   findFixtureUploadedFile,
+  fixtureCurrentFile,
   fixtureUploadedFilesFor,
 } from "./uploads.server"
 import { normalizeScientificMetadata } from "./scientific-metadata"
@@ -561,9 +562,9 @@ export async function readWorkspaceDatasetFiles(
   }
   if (configuration.mode === "fixture") {
     return [
-      ...fixtureWorkspace(scenario).files.filter(
-        (file) => file.dataset_mfid === datasetMfid
-      ),
+      ...fixtureWorkspace(scenario)
+        .files.filter((file) => file.dataset_mfid === datasetMfid)
+        .map(fixtureCurrentFile),
       ...fixtureUploadedFilesFor(datasetMfid),
     ]
   }

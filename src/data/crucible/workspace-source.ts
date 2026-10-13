@@ -473,7 +473,12 @@ export type WorkspaceResourceDetail =
       status: string | null
     })
 
-export type WorkspaceDatasetFile = Schema<"AssociatedFileRead">
+export type WorkspaceDatasetFile = Omit<
+  Schema<"AssociatedFileRead">,
+  "etag"
+> & {
+  readonly etag?: string
+}
 
 export type WorkspaceIngestionRequest = {
   datasetMfid: string | null
@@ -661,6 +666,8 @@ export type WorkspaceUploadSession = {
 export type WorkspaceUploadInitiation =
   | { state: WorkspaceUploadSessionState; uploadId: string }
   | { file: WorkspaceDatasetFile; state: "completed" }
+  | { etag: string; fileMfid: string; state: "filename_exists" }
+  | { state: "file_changed" }
 
 export type WorkspaceUploadSignedPart = {
   headers: Record<string, string>
