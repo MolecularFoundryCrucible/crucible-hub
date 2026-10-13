@@ -2,9 +2,13 @@
 
 This file records notable changes to Crucible Hub for users, operators, contributors, security and privacy reviewers, and downstream integrations.
 
-The format follows Keep a Changelog principles. Versioning policy will be selected before the first release.
+The format follows Keep a Changelog principles, and releases follow Semantic Versioning: a major version for incompatible changes to supported workflows, deployment, or configuration, a minor version for backward-compatible features, and a patch version for fixes. Each release is a `vX.Y.Z` Git tag whose commit is the one deployed.
 
 ## Unreleased
+
+## 1.0.0 - 2026-10-13
+
+First versioned release, reactivating the production pilot at `https://crucible.lbl.gov/hub/` against Crucible API 3.1.0 with ORCID sign-in and a single Cloud Run instance.
 
 - Kept users signed in when a token refresh is rate limited: a `429` from the API or proxy no longer ends the Hub session. The Hub keeps using the current access token while it is valid, waits for `Retry-After`, and otherwise reports a retryable error. Uncertain refresh failures (server errors and timeouts) still close the session, because retrying a possibly spent refresh token would trigger the API's replay revocation.
 
