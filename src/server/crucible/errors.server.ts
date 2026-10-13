@@ -3,6 +3,7 @@ import "@tanstack/react-start/server-only"
 import type {
   HubApiError,
   HubApiErrorKind,
+  HubConflictCode,
   HubConflictField,
 } from "@/data/crucible/errors"
 
@@ -14,6 +15,7 @@ type ErrorInput = {
   fieldErrors?: Record<string, string[]>
   retryAfterSeconds?: number
   conflictFields?: HubConflictField[]
+  conflictCode?: HubConflictCode
   reauthenticationRequired?: boolean
 }
 
@@ -65,5 +67,6 @@ export function toHubApiError(input: ErrorInput): HubApiError {
       ? {}
       : { retryAfterSeconds: input.retryAfterSeconds }),
     ...(input.conflictFields ? { conflictFields: input.conflictFields } : {}),
+    ...(input.conflictCode ? { conflictCode: input.conflictCode } : {}),
   }
 }

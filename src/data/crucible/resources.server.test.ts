@@ -1337,6 +1337,48 @@ describe("workspace resource sources", () => {
     })
   })
 
+  it.each([
+    [
+      {
+        detail: {
+          code: "storage_location_invalid",
+          reason: "outside dataset",
+          message: "File storage location is not valid: outside dataset",
+        },
+      },
+      "unavailable",
+    ],
+    [null, "unavailable"],
+    [{ detail: { code: "something_else" } }, "conflict"],
+  ])(
+    "maps a download 409 body %# by its structured code",
+    async (body, outcome) => {
+      vi.stubEnv("NODE_ENV", "development")
+      vi.stubEnv("HUB_DATA_SOURCE", "api")
+      vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+      vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          async () =>
+            new Response(body === null ? null : JSON.stringify(body), {
+              status: 409,
+              headers: { "Content-Type": "application/json" },
+            })
+        )
+      )
+      const download = createWorkspaceFileDownload("file-mfid")
+      if (outcome === "unavailable") {
+        await expect(download).resolves.toEqual({ status: "unavailable" })
+      } else {
+        await expect(download).rejects.toMatchObject({
+          status: 409,
+          conflictCode: "something_else",
+        })
+      }
+    }
+  )
+
   it("normalizes a catalog-only API response to unavailable", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")

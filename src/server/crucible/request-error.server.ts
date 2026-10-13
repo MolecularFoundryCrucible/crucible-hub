@@ -2,7 +2,7 @@ import "@tanstack/react-start/server-only"
 
 import { z } from "zod"
 
-import type { HubConflictField } from "@/data/crucible/errors"
+import type { HubConflictCode, HubConflictField } from "@/data/crucible/errors"
 import { readRetryAfterSeconds } from "@/lib/retry-after"
 
 const conflictBodySchema = z.object({
@@ -13,6 +13,19 @@ const conflictBodySchema = z.object({
 })
 
 const conflictFields = new Set<string>(["email", "username"])
+
+const conflictCodeBodySchema = z.object({
+  detail: z.object({ code: z.string() }),
+})
+
+function readConflictCode(body: unknown) {
+  const parsed = conflictCodeBodySchema.safeParse(body)
+  return parsed.success ? parsed.data.detail.code : undefined
+}
+
+export function isHubConflictCode(code: unknown): code is HubConflictCode {
+  return code === "storage_location_invalid"
+}
 
 function readConflictFields(body: unknown): HubConflictField[] | undefined {
   const parsed = conflictBodySchema.safeParse(body)
@@ -36,6 +49,7 @@ export class CrucibleResponseError extends Error {
   readonly status: number
   readonly retryAfterSeconds?: number
   readonly conflictFields?: HubConflictField[]
+  readonly conflictCode?: string
   readonly reauthenticationRequired: boolean = false
 
   constructor(source: number | Response, body?: unknown) {
@@ -48,7 +62,10 @@ export class CrucibleResponseError extends Error {
     this.status = source.status
     this.retryAfterSeconds = readRetryAfterSeconds(source.headers)
     this.reauthenticationRequired = isStepUpChallenge(source)
-    if (source.status === 409) this.conflictFields = readConflictFields(body)
+    if (source.status === 409) {
+      this.conflictFields = readConflictFields(body)
+      this.conflictCode = readConflictCode(body)
+    }
   }
 }
 

@@ -13,6 +13,8 @@ export type HubApiErrorKind =
 
 export type HubConflictField = "email" | "username"
 
+export type HubConflictCode = "storage_location_invalid"
+
 export type HubApiError = {
   kind: HubApiErrorKind
   message: string
@@ -21,4 +23,5 @@ export type HubApiError = {
   fieldErrors?: Record<string, string[]>
   retryAfterSeconds?: number
   conflictFields?: HubConflictField[]
+  conflictCode?: HubConflictCode
 }

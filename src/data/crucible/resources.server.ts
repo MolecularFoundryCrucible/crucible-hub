@@ -751,7 +751,7 @@ export async function requestWorkspaceFileIngestion(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return workspaceIngestionRequest(result.data)
 }
@@ -1463,7 +1463,15 @@ export async function createWorkspaceFileDownload(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (result.response.status === 409) return { status: "unavailable" }
+  if (result.response.status === 409) {
+    const conflict = new CrucibleResponseError(result.response, result.error)
+    if (
+      conflict.conflictCode === undefined ||
+      conflict.conflictCode === "storage_location_invalid"
+    )
+      return { status: "unavailable" }
+    throw conflict
+  }
   if (!result.response.ok) {
     throw new CrucibleResponseError(result.response)
   }

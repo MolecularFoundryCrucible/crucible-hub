@@ -582,7 +582,10 @@ function IngestionRequestDialog({
     setError(
       firstFailure.status === "rejected" &&
         firstFailure.reason instanceof HubApiClientError
-        ? firstFailure.reason.message
+        ? firstFailure.reason.details.conflictCode ===
+          "storage_location_invalid"
+          ? `The stored copy of this file is not in a valid location, so it cannot be ingested. Reference: ${firstFailure.reason.details.correlationId}`
+          : firstFailure.reason.message
         : `Ingestion could not be requested for ${failures.length} file${failures.length === 1 ? "" : "s"}.`
     )
   }

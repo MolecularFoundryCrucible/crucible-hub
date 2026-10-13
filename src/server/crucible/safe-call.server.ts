@@ -6,6 +6,7 @@ import { toHubApiError } from "./errors.server"
 import {
   CrucibleContractError,
   CrucibleResponseError,
+  isHubConflictCode,
 } from "./request-error.server"
 
 type SafeCrucibleCallOptions = {
@@ -51,6 +52,11 @@ export async function safeCrucibleCall<T>(
         conflictFields:
           error instanceof CrucibleResponseError
             ? error.conflictFields
+            : undefined,
+        conflictCode:
+          error instanceof CrucibleResponseError &&
+          isHubConflictCode(error.conflictCode)
+            ? error.conflictCode
             : undefined,
         reauthenticationRequired:
           error instanceof CrucibleResponseError &&

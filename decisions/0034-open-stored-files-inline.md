@@ -16,7 +16,7 @@ The Download icon action is unchanged and requests `attachment` without the para
 
 The route validates the file MFID, runs inside the normal request middleware and session, calls `GET /files/{file_id}/download_link?disposition=inline` with the current user's API authority, and redirects with `302` to the signed URL, `Cache-Control: no-store`, and `Referrer-Policy: no-referrer`. It generates a new link on every visit and never stores, logs, or reuses it. When the API reports a catalog-only file, an invalid storage location (`409`), or any error, the route redirects with `303` to the standalone `/hub/files/unavailable` page with a coarse reason (`unavailable`, `not-found`, `forbidden`, `unauthenticated`, or a generic failure). The page explains the outcome and offers sign-in when relevant; it never shows API detail text. In fixture mode the route accepts a validated `scenario` parameter and returns deterministic non-production URLs.
 
-The Download action maps the same `409` to its existing unavailable state instead of the retry error.
+The Download action maps the same `409` to its existing unavailable state instead of the retry error. Since API revision `10ce235` (pull request 312) the `409` detail is structured as `{"code": "storage_location_invalid", "reason": ..., "message": ...}`; Hub keys on that code, treats a `409` without a structured code the same way, and keeps any other structured code as an ordinary conflict.
 
 ## Privacy review
 

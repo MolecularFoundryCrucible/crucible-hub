@@ -12447,6 +12447,9 @@
               }
             }
           },
+          "409": {
+            "description": "Stored file location is outside the file's own dataset or an allowed bucket: `{\"detail\": {\"code\": \"storage_location_invalid\", \"reason\": ..., \"message\": ...}}`"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -16466,6 +16469,9 @@
               }
             }
           },
+          "409": {
+            "description": "Stored file location is outside the file's own dataset or an allowed bucket: `{\"detail\": {\"code\": \"storage_location_invalid\", \"reason\": ..., \"message\": ...}}`"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -16575,6 +16581,9 @@
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "409": {
+            "description": "Stored file location is outside the file's own dataset or an allowed bucket: `{\"detail\": {\"code\": \"storage_location_invalid\", \"reason\": ..., \"message\": ...}}`"
           },
           "422": {
             "content": {

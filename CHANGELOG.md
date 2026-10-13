@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Pinned the Crucible API contract to staging revision `10ce235` (pull requests 312 and 313). Invalid file storage locations are now recognized by the API's structured `storage_location_invalid` code, with the plain `409` kept as a fallback, and requesting ingestion for such a file explains that its stored copy is not in a valid location instead of showing a generic conflict.
+
 - Pinned the Crucible API contract to staging revision `6f227ca` (pull request 311). Clicking a stored file name in the dataset Files and Processing tables now opens the file in a new tab through the Hub `/files/{mfid}/open` route, which requests a fresh inline link, so PDFs, images, text, JSON, and CSV display in the browser; the Download button still saves the file. Files whose stored object is outside their dataset show as unavailable instead of offering a retry, and a refused open lands on a File unavailable page.
 
 - Updated the installed shadcn agent skill to the current upstream version, linked it under `.claude/skills` so Claude Code discovers it, and documented which skill to load for each kind of change and how to update skills in `skills/README.md`. ESLint now ignores installed skill files and the secret scan skips symbolic links.

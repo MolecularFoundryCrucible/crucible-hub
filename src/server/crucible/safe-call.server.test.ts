@@ -140,6 +140,30 @@ describe("safe Crucible calls", () => {
     )
   })
 
+  it("forwards only recognized conflict codes", async () => {
+    const storage = await safeCrucibleCall("storage", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 409 }), {
+        detail: {
+          code: "storage_location_invalid",
+          reason: "outside dataset",
+          message: "File storage location is not valid: outside dataset",
+        },
+      })
+    })
+    const other = await safeCrucibleCall("other", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 409 }), {
+        detail: { code: "something_else" },
+      })
+    })
+
+    expect(storage.status === "error" && storage.error.conflictCode).toBe(
+      "storage_location_invalid"
+    )
+    expect(other.status === "error" && other.error).not.toHaveProperty(
+      "conflictCode"
+    )
+  })
+
   it("asks for a fresh sign-in on a step-up challenge", async () => {
     const result = await safeCrucibleCall("step-up", async () => {
       throw new CrucibleResponseError(
