@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Served compressed static assets: the production build now pre-compresses JavaScript and CSS with brotli and gzip and serves them by `Accept-Encoding`, cutting the main bundle from 549 KB to 130 KB and the graph layout worker from 1.4 MB to 330 KB on the wire.
+
 - Unified motion: the quick, standard, and deliberate durations and standard, enter, and exit easings are now design tokens used by every dialog, menu, popover, sheet, sidebar, and toast, and the design-token check rejects hard-coded durations and easings. Metadata sections now open and close smoothly, rows revealed by Show all fade in, and switching resource, project, or instrument tabs crossfades the tab content while the header and navigation stay still. Reduced-motion settings turn all of these off.
 
 - Restored CI: `npm run audit` now checks only shipped dependencies (`npm audit --omit=dev --audit-level=high`), `shadcn` moved to `devDependencies` because the app only imports its Tailwind CSS at build time, vulnerable transitive packages were updated, and CI runners are pinned to `ubuntu-24.04`. The `braces` advisory GHSA-vfj7-8cjw-p6xm has no patched release and is reachable only through the `shadcn` CLI.

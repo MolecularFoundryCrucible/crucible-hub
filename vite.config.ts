@@ -40,7 +40,10 @@ const config = defineConfig({
   plugins: [
     tailwindcss(),
     tanstackStart({ start: { entry: "start.ts" } }),
-    nitro({ baseURL: "/hub/" }),
+    nitro({
+      baseURL: "/hub/",
+      compressPublicAssets: { gzip: true, brotli: true },
+    }),
     viteReact(),
   ],
 })
