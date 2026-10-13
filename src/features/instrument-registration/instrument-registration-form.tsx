@@ -339,6 +339,10 @@ function RegistrationTextField({
         const descriptionId = `instrument-registration-${field.name}-description`
         const errorId = `instrument-registration-${field.name}-error`
         const hasDescription = Boolean(description)
+        const describedBy =
+          [hasDescription ? descriptionId : null, invalid ? errorId : null]
+            .filter(Boolean)
+            .join(" ") || undefined
         return (
           <Field data-invalid={invalid}>
             <FieldLabel
@@ -349,9 +353,7 @@ function RegistrationTextField({
               {label}
             </FieldLabel>
             <Input
-              aria-describedby={
-                hasDescription ? `${descriptionId} ${errorId}` : errorId
-              }
+              aria-describedby={describedBy}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               autoFocus={autoFocus}
@@ -396,7 +398,7 @@ function RegistrationTextAreaField({
               {label}
             </FieldLabel>
             <Textarea
-              aria-describedby={errorId}
+              aria-describedby={invalid ? errorId : undefined}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               id={field.name}

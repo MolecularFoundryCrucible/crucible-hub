@@ -1,5 +1,4 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import type { QueryClient } from "@tanstack/react-query"
 import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
 
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
@@ -53,12 +52,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  preloadResourceDetail,
+  isResourceOverviewPath,
+  preloadResourceShell,
   resourceQueryOptions,
   resourceSummaryQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { crucibleKeys } from "@/data/crucible/query-keys"
-import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 import { ResourceSummaryCard } from "@/features/resource-edit/resource-summary-card"
 import { DatasetThumbnailsCard } from "@/features/dataset-thumbnails/dataset-thumbnails-card"
@@ -70,30 +69,7 @@ import { ResourceRelationshipManager } from "@/features/resource-relationships/r
 import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
 import { resourceDisplayName } from "@/lib/resource-name"
 
-export function isResourceOverviewPath(pathname: string, resourceMfid: string) {
-  return pathname.replace(/\/+$/, "").endsWith(`/${resourceMfid}`)
-}
-
-export async function preloadResourceShell(
-  queryClient: QueryClient,
-  scope: IdentityScope,
-  resourceMfid: string,
-  forceApiResolution = false,
-  includeDetail = false
-) {
-  const options = resourceSummaryQueryOptions(scope, resourceMfid)
-  if (forceApiResolution) {
-    await queryClient.invalidateQueries({
-      exact: true,
-      queryKey: options.queryKey,
-      refetchType: "none",
-    })
-    return queryClient.fetchQuery(options)
-  }
-  if (includeDetail)
-    await preloadResourceDetail(queryClient, scope, resourceMfid)
-  return queryClient.ensureQueryData(options)
-}
+export { isResourceOverviewPath, preloadResourceShell }
 
 export function ResourceWorkspace({
   fromProject,

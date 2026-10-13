@@ -51,7 +51,7 @@ const config = defineConfig({
               groups: [
                 {
                   name: "vendor",
-                  test: /node_modules[\\/](?!(?:elkjs|@xyflow|qrcode\.react|@tanstack[\\/](?:react-form|form-core))[\\/])/,
+                  test: /node_modules[\\/](?!(?:elkjs|@xyflow|qrcode\.react|hash-wasm|@tanstack[\\/](?:react-form|form-core))[\\/])/,
                   minShareCount: 2,
                   priority: 2,
                 },

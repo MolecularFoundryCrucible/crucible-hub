@@ -1297,7 +1297,15 @@ body {
   .resource-directory-table .resource-directory-location,
   .resource-directory-table .resource-directory-person,
   .resource-directory-table .resource-directory-date {
+    align-items: flex-start;
+    column-gap: calc(var(--spacing) * 1);
+    display: flex;
     grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .resource-directory-table .resource-directory-location > *,
+  .resource-directory-table .resource-directory-person > * {
     min-width: 0;
   }
 
@@ -1306,6 +1314,7 @@ body {
   .resource-directory-table .resource-directory-date::before {
     color: var(--muted-foreground);
     content: attr(data-label) ": ";
+    flex: none;
   }
 
   .resource-directory-table .resource-directory-action {
@@ -1404,7 +1413,15 @@ body {
 
   .identity-directory-table .identity-directory-mfid,
   .identity-directory-table .identity-directory-role {
+    align-items: flex-start;
+    column-gap: calc(var(--spacing) * 1);
+    display: flex;
     grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .identity-directory-table .identity-directory-mfid > *,
+  .identity-directory-table .identity-directory-role > * {
     min-width: 0;
   }
 
@@ -1412,6 +1429,7 @@ body {
   .identity-directory-table .identity-directory-role::before {
     color: var(--muted-foreground);
     content: attr(data-label) ": ";
+    flex: none;
   }
 
   .identity-directory-table .identity-directory-action {

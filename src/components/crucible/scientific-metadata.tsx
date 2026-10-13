@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 
 import { MetadataDisclosureIcon, SearchIcon } from "@/components/crucible/icons"
@@ -95,19 +95,20 @@ export function ScientificMetadata({
   showExpansionAction?: boolean
 }) {
   const internalExpansion = useScientificMetadataExpansion(
-    metadata,
+    expansion ? undefined : metadata,
     expandFirstLevel
   )
   const activeExpansion = expansion ?? internalExpansion
+  const rootEntries = useMemo(() => metadataEntries(metadata), [metadata])
 
   if (metadata === null || metadata === undefined || isEmptyValue(metadata)) {
     return <p className="text-body text-muted-foreground">{emptyMessage}</p>
   }
 
-  if (isMetadataArray(metadata)) {
+  if (isMetadataArray(metadata) || isMetadataObject(metadata)) {
     return (
       <MetadataTree
-        entries={arrayEntries(metadata)}
+        entries={rootEntries}
         expansion={activeExpansion}
         searchQuery={searchQuery}
         showExpansionAction={showExpansionAction}
@@ -115,41 +116,31 @@ export function ScientificMetadata({
     )
   }
 
-  if (!isMetadataObject(metadata)) {
-    return <MetadataScalar value={metadata} />
-  }
-
-  return (
-    <MetadataTree
-      entries={sortedEntries(metadata)}
-      expansion={activeExpansion}
-      searchQuery={searchQuery}
-      showExpansionAction={showExpansionAction}
-    />
-  )
+  return <MetadataScalar value={metadata} />
 }
 
 export function useScientificMetadataExpansion(
   metadata: WorkspaceMetadataValue | undefined,
   expandFirstLevel = false
 ) {
-  const entries = metadataEntries(metadata)
-  const allPaths = expandablePaths(entries)
+  const entries = useMemo(() => metadataEntries(metadata), [metadata])
+  const allPaths = useMemo(() => expandablePaths(entries), [entries])
+  const initialPaths = useMemo(
+    () => (expandFirstLevel ? expandablePaths(entries, [], true) : []),
+    [entries, expandFirstLevel]
+  )
   const [expandedPaths, setExpandedPaths] = useState<ReadonlySet<string>>(
-    () => new Set(expandFirstLevel ? expandablePaths(entries, [], true) : [])
+    () => new Set(initialPaths)
   )
 
   useEffect(() => {
-    const nextEntries = metadataEntries(metadata)
-    setExpandedPaths(
-      new Set(expandFirstLevel ? expandablePaths(nextEntries, [], true) : [])
-    )
-  }, [expandFirstLevel, metadata])
+    setExpandedPaths(new Set(initialPaths))
+  }, [initialPaths])
 
   const allExpanded =
     allPaths.length > 0 && allPaths.every((path) => expandedPaths.has(path))
 
-  function setExpanded(path: string, expanded: boolean) {
+  const setExpanded = useCallback((path: string, expanded: boolean) => {
     setExpandedPaths((current) => {
       if (current.has(path) === expanded) return current
       const next = new Set(current)
@@ -157,16 +148,22 @@ export function useScientificMetadataExpansion(
       else next.delete(path)
       return next
     })
-  }
+  }, [])
 
-  return {
-    allExpanded,
-    canExpand: allPaths.length > 0,
-    expandedPaths,
-    setExpanded,
-    toggleAll: () =>
-      setExpandedPaths(allExpanded ? new Set() : new Set(allPaths)),
-  }
+  const toggleAll = useCallback(() => {
+    setExpandedPaths(allExpanded ? new Set() : new Set(allPaths))
+  }, [allExpanded, allPaths])
+
+  return useMemo(
+    () => ({
+      allExpanded,
+      canExpand: allPaths.length > 0,
+      expandedPaths,
+      setExpanded,
+      toggleAll,
+    }),
+    [allExpanded, allPaths.length, expandedPaths, setExpanded, toggleAll]
+  )
 }
 
 export function ScientificMetadataExpansionAction({
@@ -199,7 +196,10 @@ function MetadataTree({
   showExpansionAction: boolean
 }) {
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase()
-  const visibleEntries = filterEntries(entries, normalizedQuery)
+  const visibleEntries = useMemo(
+    () => filterEntries(entries, normalizedQuery),
+    [entries, normalizedQuery]
+  )
 
   return (
     <div className="min-w-0">
@@ -343,7 +343,14 @@ function MetadataCollection({
   const [visibleArrayItems, setVisibleArrayItems] = useState(arrayPageSize)
   const disclosureRef = useRef<HTMLDetailsElement>(null)
   const array = isMetadataArray(value)
-  const entries = array ? arrayEntries(value) : sortedEntries(value)
+  const entries = useMemo(
+    () => (array ? arrayEntries(value) : sortedEntries(value)),
+    [array, value]
+  )
+  const filteredEntries = useMemo(
+    () => filterEntries(entries, searchQuery),
+    [entries, searchQuery]
+  )
   const pathKey = metadataPath(path)
   const open = forceOpen || expandedPaths.has(pathKey)
 
@@ -364,7 +371,6 @@ function MetadataCollection({
     )
   }
 
-  const filteredEntries = filterEntries(entries, searchQuery)
   const displayedEntries = array
     ? filteredEntries.slice(0, visibleArrayItems)
     : filteredEntries

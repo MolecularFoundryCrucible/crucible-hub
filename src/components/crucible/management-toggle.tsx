@@ -24,7 +24,7 @@ export function ManagementToggle({
 
   return (
     <Tooltip>
-      <TooltipTrigger render={<span className="inline-flex" />}>
+      <TooltipTrigger render={<span className="inline-flex" />} tabIndex={-1}>
         <Button
           aria-label={label}
           aria-pressed={active}

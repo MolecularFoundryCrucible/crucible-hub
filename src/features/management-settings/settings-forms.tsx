@@ -21,6 +21,8 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
+import type { FormFieldLike } from "@/features/forms/field-state"
 import {
   INSTRUMENT_DESCRIPTION_MAX_LENGTH,
   INSTRUMENT_ID_MAX_LENGTH,
@@ -677,15 +679,11 @@ function SettingsTextField({
   required = false,
 }: {
   autoFocus?: boolean
-  field: {
+  field: FormFieldLike & {
     handleBlur: () => void
     handleChange: (value: string) => void
     name: string
-    state: {
-      meta: {
-        errors: Array<{ message?: string } | undefined>
-        isValid: boolean
-      }
+    state: FormFieldLike["state"] & {
       value: string
     }
   }
@@ -693,13 +691,14 @@ function SettingsTextField({
   maxLength: number
   required?: boolean
 }) {
+  const invalid = shouldShowFieldError(field)
   return (
-    <Field data-invalid={!field.state.meta.isValid}>
+    <Field data-invalid={invalid}>
       <FieldLabel htmlFor={field.name} optional={!required} required={required}>
         {label}
       </FieldLabel>
       <Input
-        aria-invalid={!field.state.meta.isValid || undefined}
+        aria-invalid={invalid || undefined}
         autoFocus={autoFocus}
         id={field.name}
         maxLength={maxLength}
@@ -709,7 +708,7 @@ function SettingsTextField({
         required={required}
         value={field.state.value}
       />
-      <FieldError errors={field.state.meta.errors} />
+      <FieldError errors={fieldErrors(field, { invalid })} />
     </Field>
   )
 }
@@ -719,28 +718,25 @@ function SettingsTextAreaField({
   label,
   maxLength,
 }: {
-  field: {
+  field: FormFieldLike & {
     handleBlur: () => void
     handleChange: (value: string) => void
     name: string
-    state: {
-      meta: {
-        errors: Array<{ message?: string } | undefined>
-        isValid: boolean
-      }
+    state: FormFieldLike["state"] & {
       value: string
     }
   }
   label: string
   maxLength: number
 }) {
+  const invalid = shouldShowFieldError(field)
   return (
-    <Field data-invalid={!field.state.meta.isValid}>
+    <Field data-invalid={invalid}>
       <FieldLabel htmlFor={field.name} optional>
         {label}
       </FieldLabel>
       <Textarea
-        aria-invalid={!field.state.meta.isValid || undefined}
+        aria-invalid={invalid || undefined}
         id={field.name}
         maxLength={maxLength}
         name={field.name}
@@ -748,7 +744,7 @@ function SettingsTextAreaField({
         onChange={(event) => field.handleChange(event.target.value)}
         value={field.state.value}
       />
-      <FieldError errors={field.state.meta.errors} />
+      <FieldError errors={fieldErrors(field, { invalid })} />
     </Field>
   )
 }

@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react"
+import { memo, useCallback, useId, useRef, useState } from "react"
 
 import {
   AddFilesIcon,
@@ -22,6 +22,7 @@ import {
   sameIngestorChoice,
   useIngestorClasses,
 } from "@/features/ingestion/ingestor-select"
+import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
 import { formatBytes } from "@/lib/format"
 import { formatDuration } from "@/lib/transfer-rate"
 import type { TransferEstimate } from "@/lib/transfer-rate"
@@ -34,6 +35,8 @@ import type {
   UploadItem,
   UploadSource,
 } from "./upload-batch"
+
+const EMPTY_CLASSES: readonly string[] = []
 
 function readFileEntry(entry: FileSystemFileEntry) {
   return new Promise<File>((resolve, reject) => entry.file(resolve, reject))
@@ -274,7 +277,12 @@ export function UploadFileList({
   const classesResult = useIngestorClasses(
     batch.ingestionEnabled && batch.items.length > 0
   )
-  const classes = classesResult.data ?? []
+  const classes = classesResult.data ?? EMPTY_CLASSES
+  const handleRenameChange = useCallback((id: string, editing: boolean) => {
+    setRenaming((current) =>
+      editing ? id : current === id ? undefined : current
+    )
+  }, [])
   const pendingItems = batch.items.filter(
     (item) => item.state.status !== "done"
   )
@@ -341,15 +349,24 @@ export function UploadFileList({
       >
         {batch.items.map((item) => (
           <UploadFileRow
-            batch={batch}
             classes={classes}
             datasetMfid={datasetMfid}
+            ingestionEnabled={batch.ingestionEnabled}
+            issues={uploadItemIssues(
+              item,
+              batch.items,
+              batch.existingFilenames,
+              batch.filenameCounts
+            )}
             item={item}
             key={item.id}
-            onRenameChange={(editing) =>
-              setRenaming(editing ? item.id : undefined)
-            }
+            onRemove={batch.remove}
+            onRename={batch.rename}
+            onRenameChange={handleRenameChange}
+            onRetryIngestion={batch.retryIngestion}
+            onSetIngestor={batch.setIngestor}
             renaming={renaming === item.id}
+            uploading={batch.uploading}
           />
         ))}
       </ul>
@@ -376,26 +393,37 @@ function RowIcon({ item, invalid }: { item: UploadItem; invalid: boolean }) {
   return <ResourceTypeIcon type="file" />
 }
 
-function UploadFileRow({
-  batch,
+const UploadFileRow = memo(function UploadFileRowItem({
   classes,
   datasetMfid,
+  ingestionEnabled,
+  issues,
   item,
+  onRemove,
+  onRename,
   onRenameChange,
+  onRetryIngestion,
+  onSetIngestor,
   renaming,
+  uploading,
 }: {
-  batch: UploadBatch
   classes: readonly string[]
   datasetMfid?: string
+  ingestionEnabled: boolean
+  issues: readonly string[]
   item: UploadItem
-  onRenameChange: (editing: boolean) => void
+  onRemove: (id: string) => void
+  onRename: (id: string, filename: string) => void
+  onRenameChange: (id: string, editing: boolean) => void
+  onRetryIngestion: (datasetMfid: string, id: string) => Promise<void>
+  onSetIngestor: (id: string, ingestor: IngestorChoice) => void
   renaming: boolean
+  uploading: boolean
 }) {
   const { state } = item
-  const issues = uploadItemIssues(item, batch.items, batch.existingFilenames)
   const size = item.file.size
   const done = state.status === "done"
-  const locked = batch.uploading || done
+  const locked = uploading || done
   const editing = !locked && (renaming || issues.length > 0)
 
   return (
@@ -412,12 +440,12 @@ function UploadFileRow({
               autoFocus={renaming}
               className="h-8 min-w-0 flex-1"
               maxLength={1024}
-              onBlur={() => onRenameChange(false)}
-              onFocus={() => onRenameChange(true)}
-              onChange={(event) => batch.rename(item.id, event.target.value)}
+              onBlur={() => onRenameChange(item.id, false)}
+              onFocus={() => onRenameChange(item.id, true)}
+              onChange={(event) => onRename(item.id, event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === "Escape") {
-                  onRenameChange(false)
+                  onRenameChange(item.id, false)
                 }
               }}
               value={item.filename}
@@ -434,7 +462,7 @@ function UploadFileRow({
             <Button
               aria-label={`Rename ${item.filename}`}
               className="shrink-0"
-              onClick={() => onRenameChange(true)}
+              onClick={() => onRenameChange(item.id, true)}
               size="icon-xs"
               type="button"
               variant="ghost"
@@ -443,7 +471,7 @@ function UploadFileRow({
             </Button>
           ) : null}
           <span className="ml-auto flex shrink-0 items-center gap-2">
-            {batch.ingestionEnabled ? (
+            {ingestionEnabled ? (
               locked ? (
                 <span className="text-supporting text-muted-foreground">
                   {ingestorChoiceLabel(item.ingestor)}
@@ -453,7 +481,7 @@ function UploadFileRow({
                   className="w-40"
                   classes={classes}
                   label={`Ingestor for ${item.filename}`}
-                  onChange={(choice) => batch.setIngestor(item.id, choice)}
+                  onChange={(choice) => onSetIngestor(item.id, choice)}
                   size="sm"
                   value={item.ingestor}
                 />
@@ -462,7 +490,7 @@ function UploadFileRow({
             {locked ? null : (
               <Button
                 aria-label={`Remove ${item.filename} from the upload list`}
-                onClick={() => batch.remove(item.id)}
+                onClick={() => onRemove(item.id)}
                 size="icon-sm"
                 type="button"
                 variant="ghost"
@@ -473,29 +501,32 @@ function UploadFileRow({
           </span>
         </div>
         <RowDetail
-          batch={batch}
           datasetMfid={datasetMfid}
           issues={issues}
           item={item}
+          onRetryIngestion={onRetryIngestion}
           size={size}
+          uploading={uploading}
         />
       </div>
     </li>
   )
-}
+})
 
 function RowDetail({
-  batch,
   datasetMfid,
   issues,
   item,
+  onRetryIngestion,
   size,
+  uploading,
 }: {
-  batch: UploadBatch
   datasetMfid?: string
   issues: readonly string[]
   item: UploadItem
+  onRetryIngestion: (datasetMfid: string, id: string) => Promise<void>
   size: number
+  uploading: boolean
 }) {
   const { state } = item
   if (state.status === "active") {
@@ -548,7 +579,7 @@ function RowDetail({
             </span>
             {datasetMfid ? (
               <Button
-                onClick={() => void batch.retryIngestion(datasetMfid, item.id)}
+                onClick={() => void onRetryIngestion(datasetMfid, item.id)}
                 size="xs"
                 type="button"
                 variant="outline"
@@ -572,7 +603,7 @@ function RowDetail({
       </p>
     )
   }
-  if (issues.length && !batch.uploading) {
+  if (issues.length && !uploading) {
     return (
       <p className="text-supporting text-destructive" role="alert">
         {issues[0]}
@@ -584,7 +615,7 @@ function RowDetail({
       {formatBytes(size)}
       {state.status === "aborted"
         ? " · Upload cancelled"
-        : batch.uploading
+        : uploading
           ? " · Queued"
           : ""}
     </p>

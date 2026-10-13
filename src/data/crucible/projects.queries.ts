@@ -159,6 +159,18 @@ export function projectsCursorQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      collectionScopedPreviousData(
+        scope,
+        {
+          affiliation: filters.affiliation,
+          direction: filters.direction,
+          includeTotal: filters.includeTotal ?? true,
+          sort: filters.sort,
+        },
+        previousData,
+        previousQuery
+      ),
     retry: scenario ? false : undefined,
   })
 }

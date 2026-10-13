@@ -2,13 +2,13 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
 import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
-import { hubPageTitle } from "@/lib/page-title"
-import { resourceDisplayName } from "@/lib/resource-name"
 import {
-  ResourceWorkspace,
   isResourceOverviewPath,
   preloadResourceShell,
-} from "@/features/resource-detail/resource-detail-page"
+} from "@/data/crucible/resources.queries"
+import { ResourceWorkspace } from "@/features/resource-detail/resource-detail-page"
+import { hubPageTitle } from "@/lib/page-title"
+import { resourceDisplayName } from "@/lib/resource-name"
 
 export const Route = createFileRoute("/_app/datasets/$datasetMfid")({
   validateSearch: resourceDetailSearchSchema,

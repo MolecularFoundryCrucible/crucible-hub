@@ -108,10 +108,11 @@ function collectionScopedPreviousData<TData>(
     sort?: "created" | "name" | "updated"
   },
   previousData: TData | undefined,
-  previousQuery: { queryKey: readonly unknown[] } | undefined
+  previousQuery: { queryKey: readonly unknown[] } | undefined,
+  cursorChain = false
 ) {
   const queryKey = previousQuery?.queryKey
-  const previousFilters = queryKey?.[6]
+  const previousFilters = cursorChain ? queryKey?.[7] : queryKey?.[6]
   const contextKeys = [
     "affiliation",
     "createdFrom",
@@ -140,6 +141,9 @@ function collectionScopedPreviousData<TData>(
     scope.every((part, index) => queryKey[index] === part) &&
     queryKey[4] === family &&
     queryKey[5] === "list" &&
+    (cursorChain
+      ? queryKey[6] === "cursor-chain"
+      : queryKey[6] !== "cursor-chain") &&
     contextKeys.every(
       (key) =>
         (isRecord(previousFilters) ? previousFilters[key] : undefined) ===
@@ -270,6 +274,15 @@ export function samplesCursorQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      collectionScopedPreviousData(
+        scope,
+        "samples",
+        context,
+        previousData,
+        previousQuery,
+        true
+      ),
     retry: scenario ? false : undefined,
   })
 }
@@ -369,6 +382,15 @@ export function datasetsCursorQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      collectionScopedPreviousData(
+        scope,
+        "datasets",
+        context,
+        previousData,
+        previousQuery,
+        true
+      ),
     retry: scenario ? false : undefined,
   })
 }

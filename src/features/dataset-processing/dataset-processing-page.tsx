@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { UseQueryResult } from "@tanstack/react-query"
+import { lazyRouteComponent } from "@tanstack/react-router"
 
 import {
   PanelState,
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
 import { AddFilesIcon, RequestIngestionIcon } from "@/components/crucible/icons"
-import { UploadFilesDialog } from "@/features/dataset-files/upload-dialog"
 import {
   AUTO_INGESTOR,
   IngestorSelect,
@@ -82,6 +82,11 @@ import {
   FileOpenLink,
 } from "@/features/dataset-files/dataset-files-card"
 import { formatBytes } from "@/lib/format"
+
+const UploadFilesDialog = lazyRouteComponent(
+  () => import("@/features/dataset-files/upload-dialog"),
+  "UploadFilesDialog"
+)
 
 export function DatasetProcessingPage({
   datasetMfid,
@@ -279,7 +284,7 @@ function FilesAndIngestionCard({
           )}
         </section>
       </CardContent>
-      {uploadAvailable ? (
+      {uploadAvailable && uploadOpen ? (
         <UploadFilesDialog
           datasetMfid={datasetMfid}
           onClose={() => setUploadOpen(false)}

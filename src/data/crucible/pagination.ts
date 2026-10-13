@@ -29,13 +29,15 @@ export function collectionScopedPreviousData<TData>(
   ) {
     return undefined
   }
-  const previousContext = previousQuery?.queryKey[6]
+  const previousContext =
+    previousQuery?.queryKey[6] === "cursor-chain"
+      ? previousQuery.queryKey[7]
+      : previousQuery?.queryKey[6]
   if (typeof previousContext !== "object" || previousContext === null) {
     return undefined
   }
   return Object.entries(context).every(
     ([key, value]) =>
-      key in previousContext &&
       (previousContext as Record<string, unknown>)[key] === value
   )
     ? previousData

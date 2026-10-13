@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import {
@@ -25,6 +25,8 @@ import type { UploadPhase } from "./upload-orchestrator"
 import { useUploadLeaveGuard } from "./upload-leave-guard"
 
 export const MAX_PARALLEL_FILES = 3
+const EMPTY_ISSUES: readonly string[] = []
+const EMPTY_FILENAME_SET: ReadonlySet<string> = new Set<string>()
 
 export type UploadItemStatus =
   | { status: "staged" }
@@ -70,29 +72,41 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback
 }
 
+export function uploadFilenameCounts(
+  items: readonly UploadItem[]
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>()
+  for (const entry of items) {
+    counts.set(entry.filename, (counts.get(entry.filename) ?? 0) + 1)
+  }
+  return counts
+}
+
 export function uploadItemIssues(
   item: UploadItem,
   items: readonly UploadItem[],
-  existingFilenames: ReadonlySet<string>
+  existingFilenames: ReadonlySet<string>,
+  filenameCounts?: ReadonlyMap<string, number>
 ): readonly string[] {
-  if (item.state.status === "done") return []
+  if (item.state.status === "done") return EMPTY_ISSUES
   const issues = [...validateUploadFilename(item.filename)]
   if (item.file.size === 0) issues.push("Empty files cannot be uploaded.")
-  if (
-    items.some(
-      (other) => other.id !== item.id && other.filename === item.filename
-    )
-  ) {
+  const hasDuplicate = filenameCounts
+    ? (filenameCounts.get(item.filename) ?? 0) > 1
+    : items.some(
+        (other) => other.id !== item.id && other.filename === item.filename
+      )
+  if (hasDuplicate) {
     issues.push("Another file in this list has the same name.")
   }
   if (existingFilenames.has(item.filename)) {
     issues.push("A file with this name is already in the dataset.")
   }
-  return issues
+  return issues.length > 0 ? issues : EMPTY_ISSUES
 }
 
 export function useUploadBatch({
-  existingFilenames = new Set<string>(),
+  existingFilenames = EMPTY_FILENAME_SET,
 }: { existingFilenames?: ReadonlySet<string> } = {}) {
   const scope = useWorkspaceScope()
   const ingestionEnabled = useUploadIngestionEnabled()
@@ -105,18 +119,25 @@ export function useUploadBatch({
     () => controller.current !== null,
     () => controller.current?.abort()
   )
+  const filenameCounts = useMemo(() => uploadFilenameCounts(items), [items])
 
-  function update(id: string, change: (item: UploadItem) => UploadItem) {
-    setItems((current) =>
-      current.map((item) => (item.id === id ? change(item) : item))
-    )
-  }
+  const update = useCallback(
+    (id: string, change: (item: UploadItem) => UploadItem) => {
+      setItems((current) =>
+        current.map((item) => (item.id === id ? change(item) : item))
+      )
+    },
+    []
+  )
 
-  function setState(id: string, state: UploadItemStatus) {
-    update(id, (item) => ({ ...item, state }))
-  }
+  const setState = useCallback(
+    (id: string, state: UploadItemStatus) => {
+      update(id, (item) => ({ ...item, state }))
+    },
+    [update]
+  )
 
-  function add(sources: readonly UploadSource[]) {
+  const add = useCallback((sources: readonly UploadSource[]) => {
     setItems((current) => [
       ...current,
       ...sources.map((source) => ({
@@ -127,81 +148,91 @@ export function useUploadBatch({
         state: { status: "staged" } as const,
       })),
     ])
-  }
+  }, [])
 
-  function remove(id: string) {
+  const remove = useCallback((id: string) => {
     setItems((current) => current.filter((item) => item.id !== id))
-  }
+  }, [])
 
-  function rename(id: string, filename: string) {
-    update(id, (item) => ({
-      ...item,
-      filename,
-      state: item.state.status === "error" ? { status: "staged" } : item.state,
-    }))
-  }
+  const rename = useCallback(
+    (id: string, filename: string) => {
+      update(id, (item) => ({
+        ...item,
+        filename,
+        state:
+          item.state.status === "error" ? { status: "staged" } : item.state,
+      }))
+    },
+    [update]
+  )
 
-  function setIngestor(id: string, ingestor: IngestorChoice) {
-    update(id, (item) => ({ ...item, ingestor }))
-  }
+  const setIngestor = useCallback(
+    (id: string, ingestor: IngestorChoice) => {
+      update(id, (item) => ({ ...item, ingestor }))
+    },
+    [update]
+  )
 
-  function setIngestorForAll(ingestor: IngestorChoice) {
+  const setIngestorForAll = useCallback((ingestor: IngestorChoice) => {
     setItems((current) =>
       current.map((item) =>
         item.state.status === "done" ? item : { ...item, ingestor }
       )
     )
-  }
+  }, [])
 
-  function clearFinished() {
+  const clearFinished = useCallback(() => {
     setItems((current) =>
       current.filter((item) => item.state.status !== "done")
     )
-  }
+  }, [])
 
-  function reset() {
+  const reset = useCallback(() => {
     setItems([])
-  }
+  }, [])
 
-  async function requestIngestion(
-    datasetMfid: string,
-    item: UploadItem,
-    file: WorkspaceDatasetFile,
-    checkExisting: boolean
-  ) {
-    const scenario = fixtureScenarioFromScope(scope)
-    const ingestionClass = ingestorClassName(item.ingestor)
-    try {
-      if (checkExisting) {
-        const page = await queryClient.fetchQuery({
-          ...datasetIngestionRequestsQueryOptions(scope, datasetMfid),
-          staleTime: 0,
-        })
-        if (page.items.some((request) => request.fileMfid === file.mfid)) {
-          return "requested" as const
+  const requestIngestion = useCallback(
+    async (
+      datasetMfid: string,
+      item: UploadItem,
+      file: WorkspaceDatasetFile,
+      checkExisting: boolean
+    ) => {
+      const scenario = fixtureScenarioFromScope(scope)
+      const ingestionClass = ingestorClassName(item.ingestor)
+      try {
+        if (checkExisting) {
+          const page = await queryClient.fetchQuery({
+            ...datasetIngestionRequestsQueryOptions(scope, datasetMfid),
+            staleTime: 0,
+          })
+          if (page.items.some((request) => request.fileMfid === file.mfid)) {
+            return "requested" as const
+          }
         }
-      }
-      unwrapHubResult(
-        await requestWorkspaceIngestion({
-          data: {
-            fileMfid: file.mfid,
-            ...(ingestionClass ? { ingestionClass } : {}),
-            scenario,
-          },
+        unwrapHubResult(
+          await requestWorkspaceIngestion({
+            data: {
+              fileMfid: file.mfid,
+              ...(ingestionClass ? { ingestionClass } : {}),
+              scenario,
+            },
+          })
+        )
+        return "requested" as const
+      } catch (error) {
+        return {
+          message: errorMessage(error, "Ingestion could not be requested."),
+        }
+      } finally {
+        void queryClient.invalidateQueries({
+          exact: true,
+          queryKey: crucibleKeys.datasetIngestionRequests(scope, datasetMfid),
         })
-      )
-      return "requested" as const
-    } catch (error) {
-      return {
-        message: errorMessage(error, "Ingestion could not be requested."),
       }
-    } finally {
-      void queryClient.invalidateQueries({
-        exact: true,
-        queryKey: crucibleKeys.datasetIngestionRequests(scope, datasetMfid),
-      })
-    }
-  }
+    },
+    [queryClient, scope]
+  )
 
   async function retryIngestion(datasetMfid: string, id: string) {
     const item = items.find((candidate) => candidate.id === id)
@@ -224,7 +255,8 @@ export function useUploadBatch({
     const queue = items.filter(
       (item) =>
         item.state.status !== "done" &&
-        uploadItemIssues(item, items, existingFilenames).length === 0
+        uploadItemIssues(item, items, existingFilenames, filenameCounts)
+          .length === 0
     )
     let complete =
       queue.length ===
@@ -332,13 +364,15 @@ export function useUploadBatch({
     return complete
   }
 
-  function cancel() {
+  const cancel = useCallback(() => {
     controller.current?.abort()
-  }
+  }, [])
 
   const pending = items.filter((item) => item.state.status !== "done")
   const blocked = pending.some(
-    (item) => uploadItemIssues(item, items, existingFilenames).length > 0
+    (item) =>
+      uploadItemIssues(item, items, existingFilenames, filenameCounts).length >
+      0
   )
   const totalBytes = items.reduce((sum, item) => sum + item.file.size, 0)
 
@@ -348,6 +382,7 @@ export function useUploadBatch({
     cancel,
     clearFinished,
     existingFilenames,
+    filenameCounts,
     ingestionEnabled,
     items,
     leaveGuard,

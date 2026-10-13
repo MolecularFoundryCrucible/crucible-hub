@@ -678,9 +678,12 @@ function ResourceGraphFlow({
         event.altKey ||
         event.ctrlKey ||
         event.metaKey ||
-        event.key.toLocaleLowerCase() !== "f" ||
         !(event.target instanceof HTMLElement)
       ) {
+        return
+      }
+      const key = event.key.toLocaleLowerCase()
+      if (key !== "f" && event.key !== "Enter" && event.key !== " ") {
         return
       }
       const node = event.target.closest<HTMLElement>(
@@ -690,9 +693,13 @@ function ResourceGraphFlow({
       const nodeMfid = node.dataset.id
       if (!nodeMfid) return
       event.preventDefault()
-      centerGraphNode(nodeMfid)
+      if (key === "f") {
+        centerGraphNode(nodeMfid)
+        return
+      }
+      onInspect(nodeMfid, node)
     },
-    [centerGraphNode]
+    [centerGraphNode, onInspect]
   )
   const handleNodeDragStop = useCallback<OnNodeDrag<ResourceFlowNode>>(
     (_event, node) => persistNodePosition(node),

@@ -64,7 +64,10 @@ export function EditableCardActions({
       </Button>
       {presentation === "icon" ? (
         <Tooltip>
-          <TooltipTrigger render={<span className="inline-flex" />}>
+          <TooltipTrigger
+            render={<span className="inline-flex" />}
+            tabIndex={-1}
+          >
             {submit}
           </TooltipTrigger>
           <TooltipContent>{label}</TooltipContent>

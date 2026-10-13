@@ -241,7 +241,7 @@ export function DatasetCreationForm({
                             Name
                           </FieldLabel>
                           <Input
-                            aria-describedby={errorId}
+                            aria-describedby={invalid ? errorId : undefined}
                             aria-errormessage={invalid ? errorId : undefined}
                             autoFocus
                             aria-invalid={invalid || undefined}
@@ -278,7 +278,9 @@ export function DatasetCreationForm({
                             Project
                           </FieldLabel>
                           <ResourceChooser
-                            describedBy="dataset-project-error"
+                            describedBy={
+                              invalid ? "dataset-project-error" : undefined
+                            }
                             emptyLabel="Choose a project"
                             invalid={invalid}
                             kind="project"
@@ -358,7 +360,7 @@ export function DatasetCreationForm({
                               Local date and time
                             </FieldLabel>
                             <Input
-                              aria-describedby={errorId}
+                              aria-describedby={invalid ? errorId : undefined}
                               aria-errormessage={invalid ? errorId : undefined}
                               aria-invalid={invalid || undefined}
                               id={field.name}
@@ -515,7 +517,7 @@ function DatasetTextField({
               {label}
             </FieldLabel>
             <Input
-              aria-describedby={errorId}
+              aria-describedby={invalid ? errorId : undefined}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               id={field.name}

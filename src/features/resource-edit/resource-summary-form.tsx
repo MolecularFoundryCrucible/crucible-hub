@@ -26,6 +26,7 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
@@ -388,101 +389,113 @@ export function SampleSummaryForm({
           >
             <FieldGroup>
               <form.Field name="sample_name">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} required>
-                      Name
-                    </FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      autoFocus
-                      disabled={isSubmitting}
-                      id={field.name}
-                      maxLength={SAMPLE_NAME_MAX_LENGTH}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      required
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} required>
+                        Name
+                      </FieldLabel>
+                      <Input
+                        aria-invalid={invalid || undefined}
+                        autoFocus
+                        disabled={isSubmitting}
+                        id={field.name}
+                        maxLength={SAMPLE_NAME_MAX_LENGTH}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        required
+                        value={field.state.value}
+                      />
+                      <FieldError errors={fieldErrors(field, { invalid })} />
+                    </Field>
+                  )
+                }}
               </form.Field>
 
               <form.Field name="sample_type">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} optional>
-                      Sample type
-                    </FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      disabled={isSubmitting}
-                      id={field.name}
-                      maxLength={SAMPLE_TYPE_MAX_LENGTH}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} optional>
+                        Sample type
+                      </FieldLabel>
+                      <Input
+                        aria-invalid={invalid || undefined}
+                        disabled={isSubmitting}
+                        id={field.name}
+                        maxLength={SAMPLE_TYPE_MAX_LENGTH}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        value={field.state.value}
+                      />
+                      <FieldError errors={fieldErrors(field, { invalid })} />
+                    </Field>
+                  )
+                }}
               </form.Field>
 
               <form.Field name="description">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} optional>
-                      Description
-                    </FieldLabel>
-                    <Textarea
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      disabled={isSubmitting}
-                      id={field.name}
-                      maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      value={field.state.value}
-                    />
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} optional>
+                        Description
+                      </FieldLabel>
+                      <Textarea
+                        aria-invalid={invalid || undefined}
+                        disabled={isSubmitting}
+                        id={field.name}
+                        maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        value={field.state.value}
+                      />
+                      <FieldError errors={fieldErrors(field, { invalid })} />
+                    </Field>
+                  )
+                }}
               </form.Field>
 
               <form.Field name="timestamp">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} optional>
-                      Timestamp
-                    </FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      disabled={isSubmitting}
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      step={1}
-                      type="datetime-local"
-                      value={field.state.value}
-                    />
-                    <FieldDescription>
-                      {timestampFieldDescription(resource.timestamp)}
-                    </FieldDescription>
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} optional>
+                        Timestamp
+                      </FieldLabel>
+                      <Input
+                        aria-invalid={invalid || undefined}
+                        disabled={isSubmitting}
+                        id={field.name}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        step={1}
+                        type="datetime-local"
+                        value={field.state.value}
+                      />
+                      <FieldDescription>
+                        {timestampFieldDescription(resource.timestamp)}
+                      </FieldDescription>
+                      <FieldError errors={fieldErrors(field, { invalid })} />
+                    </Field>
+                  )
+                }}
               </form.Field>
 
               <SaveError message={saveError} />
@@ -614,59 +627,65 @@ export function DatasetSummaryForm({
             <FieldGroup>
               {datasetFieldDefinitions.map((definition) => (
                 <form.Field key={definition.name} name={definition.name}>
-                  {(field) => (
-                    <Field data-invalid={!field.state.meta.isValid}>
-                      <FieldLabel
-                        htmlFor={field.name}
-                        optional={!definition.required}
-                        required={definition.required}
-                      >
-                        {definition.label}
+                  {(field) => {
+                    const invalid = shouldShowFieldError(field)
+                    return (
+                      <Field data-invalid={invalid}>
+                        <FieldLabel
+                          htmlFor={field.name}
+                          optional={!definition.required}
+                          required={definition.required}
+                        >
+                          {definition.label}
+                        </FieldLabel>
+                        <Input
+                          aria-invalid={invalid || undefined}
+                          autoFocus={definition.autoFocus}
+                          disabled={isSubmitting}
+                          id={field.name}
+                          maxLength={definition.maxLength}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                          required={definition.required}
+                          value={field.state.value}
+                        />
+                        <FieldError errors={fieldErrors(field, { invalid })} />
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+              ))}
+              <form.Field name="timestamp">
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name} optional>
+                        Timestamp
                       </FieldLabel>
                       <Input
-                        aria-invalid={!field.state.meta.isValid || undefined}
-                        autoFocus={definition.autoFocus}
+                        aria-invalid={invalid || undefined}
                         disabled={isSubmitting}
                         id={field.name}
-                        maxLength={definition.maxLength}
                         name={field.name}
                         onBlur={field.handleBlur}
                         onChange={(event) =>
                           field.handleChange(event.target.value)
                         }
-                        required={definition.required}
+                        step={1}
+                        type="datetime-local"
                         value={field.state.value}
                       />
-                      <FieldError errors={field.state.meta.errors} />
+                      <FieldDescription>
+                        {timestampFieldDescription(resource.timestamp)}
+                      </FieldDescription>
+                      <FieldError errors={fieldErrors(field, { invalid })} />
                     </Field>
-                  )}
-                </form.Field>
-              ))}
-              <form.Field name="timestamp">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name} optional>
-                      Timestamp
-                    </FieldLabel>
-                    <Input
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      disabled={isSubmitting}
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      step={1}
-                      type="datetime-local"
-                      value={field.state.value}
-                    />
-                    <FieldDescription>
-                      {timestampFieldDescription(resource.timestamp)}
-                    </FieldDescription>
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                  )
+                }}
               </form.Field>
               <SaveError message={saveError} />
             </FieldGroup>

@@ -1,7 +1,7 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
-import { preloadResourceShell } from "@/features/resource-detail/resource-detail-page"
+import { preloadResourceShell } from "@/data/crucible/resources.queries"
 
 declare module "@tanstack/react-router" {
   interface HistoryState {

@@ -1,5 +1,12 @@
 import { ScriptOnce } from "@tanstack/react-router"
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 type Theme = "dark" | "light" | "system"
 
@@ -52,15 +59,20 @@ function applyTheme(theme: Theme) {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system")
+  const hydratedRef = useRef(false)
 
   useEffect(() => {
-    const stored = readStoredTheme()
-    if (stored) setThemeState(stored)
-  }, [])
-
-  useEffect(() => {
+    let activeTheme = theme
+    if (!hydratedRef.current) {
+      hydratedRef.current = true
+      const stored = readStoredTheme()
+      if (stored) {
+        activeTheme = stored
+        setThemeState(stored)
+      }
+    }
     const media = window.matchMedia("(prefers-color-scheme: dark)")
-    const applyCurrentTheme = () => applyTheme(theme)
+    const applyCurrentTheme = () => applyTheme(activeTheme)
 
     applyCurrentTheme()
     media.addEventListener("change", applyCurrentTheme)

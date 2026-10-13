@@ -225,7 +225,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                             Project lead
                           </FieldLabel>
                           <ResourceChooser
-                            describedBy={errorId}
+                            describedBy={invalid ? errorId : undefined}
                             emptyLabel="Choose a project lead"
                             excludeServiceAccounts
                             invalid={invalid}
@@ -330,6 +330,10 @@ function ProjectTextField({
         const descriptionId = `project-creation-${field.name}-description`
         const errorId = `project-creation-${field.name}-error`
         const hasDescription = Boolean(description)
+        const describedBy =
+          [hasDescription ? descriptionId : null, invalid ? errorId : null]
+            .filter(Boolean)
+            .join(" ") || undefined
         return (
           <Field data-invalid={invalid}>
             <FieldLabel
@@ -340,9 +344,7 @@ function ProjectTextField({
               {label}
             </FieldLabel>
             <Input
-              aria-describedby={
-                hasDescription ? `${descriptionId} ${errorId}` : errorId
-              }
+              aria-describedby={describedBy}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               autoFocus={autoFocus}

@@ -51,6 +51,31 @@ export function preloadResourceDetail(
   return queryClient.ensureQueryData(resourceQueryOptions(scope, resourceMfid))
 }
 
+export function isResourceOverviewPath(pathname: string, resourceMfid: string) {
+  return pathname.replace(/\/+$/, "").endsWith(`/${resourceMfid}`)
+}
+
+export async function preloadResourceShell(
+  queryClient: QueryClient,
+  scope: IdentityScope,
+  resourceMfid: string,
+  forceApiResolution = false,
+  includeDetail = false
+) {
+  const options = resourceSummaryQueryOptions(scope, resourceMfid)
+  if (forceApiResolution) {
+    await queryClient.invalidateQueries({
+      exact: true,
+      queryKey: options.queryKey,
+      refetchType: "none",
+    })
+    return queryClient.fetchQuery(options)
+  }
+  if (includeDetail)
+    await preloadResourceDetail(queryClient, scope, resourceMfid)
+  return queryClient.ensureQueryData(options)
+}
+
 export function resourceSummaryQueryOptions(
   scope: IdentityScope,
   resourceMfid: string

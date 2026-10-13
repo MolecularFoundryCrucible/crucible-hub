@@ -210,7 +210,7 @@ export function SampleCreationForm({
                             Project
                           </FieldLabel>
                           <ResourceChooser
-                            describedBy={errorId}
+                            describedBy={invalid ? errorId : undefined}
                             emptyLabel="Choose a project"
                             invalid={invalid}
                             kind="project"
@@ -282,7 +282,7 @@ export function SampleCreationForm({
                               Local date and time
                             </FieldLabel>
                             <Input
-                              aria-describedby={errorId}
+                              aria-describedby={invalid ? errorId : undefined}
                               aria-errormessage={invalid ? errorId : undefined}
                               aria-invalid={invalid || undefined}
                               id={field.name}
@@ -312,7 +312,7 @@ export function SampleCreationForm({
                               Description
                             </FieldLabel>
                             <Textarea
-                              aria-describedby={errorId}
+                              aria-describedby={invalid ? errorId : undefined}
                               aria-errormessage={invalid ? errorId : undefined}
                               aria-invalid={invalid || undefined}
                               id={field.name}
@@ -447,7 +447,7 @@ function SampleTextField({
               {label}
             </FieldLabel>
             <Input
-              aria-describedby={errorId}
+              aria-describedby={invalid ? errorId : undefined}
               aria-errormessage={invalid ? errorId : undefined}
               aria-invalid={invalid || undefined}
               autoFocus={autoFocus}

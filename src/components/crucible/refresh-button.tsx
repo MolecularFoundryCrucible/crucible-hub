@@ -22,7 +22,7 @@ export function RefreshButton({
       aria-label={label}
       className={refreshing ? "translate-y-px" : undefined}
       data-refreshing={refreshing || undefined}
-      onClick={onClick}
+      onClick={refreshing ? undefined : onClick}
       size={size}
       type="button"
       variant={failed ? "destructive" : "outline"}

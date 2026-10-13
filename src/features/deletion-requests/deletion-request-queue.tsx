@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import {
   useInfiniteQuery,
   useMutation,
@@ -236,7 +236,7 @@ function DeletionRequestPending({
       role="status"
     >
       {bulkReview ? (
-        <div className="flex items-center gap-2 border-b px-3 py-2 md:hidden">
+        <div className="flex min-h-11 items-center gap-2 border-b px-3 py-2 md:hidden">
           <Checkbox
             aria-label="Select all loaded reviewable requests"
             disabled
@@ -773,6 +773,7 @@ function DeletionRequestTable({
   showStatus: boolean
   sort: WorkspaceDeletionRequestSort
 }) {
+  const mobileSelectAllId = useId()
   const selectableRequests = bulkReview
     ? items.filter(isReviewableDeletionRequest)
     : []
@@ -802,13 +803,19 @@ function DeletionRequestTable({
               selectedCount === selectableRequests.length
             }
             disabled={selectableRequests.length === 0}
+            id={mobileSelectAllId}
             indeterminate={
               selectedCount > 0 && selectedCount < selectableRequests.length
             }
             onCheckedChange={selectAll}
           />
           {bulkReviewActions ?? (
-            <span className="text-label">Select all loaded</span>
+            <label
+              className="cursor-pointer text-label"
+              htmlFor={mobileSelectAllId}
+            >
+              Select all loaded
+            </label>
           )}
         </div>
       ) : null}

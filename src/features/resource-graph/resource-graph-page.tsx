@@ -144,13 +144,19 @@ function combineResourceGraphExpansionQueries(
   }
 }
 
+const emptyGraphThumbnails: Readonly<
+  Partial<Record<string, WorkspaceDatasetThumbnail>>
+> = {}
+
 function combineGraphThumbnailQueries(
   results: readonly GraphThumbnailQueryResult[]
 ) {
-  return Object.assign(
-    {},
-    ...results.flatMap((result) => (result.data ? [result.data] : []))
+  const batches = results.flatMap((result) =>
+    result.data ? [result.data] : []
   )
+  if (batches.length === 0) return emptyGraphThumbnails
+  if (batches.length === 1) return batches[0]
+  return Object.assign({}, ...batches)
 }
 
 export function ResourceGraphPage({
@@ -241,6 +247,7 @@ export function ResourceGraphPage({
   ])
   const displayedGraph = useMemo(() => {
     if (!rootGraph) return undefined
+    if (expansions.graphs.length === 0) return rootGraph
     return mergeResourceGraphs(rootGraph, expansions.graphs)
   }, [expansions.graphs, rootGraph])
   const canvasGraph = useMemo(() => {

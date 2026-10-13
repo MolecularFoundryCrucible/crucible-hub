@@ -57,19 +57,22 @@ export function MfidValue({
           value={value}
         />
         <Tooltip>
-          <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
-            <Button
-              aria-label={copyLabel}
-              onClick={() => void copyMfid()}
-              size="icon-xs"
-              variant="outline"
-            >
-              {copyState === "success" ? (
-                <CopySuccessIcon aria-hidden="true" />
-              ) : (
-                <CopyIcon aria-hidden="true" />
-              )}
-            </Button>
+          <TooltipTrigger
+            render={
+              <Button
+                aria-label={copyLabel}
+                className="shrink-0"
+                onClick={() => void copyMfid()}
+                size="icon-xs"
+                variant="outline"
+              />
+            }
+          >
+            {copyState === "success" ? (
+              <CopySuccessIcon aria-hidden="true" />
+            ) : (
+              <CopyIcon aria-hidden="true" />
+            )}
           </TooltipTrigger>
           <TooltipContent>{copyLabel}</TooltipContent>
         </Tooltip>

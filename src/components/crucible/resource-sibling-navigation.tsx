@@ -91,6 +91,7 @@ type ResourceSiblingNavigationContextValue = {
     currentMfid: string
   ) => Promise<ResourceSibling | undefined>
   registered: readonly ResourceSiblingCollection[]
+  registeredByItem: ReadonlyMap<string, ResourceSiblingCollection>
   register: (collections: readonly ResourceSiblingCollection[]) => void
   start: (sessionId: string, collection: ResourceSiblingCollection) => void
 }
@@ -213,6 +214,18 @@ export function ResourceSiblingNavigationProvider({
     },
     [active]
   )
+  const registeredByItem = useMemo(() => {
+    const map = new Map<string, ResourceSiblingCollection>()
+    for (const candidate of registered) {
+      for (const item of candidate.items) {
+        const key = `${item.kind}:${item.mfid}`
+        if (!map.has(key)) {
+          map.set(key, candidate)
+        }
+      }
+    }
+    return map
+  }, [registered])
   const value = useMemo(
     () => ({
       active,
@@ -221,6 +234,7 @@ export function ResourceSiblingNavigationProvider({
       clear,
       loadSibling,
       registered,
+      registeredByItem,
       register,
       start,
     }),
@@ -232,6 +246,7 @@ export function ResourceSiblingNavigationProvider({
       loadSibling,
       register,
       registered,
+      registeredByItem,
       start,
     ]
   )
@@ -271,11 +286,7 @@ export function useResourceSiblingCandidate(
   const navigation = useContext(ResourceSiblingNavigationContext)
   const collection =
     kind === "dataset" || kind === "sample"
-      ? navigation?.registered.find((candidate) =>
-          candidate.items.some(
-            (item) => item.kind === kind && item.mfid === mfid
-          )
-        )
+      ? navigation?.registeredByItem.get(`${kind}:${mfid}`)
       : undefined
   const sessionId = collection ? navigation?.candidateId : undefined
   return {
@@ -650,7 +661,9 @@ function createSiblingSessionId() {
 function isEditingOrOverlayTarget(target: EventTarget | null) {
   return (
     Boolean(
-      document.querySelector("[role='dialog'], [role='listbox'], [role='menu']")
+      document.querySelector(
+        "[role='dialog'], [role='alertdialog'], [role='listbox'], [role='menu']"
+      )
     ) ||
     (target instanceof Element &&
       Boolean(

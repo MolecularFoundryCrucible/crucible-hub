@@ -129,6 +129,18 @@ export function instrumentsCursorQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      instrumentStatusScopedPreviousData(
+        scope,
+        filters.affiliation,
+        filters.direction,
+        filters.includeOwner ?? true,
+        filters.includeTotal ?? true,
+        filters.sort,
+        filters.status,
+        previousData,
+        previousQuery
+      ),
     retry: scenario ? false : undefined,
   })
 }

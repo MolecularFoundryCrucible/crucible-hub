@@ -1,5 +1,4 @@
 import type { IHasher } from "hash-wasm"
-import { createCRC32, createSHA256 } from "hash-wasm"
 
 import { HubApiClientError } from "./result"
 
@@ -122,6 +121,7 @@ export async function computeUploadDigests(
     throw new Error("Upload parts do not tile the file.")
   }
 
+  const { createCRC32, createSHA256 } = await import("hash-wasm")
   const sha256 = await createSHA256()
   const wholeCrc32c = await createCRC32(CRC32C_POLYNOMIAL)
   sha256.init()

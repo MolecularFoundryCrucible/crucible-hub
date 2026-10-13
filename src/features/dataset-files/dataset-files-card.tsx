@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { lazyRouteComponent } from "@tanstack/react-router"
 
 import {
   PanelState,
@@ -53,8 +54,12 @@ import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
 import { formatBytes } from "@/lib/format"
-import { UploadFilesDialog } from "./upload-dialog"
 import { PendingIcon } from "@/components/crucible/pending-icon"
+
+const UploadFilesDialog = lazyRouteComponent(
+  () => import("./upload-dialog"),
+  "UploadFilesDialog"
+)
 
 export function DatasetFiles({
   canEdit,
@@ -114,7 +119,7 @@ export function DatasetFiles({
           />
         )}
       </CardContent>
-      {uploadAvailable ? (
+      {uploadAvailable && uploadOpen ? (
         <UploadFilesDialog
           datasetMfid={datasetMfid}
           onClose={() => setUploadOpen(false)}
@@ -404,7 +409,7 @@ export function FileDownloadAction({
   return (
     <>
       <Tooltip>
-        <TooltipTrigger render={<span className="inline-flex" />}>
+        <TooltipTrigger render={<span className="inline-flex" />} tabIndex={-1}>
           <Button
             aria-busy={pending}
             aria-label={actionLabel}

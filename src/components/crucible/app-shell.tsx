@@ -927,7 +927,7 @@ function SidebarAdministratorViewControl() {
   }
 
   return (
-    <div className="flex h-8 items-center gap-2 rounded-md px-2 text-body">
+    <label className="flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 text-body">
       <Icon aria-hidden="true" className="size-4 shrink-0" />
       <span className="min-w-0 flex-1 truncate">Administrator view</span>
       <Switch
@@ -938,6 +938,6 @@ function SidebarAdministratorViewControl() {
         size="sm"
         variant="warning"
       />
-    </div>
+    </label>
   )
 }

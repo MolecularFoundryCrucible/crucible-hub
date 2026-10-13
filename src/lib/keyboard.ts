@@ -7,5 +7,8 @@ export function isEditableKeyboardTarget(target: EventTarget | null) {
 }
 
 export function isDialogKeyboardTarget(target: EventTarget | null) {
-  return target instanceof Element && Boolean(target.closest('[role="dialog"]'))
+  return (
+    target instanceof Element &&
+    Boolean(target.closest('[role="dialog"], [role="alertdialog"]'))
+  )
 }

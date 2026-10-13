@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef } from "react"
+import { useEffect, useEffectEvent, useId, useRef } from "react"
 
 import { BackToTop } from "@/components/crucible/back-to-top"
 import { Button } from "@/components/ui/button"
@@ -25,6 +25,7 @@ export function CollectionPagination({
   onLoadMore: () => void
   total: number | null
 }) {
+  const errorId = useId()
   const loadMoreTarget = useRef<HTMLDivElement>(null)
   const requestNextPage = useEffectEvent(onLoadMore)
 
@@ -73,7 +74,7 @@ export function CollectionPagination({
         </p>
         {hasNextPage ? (
           <Button
-            aria-describedby={isError ? `${label}-load-more-error` : undefined}
+            aria-describedby={isError ? errorId : undefined}
             disabled={disabled || isLoading}
             onClick={onLoadMore}
             type="button"
@@ -86,7 +87,7 @@ export function CollectionPagination({
         {isError ? (
           <p
             className="basis-full text-supporting text-destructive"
-            id={`${label}-load-more-error`}
+            id={errorId}
             role="alert"
           >
             More {label} could not be loaded. The loaded results remain

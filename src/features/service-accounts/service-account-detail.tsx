@@ -52,6 +52,7 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { formatUsername } from "@/lib/username"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 import { hubActionError } from "@/components/crucible/reauthentication"
@@ -313,30 +314,33 @@ function ServiceAccountIdentityCard({
                 {(["first_name", "last_name", "username"] as const).map(
                   (name) => (
                     <form.Field key={name} name={name}>
-                      {(field) => (
-                        <Field data-invalid={!field.state.meta.isValid}>
-                          <FieldLabel
-                            htmlFor={field.name}
-                            optional={name !== "username"}
-                            required={name === "username"}
-                          >
-                            {profileFieldLabel(name)}
-                          </FieldLabel>
-                          <Input
-                            aria-invalid={
-                              !field.state.meta.isValid || undefined
-                            }
-                            id={field.name}
-                            maxLength={255}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            value={field.state.value}
-                          />
-                          <FieldError errors={field.state.meta.errors} />
-                        </Field>
-                      )}
+                      {(field) => {
+                        const invalid = shouldShowFieldError(field)
+                        return (
+                          <Field data-invalid={invalid}>
+                            <FieldLabel
+                              htmlFor={field.name}
+                              optional={name !== "username"}
+                              required={name === "username"}
+                            >
+                              {profileFieldLabel(name)}
+                            </FieldLabel>
+                            <Input
+                              aria-invalid={invalid || undefined}
+                              id={field.name}
+                              maxLength={255}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              value={field.state.value}
+                            />
+                            <FieldError
+                              errors={fieldErrors(field, { invalid })}
+                            />
+                          </Field>
+                        )
+                      }}
                     </form.Field>
                   )
                 )}

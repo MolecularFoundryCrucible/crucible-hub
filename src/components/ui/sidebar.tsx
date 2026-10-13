@@ -7,6 +7,10 @@ import { cva } from "class-variance-authority"
 import type { VariantProps } from "class-variance-authority"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  isDialogKeyboardTarget,
+  isEditableKeyboardTarget,
+} from "@/lib/keyboard"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -102,6 +106,15 @@ function SidebarProvider({
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.altKey ||
+        event.shiftKey ||
+        isEditableKeyboardTarget(event.target) ||
+        isDialogKeyboardTarget(event.target)
+      ) {
+        return
+      }
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
         (event.metaKey || event.ctrlKey)
@@ -707,7 +720,7 @@ function SidebarMenuSubAction({
     props: mergeProps<"button">(
       {
         className: cn(
-          "absolute top-0.5 right-1 flex aspect-square w-6 items-center justify-center rounded-md p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden peer-hover/menu-sub-button:text-sidebar-accent-foreground hover:bg-sidebar-action-hover hover:text-sidebar-accent-foreground focus-visible:ring-2 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
+          "absolute top-0.5 right-1 flex aspect-square w-6 items-center justify-center rounded-md p-0 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-transform group-data-[collapsible=icon]:hidden peer-hover/menu-sub-button:text-sidebar-accent-foreground after:absolute after:-inset-2 hover:bg-sidebar-action-hover hover:text-sidebar-accent-foreground focus-visible:ring-2 md:after:hidden [&>svg]:size-4 [&>svg]:shrink-0",
           showOnHover &&
             "group-focus-within/menu-sub-item:opacity-100 group-hover/menu-sub-item:opacity-100 peer-data-active/menu-sub-button:text-sidebar-accent-foreground aria-expanded:opacity-100 md:opacity-0 md:group-focus-within/menu-sub-item:opacity-100 md:group-hover/menu-sub-item:opacity-100",
           className

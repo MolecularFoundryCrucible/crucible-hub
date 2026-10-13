@@ -39,6 +39,7 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
+import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { SaveError } from "@/components/crucible/form-error"
 import type { EditableResource } from "./scientific-metadata-editor"
@@ -287,31 +288,34 @@ export function ScientificMetadataForm({
           >
             <FieldGroup>
               <form.Field name="metadata">
-                {(field) => (
-                  <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>
-                      Scientific metadata
-                    </FieldLabel>
-                    <Textarea
-                      aria-invalid={!field.state.meta.isValid || undefined}
-                      className="h-metadata-editor-height resize-y font-mono text-supporting"
-                      disabled={isSubmitting}
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      spellCheck={false}
-                      value={field.state.value}
-                    />
-                    <FieldDescription>
-                      Edit the complete JSON object. Arrays, nested objects, and
-                      primitive values keep their JSON types.
-                    </FieldDescription>
-                    <FieldError errors={field.state.meta.errors} />
-                  </Field>
-                )}
+                {(field) => {
+                  const invalid = shouldShowFieldError(field)
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        Scientific metadata
+                      </FieldLabel>
+                      <Textarea
+                        aria-invalid={invalid || undefined}
+                        className="h-metadata-editor-height resize-y font-mono text-supporting"
+                        disabled={isSubmitting}
+                        id={field.name}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        spellCheck={false}
+                        value={field.state.value}
+                      />
+                      <FieldDescription>
+                        Edit the complete JSON object. Arrays, nested objects,
+                        and primitive values keep their JSON types.
+                      </FieldDescription>
+                      <FieldError errors={fieldErrors(field, { invalid })} />
+                    </Field>
+                  )
+                }}
               </form.Field>
               <SaveError message={saveError} />
             </FieldGroup>

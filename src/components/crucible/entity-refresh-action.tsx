@@ -58,7 +58,7 @@ export function EntityRefreshAction({
   return (
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
       <Tooltip>
-        <TooltipTrigger render={<span className="inline-flex" />}>
+        <TooltipTrigger render={<span className="inline-flex" />} tabIndex={-1}>
           <RefreshButton
             failed={failed}
             label={failed ? `${label}. Refresh failed. Try again.` : label}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 import {
@@ -190,9 +190,18 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
     previewMfidSchema.safeParse(target).success
       ? target
       : invalidPreviewSearchValue
-  const preparePreview = (previewIdentity: ResourcePreviewIdentity) => {
-    setPreparedPreview(previewIdentity)
-  }
+  const preparePreview = useCallback(
+    (nextIdentity: ResourcePreviewIdentity) => {
+      setPreparedPreview((current) =>
+        current?.mfid === nextIdentity.mfid &&
+        current.kind === nextIdentity.kind &&
+        current.name === nextIdentity.name
+          ? current
+          : nextIdentity
+      )
+    },
+    []
+  )
 
   const open = (
     target: string,
@@ -582,14 +591,6 @@ export function ResourcePreviewLink({
     preparePreview()
     if (!sameTarget) void openPreview()
   }
-  const onFocus: React.FocusEventHandler<HTMLAnchorElement> = (event) => {
-    props.onFocus?.(event)
-    if (!event.defaultPrevented) preparePreview()
-  }
-  const onMouseEnter: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
-    props.onMouseEnter?.(event)
-    if (!event.defaultPrevented) preparePreview()
-  }
 
   return (
     <CanonicalResourceLink
@@ -597,8 +598,6 @@ export function ResourcePreviewLink({
       className={className}
       mfid={mfid}
       onClick={onClick}
-      onFocus={onFocus}
-      onMouseEnter={onMouseEnter}
       preload={false}
       resourceKind={resourceKind}
     >

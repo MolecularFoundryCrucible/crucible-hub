@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Optimized client bundle splitting, rendering performance, pagination smoothness, and keyboard/screen-reader accessibility: moved the dataset upload workflow and `hash-wasm` checksum library out of initial route chunks; eliminated redundant table row, scientific metadata, resource graph, and upload batch work; preserved previous rows across cursor pagination when optional filter parameters are omitted; gated inline form errors on field touch or submit and removed dangling `aria-describedby` references; enabled keyboard node inspection on the resource graph canvas; guarded global keyboard shortcuts inside alert dialogs and editable fields; and removed duplicate tab stops on icon-button tooltips.
+
 - Pinned the Crucible API contract to staging revision `10ce235` (pull requests 312 and 313). Invalid file storage locations are now recognized by the API's structured `storage_location_invalid` code, with the plain `409` kept as a fallback, and requesting ingestion for such a file explains that its stored copy is not in a valid location instead of showing a generic conflict.
 
 - Pinned the Crucible API contract to staging revision `6f227ca` (pull request 311). Clicking a stored file name in the dataset Files and Processing tables now opens the file in a new tab through the Hub `/files/{mfid}/open` route, which requests a fresh inline link, so PDFs, images, text, JSON, and CSV display in the browser; the Download button still saves the file. Files whose stored object is outside their dataset show as unavailable instead of offering a retry, and a refused open lands on a File unavailable page.
