@@ -20,7 +20,7 @@ const patterns = [
 
 function scan(directory) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (ignored.has(entry.name)) continue
+    if (ignored.has(entry.name) || entry.isSymbolicLink()) continue
     const path = join(directory, entry.name)
     if (entry.isDirectory()) {
       scan(path)

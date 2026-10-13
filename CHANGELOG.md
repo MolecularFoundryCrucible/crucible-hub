@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Updated the installed shadcn agent skill to the current upstream version, linked it under `.claude/skills` so Claude Code discovers it, and documented which skill to load for each kind of change and how to update skills in `skills/README.md`. ESLint now ignores installed skill files and the secret scan skips symbolic links.
+
 - Grouped shared client code into `vendor` and `shared` chunks, keeping the graph, form, and QR libraries separate: a cold page load now makes 13 to 16 JavaScript requests instead of about 140 and transfers about 15% less, and loads in about 0.6 s instead of 1.9 s on a throttled 10 Mbps connection.
 
 - Loaded the sample and dataset summary editor, the scientific metadata editor, and the QR code library only when needed, preloading the editors when their Edit button is hovered or focused; the main bundle shrinks from 549 KB to 452 KB (130 KB to 110 KB compressed).

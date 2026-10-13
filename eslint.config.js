@@ -15,6 +15,7 @@ export default [
   {
     ignores: [
       "eslint.config.js",
+      ".agents/**",
       ".output/**",
       ".playwright-cli/**",
       ".prettierrc",
