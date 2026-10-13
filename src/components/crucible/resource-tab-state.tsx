@@ -198,48 +198,40 @@ export function ResourceOverviewPending({
 
   return (
     <div aria-label="Loading resource overview" role="status">
-      <ContentGrid variant="detail">
-        <ContentGridItem
-          className="contents xl:flex xl:flex-col xl:gap-page-section"
-          span="wide"
-        >
-          <div className="order-1 min-w-0 xl:order-none">
+      {instrument ? (
+        <ContentGrid variant="detail">
+          <ContentGridItem span="wide">
             <ResourceCardPending title="Summary" />
-          </div>
-          {dataset ? (
-            <div className="order-4 min-w-0 xl:order-none">
-              <ResourceCardPending title="Files" />
-            </div>
-          ) : null}
-        </ContentGridItem>
-        <ContentGridItem
-          className="contents xl:flex xl:flex-col xl:gap-page-section"
-          span="narrow"
-        >
-          <div className="order-2 min-w-0 xl:order-none">
+          </ContentGridItem>
+          <ContentGridItem span="narrow">
             <ResourceCardPending title="Identity" />
-          </div>
-          {dataset ? (
-            <div className="order-3 min-w-0 xl:order-none">
-              <ResourceCardPending title="Thumbnails" />
-            </div>
-          ) : null}
-        </ContentGridItem>
-        {instrument ? (
+          </ContentGridItem>
           <ContentGridItem span="full">
             <ResourceCardPending title="Scientific metadata" />
           </ContentGridItem>
-        ) : (
-          <>
-            <ContentGridItem className="order-6 xl:order-none" span="wide">
-              <ResourceCardPending title="Scientific metadata" />
-            </ContentGridItem>
-            <ContentGridItem className="order-5 xl:order-none" span="narrow">
-              <ResourceCardPending title="Relationships" />
-            </ContentGridItem>
-          </>
-        )}
-      </ContentGrid>
+        </ContentGrid>
+      ) : (
+        <ContentGrid variant="detailAside">
+          <ContentGridItem span="wide">
+            <ResourceCardPending title="Summary" />
+          </ContentGridItem>
+          <ContentGridItem
+            className="flex flex-col gap-page-section [&>*]:min-w-0"
+            span="aside"
+          >
+            <ResourceCardPending title="Identity" />
+            {dataset ? <ResourceCardPending title="Thumbnails" /> : null}
+            <ResourceCardPending title="Relationships" />
+          </ContentGridItem>
+          <ContentGridItem
+            className="flex flex-col gap-page-section [&>*]:min-w-0"
+            span="wide"
+          >
+            {dataset ? <ResourceCardPending title="Files" /> : null}
+            <ResourceCardPending title="Scientific metadata" />
+          </ContentGridItem>
+        </ContentGrid>
+      )}
     </div>
   )
 }

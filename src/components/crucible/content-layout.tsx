@@ -23,6 +23,7 @@ const contentGridVariants = cva(
       variant: {
         actions: "content-grid-actions",
         detail: "grid grid-cols-1 xl:grid-cols-7",
+        detailAside: "grid grid-cols-1 xl:grid-cols-7 xl:grid-rows-[auto_1fr]",
         identity: "content-grid-identity grid gap-4",
         split: "grid grid-cols-1 xl:grid-cols-2",
       },
@@ -39,6 +40,7 @@ const contentGridItemVariants = cva("min-w-0", {
       wide: "xl:col-span-4",
       narrow: "xl:col-span-3",
       full: "xl:col-span-7",
+      aside: "xl:col-span-3 xl:row-span-2",
     },
   },
   defaultVariants: {

@@ -354,6 +354,41 @@ describe("DatasetFiles", () => {
     expect(order()).toEqual(["Notes.txt", "run-10.h5", "run-2.h5"])
   })
 
+  it("shows the first ten sorted files until expanded", () => {
+    const base = demoWorkspace.files[0]
+    const files = Array.from({ length: 12 }, (_, index) => ({
+      ...base,
+      filename: `run-${index + 1}.h5`,
+      mfid: `f-${index + 1}`,
+      size: index + 1,
+    }))
+    render(
+      <WorkspaceProvider mode="fixture" scope={scope}>
+        <FilesTable files={files} />
+      </WorkspaceProvider>
+    )
+    const order = () =>
+      screen
+        .getAllByRole("row")
+        .slice(1)
+        .map((row) => row.textContent.match(/run-\d+\.h5/)?.[0])
+
+    expect(order()).toHaveLength(10)
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort by size descending." })
+    )
+    expect(order()[0]).toBe("run-12.h5")
+
+    fireEvent.click(screen.getByRole("button", { name: "Show all 12 files" }))
+    expect(order()).toHaveLength(12)
+    expect(order()[11]).toBe("run-1.h5")
+    expect(
+      screen
+        .getByRole("button", { name: "Show fewer files" })
+        .getAttribute("aria-controls")
+    ).toBe(screen.getByRole("table").id)
+  })
+
   it("aborts and discards a pending capability when identity changes", async () => {
     const file = demoWorkspace.files[0]
     const otherScope = identityScope(

@@ -86,6 +86,7 @@ export {
   LoaderCircle as AvailabilityCheckingIcon,
   Copy as CopyIcon,
   ChevronRight as MetadataDisclosureIcon,
+  ChevronDown as ListExpansionIcon,
   Clock3 as DeletionRequestedIcon,
   Trash2 as DeletionRequestsIcon,
   Trash2 as RequestDeletionIcon,

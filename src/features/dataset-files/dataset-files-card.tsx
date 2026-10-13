@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import {
@@ -12,6 +12,10 @@ import {
   PreparingDownloadIcon,
   RetryDownloadIcon,
 } from "@/components/crucible/icons"
+import {
+  COLLAPSED_LIST_LIMIT,
+  ListExpansionToggle,
+} from "@/components/crucible/list-expansion-toggle"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { Button } from "@/components/ui/button"
@@ -66,7 +70,7 @@ export function DatasetFiles({
   return (
     <Card aria-busy={filesResult.isFetching}>
       <CardHeader>
-        <CardTitle>Files</CardTitle>
+        <CardTitle>Files{files?.length ? ` (${files.length})` : ""}</CardTitle>
         {uploadAvailable ? (
           <CardAction>
             <Button onClick={() => setUploadOpen(true)} type="button">
@@ -187,6 +191,8 @@ export function FilesTable({
   const scope = useWorkspaceScope()
   const identity = JSON.stringify(scope)
   const scenario = fixtureScenarioFromScope(scope)
+  const tableId = useId()
+  const [expanded, setExpanded] = useState(false)
   const [sort, setSort] = useState<{
     direction: SortDirection
     field: FileSortField
@@ -197,65 +203,81 @@ export function FilesTable({
       (left, right) => factor * compareFiles(left, right, sort.field)
     )
   }, [files, sort])
+  const visibleFiles = expanded
+    ? sortedFiles
+    : sortedFiles.slice(0, COLLAPSED_LIST_LIMIT)
   const onSortChange = (field: FileSortField, direction: SortDirection) =>
     setSort({ direction, field })
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <SortableTableHead
-            active={sort.field === "name"}
-            direction={sort.direction}
-            field="name"
-            label="Filename"
-            onChange={onSortChange}
-          />
-          <SortableTableHead
-            active={sort.field === "storage"}
-            direction={sort.direction}
-            field="storage"
-            label="Storage"
-            onChange={onSortChange}
-            preferredDirection="asc"
-          />
-          <SortableTableHead
-            active={sort.field === "size"}
-            className="text-right"
-            direction={sort.direction}
-            field="size"
-            label="Size"
-            onChange={onSortChange}
-          />
-          <TableHead className="text-right">
-            <span className="sr-only">File action</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sortedFiles.map((file) => (
-          <TableRow key={file.mfid}>
-            <TableCell>
-              <ResourceIdentity
-                kind="file"
-                name={file.filename}
-                presentation="collection"
-              />
-            </TableCell>
-            <TableCell>{file.storage_backend}</TableCell>
-            <TableCell className="text-right tabular-nums">
-              {formatBytes(file.size)}
-            </TableCell>
-            <TableCell className="text-right">
-              <FileDownloadAction
-                file={file}
-                identity={identity}
-                scenario={scenario}
-              />
-            </TableCell>
+    <div>
+      <Table id={tableId}>
+        <TableHeader>
+          <TableRow>
+            <SortableTableHead
+              active={sort.field === "name"}
+              direction={sort.direction}
+              field="name"
+              label="Filename"
+              onChange={onSortChange}
+            />
+            <SortableTableHead
+              active={sort.field === "storage"}
+              direction={sort.direction}
+              field="storage"
+              label="Storage"
+              onChange={onSortChange}
+              preferredDirection="asc"
+            />
+            <SortableTableHead
+              active={sort.field === "size"}
+              className="text-right"
+              direction={sort.direction}
+              field="size"
+              label="Size"
+              onChange={onSortChange}
+            />
+            <TableHead className="text-right">
+              <span className="sr-only">File action</span>
+            </TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {visibleFiles.map((file) => (
+            <TableRow key={file.mfid}>
+              <TableCell>
+                <ResourceIdentity
+                  kind="file"
+                  name={file.filename}
+                  presentation="collection"
+                />
+              </TableCell>
+              <TableCell>{file.storage_backend}</TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatBytes(file.size)}
+              </TableCell>
+              <TableCell className="text-right">
+                <FileDownloadAction
+                  file={file}
+                  identity={identity}
+                  scenario={scenario}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {files.length > COLLAPSED_LIST_LIMIT ? (
+        <div className="flex border-t px-0.5 pt-2">
+          <ListExpansionToggle
+            controls={tableId}
+            expanded={expanded}
+            noun="files"
+            onExpandedChange={setExpanded}
+            total={files.length}
+          />
+        </div>
+      ) : null}
+    </div>
   )
 }
 

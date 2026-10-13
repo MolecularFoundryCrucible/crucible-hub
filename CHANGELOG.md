@@ -8,6 +8,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 - Restored CI: `npm run audit` now checks only shipped dependencies (`npm audit --omit=dev --audit-level=high`), `shadcn` moved to `devDependencies` because the app only imports its Tailwind CSS at build time, vulnerable transitive packages were updated, and CI runners are pinned to `ubuntu-24.04`. The `braces` advisory GHSA-vfj7-8cjw-p6xm has no patched release and is reachable only through the `shadcn` CLI.
 
+- Reworked the sample and dataset Overview layout: on wide screens Identity, Thumbnails, and Relationships form an independent side column beside Summary, Files, and Scientific metadata, so a long card no longer leaves gaps in the other column or pushes it down, and on narrow screens Identity now follows Summary. The Files table and each relationship group show their first 10 rows with a Show all control that expands the list in place, and the Files heading shows the file count.
+
 - Made resource preview links open the full resource page on Ctrl or Cmd click, middle click, and the browser's open-in-new-tab and copy-link actions, while a plain click still opens the preview.
 
 - Pinned the Crucible API contract to staging revision `d9ff79c` (pull request 309) and fixed the administrator person view listing projects with the administrator's own role: it now reads `GET /users/{user_ref}/projects`, which returns that user's role, with server sorting.

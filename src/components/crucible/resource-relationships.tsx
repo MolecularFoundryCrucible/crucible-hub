@@ -1,7 +1,12 @@
+import { useId, useState } from "react"
 import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 
 import { OpenFullPageIcon } from "@/components/crucible/icons"
+import {
+  COLLAPSED_LIST_LIMIT,
+  ListExpansionToggle,
+} from "@/components/crucible/list-expansion-toggle"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
@@ -87,28 +92,66 @@ export function ResourceRelationships({
     )
   }
 
-  const GroupHeading = groupHeadingLevel === 4 ? "h4" : "h3"
-
   return (
     <div className="flex flex-col gap-5">
       {groupResourceRelationships(kind, links).map((group) => (
-        <section className="min-w-0" key={group.title}>
-          <GroupHeading className="text-label">
-            {group.title} ({group.links.length})
-          </GroupHeading>
-          <ResourceList className="mt-2">
-            {group.links.map((link) => (
-              <RelationshipRow
-                key={`${link.relationship}:${link.resource_type}:${link.unique_id}`}
-                link={link}
-                managing={managing}
-                renderManagementAction={renderManagementAction}
-              />
-            ))}
-          </ResourceList>
-        </section>
+        <RelationshipGroup
+          headingLevel={groupHeadingLevel}
+          key={group.title}
+          links={group.links}
+          managing={managing}
+          renderManagementAction={renderManagementAction}
+          title={group.title}
+        />
       ))}
     </div>
+  )
+}
+
+function RelationshipGroup({
+  headingLevel,
+  links,
+  managing,
+  renderManagementAction,
+  title,
+}: {
+  headingLevel: 3 | 4
+  links: readonly WorkspaceLinkedResource[]
+  managing: boolean
+  renderManagementAction?: (link: WorkspaceLinkedResource) => ReactNode
+  title: string
+}) {
+  const listId = useId()
+  const [expanded, setExpanded] = useState(false)
+  const GroupHeading = headingLevel === 4 ? "h4" : "h3"
+  const visibleLinks = expanded ? links : links.slice(0, COLLAPSED_LIST_LIMIT)
+  return (
+    <section className="min-w-0">
+      <GroupHeading className="text-label">
+        {title} ({links.length})
+      </GroupHeading>
+      <ResourceList className="mt-2" id={listId}>
+        {visibleLinks.map((link) => (
+          <RelationshipRow
+            key={`${link.relationship}:${link.resource_type}:${link.unique_id}`}
+            link={link}
+            managing={managing}
+            renderManagementAction={renderManagementAction}
+          />
+        ))}
+      </ResourceList>
+      {links.length > COLLAPSED_LIST_LIMIT ? (
+        <div className="mt-1 -ml-1.5 flex">
+          <ListExpansionToggle
+            controls={listId}
+            expanded={expanded}
+            noun={title.toLowerCase()}
+            onExpandedChange={setExpanded}
+            total={links.length}
+          />
+        </div>
+      ) : null}
+    </section>
   )
 }
 
