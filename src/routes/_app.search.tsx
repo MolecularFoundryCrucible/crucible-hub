@@ -406,7 +406,7 @@ function SearchResults({
             <section className="flex flex-col gap-2" key={group.kind}>
               <div className="flex items-center gap-2">
                 <ResourceTypeIcon type={group.kind} />
-                <h2 className="text-section-title">{kindLabel(group.kind)}</h2>
+                <h2 className="text-title-section">{kindLabel(group.kind)}</h2>
                 {!group.error && group.total !== null ? (
                   <Badge variant="secondary">{group.total}</Badge>
                 ) : null}

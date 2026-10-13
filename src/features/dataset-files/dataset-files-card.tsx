@@ -47,8 +47,8 @@ import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
 import { formatBytes } from "@/lib/format"
-import { cn } from "@/lib/utils"
 import { UploadFilesDialog } from "./upload-dialog"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 export function DatasetFiles({
   canEdit,
@@ -69,12 +69,7 @@ export function DatasetFiles({
         <CardTitle>Files</CardTitle>
         {uploadAvailable ? (
           <CardAction>
-            <Button
-              onClick={() => setUploadOpen(true)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={() => setUploadOpen(true)} type="button">
               <AddFilesIcon aria-hidden="true" data-icon="inline-start" />
               Add files
             </Button>
@@ -131,8 +126,8 @@ function FilesTablePending() {
         <TableHeader>
           <TableRow>
             <TableHead>Filename</TableHead>
-            <TableHead className="text-center">Storage</TableHead>
-            <TableHead className="text-center">Size</TableHead>
+            <TableHead>Storage</TableHead>
+            <TableHead className="text-right">Size</TableHead>
             <TableHead>
               <span className="sr-only">File action</span>
             </TableHead>
@@ -145,10 +140,10 @@ function FilesTablePending() {
                 <Skeleton className="h-5 w-40" />
               </TableCell>
               <TableCell>
-                <Skeleton className="mx-auto h-4 w-16" />
+                <Skeleton className="h-4 w-16" />
               </TableCell>
               <TableCell>
-                <Skeleton className="mx-auto h-4 w-12" />
+                <Skeleton className="ml-auto h-4 w-12" />
               </TableCell>
               <TableCell>
                 <Skeleton className="ml-auto size-8" />
@@ -217,7 +212,6 @@ export function FilesTable({
           />
           <SortableTableHead
             active={sort.field === "storage"}
-            className="text-center"
             direction={sort.direction}
             field="storage"
             label="Storage"
@@ -226,7 +220,7 @@ export function FilesTable({
           />
           <SortableTableHead
             active={sort.field === "size"}
-            className="text-center"
+            className="text-right"
             direction={sort.direction}
             field="size"
             label="Size"
@@ -247,10 +241,8 @@ export function FilesTable({
                 presentation="collection"
               />
             </TableCell>
-            <TableCell className="text-center">
-              {file.storage_backend}
-            </TableCell>
-            <TableCell className="text-center tabular-nums">
+            <TableCell>{file.storage_backend}</TableCell>
+            <TableCell className="text-right tabular-nums">
               {formatBytes(file.size)}
             </TableCell>
             <TableCell className="text-right">
@@ -374,11 +366,11 @@ export function FileDownloadAction({
             size="icon-sm"
             variant="outline"
           >
-            <ActionIcon
-              aria-hidden="true"
-              className={cn(pending && "motion-safe:animate-spin")}
-              data-icon="inline-start"
-            />
+            {pending ? (
+              <PendingIcon data-icon="inline-start" />
+            ) : (
+              <ActionIcon aria-hidden="true" data-icon="inline-start" />
+            )}
           </Button>
         </TooltipTrigger>
         <TooltipContent>{actionLabel}</TooltipContent>

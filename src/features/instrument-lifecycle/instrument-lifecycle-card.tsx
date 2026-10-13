@@ -2,10 +2,7 @@ import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
-import {
-  InstrumentStatusPendingIcon,
-  UpdateInstrumentStatusIcon,
-} from "@/components/crucible/icons"
+import { UpdateInstrumentStatusIcon } from "@/components/crucible/icons"
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { ManagementAction } from "@/components/crucible/management-action"
 import { Button } from "@/components/ui/button"
@@ -42,6 +39,7 @@ import type {
   WorkspaceInstrumentStatus,
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 
@@ -295,11 +293,7 @@ export function InstrumentLifecycleCard({
                 type="submit"
               >
                 {pending ? (
-                  <InstrumentStatusPendingIcon
-                    aria-hidden="true"
-                    className="motion-safe:animate-spin"
-                    data-icon="inline-start"
-                  />
+                  <PendingIcon data-icon="inline-start" />
                 ) : (
                   <UpdateInstrumentStatusIcon
                     aria-hidden="true"

@@ -42,7 +42,6 @@ import {
   GraphDescendantsIcon,
   GraphDescendantsVerticalIcon,
   GraphDisplayOptionsIcon,
-  LoadingMoreIcon,
   ResetGraphLayoutIcon,
   ZoomInGraphIcon,
   ZoomOutGraphIcon,
@@ -89,6 +88,7 @@ import type {
   GraphExpansionMode,
   GraphExpansionState,
 } from "./resource-graph-expansion"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 type ResourceFlowNodeData = {
   context: string | null
@@ -842,7 +842,7 @@ function ResourceGraphFlow({
           className="resource-graph-layout-status absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border bg-card px-2 py-1 text-label-compact shadow-sm"
           role="status"
         >
-          <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+          <PendingIcon />
           {loading ? "Loading" : "Arranging"}
         </div>
       ) : null}
@@ -1031,11 +1031,7 @@ function GraphNodeExpansionAction({
         }
       >
         {pending ? (
-          <LoadingMoreIcon
-            aria-hidden="true"
-            className="animate-spin"
-            data-icon="inline-start"
-          />
+          <PendingIcon data-icon="inline-start" />
         ) : (
           <Icon aria-hidden="true" data-icon="inline-start" />
         )}

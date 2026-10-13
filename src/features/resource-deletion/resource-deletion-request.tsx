@@ -4,7 +4,6 @@ import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import {
   DeletionRequestedIcon,
-  PreparingDownloadIcon,
   RequestDeletionIcon,
 } from "@/components/crucible/icons"
 import { ManagementAction } from "@/components/crucible/management-action"
@@ -36,6 +35,7 @@ import type {
   WorkspaceDeletionRequest,
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 type DeletableResource = Extract<
   WorkspaceResourceDetail,
@@ -213,23 +213,16 @@ export function ResourceDeletionRequestCard({
                 Cancel
               </Button>
               <Button
-                aria-label={
-                  mutation.isPending
-                    ? "Submitting deletion request"
-                    : "Submit deletion request"
-                }
                 disabled={mutation.isPending}
                 type="submit"
                 variant="destructive"
               >
                 {mutation.isPending ? (
-                  <PreparingDownloadIcon
-                    aria-hidden="true"
-                    className="motion-safe:animate-spin"
-                    data-icon="inline-start"
-                  />
+                  <PendingIcon data-icon="inline-start" />
                 ) : null}
-                Submit request
+                {mutation.isPending
+                  ? "Submitting deletion request"
+                  : "Submit deletion request"}
               </Button>
             </DialogFooter>
           </form>

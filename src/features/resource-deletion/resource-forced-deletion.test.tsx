@@ -134,7 +134,7 @@ describe("ResourceForcedDeletionCard", () => {
     expect(await screen.findByText("2 members unlinked")).toBeTruthy()
 
     const confirmButton = screen.getByRole("button", {
-      name: /confirm deletion/i,
+      name: "Delete permanently",
     })
     expect(confirmButton.hasAttribute("disabled")).toBe(true)
 
@@ -176,7 +176,7 @@ describe("ResourceForcedDeletionCard", () => {
       )
     ).toBeTruthy()
     const confirmButton = screen.getByRole("button", {
-      name: /confirm deletion/i,
+      name: "Delete permanently",
     })
     const confirmationInput = screen.getByLabelText(/Type DELETE to confirm/i)
     fireEvent.change(confirmationInput, { target: { value: "DELETE" } })
@@ -205,7 +205,7 @@ describe("ResourceForcedDeletionCard", () => {
       target: { value: "DELETE" },
     })
     fireEvent.click(
-      await screen.findByRole("button", { name: /confirm deletion/i })
+      await screen.findByRole("button", { name: "Delete permanently" })
     )
 
     expect(
@@ -273,7 +273,7 @@ describe("ResourceForcedDeletionCard", () => {
     expect(screen.queryByText("2 members unlinked")).toBeNull()
     expect(
       screen
-        .getByRole("button", { name: /confirm deletion/i })
+        .getByRole("button", { name: "Delete permanently" })
         .hasAttribute("disabled")
     ).toBe(true)
   })

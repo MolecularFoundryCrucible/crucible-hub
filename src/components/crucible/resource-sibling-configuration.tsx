@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import { createAnchoredResourceSiblingCollection } from "@/components/crucible/anchored-resource-siblings"
 import { CollectionOrderFields } from "@/components/crucible/collection-query-fields"
-import { FilterIcon, LoadingMoreIcon } from "@/components/crucible/icons"
+import { FilterIcon } from "@/components/crucible/icons"
 import type {
   ActiveResourceSiblingNavigation,
   ResourceSiblingConfiguration,
@@ -31,6 +31,7 @@ import {
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 type Resource = Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
 
@@ -89,7 +90,6 @@ export function ResourceSiblingConfigurationAction({
           <Button
             aria-label={`Change resource sequence. ${title}`}
             className="max-w-resource-sequence min-w-0"
-            size="sm"
             type="button"
             variant="outline"
           />
@@ -195,13 +195,7 @@ export function ResourceSiblingConfigurationAction({
             form="resource-sibling-configuration"
             type="submit"
           >
-            {pending ? (
-              <LoadingMoreIcon
-                aria-hidden="true"
-                className="animate-spin motion-reduce:animate-none"
-                data-icon="inline-start"
-              />
-            ) : null}
+            {pending ? <PendingIcon data-icon="inline-start" /> : null}
             Apply
           </Button>
         </DialogFooter>

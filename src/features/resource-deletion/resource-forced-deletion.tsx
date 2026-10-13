@@ -244,11 +244,6 @@ export function ResourceForcedDeletionCard({
               Cancel
             </Button>
             <Button
-              aria-label={
-                pending
-                  ? `Deleting ${resourceDetailDisplayName(resource)}`
-                  : `Confirm deletion of ${resourceDetailDisplayName(resource)}`
-              }
               disabled={
                 pending ||
                 !preview ||
@@ -260,7 +255,7 @@ export function ResourceForcedDeletionCard({
               variant="destructive"
             >
               {pending ? <PendingIcon data-icon="inline-start" /> : null}
-              Delete permanently
+              {pending ? "Deleting" : "Delete permanently"}
             </Button>
           </DialogFooter>
         </DialogContent>

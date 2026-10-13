@@ -7,7 +7,6 @@ import {
   AddRelationshipIcon,
   FinishManagingRelationshipsIcon,
   ManageRelationshipsIcon,
-  RelationshipPendingIcon,
   ResourceGraphIcon,
   UnlinkRelationshipIcon,
 } from "@/components/crucible/icons"
@@ -72,6 +71,7 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 type RelationshipResource = Extract<
   WorkspaceResourceDetail,
@@ -533,11 +533,7 @@ function AddRelationshipDialog({
             type="button"
           >
             {mutation.isPending ? (
-              <RelationshipPendingIcon
-                aria-hidden="true"
-                className="motion-safe:animate-spin"
-                data-icon="inline-start"
-              />
+              <PendingIcon data-icon="inline-start" />
             ) : null}
             {mutation.isPending ? "Adding" : "Add relationship"}
           </Button>

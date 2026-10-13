@@ -1,8 +1,8 @@
 import { useEffect, useEffectEvent, useRef } from "react"
 
 import { BackToTop } from "@/components/crucible/back-to-top"
-import { LoadingMoreIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 const collectionLoadAheadMargin = "480px 0px"
 
@@ -79,13 +79,7 @@ export function CollectionPagination({
             type="button"
             variant="outline"
           >
-            {isLoading ? (
-              <LoadingMoreIcon
-                aria-hidden="true"
-                className="animate-spin motion-reduce:animate-none"
-                data-icon="inline-start"
-              />
-            ) : null}
+            {isLoading ? <PendingIcon data-icon="inline-start" /> : null}
             {isError ? `Retry loading ${label}` : `Load more ${label}`}
           </Button>
         ) : null}

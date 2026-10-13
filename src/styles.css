@@ -244,6 +244,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-action-hover: var(--sidebar-action-hover);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -467,6 +468,11 @@
     var(--brand-crucible-light-blue)
   );
   --sidebar-accent-foreground: var(--brand-crucible-dark-blue);
+  --sidebar-action-hover: color-mix(
+    in oklch,
+    var(--sidebar-accent),
+    var(--sidebar-foreground) 14%
+  );
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: var(--brand-crucible-dark-blue);
   --resource-project: oklch(0.58 0.17 251);
@@ -598,6 +604,11 @@
     var(--brand-crucible-light-blue)
   );
   --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-action-hover: color-mix(
+    in oklch,
+    var(--sidebar-accent),
+    var(--sidebar-foreground) 14%
+  );
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: var(--brand-crucible-light-blue);
   --resource-project: oklch(0.72 0.14 251);

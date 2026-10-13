@@ -11,7 +11,6 @@ import {
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
 
 import {
-  LoadingMoreIcon,
   NextSiblingIcon,
   PreviousSiblingIcon,
 } from "@/components/crucible/icons"
@@ -26,6 +25,7 @@ import type {
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 export type ResourceSibling = {
   kind: "dataset" | "sample"
@@ -490,14 +490,7 @@ function SiblingBoundaryAction({
           />
         }
       >
-        {loading ? (
-          <LoadingMoreIcon
-            aria-hidden="true"
-            className="animate-spin motion-reduce:animate-none"
-          />
-        ) : (
-          <Icon aria-hidden="true" />
-        )}
+        {loading ? <PendingIcon /> : <Icon aria-hidden="true" />}
       </TooltipTrigger>
       <TooltipContent>
         {canLoad ? `Load the ${direction} items` : `No ${direction} item`}

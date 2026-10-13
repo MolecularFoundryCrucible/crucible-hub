@@ -24,6 +24,7 @@ import { getSystemStatus } from "@/data/crucible/system-status.functions"
 import { systemStatusQueryOptions } from "@/data/crucible/system-status.queries"
 import type { ServiceStatus } from "@/data/crucible/system-status"
 import { cn } from "@/lib/utils"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 function statusBadgeVariant(status: ServiceStatus) {
   if (status === "ok") return "success" as const
@@ -137,10 +138,7 @@ export function SystemStatusPopover({
 
         {statusQuery.isLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 py-6 text-supporting text-muted-foreground">
-            <RefreshResourceIcon
-              aria-hidden="true"
-              className="size-5 animate-spin motion-reduce:animate-none"
-            />
+            <PendingIcon className="size-5" />
             <span>Checking system readiness...</span>
           </div>
         ) : null}

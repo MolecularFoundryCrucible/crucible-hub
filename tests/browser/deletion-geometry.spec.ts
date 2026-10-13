@@ -25,6 +25,6 @@ test("deletion dialog opens with final geometry", async ({ page }) => {
       .count()) === 0
   )
   await expect(
-    dialog.getByRole("button", { name: /Confirm deletion/i })
+    dialog.getByRole("button", { name: "Delete permanently", exact: true })
   ).toBeDisabled()
 })

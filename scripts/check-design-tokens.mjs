@@ -37,6 +37,45 @@ const patterns = [
   },
 ]
 
+const themeSource = readFileSync(join(sourceRoot, "styles.css"), "utf8")
+const knownTextUtilities = new Set([
+  ...[...themeSource.matchAll(/--text-([a-z0-9-]+):/g)]
+    .map(([, name]) => name)
+    .filter((name) => !name.includes("--")),
+  ...[...themeSource.matchAll(/--color-([a-z0-9-]+):/g)].map(
+    ([, name]) => name
+  ),
+  "balance",
+  "center",
+  "clip",
+  "current",
+  "ellipsis",
+  "end",
+  "inherit",
+  "justify",
+  "left",
+  "nowrap",
+  "pretty",
+  "right",
+  "start",
+  "transparent",
+  "wrap",
+])
+
+function unknownTextUtilities(content) {
+  return [
+    ...content.matchAll(
+      /(?:^|[\s"'`:])text-([a-z][a-z0-9-]*)(?:\/\d+)?(?=[\s"'`]|$)/gm
+    ),
+  ]
+    .map(([, name]) => name)
+    .filter((name) => !knownTextUtilities.has(name))
+}
+
+const typographyPatterns = patterns.filter(({ label }) =>
+  label.startsWith("primitive typography")
+)
+
 const buttonStyleUtility =
   /^(?:bg|border(?:-[trblxy])?|font|gap(?:-[xy])?|h|max-h|min-h|p[trblxy]?|ring|rounded|shadow|size|tracking|whitespace)(?:-|$)/
 
@@ -124,7 +163,21 @@ function scan(directory) {
     }
     if (!new Set([".ts", ".tsx"]).has(extname(path))) continue
     const localPath = relative(sourceRoot, path)
-    if (allowedPrefixes.some((prefix) => localPath.startsWith(prefix))) continue
+    if (!localPath.startsWith("generated/")) {
+      for (const name of unknownTextUtilities(readFileSync(path, "utf8"))) {
+        violations.push(`${localPath}: unknown text utility text-${name}`)
+      }
+    }
+    if (allowedPrefixes.some((prefix) => localPath.startsWith(prefix))) {
+      if (localPath.startsWith("components/ui/")) {
+        const primitive = readFileSync(path, "utf8")
+        for (const pattern of typographyPatterns) {
+          if (pattern.expression.test(primitive))
+            violations.push(`${localPath}: ${pattern.label}`)
+        }
+      }
+      continue
+    }
     const content = readFileSync(path, "utf8")
     if (
       localPath !== "components/crucible/icons.ts" &&

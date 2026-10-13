@@ -15,7 +15,6 @@ import {
   GraphAncestorsIcon,
   GraphAssociationsIcon,
   GraphDescendantsIcon,
-  LoadingMoreIcon,
   ResourceGraphIcon,
 } from "@/components/crucible/icons"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
@@ -101,6 +100,7 @@ import type {
 import { mergeResourceGraphs } from "./resource-graph-merge"
 import { graphWithoutAssociations } from "./resource-graph-display"
 import type { ResourceGraphDisplay } from "./resource-graph-display"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 const ResourceGraphCanvas = lazy(() =>
   import("./resource-graph-canvas").then((module) => ({
@@ -556,11 +556,7 @@ function GraphExpansionModeItems({
           key={mode}
           onClick={() => onExpand(node.unique_id, mode)}
         >
-          {pending ? (
-            <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
-          ) : (
-            <Icon aria-hidden="true" />
-          )}
+          {pending ? <PendingIcon /> : <Icon aria-hidden="true" />}
           <span className="flex-1">{graphExpansionModeLabel(mode)}</span>
           {state?.isError ? (
             <span className="text-supporting text-destructive">Retry</span>
@@ -803,7 +799,7 @@ function GraphExpansionAction({
           }
         >
           {pending ? (
-            <LoadingMoreIcon aria-hidden="true" className="animate-spin" />
+            <PendingIcon />
           ) : (
             <ExpandGraphNodeIcon aria-hidden="true" />
           )}

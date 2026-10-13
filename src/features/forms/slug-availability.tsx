@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { FormFieldLike } from "./field-state"
 import { fieldErrors, shouldShowFieldError } from "./field-state"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 export type SlugAvailabilityStatus =
   "checking" | "no-exact-match" | "taken" | "error"
@@ -172,12 +173,7 @@ export function useSlugAvailability({
           />
         }
       >
-        <Icon
-          aria-hidden="true"
-          className={
-            status === "checking" ? "motion-safe:animate-spin" : undefined
-          }
-        />
+        {status === "checking" ? <PendingIcon /> : <Icon aria-hidden="true" />}
         <span className="sr-only">{label}</span>
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>

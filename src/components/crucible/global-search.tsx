@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 
-import { LoadingMoreIcon, SearchIcon } from "@/components/crucible/icons"
+import { SearchIcon } from "@/components/crucible/icons"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -35,6 +35,7 @@ import {
   isEditableKeyboardTarget,
 } from "@/lib/keyboard"
 import { cn } from "@/lib/utils"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 
 const searchScopeOptions = [
   { label: "This project", value: "project" },
@@ -368,10 +369,7 @@ function QuickSearchControl({
               className="flex items-center gap-2"
               role="status"
             >
-              <LoadingMoreIcon
-                aria-hidden="true"
-                className="size-4 animate-spin motion-reduce:animate-none"
-              />
+              <PendingIcon className="size-4" />
               <span>Searching…</span>
             </QuickSearchStatus>
           ) : result.isError ? (
