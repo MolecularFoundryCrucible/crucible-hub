@@ -1,5 +1,9 @@
 import { useState } from "react"
-import { useIsFetching, useQueryClient } from "@tanstack/react-query"
+import {
+  matchQuery,
+  useIsFetching,
+  useQueryClient,
+} from "@tanstack/react-query"
 import type { QueryKey } from "@tanstack/react-query"
 
 import { RefreshResourceIcon } from "@/components/crucible/icons"
@@ -17,27 +21,41 @@ export function EntityRefreshAction({
   label,
   queryKey,
   refreshedAt,
+  relatedQueryKeys = [],
   subject,
 }: {
   exact?: boolean
   label: string
   queryKey: QueryKey
   refreshedAt: number
+  relatedQueryKeys?: readonly QueryKey[]
   subject: string
 }) {
   const queryClient = useQueryClient()
   const refreshing =
-    useIsFetching({ exact, queryKey, fetchStatus: "fetching" }) > 0
+    useIsFetching({
+      fetchStatus: "fetching",
+      predicate: (query) =>
+        matchQuery({ exact, queryKey }, query) ||
+        relatedQueryKeys.some((related) =>
+          matchQuery({ queryKey: related }, query)
+        ),
+    }) > 0
   const [failed, setFailed] = useState(false)
   const timestamp = refreshedAt ? new Date(refreshedAt).toISOString() : null
 
   async function refresh() {
     setFailed(false)
     try {
-      await queryClient.refetchQueries(
-        { exact, queryKey },
-        { throwOnError: true }
-      )
+      await Promise.all([
+        queryClient.refetchQueries({ exact, queryKey }, { throwOnError: true }),
+        ...relatedQueryKeys.map((related) =>
+          queryClient.invalidateQueries(
+            { queryKey: related },
+            { throwOnError: true }
+          )
+        ),
+      ])
       notifySuccess(`${subject} refreshed`)
     } catch {
       setFailed(true)

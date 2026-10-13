@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import {
@@ -13,6 +13,7 @@ import {
   RetryDownloadIcon,
 } from "@/components/crucible/icons"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -39,6 +40,7 @@ import {
   useUploadsEnabled,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
+import type { SortDirection } from "@/data/crucible/collection-query"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { requestWorkspaceFileDownload } from "@/data/crucible/resources.functions"
 import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
@@ -93,13 +95,6 @@ export function DatasetFiles({
                   retry={() => void filesResult.refetch()}
                 />
               </div>
-            ) : filesResult.isFetching ? (
-              <p
-                className="px-4 pt-4 text-supporting text-muted-foreground sm:px-6"
-                role="status"
-              >
-                Refreshing file metadata…
-              </p>
             ) : null}
             {files.length ? (
               <FilesTable files={files} />
@@ -166,6 +161,29 @@ function FilesTablePending() {
   )
 }
 
+type FileSortField = "name" | "storage" | "size"
+
+const fileNameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+})
+
+function compareFiles(
+  left: WorkspaceDatasetFile,
+  right: WorkspaceDatasetFile,
+  field: FileSortField
+) {
+  if (field === "size") return left.size - right.size
+  if (field === "storage") {
+    const storage = fileNameCollator.compare(
+      left.storage_backend,
+      right.storage_backend
+    )
+    if (storage !== 0) return storage
+  }
+  return fileNameCollator.compare(left.filename, right.filename)
+}
+
 export function FilesTable({
   files,
 }: {
@@ -174,20 +192,53 @@ export function FilesTable({
   const scope = useWorkspaceScope()
   const identity = JSON.stringify(scope)
   const scenario = fixtureScenarioFromScope(scope)
+  const [sort, setSort] = useState<{
+    direction: SortDirection
+    field: FileSortField
+  }>({ direction: "asc", field: "name" })
+  const sortedFiles = useMemo(() => {
+    const factor = sort.direction === "asc" ? 1 : -1
+    return [...files].sort(
+      (left, right) => factor * compareFiles(left, right, sort.field)
+    )
+  }, [files, sort])
+  const onSortChange = (field: FileSortField, direction: SortDirection) =>
+    setSort({ direction, field })
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Filename</TableHead>
-          <TableHead className="text-center">Storage</TableHead>
-          <TableHead className="text-center">Size</TableHead>
+          <SortableTableHead
+            active={sort.field === "name"}
+            direction={sort.direction}
+            field="name"
+            label="Filename"
+            onChange={onSortChange}
+          />
+          <SortableTableHead
+            active={sort.field === "storage"}
+            className="text-center"
+            direction={sort.direction}
+            field="storage"
+            label="Storage"
+            onChange={onSortChange}
+            preferredDirection="asc"
+          />
+          <SortableTableHead
+            active={sort.field === "size"}
+            className="text-center"
+            direction={sort.direction}
+            field="size"
+            label="Size"
+            onChange={onSortChange}
+          />
           <TableHead className="text-right">
             <span className="sr-only">File action</span>
           </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {files.map((file) => (
+        {sortedFiles.map((file) => (
           <TableRow key={file.mfid}>
             <TableCell>
               <ResourceIdentity

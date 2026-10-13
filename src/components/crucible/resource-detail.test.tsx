@@ -299,6 +299,61 @@ describe("DatasetFiles", () => {
     click.mockRestore()
   })
 
+  it("sorts files by name, size, and storage on the client", () => {
+    const base = demoWorkspace.files[0]
+    const files = [
+      {
+        ...base,
+        filename: "run-10.h5",
+        mfid: "f-a",
+        size: 30,
+        storage_backend: "gcs",
+      },
+      {
+        ...base,
+        filename: "run-2.h5",
+        mfid: "f-b",
+        size: 10,
+        storage_backend: "local",
+      },
+      {
+        ...base,
+        filename: "Notes.txt",
+        mfid: "f-c",
+        size: 20,
+        storage_backend: "gcs",
+      },
+    ]
+    render(
+      <WorkspaceProvider mode="fixture" scope={scope}>
+        <FilesTable files={files} />
+      </WorkspaceProvider>
+    )
+    const order = () =>
+      screen
+        .getAllByRole("row")
+        .slice(1)
+        .map((row) => row.textContent.match(/[\w-]+\.(h5|txt)/)?.[0])
+
+    expect(order()).toEqual(["Notes.txt", "run-2.h5", "run-10.h5"])
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort by size descending." })
+    )
+    expect(order()).toEqual(["run-10.h5", "Notes.txt", "run-2.h5"])
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Size, sorted descending. Sort ascending.",
+      })
+    )
+    expect(order()).toEqual(["run-2.h5", "Notes.txt", "run-10.h5"])
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort by storage ascending." })
+    )
+    expect(order()).toEqual(["Notes.txt", "run-10.h5", "run-2.h5"])
+  })
+
   it("aborts and discards a pending capability when identity changes", async () => {
     const file = demoWorkspace.files[0]
     const otherScope = identityScope(

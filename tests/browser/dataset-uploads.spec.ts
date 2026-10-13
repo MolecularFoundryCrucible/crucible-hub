@@ -115,6 +115,33 @@ test("uploads files, requests ingestion, and starts empty when reopened", async 
   ).toHaveCount(0)
 })
 
+test("shows files added elsewhere after refreshing the dataset", async ({
+  browser,
+  page,
+}) => {
+  const filename = `refresh-${runId}.h5`
+  await page.goto(datasetPath)
+  await page.waitForLoadState("networkidle")
+
+  const other = await browser.newPage()
+  await other.goto(datasetPath)
+  await other.waitForLoadState("networkidle")
+  await other.getByRole("button", { name: "Add files" }).click()
+  await chooseFiles(other, [{ name: filename, text: "added from another tab" }])
+  await dialog(other).getByRole("button", { name: "Upload 1 file" }).click()
+  await dialog(other).getByRole("button", { name: "Done" }).waitFor()
+  await other.close()
+
+  await expect(page.getByRole("row").filter({ hasText: filename })).toHaveCount(
+    0
+  )
+  await page.getByRole("button", { name: /^Refresh details for / }).click()
+  await expect(
+    page.getByRole("row").filter({ hasText: filename })
+  ).toBeVisible()
+  await expect(page.getByText("Refreshing file metadata")).toHaveCount(0)
+})
+
 test("flags duplicate names before uploading", async ({ page }) => {
   await page.goto(datasetPath)
   await page.waitForLoadState("networkidle")

@@ -245,6 +245,18 @@ export function ResourceWorkspace({
                 label={`Refresh details for ${displayName}`}
                 queryKey={crucibleKeys.resourceDetails(scope, resourceMfid)}
                 refreshedAt={dataUpdatedAt}
+                relatedQueryKeys={
+                  resource.kind === "dataset"
+                    ? [
+                        crucibleKeys.datasetFiles(scope, resourceMfid),
+                        crucibleKeys.datasetThumbnails(scope, resourceMfid),
+                        crucibleKeys.datasetIngestionRequests(
+                          scope,
+                          resourceMfid
+                        ),
+                      ]
+                    : undefined
+                }
                 subject={
                   resource.kind === "sample"
                     ? "Sample details"
