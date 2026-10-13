@@ -36,6 +36,34 @@ test("keeps compact data records readable and fully actionable", async ({
   ).toBe(true)
 })
 
+test("previews on click and opens the full page on a modifier click", async ({
+  context,
+  page,
+}) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const resourceName = page.getByRole("link", {
+    name: "Preview NiFe oxide catalyst A",
+  })
+  const href = new URL(
+    (await resourceName.getAttribute("href")) ?? "",
+    page.url()
+  ).pathname
+  expect(href).toMatch(/^\/hub\/samples\/[^/?]+$/)
+
+  const opened = context.waitForEvent("page")
+  await resourceName.click({ modifiers: ["ControlOrMeta"] })
+  const fullPage = await opened
+  await fullPage.waitForURL(/\/hub\/samples\//)
+  expect(new URL(fullPage.url()).pathname).toBe(href)
+  await expect(page).toHaveURL(/\/hub\/data\?/)
+  await expect(page).not.toHaveURL(/preview=/)
+  await fullPage.close()
+
+  await resourceName.click()
+  await expect(page).toHaveURL(/\/hub\/data\?.*preview=/)
+})
+
 test("supports text spacing without horizontal page overflow", async ({
   page,
 }) => {

@@ -384,6 +384,83 @@ export function useResourcePreviewContext() {
   return navigation
 }
 
+type CanonicalLinkProps = Omit<
+  React.ComponentProps<typeof Link>,
+  "children" | "className" | "to" | "params" | "search" | "state"
+>
+
+function CanonicalResourceLink({
+  children,
+  className,
+  mfid,
+  resourceKind,
+  ...props
+}: {
+  children: React.ReactNode
+  className?: string
+  mfid: string
+  resourceKind?: "dataset" | "instrument" | "project" | "sample"
+} & CanonicalLinkProps) {
+  if (resourceKind === "sample") {
+    return (
+      <Link
+        {...props}
+        to="/samples/$sampleMfid"
+        params={{ sampleMfid: mfid }}
+        className={className}
+      >
+        {children}
+      </Link>
+    )
+  }
+  if (resourceKind === "dataset") {
+    return (
+      <Link
+        {...props}
+        to="/datasets/$datasetMfid"
+        params={{ datasetMfid: mfid }}
+        className={className}
+      >
+        {children}
+      </Link>
+    )
+  }
+  if (resourceKind === "project") {
+    return (
+      <Link
+        {...props}
+        to="/projects/$projectMfid"
+        params={{ projectMfid: mfid }}
+        className={className}
+      >
+        {children}
+      </Link>
+    )
+  }
+  if (resourceKind === "instrument") {
+    return (
+      <Link
+        {...props}
+        to="/instruments/$instrumentMfid"
+        params={{ instrumentMfid: mfid }}
+        className={className}
+      >
+        {children}
+      </Link>
+    )
+  }
+  return (
+    <Link
+      {...props}
+      to="/resources/$resourceMfid"
+      params={{ resourceMfid: mfid }}
+      className={className}
+    >
+      {children}
+    </Link>
+  )
+}
+
 export function ResourcePreviewLink({
   mfid,
   children,
@@ -399,72 +476,23 @@ export function ResourcePreviewLink({
   back?: boolean
   resourceKind?: "dataset" | "instrument" | "project" | "sample"
   resourceName?: string
-} & Omit<
-  React.ComponentProps<typeof Link>,
-  "children" | "className" | "to" | "params" | "search" | "state"
->) {
+} & CanonicalLinkProps) {
   const navigation = useContext(ResourcePreviewContext)
+  const router = useRouter()
   if (!navigation) {
-    if (resourceKind === "sample") {
-      return (
-        <Link
-          {...props}
-          to="/samples/$sampleMfid"
-          params={{ sampleMfid: mfid }}
-          className={className}
-        >
-          {children}
-        </Link>
-      )
-    }
-    if (resourceKind === "dataset") {
-      return (
-        <Link
-          {...props}
-          to="/datasets/$datasetMfid"
-          params={{ datasetMfid: mfid }}
-          className={className}
-        >
-          {children}
-        </Link>
-      )
-    }
-    if (resourceKind === "project") {
-      return (
-        <Link
-          {...props}
-          to="/projects/$projectMfid"
-          params={{ projectMfid: mfid }}
-          className={className}
-        >
-          {children}
-        </Link>
-      )
-    }
-    if (resourceKind === "instrument") {
-      return (
-        <Link
-          {...props}
-          to="/instruments/$instrumentMfid"
-          params={{ instrumentMfid: mfid }}
-          className={className}
-        >
-          {children}
-        </Link>
-      )
-    }
     return (
-      <Link
+      <CanonicalResourceLink
         {...props}
-        to="/resources/$resourceMfid"
-        params={{ resourceMfid: mfid }}
         className={className}
+        mfid={mfid}
+        resourceKind={resourceKind}
       >
         {children}
-      </Link>
+      </CanonicalResourceLink>
     )
   }
 
+  const host = navigation.host
   const sameTarget = navigation.preview === mfid
   const preparePreview = () =>
     navigation.preparePreview({
@@ -472,6 +500,69 @@ export function ResourcePreviewLink({
       mfid,
       name: resourceName || mfid,
     })
+  const openPreview = () => {
+    const options = {
+      hash: true as const,
+      replace: navigation.replace,
+      resetScroll: false,
+      state: navigation.state(mfid, back),
+    }
+    const preview = navigation.targetPreview(mfid)
+    if (host.kind === "resource") {
+      const search = (currentSearch: ResourceSearch) => ({
+        ...currentSearch,
+        preview,
+      })
+      if (host.resourceKind === "sample") {
+        return router.navigate({
+          ...options,
+          params: { sampleMfid: host.resourceMfid },
+          search,
+          to:
+            host.section === "graph"
+              ? "/samples/$sampleMfid/graph"
+              : "/samples/$sampleMfid",
+        })
+      }
+      return router.navigate({
+        ...options,
+        params: { datasetMfid: host.resourceMfid },
+        search,
+        to:
+          host.section === "graph"
+            ? "/datasets/$datasetMfid/graph"
+            : "/datasets/$datasetMfid",
+      })
+    }
+    if (host.kind === "data") {
+      return router.navigate({
+        ...options,
+        from: "/data",
+        search: (currentSearch: DataSearch) => ({ ...currentSearch, preview }),
+        to: "/data",
+      })
+    }
+    if (host.kind === "deletion-requests") {
+      return router.navigate({
+        ...options,
+        from: "/deletion-requests",
+        search: (currentSearch: DeletionRequestsSearch) => ({
+          ...currentSearch,
+          preview,
+        }),
+        to: "/deletion-requests",
+      })
+    }
+    return router.navigate({
+      ...options,
+      params: { projectMfid: host.projectMfid },
+      search: (currentSearch: ProjectDataSearch) => ({
+        ...currentSearch,
+        preview,
+      }),
+      to: "/projects/$projectMfid",
+    })
+  }
   const onClick: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
     props.onClick?.(event)
     if (event.defaultPrevented) return
@@ -483,11 +574,13 @@ export function ResourcePreviewLink({
       shiftKey: event.shiftKey,
       target: event.currentTarget.target,
     })
-    if (!navigation.preview && !navigation.invalidPreview && plainNavigation) {
+    if (!plainNavigation) return
+    event.preventDefault()
+    if (!navigation.preview && !navigation.invalidPreview) {
       navigation.trigger.current = event.currentTarget
     }
-    if (plainNavigation) preparePreview()
-    if (sameTarget && plainNavigation) event.preventDefault()
+    preparePreview()
+    if (!sameTarget) void openPreview()
   }
   const onFocus: React.FocusEventHandler<HTMLAnchorElement> = (event) => {
     props.onFocus?.(event)
@@ -497,96 +590,19 @@ export function ResourcePreviewLink({
     props.onMouseEnter?.(event)
     if (!event.defaultPrevented) preparePreview()
   }
-  const common = {
-    ...props,
-    className,
-    hash: true as const,
-    onClick,
-    onFocus,
-    onMouseEnter,
-    preload: false as const,
-    replace: navigation.replace,
-    resetScroll: false,
-    state: navigation.state(mfid, back),
-  }
 
-  if (navigation.host.kind === "resource") {
-    const search = (currentSearch: ResourceSearch) => ({
-      ...currentSearch,
-      preview: navigation.targetPreview(mfid),
-    })
-    if (navigation.host.resourceKind === "sample") {
-      return (
-        <Link
-          {...common}
-          params={{ sampleMfid: navigation.host.resourceMfid }}
-          search={search}
-          to={
-            navigation.host.section === "graph"
-              ? "/samples/$sampleMfid/graph"
-              : "/samples/$sampleMfid"
-          }
-        >
-          {children}
-        </Link>
-      )
-    }
-    return (
-      <Link
-        {...common}
-        params={{ datasetMfid: navigation.host.resourceMfid }}
-        search={search}
-        to={
-          navigation.host.section === "graph"
-            ? "/datasets/$datasetMfid/graph"
-            : "/datasets/$datasetMfid"
-        }
-      >
-        {children}
-      </Link>
-    )
-  }
-  if (navigation.host.kind === "data") {
-    return (
-      <Link
-        {...common}
-        from="/data"
-        to="/data"
-        search={(currentSearch: DataSearch) => ({
-          ...currentSearch,
-          preview: navigation.targetPreview(mfid),
-        })}
-      >
-        {children}
-      </Link>
-    )
-  }
-  if (navigation.host.kind === "deletion-requests") {
-    return (
-      <Link
-        {...common}
-        from="/deletion-requests"
-        to="/deletion-requests"
-        search={(currentSearch: DeletionRequestsSearch) => ({
-          ...currentSearch,
-          preview: navigation.targetPreview(mfid),
-        })}
-      >
-        {children}
-      </Link>
-    )
-  }
   return (
-    <Link
-      {...common}
-      to="/projects/$projectMfid"
-      params={{ projectMfid: navigation.host.projectMfid }}
-      search={(currentSearch: ProjectDataSearch) => ({
-        ...currentSearch,
-        preview: navigation.targetPreview(mfid),
-      })}
+    <CanonicalResourceLink
+      {...props}
+      className={className}
+      mfid={mfid}
+      onClick={onClick}
+      onFocus={onFocus}
+      onMouseEnter={onMouseEnter}
+      preload={false}
+      resourceKind={resourceKind}
     >
       {children}
-    </Link>
+    </CanonicalResourceLink>
   )
 }
