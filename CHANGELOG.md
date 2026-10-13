@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Restored CI: `npm run audit` now checks only shipped dependencies (`npm audit --omit=dev --audit-level=high`), `shadcn` moved to `devDependencies` because the app only imports its Tailwind CSS at build time, vulnerable transitive packages were updated, and CI runners are pinned to `ubuntu-24.04`. The `braces` advisory GHSA-vfj7-8cjw-p6xm has no patched release and is reachable only through the `shadcn` CLI.
+
 - Made resource preview links open the full resource page on Ctrl or Cmd click, middle click, and the browser's open-in-new-tab and copy-link actions, while a plain click still opens the preview.
 
 - Pinned the Crucible API contract to staging revision `d9ff79c` (pull request 309) and fixed the administrator person view listing projects with the administrator's own role: it now reads `GET /users/{user_ref}/projects`, which returns that user's role, with server sorting.
