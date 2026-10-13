@@ -1,22 +1,20 @@
-import type * as ResourceGraphCanvasModule from "./resource-graph-canvas"
+import { lazyRouteComponent } from "@tanstack/react-router"
 
-let loadedModule: typeof ResourceGraphCanvasModule | undefined
+import { intentPreloadProps } from "@/lib/intent-preload"
+
+const loadResourceGraphCanvas = () => import("./resource-graph-canvas")
+
+export const ResourceGraphCanvas = lazyRouteComponent(
+  loadResourceGraphCanvas,
+  "ResourceGraphCanvas"
+)
+
 let warmed = false
-
-export function loadResourceGraphCanvas() {
-  return import("./resource-graph-canvas").then((module) => {
-    loadedModule = module
-    return module
-  })
-}
-
-export function loadedResourceGraphCanvas() {
-  return loadedModule
-}
 
 function warmResourceGraph() {
   if (warmed) return
   warmed = true
+  void ResourceGraphCanvas.preload?.()
   loadResourceGraphCanvas()
     .then((module) => module.warmResourceGraphLayoutEngine())
     .catch(() => {
@@ -24,8 +22,4 @@ function warmResourceGraph() {
     })
 }
 
-export const resourceGraphWarmupProps = {
-  onFocus: warmResourceGraph,
-  onMouseEnter: warmResourceGraph,
-  onTouchStart: warmResourceGraph,
-}
+export const resourceGraphWarmupProps = intentPreloadProps(warmResourceGraph)

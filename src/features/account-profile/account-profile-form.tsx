@@ -43,8 +43,8 @@ import {
   profileNameMissing,
   ProfileNameHint,
 } from "./account-profile-fields"
-import { isSlugTakenOrRejected } from "@/features/forms/slug-availability"
-import { UsernameAvailability } from "./username-availability"
+import { UsernameField } from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 
 export function AccountProfileForm({
   account,
@@ -56,8 +56,7 @@ export function AccountProfileForm({
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [saveError, setSaveError] = useState<string>()
-  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
-  const [rejectedUsername, setRejectedUsername] = useState<string>()
+  const usernameConflict = useSlugConflict()
   const [rejectedEmail, setRejectedEmail] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (changes: WorkspaceAccountProfileUpdate) =>
@@ -95,8 +94,8 @@ export function AccountProfileForm({
           changes.username ? ["username"] : []
         )
         if (conflicts.length) {
-          if (conflicts.includes("username") && changes.username) {
-            setRejectedUsername(changes.username)
+          if (conflicts.includes("username")) {
+            usernameConflict.reject(changes.username)
           }
           if (conflicts.includes("email") && changes.email) {
             setRejectedEmail(changes.email)
@@ -119,8 +118,7 @@ export function AccountProfileForm({
   const discard = useDiscardProtection(hasChanges, () => {
     form.reset()
     setSaveError(undefined)
-    setLiveTakenUsername(undefined)
-    setRejectedUsername(undefined)
+    usernameConflict.reset()
     setEditing(false)
   })
   const formId = `account-profile-${account.unique_id}`
@@ -204,11 +202,11 @@ export function AccountProfileForm({
                 </form.Field>
                 <form.Field name="username">
                   {(field) => (
-                    <UsernameAvailability
-                      currentUsername={account.username}
+                    <UsernameField
+                      {...usernameConflict.fieldProps}
+                      currentValue={account.username}
                       field={field}
-                      onLiveTakenChange={setLiveTakenUsername}
-                      rejectedUsername={rejectedUsername}
+                      required
                       scenario={fixtureScenarioFromScope(scope)}
                     />
                   )}
@@ -226,11 +224,7 @@ export function AccountProfileForm({
           selector={(state) => [
             state.canSubmit &&
               !matchesRejectedValue(state.values.email, rejectedEmail) &&
-              !isSlugTakenOrRejected(
-                state.values.username,
-                liveTakenUsername,
-                rejectedUsername
-              ),
+              !usernameConflict.isTaken(state.values.username),
             accountProfileHasChanges(account, state.values),
             state.isSubmitting,
           ]}

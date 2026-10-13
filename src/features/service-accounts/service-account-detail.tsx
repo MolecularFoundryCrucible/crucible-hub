@@ -37,7 +37,6 @@ import { crucibleKeys } from "@/data/crucible/query-keys"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import {
   rotateWorkspaceServiceAccountKey,
-  serviceAccountUsernameSchema,
   updateWorkspaceServiceAccount,
   updateWorkspaceServiceAccountPlatformRole,
 } from "@/data/crucible/service-accounts.functions"
@@ -54,14 +53,14 @@ import {
 } from "@/features/forms/discard-changes"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { formatUsername } from "@/lib/username"
-import { USERNAME_MAX_LENGTH } from "@/data/crucible/slugs"
+import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 import { hubActionError } from "@/components/crucible/reauthentication"
 
 const serviceAccountProfileSchema = z.object({
   first_name: z.string().trim().max(255),
   last_name: z.string().trim().max(255),
-  username: serviceAccountUsernameSchema,
+  username: usernameSchema,
 })
 
 type ProfileValues = z.infer<typeof serviceAccountProfileSchema>

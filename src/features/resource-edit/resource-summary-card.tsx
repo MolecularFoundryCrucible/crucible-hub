@@ -23,6 +23,7 @@ import {
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 import { resourceDisplayName } from "@/lib/resource-name"
+import { intentPreloadProps } from "@/lib/intent-preload"
 
 export type DatasetDetail = Extract<
   WorkspaceResourceDetail,
@@ -150,9 +151,7 @@ function EditSummaryButton({
           <Button
             aria-label="Edit summary"
             onClick={onClick}
-            onFocus={onPreload}
-            onMouseEnter={onPreload}
-            onTouchStart={onPreload}
+            {...intentPreloadProps(onPreload)}
             size="icon-sm"
             variant="outline"
           />

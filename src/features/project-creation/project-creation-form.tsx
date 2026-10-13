@@ -38,7 +38,6 @@ import { Input } from "@/components/ui/input"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { createWorkspaceProject } from "@/data/crucible/creation.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { checkWorkspaceProjectId } from "@/data/crucible/projects.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
@@ -47,15 +46,13 @@ import {
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
-import { PROJECT_ID_MAX_LENGTH, projectIdSchema } from "@/data/crucible/slugs"
+import { projectIdSchema } from "@/data/crucible/slugs"
 import type {
   WorkspaceAccount,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
-import {
-  SlugAvailabilityField,
-  isSlugTakenOrRejected,
-} from "@/features/forms/slug-availability"
+import { ProjectIdField } from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 
 const projectCreationSchema = z.object({
@@ -103,8 +100,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
     WorkspaceSearchResult | undefined
   >(accountLead)
   const [saveError, setSaveError] = useState<string>()
-  const [liveTakenProjectId, setLiveTakenProjectId] = useState<string>()
-  const [rejectedProjectId, setRejectedProjectId] = useState<string>()
+  const projectIdConflict = useSlugConflict()
   const mutation = useMutation({
     mutationFn: async (value: ProjectCreationValues) =>
       unwrapHubResult(
@@ -142,7 +138,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
           error instanceof HubApiClientError &&
           error.details.kind === "conflict"
         ) {
-          setRejectedProjectId(value.project_id)
+          projectIdConflict.reject(value.project_id)
         }
         setSaveError(projectCreationError(error))
       }
@@ -193,25 +189,11 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                   />
                   <form.Field name="project_id">
                     {(field) => (
-                      <SlugAvailabilityField
-                        checkAvailability={async (candidate, signal) => {
-                          const result = await checkWorkspaceProjectId({
-                            data: {
-                              projectId: candidate,
-                              scenario: fixtureScenarioFromScope(scope),
-                            },
-                            signal,
-                          })
-                          return unwrapHubResult(result)
-                        }}
-                        entityLabel="Project ID"
+                      <ProjectIdField
+                        {...projectIdConflict.fieldProps}
                         field={field}
-                        label="Project ID"
-                        maxLength={PROJECT_ID_MAX_LENGTH}
-                        onLiveTakenChange={setLiveTakenProjectId}
-                        rejectedValue={rejectedProjectId}
                         required
-                        schema={projectIdSchema}
+                        scenario={fixtureScenarioFromScope(scope)}
                       />
                     )}
                   </form.Field>
@@ -263,11 +245,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
             </Button>
             <form.Subscribe
               selector={(state) => [
-                isSlugTakenOrRejected(
-                  state.values.project_id,
-                  liveTakenProjectId,
-                  rejectedProjectId
-                ),
+                projectIdConflict.isTaken(state.values.project_id),
                 state.isSubmitting,
               ]}
             >

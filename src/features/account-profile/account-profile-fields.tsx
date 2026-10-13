@@ -18,14 +18,10 @@ import type {
   WorkspaceAccountProfileUpdate,
 } from "@/data/crucible/workspace-source"
 
-import { usernameSchema } from "@/data/crucible/slugs"
+import { emailSchema, usernameSchema } from "@/data/crucible/slugs"
 
 export const accountProfileSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .max(320, "Use 320 characters or fewer for email.")
-    .email("Enter a valid email address."),
+  email: emailSchema,
   first_name: z
     .string()
     .trim()

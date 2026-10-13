@@ -23,8 +23,8 @@ import {
   profileNameMissing,
   ProfileNameHint,
 } from "./account-profile-fields"
-import { isSlugTakenOrRejected } from "@/features/forms/slug-availability"
-import { UsernameAvailability } from "./username-availability"
+import { UsernameField } from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 
 export function AccountSetupForm({
   account,
@@ -34,8 +34,7 @@ export function AccountSetupForm({
   returnTo?: string
 }) {
   const [saveError, setSaveError] = useState<string>()
-  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
-  const [rejectedUsername, setRejectedUsername] = useState<string>()
+  const usernameConflict = useSlugConflict()
   const [rejectedEmail, setRejectedEmail] = useState<string>()
   const form = useForm({
     defaultValues: accountProfileValues(account),
@@ -62,7 +61,7 @@ export function AccountSetupForm({
         const conflicts = hubConflictFields(error, ["username"])
         if (conflicts.length) {
           if (conflicts.includes("username")) {
-            setRejectedUsername(value.username.trim())
+            usernameConflict.reject(value.username.trim())
           }
           if (conflicts.includes("email")) setRejectedEmail(value.email.trim())
         } else {
@@ -93,11 +92,11 @@ export function AccountSetupForm({
         <FieldGroup>
           <form.Field name="username">
             {(field) => (
-              <UsernameAvailability
-                currentUsername={account.username}
+              <UsernameField
+                {...usernameConflict.fieldProps}
+                currentValue={account.username}
                 field={field}
-                onLiveTakenChange={setLiveTakenUsername}
-                rejectedUsername={rejectedUsername}
+                required
               />
             )}
           </form.Field>
@@ -135,11 +134,7 @@ export function AccountSetupForm({
         selector={(state) =>
           state.canSubmit &&
           !matchesRejectedValue(state.values.email, rejectedEmail) &&
-          !isSlugTakenOrRejected(
-            state.values.username,
-            liveTakenUsername,
-            rejectedUsername
-          )
+          !usernameConflict.isTaken(state.values.username)
         }
       >
         {(canSubmit) => (

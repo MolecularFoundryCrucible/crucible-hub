@@ -25,7 +25,6 @@ import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import type { FormFieldLike } from "@/features/forms/field-state"
 import {
   INSTRUMENT_DESCRIPTION_MAX_LENGTH,
-  INSTRUMENT_ID_MAX_LENGTH,
   INSTRUMENT_LOCATION_MAX_LENGTH,
   INSTRUMENT_MANUFACTURER_MAX_LENGTH,
   INSTRUMENT_MODEL_MAX_LENGTH,
@@ -33,13 +32,9 @@ import {
   INSTRUMENT_OTHER_ID_MAX_LENGTH,
   INSTRUMENT_OTHER_ID_SOURCE_MAX_LENGTH,
   INSTRUMENT_TYPE_MAX_LENGTH,
-  checkWorkspaceInstrumentId,
   updateWorkspaceInstrument,
 } from "@/data/crucible/instruments.functions"
-import {
-  checkWorkspaceProjectId,
-  updateWorkspaceProject,
-} from "@/data/crucible/projects.functions"
+import { updateWorkspaceProject } from "@/data/crucible/projects.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
@@ -47,11 +42,7 @@ import {
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
-import {
-  PROJECT_ID_MAX_LENGTH,
-  instrumentIdSchema,
-  projectIdSchema,
-} from "@/data/crucible/slugs"
+import { instrumentIdSchema, projectIdSchema } from "@/data/crucible/slugs"
 import type {
   WorkspaceInstrument,
   WorkspaceInstrumentDescriptiveUpdate,
@@ -61,9 +52,10 @@ import type {
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
 import {
-  SlugAvailabilityField,
-  isSlugTakenOrRejected,
-} from "@/features/forms/slug-availability"
+  InstrumentIdField,
+  ProjectIdField,
+} from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 import { SaveError } from "@/components/crucible/form-error"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
@@ -250,8 +242,7 @@ export function ProjectSettingsForm({
 }) {
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string>()
-  const [liveTakenProjectId, setLiveTakenProjectId] = useState<string>()
-  const [rejectedProjectId, setRejectedProjectId] = useState<string>()
+  const projectIdConflict = useSlugConflict()
   const mutation = useMutation({
     mutationFn: async (changes: ProjectSettingsChanges) =>
       unwrapHubResult(
@@ -295,8 +286,7 @@ export function ProjectSettingsForm({
           )
         }
         form.reset(projectValues(update))
-        setLiveTakenProjectId(undefined)
-        setRejectedProjectId(undefined)
+        projectIdConflict.reset()
         notifySuccess("Project settings saved")
         onSaved?.()
       } catch (error) {
@@ -305,7 +295,7 @@ export function ProjectSettingsForm({
           error.details.kind === "conflict" &&
           changes.project_id
         ) {
-          setRejectedProjectId(changes.project_id)
+          projectIdConflict.reject(changes.project_id)
         }
         setSaveError(saveErrorMessage(error, "project"))
       }
@@ -316,8 +306,7 @@ export function ProjectSettingsForm({
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(isDirty, () => {
     form.reset()
-    setLiveTakenProjectId(undefined)
-    setRejectedProjectId(undefined)
+    projectIdConflict.reset()
     setSaveError(undefined)
     onCancel?.()
   })
@@ -338,11 +327,7 @@ export function ProjectSettingsForm({
           <form.Subscribe
             selector={(state) => [
               state.canSubmit &&
-                !isSlugTakenOrRejected(
-                  state.values.project_id,
-                  liveTakenProjectId,
-                  rejectedProjectId
-                ),
+                !projectIdConflict.isTaken(state.values.project_id),
               state.isDirty,
               state.isSubmitting,
             ]}
@@ -377,26 +362,12 @@ export function ProjectSettingsForm({
         </form.Field>
         <form.Field name="project_id">
           {(field) => (
-            <SlugAvailabilityField
-              checkAvailability={async (candidate, signal) => {
-                const result = await checkWorkspaceProjectId({
-                  data: {
-                    projectId: candidate,
-                    scenario: fixtureScenarioFromScope(scope),
-                  },
-                  signal,
-                })
-                return unwrapHubResult(result)
-              }}
+            <ProjectIdField
+              {...projectIdConflict.fieldProps}
               currentValue={project.project_id}
-              entityLabel="Project ID"
               field={field}
-              label="Project ID"
-              maxLength={PROJECT_ID_MAX_LENGTH}
-              onLiveTakenChange={setLiveTakenProjectId}
-              rejectedValue={rejectedProjectId}
               required
-              schema={projectIdSchema}
+              scenario={fixtureScenarioFromScope(scope)}
             />
           )}
         </form.Field>
@@ -421,8 +392,7 @@ export function InstrumentSettingsForm({
 }) {
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string>()
-  const [liveTakenInstrumentId, setLiveTakenInstrumentId] = useState<string>()
-  const [rejectedInstrumentId, setRejectedInstrumentId] = useState<string>()
+  const instrumentIdConflict = useSlugConflict()
   const mutation = useMutation({
     mutationFn: async (changes: InstrumentSettingsChanges) =>
       unwrapHubResult(
@@ -465,8 +435,7 @@ export function InstrumentSettingsForm({
         }
         const next = mergeInstrumentSettingsUpdate(instrument, update)
         if (next?.kind === "instrument") form.reset(instrumentValues(next))
-        setLiveTakenInstrumentId(undefined)
-        setRejectedInstrumentId(undefined)
+        instrumentIdConflict.reset()
         notifySuccess("Instrument settings saved")
         onSaved?.()
       } catch (error) {
@@ -475,7 +444,7 @@ export function InstrumentSettingsForm({
           error.details.kind === "conflict" &&
           changes.instrument_id
         ) {
-          setRejectedInstrumentId(changes.instrument_id)
+          instrumentIdConflict.reject(changes.instrument_id)
         }
         setSaveError(saveErrorMessage(error, "instrument"))
       }
@@ -486,8 +455,7 @@ export function InstrumentSettingsForm({
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(isDirty, () => {
     form.reset()
-    setLiveTakenInstrumentId(undefined)
-    setRejectedInstrumentId(undefined)
+    instrumentIdConflict.reset()
     setSaveError(undefined)
     onCancel?.()
   })
@@ -508,11 +476,7 @@ export function InstrumentSettingsForm({
           <form.Subscribe
             selector={(state) => [
               state.canSubmit &&
-                !isSlugTakenOrRejected(
-                  state.values.instrument_id,
-                  liveTakenInstrumentId,
-                  rejectedInstrumentId
-                ),
+                !instrumentIdConflict.isTaken(state.values.instrument_id),
               state.isDirty,
               state.isSubmitting,
             ]}
@@ -543,26 +507,12 @@ export function InstrumentSettingsForm({
         </form.Field>
         <form.Field name="instrument_id">
           {(field) => (
-            <SlugAvailabilityField
-              checkAvailability={async (candidate, signal) => {
-                const result = await checkWorkspaceInstrumentId({
-                  data: {
-                    instrumentId: candidate,
-                    scenario: fixtureScenarioFromScope(scope),
-                  },
-                  signal,
-                })
-                return unwrapHubResult(result)
-              }}
+            <InstrumentIdField
+              {...instrumentIdConflict.fieldProps}
               currentValue={instrument.instrument_id}
-              entityLabel="Instrument ID"
               field={field}
-              label="Instrument ID"
-              maxLength={INSTRUMENT_ID_MAX_LENGTH}
-              onLiveTakenChange={setLiveTakenInstrumentId}
-              rejectedValue={rejectedInstrumentId}
               required
-              schema={instrumentIdSchema}
+              scenario={fixtureScenarioFromScope(scope)}
             />
           )}
         </form.Field>

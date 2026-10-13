@@ -19,20 +19,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { checkWorkspaceUsername } from "@/data/crucible/account.functions"
-import { USERNAME_MAX_LENGTH } from "@/data/crucible/slugs"
-import {
-  isSlugTakenOrRejected,
-  SlugAvailabilityField,
-} from "@/features/forms/slug-availability"
+import { UsernameField } from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import {
-  createWorkspaceServiceAccount,
-  serviceAccountUsernameSchema,
-} from "@/data/crucible/service-accounts.functions"
+import { createWorkspaceServiceAccount } from "@/data/crucible/service-accounts.functions"
+import { usernameSchema } from "@/data/crucible/slugs"
 import { hubConflictFields, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
 import { hubActionError } from "@/components/crucible/reauthentication"
@@ -45,7 +39,7 @@ const createServiceAccountSchema = z.object({
       (value) => value.length === 0 || /^[0-9A-HJKMNP-TV-Z]{26}$/i.test(value),
       "Enter a 26-character MFID or leave this field empty."
     ),
-  username: serviceAccountUsernameSchema,
+  username: usernameSchema,
 })
 
 export function ServiceAccountCreateDialog({
@@ -60,8 +54,7 @@ export function ServiceAccountCreateDialog({
   scope: IdentityScope
 }) {
   const [error, setError] = useState<React.ReactNode>()
-  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
-  const [rejectedUsername, setRejectedUsername] = useState<string>()
+  const usernameConflict = useSlugConflict()
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof createServiceAccountSchema>) =>
       unwrapHubResult(
@@ -89,7 +82,7 @@ export function ServiceAccountCreateDialog({
         onCreated(credential)
       } catch (cause) {
         if (hubConflictFields(cause, ["username"]).includes("username")) {
-          setRejectedUsername(value.username)
+          usernameConflict.reject(value.username)
         }
         setError(
           hubActionError(cause, "The service account could not be created.")
@@ -105,8 +98,7 @@ export function ServiceAccountCreateDialog({
     if (!nextOpen) {
       form.reset()
       setError(undefined)
-      setLiveTakenUsername(undefined)
-      setRejectedUsername(undefined)
+      usernameConflict.reset()
     }
   }
 
@@ -129,29 +121,14 @@ export function ServiceAccountCreateDialog({
             <FieldGroup>
               <form.Field name="username">
                 {(field) => (
-                  <SlugAvailabilityField
+                  <UsernameField
+                    {...usernameConflict.fieldProps}
                     autoComplete="off"
                     autoFocus
-                    checkAvailability={async (candidate, signal) =>
-                      unwrapHubResult(
-                        await checkWorkspaceUsername({
-                          data: {
-                            scenario: fixtureScenarioFromScope(scope),
-                            username: candidate,
-                          },
-                          signal,
-                        })
-                      )
-                    }
-                    entityLabel="Username"
                     field={field}
-                    label="Username"
-                    maxLength={USERNAME_MAX_LENGTH}
-                    onLiveTakenChange={setLiveTakenUsername}
                     placeholder="e.g. beamline-7-uploader"
-                    rejectedValue={rejectedUsername}
                     required
-                    schema={serviceAccountUsernameSchema}
+                    scenario={fixtureScenarioFromScope(scope)}
                   />
                 )}
               </form.Field>
@@ -188,13 +165,7 @@ export function ServiceAccountCreateDialog({
           ) : null}
         </form>
         <form.Subscribe
-          selector={(state) =>
-            isSlugTakenOrRejected(
-              state.values.username,
-              liveTakenUsername,
-              rejectedUsername
-            )
-          }
+          selector={(state) => usernameConflict.isTaken(state.values.username)}
         >
           {(usernameTaken) => (
             <DialogFooter>

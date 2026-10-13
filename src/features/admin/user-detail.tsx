@@ -51,7 +51,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { checkWorkspaceUsername } from "@/data/crucible/account.functions"
 import type { SortDirection } from "@/data/crucible/collection-query"
 import { applyPersonProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -62,9 +61,8 @@ import {
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
-import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
+import { emailSchema, usernameSchema } from "@/data/crucible/slugs"
 import {
-  checkWorkspaceEmail,
   provisionWorkspaceUserApiKeyFn,
   revokeWorkspaceUserApiKeyFn,
   updateWorkspaceUser,
@@ -80,20 +78,12 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
-import {
-  isSlugTakenOrRejected,
-  SlugAvailabilityField,
-} from "@/features/forms/slug-availability"
+import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-credential-dialog"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { formatUsername } from "@/lib/username"
 import { hubActionError } from "@/components/crucible/reauthentication"
-
-const userEmailSchema = z
-  .string()
-  .trim()
-  .max(320, "Use 320 characters or fewer for email.")
-  .email("Enter a valid email address.")
 
 const platformRoleDescriptions = {
   admin: "Full platform administration.",
@@ -114,7 +104,7 @@ function mergeAdminUserDetail(
 }
 
 const editUserSchema = z.object({
-  email: userEmailSchema.or(z.literal("")),
+  email: emailSchema.or(z.literal("")),
   first_name: z.string().trim().min(1, "Enter a first name.").max(255),
   last_name: z.string().trim().min(1, "Enter a last name.").max(255),
   username: usernameSchema,
@@ -217,10 +207,10 @@ function UserProfileCard({
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
   const [saveError, setSaveError] = useState<string>()
-  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
-  const [rejectedUsername, setRejectedUsername] = useState<string>()
-  const [liveTakenEmail, setLiveTakenEmail] = useState<string>()
-  const [rejectedEmail, setRejectedEmail] = useState<string>()
+  const usernameConflict = useSlugConflict()
+  const emailConflict = useSlugConflict()
+  const resetUsernameConflict = usernameConflict.reset
+  const resetEmailConflict = emailConflict.reset
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [roleUpdated, setRoleUpdated] = useState(false)
 
@@ -284,12 +274,9 @@ function UserProfileCard({
         setEditing(false)
       } catch (cause) {
         const conflicts = hubConflictFields(cause, ["username", "email"])
-        if (conflicts.includes("username") && changes.username) {
-          setRejectedUsername(changes.username)
-        }
-        if (conflicts.includes("email") && changes.email) {
-          setRejectedEmail(changes.email)
-        }
+        if (conflicts.includes("username"))
+          usernameConflict.reject(changes.username)
+        if (conflicts.includes("email")) emailConflict.reject(changes.email)
         setSaveError(
           hubErrorMessage(
             cause,
@@ -308,10 +295,8 @@ function UserProfileCard({
   const discard = useDiscardProtection(hasChanges, () => {
     form.reset(userFormValues(user))
     setSaveError(undefined)
-    setLiveTakenUsername(undefined)
-    setRejectedUsername(undefined)
-    setLiveTakenEmail(undefined)
-    setRejectedEmail(undefined)
+    usernameConflict.reset()
+    emailConflict.reset()
     setEditing(false)
   })
 
@@ -322,16 +307,14 @@ function UserProfileCard({
       form.reset(userFormValues(user))
       setEditing(false)
       setSaveError(undefined)
-      setLiveTakenUsername(undefined)
-      setRejectedUsername(undefined)
-      setLiveTakenEmail(undefined)
-      setRejectedEmail(undefined)
+      resetUsernameConflict()
+      resetEmailConflict()
       setRoleDialogOpen(false)
       setRoleUpdated(false)
     } else if (!editing) {
       form.reset(userFormValues(user))
     }
-  }, [editing, form, user])
+  }, [editing, form, resetEmailConflict, resetUsernameConflict, user])
 
   const formId = `user-profile-${user.unique_id}`
 
@@ -465,27 +448,12 @@ function UserProfileCard({
               <FieldGroup>
                 <form.Field name="username">
                   {(field) => (
-                    <SlugAvailabilityField
-                      autoComplete="nickname"
-                      checkAvailability={async (candidate, signal) => {
-                        const result = await checkWorkspaceUsername({
-                          data: {
-                            scenario: fixtureScenarioFromScope(scope),
-                            username: candidate,
-                          },
-                          signal,
-                        })
-                        return unwrapHubResult(result)
-                      }}
+                    <UsernameField
+                      {...usernameConflict.fieldProps}
                       currentValue={user.username}
-                      entityLabel="Username"
                       field={field}
-                      label="Username"
-                      maxLength={USERNAME_MAX_LENGTH}
-                      onLiveTakenChange={setLiveTakenUsername}
-                      rejectedValue={rejectedUsername}
                       required
-                      schema={usernameSchema}
+                      scenario={fixtureScenarioFromScope(scope)}
                     />
                   )}
                 </form.Field>
@@ -533,27 +501,11 @@ function UserProfileCard({
                 </div>
                 <form.Field name="email">
                   {(field) => (
-                    <SlugAvailabilityField
-                      autoComplete="email"
-                      checkAvailability={async (candidate, signal) => {
-                        const result = await checkWorkspaceEmail({
-                          data: {
-                            email: candidate,
-                            scenario: fixtureScenarioFromScope(scope),
-                          },
-                          signal,
-                        })
-                        return unwrapHubResult(result)
-                      }}
+                    <EmailField
+                      {...emailConflict.fieldProps}
                       currentValue={user.email}
-                      entityLabel="Email"
                       field={field}
-                      label="Email address"
-                      maxLength={320}
-                      onLiveTakenChange={setLiveTakenEmail}
-                      rejectedValue={rejectedEmail}
-                      schema={userEmailSchema}
-                      type="email"
+                      scenario={fixtureScenarioFromScope(scope)}
                     />
                   )}
                 </form.Field>
@@ -593,16 +545,8 @@ function UserProfileCard({
         <form.Subscribe
           selector={(state) => [
             state.canSubmit &&
-              !isSlugTakenOrRejected(
-                state.values.username,
-                liveTakenUsername,
-                rejectedUsername
-              ) &&
-              !isSlugTakenOrRejected(
-                state.values.email,
-                liveTakenEmail,
-                rejectedEmail
-              ),
+              !usernameConflict.isTaken(state.values.username) &&
+              !emailConflict.isTaken(state.values.email),
             hasChanges,
             state.isSubmitting,
           ]}

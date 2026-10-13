@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
+import { intentPreloadProps } from "@/lib/intent-preload"
 
 export type EditableResource = Extract<
   WorkspaceResourceDetail,
@@ -98,9 +99,7 @@ function EditScientificMetadataButton({
           <Button
             aria-label="Edit scientific metadata"
             onClick={onClick}
-            onFocus={onPreload}
-            onMouseEnter={onPreload}
-            onTouchStart={onPreload}
+            {...intentPreloadProps(onPreload)}
             size="icon-sm"
             variant="outline"
           />

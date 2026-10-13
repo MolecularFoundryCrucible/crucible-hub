@@ -18,7 +18,6 @@ import {
 } from "./service-accounts.server"
 
 const serviceAccountMfidSchema = z.string().trim().min(1).max(255)
-export const serviceAccountUsernameSchema = usernameSchema
 export const serviceAccountPlatformRoleSchema = z.enum([
   "none",
   "contributor",
@@ -46,7 +45,7 @@ export const serviceAccountCreateInputSchema = z
   .object({
     scenario: fixtureScenarioSchema.optional(),
     unique_id: z.string().trim().length(26).optional(),
-    username: serviceAccountUsernameSchema,
+    username: usernameSchema,
   })
   .strict()
 
@@ -56,7 +55,7 @@ export const serviceAccountUpdateInputSchema = z
       .object({
         first_name: optionalProfileTextSchema.optional(),
         last_name: optionalProfileTextSchema.optional(),
-        username: serviceAccountUsernameSchema.optional(),
+        username: usernameSchema.optional(),
       })
       .strict()
       .refine(

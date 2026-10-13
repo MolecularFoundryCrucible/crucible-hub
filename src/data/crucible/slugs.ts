@@ -3,6 +3,7 @@ import { z } from "zod"
 export const PROJECT_ID_MAX_LENGTH = 25
 export const INSTRUMENT_ID_MAX_LENGTH = 25
 export const USERNAME_MAX_LENGTH = 24
+export const EMAIL_MAX_LENGTH = 320
 
 export const PROJECT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
 export const INSTRUMENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
@@ -39,3 +40,9 @@ export const usernameSchema = z
     USERNAME_PATTERN,
     "Start with a lowercase letter and use lowercase letters, numbers, hyphens, or underscores."
   )
+
+export const emailSchema = z
+  .string()
+  .trim()
+  .max(EMAIL_MAX_LENGTH, "Use 320 characters or fewer for email.")
+  .email("Enter a valid email address.")

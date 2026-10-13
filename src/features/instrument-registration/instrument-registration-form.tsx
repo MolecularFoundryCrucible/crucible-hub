@@ -31,10 +31,7 @@ import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import {
-  checkWorkspaceInstrumentId,
-  createWorkspaceInstrument,
-} from "@/data/crucible/instruments.functions"
+import { createWorkspaceInstrument } from "@/data/crucible/instruments.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
@@ -43,14 +40,9 @@ import {
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
-import {
-  INSTRUMENT_ID_MAX_LENGTH,
-  instrumentIdSchema,
-} from "@/data/crucible/slugs"
-import {
-  SlugAvailabilityField,
-  isSlugTakenOrRejected,
-} from "@/features/forms/slug-availability"
+import { instrumentIdSchema } from "@/data/crucible/slugs"
+import { InstrumentIdField } from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 
 const registrationSchema = z.object({
@@ -106,8 +98,7 @@ export function InstrumentRegistrationForm({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string>()
-  const [liveTakenInstrumentId, setLiveTakenInstrumentId] = useState<string>()
-  const [rejectedInstrumentId, setRejectedInstrumentId] = useState<string>()
+  const instrumentIdConflict = useSlugConflict()
   const mutation = useMutation({
     mutationFn: async (value: RegistrationValues) =>
       unwrapHubResult(
@@ -154,7 +145,7 @@ export function InstrumentRegistrationForm({
         error instanceof HubApiClientError &&
         error.details.kind === "conflict"
       ) {
-        setRejectedInstrumentId(value.instrument_id)
+        instrumentIdConflict.reject(value.instrument_id)
       }
       setSaveError(registrationError(error))
     }
@@ -198,25 +189,11 @@ export function InstrumentRegistrationForm({
                   />
                   <form.Field name="instrument_id">
                     {(field) => (
-                      <SlugAvailabilityField
-                        checkAvailability={async (candidate, signal) => {
-                          const result = await checkWorkspaceInstrumentId({
-                            data: {
-                              instrumentId: candidate,
-                              scenario: fixtureScenarioFromScope(scope),
-                            },
-                            signal,
-                          })
-                          return unwrapHubResult(result)
-                        }}
-                        entityLabel="Instrument ID"
+                      <InstrumentIdField
+                        {...instrumentIdConflict.fieldProps}
                         field={field}
-                        label="Instrument ID"
-                        maxLength={INSTRUMENT_ID_MAX_LENGTH}
-                        onLiveTakenChange={setLiveTakenInstrumentId}
-                        rejectedValue={rejectedInstrumentId}
                         required
-                        schema={instrumentIdSchema}
+                        scenario={fixtureScenarioFromScope(scope)}
                       />
                     )}
                   </form.Field>
@@ -274,11 +251,7 @@ export function InstrumentRegistrationForm({
             </Button>
             <form.Subscribe
               selector={(state) => [
-                isSlugTakenOrRejected(
-                  state.values.instrument_id,
-                  liveTakenInstrumentId,
-                  rejectedInstrumentId
-                ),
+                instrumentIdConflict.isTaken(state.values.instrument_id),
                 state.isSubmitting,
               ]}
             >

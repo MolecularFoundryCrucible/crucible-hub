@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { Dispatch, ReactNode, SetStateAction } from "react"
 import type { z } from "zod"
 
@@ -47,6 +47,25 @@ export function isSlugTakenOrRejected(
   if (liveTaken && normalized === liveTaken.trim().toLowerCase()) return true
   if (rejected && normalized === rejected.trim().toLowerCase()) return true
   return false
+}
+
+export function useSlugConflict() {
+  const [liveTaken, setLiveTaken] = useState<string>()
+  const [rejected, setRejected] = useState<string>()
+  const reject = useCallback((value: string | null | undefined) => {
+    if (value) setRejected(value)
+  }, [])
+  const reset = useCallback(() => {
+    setLiveTaken(undefined)
+    setRejected(undefined)
+  }, [])
+  return {
+    fieldProps: { onLiveTakenChange: setLiveTaken, rejectedValue: rejected },
+    isTaken: (value: string) =>
+      isSlugTakenOrRejected(value, liveTaken, rejected),
+    reject,
+    reset,
+  }
 }
 
 export function useSlugAvailability({

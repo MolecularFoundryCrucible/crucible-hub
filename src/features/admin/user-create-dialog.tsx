@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/field"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
-import { checkWorkspaceUsername } from "@/data/crucible/account.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
@@ -30,25 +29,14 @@ import {
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
-import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
-import {
-  checkWorkspaceEmail,
-  createWorkspaceUserFn,
-} from "@/data/crucible/users.functions"
+import { emailSchema, usernameSchema } from "@/data/crucible/slugs"
+import { createWorkspaceUserFn } from "@/data/crucible/users.functions"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
-import {
-  isSlugTakenOrRejected,
-  SlugAvailabilityField,
-} from "@/features/forms/slug-availability"
-
-const userEmailSchema = z
-  .string()
-  .trim()
-  .max(320, "Use 320 characters or fewer for email.")
-  .email("Enter a valid email address.")
+import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
+import { useSlugConflict } from "@/features/forms/slug-availability"
 
 const createUserSchema = z.object({
-  email: userEmailSchema.or(z.literal("")),
+  email: emailSchema.or(z.literal("")),
   first_name: z.string().trim().min(1, "Enter a first name.").max(255),
   last_name: z.string().trim().min(1, "Enter a last name.").max(255),
   unique_id: z.string().trim().max(255),
@@ -68,10 +56,8 @@ export function UserCreateDialog({
 }) {
   const queryClient = useQueryClient()
   const [error, setError] = useState<string>()
-  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
-  const [rejectedUsername, setRejectedUsername] = useState<string>()
-  const [liveTakenEmail, setLiveTakenEmail] = useState<string>()
-  const [rejectedEmail, setRejectedEmail] = useState<string>()
+  const usernameConflict = useSlugConflict()
+  const emailConflict = useSlugConflict()
 
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof createUserSchema>) =>
@@ -113,12 +99,9 @@ export function UserCreateDialog({
         onCreated(user)
       } catch (cause) {
         const conflicts = hubConflictFields(cause, ["username", "email"])
-        if (conflicts.includes("username") && value.username) {
-          setRejectedUsername(value.username)
-        }
-        if (conflicts.includes("email") && value.email) {
-          setRejectedEmail(value.email)
-        }
+        if (conflicts.includes("username"))
+          usernameConflict.reject(value.username)
+        if (conflicts.includes("email")) emailConflict.reject(value.email)
         setError(hubErrorMessage(cause, "The user could not be created."))
       }
     },
@@ -131,10 +114,8 @@ export function UserCreateDialog({
     if (!nextOpen) {
       form.reset()
       setError(undefined)
-      setLiveTakenUsername(undefined)
-      setRejectedUsername(undefined)
-      setLiveTakenEmail(undefined)
-      setRejectedEmail(undefined)
+      usernameConflict.reset()
+      emailConflict.reset()
     }
   }
 
@@ -157,28 +138,13 @@ export function UserCreateDialog({
             <FieldGroup>
               <form.Field name="username">
                 {(field) => (
-                  <SlugAvailabilityField
-                    autoComplete="nickname"
+                  <UsernameField
+                    {...usernameConflict.fieldProps}
                     autoFocus
-                    checkAvailability={async (candidate, signal) => {
-                      const result = await checkWorkspaceUsername({
-                        data: {
-                          scenario: fixtureScenarioFromScope(scope),
-                          username: candidate,
-                        },
-                        signal,
-                      })
-                      return unwrapHubResult(result)
-                    }}
-                    entityLabel="Username"
                     field={field}
-                    label="Username"
-                    maxLength={USERNAME_MAX_LENGTH}
-                    onLiveTakenChange={setLiveTakenUsername}
                     placeholder="e.g. jdoe"
-                    rejectedValue={rejectedUsername}
                     required
-                    schema={usernameSchema}
+                    scenario={fixtureScenarioFromScope(scope)}
                   />
                 )}
               </form.Field>
@@ -234,27 +200,11 @@ export function UserCreateDialog({
               </div>
               <form.Field name="email">
                 {(field) => (
-                  <SlugAvailabilityField
-                    autoComplete="email"
-                    checkAvailability={async (candidate, signal) => {
-                      const result = await checkWorkspaceEmail({
-                        data: {
-                          email: candidate,
-                          scenario: fixtureScenarioFromScope(scope),
-                        },
-                        signal,
-                      })
-                      return unwrapHubResult(result)
-                    }}
-                    entityLabel="Email"
+                  <EmailField
+                    {...emailConflict.fieldProps}
                     field={field}
-                    label="Email address"
-                    maxLength={320}
-                    onLiveTakenChange={setLiveTakenEmail}
                     placeholder="e.g. jdoe@lbl.gov"
-                    rejectedValue={rejectedEmail}
-                    schema={userEmailSchema}
-                    type="email"
+                    scenario={fixtureScenarioFromScope(scope)}
                   />
                 )}
               </form.Field>
@@ -293,16 +243,8 @@ export function UserCreateDialog({
         </form>
         <form.Subscribe
           selector={(state) => [
-            isSlugTakenOrRejected(
-              state.values.username,
-              liveTakenUsername,
-              rejectedUsername
-            ) ||
-              isSlugTakenOrRejected(
-                state.values.email,
-                liveTakenEmail,
-                rejectedEmail
-              ),
+            usernameConflict.isTaken(state.values.username) ||
+              emailConflict.isTaken(state.values.email),
             state.isSubmitting,
           ]}
         >
