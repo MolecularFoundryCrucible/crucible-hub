@@ -167,6 +167,20 @@ function resourceGraphLayoutEngine() {
   return elk
 }
 
+export function warmResourceGraphLayoutEngine() {
+  void resourceGraphLayoutEngine()
+    .layout({
+      id: "warmup",
+      layoutOptions: { "elk.algorithm": "layered" },
+      children: [
+        { id: "a", width: 1, height: 1 },
+        { id: "b", width: 1, height: 1 },
+      ],
+      edges: [{ id: "e", sources: ["a"], targets: ["b"] }],
+    })
+    .catch(() => undefined)
+}
+
 export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   display,
   expansionStates,

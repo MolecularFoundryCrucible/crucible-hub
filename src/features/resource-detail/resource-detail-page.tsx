@@ -66,6 +66,7 @@ import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-v
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
+import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
 import { resourceDisplayName } from "@/lib/resource-name"
 
 export async function preloadResourceShell(
@@ -371,6 +372,7 @@ function ResourceNavigation({
           preload={false}
           search={{ fromProject, preview: undefined }}
           state={historyState}
+          {...resourceGraphWarmupProps}
           to="/samples/$sampleMfid/graph"
         >
           Graph
@@ -427,6 +429,7 @@ function ResourceNavigation({
         preload={false}
         search={{ fromProject, preview: undefined }}
         state={historyState}
+        {...resourceGraphWarmupProps}
         to="/datasets/$datasetMfid/graph"
       >
         Graph

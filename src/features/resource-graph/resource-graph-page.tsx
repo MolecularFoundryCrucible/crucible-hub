@@ -101,9 +101,13 @@ import { mergeResourceGraphs } from "./resource-graph-merge"
 import { graphWithoutAssociations } from "./resource-graph-display"
 import type { ResourceGraphDisplay } from "./resource-graph-display"
 import { PendingIcon } from "@/components/crucible/pending-icon"
+import {
+  loadResourceGraphCanvas,
+  loadedResourceGraphCanvas,
+} from "./resource-graph-warmup"
 
-const ResourceGraphCanvas = lazy(() =>
-  import("./resource-graph-canvas").then((module) => ({
+const LazyResourceGraphCanvas = lazy(() =>
+  loadResourceGraphCanvas().then((module) => ({
     default: module.ResourceGraphCanvas,
   }))
 )
@@ -162,6 +166,11 @@ export function ResourceGraphPage({
 }) {
   const scope = useWorkspaceScope()
   const navigation = useResourcePreviewContext()
+  const [ResourceGraphCanvas] = useState(
+    () =>
+      loadedResourceGraphCanvas()?.ResourceGraphCanvas ??
+      LazyResourceGraphCanvas
+  )
   const [expansion, setExpansion] = useState({
     resourceMfid,
     requests: [] as GraphExpansionRequest[],

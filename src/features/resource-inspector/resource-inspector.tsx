@@ -55,6 +55,7 @@ import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resour
 import { formatBytes } from "@/lib/format"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
+import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
 
 export function ResourceInspector({
   navigation,
@@ -369,6 +370,7 @@ function ResourceGraphLink({
         preload={false}
         search={{ preview: undefined }}
         state={{}}
+        {...resourceGraphWarmupProps}
         to="/samples/$sampleMfid/graph"
       >
         {children}
@@ -384,6 +386,7 @@ function ResourceGraphLink({
         preload={false}
         search={{ preview: undefined }}
         state={{}}
+        {...resourceGraphWarmupProps}
         to="/datasets/$datasetMfid/graph"
       >
         {children}

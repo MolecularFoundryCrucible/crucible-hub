@@ -71,6 +71,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ManagementToggle } from "@/components/crucible/management-toggle"
+import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
 
 type RelationshipResource = Extract<
   WorkspaceResourceDetail,
@@ -274,6 +275,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
         params={{ sampleMfid: resource.unique_id }}
         preload={false}
         search={{ preview: undefined }}
+        {...resourceGraphWarmupProps}
         to="/samples/$sampleMfid/graph"
       />
     ) : (
@@ -283,6 +285,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{ preview: undefined }}
+        {...resourceGraphWarmupProps}
         to="/datasets/$datasetMfid/graph"
       />
     )
