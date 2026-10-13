@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process"
+import { resolve, sep } from "node:path"
 import { defineConfig } from "vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import viteReact from "@vitejs/plugin-react"
@@ -20,6 +21,10 @@ function resolveGitCommit(): string {
   }
 }
 
+const sharedSourceRoots = ["components", "lib", "data"].map(
+  (directory) => resolve("src", directory) + sep
+)
+
 const gitCommit = resolveGitCommit()
 if (!process.env.VITE_GIT_COMMIT && gitCommit) {
   process.env.VITE_GIT_COMMIT = gitCommit
@@ -36,6 +41,33 @@ const config = defineConfig({
     host: "127.0.0.1",
     port: 3000,
     strictPort: true,
+  },
+  environments: {
+    client: {
+      build: {
+        rolldownOptions: {
+          output: {
+            codeSplitting: {
+              groups: [
+                {
+                  name: "vendor",
+                  test: /node_modules[\\/](?!(?:elkjs|@xyflow|qrcode\.react|@tanstack[\\/](?:react-form|form-core))[\\/])/,
+                  minShareCount: 2,
+                  priority: 2,
+                },
+                {
+                  name: "shared",
+                  test: (id) =>
+                    sharedSourceRoots.some((root) => id.startsWith(root)),
+                  minShareCount: 2,
+                  priority: 1,
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
   },
   plugins: [
     tailwindcss(),
