@@ -19,7 +19,6 @@ import {
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
-import { RefreshResourceIcon } from "@/components/crucible/icons"
 import {
   datasetCollectionName,
   sampleCollectionName,
@@ -40,7 +39,6 @@ import {
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -97,6 +95,7 @@ import {
   sampleFacetQueryOptions,
 } from "@/data/crucible/facets.queries"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
+import { RefreshButton } from "@/components/crucible/refresh-button"
 
 export const Route = createFileRoute("/_app/data")({
   head: () => ({ meta: [{ title: "Data | Crucible Hub" }] }),
@@ -485,24 +484,11 @@ function DataResults({
         filters={collectionFilters}
         sampleBrowse={sampleBrowse}
         refreshAction={
-          <Button
-            aria-label="Refresh data"
-            aria-pressed={refreshing || undefined}
-            className={refreshing ? "translate-y-px" : undefined}
+          <RefreshButton
+            label="Refresh data"
             onClick={refreshVisibleData}
-            variant="outline"
-          >
-            <RefreshResourceIcon
-              aria-hidden="true"
-              className={
-                refreshing
-                  ? "animate-spin motion-reduce:animate-none"
-                  : undefined
-              }
-              data-icon="inline-start"
-            />
-            Refresh
-          </Button>
+            refreshing={refreshing}
+          />
         }
         toolbarActions={<DataFilters errors={[]} values={search} />}
         toolbarPrimary={

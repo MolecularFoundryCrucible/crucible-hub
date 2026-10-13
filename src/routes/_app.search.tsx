@@ -395,8 +395,8 @@ function SearchResults({
         </EmptyHeader>
       </Empty>
     ) : (
-      <div className="flex flex-col gap-6" aria-live="polite">
-        <p className="text-supporting text-muted-foreground">
+      <div className="flex flex-col gap-6">
+        <p className="text-supporting text-muted-foreground" role="status">
           {resultCount} {resultCount === 1 ? "result" : "results"} for “
           {data.query}”
         </p>

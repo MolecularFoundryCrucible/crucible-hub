@@ -22,7 +22,7 @@ import {
   confirmWorkspaceResourceOwnership,
   previewWorkspaceResourceOwnership,
 } from "@/data/crucible/resources.functions"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import { unwrapHubResult, hubOperationError } from "@/data/crucible/result"
 import type {
   WorkspaceOwnershipTransfer,
   WorkspaceProject,
@@ -80,7 +80,7 @@ export function OwnershipTransferCard({
       setPreview(await previewMutation.mutateAsync(person.unique_id))
       setChooserOpen(false)
     } catch (caught) {
-      setError(operationError(caught, "preview this ownership transfer"))
+      setError(hubOperationError(caught, "preview this ownership transfer"))
     }
   }
 
@@ -122,7 +122,7 @@ export function OwnershipTransferCard({
       setPreview(undefined)
       onSuccess?.(result)
     } catch (caught) {
-      setError(operationError(caught, "transfer ownership"))
+      setError(hubOperationError(caught, "transfer ownership"))
     }
   }
 
@@ -220,8 +220,4 @@ export function OwnershipTransferCard({
 
 function personName(person: WorkspaceOwnershipTransfer["new_owner"]) {
   return personDisplayName(person)
-}
-
-function operationError(error: unknown, action: string) {
-  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }

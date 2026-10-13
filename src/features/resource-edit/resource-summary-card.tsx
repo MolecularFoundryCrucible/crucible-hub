@@ -70,6 +70,7 @@ import {
   timestampToLocalInput,
 } from "@/lib/format"
 import { resourceDisplayName } from "@/lib/resource-name"
+import { SaveError } from "@/components/crucible/form-error"
 
 type DatasetDetail = Extract<WorkspaceResourceDetail, { kind: "dataset" }>
 type SampleDetail = Extract<WorkspaceResourceDetail, { kind: "sample" }>
@@ -853,18 +854,6 @@ function DatasetSummaryForm({
       </Card>
       <DiscardChangesDialog {...discard.dialog} />
     </>
-  )
-}
-
-function SaveError({ message }: { message?: string }) {
-  return (
-    <div aria-live="polite" className="min-h-5 text-body">
-      {message ? (
-        <p className="text-destructive" role="alert">
-          {message}
-        </p>
-      ) : null}
-    </div>
   )
 }
 

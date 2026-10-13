@@ -56,6 +56,7 @@ import {
   workspaceSelectionOf,
 } from "./creation-form"
 import { useStagedCreation } from "./creation-submission"
+import { FormErrorRegion } from "@/components/crucible/form-error"
 
 const sampleSchema = z.object({
   description: z
@@ -348,14 +349,10 @@ export function SampleCreationForm({
                   </CreationFormSection>
                 </FieldGroup>
               </fieldset>
-              <div aria-live="polite" className="min-h-5 pt-5 text-body">
-                {saveError ? (
-                  <p className="text-destructive" role="alert">
-                    {saveError}
-                  </p>
-                ) : null}
+              <FormErrorRegion padded>
+                {saveError ? <p>{saveError}</p> : null}
                 {createdSample && relationships.failures.length ? (
-                  <p className="text-destructive" role="alert">
+                  <p>
                     The sample was created, but relationships with{" "}
                     {relationships.failures
                       .map((draft) => draft.target.name)
@@ -363,7 +360,7 @@ export function SampleCreationForm({
                     still need recovery.
                   </p>
                 ) : null}
-              </div>
+              </FormErrorRegion>
             </form>
           </CardContent>
           <CardFooter className="justify-end gap-2">

@@ -5,7 +5,6 @@ import {
   CloseIcon,
   DatabaseIcon,
   ExternalLinkIcon,
-  RefreshResourceIcon,
   ServerIcon,
 } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
@@ -25,6 +24,7 @@ import { systemStatusQueryOptions } from "@/data/crucible/system-status.queries"
 import type { ServiceStatus } from "@/data/crucible/system-status"
 import { cn } from "@/lib/utils"
 import { PendingIcon } from "@/components/crucible/pending-icon"
+import { RefreshButton } from "@/components/crucible/refresh-button"
 
 function statusBadgeVariant(status: ServiceStatus) {
   if (status === "ok") return "success" as const
@@ -269,24 +269,11 @@ export function SystemStatusPopover({
                     Hub health
                     <ExternalLinkIcon aria-hidden="true" className="size-3" />
                   </a>
-                  <Button
-                    aria-pressed={isFetching || undefined}
-                    className={isFetching ? "translate-y-px" : undefined}
+                  <RefreshButton
                     onClick={() => void handleRefresh()}
+                    refreshing={isFetching}
                     size="xs"
-                    variant="outline"
-                  >
-                    <RefreshResourceIcon
-                      aria-hidden="true"
-                      className={
-                        isFetching
-                          ? "animate-spin motion-reduce:animate-none"
-                          : undefined
-                      }
-                      data-icon="inline-start"
-                    />
-                    Refresh
-                  </Button>
+                  />
                 </div>
               </div>
             </div>

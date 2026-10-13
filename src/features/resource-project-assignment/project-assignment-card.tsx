@@ -23,7 +23,7 @@ import {
   previewWorkspaceResourceProjectAssignment,
 } from "@/data/crucible/resources.functions"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import { unwrapHubResult, hubOperationError } from "@/data/crucible/result"
 import type {
   WorkspaceProjectReassignment,
   WorkspaceResourceAccessGrant,
@@ -90,7 +90,7 @@ export function ProjectAssignmentCard({
       setChooserOpen(false)
     } catch (caught) {
       setSelectedProject(undefined)
-      setError(operationError(caught, "preview this project assignment"))
+      setError(hubOperationError(caught, "preview this project assignment"))
     }
   }
 
@@ -105,7 +105,7 @@ export function ProjectAssignmentCard({
       setSelectedProject(undefined)
       onSuccess?.(result)
     } catch (caught) {
-      setError(operationError(caught, "assign this resource to the project"))
+      setError(hubOperationError(caught, "assign this resource to the project"))
     }
   }
 
@@ -262,8 +262,4 @@ export function ProjectAssignmentCard({
       />
     </>
   )
-}
-
-function operationError(error: unknown, action: string) {
-  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }

@@ -51,6 +51,7 @@ import {
   SlugAvailabilityField,
   isSlugTakenOrRejected,
 } from "@/features/forms/slug-availability"
+import { FormErrorRegion } from "@/components/crucible/form-error"
 
 const registrationSchema = z.object({
   description: z.string().trim().max(10_000, "Use 10,000 characters or fewer."),
@@ -257,13 +258,9 @@ export function InstrumentRegistrationForm({
                   />
                 </FieldGroup>
               </fieldset>
-              <div aria-live="polite" className="min-h-5 pt-5 text-body">
-                {saveError ? (
-                  <p className="text-destructive" role="alert">
-                    {saveError}
-                  </p>
-                ) : null}
-              </div>
+              <FormErrorRegion padded>
+                {saveError ? <p>{saveError}</p> : null}
+              </FormErrorRegion>
             </form>
           </CardContent>
           <CardFooter className="justify-end gap-2">

@@ -4,7 +4,7 @@ import { createContext, useContext } from "react"
 
 import { AdministratorViewEnabledIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/toast"
+import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { updateGlobalPrivilegeMode } from "@/data/crucible/privilege-mode.functions"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
@@ -43,14 +43,13 @@ function useAdministratorView({
         })
       ),
     onError: (error) => {
-      toast.add({
-        description: hubErrorMessage(
+      notifyError(
+        "Access mode was not changed",
+        hubErrorMessage(
           error,
           "Crucible could not change the current access mode."
-        ),
-        title: "Access mode was not changed",
-        type: "error",
-      })
+        )
+      )
     },
     onSuccess: async ({ privilegeMode: nextMode }) => {
       if (nextMode === "normal") {
@@ -62,17 +61,14 @@ function useAdministratorView({
         })
       }
       await router.invalidate({ sync: true })
-      toast.add({
-        description:
-          nextMode === "elevated"
-            ? "Platform-wide resources and actions are now available."
-            : "Crucible is using your ordinary access permissions.",
-        title:
-          nextMode === "elevated"
-            ? "Administrator view is on"
-            : "Administrator view is off",
-        type: "success",
-      })
+      notifySuccess(
+        nextMode === "elevated"
+          ? "Administrator view is on"
+          : "Administrator view is off",
+        nextMode === "elevated"
+          ? "Platform-wide resources and actions are now available."
+          : "Crucible is using your ordinary access permissions."
+      )
     },
   })
 

@@ -2,15 +2,14 @@ import { useState } from "react"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import type { QueryKey } from "@tanstack/react-query"
 
-import { RefreshResourceIcon } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { notifySuccess } from "@/components/crucible/notifications"
-import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { RefreshButton } from "@/components/crucible/refresh-button"
 
 export function EntityRefreshAction({
   exact = true,
@@ -60,24 +59,12 @@ export function EntityRefreshAction({
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
       <Tooltip>
         <TooltipTrigger render={<span className="inline-flex" />}>
-          <Button
-            aria-label={failed ? `${label}. Refresh failed. Try again.` : label}
-            aria-pressed={refreshing || undefined}
-            className={refreshing ? "translate-y-px" : undefined}
+          <RefreshButton
+            failed={failed}
+            label={failed ? `${label}. Refresh failed. Try again.` : label}
             onClick={() => void refresh()}
-            variant={failed ? "destructive" : "outline"}
-          >
-            <RefreshResourceIcon
-              aria-hidden="true"
-              className={
-                refreshing
-                  ? "animate-spin motion-reduce:animate-none"
-                  : undefined
-              }
-              data-icon="inline-start"
-            />
-            Refresh
-          </Button>
+            refreshing={refreshing}
+          />
         </TooltipTrigger>
         <TooltipContent>
           {failed ? (

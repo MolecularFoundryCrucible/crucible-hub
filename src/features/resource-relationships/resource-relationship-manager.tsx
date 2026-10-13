@@ -5,8 +5,6 @@ import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import {
   AddRelationshipIcon,
-  FinishManagingRelationshipsIcon,
-  ManageRelationshipsIcon,
   ResourceGraphIcon,
   UnlinkRelationshipIcon,
 } from "@/components/crucible/icons"
@@ -72,6 +70,7 @@ import type {
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
 import { PendingIcon } from "@/components/crucible/pending-icon"
+import { ManagementToggle } from "@/components/crucible/management-toggle"
 
 type RelationshipResource = Extract<
   WorkspaceResourceDetail,
@@ -172,41 +171,13 @@ export function ResourceRelationshipManager({
                   />
                   Add
                 </Button>
-                <Tooltip>
-                  <TooltipTrigger render={<span className="inline-flex" />}>
-                    <Button
-                      aria-label={
-                        managementMode
-                          ? `Finish managing relationships for ${resourceDetailDisplayName(resource)}`
-                          : !hasRelationships
-                            ? `No relationships to manage for ${resourceDetailDisplayName(resource)}`
-                            : `Manage relationships for ${resourceDetailDisplayName(resource)}`
-                      }
-                      aria-pressed={managementMode}
-                      disabled={!hasRelationships}
-                      onClick={() => setManaging((current) => !current)}
-                      size="icon-sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      {managementMode ? (
-                        <FinishManagingRelationshipsIcon aria-hidden="true" />
-                      ) : (
-                        <ManageRelationshipsIcon aria-hidden="true" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {managementMode
-                      ? "Done managing relationships for "
-                      : !hasRelationships
-                        ? "No relationships to manage for "
-                        : "Manage relationships for "}
-                    <ResourceName>
-                      {resourceDetailDisplayName(resource)}
-                    </ResourceName>
-                  </TooltipContent>
-                </Tooltip>
+                <ManagementToggle
+                  active={managementMode}
+                  disabled={!hasRelationships}
+                  disabledReason={`No relationships to manage for ${resourceDetailDisplayName(resource)}`}
+                  onChange={setManaging}
+                  subject={`relationships for ${resourceDetailDisplayName(resource)}`}
+                />
               </>
             ) : null}
           </div>

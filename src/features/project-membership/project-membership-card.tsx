@@ -8,7 +8,7 @@ import {
 import { accessRoleLabel } from "@/components/crucible/access-role-badge"
 import { AccessGrantRow } from "@/components/crucible/access-grant-row"
 import { useAccessListManagement } from "@/components/crucible/access-list-management"
-import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
+import { ManagementToggle } from "@/components/crucible/management-toggle"
 import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
 import type { AddMembersPrincipalKind } from "@/components/crucible/add-members-dialog"
 import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
@@ -35,7 +35,7 @@ import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import { unwrapHubResult, hubOperationError } from "@/data/crucible/result"
 import type { components } from "@/generated/crucible-api"
 import { resourceDisplayName } from "@/lib/resource-name"
 import type { WorkspaceProject } from "@/data/crucible/workspace-source"
@@ -164,7 +164,7 @@ export function ProjectMembershipCard({
     } catch (error) {
       setMemberErrors((current) => ({
         ...current,
-        [member.unique_id]: membershipErrorMessage(error, "change this role"),
+        [member.unique_id]: hubOperationError(error, "change this role"),
       }))
     } finally {
       stopSaving()
@@ -193,7 +193,7 @@ export function ProjectMembershipCard({
         <CardTitle>Access management</CardTitle>
         {canManageMembers ? (
           <CardAction>
-            <AccessManagementToggle
+            <ManagementToggle
               active={managing}
               disabled={mutationPending}
               onChange={setManaging}
@@ -409,8 +409,4 @@ function memberName(member: ProjectMember) {
 function withoutMemberError(errors: Record<string, string>, memberId: string) {
   const { [memberId]: _, ...remaining } = errors
   return remaining
-}
-
-function membershipErrorMessage(error: unknown, action: string) {
-  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }

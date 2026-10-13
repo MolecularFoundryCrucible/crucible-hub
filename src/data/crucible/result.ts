@@ -17,6 +17,10 @@ export function hubErrorMessage(error: unknown, fallback: string) {
   return error instanceof HubApiClientError ? error.message : fallback
 }
 
+export function hubOperationError(error: unknown, action: string) {
+  return hubErrorMessage(error, `Could not ${action}. Try again.`)
+}
+
 export function hubConflictFields(
   error: unknown,
   fallback: readonly HubConflictField[]

@@ -2,7 +2,6 @@ import { useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 
 import { Button } from "@/components/ui/button"
-import { notifyError } from "@/components/crucible/notifications"
 import { FieldGroup } from "@/components/ui/field"
 import { updateWorkspaceAccount } from "@/data/crucible/account.functions"
 import {
@@ -64,7 +63,6 @@ export function AccountSetupForm({
         if (conflicts.length) {
           if (conflicts.includes("username")) {
             setRejectedUsername(value.username.trim())
-            notifyError("Username already taken")
           }
           if (conflicts.includes("email")) setRejectedEmail(value.email.trim())
         } else {

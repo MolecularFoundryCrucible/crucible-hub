@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { EditResourceIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
-import { notifyError, notifySuccess } from "@/components/crucible/notifications"
+import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { Button } from "@/components/ui/button"
 import {
@@ -97,7 +97,6 @@ export function AccountProfileForm({
         if (conflicts.length) {
           if (conflicts.includes("username") && changes.username) {
             setRejectedUsername(changes.username)
-            notifyError("Username already taken")
           }
           if (conflicts.includes("email") && changes.email) {
             setRejectedEmail(changes.email)

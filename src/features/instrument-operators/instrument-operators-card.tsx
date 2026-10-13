@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router"
 
 import { AccessGrantRow } from "@/components/crucible/access-grant-row"
 import { useAccessListManagement } from "@/components/crucible/access-list-management"
-import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
+import { ManagementToggle } from "@/components/crucible/management-toggle"
 import {
   AccessRoleBadge,
   accessRoleLabel,
@@ -304,7 +304,7 @@ export function InstrumentAccessCard({
           <CardTitle>Access management</CardTitle>
           {canManage ? (
             <CardAction>
-              <AccessManagementToggle
+              <ManagementToggle
                 active={managing}
                 disabled={mutationPending}
                 onChange={setManaging}

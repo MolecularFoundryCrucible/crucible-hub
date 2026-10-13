@@ -39,7 +39,6 @@ export function SortableHeaderButton({
           ? `${label}, sorted ${sortAria(direction)}. Sort ${sortAria(nextDirection)}.`
           : `Sort by ${label.toLowerCase()} ${sortAria(preferredDirection)}.`
       }
-      aria-pressed={active}
       className={className}
       onClick={() => onChange(nextDirection)}
       size="table-header"

@@ -61,6 +61,7 @@ import {
 import { useStagedCreation } from "./creation-submission"
 import { useUploadsEnabled } from "@/components/crucible/workspace-provider"
 import { UploadLeaveDialog } from "@/features/dataset-files/upload-leave-guard"
+import { FormErrorRegion } from "@/components/crucible/form-error"
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -422,15 +423,11 @@ export function DatasetCreationForm({
                   </CreationFormSection>
                 </FieldGroup>
               </fieldset>
-              <div aria-live="polite" className="min-h-5 pt-5 text-body">
-                {saveError ? (
-                  <p className="text-destructive" role="alert">
-                    {saveError}
-                  </p>
-                ) : null}
+              <FormErrorRegion padded>
+                {saveError ? <p>{saveError}</p> : null}
                 {createdDataset && incompleteStages ? (
-                  <div className="flex flex-col gap-2" role="alert">
-                    <p className="text-destructive">
+                  <div className="flex flex-col gap-2">
+                    <p>
                       The dataset was created, but{" "}
                       {[
                         relationships.failures.length
@@ -450,7 +447,7 @@ export function DatasetCreationForm({
                     </p>
                   </div>
                 ) : null}
-              </div>
+              </FormErrorRegion>
             </form>
           </CardContent>
           <CardFooter className="justify-end gap-2">

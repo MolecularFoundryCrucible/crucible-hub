@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
-import { notifyError, notifySuccess } from "@/components/crucible/notifications"
+import { notifySuccess } from "@/components/crucible/notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
@@ -62,6 +62,7 @@ import {
   SlugAvailabilityField,
   isSlugTakenOrRejected,
 } from "@/features/forms/slug-availability"
+import { SaveError } from "@/components/crucible/form-error"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 type ProjectDetail = WorkspaceProject & {
@@ -303,7 +304,6 @@ export function ProjectSettingsForm({
           changes.project_id
         ) {
           setRejectedProjectId(changes.project_id)
-          notifyError("Project ID already taken")
         }
         setSaveError(saveErrorMessage(error, "project"))
       }
@@ -474,7 +474,6 @@ export function InstrumentSettingsForm({
           changes.instrument_id
         ) {
           setRejectedInstrumentId(changes.instrument_id)
-          notifyError("Instrument ID already taken")
         }
         setSaveError(saveErrorMessage(error, "instrument"))
       }
@@ -662,7 +661,7 @@ function SettingsFormCard({
           <fieldset disabled={isSubmitting}>
             <FieldGroup>{children}</FieldGroup>
           </fieldset>
-          <SaveError message={saveError} />
+          <SaveError padded message={saveError} />
         </form>
       </CardContent>
       {actions}
@@ -751,18 +750,6 @@ function SettingsTextAreaField({
       />
       <FieldError errors={field.state.meta.errors} />
     </Field>
-  )
-}
-
-function SaveError({ message }: { message?: string }) {
-  return (
-    <div aria-live="polite" className="min-h-5 pt-5 text-body">
-      {message ? (
-        <p className="text-destructive" role="alert">
-          {message}
-        </p>
-      ) : null}
-    </div>
   )
 }
 

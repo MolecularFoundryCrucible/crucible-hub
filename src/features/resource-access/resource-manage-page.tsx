@@ -16,7 +16,7 @@ import {
 } from "@/components/crucible/access-role-badge"
 import { AccessGrantRow } from "@/components/crucible/access-grant-row"
 import { useAccessListManagement } from "@/components/crucible/access-list-management"
-import { AccessManagementToggle } from "@/components/crucible/access-management-toggle"
+import { ManagementToggle } from "@/components/crucible/management-toggle"
 import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
@@ -63,7 +63,7 @@ import {
   principalKindFor,
 } from "@/data/crucible/resource-access"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import { unwrapHubResult, hubOperationError } from "@/data/crucible/result"
 import type {
   WorkspaceResourceAccessGrant,
   WorkspaceResourceAccessPrincipalKind,
@@ -238,7 +238,7 @@ function ManagedResourceAccess({
       await commitGrant(kind, grant.principal_id, permission)
     } catch (mutationError) {
       setError({
-        message: accessError(mutationError, "update this access grant"),
+        message: hubOperationError(mutationError, "update this access grant"),
         surface: "direct",
       })
     } finally {
@@ -296,7 +296,7 @@ function ManagedResourceAccess({
       setPendingPublic(undefined)
     } catch (mutationError) {
       setError({
-        message: accessError(
+        message: hubOperationError(
           mutationError,
           publicAccess ? "publish this resource" : "make this resource private"
         ),
@@ -367,7 +367,7 @@ function ManagedResourceAccess({
         <CardHeader actionLayout="inline">
           <CardTitle>Access management</CardTitle>
           <CardAction>
-            <AccessManagementToggle
+            <ManagementToggle
               active={managing}
               disabled={mutationPending}
               onChange={setManaging}
@@ -703,8 +703,4 @@ function PrincipalName({ grant }: { grant: WorkspaceResourceAccessGrant }) {
     )
   }
   return name
-}
-
-function accessError(error: unknown, action: string) {
-  return hubErrorMessage(error, `Could not ${action}. Try again.`)
 }

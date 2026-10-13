@@ -53,6 +53,7 @@ import {
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
+import { SaveError } from "@/components/crucible/form-error"
 
 type EditableResource = Extract<
   WorkspaceResourceDetail,
@@ -454,18 +455,6 @@ function MetadataReplacementDialog({
       open={open}
       title="Replace scientific metadata?"
     />
-  )
-}
-
-function SaveError({ message }: { message?: string }) {
-  return (
-    <div aria-live="polite" className="min-h-5 text-body">
-      {message ? (
-        <p className="text-destructive" role="alert">
-          {message}
-        </p>
-      ) : null}
-    </div>
   )
 }
 
