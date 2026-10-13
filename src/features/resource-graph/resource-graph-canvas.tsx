@@ -426,7 +426,8 @@ function ResourceGraphFlow({
             flow,
             element,
             currentGraph.rootMfid,
-            nextPositions
+            nextPositions,
+            !firstLayout
           )
         }
         setLayoutPending(false)
@@ -1203,7 +1204,13 @@ function GraphDisplayMenu({
             onClick={() => {
               const element = surface.current
               if (element) {
-                centerResourceGraph(flow, element, graph.rootMfid, positions)
+                centerResourceGraph(
+                  flow,
+                  element,
+                  graph.rootMfid,
+                  positions,
+                  true
+                )
               }
             }}
           >
@@ -1636,7 +1643,8 @@ function centerResourceGraph(
   flow: ReactFlowInstance<ResourceFlowNode, ResourceFlowEdge>,
   element: HTMLElement,
   rootMfid: string,
-  positions: ReadonlyMap<string, LayoutPosition>
+  positions: ReadonlyMap<string, LayoutPosition>,
+  animate: boolean
 ) {
   const root = positions.get(rootMfid)
   if (!root) return
@@ -1667,7 +1675,7 @@ function centerResourceGraph(
     graphNumberToken(element, "--graph-max-zoom")
   )
   void flow.setCenter(rootCenter.x, rootCenter.y, {
-    ...graphViewportOptions(element),
+    ...(animate ? graphViewportOptions(element) : { duration: 0 }),
     zoom: Math.max(
       zoom,
       graphNumberToken(element, "--graph-readable-zoom"),
