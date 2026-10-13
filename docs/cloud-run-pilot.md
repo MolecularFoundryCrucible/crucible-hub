@@ -18,14 +18,14 @@ gcloud run services get-iam-policy crucible-hub --project mf-crucible --region u
 curl -sS -o /dev/null -w '%{http_code}\n' https://crucible.lbl.gov/hub/health
 ```
 
-To resume the same single-instance pilot, restore automatic scaling with one minimum instance and the original public invoker binding on the Hub service only:
+To resume the single-instance pilot, set manual scaling to exactly one instance and restore the original public invoker binding on the Hub service only. Manual scaling is used instead of automatic scaling with a minimum and maximum of one because automatic scaling can briefly start a second instance, which would split the process-local sessions. More instances wait for the API ingress reinforcement and the shared session store in [decision 0033](../decisions/0033-use-existing-cloud-sql-for-shared-hub-sessions.md).
 
 ```sh
-gcloud run services update crucible-hub --project mf-crucible --region us-central1 --scaling=auto --min=1 --quiet
+gcloud run services update crucible-hub --project mf-crucible --region us-central1 --scaling=1 --quiet
 gcloud run services add-iam-policy-binding crucible-hub --project mf-crucible --region us-central1 --member=allUsers --role=roles/run.invoker --quiet
 ```
 
-Confirm that scaling is automatic with a minimum and maximum of one, the original image and revision still serve 100% of traffic, and `/hub/health` returns HTTP 200. Then smoke-test sign-in, navigation, and logout with a disposable account. Users must sign in again because sessions were held in the stopped instance. Do not change `crucible-web` or the API to resume this service.
+Confirm that the service annotations show `scalingMode` `manual` with `manualInstanceCount` `1`, the intended image digest serves 100% of traffic, and `/hub/health` returns HTTP 200. Then smoke-test sign-in, navigation, and logout with a disposable account. Users must sign in again because sessions were held in the stopped instance. Do not change `crucible-web` or the API to resume this service.
 
 ## Build and deploy
 
@@ -38,7 +38,7 @@ gcloud builds submit . --project mf-crucible --config cloudbuild.pilot.yaml --su
 gcloud run deploy crucible-hub --project mf-crucible --region us-central1 --image IMAGE_DIGEST --quiet
 ```
 
-An image-only deployment preserves the service's existing authentication, instance, identity, network, and secret settings while creating a new revision. Do not repeat the initial service-creation flags or copy the Explorer's configuration. The Hub runtime identity needs only its existing Hub client-secret access, not an API key or the API's ORCID secret. Before deployment, inspect the current service and confirm `internal` ingress, one minimum and maximum instance, session affinity, `HUB_AUTH_PRODUCTION_ENABLED=true`, the expected callback and API origins, and 100% traffic on one revision. Never display secret values while inspecting configuration.
+An image-only deployment preserves the service's existing authentication, instance, identity, network, and secret settings while creating a new revision. Do not repeat the initial service-creation flags or copy the Explorer's configuration. The Hub runtime identity needs only its existing Hub client-secret access, not an API key or the API's ORCID secret. Before deployment, inspect the current service and confirm `internal` ingress, manual scaling with one instance, session affinity, `HUB_AUTH_PRODUCTION_ENABLED=true`, the expected callback and API origins, and 100% traffic on one revision. Never display secret values while inspecting configuration.
 
 After deployment, confirm the new image digest and healthy revision with 100% traffic, then check public `/hub/health`, sign-in and error-page security headers, and a disposable-account sign-in, navigation, and logout. The normal Hub document policy is `Referrer-Policy: same-origin`, which lets the native logout form send its real `Origin`; OAuth redirects use `no-referrer`. Keep exact Origin validation, including rejection of missing, null, and foreign origins. The response also needs its framing CSP, `X-Frame-Options: DENY`, and `X-Content-Type-Options: nosniff`. Check that callback codes and cookies are absent from retained logs and browser artifacts. Two-user isolation, refresh races, and restart behavior remain separate pilot evidence.
 
