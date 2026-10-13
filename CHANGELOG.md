@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Removed a sequential API round trip when opening a sample or dataset Overview: the resource shell now loads the full detail directly when the Overview is the destination, instead of loading a summary first and the detail afterwards.
+
 - Sped up the first Graph tab visit: hovering or focusing any Graph link now loads the graph canvas and starts the layout engine in the background without requesting graph data, so the graph renders without a loading placeholder (about 60 ms instead of 430 ms after the click locally, and 310 ms instead of 980 ms on a throttled connection).
 
 - Made Show all expand the Files table and relationship groups smoothly instead of jumping, and kept Show fewer under the pointer when a long list collapses so the page no longer jumps away from it.

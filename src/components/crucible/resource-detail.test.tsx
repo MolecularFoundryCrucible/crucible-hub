@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
+import { createQueryClient } from "@/data/query-client"
 import { identityScope } from "@/data/crucible/query-keys"
 import {
   getWorkspaceDatasetFiles,
@@ -24,7 +25,10 @@ import {
   initiateFileDownload,
 } from "@/features/dataset-files/dataset-files-card"
 
-import { preloadResourceShell } from "../../features/resource-detail/resource-detail-page"
+import {
+  isResourceOverviewPath,
+  preloadResourceShell,
+} from "../../features/resource-detail/resource-detail-page"
 
 vi.mock("@/data/crucible/resources.functions", () => ({
   DATASET_DATA_FORMAT_MAX_LENGTH: 255,
@@ -108,6 +112,28 @@ describe("DatasetFiles", () => {
         datasetFilesQueryOptions(scope, datasetMfid).queryKey
       )
     ).toBeUndefined()
+
+    vi.mocked(getWorkspaceResource).mockClear()
+    const overviewClient = createQueryClient()
+    await expect(
+      preloadResourceShell(overviewClient, scope, datasetMfid, false, true)
+    ).resolves.toEqual(resource)
+    expect(getWorkspaceResource).toHaveBeenCalledTimes(1)
+    expect(
+      vi.mocked(getWorkspaceResource).mock.calls[0]?.[0]?.data
+    ).not.toHaveProperty("projection", "summary")
+  })
+
+  it("recognizes the overview path of a resource", () => {
+    expect(
+      isResourceOverviewPath(`/datasets/${datasetMfid}`, datasetMfid)
+    ).toBe(true)
+    expect(
+      isResourceOverviewPath(`/hub/datasets/${datasetMfid}/`, datasetMfid)
+    ).toBe(true)
+    expect(
+      isResourceOverviewPath(`/datasets/${datasetMfid}/graph`, datasetMfid)
+    ).toBe(false)
   })
 
   it("keeps resource files local and retries an initial failure", async () => {

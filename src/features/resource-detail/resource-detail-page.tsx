@@ -53,6 +53,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  preloadResourceDetail,
   resourceQueryOptions,
   resourceSummaryQueryOptions,
 } from "@/data/crucible/resources.queries"
@@ -69,11 +70,16 @@ import { ResourceRelationshipManager } from "@/features/resource-relationships/r
 import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
 import { resourceDisplayName } from "@/lib/resource-name"
 
+export function isResourceOverviewPath(pathname: string, resourceMfid: string) {
+  return pathname.replace(/\/+$/, "").endsWith(`/${resourceMfid}`)
+}
+
 export async function preloadResourceShell(
   queryClient: QueryClient,
   scope: IdentityScope,
   resourceMfid: string,
-  forceApiResolution = false
+  forceApiResolution = false,
+  includeDetail = false
 ) {
   const options = resourceSummaryQueryOptions(scope, resourceMfid)
   if (forceApiResolution) {
@@ -84,6 +90,8 @@ export async function preloadResourceShell(
     })
     return queryClient.fetchQuery(options)
   }
+  if (includeDetail)
+    await preloadResourceDetail(queryClient, scope, resourceMfid)
   return queryClient.ensureQueryData(options)
 }
 

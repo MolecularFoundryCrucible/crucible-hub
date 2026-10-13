@@ -2,6 +2,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
 import {
   ResourceWorkspace,
+  isResourceOverviewPath,
   preloadResourceShell,
 } from "@/features/resource-detail/resource-detail-page"
 import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
@@ -12,14 +13,16 @@ import { resourceDisplayName } from "@/lib/resource-name"
 export const Route = createFileRoute("/_app/samples/$sampleMfid")({
   validateSearch: resourceDetailSearchSchema,
   staleTime: Infinity,
-  loader: async ({ context, params, parentMatchPromise }) => {
+  loader: async ({ context, location, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
     const resource = await preloadResourceShell(
       context.queryClient,
       source.scope,
-      params.sampleMfid
+      params.sampleMfid,
+      false,
+      isResourceOverviewPath(location.pathname, params.sampleMfid)
     )
     if (!resource) throw notFound()
     if (resource.kind === "dataset") {
