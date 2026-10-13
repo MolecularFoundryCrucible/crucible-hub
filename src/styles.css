@@ -34,6 +34,8 @@
   --container-action-min: 22rem;
   --container-group-directory: 18rem;
   --container-state: 36rem;
+  --container-processing-files-table: 46.5rem;
+  --container-processing-files-table-wide: 58.5rem;
   --spacing-page-gutter: 1rem;
   --spacing-page-gutter-medium: 1.5rem;
   --spacing-page-gutter-wide: 2rem;
@@ -102,6 +104,11 @@
   --spacing-data-owner-column-wide: var(--spacing-resource-person-column);
   --spacing-data-date-column-wide: var(--spacing-resource-date-column);
   --spacing-data-action-column: 3rem;
+  --spacing-processing-storage-column: 6rem;
+  --spacing-processing-size-column: 6rem;
+  --spacing-processing-status-column: 9rem;
+  --spacing-processing-ingestor-column: 10rem;
+  --spacing-processing-updated-column: var(--spacing-resource-date-column);
   --spacing-directory-action-column: 3rem;
   --spacing-directory-date-column: var(--spacing-resource-date-column);
   --spacing-directory-date-columns: var(--spacing-directory-date-column);

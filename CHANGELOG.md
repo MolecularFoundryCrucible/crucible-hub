@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Gave file names more room in the dataset Processing files table: the file MFID now sits under the name instead of in its own column, storage and size have their own columns on wide screens, and column widths use semantic tokens so status, ingestor, and update times keep comfortable space.
+
 - Fixed the Create service account workflow: the username field now applies the API rule up front (3 to 24 characters, lowercase letters, numbers, hyphens, and underscores, starting with a letter) with clear messages instead of a generic error after submitting, checks availability as you type, and blocks Create for a taken name; renaming a service account applies the same rule. When credentials need a recent sign-in, Sign in with ORCID now opens in a pop-up and returns to a new Signed in again page, so the dialog and what you typed are kept; a blocked pop-up falls back to the previous full-page sign-in.
 
 - Pinned the Crucible API contract to staging revision `d12b998` (pull request 315) and added file replacement to the upload dialog: a file whose name matches a stored file in the dataset can replace it after you choose Replace existing file for that row (undo with Keep existing). The replaced file keeps its MFID and gets the new content; if the file changed in the meantime, another replacement is running, or the name was taken during the upload, the row explains it and asks again. Catalog-only files can still only be renamed.

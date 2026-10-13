@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import type { ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { UseQueryResult } from "@tanstack/react-query"
 import { lazyRouteComponent } from "@tanstack/react-router"
@@ -17,7 +18,6 @@ import {
 import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
-import { MfidValue } from "@/components/crucible/mfid-value"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
@@ -82,6 +82,7 @@ import {
   FileOpenLink,
 } from "@/features/dataset-files/dataset-files-card"
 import { formatBytes } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
 const UploadFilesDialog = lazyRouteComponent(
   () => import("@/features/dataset-files/upload-dialog"),
@@ -175,10 +176,14 @@ function FilesAndIngestionCard({
           </h3>
           {filesResult.isPending || requestsResult.isPending ? (
             <ProcessingTablePending
-              alignTrailing={2}
+              alignEnd={[2, 5, 6]}
+              className="min-w-processing-files-table table-fixed xl:min-w-processing-files-table-wide"
+              wideOnly={[1, 2]}
+              colgroup={<ProcessingFilesColumns />}
               columns={[
                 "File",
-                "File MFID",
+                "Storage",
+                "Size",
                 "Status",
                 "Ingestor",
                 "Updated",
@@ -303,27 +308,47 @@ function FilesAndIngestionCard({
   )
 }
 
+function ProcessingFilesColumns() {
+  return (
+    <colgroup>
+      <col />
+      <col className="hidden xl:table-column xl:w-processing-storage-column" />
+      <col className="hidden xl:table-column xl:w-processing-size-column" />
+      <col className="w-processing-status-column" />
+      <col className="w-processing-ingestor-column" />
+      <col className="w-processing-updated-column" />
+      <col className="w-data-action-column" />
+    </colgroup>
+  )
+}
+
 function ProcessingTablePending({
-  alignTrailing = 0,
+  alignEnd = [],
+  className,
+  colgroup,
   columns,
   label,
+  wideOnly = [],
 }: {
-  alignTrailing?: number
+  alignEnd?: readonly number[]
+  className?: string
+  colgroup?: ReactNode
   columns: readonly string[]
   label: string
+  wideOnly?: readonly number[]
 }) {
   return (
     <div aria-label={`Loading ${label}`} role="status">
-      <Table>
+      <Table className={className}>
+        {colgroup}
         <TableHeader>
           <TableRow>
             {columns.map((column, index) => (
               <TableHead
-                className={
-                  alignTrailing > 0 && index >= columns.length - alignTrailing
-                    ? "text-right"
-                    : undefined
-                }
+                className={cn(
+                  alignEnd.includes(index) && "text-right",
+                  wideOnly.includes(index) && "hidden xl:table-cell"
+                )}
                 key={`${column}-${index}`}
               >
                 {column || <span className="sr-only">File action</span>}
@@ -335,13 +360,19 @@ function ProcessingTablePending({
           {Array.from({ length: 3 }, (_, row) => (
             <TableRow key={row}>
               {columns.map((column, columnIndex) => (
-                <TableCell key={`${column}-${columnIndex}`}>
+                <TableCell
+                  className={
+                    wideOnly.includes(columnIndex)
+                      ? "hidden xl:table-cell"
+                      : undefined
+                  }
+                  key={`${column}-${columnIndex}`}
+                >
                   <Skeleton
                     className={
-                      alignTrailing > 0 &&
-                      columnIndex >= columns.length - alignTrailing
+                      alignEnd.includes(columnIndex)
                         ? "ml-auto h-4 w-20"
-                        : "h-4 w-24"
+                        : "h-4 w-24 max-w-full"
                     }
                   />
                 </TableCell>
@@ -372,11 +403,15 @@ function ProcessingFilesTable({
   )
 
   return (
-    <Table>
+    <Table className="min-w-processing-files-table table-fixed xl:min-w-processing-files-table-wide">
+      <ProcessingFilesColumns />
       <TableHeader>
         <TableRow>
           <TableHead>File</TableHead>
-          <TableHead>File MFID</TableHead>
+          <TableHead className="hidden xl:table-cell">Storage</TableHead>
+          <TableHead className="hidden pr-4 text-right xl:table-cell">
+            Size
+          </TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Ingestor</TableHead>
           <TableHead className="text-right">Updated</TableHead>
@@ -392,16 +427,18 @@ function ProcessingFilesTable({
             <TableRow key={file.mfid}>
               <TableCell>
                 <ResourceIdentity
-                  className="max-w-64"
-                  context={`${file.storage_backend} · ${formatBytes(file.size)}`}
                   kind="file"
+                  mfid={file.mfid}
                   name={file.filename}
                   nameContent={<FileOpenLink file={file} scenario={scenario} />}
                   presentation="collection"
                 />
               </TableCell>
-              <TableCell>
-                <MfidValue value={file.mfid} />
+              <TableCell className="hidden truncate xl:table-cell">
+                {file.storage_backend}
+              </TableCell>
+              <TableCell className="hidden pr-4 text-right tabular-nums xl:table-cell">
+                {formatBytes(file.size)}
               </TableCell>
               <TableCell>
                 <IngestionStatusBadge
@@ -411,7 +448,9 @@ function ProcessingFilesTable({
                   status={request?.status}
                 />
               </TableCell>
-              <TableCell>{request?.ingestionClass ?? "Auto-detect"}</TableCell>
+              <TableCell className="truncate">
+                {request?.ingestionClass ?? "Auto-detect"}
+              </TableCell>
               <TableCell className="text-right tabular-nums">
                 <LocalDateTime
                   fallback="-"
