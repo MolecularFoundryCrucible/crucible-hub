@@ -309,7 +309,7 @@ export function InstrumentLifecycleCard({
 
       <ConfirmationDialog
         kind="alert"
-        confirmLabel="Decommission"
+        confirmLabel="Decommission instrument"
         description={
           <>
             <strong>{instrument.name}</strong> will be retired from future use.
@@ -327,6 +327,7 @@ export function InstrumentLifecycleCard({
         onConfirm={() => void applyStatus("decommissioned")}
         open={confirmingDecommission}
         pending={pending}
+        pendingLabel="Decommissioning instrument"
         title="Decommission instrument?"
         variant="destructive"
       />

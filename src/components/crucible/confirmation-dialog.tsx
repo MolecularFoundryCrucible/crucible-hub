@@ -22,6 +22,7 @@ import { PendingIcon } from "@/components/crucible/pending-icon"
 type ConfirmationProps = {
   cancelLabel?: string
   children?: React.ReactNode
+  confirmDisabled?: boolean
   confirmLabel: string
   description: React.ReactNode
   error?: React.ReactNode
@@ -30,17 +31,19 @@ type ConfirmationProps = {
   onConfirm: () => void
   onOpenChange: (open: boolean) => void
   open: boolean
-  pending?: boolean
   pendingCancelDisabled?: boolean
   pendingCancelLabel?: string
-  pendingLabel?: string
   title: React.ReactNode
   variant?: "default" | "destructive"
-}
+} & (
+  | { pending?: undefined; pendingLabel?: undefined }
+  | { pending: boolean; pendingLabel: string }
+)
 
 export function ConfirmationDialog({
   cancelLabel = "Cancel",
   children,
+  confirmDisabled = false,
   confirmLabel,
   description,
   error,
@@ -86,7 +89,7 @@ export function ConfirmationDialog({
               {activeCancelLabel}
             </AlertDialogCancel>
             <AlertDialogAction
-              disabled={pending}
+              disabled={pending || confirmDisabled}
               onClick={(event) => {
                 event.preventDefault()
                 onConfirm()
@@ -128,7 +131,7 @@ export function ConfirmationDialog({
             {activeCancelLabel}
           </Button>
           <Button
-            disabled={pending}
+            disabled={pending || confirmDisabled}
             onClick={onConfirm}
             type="button"
             variant={variant}

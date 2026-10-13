@@ -116,6 +116,7 @@ export function ProjectLeaveCard({
         onConfirm={() => void leaveProject()}
         open={open}
         pending={pending}
+        pendingLabel="Leaving project"
         title="Leave project?"
         variant="destructive"
       />

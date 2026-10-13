@@ -88,7 +88,7 @@ test("validates profile fields and protects unsaved changes", async ({
     .getByRole("dialog", { name: "Sidebar" })
     .getByRole("link", { name: "Home", exact: true })
     .click()
-  const discardDialog = page.getByRole("dialog", {
+  const discardDialog = page.getByRole("alertdialog", {
     name: "Discard unsaved changes?",
   })
   await expect(discardDialog).toBeVisible()

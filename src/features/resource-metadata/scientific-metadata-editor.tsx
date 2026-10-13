@@ -21,14 +21,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
   Field,
   FieldDescription,
   FieldError,
@@ -60,6 +52,7 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 
 type EditableResource = Extract<
   WorkspaceResourceDetail,
@@ -451,23 +444,16 @@ function MetadataReplacementDialog({
   open: boolean
 }) {
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Replace scientific metadata?</DialogTitle>
-          <DialogDescription>
-            Removing a top-level field cannot be applied atomically. Saving will
-            replace all scientific metadata with this edited JSON object.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
-            Keep editing
-          </Button>
-          <Button onClick={onConfirm}>Replace metadata</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmationDialog
+      cancelLabel="Keep editing"
+      confirmLabel="Replace metadata"
+      description="Removing a top-level field cannot be applied atomically. Saving will replace all scientific metadata with this edited JSON object."
+      kind="alert"
+      onConfirm={onConfirm}
+      onOpenChange={onOpenChange}
+      open={open}
+      title="Replace scientific metadata?"
+    />
   )
 }
 

@@ -1,15 +1,7 @@
 import { useCallback, useRef, useState } from "react"
 import { useBlocker } from "@tanstack/react-router"
 
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 
 export function useDiscardProtection(
   isDirty: boolean | (() => boolean),
@@ -70,26 +62,18 @@ export function DiscardChangesDialog({
   open: boolean
 }) {
   return (
-    <Dialog
-      onOpenChange={(nextOpen) => !nextOpen && onKeepEditing()}
+    <ConfirmationDialog
+      cancelLabel="Keep editing"
+      confirmLabel="Discard changes"
+      description="Your edits have not been saved. Leaving this page will discard them."
+      kind="alert"
+      onConfirm={onDiscard}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onKeepEditing()
+      }}
       open={open}
-    >
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Discard unsaved changes?</DialogTitle>
-          <DialogDescription>
-            Your edits have not been saved. Leaving this page will discard them.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button onClick={onKeepEditing} variant="outline">
-            Keep editing
-          </Button>
-          <Button onClick={onDiscard} variant="destructive">
-            Discard changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      title="Discard unsaved changes?"
+      variant="destructive"
+    />
   )
 }

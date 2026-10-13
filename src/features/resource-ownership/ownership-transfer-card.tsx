@@ -191,7 +191,7 @@ export function OwnershipTransferCard({
       </Dialog>
       <ConfirmationDialog
         kind="alert"
-        confirmLabel="Confirm transfer"
+        confirmLabel="Transfer ownership"
         description={
           preview ? (
             <>
@@ -211,6 +211,7 @@ export function OwnershipTransferCard({
         onConfirm={() => void confirm()}
         open={Boolean(preview)}
         pending={confirmMutation.isPending}
+        pendingLabel="Transferring ownership"
         title="Transfer ownership?"
       />
     </>

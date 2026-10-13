@@ -609,7 +609,9 @@ function ManagedResourceAccess({
         title="Revoke access?"
       />
       <ConfirmationDialog
-        confirmLabel={pendingPublic ? "Publish" : "Make private"}
+        confirmLabel={
+          pendingPublic ? "Publish resource" : "Make resource private"
+        }
         description={
           pendingPublic ? (
             <>
@@ -634,6 +636,9 @@ function ManagedResourceAccess({
         }}
         open={pendingPublic !== undefined}
         pending={mutationPending}
+        pendingLabel={
+          pendingPublic ? "Publishing resource" : "Making resource private"
+        }
         title={pendingPublic ? "Publish resource?" : "Make resource private?"}
       />
     </>

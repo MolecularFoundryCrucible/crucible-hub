@@ -235,7 +235,7 @@ export function ProjectAssignmentCard({
       </Dialog>
       <ConfirmationDialog
         kind="alert"
-        confirmLabel="Confirm assignment"
+        confirmLabel="Assign project"
         description={
           preview ? (
             <>
@@ -257,6 +257,7 @@ export function ProjectAssignmentCard({
         onConfirm={() => void confirm()}
         open={Boolean(preview)}
         pending={confirmMutation.isPending}
+        pendingLabel="Assigning project"
         title="Assign to this project?"
       />
     </>

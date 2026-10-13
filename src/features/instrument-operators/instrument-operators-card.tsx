@@ -691,6 +691,7 @@ export function InstrumentAccessCard({
         onConfirm={() => void handleRemoveOperator()}
         open={Boolean(removingOperator)}
         pending={removeOperatorMutation.isPending}
+        pendingLabel="Unassigning operator"
         title="Unassign operator?"
         variant="destructive"
       />

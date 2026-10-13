@@ -405,6 +405,7 @@ function ThumbnailEditor({
         onConfirm={() => void deleteThumbnail()}
         open={Boolean(deleting)}
         pending={mutation.isPending}
+        pendingLabel="Deleting thumbnail"
         title="Delete thumbnail?"
         variant="destructive"
       />

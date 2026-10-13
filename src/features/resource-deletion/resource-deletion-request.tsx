@@ -9,20 +9,7 @@ import {
 import { ManagementAction } from "@/components/crucible/management-action"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import { invalidateDeletionRequestMutationQueries } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -35,7 +22,7 @@ import type {
   WorkspaceDeletionRequest,
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
-import { PendingIcon } from "@/components/crucible/pending-icon"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 
 type DeletableResource = Extract<
   WorkspaceResourceDetail,
@@ -85,8 +72,7 @@ export function ResourceDeletionRequestCard({
   })
   const activeRequest = resource.deletion_request
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  async function submit() {
     setError(undefined)
     try {
       const confirmed = await mutation.mutateAsync()
@@ -158,9 +144,19 @@ export function ResourceDeletionRequestCard({
           title="Request deletion"
         />
       )}
-      <Dialog
+      <ConfirmationDialog
+        confirmLabel="Submit deletion request"
+        description={
+          <>
+            This submits{" "}
+            <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>{" "}
+            for review. It becomes hidden from collections, search, facets, and
+            graphs while the request is pending.
+          </>
+        }
+        error={error}
+        onConfirm={() => void submit()}
         onOpenChange={(nextOpen) => {
-          if (mutation.isPending) return
           setOpen(nextOpen)
           if (!nextOpen) {
             setError(undefined)
@@ -168,66 +164,26 @@ export function ResourceDeletionRequestCard({
           }
         }}
         open={open}
+        pending={mutation.isPending}
+        pendingLabel="Submitting deletion request"
+        title="Request deletion?"
+        variant="destructive"
       >
-        <DialogContent showCloseButton={!mutation.isPending}>
-          <form className="contents" onSubmit={(event) => void submit(event)}>
-            <DialogHeader>
-              <DialogTitle>Request deletion?</DialogTitle>
-              <DialogDescription>
-                This submits{" "}
-                <ResourceName>
-                  {resourceDetailDisplayName(resource)}
-                </ResourceName>{" "}
-                for review. It becomes hidden from collections, search, facets,
-                and graphs while the request is pending.
-              </DialogDescription>
-            </DialogHeader>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="deletion-request-reason" optional>
-                  Reason
-                </FieldLabel>
-                <Textarea
-                  disabled={mutation.isPending}
-                  id="deletion-request-reason"
-                  maxLength={2000}
-                  onChange={(event) => setReason(event.target.value)}
-                  placeholder="Why should this resource be deleted?"
-                  value={reason}
-                />
-                <FieldDescription>Up to 2,000 characters.</FieldDescription>
-              </Field>
-              {error ? (
-                <p className="text-body text-destructive" role="alert">
-                  {error}
-                </p>
-              ) : null}
-            </FieldGroup>
-            <DialogFooter>
-              <Button
-                disabled={mutation.isPending}
-                onClick={() => setOpen(false)}
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={mutation.isPending}
-                type="submit"
-                variant="destructive"
-              >
-                {mutation.isPending ? (
-                  <PendingIcon data-icon="inline-start" />
-                ) : null}
-                {mutation.isPending
-                  ? "Submitting deletion request"
-                  : "Submit deletion request"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        <Field>
+          <FieldLabel htmlFor="deletion-request-reason" optional>
+            Reason
+          </FieldLabel>
+          <Textarea
+            disabled={mutation.isPending}
+            id="deletion-request-reason"
+            maxLength={2000}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Why should this resource be deleted?"
+            value={reason}
+          />
+          <FieldDescription>Up to 2,000 characters.</FieldDescription>
+        </Field>
+      </ConfirmationDialog>
     </>
   )
 }

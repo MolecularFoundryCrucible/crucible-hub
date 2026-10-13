@@ -7,14 +7,6 @@ import { ManagementAction } from "@/components/crucible/management-action"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { invalidateResourceDeletionQueries } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { privilegeModeFromScope } from "@/data/crucible/query-keys"
@@ -30,6 +22,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 
 type DeletableResource = Extract<
   WorkspaceResourceDetail,
@@ -169,97 +162,80 @@ export function ResourceForcedDeletionCard({
         presentation={presentation}
         title="Delete permanently"
       />
-      <Dialog onOpenChange={closeDialog} open={open}>
-        <DialogContent showCloseButton={!pending}>
-          <DialogHeader>
-            <DialogTitle>Delete permanently?</DialogTitle>
-            <DialogDescription>
-              This permanently removes{" "}
-              <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>{" "}
-              and its access group. Stored files are not deleted.
-            </DialogDescription>
-          </DialogHeader>
-          {preview ? (
-            <ul className="flex flex-col gap-1 text-body text-muted-foreground">
-              {preview.memberships_removed > 0 ? (
-                <li>
-                  {preview.memberships_removed}{" "}
-                  {preview.memberships_removed === 1 ? "member" : "members"}{" "}
-                  unlinked
-                </li>
-              ) : null}
-              {preview.join_requests_removed > 0 ? (
-                <li>
-                  {preview.join_requests_removed}{" "}
-                  {preview.join_requests_removed === 1
-                    ? "join request"
-                    : "join requests"}{" "}
-                  removed
-                </li>
-              ) : null}
-              {preview.service_accounts_unbound > 0 ? (
-                <li>
-                  {preview.service_accounts_unbound}{" "}
-                  {preview.service_accounts_unbound === 1
-                    ? "operator"
-                    : "operators"}{" "}
-                  unbound
-                </li>
-              ) : null}
-              {preview.removed_grants.length > 0 ? (
-                <li>
-                  {preview.removed_grants.length}{" "}
-                  {preview.removed_grants.length === 1 ? "grant" : "grants"}{" "}
-                  held on other resources removed
-                </li>
-              ) : null}
-              {blocked ? <li>{blocked}</li> : null}
-            </ul>
-          ) : null}
-          {error ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <Field>
-            <FieldLabel htmlFor={`confirm-delete-${resource.unique_id}`}>
-              Type DELETE to confirm
-            </FieldLabel>
-            <Input
-              autoComplete="off"
-              disabled={confirmMutation.isPending}
-              id={`confirm-delete-${resource.unique_id}`}
-              onChange={(event) => setConfirmation(event.target.value)}
-              placeholder="DELETE"
-              value={confirmation}
-            />
-          </Field>
-          <DialogFooter>
-            <Button
-              disabled={pending}
-              onClick={() => closeDialog(false)}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={
-                pending ||
-                !preview ||
-                Boolean(blocked) ||
-                confirmation !== "DELETE"
-              }
-              onClick={() => void confirm()}
-              type="button"
-              variant="destructive"
-            >
-              {pending ? <PendingIcon data-icon="inline-start" /> : null}
-              {pending ? "Deleting" : "Delete permanently"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationDialog
+        confirmDisabled={
+          !preview || Boolean(blocked) || confirmation !== "DELETE"
+        }
+        confirmLabel="Delete permanently"
+        description={
+          <>
+            This permanently removes{" "}
+            <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>{" "}
+            and its access group. Stored files are not deleted.
+          </>
+        }
+        error={error}
+        onConfirm={() => void confirm()}
+        onOpenChange={closeDialog}
+        open={open}
+        pending={pending}
+        pendingLabel={
+          confirmMutation.isPending ? "Deleting permanently" : "Checking impact"
+        }
+        title="Delete permanently?"
+        variant="destructive"
+      >
+        {preview ? (
+          <ul className="flex flex-col gap-1 text-body text-muted-foreground">
+            {preview.memberships_removed > 0 ? (
+              <li>
+                {preview.memberships_removed}{" "}
+                {preview.memberships_removed === 1 ? "member" : "members"}{" "}
+                unlinked
+              </li>
+            ) : null}
+            {preview.join_requests_removed > 0 ? (
+              <li>
+                {preview.join_requests_removed}{" "}
+                {preview.join_requests_removed === 1
+                  ? "join request"
+                  : "join requests"}{" "}
+                removed
+              </li>
+            ) : null}
+            {preview.service_accounts_unbound > 0 ? (
+              <li>
+                {preview.service_accounts_unbound}{" "}
+                {preview.service_accounts_unbound === 1
+                  ? "operator"
+                  : "operators"}{" "}
+                unbound
+              </li>
+            ) : null}
+            {preview.removed_grants.length > 0 ? (
+              <li>
+                {preview.removed_grants.length}{" "}
+                {preview.removed_grants.length === 1 ? "grant" : "grants"} held
+                on other resources removed
+              </li>
+            ) : null}
+            {blocked ? <li>{blocked}</li> : null}
+          </ul>
+        ) : null}
+        <Field>
+          <FieldLabel htmlFor={`confirm-delete-${resource.unique_id}`}>
+            Type DELETE to confirm
+          </FieldLabel>
+          <Input
+            autoComplete="off"
+            disabled={confirmMutation.isPending}
+            id={`confirm-delete-${resource.unique_id}`}
+            onChange={(event) => setConfirmation(event.target.value)}
+            placeholder="DELETE"
+            value={confirmation}
+          />
+        </Field>
+      </ConfirmationDialog>
     </>
   )
 }
