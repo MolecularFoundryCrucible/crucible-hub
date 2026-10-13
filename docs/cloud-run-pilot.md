@@ -42,6 +42,46 @@ An image-only deployment preserves the service's existing authentication, instan
 
 After deployment, confirm the new image digest and healthy revision with 100% traffic, then check public `/hub/health`, sign-in and error-page security headers, and a disposable-account sign-in, navigation, and logout. The normal Hub document policy is `Referrer-Policy: same-origin`, which lets the native logout form send its real `Origin`; OAuth redirects use `no-referrer`. Keep exact Origin validation, including rejection of missing, null, and foreign origins. The response also needs its framing CSP, `X-Frame-Options: DENY`, and `X-Content-Type-Options: nosniff`. Check that callback codes and cookies are absent from retained logs and browser artifacts. Two-user isolation, refresh races, and restart behavior remain separate pilot evidence.
 
+## Response compression (deferred)
+
+Status: Deferred on October 13, 2026. No proxy or application change is planned for the pilot.
+
+Static JavaScript and CSS are pre-compressed at build time (`compressPublicAssets` in `vite.config.ts`) and served as brotli or gzip by `Accept-Encoding`. Dynamic responses, the server-rendered HTML documents and server-function JSON, are sent uncompressed because Cloud Run does not compress responses and the `crucible-web` Nginx proxy is not configured to. HTML documents are `private, no-store`, so every full page load transfers them in full.
+
+| Response (fixture build)  | Uncompressed | gzip  | brotli  |
+| ------------------------- | ------------ | ----- | ------- |
+| Home document             | 103 KB       | 14 KB | 11.5 KB |
+| Dataset Overview document | 127 KB       | 18 KB | 14 KB   |
+| Server-function JSON      | 1 to 3 KB    | -60%  | -65%    |
+
+The documents are mostly utility class names and inline SVG icons. The saving is about 90 ms per full page load at 10 Mbps and about 450 ms at 2 Mbps; real API collections, file lists, and thumbnail payloads will be larger than the fixtures.
+
+Preferred option: enable gzip in the existing `/hub/` location of the `crucible-web` Nginx proxy. It needs no application or Cloud Run CPU, streams with server rendering, and leaves the pre-compressed static assets untouched because Nginx does not recompress responses that already carry `Content-Encoding`. The proxy must keep forwarding the browser's `Accept-Encoding` header (no `proxy_set_header Accept-Encoding ""`); otherwise Cloud Run returns uncompressed assets and Nginx re-gzips them without brotli.
+
+```nginx
+location /hub/ {
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_types application/json text/plain text/css application/javascript image/svg+xml;
+    # existing proxy_pass and headers unchanged
+}
+```
+
+`text/html` is compressed whenever `gzip on` is set. Brotli would need a non-standard Nginx module and saves only about 15 to 20% more on HTML.
+
+Alternatives: compressing inside the Hub server entry works without the proxy but spends Cloud Run CPU on the single instance, buffers streamed server rendering on Node, and must be checked against [Nitro issue 3789](https://github.com/nitrojs/nitro/issues/3789). [Cloud CDN dynamic compression](https://docs.cloud.google.com/cdn/docs/dynamic-compression) requires an external Application Load Balancer in front of Cloud Run, which would replace the current proxy ingress and its logging controls; reconsider it only if ingress moves to a load balancer for other reasons.
+
+BREACH assessment: compressing HTTPS responses that combine a secret with attacker-influenced input can leak that secret through response sizes. Hub documents carry no CSRF token (mutations are protected by `Origin` validation in `src/start.ts`), the session cookie is `HttpOnly` and never in a body, API tokens stay on the server, and the `SameSite=Lax` cookie prevents cross-site credentialed subrequests that the attack needs. Record this assessment in the [pilot risk review](cloud-run-pilot-risk-review.md) when compression is enabled.
+
+Verification after enabling:
+
+1. `curl -sI -H 'Accept-Encoding: gzip' https://crucible.lbl.gov/hub/` returns `Content-Encoding: gzip` and `Vary: Accept-Encoding`; repeat for one server-function request.
+2. A file under `/hub/assets/` still returns `Content-Encoding: br`, confirming pre-compressed assets pass through.
+3. Sign-in, navigation, logout, and the security headers listed above are unchanged.
+
 ## Release automation
 
 No Hub GitHub tag build trigger is configured. A future release can use a native [Cloud Build GitHub trigger](https://docs.cloud.google.com/build/docs/automating-builds/github/build-repos-from-github) restricted to this repository, `v*` tags, and `cloudbuild.pilot.yaml`. First connect the repository to Cloud Build and assign a least-privilege build identity. Have the trigger build and push an image tagged with the source commit SHA, then record the digest. Keep deployment manual during the single-instance pilot so creating a tag cannot end active sessions without an explicit rollout.

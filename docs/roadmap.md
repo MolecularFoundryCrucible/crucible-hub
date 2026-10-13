@@ -41,6 +41,7 @@ The local workspace has the runtime and server boundary, generated contract cons
 2. Verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement in the target browser and deployment topology.
 3. Complete upload feasibility evidence for the direct object-storage boundary.
 4. Run the production go or no-go review with container, path-prefix, authentication, and operational evidence.
+5. Deferred: compress dynamic HTML and server-function responses at the `crucible-web` proxy, as described in [Cloud Run pilot response compression](cloud-run-pilot.md#response-compression-deferred).
 
 Entry: accepted API login and session contract. Completion: pilot-shaped authentication, session, security, deployment, and recovery evidence is recorded in [foundation evidence](phase-0-evidence.md). Before raising the instance cap or requiring session continuity, implement and validate the Hub-owned Cloud SQL session store across replicas under [decision 0033](../decisions/0033-use-existing-cloud-sql-for-shared-hub-sessions.md).
 
