@@ -24,6 +24,7 @@ import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-del
 import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import {
   ResourceSectionNavigation,
+  ResourceSectionPanel,
   resourceSectionActiveProps,
   resourceSectionLinkClassName,
 } from "@/components/crucible/resource-section-navigation"
@@ -269,7 +270,9 @@ export function ResourceWorkspace({
           resource={resource}
           siblingSessionId={siblingNavigation?.id}
         />
-        <Outlet />
+        <ResourceSectionPanel>
+          <Outlet />
+        </ResourceSectionPanel>
       </PageLayout>
       <ResourceInspector navigation={navigation} />
     </ResourcePreviewContext.Provider>
@@ -350,6 +353,7 @@ function ResourceNavigation({
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={resourceSectionActiveProps}
+          viewTransition
           className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           search={{ fromProject, preview: undefined }}
@@ -361,6 +365,7 @@ function ResourceNavigation({
         <Link
           activeOptions={{ includeSearch: false }}
           activeProps={resourceSectionActiveProps}
+          viewTransition
           className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
@@ -373,6 +378,7 @@ function ResourceNavigation({
         <Link
           activeOptions={{ includeSearch: false }}
           activeProps={resourceSectionActiveProps}
+          viewTransition
           className={resourceSectionLinkClassName}
           params={{ sampleMfid: resource.unique_id }}
           preload={false}
@@ -390,6 +396,7 @@ function ResourceNavigation({
       <Link
         activeOptions={{ exact: true, includeSearch: false }}
         activeProps={resourceSectionActiveProps}
+        viewTransition
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         search={{ fromProject, preview: undefined }}
@@ -401,6 +408,7 @@ function ResourceNavigation({
       <Link
         activeOptions={{ includeSearch: false }}
         activeProps={resourceSectionActiveProps}
+        viewTransition
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
@@ -413,6 +421,7 @@ function ResourceNavigation({
       <Link
         activeOptions={{ includeSearch: false }}
         activeProps={resourceSectionActiveProps}
+        viewTransition
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
@@ -425,6 +434,7 @@ function ResourceNavigation({
       <Link
         activeOptions={{ includeSearch: false }}
         activeProps={resourceSectionActiveProps}
+        viewTransition
         className={resourceSectionLinkClassName}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}

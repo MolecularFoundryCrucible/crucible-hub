@@ -31,3 +31,11 @@ export function ResourceSectionNavigation({
     </div>
   )
 }
+
+export function ResourceSectionPanel({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return <div className="resource-section-panel min-w-0">{children}</div>
+}

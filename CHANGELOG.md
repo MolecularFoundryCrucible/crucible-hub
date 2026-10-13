@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Unified motion: the quick, standard, and deliberate durations and standard, enter, and exit easings are now design tokens used by every dialog, menu, popover, sheet, sidebar, and toast, and the design-token check rejects hard-coded durations and easings. Metadata sections now open and close smoothly, rows revealed by Show all fade in, and switching resource, project, or instrument tabs crossfades the tab content while the header and navigation stay still. Reduced-motion settings turn all of these off.
+
 - Restored CI: `npm run audit` now checks only shipped dependencies (`npm audit --omit=dev --audit-level=high`), `shadcn` moved to `devDependencies` because the app only imports its Tailwind CSS at build time, vulnerable transitive packages were updated, and CI runners are pinned to `ubuntu-24.04`. The `braces` advisory GHSA-vfj7-8cjw-p6xm has no patched release and is reachable only through the `shadcn` CLI.
 
 - Reworked the sample and dataset Overview layout: on wide screens Identity, Thumbnails, and Relationships form an independent side column beside Summary, Files, and Scientific metadata, so a long card no longer leaves gaps in the other column or pushes it down, and on narrow screens Identity now follows Summary. The Files table and each relationship group show their first 10 rows with a Show all control that expands the list in place, and the Files heading shows the file count.

@@ -62,7 +62,7 @@ function ToastContent({ className, ...props }: ToastPrimitive.Content.Props) {
   return (
     <ToastPrimitive.Content
       className={cn(
-        "flex h-full items-center gap-3 overflow-hidden p-4 transition-opacity duration-150 data-behind:opacity-0 data-expanded:opacity-100 motion-reduce:transition-none",
+        "flex h-full items-center gap-3 overflow-hidden p-4 transition-opacity duration-fast data-behind:opacity-0 data-expanded:opacity-100 motion-reduce:transition-none",
         className
       )}
       data-slot="toast-content"

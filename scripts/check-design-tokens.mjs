@@ -35,6 +35,11 @@ const patterns = [
     expression:
       /(?:^|[\s"'`])(?:[a-z][a-z0-9-]*:)*tracking-(?:tighter|tight|normal|wide|wider|widest)\b/m,
   },
+  {
+    label: "primitive motion",
+    expression:
+      /(?:^|[\s"'`])(?:\S*:)?(?:duration-\d+|ease-(?:linear|in|out|in-out))(?=[\s"'`]|$)/m,
+  },
 ]
 
 const themeSource = readFileSync(join(sourceRoot, "styles.css"), "utf8")
@@ -72,8 +77,8 @@ function unknownTextUtilities(content) {
     .filter((name) => !knownTextUtilities.has(name))
 }
 
-const typographyPatterns = patterns.filter(({ label }) =>
-  label.startsWith("primitive typography")
+const primitivePatterns = patterns.filter(({ label }) =>
+  label.startsWith("primitive ")
 )
 
 const buttonStyleUtility =
@@ -171,7 +176,7 @@ function scan(directory) {
     if (allowedPrefixes.some((prefix) => localPath.startsWith(prefix))) {
       if (localPath.startsWith("components/ui/")) {
         const primitive = readFileSync(path, "utf8")
-        for (const pattern of typographyPatterns) {
+        for (const pattern of primitivePatterns) {
           if (pattern.expression.test(primitive))
             violations.push(`${localPath}: ${pattern.label}`)
         }

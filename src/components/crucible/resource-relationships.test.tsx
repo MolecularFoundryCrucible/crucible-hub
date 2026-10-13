@@ -184,6 +184,9 @@ describe("ResourceRelationships", () => {
     fireEvent.click(toggle)
 
     expect(screen.getAllByRole("listitem")).toHaveLength(12)
+    const items = screen.getAllByRole("listitem")
+    expect(items[9]?.classList.contains("animate-in")).toBe(false)
+    expect(items[10]?.classList.contains("animate-in")).toBe(true)
     expect(
       screen
         .getByRole("button", { name: "Show fewer parents" })

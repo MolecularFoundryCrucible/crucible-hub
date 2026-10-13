@@ -6,6 +6,7 @@ import { OpenFullPageIcon } from "@/components/crucible/icons"
 import {
   COLLAPSED_LIST_LIMIT,
   ListExpansionToggle,
+  revealedRowClassName,
 } from "@/components/crucible/list-expansion-toggle"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
@@ -131,8 +132,9 @@ function RelationshipGroup({
         {title} ({links.length})
       </GroupHeading>
       <ResourceList className="mt-2" id={listId}>
-        {visibleLinks.map((link) => (
+        {visibleLinks.map((link, index) => (
           <RelationshipRow
+            className={revealedRowClassName(index)}
             key={`${link.relationship}:${link.resource_type}:${link.unique_id}`}
             link={link}
             managing={managing}
@@ -156,10 +158,12 @@ function RelationshipGroup({
 }
 
 function RelationshipRow({
+  className,
   link,
   managing,
   renderManagementAction,
 }: {
+  className?: string
   link: WorkspaceLinkedResource
   managing: boolean
   renderManagementAction?: (link: WorkspaceLinkedResource) => ReactNode
@@ -193,7 +197,7 @@ function RelationshipRow({
     </span>
   )
   return (
-    <ResourceListItem>
+    <ResourceListItem className={className}>
       <ResourceListItemContent className="px-0">
         <div className="min-w-0 flex-1">{identity}</div>
         <div className="flex shrink-0 items-center">

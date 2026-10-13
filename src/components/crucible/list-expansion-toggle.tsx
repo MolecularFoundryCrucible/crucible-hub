@@ -3,6 +3,12 @@ import { Button } from "@/components/ui/button"
 
 export const COLLAPSED_LIST_LIMIT = 10
 
+export function revealedRowClassName(index: number) {
+  return index >= COLLAPSED_LIST_LIMIT
+    ? "animate-in fade-in-0 duration-standard ease-enter"
+    : undefined
+}
+
 export function ListExpansionToggle({
   controls,
   expanded,

@@ -15,6 +15,7 @@ import {
 import {
   COLLAPSED_LIST_LIMIT,
   ListExpansionToggle,
+  revealedRowClassName,
 } from "@/components/crucible/list-expansion-toggle"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
@@ -242,8 +243,8 @@ export function FilesTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {visibleFiles.map((file) => (
-            <TableRow key={file.mfid}>
+          {visibleFiles.map((file, index) => (
+            <TableRow className={revealedRowClassName(index)} key={file.mfid}>
               <TableCell>
                 <ResourceIdentity
                   kind="file"

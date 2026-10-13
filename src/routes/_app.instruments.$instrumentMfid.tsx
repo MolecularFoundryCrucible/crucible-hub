@@ -8,6 +8,7 @@ import { ResourceCreationActions } from "@/components/crucible/resource-creation
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   ResourceSectionNavigation,
+  ResourceSectionPanel,
   resourceSectionActiveProps,
   resourceSectionLinkClassName,
 } from "@/components/crucible/resource-section-navigation"
@@ -152,6 +153,7 @@ function InstrumentPage() {
         <Link
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={resourceSectionActiveProps}
+          viewTransition
           className={resourceSectionLinkClassName}
           params={{ instrumentMfid }}
           search={{ cursor: undefined }}
@@ -162,6 +164,7 @@ function InstrumentPage() {
         <Link
           activeOptions={{ includeSearch: false }}
           activeProps={resourceSectionActiveProps}
+          viewTransition
           className={resourceSectionLinkClassName}
           params={{ instrumentMfid }}
           search={{}}
@@ -175,6 +178,7 @@ function InstrumentPage() {
           <Link
             activeOptions={{ includeSearch: false }}
             activeProps={resourceSectionActiveProps}
+            viewTransition
             className={resourceSectionLinkClassName}
             params={{ instrumentMfid }}
             search={{}}
@@ -185,7 +189,9 @@ function InstrumentPage() {
         ) : null}
       </ResourceSectionNavigation>
 
-      <Outlet />
+      <ResourceSectionPanel>
+        <Outlet />
+      </ResourceSectionPanel>
     </PageLayout>
   )
 }
