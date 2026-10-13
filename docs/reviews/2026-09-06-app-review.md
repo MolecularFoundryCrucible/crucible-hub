@@ -1,6 +1,6 @@
 # Crucible Hub application review
 
-Status: Historical snapshot. Findings and commands describe the 2026-09-06 working tree and are not the current Hub validation contract. As of 2026-09-23, current status lives in [foundation evidence](phase-0-evidence.md), CI uses a bounded screenshot-free browser gate, and targeted screenshots remain uncommitted local review artifacts.
+Status: Historical snapshot. Findings and commands describe the 2026-09-06 working tree and are not the current Hub validation contract. As of 2026-09-23, current status lives in [foundation evidence](../phase-0-evidence.md), CI uses a bounded screenshot-free browser gate, and targeted screenshots remain uncommitted local review artifacts.
 
 Review date: 2026-09-06, America/Los_Angeles.
 
@@ -37,7 +37,7 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 **Evidence:** At `/hub/data` with a 320-pixel viewport, resource names collapse to approximately one or two visible characters, project and owner values become short fragments, and dates visually compete with the full-page action. The page does not overflow horizontally, but users cannot identify the records reliably. The local review artifact was captured as `output/playwright/review-data-compact-dark.png`.
 
-**Cause:** The [Data route](../src/routes/_app.data.tsx), around line 246, retains Name, Project, Owner, Updated, and the action column in a fixed-layout table at compact widths. The [column tokens](../src/styles.css), around line 43, reserve a fixed action width and divide the remainder between several columns. Hiding only the separate Type column is insufficient.
+**Cause:** The [Data route](../../src/routes/_app.data.tsx), around line 246, retains Name, Project, Owner, Updated, and the action column in a fixed-layout table at compact widths. The [column tokens](../../src/styles.css), around line 43, reserve a fixed action width and divide the remainder between several columns. Hiding only the separate Type column is insufficient.
 
 **Recommendation:** Introduce an equivalent compact list with the resource name as the primary line and project, type, owner, and date as secondary information, or give the table a useful minimum width with deliberate local scrolling. Preserve both inspection and full-page navigation. Check actual text visibility and action overlap at 320 and 390 pixels, not only `scrollWidth <= innerWidth`. Audit project and instrument data tables for the same pattern.
 
@@ -45,7 +45,7 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 **Evidence:** Opening a populated sample or dataset Graph tab produces repeated warnings such as `The style property background-color: oklch(1 0 0) is invalid`. Nodes render with gray fills and black borders/text in both themes, instead of the intended sample/dataset colors and theme-specific surfaces. The local review artifacts were captured as `output/playwright/review-graph-desktop.png` and `output/playwright/review-graph-dark.png`.
 
-**Cause:** `graphStyles()` in the [graph page](../src/features/resource-graph/resource-graph-page.tsx), around line 291, passes raw CSS custom-property values to Cytoscape. The installed Cytoscape color parser accepts arrays, named colors, hex, RGB, and HSL, but does not parse these OKLCH strings. CSS custom-property lookup returns the original token syntax rather than a renderer-compatible color.
+**Cause:** `graphStyles()` in the [graph page](../../src/features/resource-graph/resource-graph-page.tsx), around line 291, passes raw CSS custom-property values to Cytoscape. The installed Cytoscape color parser accepts arrays, named colors, hex, RGB, and HSL, but does not parse these OKLCH strings. CSS custom-property lookup returns the original token syntax rather than a renderer-compatible color.
 
 **Recommendation:** Keep the semantic tokens authoritative and resolve their colors into a format the graph renderer supports at the integration boundary. Verify both initial rendering and a theme change. Add a graph-specific visual check and detection of rejected style warnings. The current graph tests verify canvas presence and the HTML alternative, so this rendering defect passes those tests.
 
@@ -55,7 +55,7 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 **Interpretation:** This establishes that current product screens differ from their accepted baselines. It does not establish that all 19 differences are bad design. The worktree contains new Create controls, graph navigation, and layout changes that plausibly account for some differences. Each failure still requires review before acceptance.
 
-**Recommendation:** Inspect expected, actual, and diff images; repair unintended changes; then update only intentionally accepted baselines. Do not increase the tolerance or bulk-accept the results. Record fresh evidence for the current tree before describing the affected slices as browser-verified. See the [browser configuration](../playwright.config.ts), [route scenarios](../tests/browser/route-scenarios.spec.ts), and [evidence register](phase-0-evidence.md).
+**Recommendation:** Inspect expected, actual, and diff images; repair unintended changes; then update only intentionally accepted baselines. Do not increase the tolerance or bulk-accept the results. Record fresh evidence for the current tree before describing the affected slices as browser-verified. See the [browser configuration](../../playwright.config.ts), [route scenarios](../../tests/browser/route-scenarios.spec.ts), and [evidence register](../phase-0-evidence.md).
 
 ### F4. Priority 2: a closing tooltip causes a reproducible accessibility failure
 
@@ -63,27 +63,27 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 **Interpretation:** The flagged element is a tooltip during its exit state. This is not evidence that the entire dialog palette has insufficient contrast. The interaction between tooltip dismissal, its animation, and the timing of the accessibility scan needs inspection.
 
-**Recommendation:** Inspect the [tooltip primitive](../src/components/ui/tooltip.tsx) and relationship dialog behavior. Establish correct dismissal and visibility semantics and test both the stable dialog and its transition. Avoid suppressing contrast checks or simply adding an arbitrary delay to hide the symptom.
+**Recommendation:** Inspect the [tooltip primitive](../../src/components/ui/tooltip.tsx) and relationship dialog behavior. Establish correct dismissal and visibility semantics and test both the stable dialog and its transition. Avoid suppressing contrast checks or simply adding an arbitrary delay to hide the symptom.
 
 ### F5. Priority 2: cancelling a creation draft asks for discard confirmation twice
 
 **Reproduction:** Open `/hub/datasets/new`, type a name, click Cancel, and click Discard changes. The confirmation remains and the route does not change. Clicking Discard changes a second time finally navigates to Data.
 
-**Cause:** In [discard protection](../src/features/forms/discard-changes.tsx), lines 34-40, the explicit cancel-confirmation branch calls `onDiscard()` while the form is still dirty. The dataset callback navigates immediately, so the route blocker intercepts that navigation and raises another confirmation. Other creation forms use the same callback pattern; their individual reproductions remain to be checked.
+**Cause:** In [discard protection](../../src/features/forms/discard-changes.tsx), lines 34-40, the explicit cancel-confirmation branch calls `onDiscard()` while the form is still dirty. The dataset callback navigates immediately, so the route blocker intercepts that navigation and raises another confirmation. Other creation forms use the same callback pattern; their individual reproductions remain to be checked.
 
 **Recommendation:** Make an approved discard and the resulting navigation one coherent operation using the existing router blocker. A single confirmation must complete cancellation. Add coverage for Cancel followed by Discard, separately from clicking a navigation link while dirty.
 
 ### F6. Priority 2: the Activity placeholder renders as an enabled control
 
-**Evidence:** Activity has a normal pointer cursor and button presentation but does nothing. DOM inspection found neither `disabled` nor `aria-disabled` on the rendered button, despite the `disabled` prop in [AppShell](../src/components/crucible/app-shell.tsx), around line 111. Its “coming later” tooltip is hidden in the expanded desktop sidebar.
+**Evidence:** Activity has a normal pointer cursor and button presentation but does nothing. DOM inspection found neither `disabled` nor `aria-disabled` on the rendered button, despite the `disabled` prop in [AppShell](../../src/components/crucible/app-shell.tsx), around line 111. Its “coming later” tooltip is hidden in the expanded desktop sidebar.
 
-**Cause to investigate:** The [sidebar primitive](../src/components/ui/sidebar.tsx) composes the button through a tooltip trigger. The intended disabled semantics are not reaching the final DOM in this case.
+**Cause to investigate:** The [sidebar primitive](../../src/components/ui/sidebar.tsx) composes the button through a tooltip trigger. The intended disabled semantics are not reaching the final DOM in this case.
 
 **Recommendation:** Omit Activity until useful, or render a clearly unavailable item with visible explanatory text and correct semantics. Verify disabled prop forwarding through this composition. A dead control should not look like a working destination.
 
 ### F7. Priority 2: several form errors are announced but not associated with their inputs
 
-**Evidence:** For example, `ProjectTextField` in the [project creation form](../src/features/project-creation/project-creation-form.tsx), around line 300, supplies `aria-invalid` but no `aria-describedby` or `aria-errormessage`; its `FieldError` has no associated ID. Similar patterns exist in instrument registration and dataset text fields. The [shared Field wrapper](../src/components/ui/field.tsx) is an ordinary grouped element and does not generate these relationships automatically.
+**Evidence:** For example, `ProjectTextField` in the [project creation form](../../src/features/project-creation/project-creation-form.tsx), around line 300, supplies `aria-invalid` but no `aria-describedby` or `aria-errormessage`; its `FieldError` has no associated ID. Similar patterns exist in instrument registration and dataset text fields. The [shared Field wrapper](../../src/components/ui/field.tsx) is an ordinary grouped element and does not generate these relationships automatically.
 
 **Impact:** An alert can announce a newly displayed error, but returning focus to the input does not reliably expose the specific correction as its accessible description. Help text also lacks consistent association. This is a source-confirmed semantic gap; a screen reader session was not performed.
 
@@ -91,7 +91,7 @@ Priority 1 means fix before treating the affected workflow as ready. Priority 2 
 
 ### F8. Priority 2: newer consequential workflows have incomplete browser coverage
 
-**Evidence:** Browser tests cover menu navigation to creation routes, lifecycle changes, and the presence/layout of ownership and project-assignment cards. They do not exercise complete project/sample/dataset creation submissions, dataset link recovery, operator changes, or ownership/project-move preview-confirm flows. The [evidence register](phase-0-evidence.md) correctly distinguishes static/unit coverage for several of these newer operations.
+**Evidence:** Browser tests cover menu navigation to creation routes, lifecycle changes, and the presence/layout of ownership and project-assignment cards. They do not exercise complete project/sample/dataset creation submissions, dataset link recovery, operator changes, or ownership/project-move preview-confirm flows. The [evidence register](../phase-0-evidence.md) correctly distinguishes static/unit coverage for several of these newer operations.
 
 **Recommendation:** Prioritize behavioral browser coverage for successful submission, confirmed rejection, uncertain outcome, cancellation, lost capabilities, stale preview, and partial completion. For dataset creation, prove that retry only repeats missing links and clearly distinguishes “dataset created” from “links incomplete.” This would also cover the discard defect missed by current route-opening tests. Keep fixture coverage separate from accepted API-contract and production-session evidence.
 
@@ -125,7 +125,7 @@ No wholesale redesign or additional decorative treatment is needed. Resolve read
 
 ## Product status and missing features
 
-The [roadmap](roadmap.md) is broadly candid about the distinction between local functionality and production exposure. “Implemented locally” should remain the status for the newer management and graph work until its behavioral and contract gates are complete.
+The [roadmap](../roadmap.md) is broadly candid about the distinction between local functionality and production exposure. “Implemented locally” should remain the status for the newer management and graph work until its behavioral and contract gates are complete.
 
 | Capability                                     | Current status                                                                                                             | Next requirement and owner                                                                                                                                                                                                                         |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -141,12 +141,12 @@ The [roadmap](roadmap.md) is broadly candid about the distinction between local 
 | Saved views, pins, exports, bulk work          | Deferred high-scale features.                                                                                              | Prioritize with research users after core reliability. Use API-backed bulk actions and explicit privacy decisions for stored personal workspace state.                                                                                             |
 | Administration                                 | Not required for the first user-facing release.                                                                            | Keep separate from normal researcher workflows; implement only against accepted capabilities and review contracts.                                                                                                                                 |
 
-The external dependency details should continue to live in the [API handoff](crucible-api-handoff.md), rather than becoming Hub-side workarounds. Authentication and upload designs are still proposed decisions, not authorization to implement a guessed contract.
+The external dependency details should continue to live in the [API handoff](../crucible-api-handoff.md), rather than becoming Hub-side workarounds. Authentication and upload designs are still proposed decisions, not authorization to implement a guessed contract.
 
 ## Recommended work order
 
 1. Repair compact Data readability, graph color integration, double discard confirmation, Activity semantics, and form error associations. Resolve the tooltip transition failure and review all failing screenshots.
-2. Complete browser coverage for creation, operators, ownership, and project moves, including partial and uncertain outcomes. Add graph rendering and warning checks. Use a meaningful warning policy because the current [browser fixture](../tests/fixtures.ts) checks uncaught page errors but does not fail on the graph’s console warnings.
+2. Complete browser coverage for creation, operators, ownership, and project moves, including partial and uncertain outcomes. Add graph rendering and warning checks. Use a meaningful warning policy because the current [browser fixture](../../tests/fixtures.ts) checks uncaught page errors but does not fail on the graph’s console warnings.
 3. Run focused usability sessions with a researcher and project/instrument manager: find a known sample, inspect provenance, download a file, create a dataset, recover from an incomplete association, and explain the consequence of an access change. Include keyboard-only and screen reader use, native zoom, and compact layouts.
 4. Close the production authentication/session gate with the owning API and infrastructure work. Establish deployment and rollback evidence before enabling real user access.
 5. Deliver the complete create-and-upload workflow, then prioritize activity, saved views, richer discovery, and scientific previews using observed user needs.

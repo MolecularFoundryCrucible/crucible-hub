@@ -47,6 +47,8 @@ Browser-reachable routes and features compose domain components and identity-sco
 
 Ordinary loaders are isomorphic. They must not read credentials, sessions, or the API client. Use authenticated server functions for application reads and mutations; reserve server routes for external callers, raw or streaming responses, callbacks, and health endpoints. Validate route/search input and server-function input separately, propagate abort signals, and select API origins only from trusted server configuration.
 
+Client code ships as route chunks plus `vendor` and `shared` groups for third-party and common `src/components`, `src/lib`, and `src/data` modules, configured in `vite.config.ts`; heavy optional code (graph canvas and ELK worker, form library and edit forms, QR rendering) stays in on-demand chunks and must not be pulled into those groups. Optional components load through `lazyRouteComponent` and may preload on hover, focus, or touch of the control that reveals them, so a warmed component renders without a Suspense fallback; intent warm-ups load code only, never data. Static assets are pre-compressed at build time; dynamic documents and server-function responses are not yet compressed, as recorded in [Cloud Run pilot response compression](cloud-run-pilot.md#response-compression-deferred).
+
 Generated API output is reproducible and never hand-edited. The adapter may provide trusted base URL selection, user authorization, aborts and timeouts, safe decoding, and redacted metrics. It must not recreate authorization, rename a second wire contract, or silently compensate for an API mismatch. Detailed generation, error, endpoint, and cache rules are in [`api-integration.md`](api-integration.md).
 
 ## Authentication and identity

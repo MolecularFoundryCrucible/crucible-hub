@@ -42,7 +42,8 @@ Read only the sources relevant to the change. A proposal or unmerged API contrac
 - `src/data/crucible/`: browser-safe models, Query ownership, fixtures, and adapters
 - `src/server/crucible/`: server-only API transport and safe errors
 - `src/generated/` and `contracts/`: generated client types and pinned OpenAPI input
-- `docs/` and `decisions/`: product, architecture, and decision authority
+- `docs/` and `decisions/`: product, architecture, and decision authority; `docs/reviews/` holds historical reviews only
+- `.agents/skills/` and `.claude/skills/`: installed external agent skills, described in [`skills/README.md`](skills/README.md)
 
 ## Architecture invariants
 
@@ -62,6 +63,7 @@ Read only the sources relevant to the change. A proposal or unmerged API contrac
 - `src/components/ui` owns controlled shadcn primitives. Feature screens should prefer `src/components/crucible` components.
 - Prefer semantic HTML and native behavior. Verify keyboard, focus, disabled, error, theme, and accessible-name states when changing a primitive.
 - Never rely on color alone for resource type, lifecycle, permission, or state.
+- Keep heavy optional code (graph canvas, ELK, forms, QR rendering) in on-demand chunks loaded through `lazyRouteComponent` or dynamic imports, and out of the `vendor` and `shared` chunk groups in `vite.config.ts`.
 
 ## Security and live systems
 
@@ -83,6 +85,8 @@ Read only the sources relevant to the change. A proposal or unmerged API contrac
 ## Skills and validation
 
 Read [`skills/README.md`](skills/README.md) before changing skills. Do not hand-edit installed external skills.
+
+Do not start an additional `vite dev` server from this checkout while another one may be running: dev servers share the `node_modules/.vite` dependency cache, and a re-optimization breaks the other server's dynamic imports. For ad hoc browser checks, build with `npm run build` and run `node .output/server/index.mjs` on a spare port with `HUB_DATA_SOURCE=fixture` and `HUB_ENABLE_FIXTURES=true`.
 
 Run focused checks while iterating and checks proportional to the change before completion. `npm run validate` is the complete gate; [`CONTRIBUTING.md`](CONTRIBUTING.md) lists focused commands. For documentation-only work, inspect the diff and run `npm run docs:check` plus relevant secret and formatting checks.
 

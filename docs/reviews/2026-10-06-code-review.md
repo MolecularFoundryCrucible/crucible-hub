@@ -1,5 +1,7 @@
 # Code review: October 2 to October 6, 2026
 
+Status: Historical snapshot. Findings describe commits from October 2 to 6, 2026 and may since have been resolved; check the current code before acting on them.
+
 Reviewer: opencode security and code review session.
 
 Scope: the 17 commits authored since 2026-10-02 (all landed 2026-10-05 and 2026-10-06; 8,449 insertions, 1,546 deletions), plus roughly 1,200 uncommitted working-tree lines present at review time. Every finding below was verified against the actual diff; the two feature-dense commits were additionally reviewed against the pinned OpenAPI contract and supporting modules.

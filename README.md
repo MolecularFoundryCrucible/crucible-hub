@@ -1,67 +1,97 @@
 # Crucible Hub
 
-Crucible Hub is the browser workspace for finding, organizing, understanding, sharing, uploading, and managing resources in the Molecular Foundry Crucible data platform.
+Crucible Hub is the web workspace for the Molecular Foundry's [Crucible](https://crucible.lbl.gov) data platform. Researchers use it to find, inspect, organize, share, upload, and manage their samples, datasets, projects, and instruments.
+
+## What you can do
+
+- Browse and search samples and datasets across projects and instruments, with filters, grouping, and a quick preview panel.
+- Open a resource to see its summary, identity, files, thumbnails, scientific metadata, and relationships, and explore its neighbours as a graph.
+- Edit descriptions and metadata, link related resources, upload files, and request deletions, where your permissions allow.
+- Manage projects, members, access, ownership, and instrument lifecycles, with platform administration for authorized staff.
+
+The Crucible API decides what each person may see and do; the Hub presents those decisions and never grants access itself.
 
 ## Status
 
-The Hub runs locally with fixtures, a developer API key, or ORCID sign-in. Its limited production pilot at `https://crucible.lbl.gov/hub/` is temporarily paused by disabling the separate Cloud Run service. The [pilot deployment guide](docs/cloud-run-pilot.md) records the current state and resume steps. When active, the pilot uses one instance with ORCID authentication; deployments can end active sessions. Shared session persistence, broader rollout checks, and browser upload remain future work.
+Most planned workflows are implemented and run locally against demo fixtures, a staging API, or ORCID sign-in. A restricted production pilot at `https://crucible.lbl.gov/hub/` is currently paused; [the pilot guide](docs/cloud-run-pilot.md) explains the deployment and how to resume it, and the [roadmap](docs/roadmap.md) tracks what remains before a wider release.
 
-Hub follows the API contract owned by `crucible-api`, cross-repository policy from `crucible-ecosystem`, interaction lessons from `crucible-lens`, and incremental convergence with `crucible_graph_explorer`. `nano-crucible` remains the Python and CLI interface.
+## Try it locally
 
-## Quick start
-
-Use Node.js 22.22 and npm 10.9. To explore the interface without an API account:
+You need Node.js 22.22 and npm 10.9.
 
 ```bash
 npm ci
 npm run dev:fixtures
 ```
 
-Open `http://127.0.0.1:3000/hub/`. The server fails if port 3000 is occupied. Plain `npm run dev` has no data source and shows a configuration error; set `HUB_DATA_SOURCE` or use a named scenario.
+Then open <http://127.0.0.1:3000/hub/>. Fixture mode uses built-in demo data, so no account or API access is needed.
 
-To test against the staging API as your own account, put your user-scoped key in the gitignored `.env.api-staging.local` file as `CRUCIBLE_API_KEY`, then run:
+## Work against a real API
 
-```bash
-npm run dev:api-staging
-```
+Each development scenario picks how you sign in and which API the Hub talks to:
 
-This mode sends API requests from the Hub server using that key. It does not exercise ORCID sign-in, session cookies, or logout. It can perform real mutations, so use test resources and the staging API for workflow testing. Run `npm run dev:api-main` only when you explicitly intend to work against production data. The browser never receives the key.
+| Command                     | Sign-in      | API                               |
+| --------------------------- | ------------ | --------------------------------- |
+| `npm run dev:fixtures`      | None (demo)  | None                              |
+| `npm run dev:api-local`     | Your API key | Local HTTPS API                   |
+| `npm run dev:api-staging`   | Your API key | Staging API                       |
+| `npm run dev:api-main`      | Your API key | Production API                    |
+| `npm run dev:orcid-local`   | ORCID        | Local HTTPS API through Tailscale |
+| `npm run dev:orcid-staging` | ORCID        | Staging API through Tailscale     |
 
-The other named scenarios are:
+API-key scenarios act as you and can change real data, so prefer staging and test resources. Credentials stay on the Hub server and never reach the browser. The [contributor guide](CONTRIBUTING.md#development-scenarios) explains where to put your key or ORCID client secret and how each scenario is configured.
 
-| Command                     | Hub authentication | API target                        |
-| --------------------------- | ------------------ | --------------------------------- |
-| `npm run dev:fixtures`      | Fixtures           | None                              |
-| `npm run dev:api-local`     | Your API key       | Local HTTPS API                   |
-| `npm run dev:api-staging`   | Your API key       | Staging API                       |
-| `npm run dev:api-main`      | Your API key       | Production API                    |
-| `npm run dev:orcid-local`   | ORCID              | Local HTTPS API through Tailscale |
-| `npm run dev:orcid-staging` | ORCID              | Staging API through Tailscale     |
+## Everyday commands
 
-The nonsecret API URLs and callback settings live in [`config/env/`](config/env/). Each API-key scenario reads `CRUCIBLE_API_KEY` from its matching gitignored `.env.api-*.local` file; `.env.api-key.local` or an exported shell variable is a fallback. ORCID scenarios instead read `HUB_AUTH_CLIENT_SECRET` from the matching gitignored `.env.orcid-*.local` file; `.env.hub-auth.local` is a fallback. For a local HTTPS API, also set `NODE_EXTRA_CA_CERTS` to its trusted certificate before Node starts. The launcher clears settings from other scenarios and gives credentials only to the server process. Do not use a `VITE_` prefix, enter credentials in the browser, or commit local credential files. Production Hub never accepts API-key mode.
+| Command                   | What it does                                                          |
+| ------------------------- | --------------------------------------------------------------------- |
+| `npm run validate`        | Full check: formatting, lint, types, unit tests, contracts, and build |
+| `npm run validate:static` | The same checks without the production build                          |
+| `npm run test:browser`    | Browser, accessibility, and workflow tests in Chromium                |
+| `npm run test:production` | Builds the app and checks the production Node server                  |
 
-Use an ORCID scenario to exercise sign-in, sessions, and logout. These scenarios use a Tailscale-reachable Hub callback, so the chosen API must register the exact callback and have its own ORCID callback registered. The staging scenario uses `https://leviathan.rooster-chimaera.ts.net/hub/auth/callback`. See [authentication transition](docs/authentication-transition.md) for the full setup. Deployed Hub settings are separate from local development.
+Install Chromium once with `npx playwright install chromium`. The [contributor guide](CONTRIBUTING.md) lists every command.
 
-Run `npm run validate` for the complete local validation and production build. Run `npm run validate:static` for the static and unit subset, `npm run test:browser` for the bounded screenshot-free CI browser and accessibility gate, and `npm run test:production` for the built Node runtime. Install Chromium once with `npx playwright install chromium`.
+## How it is built
+
+The Hub is a TypeScript app on [TanStack Start](https://tanstack.com/start) with React, TanStack Router and Query, Tailwind CSS, and shadcn components on Base UI. It is a backend for the frontend: browser code calls Hub server functions, which hold the session and call the Crucible API through a client generated from its OpenAPI contract. It deploys as a single container on Google Cloud Run.
 
 ## Documentation
 
-- [Product brief](docs/product-brief.md)
-- [Information architecture](docs/information-architecture.md)
-- [Architecture](docs/architecture.md)
-- [Authentication transition](docs/authentication-transition.md)
-- [Roadmap](docs/roadmap.md)
-- [Foundation evidence](docs/phase-0-evidence.md)
-- [Administration workspace proposal](docs/administration-workspace.md)
-- [Design system](docs/design-system.md)
-- [API integration](docs/api-integration.md)
-- [Crucible API handoff](docs/crucible-api-handoff.md)
-- [Architecture decisions](decisions/README.md)
-- [Skills](skills/README.md)
-- [Contributor guide](CONTRIBUTING.md)
-- [Agent guide](AGENTS.md)
+Product and design:
+
+- [Product brief](docs/product-brief.md): who the Hub is for and what it must do
+- [Information architecture](docs/information-architecture.md): routes, navigation, and page structure
+- [Design system](docs/design-system.md): visual, interaction, motion, and accessibility rules
+- [Administration workspace](docs/administration-workspace.md): platform administration design
+
+Engineering:
+
+- [Architecture](docs/architecture.md): runtime, security boundaries, and data flow
+- [API integration](docs/api-integration.md): API contract, caching, pagination, and invalidation
+- [Authentication transition](docs/authentication-transition.md): ORCID sign-in and sessions
+- [Design fixtures](docs/design-fixtures.md): the demo data scenarios
+- [Architecture decisions](decisions/README.md): durable choices and their reasons
+
+Delivery and operations:
+
+- [Roadmap](docs/roadmap.md): status and ordered work
+- [Foundation evidence](docs/phase-0-evidence.md): verification evidence for production readiness
+- [Cloud Run pilot](docs/cloud-run-pilot.md) and its [risk review](docs/cloud-run-pilot-risk-review.md)
+- [Crucible API handoff](docs/crucible-api-handoff.md) and [resource graph API handoff](docs/resource-graph-api-handoff.md): requests owned by the API team
 - [Changelog](CHANGELOG.md)
+
+Working on the code:
+
+- [Contributor guide](CONTRIBUTING.md): setup, scenarios, commands, and review
+- [Agent guide](AGENTS.md): rules for AI coding agents, also a concise summary of repository policy
+- [Skills](skills/README.md): AI agent skills used in this repository
+- Past reviews: the [September 2026 application review](docs/reviews/2026-09-06-app-review.md) and the [October 2026 code review](docs/reviews/2026-10-06-code-review.md), kept as historical snapshots
+
+## Related repositories
+
+The Hub follows the API contract owned by `crucible-api` and the cross-repository policy in `crucible-ecosystem`. It borrows interaction lessons from `crucible-lens` and is converging with `crucible_graph_explorer`. `nano-crucible` remains the Python and command-line interface.
 
 ## License
 
-A license has not been selected. Do not copy a sibling repository's license without an explicit decision.
+A license has not been selected yet. Do not copy a sibling repository's license without an explicit decision.

@@ -13,7 +13,17 @@ npm run dev:fixtures
 
 Development serves `http://127.0.0.1:3000/hub/` with strict port handling. Do not add another package-manager lockfile. Direct dependency changes require deliberate review of package and generated-skill changes.
 
-There is no default data source: `HUB_DATA_SOURCE` must be `fixture`, `api`, or `hub-auth`. Use the [named development scenarios](README.md#quick-start) to select fixture, API-key, or ORCID mode and its local or staging API target. The temporary API bridge uses a user-scoped `CRUCIBLE_API_KEY` on the server process. Do not use a `VITE_` prefix, expose credentials to browser code or storage, print them, or commit them. API-key mode fails closed in production.
+There is no default data source: `HUB_DATA_SOURCE` must be `fixture`, `api`, or `hub-auth`. Plain `npm run dev` therefore shows a configuration error; use one of the development scenarios below.
+
+## Development scenarios
+
+The [README](README.md#work-against-a-real-api) lists the scenarios. Each one is a `npm run dev:<scenario>` script that loads nonsecret API URLs and callback settings from [`config/env/`](config/env/), clears settings from other scenarios, and gives credentials only to the server process.
+
+API-key scenarios (`dev:api-local`, `dev:api-staging`, `dev:api-main`) read a user-scoped `CRUCIBLE_API_KEY` from the matching gitignored `.env.api-*.local` file, for example `.env.api-staging.local`; `.env.api-key.local` or an exported shell variable is a fallback. The Hub server sends API requests as you, so these modes can perform real mutations: use test resources and the staging API for workflow testing, and run `dev:api-main` only when you explicitly intend to work against production data. API-key mode does not exercise ORCID sign-in, session cookies, or logout, and it fails closed in production.
+
+ORCID scenarios (`dev:orcid-local`, `dev:orcid-staging`) exercise sign-in, sessions, and logout. They read `HUB_AUTH_CLIENT_SECRET` from the matching gitignored `.env.orcid-*.local` file; `.env.hub-auth.local` is a fallback. They use a Tailscale-reachable Hub callback, so the chosen API must register the exact callback and have its own ORCID callback registered; the staging scenario uses `https://leviathan.rooster-chimaera.ts.net/hub/auth/callback`. See [authentication transition](docs/authentication-transition.md) for the full setup. Deployed Hub settings are separate from local development.
+
+For a local HTTPS API, set `NODE_EXTRA_CA_CERTS` to its trusted certificate before Node starts. Never use a `VITE_` prefix for credentials, enter them in the browser, expose them to browser code or storage, print them, or commit local credential files.
 
 ## Change workflow
 
