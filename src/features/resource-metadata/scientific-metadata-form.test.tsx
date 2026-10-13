@@ -7,7 +7,7 @@ import {
   parseScientificMetadata,
   prettyScientificMetadata,
   scientificMetadataWrite,
-} from "./scientific-metadata-editor"
+} from "./scientific-metadata-form"
 
 const sample: Extract<WorkspaceResourceDetail, { kind: "sample" }> = {
   capabilities: null,

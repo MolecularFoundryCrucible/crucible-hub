@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Loaded the sample and dataset summary editor, the scientific metadata editor, and the QR code library only when needed, preloading the editors when their Edit button is hovered or focused; the main bundle shrinks from 549 KB to 452 KB (130 KB to 110 KB compressed).
+
 - Removed a sequential API round trip when opening a sample or dataset Overview: the resource shell now loads the full detail directly when the Overview is the destination, instead of loading a summary first and the detail afterwards.
 
 - Made the Graph tab open directly at its final position and zoom instead of zooming out from the default view; Reset layout, direction changes, and Center current resource still animate.

@@ -8,7 +8,7 @@ import {
   mergeDatasetSummaryUpdate,
   mergeSampleSummaryUpdate,
   sampleSummaryChanges,
-} from "./resource-summary-card"
+} from "./resource-summary-form"
 
 const sample: Extract<WorkspaceResourceDetail, { kind: "sample" }> = {
   capabilities: {

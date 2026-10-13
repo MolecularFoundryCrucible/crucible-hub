@@ -1,4 +1,5 @@
-import { QRCodeSVG } from "qrcode.react"
+import { Suspense } from "react"
+import { lazyRouteComponent } from "@tanstack/react-router"
 
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+const QRCodeSVG = lazyRouteComponent(() => import("qrcode.react"), "QRCodeSVG")
+
 export function MfidQrCode({ value }: { value: string }) {
   const label = "Enlarge MFID QR code"
 
@@ -28,13 +31,15 @@ export function MfidQrCode({ value }: { value: string }) {
             />
           }
         >
-          <QRCodeSVG
-            aria-hidden="true"
-            className="size-full"
-            level="M"
-            marginSize={4}
-            value={value}
-          />
+          <Suspense fallback={null}>
+            <QRCodeSVG
+              aria-hidden="true"
+              className="size-full"
+              level="M"
+              marginSize={4}
+              value={value}
+            />
+          </Suspense>
         </TooltipTrigger>
         <TooltipContent>{label}</TooltipContent>
       </Tooltip>
@@ -43,13 +48,15 @@ export function MfidQrCode({ value }: { value: string }) {
           <DialogTitle>MFID QR code</DialogTitle>
         </DialogHeader>
         <div className="flex justify-center">
-          <QRCodeSVG
-            className="h-auto w-full max-w-64"
-            level="M"
-            marginSize={4}
-            title={`QR code for ${value}`}
-            value={value}
-          />
+          <Suspense fallback={null}>
+            <QRCodeSVG
+              className="h-auto w-full max-w-64"
+              level="M"
+              marginSize={4}
+              title={`QR code for ${value}`}
+              value={value}
+            />
+          </Suspense>
         </div>
         <MfidValue className="justify-center" value={value} />
       </DialogContent>
