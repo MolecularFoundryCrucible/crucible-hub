@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Gave sample and dataset names more room in the Data tables: the Type column now has a fixed 9rem width on wide screens and Name and Project share the remaining space. The previous proportional column widths used percentage-and-length `calc()` values that fixed-layout tables ignore, so they never took effect and were removed with the unused base width tokens.
+
 - Made table column alignment consistent and rule-based: text, status, and dates align to the start, sizes and other quantities to the end with tabular numerals, row actions sit at the end of the row (previously centered in several directories and queues), and only selection checkboxes are centered. Tables declare this through a `kind` prop on the shared table cells, documented in the design system and enforced by the design-token check.
 
 - Gave file names more room in the dataset Processing files table: the file MFID now sits under the name instead of in its own column, storage and size have their own columns on wide screens, and column widths use semantic tokens so status, ingestor, and update times keep comfortable space.

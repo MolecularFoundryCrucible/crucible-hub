@@ -64,13 +64,11 @@ export function ResourceCollectionTable({
       className="resource-collection-table table-fixed"
     >
       <colgroup>
-        <col className="w-data-name-column-with-action xl:w-data-name-column-wide-with-action" />
+        <col />
         {showSubtypeColumn ? (
           <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
         ) : null}
-        {showProjectColumn ? (
-          <col className="w-data-project-column-with-action xl:w-data-project-column-wide-with-action" />
-        ) : null}
+        {showProjectColumn ? <col /> : null}
         <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
         <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
         <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />

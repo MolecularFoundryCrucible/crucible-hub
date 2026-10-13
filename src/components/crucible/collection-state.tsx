@@ -129,8 +129,6 @@ const pendingColumns: Record<
   resources: [
     {
       className: "resource-collection-name",
-      columnClassName:
-        "w-data-name-column-with-action xl:w-data-name-column-wide-with-action",
       label: "Name",
       name: true,
     },
@@ -142,8 +140,6 @@ const pendingColumns: Record<
     },
     {
       className: "resource-collection-project",
-      columnClassName:
-        "w-data-project-column-with-action xl:w-data-project-column-wide-with-action",
       label: "Project",
     },
     {
@@ -176,8 +172,6 @@ const pendingColumns: Record<
   "resources-scoped": [
     {
       className: "resource-collection-name",
-      columnClassName:
-        "w-data-name-column-with-action xl:w-data-name-column-wide-with-action",
       label: "Name",
       name: true,
     },
