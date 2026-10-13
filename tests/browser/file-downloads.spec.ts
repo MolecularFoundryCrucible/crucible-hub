@@ -203,3 +203,55 @@ test("keeps a failed download local and retries only that file", async ({
   await expect.poll(() => handoffs).toBe(1)
   await expect(row.getByRole("alert")).toHaveCount(0)
 })
+
+test("opens stored files inline through a fresh link per visit", async ({
+  page,
+  request,
+}) => {
+  await page.goto(datasetPath)
+  const open = fileRow(page, readyFile).getByRole("link", {
+    name: `Open ${readyFile} in a new tab`,
+  })
+  await expect(open).toHaveAttribute(
+    "href",
+    `/hub/files/${readyFileMfid}/open?scenario=populated`
+  )
+  await expect(open).toHaveAttribute("target", "_blank")
+  await expect(
+    fileRow(page, unavailableFile).getByRole("link", {
+      name: `Open ${unavailableFile} in a new tab`,
+    })
+  ).toHaveCount(0)
+
+  const opened = await request.get(
+    `/hub/files/${readyFileMfid}/open?scenario=populated`,
+    { maxRedirects: 0 }
+  )
+  expect(opened.status()).toBe(302)
+  expect(opened.headers()["location"]).toBe(
+    `https://downloads.crucible.invalid/files/${readyFileMfid}?disposition=inline`
+  )
+  expect(opened.headers()["cache-control"]).toBe("no-store")
+
+  for (const [fileMfid, reason] of [
+    [unavailableFileMfid, "unavailable"],
+    ["missing-file", "not-found"],
+  ]) {
+    const refused = await request.get(
+      `/hub/files/${fileMfid}/open?scenario=populated`,
+      { maxRedirects: 0 }
+    )
+    expect(refused.status()).toBe(303)
+    expect(refused.headers()["location"]).toBe(
+      `/hub/files/unavailable?reason=${reason}`
+    )
+  }
+
+  await page.goto("/hub/files/unavailable?reason=unavailable")
+  await expect(
+    page.getByRole("heading", { name: "File unavailable" })
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Return to Crucible Hub" })
+  ).toBeVisible()
+})

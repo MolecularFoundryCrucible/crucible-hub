@@ -77,7 +77,10 @@ import type {
   WorkspaceIngestionRequest,
   WorkspaceIngestionRequestPage,
 } from "@/data/crucible/workspace-source"
-import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
+import {
+  FileDownloadAction,
+  FileOpenLink,
+} from "@/features/dataset-files/dataset-files-card"
 import { formatBytes } from "@/lib/format"
 
 export function DatasetProcessingPage({
@@ -388,6 +391,7 @@ function ProcessingFilesTable({
                   context={`${file.storage_backend} · ${formatBytes(file.size)}`}
                   kind="file"
                   name={file.filename}
+                  nameContent={<FileOpenLink file={file} scenario={scenario} />}
                   presentation="collection"
                 />
               </TableCell>

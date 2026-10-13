@@ -18,6 +18,7 @@ import {
   revealedRowClassName,
 } from "@/components/crucible/list-expansion-toggle"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { Button } from "@/components/ui/button"
 import {
@@ -249,6 +250,7 @@ export function FilesTable({
                 <ResourceIdentity
                   kind="file"
                   name={file.filename}
+                  nameContent={<FileOpenLink file={file} scenario={scenario} />}
                   presentation="collection"
                 />
               </TableCell>
@@ -279,6 +281,28 @@ export function FilesTable({
         </div>
       ) : null}
     </div>
+  )
+}
+
+export function FileOpenLink({
+  file,
+  scenario,
+}: {
+  file: WorkspaceDatasetFile
+  scenario: ReturnType<typeof fixtureScenarioFromScope>
+}) {
+  if (file.storage_backend !== "gcs") return file.filename
+  const search = scenario ? `?scenario=${encodeURIComponent(scenario)}` : ""
+  return (
+    <SelectableTextLink
+      aria-label={`Open ${file.filename} in a new tab`}
+      className="block"
+      href={`/hub/files/${encodeURIComponent(file.mfid)}/open${search}`}
+      rel="noopener"
+      target="_blank"
+    >
+      {file.filename}
+    </SelectableTextLink>
   )
 }
 

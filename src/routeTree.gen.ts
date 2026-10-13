@@ -23,6 +23,7 @@ import { Route as AuthErrorRouteImport } from './routes/auth.error'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthLogoutRouteImport } from './routes/auth.logout'
 import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
+import { Route as FilesUnavailableRouteImport } from './routes/files.unavailable'
 import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.design-system'
 import { Route as FixturesScenariosRouteImport } from './routes/fixtures.scenarios'
 import { Route as AppDatasetsDatasetMfidRouteImport } from './routes/_app.datasets.$datasetMfid'
@@ -37,6 +38,7 @@ import { Route as AppResourcesResourceMfidRouteImport } from './routes/_app.reso
 import { Route as AppSamplesSampleMfidRouteImport } from './routes/_app.samples.$sampleMfid'
 import { Route as AppSamplesNewRouteImport } from './routes/_app.samples.new'
 import { Route as AppUsersUserIdRouteImport } from './routes/_app.users.$userId'
+import { Route as FilesFileMfidOpenRouteImport } from './routes/files.$fileMfid.open'
 import { Route as AppAdminServiceAccountsIndexRouteImport } from './routes/_app.admin.service-accounts.index'
 import { Route as AppAdminServiceAccountsServiceAccountMfidRouteImport } from './routes/_app.admin.service-accounts.$serviceAccountMfid'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app.admin.users.index'
@@ -134,6 +136,11 @@ const AuthSignInRoute = AuthSignInRouteImport.update({
   path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FilesUnavailableRoute = FilesUnavailableRouteImport.update({
+  id: '/files/unavailable',
+  path: '/files/unavailable',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FixturesDesignSystemRoute = FixturesDesignSystemRouteImport.update({
   id: '/fixtures/design-system',
   path: '/fixtures/design-system',
@@ -205,6 +212,11 @@ const AppUsersUserIdRoute = AppUsersUserIdRouteImport.update({
   id: '/users/$userId',
   path: '/users/$userId',
   getParentRoute: () => AppRoute,
+} as any)
+const FilesFileMfidOpenRoute = FilesFileMfidOpenRouteImport.update({
+  id: '/files/$fileMfid/open',
+  path: '/files/$fileMfid/open',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminServiceAccountsIndexRoute =
   AppAdminServiceAccountsIndexRouteImport.update({
@@ -382,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
+  '/files/unavailable': typeof FilesUnavailableRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
@@ -394,6 +407,7 @@ export interface FileRoutesByFullPath {
   '/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/samples/new': typeof AppSamplesNewRoute
   '/users/$userId': typeof AppUsersUserIdRoute
+  '/files/$fileMfid/open': typeof FilesFileMfidOpenRoute
   '/instruments/': typeof AppInstrumentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -437,6 +451,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
+  '/files/unavailable': typeof FilesUnavailableRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/': typeof AppIndexRoute
@@ -446,6 +461,7 @@ export interface FileRoutesByTo {
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/new': typeof AppSamplesNewRoute
   '/users/$userId': typeof AppUsersUserIdRoute
+  '/files/$fileMfid/open': typeof FilesFileMfidOpenRoute
   '/instruments': typeof AppInstrumentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -489,6 +505,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
+  '/files/unavailable': typeof FilesUnavailableRoute
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/_app/': typeof AppIndexRoute
@@ -502,6 +519,7 @@ export interface FileRoutesById {
   '/_app/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/_app/samples/new': typeof AppSamplesNewRoute
   '/_app/users/$userId': typeof AppUsersUserIdRoute
+  '/files/$fileMfid/open': typeof FilesFileMfidOpenRoute
   '/_app/instruments/': typeof AppInstrumentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
@@ -548,6 +566,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/logout'
     | '/auth/sign-in'
+    | '/files/unavailable'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/datasets/$datasetMfid'
@@ -560,6 +579,7 @@ export interface FileRouteTypes {
     | '/samples/$sampleMfid'
     | '/samples/new'
     | '/users/$userId'
+    | '/files/$fileMfid/open'
     | '/instruments/'
     | '/projects/'
     | '/admin/service-accounts/$serviceAccountMfid'
@@ -603,6 +623,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/logout'
     | '/auth/sign-in'
+    | '/files/unavailable'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/'
@@ -612,6 +633,7 @@ export interface FileRouteTypes {
     | '/resources/$resourceMfid'
     | '/samples/new'
     | '/users/$userId'
+    | '/files/$fileMfid/open'
     | '/instruments'
     | '/projects'
     | '/admin/service-accounts/$serviceAccountMfid'
@@ -654,6 +676,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/logout'
     | '/auth/sign-in'
+    | '/files/unavailable'
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/_app/'
@@ -667,6 +690,7 @@ export interface FileRouteTypes {
     | '/_app/samples/$sampleMfid'
     | '/_app/samples/new'
     | '/_app/users/$userId'
+    | '/files/$fileMfid/open'
     | '/_app/instruments/'
     | '/_app/projects/'
     | '/_app/admin/service-accounts/$serviceAccountMfid'
@@ -708,8 +732,10 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthLogoutRoute: typeof AuthLogoutRoute
   AuthSignInRoute: typeof AuthSignInRoute
+  FilesUnavailableRoute: typeof FilesUnavailableRoute
   FixturesDesignSystemRoute: typeof FixturesDesignSystemRoute
   FixturesScenariosRoute: typeof FixturesScenariosRoute
+  FilesFileMfidOpenRoute: typeof FilesFileMfidOpenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -812,6 +838,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/files/unavailable': {
+      id: '/files/unavailable'
+      path: '/files/unavailable'
+      fullPath: '/files/unavailable'
+      preLoaderRoute: typeof FilesUnavailableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fixtures/design-system': {
       id: '/fixtures/design-system'
       path: '/fixtures/design-system'
@@ -909,6 +942,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/users/$userId'
       preLoaderRoute: typeof AppUsersUserIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/files/$fileMfid/open': {
+      id: '/files/$fileMfid/open'
+      path: '/files/$fileMfid/open'
+      fullPath: '/files/$fileMfid/open'
+      preLoaderRoute: typeof FilesFileMfidOpenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/admin/service-accounts/': {
       id: '/_app/admin/service-accounts/'
@@ -1292,8 +1332,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthLogoutRoute: AuthLogoutRoute,
   AuthSignInRoute: AuthSignInRoute,
+  FilesUnavailableRoute: FilesUnavailableRoute,
   FixturesDesignSystemRoute: FixturesDesignSystemRoute,
   FixturesScenariosRoute: FixturesScenariosRoute,
+  FilesFileMfidOpenRoute: FilesFileMfidOpenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

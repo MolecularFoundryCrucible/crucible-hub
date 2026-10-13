@@ -519,6 +519,8 @@ export type WorkspaceDatasetThumbnailOperation =
       thumbnailId: number
     }
 
+export type WorkspaceFileDisposition = "attachment" | "inline"
+
 export type WorkspaceFileDownload =
   | { status: "ready"; url: string; expiresInSeconds: number }
   | { status: "unavailable" }

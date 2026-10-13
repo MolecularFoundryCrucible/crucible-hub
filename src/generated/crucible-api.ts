@@ -7129,7 +7129,10 @@ export interface operations {
     };
     generate_dataset_download_links_datasets__dataset_mfid__download_links_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description attachment (default) makes browsers save the file; inline asks them to display it when they can. Script-capable types (HTML, SVG, XML, +xml types, XSL) are always served as attachments. */
+                disposition?: "attachment" | "inline";
+            };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
@@ -8928,7 +8931,10 @@ export interface operations {
     };
     get_file_download_link_files__file_id__download_link_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description attachment (default) makes browsers save the file; inline asks them to display it when they can. Script-capable types (HTML, SVG, XML, +xml types, XSL) are always served as attachments. */
+                disposition?: "attachment" | "inline";
+            };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;

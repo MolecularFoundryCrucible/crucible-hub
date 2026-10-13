@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Pinned the Crucible API contract to staging revision `6f227ca` (pull request 311). Clicking a stored file name in the dataset Files and Processing tables now opens the file in a new tab through the Hub `/files/{mfid}/open` route, which requests a fresh inline link, so PDFs, images, text, JSON, and CSV display in the browser; the Download button still saves the file. Files whose stored object is outside their dataset show as unavailable instead of offering a retry, and a refused open lands on a File unavailable page.
+
 - Updated the installed shadcn agent skill to the current upstream version, linked it under `.claude/skills` so Claude Code discovers it, and documented which skill to load for each kind of change and how to update skills in `skills/README.md`. ESLint now ignores installed skill files and the secret scan skips symbolic links.
 
 - Grouped shared client code into `vendor` and `shared` chunks, keeping the graph, form, and QR libraries separate: a cold page load now makes 13 to 16 JavaScript requests instead of about 140 and transfers about 15% less, and loads in about 0.6 s instead of 1.9 s on a throttled 10 Mbps connection.

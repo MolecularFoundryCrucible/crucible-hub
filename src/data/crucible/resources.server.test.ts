@@ -1291,6 +1291,52 @@ describe("workspace resource sources", () => {
     )
   })
 
+  it("requests an inline link only when asked and maps an invalid storage location to unavailable", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({
+          expires_in: 3600,
+          url: "https://downloads.example.invalid/file",
+        })
+      })
+    )
+
+    await createWorkspaceFileDownload("file-mfid")
+    await createWorkspaceFileDownload(
+      "file-mfid",
+      undefined,
+      undefined,
+      "inline"
+    )
+    expect(new URL(requests[0].url).searchParams.has("disposition")).toBe(false)
+    expect(new URL(requests[1].url).searchParams.get("disposition")).toBe(
+      "inline"
+    )
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              detail: "File storage location is not valid: outside dataset",
+            }),
+            { status: 409, headers: { "Content-Type": "application/json" } }
+          )
+      )
+    )
+    await expect(createWorkspaceFileDownload("file-mfid")).resolves.toEqual({
+      status: "unavailable",
+    })
+  })
+
   it("normalizes a catalog-only API response to unavailable", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")

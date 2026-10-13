@@ -37,6 +37,7 @@ import type {
   WorkspaceDatasetDescriptiveUpdate,
   WorkspaceDeletionPreview,
   WorkspaceDeletionRequest,
+  WorkspaceFileDisposition,
   WorkspaceFileDownload,
   WorkspaceLinkedResource,
   WorkspacePerson,
@@ -1433,7 +1434,8 @@ function workspaceFileDownload(value: unknown): WorkspaceFileDownload {
 export async function createWorkspaceFileDownload(
   fileMfid: string,
   scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
+  requestSignal?: AbortSignal,
+  disposition: WorkspaceFileDisposition = "attachment"
 ): Promise<WorkspaceFileDownload> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
@@ -1447,7 +1449,7 @@ export async function createWorkspaceFileDownload(
     return file.storage_backend === "gcs"
       ? {
           status: "ready",
-          url: `https://downloads.crucible.invalid/files/${file.mfid}`,
+          url: `https://downloads.crucible.invalid/files/${file.mfid}${disposition === "inline" ? "?disposition=inline" : ""}`,
           expiresInSeconds: 3600,
         }
       : { status: "unavailable" }
@@ -1455,9 +1457,13 @@ export async function createWorkspaceFileDownload(
 
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/files/{file_id}/download_link", {
-    params: { path: { file_id: fileMfid } },
+    params: {
+      path: { file_id: fileMfid },
+      ...(disposition === "inline" ? { query: { disposition } } : {}),
+    },
     signal: crucibleRequestSignal(requestSignal),
   })
+  if (result.response.status === 409) return { status: "unavailable" }
   if (!result.response.ok) {
     throw new CrucibleResponseError(result.response)
   }

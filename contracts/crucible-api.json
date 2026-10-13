@@ -12092,6 +12092,22 @@
             }
           },
           {
+            "description": "attachment (default) makes browsers save the file; inline asks them to display it when they can. Script-capable types (HTML, SVG, XML, +xml types, XSL) are always served as attachments.",
+            "in": "query",
+            "name": "disposition",
+            "required": false,
+            "schema": {
+              "default": "attachment",
+              "description": "attachment (default) makes browsers save the file; inline asks them to display it when they can. Script-capable types (HTML, SVG, XML, +xml types, XSL) are always served as attachments.",
+              "enum": [
+                "attachment",
+                "inline"
+              ],
+              "title": "Disposition",
+              "type": "string"
+            }
+          },
+          {
             "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
             "in": "header",
             "name": "Crucible-Privilege-Mode",
@@ -16389,6 +16405,22 @@
             "required": true,
             "schema": {
               "title": "File Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "attachment (default) makes browsers save the file; inline asks them to display it when they can. Script-capable types (HTML, SVG, XML, +xml types, XSL) are always served as attachments.",
+            "in": "query",
+            "name": "disposition",
+            "required": false,
+            "schema": {
+              "default": "attachment",
+              "description": "attachment (default) makes browsers save the file; inline asks them to display it when they can. Script-capable types (HTML, SVG, XML, +xml types, XSL) are always served as attachments.",
+              "enum": [
+                "attachment",
+                "inline"
+              ],
+              "title": "Disposition",
               "type": "string"
             }
           },

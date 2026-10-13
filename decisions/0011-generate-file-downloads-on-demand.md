@@ -1,6 +1,6 @@
 # 0011: Generate File Downloads on Demand
 
-Status: Accepted
+Status: Accepted; extended by [0034](0034-open-stored-files-inline.md) for inline opening
 
 Date: 2026-09-04
 
