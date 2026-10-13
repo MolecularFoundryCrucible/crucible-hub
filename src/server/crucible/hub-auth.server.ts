@@ -31,7 +31,11 @@ import {
   touchSession,
 } from "./hub-session-store.server"
 import type { SharedSession } from "./hub-session-store.server"
-import { isStepUpChallenge } from "./request-error.server"
+import {
+  CrucibleResponseError,
+  isStepUpChallenge,
+} from "./request-error.server"
+import { readRetryAfterSeconds } from "@/lib/retry-after"
 
 const clientId = "crucible-hub"
 const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
@@ -63,6 +67,7 @@ type Session = {
   tokens: Tokens
   expiresAt: number
   idleExpiresAt: number
+  refreshRetryAt?: number
 }
 type Store = {
   transactions: Map<string, Transaction>
@@ -71,9 +76,36 @@ type Store = {
 }
 
 class TokenRequestError extends Error {
-  constructor(readonly status: number) {
+  constructor(
+    readonly status: number,
+    readonly retryAfterSeconds?: number
+  ) {
     super("The Crucible sign-in request failed.")
   }
+}
+
+const transientRefreshDelay = 5000
+
+function refreshFailure(error: unknown) {
+  return {
+    transient: error instanceof TokenRequestError && error.status === 429,
+    retryAfterMs:
+      error instanceof TokenRequestError &&
+      error.retryAfterSeconds !== undefined
+        ? error.retryAfterSeconds * 1000
+        : transientRefreshDelay,
+  }
+}
+
+function refreshUnavailable(retryAfterMs: number) {
+  return new CrucibleResponseError(
+    new Response(null, {
+      status: 429,
+      headers: {
+        "Retry-After": String(Math.max(1, Math.ceil(retryAfterMs / 1000))),
+      },
+    })
+  )
 }
 
 export function hubSignInFailureDetails(error: unknown) {
@@ -349,7 +381,11 @@ async function tokenRequest(path: string, body: object): Promise<Tokens> {
     cache: "no-store",
     signal: AbortSignal.timeout(15000),
   })
-  if (!response.ok) throw new TokenRequestError(response.status)
+  if (!response.ok)
+    throw new TokenRequestError(
+      response.status,
+      readRetryAfterSeconds(response.headers)
+    )
   return tokenSchema.parse(await response.json())
 }
 
@@ -551,6 +587,16 @@ async function refreshSharedSession(
         if (context) context.session = updated
         return tokens
       } catch (error) {
+        const failure = refreshFailure(error)
+        if (failure.transient) {
+          const claimedState = await readSession(sessionId)
+          if (claimedState?.session.refreshing)
+            await replaceSession(sessionId, claimedState, {
+              ...claimedState.session,
+              refreshing: false,
+            })
+          throw refreshUnavailable(failure.retryAfterMs)
+        }
         await closeSession(sessionId)
         clearSharedRequestSession()
         throw error
@@ -633,12 +679,17 @@ async function refresh(sessionId: string): Promise<Tokens | null> {
         return null
       }
       current.tokens = tokens
+      current.refreshRetryAt = undefined
       return tokens
     })
     .catch((error: unknown) => {
+      const failure = refreshFailure(error)
+      if (failure.transient) {
+        current.refreshRetryAt = Date.now() + failure.retryAfterMs
+        throw refreshUnavailable(failure.retryAfterMs)
+      }
       store.sessions.delete(sessionId)
-      if (error instanceof TokenRequestError && error.status === 401)
-        return null
+      if (error instanceof TokenRequestError && error.status < 500) return null
       throw error
     })
     .finally(() => store.refreshes.delete(sessionId))
@@ -663,10 +714,22 @@ export function sessionApiFetch(): typeof fetch {
       throw new Error("The Hub session has expired.")
     }
     if (Date.parse(current.tokens.access_expires_at) <= Date.now() + 30000) {
-      const tokens = await refresh(sessionId)
-      if (!tokens) throw new Error("The Hub session has expired.")
-      current = localSession(sessionId)
-      if (!current) throw new Error("The Hub session has ended.")
+      const accessValid =
+        Date.parse(current.tokens.access_expires_at) > Date.now()
+      const retryAt = current.refreshRetryAt ?? 0
+      if (retryAt > Date.now()) {
+        if (!accessValid) throw refreshUnavailable(retryAt - Date.now())
+      } else {
+        try {
+          const tokens = await refresh(sessionId)
+          if (!tokens) throw new Error("The Hub session has expired.")
+        } catch (error) {
+          if (!(accessValid && error instanceof CrucibleResponseError))
+            throw error
+        }
+        current = localSession(sessionId)
+        if (!current) throw new Error("The Hub session has ended.")
+      }
     }
     const usedToken = current.tokens.access_token
     let response = await execute(usedToken)

@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Kept users signed in when a token refresh is rate limited: a `429` from the API or proxy no longer ends the Hub session. The Hub keeps using the current access token while it is valid, waits for `Retry-After`, and otherwise reports a retryable error. Uncertain refresh failures (server errors and timeouts) still close the session, because retrying a possibly spent refresh token would trigger the API's replay revocation.
+
 - Gave sample and dataset names more room in the Data tables: the Type column now has a fixed 9rem width on wide screens and Name and Project share the remaining space. The previous proportional column widths used percentage-and-length `calc()` values that fixed-layout tables ignore, so they never took effect and were removed with the unused base width tokens.
 
 - Made table column alignment consistent and rule-based: text, status, and dates align to the start, sizes and other quantities to the end with tabular numerals, row actions sit at the end of the row (previously centered in several directories and queues), and only selection checkboxes are centered. Tables declare this through a `kind` prop on the shared table cells, documented in the design system and enforced by the design-token check.

@@ -274,6 +274,138 @@ describe("hub login exchange", () => {
     expect(requests).toEqual(["/auth/hub/token", "/service_accounts"])
   })
 
+  async function signedInSession(
+    respond: (path: string) => Response | Promise<Response>
+  ) {
+    const { h3Event, location } = await beginLogin("/hub/")
+    const state = new URL(location).searchParams.get("state")!
+    const requests: string[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request) => {
+        const url = new URL(
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.href
+              : input.url
+        )
+        requests.push(url.pathname)
+        if (url.pathname === "/auth/hub/token") {
+          return Response.json(tokenResponse)
+        }
+        return respond(url.pathname)
+      })
+    )
+    const { cookies } = await finishLogin(loginCookie(h3Event), "code", state)
+    const sessionCookie = cookies
+      .find((value) => value.startsWith("crucible_hub_session="))!
+      .split(";")[0]
+    const call = () => {
+      const apiEvent = new H3Event(
+        new Request("http://127.0.0.1:3000/hub/data", {
+          headers: { cookie: sessionCookie },
+        })
+      )
+      return eventStorage.run({ h3Event: apiEvent }, async () => {
+        try {
+          const response = await sessionApiFetch()(
+            "https://api.example.test/datasets"
+          )
+          return { response, signedIn: hasHubSession() }
+        } catch (error) {
+          return { error, signedIn: hasHubSession() }
+        }
+      })
+    }
+    return { call, requests }
+  }
+
+  it("keeps the session and the current access token when a refresh is rate limited", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T22:59:45.000Z"))
+    stubHubAuthEnv()
+    const { call, requests } = await signedInSession((path) =>
+      path === "/auth/hub/refresh"
+        ? new Response(null, { headers: { "Retry-After": "20" }, status: 429 })
+        : Response.json([])
+    )
+
+    const first = await call()
+    expect(first.response?.status).toBe(200)
+    expect(first.signedIn).toBe(true)
+    const second = await call()
+    expect(second.response?.status).toBe(200)
+    expect(requests).toEqual([
+      "/auth/hub/token",
+      "/auth/hub/refresh",
+      "/datasets",
+      "/datasets",
+    ])
+  })
+
+  it("waits out a rate-limited refresh after expiry and then recovers", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
+    stubHubAuthEnv()
+    let refreshes = 0
+    const { call } = await signedInSession((path) => {
+      if (path !== "/auth/hub/refresh") return Response.json([])
+      refreshes += 1
+      return refreshes === 1
+        ? new Response(null, { headers: { "Retry-After": "10" }, status: 429 })
+        : Response.json({
+            ...tokenResponse,
+            access_token: "access-2",
+            access_expires_at: "2026-10-06T23:15:30.000Z",
+            refresh_token: "refresh-2",
+          })
+    })
+
+    const failed = await call()
+    expect(failed.error).toMatchObject({ retryAfterSeconds: 10, status: 429 })
+    expect(failed.signedIn).toBe(true)
+    const waiting = await call()
+    expect(waiting.error).toMatchObject({ status: 429 })
+    expect(refreshes).toBe(1)
+
+    vi.setSystemTime(new Date("2026-10-06T23:00:41.000Z"))
+    const recovered = await call()
+    expect(recovered.response?.status).toBe(200)
+    expect(recovered.signedIn).toBe(true)
+    expect(refreshes).toBe(2)
+  })
+
+  it("closes the session after an uncertain refresh instead of replaying the token", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
+    stubHubAuthEnv()
+    const { call } = await signedInSession((path) =>
+      path === "/auth/hub/refresh"
+        ? new Response(null, { status: 504 })
+        : Response.json([])
+    )
+
+    const result = await call()
+    expect(result.error).toBeInstanceOf(Error)
+    expect(result.signedIn).toBe(false)
+  })
+
+  it("ends the session when the refresh token is rejected", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
+    stubHubAuthEnv()
+    const { call } = await signedInSession((path) =>
+      path === "/auth/hub/refresh"
+        ? Response.json({ detail: "invalid_grant" }, { status: 400 })
+        : Response.json([])
+    )
+
+    const result = await call()
+    expect(result.error).toBeInstanceOf(Error)
+    expect(result.signedIn).toBe(false)
+  })
+
   it.each([
     ["http://localhost:3000/hub/auth/callback", "http://localhost:3000"],
     ["http://[::1]:3000/hub/auth/callback", "http://[::1]:3000"],
