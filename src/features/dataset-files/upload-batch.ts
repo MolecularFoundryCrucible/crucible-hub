@@ -12,20 +12,29 @@ import { datasetIngestionRequestsQueryOptions } from "@/data/crucible/resources.
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import { validateUploadFilename } from "@/data/crucible/uploads"
 import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
+import {
+  ingestorClassName,
+  NO_INGESTOR,
+} from "@/features/ingestion/ingestor-select"
+import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
+import { createTransferRate } from "@/lib/transfer-rate"
+import type { TransferEstimate } from "@/lib/transfer-rate"
 
 import { uploadDatasetFile } from "./upload-orchestrator"
+import type { UploadPhase } from "./upload-orchestrator"
 import { useUploadLeaveGuard } from "./upload-leave-guard"
 
-export const NO_INGESTION = null
-export const AUTO_DETECT_INGESTION = ""
-
-export type UploadIngestionChoice = string | null
+export const MAX_PARALLEL_FILES = 3
 
 export type UploadItemStatus =
   | { status: "staged" }
-  | { bytes: number; status: "hashing" }
-  | { bytes: number; status: "uploading" }
-  | { status: "completing" }
+  | {
+      estimate?: TransferEstimate
+      phase: Exclude<UploadPhase, "done">
+      preparedBytes: number
+      status: "active"
+      uploadedBytes: number
+    }
   | {
       file: WorkspaceDatasetFile
       ingestion?: "requested" | { message: string }
@@ -38,11 +47,20 @@ export type UploadItem = {
   file: File
   filename: string
   id: string
-  ingestionClass: UploadIngestionChoice
+  ingestor: IngestorChoice
   state: UploadItemStatus
 }
 
 export type UploadSource = { file: File; path: string }
+
+export type UploadBatchProgress = {
+  activeFiles: number
+  completedFiles: number
+  estimate?: TransferEstimate
+  totalBytes: number
+  totalFiles: number
+  uploadedBytes: number
+}
 
 function isAborted(signal: AbortSignal) {
   return signal.aborted
@@ -81,9 +99,11 @@ export function useUploadBatch({
   const queryClient = useQueryClient()
   const [items, setItems] = useState<UploadItem[]>([])
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState<UploadBatchProgress>()
   const controller = useRef<AbortController | null>(null)
-  const leaveGuard = useUploadLeaveGuard(uploading, () =>
-    controller.current?.abort()
+  const leaveGuard = useUploadLeaveGuard(
+    () => controller.current !== null,
+    () => controller.current?.abort()
   )
 
   function update(id: string, change: (item: UploadItem) => UploadItem) {
@@ -103,7 +123,7 @@ export function useUploadBatch({
         file: source.file,
         filename: source.path,
         id: crypto.randomUUID(),
-        ingestionClass: NO_INGESTION,
+        ingestor: NO_INGESTOR,
         state: { status: "staged" } as const,
       })),
     ])
@@ -121,14 +141,14 @@ export function useUploadBatch({
     }))
   }
 
-  function setIngestion(id: string, ingestionClass: UploadIngestionChoice) {
-    update(id, (item) => ({ ...item, ingestionClass }))
+  function setIngestor(id: string, ingestor: IngestorChoice) {
+    update(id, (item) => ({ ...item, ingestor }))
   }
 
-  function setIngestionForAll(ingestionClass: UploadIngestionChoice) {
+  function setIngestorForAll(ingestor: IngestorChoice) {
     setItems((current) =>
       current.map((item) =>
-        item.state.status === "done" ? item : { ...item, ingestionClass }
+        item.state.status === "done" ? item : { ...item, ingestor }
       )
     )
   }
@@ -150,6 +170,7 @@ export function useUploadBatch({
     checkExisting: boolean
   ) {
     const scenario = fixtureScenarioFromScope(scope)
+    const ingestionClass = ingestorClassName(item.ingestor)
     try {
       if (checkExisting) {
         const page = await queryClient.fetchQuery({
@@ -164,9 +185,7 @@ export function useUploadBatch({
         await requestWorkspaceIngestion({
           data: {
             fileMfid: file.mfid,
-            ...(item.ingestionClass
-              ? { ingestionClass: item.ingestionClass }
-              : {}),
+            ...(ingestionClass ? { ingestionClass } : {}),
             scenario,
           },
         })
@@ -202,44 +221,67 @@ export function useUploadBatch({
     controller.current = current
     setUploading(true)
     const scenario = fixtureScenarioFromScope(scope)
-    let complete = true
-    for (const item of items) {
-      if (item.state.status === "done") continue
-      if (isAborted(current.signal)) {
-        complete = false
-        break
-      }
-      if (uploadItemIssues(item, items, existingFilenames).length > 0) {
-        complete = false
-        continue
-      }
+    const queue = items.filter(
+      (item) =>
+        item.state.status !== "done" &&
+        uploadItemIssues(item, items, existingFilenames).length === 0
+    )
+    let complete =
+      queue.length ===
+      items.filter((item) => item.state.status !== "done").length
+    const totalBytes = queue.reduce((sum, item) => sum + item.file.size, 0)
+    const transferred = new Map<string, number>()
+    const overallRate = createTransferRate()
+    let activeFiles = 0
+    let completedFiles = 0
+
+    const reportOverall = () => {
+      let uploadedBytes = 0
+      for (const bytes of transferred.values()) uploadedBytes += bytes
+      setProgress({
+        activeFiles,
+        completedFiles,
+        estimate: overallRate.update(uploadedBytes, totalBytes),
+        totalBytes,
+        totalFiles: queue.length,
+        uploadedBytes,
+      })
+    }
+
+    async function uploadItem(item: UploadItem) {
+      const rate = createTransferRate()
+      activeFiles += 1
       try {
         const file = await uploadDatasetFile({
           datasetMfid,
           file: item.file,
           filename: item.filename,
-          onProgress: (progress) => {
-            if (
-              progress.phase === "hashing" ||
-              progress.phase === "uploading"
-            ) {
-              setState(item.id, {
-                bytes: progress.bytes,
-                status: progress.phase,
-              })
-            } else if (progress.phase === "completing") {
-              setState(item.id, { status: "completing" })
-            }
+          onProgress: (next) => {
+            if (next.phase === "done") return
+            transferred.set(item.id, next.uploadedBytes)
+            setState(item.id, {
+              estimate:
+                next.phase === "uploading"
+                  ? rate.update(next.uploadedBytes, item.file.size)
+                  : undefined,
+              phase: next.phase,
+              preparedBytes: next.preparedBytes,
+              status: "active",
+              uploadedBytes: next.uploadedBytes,
+            })
+            reportOverall()
           },
           scenario,
           signal: current.signal,
         })
+        transferred.set(item.id, item.file.size)
+        completedFiles += 1
         setState(item.id, { file, status: "done" })
         void queryClient.invalidateQueries({
           exact: true,
           queryKey: crucibleKeys.datasetFiles(scope, datasetMfid),
         })
-        if (ingestionEnabled && item.ingestionClass !== NO_INGESTION) {
+        if (ingestionEnabled && item.ingestor.kind !== "none") {
           const ingestion = await requestIngestion(
             datasetMfid,
             item,
@@ -251,9 +293,10 @@ export function useUploadBatch({
         }
       } catch (error) {
         complete = false
+        transferred.delete(item.id)
         if (isAborted(current.signal)) {
           setState(item.id, { status: "aborted" })
-          break
+          return
         }
         setState(item.id, {
           message:
@@ -262,10 +305,30 @@ export function useUploadBatch({
               : errorMessage(error, "The upload failed."),
           status: "error",
         })
+      } finally {
+        activeFiles -= 1
+        reportOverall()
       }
     }
+
+    let next = 0
+    await Promise.all(
+      Array.from(
+        { length: Math.min(MAX_PARALLEL_FILES, queue.length) },
+        async () => {
+          while (next < queue.length && !isAborted(current.signal)) {
+            const item = queue[next]
+            next += 1
+            await uploadItem(item)
+          }
+        }
+      )
+    )
+    if (next < queue.length) complete = false
+
     controller.current = null
     setUploading(false)
+    setProgress(undefined)
     return complete
   }
 
@@ -278,16 +341,6 @@ export function useUploadBatch({
     (item) => uploadItemIssues(item, items, existingFilenames).length > 0
   )
   const totalBytes = items.reduce((sum, item) => sum + item.file.size, 0)
-  const transferredBytes = items.reduce(
-    (sum, item) =>
-      sum +
-      (item.state.status === "done" || item.state.status === "completing"
-        ? item.file.size
-        : item.state.status === "uploading"
-          ? item.state.bytes
-          : 0),
-    0
-  )
 
   return {
     add,
@@ -299,15 +352,15 @@ export function useUploadBatch({
     items,
     leaveGuard,
     pendingCount: pending.length,
+    progress,
     remove,
     rename,
     reset,
     retryIngestion,
-    setIngestion,
-    setIngestionForAll,
+    setIngestor,
+    setIngestorForAll,
     start,
     totalBytes,
-    transferredBytes,
     uploading,
   }
 }

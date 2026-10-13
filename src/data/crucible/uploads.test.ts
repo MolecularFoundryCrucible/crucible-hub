@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import {
   computeUploadDigests,
+  createUploadPartChecksums,
   CRC32C_POLYNOMIAL,
   MAX_CONCURRENT_PARTS,
   MAX_PARTS_PER_SIGN_REQUEST,
@@ -457,6 +458,72 @@ describe("part uploads", () => {
       })
     ).rejects.toBe(forbidden)
     expect(signCalls).toBe(1)
+  })
+
+  it("starts uploading as soon as the first checksums are ready", async () => {
+    const file = new Blob([new Uint8Array(12)])
+    const checksums = createUploadPartChecksums()
+    const { transport, signRequests, puts } = signedTransport()
+    const run = runUploadParts({
+      file,
+      parts: planUploadParts(file.size, 1),
+      signatures: checksums,
+      transport,
+      wait: async () => {},
+    })
+
+    for (let part = 1; part <= 8; part += 1) checksums.resolve(part, "c2ln")
+    await vi.waitFor(() => expect(signRequests).toHaveLength(1))
+    expect(signRequests[0]).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+
+    for (let part = 9; part <= 12; part += 1) checksums.resolve(part, "c2ln")
+    await run
+    expect(signRequests[1]).toEqual([9, 10, 11, 12])
+    expect(puts).toHaveLength(12)
+  })
+
+  it("stops when preparing the checksums fails", async () => {
+    const checksums = createUploadPartChecksums()
+    const { transport } = signedTransport()
+    const run = runUploadParts({
+      file: new Blob(["ab"]),
+      parts: planUploadParts(2, 1),
+      signatures: checksums,
+      transport,
+      wait: async () => {},
+    })
+    checksums.fail(new Error("The file could not be read."))
+    await expect(run).rejects.toThrow("The file could not be read.")
+  })
+
+  it("reports bytes in flight and resets them on a failed attempt", async () => {
+    const progress: [number, number][] = []
+    const { transport } = signedTransport()
+    let attempts = 0
+    await runUploadParts({
+      file: new Blob(["abcd"]),
+      parts: planUploadParts(4, 4),
+      signatures: ["c2ln"],
+      transport: {
+        ...transport,
+        async putPart(part, signed, body, signal, onProgress) {
+          attempts += 1
+          onProgress?.(2)
+          if (attempts === 1) throw new Error("connection reset")
+          onProgress?.(4)
+          return transport.putPart(part, signed, body, signal)
+        },
+      },
+      wait: async () => {},
+      onPartProgress: (partNumber, loaded) =>
+        progress.push([partNumber, loaded]),
+    })
+    expect(progress).toEqual([
+      [1, 2],
+      [1, 0],
+      [1, 2],
+      [1, 4],
+    ])
   })
 
   it("fails when a requested part is not signed", async () => {

@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -13,6 +14,8 @@ import type {
   WorkspaceAdminUser,
   WorkspaceUserProject,
 } from "@/data/crucible/workspace-source"
+import { provisionWorkspaceUserApiKeyFn } from "@/data/crucible/users.functions"
+
 import { UserDetailView } from "./user-detail"
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
@@ -25,6 +28,11 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
     useBlocker: () => ({ proceed: vi.fn(), reset: vi.fn(), status: "idle" }),
   }
 })
+
+vi.mock("@/data/crucible/users.functions", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  provisionWorkspaceUserApiKeyFn: vi.fn(),
+}))
 
 const mockProjects: WorkspaceUserProject[] = [
   {
@@ -243,5 +251,37 @@ describe("UserDetailView projects table sorting", () => {
       expect(rowsUpdated[1].textContent).toContain("Beta Project")
       expect(rowsUpdated[2].textContent).toContain("Gamma Project")
     })
+  })
+})
+
+describe("UserDetailView API key provisioning", () => {
+  afterEach(cleanup)
+
+  it("asks for a fresh sign-in inside the confirmation dialog", async () => {
+    vi.mocked(provisionWorkspaceUserApiKeyFn).mockResolvedValue({
+      error: {
+        correlationId: "request-1",
+        kind: "reauthentication-required",
+        message: "Sign in again to continue.",
+        retryable: false,
+      },
+      status: "error",
+    })
+    renderUserDetail()
+
+    fireEvent.click(screen.getByRole("button", { name: "Rotate API key" }))
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Rotate user API key",
+    })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Rotate key" }))
+
+    const signIn = await within(dialog).findByRole("button", {
+      name: "Sign in with ORCID",
+    })
+    const href = new URL(signIn.getAttribute("href") ?? "", "https://hub.test")
+    expect(href.pathname).toBe("/hub/auth/login")
+    expect(href.searchParams.get("max_age")).toBe("0")
+    expect(href.searchParams.get("returnTo")).toMatch(/#reauthenticated$/)
+    expect(screen.getByRole("alertdialog")).toBe(dialog)
   })
 })

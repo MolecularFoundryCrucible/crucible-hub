@@ -1,5 +1,6 @@
 import {
   computeUploadDigests,
+  createUploadPartChecksums,
   planUploadParts,
   runUploadParts,
   UPLOAD_PART_SIZE,
@@ -18,20 +19,15 @@ import { readRetryAfterSeconds } from "@/lib/retry-after"
 import type { FixtureScenario } from "@/data/crucible/fixture-scenarios"
 import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
 
-export type UploadPhase =
-  | "hashing"
-  | "initiating"
-  | "uploading"
-  | "completing"
-  | "done"
-  | "failed"
-  | "aborted"
+export type UploadPhase = "preparing" | "uploading" | "completing" | "done"
 
 export type UploadProgress = {
-  bytes: number
   phase: UploadPhase
+  preparedBytes: number
+  uploadedBytes: number
 }
 
+const PROGRESS_INTERVAL_MS = 250
 const DEFAULT_COMPLETION_RETRY_SECONDS = 5
 const MAX_COMPLETION_ATTEMPTS = 3
 
@@ -60,6 +56,66 @@ function wait(milliseconds: number, signal: AbortSignal): Promise<void> {
       resolve()
     }, milliseconds)
     signal.addEventListener("abort", onAbort, { once: true })
+  })
+}
+
+function partTransferError(partNumber: number, retryAfter: string | null) {
+  const retryAfterSeconds = readRetryAfterSeconds(
+    new Headers(retryAfter === null ? {} : { "Retry-After": retryAfter })
+  )
+  return Object.assign(
+    new Error(`Part ${partNumber} could not be transferred.`),
+    retryAfterSeconds === undefined ? {} : { retryAfterSeconds }
+  )
+}
+
+export function putUploadPart(options: {
+  body: Blob
+  headers: Readonly<Record<string, string>>
+  onProgress?: (loadedBytes: number) => void
+  partNumber: number
+  signal?: AbortSignal
+  url: string
+}): Promise<void> {
+  const { body, headers, onProgress, partNumber, signal, url } = options
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason)
+      return
+    }
+    const request = new XMLHttpRequest()
+    const abort = () => request.abort()
+    const settle = () => signal?.removeEventListener("abort", abort)
+    request.open("PUT", url)
+    for (const [name, value] of Object.entries(headers)) {
+      request.setRequestHeader(name, value)
+    }
+    request.upload.onprogress = (event) => onProgress?.(event.loaded)
+    request.onload = () => {
+      settle()
+      if (request.status >= 200 && request.status < 300) resolve()
+      else {
+        reject(
+          partTransferError(
+            partNumber,
+            request.getResponseHeader("Retry-After")
+          )
+        )
+      }
+    }
+    request.onerror = () => {
+      settle()
+      reject(partTransferError(partNumber, null))
+    }
+    request.onabort = () => {
+      settle()
+      reject(
+        signal?.reason ??
+          new DOMException("The upload was cancelled.", "AbortError")
+      )
+    }
+    signal?.addEventListener("abort", abort, { once: true })
+    request.send(body)
   })
 }
 
@@ -107,13 +163,24 @@ export async function uploadDatasetFile(options: {
   }
 
   const parts = planUploadParts(file.size)
-  const digests = await computeUploadDigests(
-    file,
-    parts,
-    (bytes) => onProgress({ bytes, phase: "hashing" }),
-    signal
+  const partSizes = new Map(
+    parts.map((part) => [part.partNumber, part.end - part.start])
   )
-  signal.throwIfAborted()
+  const partLoaded = new Map<number, number>()
+  let preparedBytes = 0
+  let completedBytes = 0
+  let phase: UploadPhase = "preparing"
+  let lastReport = 0
+  const report = (force = false) => {
+    const now = performance.now()
+    if (!force && now - lastReport < PROGRESS_INTERVAL_MS) return
+    lastReport = now
+    let uploadedBytes = completedBytes
+    for (const loaded of partLoaded.values()) uploadedBytes += loaded
+    if (phase === "preparing" && uploadedBytes > 0) phase = "uploading"
+    onProgress({ phase, preparedBytes, uploadedBytes })
+  }
+  report(true)
 
   const initiation = unwrapHubResult(
     await initializeWorkspaceDatasetUpload({
@@ -128,12 +195,29 @@ export async function uploadDatasetFile(options: {
     })
   )
   if ("file" in initiation) {
-    onProgress({ bytes: file.size, phase: "done" })
+    onProgress({
+      phase: "done",
+      preparedBytes: file.size,
+      uploadedBytes: file.size,
+    })
     return initiation.file
   }
   const uploadId = initiation.uploadId
-  let uploadedBytes = 0
-  onProgress({ bytes: 0, phase: "uploading" })
+  const checksums = createUploadPartChecksums()
+  const preparation = new AbortController()
+  const stopPreparation = () => preparation.abort(signal.reason)
+  signal.addEventListener("abort", stopPreparation, { once: true })
+  const digests = computeUploadDigests(
+    file,
+    parts,
+    (bytes) => {
+      preparedBytes = bytes
+      report()
+    },
+    preparation.signal,
+    (partNumber, crc32cBase64) => checksums.resolve(partNumber, crc32cBase64)
+  )
+  digests.catch((error: unknown) => checksums.fail(error))
 
   try {
     if (initiation.state !== "uploading") {
@@ -143,7 +227,7 @@ export async function uploadDatasetFile(options: {
     await runUploadParts({
       file,
       parts,
-      signatures: digests.partCrc32cBase64,
+      signatures: checksums,
       signal,
       transport: {
         readAcknowledgedPartNumbers: async () => {
@@ -182,52 +266,50 @@ export async function uploadDatasetFile(options: {
             ])
           )
         },
-        putPart: async (part, signed, body, partSignal) => {
-          const response = await fetch(signed.url, {
+        putPart: (part, signed, body, partSignal, onPartProgress) =>
+          putUploadPart({
             body,
             headers: signed.headers,
-            method: "PUT",
+            onProgress: onPartProgress,
+            partNumber: part.partNumber,
             signal: partSignal,
-          })
-          if (response.ok) return
-          await response.arrayBuffer()
-          const retryAfterSeconds = readRetryAfterSeconds(response.headers)
-          throw Object.assign(
-            new Error(`Part ${part.partNumber} could not be transferred.`),
-            retryAfterSeconds === undefined ? {} : { retryAfterSeconds }
-          )
-        },
+            url: signed.url,
+          }),
       },
       wait: (milliseconds) => wait(milliseconds, signal),
+      onPartProgress: (partNumber, loadedBytes) => {
+        partLoaded.set(partNumber, loadedBytes)
+        report()
+      },
       onPartUploaded: (partNumber) => {
-        const part = parts.find(
-          (candidate) => candidate.partNumber === partNumber
-        )
-        uploadedBytes += part ? part.end - part.start : 0
-        onProgress({ bytes: uploadedBytes, phase: "uploading" })
+        partLoaded.delete(partNumber)
+        completedBytes += partSizes.get(partNumber) ?? 0
+        report()
       },
     })
 
-    onProgress({ bytes: file.size, phase: "completing" })
+    const { crc32cBase64, sha256Hex } = await digests
+    phase = "completing"
+    report(true)
     const completed = await completeWithRetry(
       () =>
         completeWorkspaceDatasetUpload({
-          data: {
-            crc32cBase64: digests.crc32cBase64,
-            datasetMfid,
-            sha256Hex: digests.sha256Hex,
-            uploadId,
-          },
+          data: { crc32cBase64, datasetMfid, sha256Hex, uploadId },
           signal,
         }),
       signal
     )
-    onProgress({ bytes: file.size, phase: "done" })
+    phase = "done"
+    report(true)
     return completed
   } catch (error) {
+    preparation.abort()
+    await digests.catch(() => undefined)
     await abortWorkspaceDatasetUpload({
       data: { datasetMfid, uploadId },
     }).catch(() => undefined)
     throw error
+  } finally {
+    signal.removeEventListener("abort", stopPreparation)
   }
 }

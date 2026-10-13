@@ -1,5 +1,4 @@
 import { useId, useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 
 import {
   AddFilesIcon,
@@ -8,53 +7,33 @@ import {
   CloseIcon,
   DropFilesIcon,
   RetryIngestionIcon,
+  RenameUploadIcon,
   UploadCompleteIcon,
   UploadFailureIcon,
 } from "@/components/crucible/icons"
 import { MfidText } from "@/components/crucible/mfid-text"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { PendingIcon } from "@/components/crucible/pending-icon"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { ingestionClassesQueryOptions } from "@/data/crucible/resources.queries"
+import {
+  IngestorSelect,
+  ingestorChoiceLabel,
+  sameIngestorChoice,
+  useIngestorClasses,
+} from "@/features/ingestion/ingestor-select"
 import { formatBytes } from "@/lib/format"
+import { formatDuration } from "@/lib/transfer-rate"
+import type { TransferEstimate } from "@/lib/transfer-rate"
 import { cn } from "@/lib/utils"
 
-import {
-  AUTO_DETECT_INGESTION,
-  NO_INGESTION,
-  uploadItemIssues,
-} from "./upload-batch"
+import { uploadItemIssues } from "./upload-batch"
 import type {
   UploadBatch,
-  UploadIngestionChoice,
+  UploadBatchProgress,
   UploadItem,
   UploadSource,
 } from "./upload-batch"
-
-const NONE_VALUE = "none"
-const AUTO_VALUE = "auto"
-const MIXED_VALUE = "mixed"
-
-function choiceValue(choice: UploadIngestionChoice) {
-  if (choice === NO_INGESTION) return NONE_VALUE
-  if (choice === AUTO_DETECT_INGESTION) return AUTO_VALUE
-  return `class:${choice}`
-}
-
-function choiceFromValue(value: string): UploadIngestionChoice {
-  if (value === NONE_VALUE) return NO_INGESTION
-  if (value === AUTO_VALUE) return AUTO_DETECT_INGESTION
-  return value.slice("class:".length)
-}
-
-function choiceLabel(choice: UploadIngestionChoice) {
-  if (choice === NO_INGESTION) return "No ingestion"
-  if (choice === AUTO_DETECT_INGESTION) return "Auto-detect"
-  return choice
-}
 
 function readFileEntry(entry: FileSystemFileEntry) {
   return new Promise<File>((resolve, reject) => entry.file(resolve, reject))
@@ -128,8 +107,10 @@ export function UploadDropZone({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border text-center transition-colors",
-        compact ? "px-4 py-4" : "px-6 py-8",
+        "flex items-center gap-3 rounded-lg border border-dashed border-border transition-colors",
+        compact
+          ? "flex-row flex-wrap justify-between px-4 py-2"
+          : "flex-col justify-center px-6 py-8 text-center",
         dragging && "border-primary bg-primary/5",
         disabled && "opacity-60"
       )}
@@ -166,7 +147,9 @@ export function UploadDropZone({
         />
       )}
       <p className="text-body text-muted-foreground">
-        Drag files or folders here, or
+        {compact
+          ? "Drag more files or folders here, or"
+          : "Drag files or folders here, or"}
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         <Button
@@ -222,36 +205,60 @@ export function UploadDropZone({
   )
 }
 
-function IngestionOptions({ classes }: { classes: readonly string[] }) {
-  return (
-    <>
-      <NativeSelectOption value={NONE_VALUE}>No ingestion</NativeSelectOption>
-      <NativeSelectOption value={AUTO_VALUE}>Auto-detect</NativeSelectOption>
-      {classes.map((value) => (
-        <NativeSelectOption key={value} value={`class:${value}`}>
-          {value}
-        </NativeSelectOption>
-      ))}
-    </>
-  )
-}
-
-function UploadProgressBar({
+function TransferProgress({
+  detail,
   label,
   max,
   value,
 }: {
+  detail?: string
   label: string
   max: number
   value: number
 }) {
   return (
-    <progress
-      aria-label={label}
-      className="h-1.5 w-full appearance-none overflow-hidden rounded-full bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-primary"
-      max={Math.max(max, 1)}
-      value={value}
-    />
+    <div className="flex items-center gap-3">
+      <progress
+        aria-label={label}
+        className="h-1.5 min-w-0 flex-1 appearance-none overflow-hidden rounded-full bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-primary"
+        max={Math.max(max, 1)}
+        value={value}
+      />
+      <span className="w-44 shrink-0 text-right text-supporting whitespace-nowrap text-muted-foreground tabular-nums">
+        {detail ?? ""}
+      </span>
+    </div>
+  )
+}
+
+function estimateText(estimate?: TransferEstimate) {
+  if (!estimate) return undefined
+  const rate = `${formatBytes(Math.round(estimate.bytesPerSecond))}/s`
+  return estimate.secondsRemaining === undefined
+    ? rate
+    : `${rate} · ${formatDuration(estimate.secondsRemaining)} left`
+}
+
+function BatchProgress({ progress }: { progress: UploadBatchProgress }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-label">
+          Uploaded {progress.completedFiles} of {progress.totalFiles}{" "}
+          {progress.totalFiles === 1 ? "file" : "files"}
+        </p>
+        <p className="text-supporting text-muted-foreground tabular-nums">
+          {formatBytes(progress.uploadedBytes)} of{" "}
+          {formatBytes(progress.totalBytes)}
+        </p>
+      </div>
+      <TransferProgress
+        detail={estimateText(progress.estimate)}
+        label="Overall upload progress"
+        max={progress.totalBytes}
+        value={progress.uploadedBytes}
+      />
+    </div>
   )
 }
 
@@ -262,86 +269,72 @@ export function UploadFileList({
   batch: UploadBatch
   datasetMfid?: string
 }) {
-  const scope = useWorkspaceScope()
   const allIngestorId = useId()
-  const classesResult = useQuery({
-    ...ingestionClassesQueryOptions(scope),
-    enabled: batch.ingestionEnabled && batch.items.length > 0,
-  })
-  const classes = classesResult.data ?? []
-  const pendingChoices = new Set(
-    batch.items
-      .filter((item) => item.state.status !== "done")
-      .map((item) => choiceValue(item.ingestionClass))
+  const [renaming, setRenaming] = useState<string>()
+  const classesResult = useIngestorClasses(
+    batch.ingestionEnabled && batch.items.length > 0
   )
-  const sharedChoice =
-    pendingChoices.size === 1 ? [...pendingChoices][0] : MIXED_VALUE
-  const finished = batch.items.filter(
-    (item) => item.state.status === "done"
-  ).length
+  const classes = classesResult.data ?? []
+  const pendingItems = batch.items.filter(
+    (item) => item.state.status !== "done"
+  )
+  const sharedIngestor =
+    pendingItems.length > 0 &&
+    pendingItems.every((item) =>
+      sameIngestorChoice(item.ingestor, pendingItems[0].ingestor)
+    )
+      ? pendingItems[0].ingestor
+      : "mixed"
+  const finished = batch.items.length - pendingItems.length
 
   if (!batch.items.length) return null
 
   return (
     <div className="flex min-h-0 flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="text-supporting text-muted-foreground tabular-nums">
-          {batch.items.length} {batch.items.length === 1 ? "file" : "files"}
-          {" · "}
-          {formatBytes(batch.totalBytes)}
-          {finished ? ` · ${finished} uploaded` : ""}
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          {batch.ingestionEnabled && batch.pendingCount > 0 ? (
-            <div className="flex items-center gap-2">
-              <label
-                className="text-supporting text-muted-foreground"
-                htmlFor={allIngestorId}
-              >
-                Ingestor for all
-              </label>
-              <NativeSelect
-                disabled={batch.uploading}
-                id={allIngestorId}
-                onChange={(event) => {
-                  if (event.target.value === MIXED_VALUE) return
-                  batch.setIngestionForAll(choiceFromValue(event.target.value))
-                }}
+      {batch.progress ? (
+        <BatchProgress progress={batch.progress} />
+      ) : (
+        <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <p className="text-supporting text-muted-foreground tabular-nums">
+            {batch.items.length} {batch.items.length === 1 ? "file" : "files"}
+            {" · "}
+            {formatBytes(batch.totalBytes)}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {batch.ingestionEnabled && pendingItems.length > 0 ? (
+              <>
+                <label
+                  className="text-supporting text-muted-foreground"
+                  htmlFor={allIngestorId}
+                >
+                  Ingestor for all
+                </label>
+                <IngestorSelect
+                  classes={classes}
+                  id={allIngestorId}
+                  onChange={batch.setIngestorForAll}
+                  size="sm"
+                  value={sharedIngestor}
+                />
+              </>
+            ) : null}
+            {finished ? (
+              <Button
+                onClick={batch.clearFinished}
                 size="sm"
-                value={sharedChoice}
+                type="button"
+                variant="ghost"
               >
-                {sharedChoice === MIXED_VALUE ? (
-                  <NativeSelectOption disabled value={MIXED_VALUE}>
-                    Mixed
-                  </NativeSelectOption>
-                ) : null}
-                <IngestionOptions classes={classes} />
-              </NativeSelect>
-            </div>
-          ) : null}
-          {finished && !batch.uploading ? (
-            <Button
-              onClick={batch.clearFinished}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              <ClearFinishedUploadsIcon
-                aria-hidden="true"
-                data-icon="inline-start"
-              />
-              Clear uploaded
-            </Button>
-          ) : null}
+                <ClearFinishedUploadsIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
+                Clear uploaded
+              </Button>
+            ) : null}
+          </div>
         </div>
-      </div>
-      {batch.uploading ? (
-        <UploadProgressBar
-          label="Overall upload progress"
-          max={batch.totalBytes}
-          value={batch.transferredBytes}
-        />
-      ) : null}
+      )}
       <ul
         aria-label="Selected files"
         className="flex max-h-96 min-h-0 flex-col divide-y overflow-y-auto overscroll-contain rounded-lg border"
@@ -353,6 +346,10 @@ export function UploadFileList({
             datasetMfid={datasetMfid}
             item={item}
             key={item.id}
+            onRenameChange={(editing) =>
+              setRenaming(editing ? item.id : undefined)
+            }
+            renaming={renaming === item.id}
           />
         ))}
       </ul>
@@ -360,16 +357,23 @@ export function UploadFileList({
   )
 }
 
-function statusText(item: UploadItem) {
-  const { state } = item
-  if (state.status === "hashing")
-    return `Preparing ${formatBytes(state.bytes)} of ${formatBytes(item.file.size)}`
-  if (state.status === "uploading")
-    return `Uploading ${formatBytes(state.bytes)} of ${formatBytes(item.file.size)}`
-  if (state.status === "completing") return "Verifying checksum"
-  if (state.status === "aborted") return "Upload cancelled"
-  if (state.status === "error") return state.message
-  return undefined
+function RowIcon({ item, invalid }: { item: UploadItem; invalid: boolean }) {
+  const { status } = item.state
+  if (status === "active") return <PendingIcon aria-hidden="true" />
+  if (status === "done") {
+    return (
+      <UploadCompleteIcon aria-hidden="true" className="size-4 text-success" />
+    )
+  }
+  if (status === "error" || invalid) {
+    return (
+      <UploadFailureIcon
+        aria-hidden="true"
+        className="size-4 text-destructive"
+      />
+    )
+  }
+  return <ResourceTypeIcon type="file" />
 }
 
 function UploadFileRow({
@@ -377,158 +381,212 @@ function UploadFileRow({
   classes,
   datasetMfid,
   item,
+  onRenameChange,
+  renaming,
 }: {
   batch: UploadBatch
   classes: readonly string[]
   datasetMfid?: string
   item: UploadItem
+  onRenameChange: (editing: boolean) => void
+  renaming: boolean
 }) {
   const { state } = item
   const issues = uploadItemIssues(item, batch.items, batch.existingFilenames)
-  const inFlight =
-    state.status === "hashing" ||
-    state.status === "uploading" ||
-    state.status === "completing"
+  const size = item.file.size
   const done = state.status === "done"
   const locked = batch.uploading || done
-  const failed = state.status === "error"
-  const text = statusText(item)
+  const editing = !locked && (renaming || issues.length > 0)
 
   return (
-    <li className="flex flex-col gap-2 px-3 py-3">
-      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-        <span className="flex size-5 shrink-0 items-center justify-center">
-          {inFlight ? (
-            <PendingIcon aria-hidden="true" />
-          ) : done ? (
-            <UploadCompleteIcon
-              aria-hidden="true"
-              className="size-4 text-success"
-            />
-          ) : failed || issues.length ? (
-            <UploadFailureIcon
-              aria-hidden="true"
-              className="size-4 text-destructive"
+    <li className="flex items-start gap-3 px-3 py-2.5">
+      <span className="flex h-8 w-5 shrink-0 items-center justify-center">
+        <RowIcon invalid={issues.length > 0} item={item} />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex min-h-8 items-center gap-2">
+          {editing ? (
+            <Input
+              aria-invalid={issues.length > 0 || undefined}
+              aria-label={`File name for ${item.file.name}`}
+              autoFocus={renaming}
+              className="h-8 min-w-0 flex-1"
+              maxLength={1024}
+              onBlur={() => onRenameChange(false)}
+              onFocus={() => onRenameChange(true)}
+              onChange={(event) => batch.rename(item.id, event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === "Escape") {
+                  onRenameChange(false)
+                }
+              }}
+              value={item.filename}
             />
           ) : (
-            <ResourceTypeIcon type="file" />
-          )}
-        </span>
-        {done ? (
-          <span
-            className="min-w-0 flex-1 truncate text-body"
-            title={item.filename}
-          >
-            {item.filename}
-          </span>
-        ) : (
-          <Input
-            aria-invalid={issues.length > 0 || undefined}
-            aria-label={`File name for ${item.file.name}`}
-            className="h-8 min-w-0 flex-1 basis-48"
-            disabled={locked}
-            maxLength={1024}
-            onChange={(event) => batch.rename(item.id, event.target.value)}
-            value={item.filename}
-          />
-        )}
-        <span className="w-20 shrink-0 text-right text-supporting text-muted-foreground tabular-nums">
-          {formatBytes(item.file.size)}
-        </span>
-        {batch.ingestionEnabled ? (
-          done ? (
-            <span className="w-40 shrink-0 truncate text-supporting text-muted-foreground">
-              {choiceLabel(item.ingestionClass)}
-            </span>
-          ) : (
-            <NativeSelect
-              aria-label={`Ingestor for ${item.filename}`}
-              className="w-40 shrink-0"
-              disabled={locked}
-              onChange={(event) =>
-                batch.setIngestion(item.id, choiceFromValue(event.target.value))
-              }
-              size="sm"
-              value={choiceValue(item.ingestionClass)}
+            <span
+              className="min-w-0 truncate font-heading text-label"
+              title={item.filename}
             >
-              <IngestionOptions classes={classes} />
-            </NativeSelect>
-          )
-        ) : null}
-        {locked ? (
-          <span aria-hidden="true" className="size-7 shrink-0" />
-        ) : (
-          <Button
-            aria-label={`Remove ${item.filename} from the upload list`}
-            className="shrink-0"
-            onClick={() => batch.remove(item.id)}
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            <CloseIcon aria-hidden="true" />
-          </Button>
-        )}
-      </div>
-      {state.status === "hashing" || state.status === "uploading" ? (
-        <div className="flex flex-col gap-1 pl-7">
-          <UploadProgressBar
-            label={`${state.status === "hashing" ? "Preparing" : "Uploading"} ${item.filename}`}
-            max={item.file.size}
-            value={state.bytes}
-          />
-          <p className="text-supporting text-muted-foreground tabular-nums">
-            {text}
-          </p>
-        </div>
-      ) : issues.length && !batch.uploading ? (
-        <p className="pl-7 text-supporting text-destructive" role="alert">
-          {issues[0]}
-        </p>
-      ) : text ? (
-        <p
-          className={cn(
-            "pl-7 text-supporting",
-            failed ? "text-destructive" : "text-muted-foreground"
+              {item.filename}
+            </span>
           )}
-          role={failed ? "alert" : "status"}
-        >
-          {text}
-        </p>
-      ) : done ? (
-        <div
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 pl-7 text-supporting text-muted-foreground"
+          {!locked && !editing ? (
+            <Button
+              aria-label={`Rename ${item.filename}`}
+              className="shrink-0"
+              onClick={() => onRenameChange(true)}
+              size="icon-xs"
+              type="button"
+              variant="ghost"
+            >
+              <RenameUploadIcon aria-hidden="true" />
+            </Button>
+          ) : null}
+          <span className="ml-auto flex shrink-0 items-center gap-2">
+            {batch.ingestionEnabled ? (
+              locked ? (
+                <span className="text-supporting text-muted-foreground">
+                  {ingestorChoiceLabel(item.ingestor)}
+                </span>
+              ) : (
+                <IngestorSelect
+                  className="w-40"
+                  classes={classes}
+                  label={`Ingestor for ${item.filename}`}
+                  onChange={(choice) => batch.setIngestor(item.id, choice)}
+                  size="sm"
+                  value={item.ingestor}
+                />
+              )
+            ) : null}
+            {locked ? null : (
+              <Button
+                aria-label={`Remove ${item.filename} from the upload list`}
+                onClick={() => batch.remove(item.id)}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <CloseIcon aria-hidden="true" />
+              </Button>
+            )}
+          </span>
+        </div>
+        <RowDetail
+          batch={batch}
+          datasetMfid={datasetMfid}
+          issues={issues}
+          item={item}
+          size={size}
+        />
+      </div>
+    </li>
+  )
+}
+
+function RowDetail({
+  batch,
+  datasetMfid,
+  issues,
+  item,
+  size,
+}: {
+  batch: UploadBatch
+  datasetMfid?: string
+  issues: readonly string[]
+  item: UploadItem
+  size: number
+}) {
+  const { state } = item
+  if (state.status === "active") {
+    if (state.phase === "completing") {
+      return (
+        <p
+          className="text-supporting text-muted-foreground tabular-nums"
           role="status"
         >
-          <span>Uploaded as</span>
-          <MfidText presentation="supporting" value={state.file.mfid} />
-          {state.ingestion === "requested" ? (
-            <span>· Ingestion requested</span>
-          ) : state.ingestion ? (
-            <>
-              <span className="text-destructive">
-                · {state.ingestion.message}
-              </span>
-              {datasetMfid ? (
-                <Button
-                  onClick={() =>
-                    void batch.retryIngestion(datasetMfid, item.id)
-                  }
-                  size="xs"
-                  type="button"
-                  variant="outline"
-                >
-                  <RetryIngestionIcon
-                    aria-hidden="true"
-                    data-icon="inline-start"
-                  />
-                  Retry ingestion
-                </Button>
-              ) : null}
-            </>
-          ) : null}
-        </div>
-      ) : null}
-    </li>
+          {formatBytes(size)} · Verifying checksum
+        </p>
+      )
+    }
+    const preparing = state.preparedBytes < size
+    return (
+      <div className="flex flex-col gap-1">
+        <TransferProgress
+          detail={
+            state.phase === "preparing"
+              ? `Preparing ${Math.floor((state.preparedBytes / size) * 100)}%`
+              : estimateText(state.estimate)
+          }
+          label={`Uploading ${item.filename}`}
+          max={size}
+          value={state.uploadedBytes}
+        />
+        <p className="text-supporting text-muted-foreground tabular-nums">
+          {formatBytes(state.uploadedBytes)} of {formatBytes(size)}
+          {preparing && state.phase === "uploading"
+            ? ` · preparing ${Math.floor((state.preparedBytes / size) * 100)}%`
+            : ""}
+        </p>
+      </div>
+    )
+  }
+  if (state.status === "done") {
+    return (
+      <div
+        className="flex flex-wrap items-center gap-x-2 gap-y-1 text-supporting text-muted-foreground"
+        role="status"
+      >
+        <MfidText presentation="supporting" value={state.file.mfid} />
+        <span className="tabular-nums">· {formatBytes(size)}</span>
+        {state.ingestion === "requested" ? (
+          <span>· Ingestion requested</span>
+        ) : state.ingestion ? (
+          <>
+            <span className="text-destructive">
+              · {state.ingestion.message}
+            </span>
+            {datasetMfid ? (
+              <Button
+                onClick={() => void batch.retryIngestion(datasetMfid, item.id)}
+                size="xs"
+                type="button"
+                variant="outline"
+              >
+                <RetryIngestionIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
+                Retry ingestion
+              </Button>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+    )
+  }
+  if (state.status === "error") {
+    return (
+      <p className="text-supporting text-destructive" role="alert">
+        {state.message}
+      </p>
+    )
+  }
+  if (issues.length && !batch.uploading) {
+    return (
+      <p className="text-supporting text-destructive" role="alert">
+        {issues[0]}
+      </p>
+    )
+  }
+  return (
+    <p className="text-supporting text-muted-foreground tabular-nums">
+      {formatBytes(size)}
+      {state.status === "aborted"
+        ? " · Upload cancelled"
+        : batch.uploading
+          ? " · Queued"
+          : ""}
+    </p>
   )
 }

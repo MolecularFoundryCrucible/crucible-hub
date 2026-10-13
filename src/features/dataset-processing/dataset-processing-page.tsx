@@ -8,6 +8,13 @@ import {
 } from "@/components/crucible/collection-state"
 import { AddFilesIcon, RequestIngestionIcon } from "@/components/crucible/icons"
 import { UploadFilesDialog } from "@/features/dataset-files/upload-dialog"
+import {
+  AUTO_INGESTOR,
+  IngestorSelect,
+  ingestorClassName,
+  useIngestorClasses,
+} from "@/features/ingestion/ingestor-select"
+import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { MfidValue } from "@/components/crucible/mfid-value"
@@ -44,7 +51,6 @@ import {
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Table,
   TableBody,
@@ -59,7 +65,6 @@ import { requestWorkspaceIngestion } from "@/data/crucible/resources.functions"
 import {
   datasetFilesQueryOptions,
   datasetIngestionRequestsQueryOptions,
-  ingestionClassesQueryOptions,
   resourceQueryOptions,
 } from "@/data/crucible/resources.queries"
 import {
@@ -503,14 +508,12 @@ function IngestionRequestDialog({
     [eligibleFiles]
   )
   const [selectedMfids, setSelectedMfids] = useState<readonly string[]>([])
-  const [ingestionClass, setIngestionClass] = useState("")
+  const [ingestor, setIngestor] = useState<IngestorChoice>(AUTO_INGESTOR)
   const [error, setError] = useState<string>()
-  const classesResult = useQuery({
-    ...ingestionClassesQueryOptions(scope),
-    enabled: open,
-  })
+  const classesResult = useIngestorClasses(open)
   const mutation = useMutation({
     mutationFn: async (fileMfids: readonly string[]) => {
+      const ingestionClass = ingestorClassName(ingestor)
       const results = await Promise.allSettled(
         fileMfids.map(async (fileMfid) =>
           unwrapHubResult(
@@ -534,7 +537,7 @@ function IngestionRequestDialog({
   useEffect(() => {
     if (!open) return
     setSelectedMfids(eligibleMfids)
-    setIngestionClass("")
+    setIngestor(AUTO_INGESTOR)
     setError(undefined)
   }, [eligibleMfids, open])
 
@@ -597,20 +600,15 @@ function IngestionRequestDialog({
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="ingestion-class">Ingestion class</FieldLabel>
-              <NativeSelect
+              <IngestorSelect
+                allowNone={false}
                 className="w-full"
+                classes={classesResult.data ?? []}
                 disabled={mutation.isPending}
                 id="ingestion-class"
-                onChange={(event) => setIngestionClass(event.target.value)}
-                value={ingestionClass}
-              >
-                <NativeSelectOption value="">Auto-detect</NativeSelectOption>
-                {classesResult.data?.map((value) => (
-                  <NativeSelectOption key={value} value={value}>
-                    {value}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
+                onChange={setIngestor}
+                value={ingestor}
+              />
               {classesResult.isError ? (
                 <p className="text-supporting text-muted-foreground">
                   Ingestion classes could not be loaded. Auto-detect remains

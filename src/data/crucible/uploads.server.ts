@@ -178,6 +178,7 @@ export async function initializeWorkspaceUploadSession(
 
   const workspace = fixtureWorkspace(scenario)
   if (
+    !input.datasetMfid.startsWith("fixture-dataset-") &&
     !workspace.datasets.some(
       (dataset) => dataset.unique_id === input.datasetMfid
     )

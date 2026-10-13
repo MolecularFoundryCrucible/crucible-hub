@@ -96,7 +96,7 @@ test("uploads files, requests ingestion, and starts empty when reopened", async 
   await expect(dialog(page).getByText("Ingestion requested")).toHaveCount(1, {
     timeout: 15000,
   })
-  await expect(dialog(page).getByText("Uploaded as")).toHaveCount(2)
+  await expect(dialog(page).getByText(/^fixture-file-/)).toHaveCount(2)
   expect(partPuts.length).toBeGreaterThan(0)
   for (const url of partPuts) {
     expect(url).toContain("fixture-uploads")
@@ -142,6 +142,29 @@ test("shows files added elsewhere after refreshing the dataset", async ({
   await expect(page.getByText("Refreshing file metadata")).toHaveCount(0)
 })
 
+test("opens the created dataset after uploading its files without a leave prompt", async ({
+  page,
+}) => {
+  await page.goto("/hub/datasets/new")
+  await page.waitForLoadState("networkidle")
+  await page
+    .getByRole("textbox", { name: "Name", exact: true })
+    .fill(`Created with files ${runId}`)
+  await page.getByLabel("Files to upload").setInputFiles({
+    buffer: Buffer.from("created alongside the dataset"),
+    mimeType: "application/octet-stream",
+    name: `created-${runId}.h5`,
+  })
+  await page.getByRole("button", { name: "Create dataset" }).click()
+
+  await expect(page).toHaveURL(/\/hub\/datasets\/(?!new)[^/?]+/)
+  await expect(page.getByRole("alertdialog")).toHaveCount(0)
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(
+    page.getByRole("row").filter({ hasText: `created-${runId}.h5` })
+  ).toBeVisible()
+})
+
 test("flags duplicate names before uploading", async ({ page }) => {
   await page.goto(datasetPath)
   await page.waitForLoadState("networkidle")
@@ -179,9 +202,20 @@ test("adds dropped files to the list", async ({ page }) => {
   await zone.dispatchEvent("dragenter", { dataTransfer })
   await zone.dispatchEvent("drop", { dataTransfer })
 
+  const list = dialog(page).getByRole("list", { name: "Selected files" })
+  await expect(list.getByText("dropped.csv", { exact: true })).toBeVisible()
+
+  await dialog(page).getByRole("button", { name: "Rename dropped.csv" }).click()
+  await dialog(page)
+    .getByRole("textbox", { name: "File name for dropped.csv" })
+    .fill("runs/dropped-renamed.csv")
+  await page.keyboard.press("Enter")
+  await expect(
+    list.getByText("runs/dropped-renamed.csv", { exact: true })
+  ).toBeVisible()
   await expect(
     dialog(page).getByRole("textbox", { name: "File name for dropped.csv" })
-  ).toHaveValue("dropped.csv")
+  ).toHaveCount(0)
 })
 
 test("adds files from the processing tab", async ({ page }) => {

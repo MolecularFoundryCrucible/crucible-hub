@@ -3,12 +3,15 @@ import { useBlocker } from "@tanstack/react-router"
 
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 
-export function useUploadLeaveGuard(active: boolean, onLeave: () => void) {
-  const activeRef = useRef(active)
-  activeRef.current = active
+export function useUploadLeaveGuard(
+  isActive: () => boolean,
+  onLeave: () => void
+) {
+  const activeRef = useRef(isActive)
+  activeRef.current = isActive
   const leaveRef = useRef(onLeave)
   leaveRef.current = onLeave
-  const shouldBlock = useCallback(() => activeRef.current, [])
+  const shouldBlock = useCallback(() => activeRef.current(), [])
   const blocker = useBlocker({
     enableBeforeUnload: shouldBlock,
     shouldBlockFn: shouldBlock,

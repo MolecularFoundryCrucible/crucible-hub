@@ -16,11 +16,13 @@ export function CreationFilesField({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <UploadDropZone
-        compact={batch.items.length > 0}
-        disabled={disabled || batch.uploading}
-        onAdd={batch.add}
-      />
+      {batch.uploading ? null : (
+        <UploadDropZone
+          compact={batch.items.length > 0}
+          disabled={disabled || batch.uploading}
+          onAdd={batch.add}
+        />
+      )}
       <UploadFileList batch={batch} datasetMfid={datasetMfid} />
     </div>
   )

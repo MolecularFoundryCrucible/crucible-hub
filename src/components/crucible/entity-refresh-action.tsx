@@ -1,9 +1,5 @@
 import { useState } from "react"
-import {
-  matchQuery,
-  useIsFetching,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import type { QueryKey } from "@tanstack/react-query"
 
 import { RefreshResourceIcon } from "@/components/crucible/icons"
@@ -32,20 +28,16 @@ export function EntityRefreshAction({
   subject: string
 }) {
   const queryClient = useQueryClient()
+  const [refreshRequested, setRefreshRequested] = useState(false)
   const refreshing =
-    useIsFetching({
-      fetchStatus: "fetching",
-      predicate: (query) =>
-        matchQuery({ exact, queryKey }, query) ||
-        relatedQueryKeys.some((related) =>
-          matchQuery({ queryKey: related }, query)
-        ),
-    }) > 0
+    useIsFetching({ exact, queryKey, fetchStatus: "fetching" }) > 0 ||
+    refreshRequested
   const [failed, setFailed] = useState(false)
   const timestamp = refreshedAt ? new Date(refreshedAt).toISOString() : null
 
   async function refresh() {
     setFailed(false)
+    setRefreshRequested(true)
     try {
       await Promise.all([
         queryClient.refetchQueries({ exact, queryKey }, { throwOnError: true }),
@@ -59,6 +51,8 @@ export function EntityRefreshAction({
       notifySuccess(`${subject} refreshed`)
     } catch {
       setFailed(true)
+    } finally {
+      setRefreshRequested(false)
     }
   }
 

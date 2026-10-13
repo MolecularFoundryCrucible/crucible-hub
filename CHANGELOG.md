@@ -6,6 +6,12 @@ The format follows Keep a Changelog principles. Versioning policy will be select
 
 ## Unreleased
 
+- Fixed the administrator Provision or Rotate API key dialog: errors, including the recent-sign-in prompt, now appear inside the dialog instead of on the card behind it, the confirm button shows progress and cannot issue a second key while one is pending, and provisioning and revocation no longer share one error. The sign-in prompt is a Sign in with ORCID button with a short explanation, returning from ORCID shows a notice that the action can be retried, and the sign-in error page explains that an existing session is unchanged and offers Return to Crucible Hub.
+
+- Fixed dataset creation with files showing the "Cancel the upload?" prompt when it opened the new dataset after the uploads finished; the leave guard now reads the live upload state instead of the last rendered one.
+
+- Sped up and clarified dataset uploads: preparation (checksums) now overlaps the transfer, up to three files upload at once, progress is byte-accurate with a transfer rate and time remaining beside each bar and for the whole batch, and the upload list follows the Hub row style with names as text, an inline rename action, a compact drop zone hidden during uploads, and the uploaded MFID and size on one line. The upload list and the Request ingestion dialog share one ingestor selector.
+
 - Made the dataset Refresh action also reload the dataset's files, thumbnails, and ingestion requests, so files added from another tab or client appear without a page reload, and dropped the redundant "Refreshing file metadata" line from the Files card.
 
 - Added client-side sorting to the dataset Files table by filename (natural number order), storage backend, and size.

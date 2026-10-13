@@ -639,12 +639,14 @@ function UserApiCredentialSection({
   const queryClient = useQueryClient()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false)
-  const [actionError, setActionError] = useState<React.ReactNode>()
+  const [provisionError, setProvisionError] = useState<React.ReactNode>()
+  const [revokeError, setRevokeError] = useState<React.ReactNode>()
 
   useEffect(() => {
     setConfirmOpen(false)
     setRevokeConfirmOpen(false)
-    setActionError(undefined)
+    setProvisionError(undefined)
+    setRevokeError(undefined)
   }, [user.unique_id])
 
   const mutation = useMutation({
@@ -658,6 +660,7 @@ function UserApiCredentialSection({
         })
       ),
     onSuccess: (result) => {
+      setConfirmOpen(false)
       onCredentialMinted({
         api_key: result.api_key,
         unique_id: user.unique_id,
@@ -668,7 +671,7 @@ function UserApiCredentialSection({
       })
     },
     onError: (err) => {
-      setActionError(hubActionError(err, "Failed to provision API key."))
+      setProvisionError(hubActionError(err, "Failed to provision API key."))
     },
   })
 
@@ -689,7 +692,7 @@ function UserApiCredentialSection({
       })
     },
     onError: (err) => {
-      setActionError(hubErrorMessage(err, "Failed to revoke API key."))
+      setRevokeError(hubErrorMessage(err, "Failed to revoke API key."))
     },
   })
 
@@ -703,7 +706,7 @@ function UserApiCredentialSection({
             <Button
               disabled={mutation.isPending}
               onClick={() => {
-                setActionError(undefined)
+                setProvisionError(undefined)
                 setConfirmOpen(true)
               }}
               size="sm"
@@ -721,7 +724,7 @@ function UserApiCredentialSection({
               <Button
                 disabled={revokeMutation.isPending}
                 onClick={() => {
-                  setActionError(undefined)
+                  setRevokeError(undefined)
                   setRevokeConfirmOpen(true)
                 }}
                 size="sm"
@@ -733,7 +736,6 @@ function UserApiCredentialSection({
             ) : null}
           </div>
         }
-        error={actionError}
         status={user.api_key_status}
       />
       <ConfirmationDialog
@@ -744,17 +746,26 @@ function UserApiCredentialSection({
             ? "Rotating will immediately invalidate the existing API key for this user. Any scripts using it will stop working until updated."
             : "This will generate a new active API credential for this user."
         }
-        onConfirm={() => void mutation.mutateAsync()}
+        error={provisionError}
+        onConfirm={() => {
+          setProvisionError(undefined)
+          mutation.mutate()
+        }}
         onOpenChange={setConfirmOpen}
         open={confirmOpen}
+        pending={mutation.isPending}
+        pendingLabel={hasValidKey ? "Rotating key" : "Provisioning key"}
         title={hasValidKey ? "Rotate user API key" : "Provision user API key"}
       />
       <ConfirmationDialog
         kind="alert"
         confirmLabel="Revoke key"
         description="The API key will stop working immediately. Any scripts using it must be provisioned with a replacement credential."
-        error={actionError}
-        onConfirm={() => void revokeMutation.mutateAsync()}
+        error={revokeError}
+        onConfirm={() => {
+          setRevokeError(undefined)
+          revokeMutation.mutate()
+        }}
         onOpenChange={setRevokeConfirmOpen}
         open={revokeConfirmOpen}
         pending={revokeMutation.isPending}

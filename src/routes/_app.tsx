@@ -8,6 +8,7 @@ import {
 import { z } from "zod"
 
 import { AppShell } from "@/components/crucible/app-shell"
+import { useReauthenticationNotice } from "@/components/crucible/reauthentication"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
@@ -141,6 +142,7 @@ function ReadyWorkspace({
   uploadsEnabled: boolean
 }) {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
+  useReauthenticationNotice()
 
   return (
     <WorkspaceProvider

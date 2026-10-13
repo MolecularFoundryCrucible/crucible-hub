@@ -107,7 +107,8 @@ export async function computeUploadDigests(
   file: Blob,
   parts: readonly UploadPart[],
   onProgress?: (hashedBytes: number) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onPartDigest?: (partNumber: number, crc32cBase64: string) => void
 ): Promise<UploadFileDigests> {
   const lastPart = parts.at(-1)
   const tilesFile =
@@ -156,7 +157,9 @@ export async function computeUploadDigests(
       partHasher.update(bytes.subarray(chunkOffset, chunkOffset + take))
       chunkOffset += take
       if (offset + chunkOffset === part.end) {
-        partCrc32cBase64.push(encodeBase64(partHasher.digest("binary")))
+        const digest = encodeBase64(partHasher.digest("binary"))
+        partCrc32cBase64.push(digest)
+        onPartDigest?.(part.partNumber, digest)
         partIndex += 1
         partHasher = undefined
       }
@@ -169,6 +172,54 @@ export async function computeUploadDigests(
     sha256Hex: sha256.digest("hex"),
     crc32cBase64: encodeBase64(wholeCrc32c.digest("binary")),
     partCrc32cBase64,
+  }
+}
+
+export type UploadPartChecksums = {
+  ready: (partNumber: number) => string | undefined
+  wait: (partNumber: number) => Promise<string>
+}
+
+export function createUploadPartChecksums() {
+  const values = new Map<number, string>()
+  const waiters = new Map<number, ((value: string) => void)[]>()
+  let failure: { error: unknown } | undefined
+  const rejecters = new Set<(error: unknown) => void>()
+
+  return {
+    ready: (partNumber: number) => values.get(partNumber),
+    wait: (partNumber: number) => {
+      const value = values.get(partNumber)
+      if (value !== undefined) return Promise.resolve(value)
+      if (failure) return Promise.reject(failure.error)
+      return new Promise<string>((resolve, reject) => {
+        waiters.set(partNumber, [...(waiters.get(partNumber) ?? []), resolve])
+        rejecters.add(reject)
+      })
+    },
+    resolve: (partNumber: number, value: string) => {
+      values.set(partNumber, value)
+      for (const resolve of waiters.get(partNumber) ?? []) resolve(value)
+      waiters.delete(partNumber)
+    },
+    fail: (error: unknown) => {
+      failure = { error }
+      for (const reject of rejecters) reject(error)
+      rejecters.clear()
+      waiters.clear()
+    },
+  }
+}
+
+function knownChecksums(signatures: readonly string[]): UploadPartChecksums {
+  return {
+    ready: (partNumber) => signatures.at(partNumber - 1),
+    wait: (partNumber) => {
+      const value = signatures.at(partNumber - 1)
+      return value === undefined
+        ? Promise.reject(new Error(`Part ${partNumber} has no checksum.`))
+        : Promise.resolve(value)
+    },
   }
 }
 
@@ -186,14 +237,15 @@ export type UploadPartTransport = {
     part: UploadPart,
     signed: SignedUploadPart,
     body: Blob,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    onProgress?: (loadedBytes: number) => void
   ) => Promise<void>
 }
 
 export type RunUploadPartsOptions = {
   file: Blob
   parts: readonly UploadPart[]
-  signatures: readonly string[]
+  signatures: readonly string[] | UploadPartChecksums
   transport: UploadPartTransport
   signal?: AbortSignal
   maxConcurrentParts?: number
@@ -201,6 +253,7 @@ export type RunUploadPartsOptions = {
   maxPartAttempts?: number
   wait?: (milliseconds: number) => Promise<void>
   onPartUploaded?: (partNumber: number) => void
+  onPartProgress?: (partNumber: number, loadedBytes: number) => void
 }
 
 export async function runUploadParts(
@@ -217,7 +270,11 @@ export async function runUploadParts(
     maxPartAttempts = MAX_PART_ATTEMPTS,
     wait = defaultWait,
     onPartUploaded,
+    onPartProgress,
   } = options
+  const checksums = Array.isArray(signatures)
+    ? knownChecksums(signatures)
+    : (signatures as UploadPartChecksums)
   const signWindow = Math.min(signWindowParts, MAX_PARTS_PER_SIGN_REQUEST)
   const laneLimit = Math.max(
     1,
@@ -227,44 +284,64 @@ export async function runUploadParts(
   const acknowledged = await transport.readAcknowledgedPartNumbers()
   const pending = parts.filter((part) => !acknowledged.has(part.partNumber))
 
-  for (let index = 0; index < pending.length; index += signWindow) {
+  let index = 0
+  while (index < pending.length) {
+    const required = Math.min(laneLimit, signWindow, pending.length - index)
+    await Promise.all(
+      pending
+        .slice(index, index + required)
+        .map((part) => checksums.wait(part.partNumber))
+    )
+    assertNotAborted(signal)
+    let end = index + required
+    while (
+      end < pending.length &&
+      end - index < signWindow &&
+      checksums.ready(pending[end].partNumber) !== undefined
+    ) {
+      end += 1
+    }
     await uploadWindow({
       file,
-      window: pending.slice(index, index + signWindow),
-      signatures,
+      window: pending.slice(index, end),
+      checksums,
       transport,
       signal,
       laneLimit,
       maxPartAttempts,
       wait,
       onPartUploaded,
+      onPartProgress,
     })
+    index = end
   }
 }
 
 type UploadWindowOptions = {
   file: Blob
   window: UploadPart[]
-  signatures: readonly string[]
+  checksums: UploadPartChecksums
   transport: UploadPartTransport
   signal?: AbortSignal
   laneLimit: number
   maxPartAttempts: number
   wait: (milliseconds: number) => Promise<void>
   onPartUploaded?: (partNumber: number) => void
+  onPartProgress?: (partNumber: number, loadedBytes: number) => void
 }
 
 async function uploadWindow(options: UploadWindowOptions): Promise<void> {
   const {
     file,
     window,
-    signatures,
+    checksums,
     transport,
     signal,
     laneLimit,
     maxPartAttempts,
     wait,
     onPartUploaded,
+    onPartProgress,
   } = options
   let remaining = window
   let lastError: unknown
@@ -277,7 +354,7 @@ async function uploadWindow(options: UploadWindowOptions): Promise<void> {
       const urls = await transport.signParts(
         remaining.map((part) => ({
           partNumber: part.partNumber,
-          crc32cBase64: signatures[part.partNumber - 1],
+          crc32cBase64: checksums.ready(part.partNumber) ?? "",
         }))
       )
       // Signed URLs are bearer credentials: this window-local map is never returned, logged, or persisted.
@@ -286,12 +363,18 @@ async function uploadWindow(options: UploadWindowOptions): Promise<void> {
         if (signed === undefined) {
           throw new Error("The upload session did not sign a requested part.")
         }
-        await transport.putPart(
-          part,
-          signed,
-          file.slice(part.start, part.end),
-          signal
-        )
+        try {
+          await transport.putPart(
+            part,
+            signed,
+            file.slice(part.start, part.end),
+            signal,
+            (loaded) => onPartProgress?.(part.partNumber, loaded)
+          )
+        } catch (error) {
+          onPartProgress?.(part.partNumber, 0)
+          throw error
+        }
         onPartUploaded?.(part.partNumber)
       })
       remaining = result.failed
