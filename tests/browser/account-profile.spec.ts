@@ -95,3 +95,34 @@ test("validates profile fields and protects unsaved changes", async ({
   await discardDialog.getByRole("button", { name: "Discard changes" }).click()
   await expect(page).toHaveURL(/\/hub\/\?scenario=populated/)
 })
+
+test("validates service account usernames before creating", async ({
+  page,
+}) => {
+  await page.goto("/hub/admin/service-accounts")
+  await page.getByRole("link", { name: "Create service account" }).click()
+  const dialog = page.getByRole("dialog", { name: "Create service account" })
+  const username = dialog.getByRole("textbox", { name: "Username" })
+  const create = dialog.getByRole("button", { name: "Create service account" })
+
+  await username.fill("a".repeat(30))
+  await expect(username).toHaveValue("a".repeat(24))
+
+  await username.fill("Beamline Uploader")
+  await expect(
+    dialog.getByText(
+      "Start with a lowercase letter and use lowercase letters, numbers, hyphens, or underscores."
+    )
+  ).toBeVisible()
+
+  await username.fill("beamline-collector")
+  await expect(
+    dialog.getByText(/already taken|is taken|not available/i).first()
+  ).toBeVisible({
+    timeout: 10000,
+  })
+  await expect(create).toBeDisabled()
+
+  await username.fill("beamline-uploader-7")
+  await expect(create).toBeEnabled()
+})

@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start"
 import { setResponseHeader } from "@tanstack/react-start/server"
 import { z } from "zod"
 
+import { usernameSchema } from "./slugs"
+
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import { fixtureScenarioSchema } from "./fixture-scenarios"
@@ -16,11 +18,7 @@ import {
 } from "./service-accounts.server"
 
 const serviceAccountMfidSchema = z.string().trim().min(1).max(255)
-export const serviceAccountUsernameSchema = z
-  .string()
-  .trim()
-  .min(1, "Enter a username.")
-  .max(255, "Use 255 characters or fewer for the username.")
+export const serviceAccountUsernameSchema = usernameSchema
 export const serviceAccountPlatformRoleSchema = z.enum([
   "none",
   "contributor",

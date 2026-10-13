@@ -54,6 +54,7 @@ import {
 } from "@/features/forms/discard-changes"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { formatUsername } from "@/lib/username"
+import { USERNAME_MAX_LENGTH } from "@/data/crucible/slugs"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 import { hubActionError } from "@/components/crucible/reauthentication"
 
@@ -328,7 +329,9 @@ function ServiceAccountIdentityCard({
                             <Input
                               aria-invalid={invalid || undefined}
                               id={field.name}
-                              maxLength={255}
+                              maxLength={
+                                name === "username" ? USERNAME_MAX_LENGTH : 255
+                              }
                               onBlur={field.handleBlur}
                               onChange={(event) =>
                                 field.handleChange(event.target.value)

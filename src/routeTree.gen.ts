@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as FixtureUploadsRouteImport } from './routes/fixture-uploads'
 import { Route as HealthRouteImport } from './routes/health'
+import { Route as ReauthenticatedRouteImport } from './routes/reauthenticated'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAccountRouteImport } from './routes/_app.account'
 import { Route as AppDataRouteImport } from './routes/_app.data'
@@ -79,6 +80,11 @@ const FixtureUploadsRoute = FixtureUploadsRouteImport.update({
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReauthenticatedRoute = ReauthenticatedRouteImport.update({
+  id: '/reauthenticated',
+  path: '/reauthenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/fixture-uploads': typeof FixtureUploadsRoute
   '/health': typeof HealthRoute
+  '/reauthenticated': typeof ReauthenticatedRoute
   '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
@@ -441,6 +448,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/fixture-uploads': typeof FixtureUploadsRoute
   '/health': typeof HealthRoute
+  '/reauthenticated': typeof ReauthenticatedRoute
   '/account': typeof AppAccountRoute
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
@@ -495,6 +503,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/fixture-uploads': typeof FixtureUploadsRoute
   '/health': typeof HealthRoute
+  '/reauthenticated': typeof ReauthenticatedRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/data': typeof AppDataRoute
   '/_app/deletion-requests': typeof AppDeletionRequestsRoute
@@ -556,6 +565,7 @@ export interface FileRouteTypes {
     | '/'
     | '/fixture-uploads'
     | '/health'
+    | '/reauthenticated'
     | '/account'
     | '/data'
     | '/deletion-requests'
@@ -613,6 +623,7 @@ export interface FileRouteTypes {
   to:
     | '/fixture-uploads'
     | '/health'
+    | '/reauthenticated'
     | '/account'
     | '/data'
     | '/deletion-requests'
@@ -666,6 +677,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/fixture-uploads'
     | '/health'
+    | '/reauthenticated'
     | '/_app/account'
     | '/_app/data'
     | '/_app/deletion-requests'
@@ -726,6 +738,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   FixtureUploadsRoute: typeof FixtureUploadsRoute
   HealthRoute: typeof HealthRoute
+  ReauthenticatedRoute: typeof ReauthenticatedRoute
   AccountSetupRoute: typeof AccountSetupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthErrorRoute: typeof AuthErrorRoute
@@ -759,6 +772,13 @@ declare module '@tanstack/react-router' {
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reauthenticated': {
+      id: '/reauthenticated'
+      path: '/reauthenticated'
+      fullPath: '/reauthenticated'
+      preLoaderRoute: typeof ReauthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -1326,6 +1346,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   FixtureUploadsRoute: FixtureUploadsRoute,
   HealthRoute: HealthRoute,
+  ReauthenticatedRoute: ReauthenticatedRoute,
   AccountSetupRoute: AccountSetupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthErrorRoute: AuthErrorRoute,

@@ -19,6 +19,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { checkWorkspaceUsername } from "@/data/crucible/account.functions"
+import { USERNAME_MAX_LENGTH } from "@/data/crucible/slugs"
+import {
+  isSlugTakenOrRejected,
+  SlugAvailabilityField,
+} from "@/features/forms/slug-availability"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { Input } from "@/components/ui/input"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -27,7 +33,7 @@ import {
   createWorkspaceServiceAccount,
   serviceAccountUsernameSchema,
 } from "@/data/crucible/service-accounts.functions"
-import { unwrapHubResult } from "@/data/crucible/result"
+import { hubConflictFields, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
 import { hubActionError } from "@/components/crucible/reauthentication"
 
@@ -54,6 +60,8 @@ export function ServiceAccountCreateDialog({
   scope: IdentityScope
 }) {
   const [error, setError] = useState<React.ReactNode>()
+  const [liveTakenUsername, setLiveTakenUsername] = useState<string>()
+  const [rejectedUsername, setRejectedUsername] = useState<string>()
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof createServiceAccountSchema>) =>
       unwrapHubResult(
@@ -80,6 +88,9 @@ export function ServiceAccountCreateDialog({
         onOpenChange(false)
         onCreated(credential)
       } catch (cause) {
+        if (hubConflictFields(cause, ["username"]).includes("username")) {
+          setRejectedUsername(value.username)
+        }
         setError(
           hubActionError(cause, "The service account could not be created.")
         )
@@ -94,6 +105,8 @@ export function ServiceAccountCreateDialog({
     if (!nextOpen) {
       form.reset()
       setError(undefined)
+      setLiveTakenUsername(undefined)
+      setRejectedUsername(undefined)
     }
   }
 
@@ -115,28 +128,32 @@ export function ServiceAccountCreateDialog({
           <fieldset disabled={pending}>
             <FieldGroup>
               <form.Field name="username">
-                {(field) => {
-                  const invalid = shouldShowFieldError(field)
-                  return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={field.name} required>
-                        Username
-                      </FieldLabel>
-                      <Input
-                        aria-invalid={invalid || undefined}
-                        autoFocus
-                        id={field.name}
-                        maxLength={255}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        value={field.state.value}
-                      />
-                      <FieldError errors={fieldErrors(field)} />
-                    </Field>
-                  )
-                }}
+                {(field) => (
+                  <SlugAvailabilityField
+                    autoComplete="off"
+                    autoFocus
+                    checkAvailability={async (candidate, signal) =>
+                      unwrapHubResult(
+                        await checkWorkspaceUsername({
+                          data: {
+                            scenario: fixtureScenarioFromScope(scope),
+                            username: candidate,
+                          },
+                          signal,
+                        })
+                      )
+                    }
+                    entityLabel="Username"
+                    field={field}
+                    label="Username"
+                    maxLength={USERNAME_MAX_LENGTH}
+                    onLiveTakenChange={setLiveTakenUsername}
+                    placeholder="e.g. beamline-7-uploader"
+                    rejectedValue={rejectedUsername}
+                    required
+                    schema={serviceAccountUsernameSchema}
+                  />
+                )}
               </form.Field>
               <form.Field name="unique_id">
                 {(field) => {
@@ -170,28 +187,40 @@ export function ServiceAccountCreateDialog({
             </p>
           ) : null}
         </form>
-        <DialogFooter>
-          <Button
-            disabled={pending}
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            Cancel
-          </Button>
-          <Button
-            disabled={pending}
-            form="service-account-create"
-            type="submit"
-          >
-            {pending ? (
-              <PendingIcon data-icon="inline-start" />
-            ) : (
-              <CreateResourceIcon data-icon="inline-start" />
-            )}
-            Create service account
-          </Button>
-        </DialogFooter>
+        <form.Subscribe
+          selector={(state) =>
+            isSlugTakenOrRejected(
+              state.values.username,
+              liveTakenUsername,
+              rejectedUsername
+            )
+          }
+        >
+          {(usernameTaken) => (
+            <DialogFooter>
+              <Button
+                disabled={pending}
+                onClick={() => setOpen(false)}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={pending || usernameTaken}
+                form="service-account-create"
+                type="submit"
+              >
+                {pending ? (
+                  <PendingIcon data-icon="inline-start" />
+                ) : (
+                  <CreateResourceIcon data-icon="inline-start" />
+                )}
+                Create service account
+              </Button>
+            </DialogFooter>
+          )}
+        </form.Subscribe>
       </DialogContent>
     </Dialog>
   )
