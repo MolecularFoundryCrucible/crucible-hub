@@ -51,6 +51,7 @@ import {
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { useHomeGreeting } from "@/features/home/home-greeting"
 import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 import { resourceDisplayName } from "@/lib/resource-name"
@@ -345,7 +346,13 @@ function HomePage() {
                       identifier: project.project_id,
                       mfid: project.unique_id,
                     })}
-                    role={project.role}
+                    trailing={
+                      <ActivityTime
+                        className="text-supporting text-muted-foreground"
+                        fallback="No activity yet"
+                        value={project.last_activity_at}
+                      />
+                    }
                   />
                 ))}
               </ResourceList>
@@ -398,7 +405,11 @@ function HomePage() {
                     key={instrument.unique_id}
                     mfid={instrument.unique_id}
                     name={instrumentName(instrument)}
-                    role={instrument.role}
+                    trailing={
+                      instrument.role ? (
+                        <ProjectRoleBadge role={instrument.role} />
+                      ) : null
+                    }
                   />
                 ))}
               </ResourceList>
@@ -519,13 +530,13 @@ function OwnershipResourceLink({
   kind,
   mfid,
   name,
-  role,
+  trailing,
 }: {
   identifier?: string | null
   kind: "instrument" | "project"
   mfid: string
   name: string
-  role?: string | null
+  trailing?: React.ReactNode
 }) {
   return (
     <ResourceListItem>
@@ -542,11 +553,7 @@ function OwnershipResourceLink({
           nameContent={<ResourceNameLink kind={kind} mfid={mfid} name={name} />}
           presentation="collection"
         />
-        {role ? (
-          <div className="shrink-0">
-            <ProjectRoleBadge role={role} />
-          </div>
-        ) : null}
+        {trailing ? <div className="shrink-0">{trailing}</div> : null}
       </ResourceListItemContent>
     </ResourceListItem>
   )
