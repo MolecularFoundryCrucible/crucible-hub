@@ -62,6 +62,7 @@ import {
   datasetsCursorQueryOptions,
 } from "@/data/crucible/data.queries"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
+import { useDataGroupBy } from "@/features/preferences/data-group-by"
 
 const instrumentDatasetSearchSchema = z.object({
   ...collectionBrowseSearchFields,
@@ -92,7 +93,11 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
     const instrument = (await parentMatchPromise).loaderData
     if (!instrument?.isInstrument || !instrument.instrumentMfid) return
 
-    const browse = resolveCollectionBrowse(deps, instrumentDatasetBrowseOptions)
+    const browse = resolveCollectionBrowse(
+      deps,
+      instrumentDatasetBrowseOptions,
+      instrument.dataGroupBy?.datasets
+    )
     if (browse.view === "grouped" && browse.selection.kind === "all") return
     const baseFilters = {
       createdFrom: deps.createdFrom,
@@ -145,7 +150,14 @@ function InstrumentDatasetsPage() {
   const instrument = instrumentRoute.useLoaderData()
   const scope = useWorkspaceScope()
   const instrumentMfid = instrument?.instrumentMfid ?? ""
-  const browse = resolveCollectionBrowse(search, instrumentDatasetBrowseOptions)
+  const dataGroupBy = useDataGroupBy(
+    instrument?.isInstrument ? instrument.dataGroupBy : undefined
+  )
+  const browse = resolveCollectionBrowse(
+    search,
+    instrumentDatasetBrowseOptions,
+    dataGroupBy?.datasets
+  )
   const baseFilters = {
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
@@ -268,7 +280,7 @@ function InstrumentDatasetsPage() {
     updateBrowse({
       ...collectionBrowseSearchState({ kind: "all" }),
       groupBy: field,
-      view: field ? "grouped" : undefined,
+      view: field ? "grouped" : "list",
     })
   }
 

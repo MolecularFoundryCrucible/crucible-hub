@@ -167,7 +167,7 @@ function PreferencesPage() {
                   />
                 </PreferenceField>
                 <PreferenceField
-                  description="Samples open grouped by this field instead of as a flat list."
+                  description="Sample lists on the Data page and in projects open grouped by this field instead of as a flat list."
                   id="preferred-sample-grouping"
                   title="Group samples by"
                 >
@@ -181,7 +181,7 @@ function PreferencesPage() {
                   />
                 </PreferenceField>
                 <PreferenceField
-                  description="Datasets open grouped by this field instead of as a flat list."
+                  description="Dataset lists on the Data page, in projects, and on instruments open grouped by this field. Lists that do not offer the field stay flat."
                   id="preferred-dataset-grouping"
                   title="Group datasets by"
                 >

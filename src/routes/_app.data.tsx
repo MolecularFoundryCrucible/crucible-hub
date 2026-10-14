@@ -96,8 +96,10 @@ import {
 } from "@/data/crucible/facets.queries"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { RefreshButton } from "@/components/crucible/refresh-button"
-import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.queries"
-import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import {
+  loadDataGroupBy,
+  useDataGroupBy,
+} from "@/features/preferences/data-group-by"
 
 export const Route = createFileRoute("/_app/data")({
   head: () => ({ meta: [{ title: "Data | Crucible Hub" }] }),
@@ -140,13 +142,11 @@ export const Route = createFileRoute("/_app/data")({
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
-    const groupBy = source.accountPreferencesEnabled
-      ? (
-          await context.queryClient
-            .ensureQueryData(accountPreferencesQueryOptions(source.scope))
-            .catch(() => undefined)
-        )?.preferences.hub?.data_group_by
-      : undefined
+    const groupBy = await loadDataGroupBy(
+      context.queryClient,
+      source.scope,
+      source.accountPreferencesEnabled
+    )
     const resolution = resolveDataFilters(deps)
     if (!resolution.valid) return { dataGroupBy: groupBy }
     const baseFilters = collectionQueryFilters(resolution.filters)
@@ -303,9 +303,7 @@ function DataResults({
   const showSamples = kind === "samples"
   const showDatasets = kind === "datasets"
   const collectionFilters = collectionQueryFilters(filters)
-  const { loaded, preferences } = useAccountPreferences()
-  const loadedGroupBy = Route.useLoaderData()?.dataGroupBy
-  const groupBy = loaded ? preferences.hub?.data_group_by : loadedGroupBy
+  const groupBy = useDataGroupBy(Route.useLoaderData()?.dataGroupBy)
   const sampleBrowse =
     kind === "samples"
       ? resolveCollectionBrowse(

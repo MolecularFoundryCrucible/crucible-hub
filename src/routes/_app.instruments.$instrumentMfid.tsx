@@ -33,6 +33,7 @@ import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import { hubPageTitle } from "@/lib/page-title"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
+import { loadDataGroupBy } from "@/features/preferences/data-group-by"
 
 export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
   staleTime: Infinity,
@@ -40,13 +41,21 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const resource = await context.queryClient.ensureQueryData(
-      resourceSummaryQueryOptions(source.scope, params.instrumentMfid)
-    )
+    const [resource, dataGroupBy] = await Promise.all([
+      context.queryClient.ensureQueryData(
+        resourceSummaryQueryOptions(source.scope, params.instrumentMfid)
+      ),
+      loadDataGroupBy(
+        context.queryClient,
+        source.scope,
+        source.accountPreferencesEnabled
+      ),
+    ])
     if (!resource || resource.kind !== "instrument") {
       return { isInstrument: false, scope: source.scope }
     }
     return {
+      dataGroupBy,
       instrumentMfid: resource.unique_id,
       instrumentName: resourceDisplayName("instrument", resource.name, {
         identifier: resource.instrument_id,

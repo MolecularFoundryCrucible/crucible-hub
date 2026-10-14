@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- The default grouping preference now also applies to sample and dataset lists inside projects and to an instrument's datasets, not only the Data page.
+
 ## 1.2.1 - 2026-10-14
 
 - Fixed saving preferences when the API's ETag arrives in weak form (`W/"p1"`), which made every save fail, and made toast titles and messages selectable so error references can be copied.

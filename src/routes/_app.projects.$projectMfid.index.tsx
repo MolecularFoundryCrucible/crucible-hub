@@ -32,6 +32,7 @@ import {
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import { facetFilterSearchFields } from "@/data/crucible/facet-filter-search"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
+import { useDataGroupBy } from "@/features/preferences/data-group-by"
 
 const filterSearchValue = z.string().max(255).optional().catch("")
 const selectedFacetSchema = z
@@ -100,7 +101,11 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     const resolution = resolveProjectDataFilters(deps, deps.kind)
     if (!resolution.valid) return
     if (deps.kind === "samples") {
-      const browse = resolveCollectionBrowse(deps, projectSampleBrowseOptions)
+      const browse = resolveCollectionBrowse(
+        deps,
+        projectSampleBrowseOptions,
+        project.dataGroupBy?.samples
+      )
       if (browse.view === "grouped" && browse.selection.kind === "all") return
       const filters =
         browse.view === "grouped"
@@ -121,7 +126,11 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
       return
     }
 
-    const browse = resolveCollectionBrowse(deps, projectDatasetBrowseOptions)
+    const browse = resolveCollectionBrowse(
+      deps,
+      projectDatasetBrowseOptions,
+      project.dataGroupBy?.datasets
+    )
     if (browse.view === "grouped" && browse.selection.kind === "all") return
     const filters =
       browse.view === "grouped"
@@ -159,6 +168,7 @@ function ProjectDataPage() {
   const search = Route.useSearch()
   const { projectMfid } = Route.useParams()
   const project = projectRoute.useLoaderData()
+  const dataGroupBy = useDataGroupBy(project?.dataGroupBy)
   const navigation = useResourcePreviewNavigation({
     kind: "project-data",
     preview: search.preview,
@@ -197,6 +207,7 @@ function ProjectDataPage() {
     <ResourcePreviewContext.Provider value={navigation}>
       <ProjectDataCollection
         browseSearch={search}
+        dataGroupBy={dataGroupBy}
         cursor={kind === "samples" ? search.sampleCursor : search.datasetCursor}
         filterResolution={filterResolution}
         filterValues={filterValues}

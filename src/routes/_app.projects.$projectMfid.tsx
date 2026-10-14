@@ -33,6 +33,7 @@ import { projectMembershipActions } from "@/features/project-membership/project-
 import { hubPageTitle } from "@/lib/page-title"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
+import { loadDataGroupBy } from "@/features/preferences/data-group-by"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid")({
   staleTime: Infinity,
@@ -40,10 +41,18 @@ export const Route = createFileRoute("/_app/projects/$projectMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const project = await context.queryClient.ensureQueryData(
-      projectQueryOptions(source.scope, params.projectMfid)
-    )
+    const [project, dataGroupBy] = await Promise.all([
+      context.queryClient.ensureQueryData(
+        projectQueryOptions(source.scope, params.projectMfid)
+      ),
+      loadDataGroupBy(
+        context.queryClient,
+        source.scope,
+        source.accountPreferencesEnabled
+      ),
+    ])
     return {
+      dataGroupBy,
       isProject: Boolean(project),
       projectMfid: project?.unique_id ?? params.projectMfid,
       projectName: project

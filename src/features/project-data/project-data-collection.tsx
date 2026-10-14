@@ -75,11 +75,13 @@ import type {
   ProjectDataFilterSearch,
   ProjectDataCollectionFilters,
 } from "./project-data-filter-state"
+import type { DataGroupBy } from "@/features/preferences/data-group-by"
 
 export type ProjectDataKind = "datasets" | "samples"
 
 export function ProjectDataCollection({
   browseSearch,
+  dataGroupBy,
   cursor,
   filterResolution,
   filterValues,
@@ -89,6 +91,7 @@ export function ProjectDataCollection({
 }: {
   browseSearch: CollectionBrowseSearch
   cursor: string | undefined
+  dataGroupBy: DataGroupBy | undefined
   filterResolution: ProjectDataFilterResolution
   filterValues: ProjectDataFilterSearch
   kind: ProjectDataKind
@@ -98,11 +101,19 @@ export function ProjectDataCollection({
   const navigate = useNavigate({ from: "/projects/$projectMfid" })
   const sampleBrowse =
     kind === "samples"
-      ? resolveCollectionBrowse(browseSearch, projectSampleBrowseOptions)
+      ? resolveCollectionBrowse(
+          browseSearch,
+          projectSampleBrowseOptions,
+          dataGroupBy?.samples
+        )
       : undefined
   const datasetBrowse =
     kind === "datasets"
-      ? resolveCollectionBrowse(browseSearch, projectDatasetBrowseOptions)
+      ? resolveCollectionBrowse(
+          browseSearch,
+          projectDatasetBrowseOptions,
+          dataGroupBy?.datasets
+        )
       : undefined
   const onSort = (sort: ResourceSort, direction: SortDirection) => {
     const ordering = collectionOrderingSearchState(sort, direction)
@@ -246,7 +257,7 @@ function ProjectBrowseFrame({
       ...collectionBrowseSearchState({ kind: "all" }),
       ...clearCollectionGroupFilterSearch(field ?? browseField),
       groupBy: field,
-      view: field ? "grouped" : undefined,
+      view: field ? "grouped" : "list",
     })
   }
 
