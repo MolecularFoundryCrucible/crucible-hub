@@ -263,9 +263,7 @@ export function InstrumentRegistrationForm({
                   type="submit"
                 >
                   <span className="inline-grid min-w-28 place-items-center">
-                    {submitting
-                      ? "Registering instrument"
-                      : "Register instrument"}
+                    {submitting ? "Registering" : "Register"}
                   </span>
                 </Button>
               )}

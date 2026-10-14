@@ -257,7 +257,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                   type="submit"
                 >
                   <span className="inline-grid min-w-28 place-items-center">
-                    {submitting ? "Creating project" : "Create project"}
+                    {submitting ? "Creating" : "Create"}
                   </span>
                 </Button>
               )}

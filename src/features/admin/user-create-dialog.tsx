@@ -268,7 +268,7 @@ export function UserCreateDialog({
                 ) : (
                   <CreateResourceIcon data-icon="inline-start" />
                 )}
-                Create user
+                Create
               </Button>
             </DialogFooter>
           )}

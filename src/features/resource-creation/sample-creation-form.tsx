@@ -382,12 +382,12 @@ export function SampleCreationForm({
                 {createdSample
                   ? relationships.failures.length
                     ? "Retry missing relationships"
-                    : "Sample created"
+                    : "Created"
                   : uncertainOutcome
-                    ? "Create sample"
+                    ? "Create"
                     : busy
-                      ? "Creating sample"
-                      : "Create sample"}
+                      ? "Creating"
+                      : "Create"}
               </Button>
             </CardFooter>
           </Card>

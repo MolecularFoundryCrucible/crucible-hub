@@ -187,7 +187,7 @@ export function ServiceAccountCreateDialog({
                 ) : (
                   <CreateResourceIcon data-icon="inline-start" />
                 )}
-                Create service account
+                Create
               </Button>
             </DialogFooter>
           )}

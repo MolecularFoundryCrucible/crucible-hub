@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- Creation pages and dialogs now label their submit button Create (Register for instruments), since the page or dialog title already names the record.
+
 - The footer API status now refreshes every minute while the tab is visible and shows a check or cross instead of status words. The status check uses the public readiness probe without the signed-in session, and its background polling does not count as activity, so the idle sign-out still applies.
 
 - Fixed the default grouping preference applying only on the Data page; sample and dataset lists inside projects and an instrument's datasets now open with it too.

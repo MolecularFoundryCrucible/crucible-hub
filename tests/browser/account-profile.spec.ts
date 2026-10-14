@@ -113,7 +113,7 @@ test("validates service account usernames before creating", async ({
   await createLink.click()
   const dialog = page.getByRole("dialog", { name: "Create service account" })
   const username = dialog.getByRole("textbox", { name: "Username" })
-  const create = dialog.getByRole("button", { name: "Create service account" })
+  const create = dialog.getByRole("button", { name: "Create", exact: true })
 
   await username.fill("a".repeat(30))
   await expect(username).toHaveValue("a".repeat(24))

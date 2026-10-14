@@ -463,12 +463,12 @@ export function DatasetCreationForm({
                 {createdDataset
                   ? incompleteStages
                     ? "Retry missing stages"
-                    : "Dataset created"
+                    : "Created"
                   : uncertainOutcome
-                    ? "Create dataset"
+                    ? "Create"
                     : isSubmitting || createMutation.isPending
-                      ? "Creating dataset"
-                      : "Create dataset"}
+                      ? "Creating"
+                      : "Create"}
               </Button>
             </CardFooter>
           </Card>
