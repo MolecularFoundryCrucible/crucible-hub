@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+## 1.2.0 - 2026-10-14
+
 - Recently viewed resources are now stored on the Crucible account, so the sidebar and Home list survives reloads and follows people across devices; Preferences can turn recording off or clear the history. It appears with the other account features once `HUB_ACCOUNT_PREFERENCES_ENABLED` is set.
 
 - Added a link to the Crucible community Discord server in the footer and the GitHub mark to its Issues link, removed the Preferences entry from the sidebar (it stays in the account menu), and the footer now shows the release as `v1.1.0` without a label.
