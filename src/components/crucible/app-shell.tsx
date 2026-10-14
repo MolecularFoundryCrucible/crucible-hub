@@ -4,10 +4,6 @@ import { Link, useRouterState } from "@tanstack/react-router"
 import { AppFooter } from "@/components/crucible/app-footer"
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
-  DiscordIcon,
-  discordInviteUrl,
-} from "@/components/crucible/discord-icon"
-import {
   AdministratorViewProvider,
   AdministratorViewStatus,
   useAdministratorViewControl,
@@ -846,42 +842,11 @@ function SidebarUtilities({
 }) {
   const { isMobile, state, toggleSidebar } = useSidebar()
   const { setTheme, theme } = useThemePreference()
-  const preferencesEnabled = useAccountPreferencesEnabled()
   const expanded = isMobile || state === "expanded"
 
   return (
     <SidebarFooter>
       <SidebarMenu>
-        {preferencesEnabled ? (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={pathname === "/preferences"}
-              tooltip="Preferences"
-              render={
-                <Link
-                  aria-current={
-                    pathname === "/preferences" ? "page" : undefined
-                  }
-                  to="/preferences"
-                />
-              }
-            >
-              <PreferencesIcon aria-hidden="true" />
-              <span>Preferences</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ) : null}
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            tooltip="Discord"
-            render={
-              <a href={discordInviteUrl} rel="noreferrer" target="_blank" />
-            }
-          >
-            <DiscordIcon />
-            <span>Discord</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
         <SidebarMenuItem>
           <KeyboardShortcuts
             pathname={pathname}
