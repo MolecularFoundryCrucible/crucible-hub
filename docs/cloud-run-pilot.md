@@ -1,10 +1,10 @@
 # Cloud Run pilot
 
-Status: Pilot active since October 13, 2026 (v1.0.0), with uploads and ingestion enabled on October 14, 2026
+Status: Pilot active since October 13, 2026 (v1.0.0), with uploads and ingestion enabled and the shared Postgres session store in use since October 14, 2026 (v1.1.0)
 
 The Hub's public address is `https://crucible.lbl.gov/hub/`. The separate `crucible-hub` Cloud Run service in `mf-crucible/us-central1` runs with 2 vCPU, 1 GiB, manual scaling fixed at one instance, request-based billing, session affinity, and `internal` ingress, with `HUB_UPLOADS_ENABLED` and `HUB_UPLOAD_INGESTION_ENABLED` set. It is reached through the `crucible-web` proxy. The Hub uses API-owned ORCID sign-in, server-held API tokens, and an opaque `HttpOnly`, `Secure` browser session cookie. API-key mode is local development only.
 
-The pilot uses `HUB_AUTH_SESSION_MODE=single-instance` with process-local sessions. Cloud Run can [briefly exceed a configured maximum](https://docs.cloud.google.com/run/docs/configuring/max-instances), and [affinity is best effort](https://docs.cloud.google.com/run/docs/configuring/session-affinity). A deployment, replacement, or routing change can sign users out. Keep all traffic on one revision and do not promise session continuity until the service runs on the [shared session store](#shared-session-store). The [pilot risk review](cloud-run-pilot-risk-review.md) records remaining ingress and transport limitations.
+Since October 14, 2026 the service runs `HUB_AUTH_SESSION_MODE=postgres`, keeping sessions in the Hub-owned `crucible_hub` database, so deployments and restarts keep people signed in; a session survived a forced revision restart (`crucible-hub-00016-b9z`) during verification. It still runs one instance until the API ingress reinforcement allows more. The [pilot risk review](cloud-run-pilot-risk-review.md) records remaining ingress and transport limitations.
 
 ## Pause and resume the pilot
 
