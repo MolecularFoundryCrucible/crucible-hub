@@ -23,10 +23,10 @@ export function PageHeader({
         "gap-4 border-b pb-6",
         actionLayout === "inline"
           ? "page-header-inline grid items-end"
-          : "flex flex-col lg:flex-row lg:items-end lg:justify-between"
+          : "flex flex-wrap items-end justify-between"
       )}
     >
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 basis-56">
         <div className="flex min-w-0 items-start gap-2">
           {icon}
           <div className="min-w-0">
@@ -51,14 +51,7 @@ export function PageHeader({
         ) : null}
       </div>
       {actions ? (
-        <div
-          className={cn(
-            "shrink-0",
-            actionLayout === "inline" ? "self-end" : "self-start lg:self-end"
-          )}
-        >
-          {actions}
-        </div>
+        <div className="ml-auto shrink-0 self-end">{actions}</div>
       ) : null}
     </header>
   )

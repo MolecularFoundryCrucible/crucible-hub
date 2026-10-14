@@ -227,15 +227,15 @@ function ProjectIdentity({
           <div className="content-grid-identity-qr">
             <MfidQrCode value={project.unique_id} />
           </div>
-          <dl className="content-grid-identity-timestamps grid gap-4 sm:grid-cols-2">
-            <div>
+          <dl className="content-grid-identity-timestamps grid grid-cols-2 gap-4">
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Created</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="created" />
                 <LocalDateTime fallback="-" value={project.creation_time} />
               </dd>
             </div>
-            <div>
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Updated</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="updated" />

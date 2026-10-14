@@ -472,7 +472,7 @@ export function DatasetCreationForm({
                 uncertainOutcome ||
                 (Boolean(createdDataset) && !incompleteStages)
               }
-              className="min-w-52"
+              className="sm:min-w-52"
               form={formId}
               type="submit"
             >

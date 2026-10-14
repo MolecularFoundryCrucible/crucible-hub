@@ -234,7 +234,7 @@ function TransferProgress({
         max={Math.max(max, 1)}
         value={value}
       />
-      <span className="w-44 shrink-0 text-right text-supporting whitespace-nowrap text-muted-foreground tabular-nums">
+      <span className="shrink-0 text-right text-supporting whitespace-nowrap text-muted-foreground tabular-nums sm:w-44">
         {detail ?? ""}
       </span>
     </div>
@@ -448,44 +448,46 @@ const UploadFileRow = memo(function UploadFileRowItem({
         <RowIcon invalid={issues.length > 0} item={item} />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex min-h-8 items-center gap-2">
-          {editing ? (
-            <Input
-              aria-invalid={issues.length > 0 || undefined}
-              aria-label={`File name for ${item.file.name}`}
-              autoFocus={renaming}
-              className="h-8 min-w-0 flex-1"
-              maxLength={1024}
-              onBlur={() => onRenameChange(item.id, false)}
-              onFocus={() => onRenameChange(item.id, true)}
-              onChange={(event) => onRename(item.id, event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === "Escape") {
-                  onRenameChange(item.id, false)
-                }
-              }}
-              value={item.filename}
-            />
-          ) : (
-            <span
-              className="min-w-0 truncate font-heading text-label"
-              title={item.filename}
-            >
-              {item.filename}
-            </span>
-          )}
-          {!locked && !editing ? (
-            <Button
-              aria-label={`Rename ${item.filename}`}
-              className="shrink-0"
-              onClick={() => onRenameChange(item.id, true)}
-              size="icon-xs"
-              type="button"
-              variant="ghost"
-            >
-              <RenameUploadIcon aria-hidden="true" />
-            </Button>
-          ) : null}
+        <div className="flex min-h-8 flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-1 basis-36 items-center gap-1.5">
+            {editing ? (
+              <Input
+                aria-invalid={issues.length > 0 || undefined}
+                aria-label={`File name for ${item.file.name}`}
+                autoFocus={renaming}
+                className="h-8 min-w-0 flex-1"
+                maxLength={1024}
+                onBlur={() => onRenameChange(item.id, false)}
+                onFocus={() => onRenameChange(item.id, true)}
+                onChange={(event) => onRename(item.id, event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === "Escape") {
+                    onRenameChange(item.id, false)
+                  }
+                }}
+                value={item.filename}
+              />
+            ) : (
+              <span
+                className="min-w-0 truncate font-heading text-label"
+                title={item.filename}
+              >
+                {item.filename}
+              </span>
+            )}
+            {!locked && !editing ? (
+              <Button
+                aria-label={`Rename ${item.filename}`}
+                className="shrink-0"
+                onClick={() => onRenameChange(item.id, true)}
+                size="icon-xs"
+                type="button"
+                variant="ghost"
+              >
+                <RenameUploadIcon aria-hidden="true" />
+              </Button>
+            ) : null}
+          </div>
           <span className="ml-auto flex shrink-0 items-center gap-2">
             {ingestionEnabled ? (
               locked ? (
@@ -494,7 +496,7 @@ const UploadFileRow = memo(function UploadFileRowItem({
                 </span>
               ) : (
                 <IngestorSelect
-                  className="w-40"
+                  className="w-36 sm:w-40"
                   classes={classes}
                   label={`Ingestor for ${item.filename}`}
                   onChange={(choice) => onSetIngestor(item.id, choice)}

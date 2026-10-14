@@ -9,7 +9,10 @@ import {
   getWorkspaceUserProjects,
 } from "./projects.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
-import { collectionScopedPreviousData } from "./pagination"
+import {
+  collectionScopedPreviousData,
+  identityScopedPreviousData,
+} from "./pagination"
 import { unwrapHubResult } from "./result"
 import type {
   WorkspaceProject,
@@ -43,6 +46,11 @@ export function userProjectsQueryOptions(
           signal,
         })
       ),
+    placeholderData: (previousData, previousQuery) =>
+      identityScopedPreviousData(scope, previousData, previousQuery) !==
+        undefined && previousQuery?.queryKey[6] === userRef
+        ? previousData
+        : undefined,
   })
 }
 

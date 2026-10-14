@@ -114,12 +114,14 @@ export function AccountSetupForm({
               />
             )}
           </form.Field>
-          <form.Field name="first_name">
-            {(field) => <ProfileField field={field} label="First name" />}
-          </form.Field>
-          <form.Field name="last_name">
-            {(field) => <ProfileField field={field} label="Last name" />}
-          </form.Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <form.Field name="first_name">
+              {(field) => <ProfileField field={field} label="First name" />}
+            </form.Field>
+            <form.Field name="last_name">
+              {(field) => <ProfileField field={field} label="Last name" />}
+            </form.Field>
+          </div>
           <form.Subscribe selector={profileNameMissing}>
             {(missing) => (missing ? <ProfileNameHint /> : null)}
           </form.Subscribe>

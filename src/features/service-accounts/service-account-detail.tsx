@@ -227,16 +227,20 @@ function ServiceAccountIdentityCard({
     return (
       <>
         <Card>
-          <CardHeader>
+          <CardHeader actionLayout="inline">
             <CardTitle>Identity</CardTitle>
             <CardAction>
               <div className="flex flex-wrap justify-end gap-2">
                 {canChangePlatformRole ? (
-                  <Button onClick={openRoleDialog} variant="outline">
+                  <Button onClick={openRoleDialog} size="sm" variant="outline">
                     Change role
                   </Button>
                 ) : null}
-                <Button onClick={() => setEditing(true)} variant="outline">
+                <Button
+                  onClick={() => setEditing(true)}
+                  size="sm"
+                  variant="outline"
+                >
                   <EditResourceIcon
                     aria-hidden="true"
                     data-icon="inline-start"
@@ -254,14 +258,14 @@ function ServiceAccountIdentityCard({
               </p>
             ) : null}
             <PersonIdentity person={account} presentation="avatar" size="lg" />
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <div>
+            <dl className="grid grid-cols-2 gap-4">
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">Username</dt>
                 <dd className="mt-1 text-body break-words">
                   {formatUsername(account.username, "raw")}
                 </dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Platform role
                 </dt>
@@ -269,7 +273,7 @@ function ServiceAccountIdentityCard({
                   <PlatformRoleBadge role={account.platform_role} />
                 </dd>
               </div>
-              <div className="sm:col-span-2">
+              <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID
                 </dt>
@@ -311,26 +315,20 @@ function ServiceAccountIdentityCard({
           >
             <fieldset disabled={submitting}>
               <FieldGroup>
-                {(["first_name", "last_name", "username"] as const).map(
-                  (name) => (
+                <div className="grid grid-cols-2 gap-4">
+                  {(["first_name", "last_name"] as const).map((name) => (
                     <form.Field key={name} name={name}>
                       {(field) => {
                         const invalid = shouldShowFieldError(field)
                         return (
                           <Field data-invalid={invalid}>
-                            <FieldLabel
-                              htmlFor={field.name}
-                              optional={name !== "username"}
-                              required={name === "username"}
-                            >
+                            <FieldLabel htmlFor={field.name} optional>
                               {profileFieldLabel(name)}
                             </FieldLabel>
                             <Input
                               aria-invalid={invalid || undefined}
                               id={field.name}
-                              maxLength={
-                                name === "username" ? USERNAME_MAX_LENGTH : 255
-                              }
+                              maxLength={255}
                               onBlur={field.handleBlur}
                               onChange={(event) =>
                                 field.handleChange(event.target.value)
@@ -344,8 +342,31 @@ function ServiceAccountIdentityCard({
                         )
                       }}
                     </form.Field>
-                  )
-                )}
+                  ))}
+                </div>
+                <form.Field name="username">
+                  {(field) => {
+                    const invalid = shouldShowFieldError(field)
+                    return (
+                      <Field data-invalid={invalid}>
+                        <FieldLabel htmlFor={field.name} required>
+                          {profileFieldLabel("username")}
+                        </FieldLabel>
+                        <Input
+                          aria-invalid={invalid || undefined}
+                          id={field.name}
+                          maxLength={USERNAME_MAX_LENGTH}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                          value={field.state.value}
+                        />
+                        <FieldError errors={fieldErrors(field, { invalid })} />
+                      </Field>
+                    )
+                  }}
+                </form.Field>
               </FieldGroup>
             </fieldset>
             {error ? (
@@ -421,7 +442,11 @@ function ServiceAccountCredentialCard({
     <>
       <ApiCredentialCard
         action={
-          <Button onClick={() => setConfirming(true)} variant="destructive">
+          <Button
+            onClick={() => setConfirming(true)}
+            size="sm"
+            variant="destructive"
+          >
             <RotateCredentialIcon aria-hidden="true" data-icon="inline-start" />
             Rotate key
           </Button>

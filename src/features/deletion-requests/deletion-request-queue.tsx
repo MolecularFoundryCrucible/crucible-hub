@@ -1071,7 +1071,7 @@ function DeletionRequestDialog({
               name={request.resource_name?.trim() || "Untitled resource"}
               projectId={request.project_id}
             />
-            <dl className="grid gap-4 text-body sm:grid-cols-2">
+            <dl className="grid grid-cols-2 gap-4 text-body">
               <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Requested by

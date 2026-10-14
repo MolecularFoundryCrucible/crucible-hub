@@ -268,7 +268,7 @@ export function ProjectMembershipCard({
                     canChangeRole ? (
                       <NativeSelect
                         aria-label={`Role for ${memberName(member)}`}
-                        className="w-full sm:w-fit"
+                        className="w-fit"
                         disabled={mutationPending}
                         onChange={(event) => {
                           if (isGrantRole(event.target.value)) {
@@ -315,7 +315,6 @@ export function ProjectMembershipCard({
             {canManage ? (
               <Button
                 disabled={mutationPending}
-                className="max-sm:w-full"
                 onClick={() => setAddMemberOpen(true)}
                 type="button"
               >

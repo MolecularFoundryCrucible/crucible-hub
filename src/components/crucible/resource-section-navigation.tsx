@@ -16,7 +16,7 @@ export function ResourceSectionNavigation({
   children: React.ReactNode
 }) {
   return (
-    <div className="-mt-(--spacing-resource-navigation-offset) flex min-w-0 flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <div className="-mt-(--spacing-resource-navigation-offset) flex min-w-0 flex-wrap items-end justify-between gap-x-3 gap-y-2">
       <nav
         aria-label={label}
         className="flex max-w-full min-w-0 gap-0 overflow-x-auto sm:gap-1"
@@ -24,7 +24,7 @@ export function ResourceSectionNavigation({
         {children}
       </nav>
       {actions ? (
-        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 max-sm:w-full sm:shrink-0 max-sm:[&>*]:justify-end">
+        <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
           {actions}
         </div>
       ) : null}

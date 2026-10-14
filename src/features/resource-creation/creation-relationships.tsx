@@ -134,18 +134,18 @@ export function CreationRelationshipsField({
         <ul aria-label="Relationships to add" className="flex flex-col gap-2">
           {value.map((draft) => (
             <li
-              className="flex min-w-0 flex-col gap-3 rounded-lg border p-3 sm:flex-row"
+              className="flex min-w-0 items-center justify-between gap-2 rounded-lg border p-3 sm:gap-3"
               key={draft.target.unique_id}
             >
               <ResourceIdentity
-                className="flex-1"
+                className="min-w-0 flex-1"
                 context={draft.target.context}
                 kind={draft.target.kind}
                 mfid={draft.target.unique_id}
                 name={draft.target.name}
                 projectId={draft.target.projectId}
               />
-              <div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
+              <div className="flex shrink-0 items-center gap-2">
                 <Badge variant="outline">
                   {relationshipLabel(resourceKind, draft.relationship)}
                 </Badge>

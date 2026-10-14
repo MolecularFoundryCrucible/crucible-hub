@@ -139,8 +139,8 @@ function InstrumentSummary({
         ) : null}
       </CardHeader>
       <CardContent>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="min-w-0 sm:col-span-2">
+        <dl className="grid grid-cols-2 gap-4">
+          <div className="col-span-2 min-w-0">
             <dt className="text-label text-muted-foreground">Description</dt>
             <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
               <SummaryFieldIcon type="description" />
@@ -237,15 +237,15 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
           <div className="content-grid-identity-qr">
             <MfidQrCode value={instrument.unique_id} />
           </div>
-          <dl className="content-grid-identity-timestamps grid gap-4 sm:grid-cols-2">
-            <div>
+          <dl className="content-grid-identity-timestamps grid grid-cols-2 gap-4">
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Created</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="created" />
                 <LocalDateTime fallback="-" value={instrument.creation_time} />
               </dd>
             </div>
-            <div>
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Updated</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="updated" />

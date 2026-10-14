@@ -4,6 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
+import {
+  PanelState,
+  PanelUpdateError,
+  ResourceListPending,
+} from "@/components/crucible/collection-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import {
@@ -375,14 +380,14 @@ function UserProfileCard({
               </p>
             ) : null}
             <PersonIdentity person={user} presentation="avatar" size="lg" />
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <div>
+            <dl className="grid grid-cols-2 gap-4">
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">Username</dt>
-                <dd className="mt-1 font-mono text-body">
+                <dd className="mt-1 font-mono text-body break-words">
                   {formatUsername(user.username, "raw")}
                 </dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Platform role
                 </dt>
@@ -396,15 +401,15 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div>
+              <div className="col-span-2 min-w-0 sm:col-span-1">
                 <dt className="text-label text-muted-foreground">Email</dt>
-                <dd className="mt-1 text-body">
+                <dd className="mt-1 text-body break-words">
                   {user.email || (
                     <span className="text-muted-foreground">None</span>
                   )}
                 </dd>
               </div>
-              <div>
+              <div className="col-span-2 min-w-0 sm:col-span-1">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID / ORCID
                 </dt>
@@ -511,8 +516,8 @@ function UserProfileCard({
                 </form.Field>
               </FieldGroup>
             </fieldset>
-            <dl className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2">
-              <div>
+            <dl className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Platform role
                 </dt>
@@ -526,7 +531,7 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div>
+              <div className="col-span-2 min-w-0 sm:col-span-1">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID / ORCID
                 </dt>
@@ -758,137 +763,160 @@ function UserProjectsSection({
   }
 
   return (
-    <Card aria-busy={projectsQuery.isPending}>
+    <Card aria-busy={projectsQuery.isFetching}>
       <CardHeader actionLayout="inline">
         <CardTitle className="flex items-center gap-2">
           <ProjectIcon aria-hidden="true" />
           Projects
         </CardTitle>
-        <CardAction>
-          <Badge variant="outline">{projects.length}</Badge>
-        </CardAction>
+        {projectsQuery.data !== undefined ? (
+          <CardAction>
+            <Badge variant="outline">{projects.length}</Badge>
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="px-0">
-        {projects.length > 0 ? (
-          <Table
-            aria-label="User projects"
-            className="resource-directory-table resource-directory-project-table table-fixed"
-          >
-            <colgroup>
-              <col className="resource-directory-name-column" />
-              <col className="resource-directory-person-column" />
-              <col className="resource-directory-role-column hidden xl:table-column" />
-              <col className="resource-directory-date-column hidden xl:table-column" />
-              <col className="resource-directory-date-column" />
-              <col className="resource-directory-action-column" />
-            </colgroup>
-            <TableHeader>
-              <TableRow>
-                <SortableTableHead
-                  active={sortColumn === "name"}
-                  direction={sortDirection}
-                  field="name"
-                  label="Project"
-                  onChange={handleSortChange}
-                  preferredDirection="asc"
+        {projectsQuery.isPending ? (
+          <ResourceListPending label="user projects" />
+        ) : projectsQuery.isError && projects.length === 0 ? (
+          <div className="px-6 py-4">
+            <PanelState
+              description="Try again. User details remain available."
+              retry={() => void projectsQuery.refetch()}
+              role="alert"
+              title="Projects could not be loaded"
+            />
+          </div>
+        ) : projects.length > 0 ? (
+          <>
+            {projectsQuery.isError ? (
+              <div className="border-b px-6 py-4">
+                <PanelUpdateError
+                  description="Projects could not be refreshed. Existing rows remain available."
+                  retry={() => void projectsQuery.refetch()}
                 />
-                <TableHead>Lead</TableHead>
-                <TableHead className="hidden xl:table-cell">Role</TableHead>
-                <SortableTableHead
-                  active={sortColumn === "created"}
-                  className="hidden xl:table-cell"
-                  direction={sortDirection}
-                  field="created"
-                  kind="date"
-                  label="Created"
-                  onChange={handleSortChange}
-                  preferredDirection="desc"
-                />
-                <SortableTableHead
-                  active={sortColumn === "updated"}
-                  direction={sortDirection}
-                  field="updated"
-                  kind="date"
-                  label="Updated"
-                  onChange={handleSortChange}
-                  preferredDirection="desc"
-                />
-                <TableHead kind="action">
-                  <span className="sr-only">Open</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {projects.map((project) => {
-                const complete = "status" in project
-                const title = project.title?.trim()
-                const name = resourceDisplayName("project", project.title, {
-                  identifier: project.project_id,
-                  mfid: project.unique_id,
-                })
-                const effectiveRole =
-                  project.role ??
-                  (project.lead?.unique_id === user.unique_id ||
-                  project.project_lead_orcid === user.unique_id
-                    ? "owner"
-                    : null)
-                return (
-                  <TableRow key={project.unique_id}>
-                    <ResourceDirectoryNameCell
-                      identifier={title ? project.project_id : null}
-                      kind="project"
-                      mfid={project.unique_id}
-                      name={name}
-                    />
-                    <TableCell
-                      className="resource-directory-person"
-                      data-label="Lead"
-                    >
-                      {complete && "lead" in project && project.lead ? (
-                        <PersonLink
-                          nameStyle="abbreviated"
-                          person={project.lead}
-                          presentation="collection"
-                        />
-                      ) : (
-                        <span aria-label="Not available">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell
-                      className="hidden xl:table-cell"
-                      data-label="Role"
-                    >
-                      {effectiveRole ? (
-                        <ProjectRoleBadge role={effectiveRole} />
-                      ) : (
-                        <span aria-label="Not available">-</span>
-                      )}
-                    </TableCell>
-                    <ResourceCreatedCell
-                      className="hidden xl:table-cell"
-                      value={
-                        complete && "creation_time" in project
-                          ? project.creation_time
-                          : undefined
-                      }
-                    />
-                    <ResourceUpdatedCell
-                      value={
-                        complete && "modification_time" in project
-                          ? project.modification_time
-                          : undefined
-                      }
-                    />
-                    <ResourceOpenCell
-                      kind="project"
-                      mfid={project.unique_id}
-                      name={name}
-                    />
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+              </div>
+            ) : null}
+            <Table
+              aria-label="User projects"
+              className="resource-directory-table resource-directory-project-table table-fixed"
+            >
+              <colgroup>
+                <col className="resource-directory-name-column" />
+                <col className="resource-directory-person-column" />
+                <col className="resource-directory-role-column hidden xl:table-column" />
+                <col className="resource-directory-date-column hidden xl:table-column" />
+                <col className="resource-directory-date-column" />
+                <col className="resource-directory-action-column" />
+              </colgroup>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHead
+                    active={sortColumn === "name"}
+                    direction={sortDirection}
+                    field="name"
+                    label="Project"
+                    onChange={handleSortChange}
+                    preferredDirection="asc"
+                  />
+                  <TableHead>Lead</TableHead>
+                  <TableHead className="hidden xl:table-cell">Role</TableHead>
+                  <SortableTableHead
+                    active={sortColumn === "created"}
+                    className="hidden xl:table-cell"
+                    direction={sortDirection}
+                    field="created"
+                    kind="date"
+                    label="Created"
+                    onChange={handleSortChange}
+                    preferredDirection="desc"
+                  />
+                  <SortableTableHead
+                    active={sortColumn === "updated"}
+                    direction={sortDirection}
+                    field="updated"
+                    kind="date"
+                    label="Updated"
+                    onChange={handleSortChange}
+                    preferredDirection="desc"
+                  />
+                  <TableHead kind="action">
+                    <span className="sr-only">Open</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((project) => {
+                  const complete = "status" in project
+                  const title = project.title?.trim()
+                  const name = resourceDisplayName("project", project.title, {
+                    identifier: project.project_id,
+                    mfid: project.unique_id,
+                  })
+                  const effectiveRole =
+                    project.role ??
+                    (project.lead?.unique_id === user.unique_id ||
+                    project.project_lead_orcid === user.unique_id
+                      ? "owner"
+                      : null)
+                  return (
+                    <TableRow key={project.unique_id}>
+                      <ResourceDirectoryNameCell
+                        identifier={title ? project.project_id : null}
+                        kind="project"
+                        mfid={project.unique_id}
+                        name={name}
+                      />
+                      <TableCell
+                        className="resource-directory-person"
+                        data-label="Lead"
+                      >
+                        {complete && "lead" in project && project.lead ? (
+                          <PersonLink
+                            nameStyle="abbreviated"
+                            person={project.lead}
+                            presentation="collection"
+                          />
+                        ) : (
+                          <span aria-label="Not available">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className="resource-directory-role hidden xl:table-cell"
+                        data-label="Role"
+                      >
+                        {effectiveRole ? (
+                          <ProjectRoleBadge role={effectiveRole} />
+                        ) : (
+                          <span aria-label="Not available">-</span>
+                        )}
+                      </TableCell>
+                      <ResourceCreatedCell
+                        className="hidden xl:table-cell"
+                        value={
+                          complete && "creation_time" in project
+                            ? project.creation_time
+                            : undefined
+                        }
+                      />
+                      <ResourceUpdatedCell
+                        value={
+                          complete && "modification_time" in project
+                            ? project.modification_time
+                            : undefined
+                        }
+                      />
+                      <ResourceOpenCell
+                        kind="project"
+                        mfid={project.unique_id}
+                        name={name}
+                      />
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </>
         ) : (
           <div className="px-6 py-4">
             <p className="text-body text-muted-foreground">

@@ -47,17 +47,18 @@ import { userDetailQueryOptions } from "@/data/crucible/users.queries"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
 import { UserDetailView } from "@/features/admin/user-detail"
 import { hubPageTitle } from "@/lib/page-title"
+import { formatUsername } from "@/lib/username"
 
 export const Route = createFileRoute("/_app/users/$userId")({
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
-    const person = await context.queryClient.ensureQueryData(
-      personQueryOptions(source.scope, params.userId)
-    )
-    const account = await context.queryClient.ensureQueryData(
-      accountQueryOptions(source.scope)
-    )
+    const [person, account] = await Promise.all([
+      context.queryClient.ensureQueryData(
+        personQueryOptions(source.scope, params.userId)
+      ),
+      context.queryClient.ensureQueryData(accountQueryOptions(source.scope)),
+    ])
     let adminUser: WorkspaceAdminUser | null | undefined
     if (canOpenUserAdministration(account) && !person?.is_service_account) {
       const administrationScope = identityScopeWithPrivilegeMode(
@@ -223,12 +224,20 @@ function ReadOnlyPersonProfileCard({
           <PersonIdentity person={person} presentation="avatar" size="lg" />
         </CardHeader>
         <CardContent>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
+          <dl className="grid grid-cols-2 gap-4">
+            <div className="flex min-w-0 flex-col gap-1">
               <dt className="text-label text-muted-foreground">Username</dt>
-              <dd className="text-body">{person.username ?? "Not provided"}</dd>
+              <dd className="text-body break-words">
+                {person.username ? (
+                  <span className="font-mono">
+                    {formatUsername(person.username, "raw")}
+                  </span>
+                ) : (
+                  "Not provided"
+                )}
+              </dd>
             </div>
-            <div className="flex flex-col gap-1 sm:col-span-2">
+            <div className="col-span-2 flex min-w-0 flex-col gap-1 sm:col-span-1">
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd>
                 <MfidValue value={person.unique_id} />

@@ -80,7 +80,7 @@ export function DatasetFiles({
         <CardTitle>Files{files?.length ? ` (${files.length})` : ""}</CardTitle>
         {uploadAvailable ? (
           <CardAction>
-            <Button onClick={() => setUploadOpen(true)} type="button">
+            <Button onClick={() => setUploadOpen(true)} size="sm" type="button">
               <AddFilesIcon aria-hidden="true" data-icon="inline-start" />
               Add files
             </Button>
@@ -137,8 +137,10 @@ function FilesTablePending() {
         <TableHeader>
           <TableRow>
             <TableHead>Filename</TableHead>
-            <TableHead>Storage</TableHead>
-            <TableHead kind="numeric">Size</TableHead>
+            <TableHead className="hidden sm:table-cell">Storage</TableHead>
+            <TableHead className="hidden sm:table-cell" kind="numeric">
+              Size
+            </TableHead>
             <TableHead kind="action">
               <span className="sr-only">File action</span>
             </TableHead>
@@ -147,13 +149,13 @@ function FilesTablePending() {
         <TableBody>
           {Array.from({ length: 3 }, (_, index) => (
             <TableRow key={index}>
-              <TableCell>
-                <Skeleton className="h-5 w-40" />
+              <TableCell className="w-full max-w-0">
+                <Skeleton className="h-5 w-40 max-w-full" />
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <Skeleton className="h-4 w-16" />
               </TableCell>
-              <TableCell kind="numeric">
+              <TableCell className="hidden sm:table-cell" kind="numeric">
                 <Skeleton className="ml-auto h-4 w-12" />
               </TableCell>
               <TableCell kind="action">
@@ -229,6 +231,7 @@ export function FilesTable({
             />
             <SortableTableHead
               active={sort.field === "storage"}
+              className="hidden sm:table-cell"
               direction={sort.direction}
               field="storage"
               label="Storage"
@@ -237,6 +240,7 @@ export function FilesTable({
             />
             <SortableTableHead
               active={sort.field === "size"}
+              className="hidden sm:table-cell"
               direction={sort.direction}
               field="size"
               kind="numeric"
@@ -251,16 +255,23 @@ export function FilesTable({
         <TableBody>
           {visibleFiles.map((file, index) => (
             <TableRow className={revealedRowClassName(index)} key={file.mfid}>
-              <TableCell>
+              <TableCell className="w-full max-w-0">
                 <ResourceIdentity
                   kind="file"
                   name={file.filename}
                   nameContent={<FileOpenLink file={file} scenario={scenario} />}
                   presentation="collection"
                 />
+                <span className="mt-0.5 block pl-6 text-supporting text-muted-foreground sm:hidden">
+                  {file.storage_backend} · {formatBytes(file.size)}
+                </span>
               </TableCell>
-              <TableCell>{file.storage_backend}</TableCell>
-              <TableCell kind="numeric">{formatBytes(file.size)}</TableCell>
+              <TableCell className="hidden sm:table-cell">
+                {file.storage_backend}
+              </TableCell>
+              <TableCell className="hidden sm:table-cell" kind="numeric">
+                {formatBytes(file.size)}
+              </TableCell>
               <TableCell kind="action">
                 <FileDownloadAction
                   file={file}

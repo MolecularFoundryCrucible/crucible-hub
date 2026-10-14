@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- Improved responsive layouts and touch interactions on narrow viewports: paired short scalar fields (`Created` and `Updated`, `Owner` and `Visibility`, and summary/identity pairs) in two-column grids; kept page, section-tab, and card header actions (`Refresh`, `Graph`, `Add`, `Manage`, `Add files`, and `Request ingestion`) inline on the title row whenever space permits; condensed secondary columns into inline subtitles on narrow dataset Files and Processing tables so long filenames truncate without pushing actions off-screen; kept access grant roles, operator badges, and public/private visibility controls on the same row as their subject and removed the duplicate internal icon from `VisibilityBadge`; and added cooperative touch gestures to the resource graph canvas (single-finger page scroll outside fullscreen with a transient two-finger hint, two-finger pan and pinch-zoom, and double-tap-and-hold vertical drag to zoom).
+
 ## 1.0.0 - 2026-10-13
 
 First versioned release, reactivating the production pilot at `https://crucible.lbl.gov/hub/` against Crucible API 3.1.0 with ORCID sign-in and a single Cloud Run instance.

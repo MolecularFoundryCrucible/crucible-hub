@@ -436,9 +436,9 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
           projectId={item.projectId}
         />
         {item.timestamp ? (
-          <div className="shrink-0 text-supporting text-muted-foreground sm:text-right">
-            <span className="block">{item.timestamp.label}</span>
-            <LocalDateTime className="block" value={item.timestamp.value} />
+          <div className="flex shrink-0 flex-wrap items-baseline gap-x-1.5 text-supporting text-muted-foreground sm:block sm:text-right">
+            <span className="sm:block">{item.timestamp.label}</span>
+            <LocalDateTime className="sm:block" value={item.timestamp.value} />
           </div>
         ) : null}
       </ResourceListItemContent>

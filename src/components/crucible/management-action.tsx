@@ -24,14 +24,16 @@ export function ManagementAction({
 }) {
   const content = (
     <>
-      <div className="grid min-w-0 grid-cols-1 items-start gap-1 sm:grid-cols-[1fr_auto]">
-        <div className="min-w-0">
-          <h3 className="font-heading text-title-section">{title}</h3>
-          <div className="mt-1 text-body text-muted-foreground">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
+        <div className="min-w-0 flex-1 basis-40 space-y-1">
+          <h3 className="min-w-0 font-heading text-title-section break-words">
+            {title}
+          </h3>
+          <div className="min-w-0 text-body break-words text-muted-foreground">
             {description}
           </div>
         </div>
-        <div className="mt-3 w-full sm:mt-0 sm:w-auto">{action}</div>
+        <div className="shrink-0">{action}</div>
       </div>
       {children}
     </>

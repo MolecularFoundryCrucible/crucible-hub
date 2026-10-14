@@ -416,7 +416,7 @@ function ServiceAccountCollection({
                   <TableRow key={serviceAccount.unique_id}>
                     <TableCell className="identity-directory-account">
                       <PersonIdentity
-                        className="min-w-48"
+                        className="min-w-0 sm:min-w-48"
                         nameContent={
                           <SelectableTextLink
                             className="block"

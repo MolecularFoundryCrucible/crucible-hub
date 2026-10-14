@@ -697,9 +697,25 @@ body {
   border-radius: 0;
 }
 
+.resource-graph-surface:not(:fullscreen):not([data-touch-gesture-active])
+  .react-flow__renderer,
+.resource-graph-surface:not(:fullscreen):not([data-touch-gesture-active])
+  .react-flow__pane,
+.resource-graph-surface:not(:fullscreen):not([data-touch-gesture-active])
+  .react-flow__node {
+  touch-action: pan-x pan-y;
+}
+
+.resource-graph-surface[data-touch-gesture-active] .react-flow__renderer,
+.resource-graph-surface[data-touch-gesture-active] .react-flow__pane,
+.resource-graph-surface[data-touch-gesture-active] .react-flow__node {
+  touch-action: none;
+}
+
 .resource-graph-controls,
 .resource-graph-layout-status,
-.resource-graph-legend {
+.resource-graph-legend,
+.resource-graph-touch-hint {
   z-index: var(--layer-graph-overlay);
 }
 
@@ -1225,8 +1241,9 @@ body {
 
   .resource-directory-table .resource-directory-location,
   .resource-directory-table .resource-directory-person,
+  .resource-directory-table .resource-directory-role,
   .resource-directory-table .resource-directory-date {
-    align-items: flex-start;
+    align-items: center;
     column-gap: calc(var(--spacing) * 1);
     display: flex;
     grid-column: 1 / -1;
@@ -1234,12 +1251,14 @@ body {
   }
 
   .resource-directory-table .resource-directory-location > *,
-  .resource-directory-table .resource-directory-person > * {
+  .resource-directory-table .resource-directory-person > *,
+  .resource-directory-table .resource-directory-role > * {
     min-width: 0;
   }
 
   .resource-directory-table .resource-directory-location::before,
   .resource-directory-table .resource-directory-person::before,
+  .resource-directory-table .resource-directory-role::before,
   .resource-directory-table .resource-directory-date::before {
     color: var(--muted-foreground);
     content: attr(data-label) ": ";
@@ -1341,8 +1360,9 @@ body {
   }
 
   .identity-directory-table .identity-directory-mfid,
+  .identity-directory-table .identity-directory-email,
   .identity-directory-table .identity-directory-role {
-    align-items: flex-start;
+    align-items: center;
     column-gap: calc(var(--spacing) * 1);
     display: flex;
     grid-column: 1 / -1;
@@ -1350,11 +1370,13 @@ body {
   }
 
   .identity-directory-table .identity-directory-mfid > *,
+  .identity-directory-table .identity-directory-email > *,
   .identity-directory-table .identity-directory-role > * {
     min-width: 0;
   }
 
   .identity-directory-table .identity-directory-mfid::before,
+  .identity-directory-table .identity-directory-email::before,
   .identity-directory-table .identity-directory-role::before {
     color: var(--muted-foreground);
     content: attr(data-label) ": ";
@@ -1447,7 +1469,7 @@ body {
   }
 }
 
-@media (max-width: 29.999rem) {
+@media (max-width: 39.999rem) {
   .content-grid-identity {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1461,7 +1483,9 @@ body {
   .content-grid-identity-qr {
     justify-self: center;
   }
+}
 
+@media (max-width: 29.999rem) {
   .mfid-value-icon {
     display: none;
   }

@@ -164,6 +164,7 @@ export function ResourceRelationshipManager({
                 <Button
                   aria-label={`Add relationship to ${resourceDetailDisplayName(resource)}`}
                   onClick={() => setAddOpen(true)}
+                  size="sm"
                   type="button"
                 >
                   <AddRelationshipIcon
@@ -271,7 +272,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
     resource.kind === "sample" ? (
       <Link
         aria-label={`Explore graph for ${resourceDetailDisplayName(resource)}`}
-        className={buttonVariants({ variant: "outline" })}
+        className={buttonVariants({ size: "sm", variant: "outline" })}
         params={{ sampleMfid: resource.unique_id }}
         preload={false}
         search={{ preview: undefined }}
@@ -281,7 +282,7 @@ function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
     ) : (
       <Link
         aria-label={`Explore graph for ${resourceDetailDisplayName(resource)}`}
-        className={buttonVariants({ variant: "outline" })}
+        className={buttonVariants({ size: "sm", variant: "outline" })}
         params={{ datasetMfid: resource.unique_id }}
         preload={false}
         search={{ preview: undefined }}

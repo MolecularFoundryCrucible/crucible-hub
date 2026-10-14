@@ -444,14 +444,14 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
         <ContentGrid variant="identity">
           <div className="min-w-0">
             <CardTitle>Identity</CardTitle>
-            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="min-w-0 sm:col-span-2">
+            <dl className="mt-4 grid grid-cols-2 gap-4">
+              <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
                   <MfidValue value={resource.unique_id} />
                 </dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">Owner</dt>
                 <dd className="mt-1 flex items-start gap-2 text-body">
                   <IdentityFieldIcon
@@ -470,7 +470,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
                 </dd>
               </div>
               {"public" in resource && (
-                <div>
+                <div className="min-w-0">
                   <dt className="text-label text-muted-foreground">
                     Visibility
                   </dt>
@@ -488,15 +488,15 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               )}
             </dl>
           </div>
-          <dl className="content-grid-identity-timestamps grid gap-4 sm:grid-cols-2">
-            <div>
+          <dl className="content-grid-identity-timestamps grid grid-cols-2 gap-4">
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Created</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="created" />
                 <LocalDateTime value={resource.creation_time} />
               </dd>
             </div>
-            <div>
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Updated</dt>
               <dd className="mt-1 flex items-start gap-2 text-body">
                 <IdentityFieldIcon type="updated" />

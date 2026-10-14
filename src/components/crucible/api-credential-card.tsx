@@ -71,8 +71,8 @@ function CredentialStatus({
   status: WorkspaceApiCredentialStatus
 }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <div className="sm:col-span-2 xl:col-span-1">
+    <dl className="grid grid-cols-2 gap-4 xl:grid-cols-3">
+      <div className="col-span-2 min-w-0 xl:col-span-1">
         <dt className="text-label text-muted-foreground">Status</dt>
         <dd className="mt-1">
           <Badge variant={status.valid ? "success" : "destructive"}>
@@ -80,13 +80,13 @@ function CredentialStatus({
           </Badge>
         </dd>
       </div>
-      <div>
+      <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Created</dt>
         <dd className="mt-1 text-body">
           <LocalDateTime value={status.created_at} />
         </dd>
       </div>
-      <div>
+      <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Expires</dt>
         <dd className="mt-1 text-body">
           <LocalDateTime value={status.expires_at} />
@@ -101,12 +101,14 @@ function CredentialStatusSkeleton() {
   return (
     <dl
       aria-label="Loading API credential status"
-      className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+      className="grid grid-cols-2 gap-4 xl:grid-cols-3"
       role="status"
     >
       {fields.map((field, index) => (
         <div
-          className={index === 0 ? "sm:col-span-2 xl:col-span-1" : undefined}
+          className={
+            index === 0 ? "col-span-2 min-w-0 xl:col-span-1" : "min-w-0"
+          }
           key={field}
         >
           <dt className="text-label text-muted-foreground">{field}</dt>

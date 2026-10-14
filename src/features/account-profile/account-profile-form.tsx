@@ -45,6 +45,7 @@ import {
 } from "./account-profile-fields"
 import { UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
+import { formatUsername } from "@/lib/username"
 
 export function AccountProfileForm({
   account,
@@ -126,30 +127,40 @@ export function AccountProfileForm({
   if (!editing) {
     return (
       <Card>
-        <CardHeader>
+        <CardHeader actionLayout="inline">
           <PersonIdentity person={account} presentation="avatar" size="lg" />
           <CardAction>
-            <Button onClick={() => setEditing(true)} variant="outline">
+            <Button
+              onClick={() => setEditing(true)}
+              size="sm"
+              variant="outline"
+            >
               <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
               Edit profile
             </Button>
           </CardAction>
         </CardHeader>
         <CardContent>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
+          <dl className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 min-w-0 sm:col-span-1">
               <dt className="text-label text-muted-foreground">Email</dt>
               <dd className="mt-1 text-body break-words">
                 {account.email ?? "Not provided"}
               </dd>
             </div>
-            <div>
+            <div className="col-span-2 min-w-0 sm:col-span-1">
               <dt className="text-label text-muted-foreground">Username</dt>
               <dd className="mt-1 text-body break-words">
-                {account.username ?? "Not provided"}
+                {account.username ? (
+                  <span className="font-mono">
+                    {formatUsername(account.username, "raw")}
+                  </span>
+                ) : (
+                  "Not provided"
+                )}
               </dd>
             </div>
-            <div className="sm:col-span-2">
+            <div className="col-span-2 min-w-0">
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd className="mt-1">
                 <MfidValue value={account.unique_id} />
@@ -179,12 +190,18 @@ export function AccountProfileForm({
           >
             <fieldset disabled={isSubmitting}>
               <FieldGroup>
-                <form.Field name="first_name">
-                  {(field) => <ProfileField field={field} label="First name" />}
-                </form.Field>
-                <form.Field name="last_name">
-                  {(field) => <ProfileField field={field} label="Last name" />}
-                </form.Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <form.Field name="first_name">
+                    {(field) => (
+                      <ProfileField field={field} label="First name" />
+                    )}
+                  </form.Field>
+                  <form.Field name="last_name">
+                    {(field) => (
+                      <ProfileField field={field} label="Last name" />
+                    )}
+                  </form.Field>
+                </div>
                 <form.Subscribe selector={profileNameMissing}>
                   {(missing) => (missing ? <ProfileNameHint /> : null)}
                 </form.Subscribe>

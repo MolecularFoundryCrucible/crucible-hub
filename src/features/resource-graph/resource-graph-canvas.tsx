@@ -280,6 +280,7 @@ function ResourceGraphFlow({
   const [flowReady, setFlowReady] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const [fullscreenError, setFullscreenError] = useState(false)
+  const [touchHintVisible, setTouchHintVisible] = useState(false)
   const [flowNodes, setFlowNodes, handleNodesChange] =
     useNodesState<ResourceFlowNode>([])
 
@@ -346,6 +347,7 @@ function ResourceGraphFlow({
     const updateFullscreen = () => {
       setFullscreen(document.fullscreenElement === surface.current)
       setFullscreenError(false)
+      setTouchHintVisible(false)
       requestAnimationFrame(() => {
         void flow.fitView({
           ...graphViewportOptions(surface.current),
@@ -357,6 +359,249 @@ function ResourceGraphFlow({
     return () =>
       document.removeEventListener("fullscreenchange", updateFullscreen)
   }, [flow])
+
+  useEffect(() => {
+    const element = surface.current
+    if (!element) return
+    let hintTimer: ReturnType<typeof setTimeout> | undefined
+    let singleTouch: {
+      moved: boolean
+      startTime: number
+      startX: number
+      startY: number
+    } | null = null
+    let lastTap: {
+      clientX: number
+      clientY: number
+      time: number
+    } | null = null
+    let doubleTapZoom: {
+      centerX: number
+      centerY: number
+      moved: boolean
+      nodeMfid: string | null
+      startViewportX: number
+      startViewportY: number
+      startY: number
+      startZoom: number
+    } | null = null
+
+    const clearHintTimer = () => {
+      if (hintTimer !== undefined) {
+        clearTimeout(hintTimer)
+        hintTimer = undefined
+      }
+    }
+
+    const showTouchHint = () => {
+      clearHintTimer()
+      setTouchHintVisible(true)
+      hintTimer = setTimeout(() => {
+        setTouchHintVisible(false)
+        hintTimer = undefined
+      }, 1800)
+    }
+
+    const isInteractiveControl = (target: EventTarget | null) =>
+      target instanceof HTMLElement &&
+      Boolean(
+        target.closest(
+          ".resource-graph-controls, .resource-graph-expansion-action"
+        )
+      )
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (isInteractiveControl(event.target)) return
+      const isFullscreen = document.fullscreenElement === element
+      if (event.touches.length >= 2) {
+        singleTouch = null
+        doubleTapZoom = null
+        element.dataset.touchGestureActive = ""
+        clearHintTimer()
+        setTouchHintVisible(false)
+        return
+      }
+      if (event.touches.length !== 1) return
+      const touch = event.touches[0]
+      const now = performance.now()
+      if (
+        lastTap &&
+        now - lastTap.time <= 320 &&
+        Math.hypot(
+          touch.clientX - lastTap.clientX,
+          touch.clientY - lastTap.clientY
+        ) <= 28
+      ) {
+        const viewport = flow.getViewport()
+        const rect = element.getBoundingClientRect()
+        const tappedNode =
+          event.target instanceof HTMLElement
+            ? event.target.closest<HTMLElement>(".react-flow__node-resource")
+            : null
+        doubleTapZoom = {
+          centerX: touch.clientX - rect.left,
+          centerY: touch.clientY - rect.top,
+          moved: false,
+          nodeMfid: tappedNode?.dataset.id ?? null,
+          startViewportX: viewport.x,
+          startViewportY: viewport.y,
+          startY: touch.clientY,
+          startZoom: viewport.zoom,
+        }
+        singleTouch = null
+        lastTap = null
+        element.dataset.touchGestureActive = ""
+        clearHintTimer()
+        setTouchHintVisible(false)
+        event.stopPropagation()
+        return
+      }
+      doubleTapZoom = null
+      singleTouch = {
+        moved: false,
+        startTime: now,
+        startX: touch.clientX,
+        startY: touch.clientY,
+      }
+      if (!isFullscreen) {
+        delete element.dataset.touchGestureActive
+        event.stopPropagation()
+      }
+    }
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (isInteractiveControl(event.target)) return
+      const isFullscreen = document.fullscreenElement === element
+      if (event.touches.length >= 2) {
+        doubleTapZoom = null
+        singleTouch = null
+        element.dataset.touchGestureActive = ""
+        clearHintTimer()
+        setTouchHintVisible(false)
+        return
+      }
+      if (event.touches.length !== 1) return
+      const touch = event.touches[0]
+      if (doubleTapZoom) {
+        const deltaY = touch.clientY - doubleTapZoom.startY
+        if (Math.abs(deltaY) > 4 || doubleTapZoom.moved) {
+          doubleTapZoom.moved = true
+          event.preventDefault()
+          event.stopPropagation()
+          const nextZoom = Math.min(
+            zoomRange.max,
+            Math.max(
+              zoomRange.min,
+              doubleTapZoom.startZoom * Math.pow(2, deltaY / 140)
+            )
+          )
+          const graphX =
+            (doubleTapZoom.centerX - doubleTapZoom.startViewportX) /
+            doubleTapZoom.startZoom
+          const graphY =
+            (doubleTapZoom.centerY - doubleTapZoom.startViewportY) /
+            doubleTapZoom.startZoom
+          void flow.setViewport(
+            {
+              x: doubleTapZoom.centerX - graphX * nextZoom,
+              y: doubleTapZoom.centerY - graphY * nextZoom,
+              zoom: nextZoom,
+            },
+            { duration: 0 }
+          )
+        }
+        return
+      }
+      if (singleTouch) {
+        const distance = Math.hypot(
+          touch.clientX - singleTouch.startX,
+          touch.clientY - singleTouch.startY
+        )
+        if (distance > 12 && !singleTouch.moved) {
+          singleTouch.moved = true
+          if (!isFullscreen) {
+            showTouchHint()
+          }
+        }
+      }
+      if (!isFullscreen) {
+        event.stopPropagation()
+      }
+    }
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (event.touches.length > 0) {
+        if (
+          document.fullscreenElement !== element &&
+          event.touches.length === 1 &&
+          !doubleTapZoom
+        ) {
+          delete element.dataset.touchGestureActive
+        }
+        return
+      }
+      delete element.dataset.touchGestureActive
+      const now = performance.now()
+      if (doubleTapZoom) {
+        if (!doubleTapZoom.moved && doubleTapZoom.nodeMfid) {
+          const position = displayedPositions.current.get(
+            doubleTapZoom.nodeMfid
+          )
+          if (position) {
+            void flow.setCenter(
+              position.x + position.width / 2,
+              position.y + position.height / 2,
+              {
+                ...graphViewportOptions(element),
+                zoom: flow.getZoom(),
+              }
+            )
+          }
+        }
+        doubleTapZoom = null
+        return
+      }
+      if (
+        singleTouch &&
+        !singleTouch.moved &&
+        now - singleTouch.startTime <= 300
+      ) {
+        lastTap = {
+          clientX: singleTouch.startX,
+          clientY: singleTouch.startY,
+          time: now,
+        }
+      } else {
+        lastTap = null
+      }
+      singleTouch = null
+    }
+
+    element.addEventListener("touchstart", handleTouchStart, {
+      capture: true,
+      passive: true,
+    })
+    element.addEventListener("touchmove", handleTouchMove, {
+      capture: true,
+      passive: false,
+    })
+    element.addEventListener("touchend", handleTouchEnd, {
+      capture: true,
+      passive: true,
+    })
+    element.addEventListener("touchcancel", handleTouchEnd, {
+      capture: true,
+      passive: true,
+    })
+    return () => {
+      clearHintTimer()
+      delete element.dataset.touchGestureActive
+      element.removeEventListener("touchstart", handleTouchStart, true)
+      element.removeEventListener("touchmove", handleTouchMove, true)
+      element.removeEventListener("touchend", handleTouchEnd, true)
+      element.removeEventListener("touchcancel", handleTouchEnd, true)
+    }
+  }, [flow, zoomRange.max, zoomRange.min])
 
   useEffect(() => {
     const element = surface.current
@@ -847,11 +1092,21 @@ function ResourceGraphFlow({
         edges show sample and dataset associations. Expansion controls load
         ancestors, descendants, or associated resources. Nodes can be
         repositioned by dragging. Hold Control, or Command on macOS, while
-        scrolling to zoom. Double-click a node, or focus it and press F, to
-        center it. Reset layout restores the ELK arrangement. The relationship
-        table following the graph provides the same resources with
-        keyboard-accessible inspection and navigation.
+        scrolling to zoom. On touch screens, use two fingers to pan or pinch to
+        zoom, or double-tap and hold then drag vertically to zoom. Double-click
+        a node, or focus it and press F, to center it. Reset layout restores the
+        ELK arrangement. The relationship table following the graph provides the
+        same resources with keyboard-accessible inspection and navigation.
       </span>
+      {touchHintVisible && !fullscreen ? (
+        <div
+          aria-live="polite"
+          className="resource-graph-touch-hint pointer-events-none absolute top-14 left-1/2 -translate-x-1/2 rounded-lg border bg-card/95 px-3 py-1.5 text-label-compact text-foreground shadow-sm"
+          role="status"
+        >
+          Use two fingers to move the graph
+        </div>
+      ) : null}
       {fullscreenError ? (
         <div
           className="resource-graph-layout-status absolute right-3 bottom-3 rounded-lg border border-destructive/40 bg-card px-2 py-1 text-label-compact text-destructive shadow-sm"

@@ -222,7 +222,7 @@ function SearchPage() {
       <div className="overflow-x-auto pb-1">
         <SegmentedControl
           ariaLabel="Resource type filter"
-          className="flex-wrap"
+          className="w-max"
           onValueChange={(nextValue) => {
             void navigate({
               search: (previous) => ({

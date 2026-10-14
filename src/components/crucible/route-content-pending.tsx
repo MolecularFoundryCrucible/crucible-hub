@@ -74,33 +74,48 @@ export function IdentityDetailContentPending({
     ? ["Username", "Platform role", "Crucible ID"]
     : ["Username", "Platform role", "Email", "Crucible ID / ORCID"]
   return (
-    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-      <Card aria-busy="true">
-        <CardHeader>
-          <CardTitle>Identity</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <PendingPrincipalIdentity />
-          <dl className="grid gap-4 sm:grid-cols-2">
-            {fields.map((label) => (
-              <div
-                className={
-                  serviceAccount && label.startsWith("Crucible ID")
-                    ? "grid gap-1 sm:col-span-2"
-                    : "grid gap-1"
-                }
-                key={label}
-              >
-                <dt className="text-label text-muted-foreground">{label}</dt>
-                <dd>
-                  <Skeleton className="h-5 w-32" />
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </CardContent>
-      </Card>
-      <CredentialCardPending />
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <Card aria-busy="true">
+          <CardHeader>
+            <CardTitle>Identity</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-5">
+            <PendingPrincipalIdentity />
+            <dl className="grid grid-cols-2 gap-4">
+              {fields.map((label) => (
+                <div
+                  className={
+                    serviceAccount && label.startsWith("Crucible ID")
+                      ? "col-span-2 grid gap-1"
+                      : !serviceAccount &&
+                          (label === "Email" || label.startsWith("Crucible ID"))
+                        ? "col-span-2 grid gap-1 sm:col-span-1"
+                        : "grid gap-1"
+                  }
+                  key={label}
+                >
+                  <dt className="text-label text-muted-foreground">{label}</dt>
+                  <dd>
+                    <Skeleton className="h-5 w-32" />
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </CardContent>
+        </Card>
+        <CredentialCardPending />
+      </div>
+      {!serviceAccount ? (
+        <Card aria-busy="true">
+          <CardHeader>
+            <CardTitle>Projects</CardTitle>
+          </CardHeader>
+          <CardContent className="px-0">
+            <ResourceListPending label="user projects" />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }
@@ -124,7 +139,7 @@ function CredentialCardPending() {
         <CardTitle>API credential</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-4 xl:grid-cols-3">
           {["Status", "Created", "Expires"].map((label) => (
             <div className="grid gap-1" key={label}>
               <dt className="text-label text-muted-foreground">{label}</dt>

@@ -186,9 +186,12 @@ function SummaryCard({
 
 export function SummaryFields({ fields }: { fields: readonly SummaryField[] }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-2">
+    <dl className="grid grid-cols-2 gap-4">
       {fields.map(([label, value, type]) => (
-        <div className="min-w-0" key={label}>
+        <div
+          className={type === "description" ? "col-span-2 min-w-0" : "min-w-0"}
+          key={label}
+        >
           <dt className="text-label text-muted-foreground">{label}</dt>
           <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
             <SummaryFieldIcon type={type} />

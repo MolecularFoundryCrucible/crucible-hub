@@ -127,7 +127,7 @@ export function ResourceChooser({
         disabled={disabled}
         endAdornment={
           value ? (
-            <span className="text-label-compact text-muted-foreground select-none">
+            <span className="hidden text-label-compact text-muted-foreground select-none sm:inline">
               ({value.unique_id})
             </span>
           ) : null

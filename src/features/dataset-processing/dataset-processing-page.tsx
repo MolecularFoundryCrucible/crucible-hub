@@ -151,6 +151,7 @@ function FilesAndIngestionCard({
             {uploadAvailable ? (
               <Button
                 onClick={() => setUploadOpen(true)}
+                size="sm"
                 type="button"
                 variant="outline"
               >
@@ -159,7 +160,11 @@ function FilesAndIngestionCard({
               </Button>
             ) : null}
             {eligibleFiles?.length ? (
-              <Button onClick={() => setDialogOpen(true)} type="button">
+              <Button
+                onClick={() => setDialogOpen(true)}
+                size="sm"
+                type="button"
+              >
                 <RequestIngestionIcon
                   aria-hidden="true"
                   data-icon="inline-start"
@@ -186,7 +191,8 @@ function FilesAndIngestionCard({
                 "date",
                 "action",
               ]}
-              className="min-w-processing-files-table table-fixed xl:min-w-processing-files-table-wide"
+              className="table-fixed md:min-w-processing-files-table xl:min-w-processing-files-table-wide"
+              mdOnly={[4, 5]}
               wideOnly={[1, 2]}
               colgroup={<ProcessingFilesColumns />}
               columns={[
@@ -271,6 +277,7 @@ function FilesAndIngestionCard({
                 "Completed",
               ]}
               label="ingestion request history"
+              mdOnly={[1, 3, 5]}
             />
           ) : requests !== undefined ? (
             requests.length ? (
@@ -324,8 +331,8 @@ function ProcessingFilesColumns() {
       <col className="hidden xl:table-column xl:w-processing-storage-column" />
       <col className="hidden xl:table-column xl:w-processing-size-column" />
       <col className="w-processing-status-column" />
-      <col className="w-processing-ingestor-column" />
-      <col className="w-processing-updated-column" />
+      <col className="hidden md:table-column md:w-processing-ingestor-column" />
+      <col className="hidden md:table-column md:w-processing-updated-column" />
       <col className="w-data-action-column" />
     </colgroup>
   )
@@ -337,6 +344,7 @@ function ProcessingTablePending({
   columns,
   kinds = [],
   label,
+  mdOnly = [],
   wideOnly = [],
 }: {
   className?: string
@@ -344,6 +352,7 @@ function ProcessingTablePending({
   columns: readonly string[]
   kinds?: readonly TableColumnKind[]
   label: string
+  mdOnly?: readonly number[]
   wideOnly?: readonly number[]
 }) {
   return (
@@ -355,6 +364,7 @@ function ProcessingTablePending({
             {columns.map((column, index) => (
               <TableHead
                 className={cn(
+                  mdOnly.includes(index) && "hidden md:table-cell",
                   wideOnly.includes(index) && "hidden xl:table-cell"
                 )}
                 kind={kinds[index]}
@@ -370,11 +380,10 @@ function ProcessingTablePending({
             <TableRow key={row}>
               {columns.map((column, columnIndex) => (
                 <TableCell
-                  className={
-                    wideOnly.includes(columnIndex)
-                      ? "hidden xl:table-cell"
-                      : undefined
-                  }
+                  className={cn(
+                    mdOnly.includes(columnIndex) && "hidden md:table-cell",
+                    wideOnly.includes(columnIndex) && "hidden xl:table-cell"
+                  )}
                   key={`${column}-${columnIndex}`}
                   kind={kinds[columnIndex]}
                 >
@@ -414,7 +423,7 @@ function ProcessingFilesTable({
   )
 
   return (
-    <Table className="min-w-processing-files-table table-fixed xl:min-w-processing-files-table-wide">
+    <Table className="table-fixed md:min-w-processing-files-table xl:min-w-processing-files-table-wide">
       <ProcessingFilesColumns />
       <TableHeader>
         <TableRow>
@@ -424,8 +433,10 @@ function ProcessingFilesTable({
             Size
           </TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Ingestor</TableHead>
-          <TableHead kind="date">Updated</TableHead>
+          <TableHead className="hidden md:table-cell">Ingestor</TableHead>
+          <TableHead className="hidden md:table-cell" kind="date">
+            Updated
+          </TableHead>
           <TableHead kind="action">
             <span className="sr-only">File action</span>
           </TableHead>
@@ -436,7 +447,7 @@ function ProcessingFilesTable({
           const request = latestRequests.get(file.mfid)
           return (
             <TableRow key={file.mfid}>
-              <TableCell>
+              <TableCell className="w-full max-w-0">
                 <ResourceIdentity
                   kind="file"
                   mfid={file.mfid}
@@ -444,6 +455,10 @@ function ProcessingFilesTable({
                   nameContent={<FileOpenLink file={file} scenario={scenario} />}
                   presentation="collection"
                 />
+                <span className="mt-0.5 block truncate pl-6 text-supporting text-muted-foreground md:hidden">
+                  {request?.ingestionClass ?? "Auto-detect"} ·{" "}
+                  {formatBytes(file.size)}
+                </span>
               </TableCell>
               <TableCell className="hidden truncate xl:table-cell">
                 {file.storage_backend}
@@ -459,10 +474,10 @@ function ProcessingFilesTable({
                   status={request?.status}
                 />
               </TableCell>
-              <TableCell className="truncate">
+              <TableCell className="hidden truncate md:table-cell">
                 {request?.ingestionClass ?? "Auto-detect"}
               </TableCell>
-              <TableCell kind="date">
+              <TableCell className="hidden md:table-cell" kind="date">
                 <LocalDateTime
                   fallback="-"
                   value={request?.timeCompleted ?? request?.timeCreated}
@@ -501,11 +516,13 @@ function IngestionRequestHistory({
         <TableHeader>
           <TableRow>
             <TableHead>Request</TableHead>
-            <TableHead>File MFID</TableHead>
+            <TableHead className="hidden md:table-cell">File MFID</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Ingestor</TableHead>
+            <TableHead className="hidden md:table-cell">Ingestor</TableHead>
             <TableHead kind="date">Created</TableHead>
-            <TableHead kind="date">Completed</TableHead>
+            <TableHead className="hidden md:table-cell" kind="date">
+              Completed
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -513,14 +530,19 @@ function IngestionRequestHistory({
             <TableRow
               key={request.id ?? `${request.fileMfid ?? "request"}-${index}`}
             >
-              <TableCell>{request.id ?? "-"}</TableCell>
               <TableCell>
+                <span>{request.id ?? "-"}</span>
+                <span className="mt-0.5 block truncate text-supporting text-muted-foreground md:hidden">
+                  {request.ingestionClass ?? "Auto-detect"}
+                </span>
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
                 {request.fileMfid ? <MfidText value={request.fileMfid} /> : "-"}
               </TableCell>
               <TableCell>
                 <IngestionStatusBadge status={request.status} />
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 <span>{request.ingestionClass ?? "Auto-detect"}</span>
                 {request.ingestionGitHash ? (
                   <span className="block font-mono text-supporting text-muted-foreground">
@@ -531,7 +553,7 @@ function IngestionRequestHistory({
               <TableCell kind="date">
                 <LocalDateTime fallback="-" value={request.timeCreated} />
               </TableCell>
-              <TableCell kind="date">
+              <TableCell className="hidden md:table-cell" kind="date">
                 <LocalDateTime fallback="-" value={request.timeCompleted} />
               </TableCell>
             </TableRow>

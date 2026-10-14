@@ -390,7 +390,7 @@ function UserCollection({
                     <TableRow key={user.unique_id}>
                       <TableCell className="identity-directory-account">
                         <PersonIdentity
-                          className="min-w-48"
+                          className="min-w-0 sm:min-w-48"
                           nameContent={
                             <SelectableTextLink
                               className="block"
@@ -415,9 +415,14 @@ function UserCollection({
                       >
                         <MfidText value={user.unique_id} />
                       </TableCell>
-                      <TableCell data-label="Email">
+                      <TableCell
+                        className="identity-directory-email"
+                        data-label="Email"
+                      >
                         {user.email ? (
-                          <span className="text-body">{user.email}</span>
+                          <span className="text-body break-words">
+                            {user.email}
+                          </span>
                         ) : (
                           <span className="text-body text-muted-foreground">
                             None

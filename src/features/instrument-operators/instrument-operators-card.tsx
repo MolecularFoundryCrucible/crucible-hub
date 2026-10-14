@@ -416,7 +416,7 @@ export function InstrumentAccessCard({
                       editable ? (
                         <NativeSelect
                           aria-label={`Role for ${grantName(grant)}`}
-                          className="w-full sm:w-fit"
+                          className="w-fit"
                           disabled={mutationPending}
                           onChange={(event) => {
                             if (isAccessGrantRole(event.target.value)) {
@@ -488,7 +488,6 @@ export function InstrumentAccessCard({
                 </Button>
               ) : null}
               <Button
-                className="max-sm:w-full"
                 disabled={mutationPending}
                 onClick={() => {
                   setError(undefined)
@@ -519,15 +518,15 @@ export function InstrumentAccessCard({
                     removeOperatorMutation.variables === operator.unique_id
                   return (
                     <li
-                      className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3"
+                      className="flex min-w-0 items-center justify-between gap-2 sm:gap-3"
                       key={operator.unique_id}
                     >
                       <PersonLink
-                        className="flex-1"
+                        className="min-w-0 flex-1"
                         person={{ ...operator, is_service_account: true }}
                         presentation="avatar"
                       />
-                      <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
+                      <div className="flex min-h-8 shrink-0 items-center justify-end gap-2">
                         {pending ? (
                           <PendingIcon
                             label={`Unassigning ${operatorName(operator)}`}
@@ -592,7 +591,6 @@ export function InstrumentAccessCard({
             {canManage ? (
               <div className="mt-4 flex justify-end">
                 <Button
-                  className="max-sm:w-full"
                   disabled={mutationPending}
                   onClick={() => {
                     setError(undefined)

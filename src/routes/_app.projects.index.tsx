@@ -384,7 +384,7 @@ function ProjectCollection({
                         )}
                       </TableCell>
                       <TableCell
-                        className="hidden xl:table-cell"
+                        className="resource-directory-role hidden xl:table-cell"
                         data-label="Role"
                       >
                         {effectiveRole ? (

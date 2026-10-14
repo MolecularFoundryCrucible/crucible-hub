@@ -403,7 +403,7 @@ function MetadataCollection({
         </span>
         <span className="text-supporting text-muted-foreground">{count}</span>
       </summary>
-      <div className="mb-1 ml-1 min-w-0 border-l pl-3">
+      <div className="mb-1 ml-0.5 min-w-0 border-l pl-2 sm:ml-1 sm:pl-3">
         <MetadataEntries
           entries={displayedEntries}
           expandedPaths={expandedPaths}

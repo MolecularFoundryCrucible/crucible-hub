@@ -166,13 +166,23 @@ function DeletionAuditPending() {
                   </div>
                 </div>
               </TableCell>
-              <TableCell className="deletion-request-project">
+              <TableCell
+                className="deletion-request-project"
+                data-label="Project"
+              >
                 <Skeleton className="h-4 w-3/4" />
               </TableCell>
-              <TableCell className="deletion-request-requester">
+              <TableCell
+                className="deletion-request-requester"
+                data-label="Requested by"
+              >
                 <Skeleton className="h-4 w-3/4" />
               </TableCell>
-              <TableCell kind="date" className="deletion-request-date">
+              <TableCell
+                className="deletion-request-date"
+                data-label="Deleted"
+                kind="date"
+              >
                 <Skeleton className="h-4 w-4/5" />
               </TableCell>
               <TableCell kind="action" className="deletion-request-action">
@@ -314,7 +324,7 @@ function DeletionAuditDialog({
               name={audit.resource_name?.trim() || "Untitled resource"}
               projectId={audit.project_id}
             />
-            <dl className="grid gap-4 text-body sm:grid-cols-2">
+            <dl className="grid grid-cols-2 gap-4 text-body">
               <AuditDetail label="Requested by">
                 <AuditIdentity
                   account={account}

@@ -41,10 +41,7 @@ function CardHeader({
       <div
         data-slot="card-header"
         className={cn(
-          "group/card-header @container/card-header grid auto-rows-min grid-cols-1 items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
-          actionLayout === "inline"
-            ? "has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto]"
-            : "sm:has-data-[slot=card-action]:grid-cols-[1fr_auto]",
+          "group/card-header @container/card-header flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-t-xl px-(--card-spacing) has-data-[slot=card-description]:grid has-data-[slot=card-description]:auto-rows-min has-data-[slot=card-description]:grid-cols-1 has-data-[slot=card-description]:items-start has-data-[slot=card-description]:gap-y-1 has-data-[slot=card-description]:has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto] [.border-b]:pb-(--card-spacing)",
           className
         )}
         {...props}
@@ -71,7 +68,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-description"
       className={cn(
-        "min-w-0 text-body break-words text-muted-foreground",
+        "col-span-full min-w-0 text-body break-words text-muted-foreground sm:col-span-1",
         className
       )}
       {...props}
@@ -80,15 +77,11 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
-  const actionLayout = React.useContext(CardHeaderActionLayoutContext)
-
   return (
     <div
       data-slot="card-action"
       className={cn(
-        actionLayout === "inline"
-          ? "col-start-2 row-span-2 row-start-1 w-auto self-start justify-self-end"
-          : "mt-3 w-full self-start justify-self-stretch sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:w-auto sm:justify-self-end",
+        "col-start-2 row-start-1 ml-auto flex w-auto shrink-0 flex-wrap items-center justify-end gap-2 self-start justify-self-end sm:row-span-2",
         className
       )}
       {...props}

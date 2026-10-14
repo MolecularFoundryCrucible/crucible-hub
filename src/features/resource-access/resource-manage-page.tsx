@@ -26,6 +26,7 @@ import {
 } from "@/components/crucible/icons"
 import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
+import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -463,13 +464,14 @@ function ManagedResourceAccess({
                       editable ? (
                         <NativeSelect
                           aria-label={`Role for ${grantName(grant)}`}
-                          className="w-full sm:w-fit"
+                          className="w-fit"
                           disabled={mutationPending}
                           onChange={(event) => {
                             if (isAccessGrantRole(event.target.value)) {
                               void setGrant(grant, event.target.value)
                             }
                           }}
+                          size="sm"
                           value={grant.permission}
                         >
                           {roles.map((role) => (
@@ -516,7 +518,6 @@ function ManagedResourceAccess({
                 </Button>
               ) : null}
               <Button
-                className="max-sm:w-full"
                 disabled={mutationPending}
                 onClick={() => {
                   setError(undefined)
@@ -533,12 +534,16 @@ function ManagedResourceAccess({
             </div>
           ) : null}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-            <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 items-center gap-2">
               <h3 className="font-heading text-label">Public access</h3>
+              <IdentityFieldIcon
+                type={
+                  resource.public ? "visibility-public" : "visibility-private"
+                }
+              />
               <VisibilityBadge isPublic={resource.public} />
             </div>
             <Button
-              className="max-sm:w-full"
               disabled={mutationPending}
               onClick={() => {
                 setError(undefined)

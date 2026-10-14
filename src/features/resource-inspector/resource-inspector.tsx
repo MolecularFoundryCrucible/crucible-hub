@@ -487,7 +487,7 @@ function InspectorBodyPending({
     >
       <section>
         <h3 className="mb-3 text-title-section">Context</h3>
-        <dl className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+        <dl className="grid min-w-0 grid-cols-2 gap-3">
           {Array.from({ length: 4 }, (_, index) => (
             <div className="grid gap-2" key={index}>
               <dt>
@@ -612,7 +612,7 @@ function InspectorContext({ resource }: { resource: WorkspaceResourceDetail }) {
       <h3 className="mb-3 text-title-section" id="inspector-context-heading">
         Context
       </h3>
-      <dl className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+      <dl className="grid min-w-0 grid-cols-2 gap-3">
         {fields.map((field) => (
           <div className="min-w-0" key={field.label}>
             <dt className="text-label text-muted-foreground">{field.label}</dt>

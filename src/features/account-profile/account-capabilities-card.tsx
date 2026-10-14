@@ -46,7 +46,7 @@ export function AccountCapabilitiesCard({
         <CardTitle>Account access</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl className="grid gap-4 sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div>
             <dt className="text-label text-muted-foreground">Platform role</dt>
             <dd className="mt-1">

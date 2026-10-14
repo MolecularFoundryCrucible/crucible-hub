@@ -103,7 +103,7 @@ const pendingColumns: Record<
       label: "Lead",
     },
     {
-      className: "hidden xl:table-cell",
+      className: "resource-directory-role hidden xl:table-cell",
       columnClassName: "resource-directory-role-column hidden xl:table-column",
       label: "Role",
     },

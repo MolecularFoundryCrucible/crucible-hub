@@ -373,7 +373,7 @@ export function SampleCreationForm({
               Cancel
             </Button>
             <Button
-              className="min-w-52"
+              className="sm:min-w-52"
               disabled={
                 busy ||
                 uncertainOutcome ||

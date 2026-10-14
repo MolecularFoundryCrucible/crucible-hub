@@ -98,7 +98,7 @@ export function CollectionGroupControl<TField extends string>({
         Group by
       </FieldLabel>
       <NativeSelect
-        className="w-44 min-w-0"
+        className="w-auto min-w-0"
         disabled={disabled}
         id={id}
         onChange={(event) => {

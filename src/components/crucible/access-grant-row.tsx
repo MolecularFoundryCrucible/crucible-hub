@@ -54,7 +54,7 @@ export function AccessGrantRow({
 }) {
   return (
     <li className="flex min-w-0 flex-col gap-1">
-      <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
+      <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
         {managing ? (
           <RemovalCheckbox
             checked={selected}
@@ -65,12 +65,12 @@ export function AccessGrantRow({
           />
         ) : null}
         {identity}
-        <div className="flex min-h-8 w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
+        <div className="flex min-h-8 shrink-0 items-center justify-end gap-2">
           {pending && pendingAriaLabel ? (
             <PendingIcon label={pendingAriaLabel} />
           ) : null}
           {badge}
-          <span className="flex min-w-0 flex-1 justify-end sm:w-access-role-control sm:flex-none">
+          <span className="flex shrink-0 justify-end sm:w-access-role-control">
             {roleEditor ?? roleBadge}
           </span>
           {revocable ? (
