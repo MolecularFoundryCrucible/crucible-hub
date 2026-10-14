@@ -68,7 +68,11 @@ describe("dataset file upload orchestration", () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(initializeWorkspaceDatasetUpload).mockResolvedValue(
-      ok({ state: "uploading", uploadId: "upload-1" })
+      ok({
+        partSize: 64 * 1024 * 1024,
+        state: "uploading",
+        uploadId: "upload-1",
+      })
     )
     vi.mocked(readWorkspaceDatasetUpload).mockResolvedValue(
       ok({
@@ -193,5 +197,64 @@ describe("dataset file upload orchestration", () => {
       },
     ])
     vi.unstubAllGlobals()
+  })
+
+  it("plans parts from the part size the session returns", async () => {
+    FakeUploadRequest.sent = []
+    vi.mocked(initializeWorkspaceDatasetUpload).mockResolvedValue(
+      ok({ partSize: 2, state: "uploading", uploadId: "upload-1" })
+    )
+    vi.mocked(readWorkspaceDatasetUpload).mockResolvedValue(
+      ok({
+        acknowledgedPartNumbers: [],
+        datasetMfid: "dataset-1",
+        partSize: 2,
+        state: "uploading",
+        uploadId: "upload-1",
+      })
+    )
+    vi.mocked(signWorkspaceDatasetUploadParts).mockImplementation(
+      async ({ data }) =>
+        ok(
+          data.parts.map((part) => ({
+            headers: {},
+            partNumber: part.partNumber,
+            url: `https://uploads.crucible.invalid/part-${part.partNumber}`,
+          }))
+        )
+    )
+    vi.mocked(completeWorkspaceDatasetUpload).mockResolvedValue(
+      ok({
+        dataset_id: 1,
+        dataset_mfid: "dataset-1",
+        filename: "data.dat",
+        mfid: "file-1",
+        sha256_hash: "a".repeat(64),
+        size: 5,
+        storage_backend: "gcs",
+      })
+    )
+    vi.stubGlobal("XMLHttpRequest", FakeUploadRequest)
+
+    await upload(new File(["abcde"], "data.dat"))
+
+    expect(FakeUploadRequest.sent.map((sent) => sent.url).sort()).toEqual([
+      "https://uploads.crucible.invalid/part-1",
+      "https://uploads.crucible.invalid/part-2",
+      "https://uploads.crucible.invalid/part-3",
+    ])
+    vi.unstubAllGlobals()
+  })
+
+  it("abandons a session whose part size cannot be planned", async () => {
+    vi.mocked(initializeWorkspaceDatasetUpload).mockResolvedValue(
+      ok({ partSize: 0, state: "uploading", uploadId: "upload-1" })
+    )
+
+    await expect(upload(new File(["abc"], "data.dat"))).rejects.toThrow()
+    expect(abortWorkspaceDatasetUpload).toHaveBeenCalledWith({
+      data: { datasetMfid: "dataset-1", uploadId: "upload-1" },
+    })
+    expect(signWorkspaceDatasetUploadParts).not.toHaveBeenCalled()
   })
 })

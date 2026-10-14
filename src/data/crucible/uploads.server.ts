@@ -18,7 +18,7 @@ import {
 } from "./workspace-config.server"
 import type { WorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
-import { MAX_UPLOAD_PART_NUMBER } from "./uploads"
+import { MAX_UPLOAD_PART_NUMBER, UPLOAD_PART_SIZE } from "./uploads"
 import type {
   WorkspaceDatasetFile,
   WorkspaceUploadInitiation,
@@ -32,6 +32,7 @@ type FixtureUploadSession = {
   datasetMfid: string
   file?: WorkspaceDatasetFile
   filename: string
+  partSize: number
   replaceFileMfid?: string
   size: number
   state: WorkspaceUploadSession["state"]
@@ -96,6 +97,12 @@ function fixtureWorkspace(scenario?: FixtureScenario) {
   const source = readWorkspaceFixture(scenario)
   if (source.status === "unavailable") throw new Error(source.reason)
   return source.workspace
+}
+
+const MIB = 1024 * 1024
+
+function fixturePartSize(size: number) {
+  return Math.min(Math.max(Math.ceil(size / 8 / MIB), 8), 64) * MIB
 }
 
 const STATUS_PAGE_LIMIT = 1000
@@ -237,7 +244,11 @@ export async function initializeWorkspaceUploadSession(
         { code: "missing_upload_id", path: ["upload_id"] },
       ])
     }
-    return { state: apiUploadState(status.state), uploadId: status.upload_id }
+    return {
+      partSize: status.part_size ?? UPLOAD_PART_SIZE,
+      state: apiUploadState(status.state),
+      uploadId: status.upload_id,
+    }
   }
 
   const workspace = fixtureWorkspace(scenario)
@@ -273,11 +284,12 @@ export async function initializeWorkspaceUploadSession(
     acknowledgedPartNumbers: [],
     datasetMfid: input.datasetMfid,
     filename: input.filename,
+    partSize: fixturePartSize(input.size),
     ...(input.replace ? { replaceFileMfid: input.replace.fileMfid } : {}),
     size: input.size,
     state: "uploading",
   })
-  return { state: "uploading", uploadId }
+  return { partSize: fixturePartSize(input.size), state: "uploading", uploadId }
 }
 
 export async function signWorkspaceUploadParts(
@@ -398,6 +410,7 @@ export async function readWorkspaceUploadSession(
     acknowledgedPartNumbers: [...session.acknowledgedPartNumbers],
     datasetMfid: input.datasetMfid,
     file: session.file,
+    partSize: session.partSize,
     state: session.state,
     uploadId: input.uploadId,
   }

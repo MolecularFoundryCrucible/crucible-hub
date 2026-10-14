@@ -1,9 +1,11 @@
 import {
   computeUploadDigests,
   createUploadPartChecksums,
+  MAX_UPLOAD_PART_NUMBER,
+  MAX_UPLOAD_SIZE,
   planUploadParts,
   runUploadParts,
-  UPLOAD_PART_SIZE,
+  UploadSizeError,
   validateUploadFilename,
 } from "@/data/crucible/uploads"
 import {
@@ -181,10 +183,10 @@ export async function uploadDatasetFile(options: {
     throw new UploadEmptyFileError()
   }
 
-  const parts = planUploadParts(file.size)
-  const partSizes = new Map(
-    parts.map((part) => [part.partNumber, part.end - part.start])
-  )
+  if (file.size > MAX_UPLOAD_SIZE) {
+    throw new UploadSizeError()
+  }
+
   const partLoaded = new Map<number, number>()
   let preparedBytes = 0
   let completedBytes = 0
@@ -229,6 +231,22 @@ export async function uploadDatasetFile(options: {
     return initiation.file
   }
   const uploadId = initiation.uploadId
+  const partSize = initiation.partSize
+  let parts: ReturnType<typeof planUploadParts>
+  try {
+    parts = planUploadParts(file.size, partSize)
+    if (parts.length > MAX_UPLOAD_PART_NUMBER) {
+      throw new Error("The upload session uses an unsupported part size.")
+    }
+  } catch (error) {
+    await abortWorkspaceDatasetUpload({
+      data: { datasetMfid, uploadId },
+    }).catch(() => undefined)
+    throw error
+  }
+  const partSizes = new Map(
+    parts.map((part) => [part.partNumber, part.end - part.start])
+  )
   const checksums = createUploadPartChecksums()
   const preparation = new AbortController()
   const stopPreparation = () => preparation.abort(signal.reason)
@@ -270,10 +288,7 @@ export async function uploadDatasetFile(options: {
                 : "The upload is no longer accepting parts."
             )
           }
-          if (
-            current.partSize !== undefined &&
-            current.partSize !== UPLOAD_PART_SIZE
-          ) {
+          if (current.partSize !== undefined && current.partSize !== partSize) {
             throw new Error("The upload session uses an unsupported part size.")
           }
           return new Set(current.acknowledgedPartNumbers)

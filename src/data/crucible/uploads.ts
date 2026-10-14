@@ -15,6 +15,7 @@ const READ_CHUNK_SIZE = 8 * 1024 * 1024
 const SIGN_WINDOW_PARTS = MAX_CONCURRENT_PARTS * 4
 const MAX_PART_ATTEMPTS = 3
 const DEFAULT_PART_RETRY_WAIT_MS = 1000
+const SIGNATURE_REUSE_MS = 10 * 60 * 1000
 const MAX_PART_RETRY_WAIT_MS = 60_000
 
 export type UploadPart = {
@@ -282,167 +283,135 @@ export async function runUploadParts(
   )
 
   const acknowledged = await transport.readAcknowledgedPartNumbers()
-  const pending = parts.filter((part) => !acknowledged.has(part.partNumber))
+  const remaining = parts.filter((part) => !acknowledged.has(part.partNumber))
+  const queue = [...remaining]
+  const uploaded = new Set<number>()
+  // Signed URLs are bearer credentials: this run-local map is never returned, logged, or persisted.
+  const signed = new Map<number, { part: SignedUploadPart; signedAt: number }>()
+  let signing: Promise<void> | undefined
+  let progress = 0
+  let fatal: { error: unknown } | undefined
 
-  let index = 0
-  while (index < pending.length) {
-    const required = Math.min(laneLimit, signWindow, pending.length - index)
-    await Promise.all(
-      pending
-        .slice(index, index + required)
-        .map((part) => checksums.wait(part.partNumber))
-    )
-    assertNotAborted(signal)
-    let end = index + required
-    while (
-      end < pending.length &&
-      end - index < signWindow &&
-      checksums.ready(pending[end].partNumber) !== undefined
-    ) {
-      end += 1
+  const signatureFor = (partNumber: number) => {
+    const entry = signed.get(partNumber)
+    if (entry && Date.now() - entry.signedAt < SIGNATURE_REUSE_MS) {
+      return entry.part
     }
-    await uploadWindow({
-      file,
-      window: pending.slice(index, end),
-      checksums,
-      transport,
-      signal,
-      laneLimit,
-      maxPartAttempts,
-      wait,
-      onPartUploaded,
-      onPartProgress,
-    })
-    index = end
+    signed.delete(partNumber)
+    return undefined
   }
-}
 
-type UploadWindowOptions = {
-  file: Blob
-  window: UploadPart[]
-  checksums: UploadPartChecksums
-  transport: UploadPartTransport
-  signal?: AbortSignal
-  laneLimit: number
-  maxPartAttempts: number
-  wait: (milliseconds: number) => Promise<void>
-  onPartUploaded?: (partNumber: number) => void
-  onPartProgress?: (partNumber: number, loadedBytes: number) => void
-}
-
-async function uploadWindow(options: UploadWindowOptions): Promise<void> {
-  const {
-    file,
-    window,
-    checksums,
-    transport,
-    signal,
-    laneLimit,
-    maxPartAttempts,
-    wait,
-    onPartUploaded,
-    onPartProgress,
-  } = options
-  let remaining = window
-  let lastError: unknown
-  let failedAttempts = 0
-
-  for (;;) {
-    assertNotAborted(signal)
-    const outstanding = remaining.length
-    try {
-      const urls = await transport.signParts(
-        remaining.map((part) => ({
-          partNumber: part.partNumber,
-          crc32cBase64: checksums.ready(part.partNumber) ?? "",
-        }))
+  const signNextParts = async () => {
+    const unsigned = () =>
+      remaining.filter(
+        (part) =>
+          !uploaded.has(part.partNumber) &&
+          signatureFor(part.partNumber) === undefined
       )
-      // Signed URLs are bearer credentials: this window-local map is never returned, logged, or persisted.
-      const result = await attemptParts(remaining, laneLimit, async (part) => {
-        const signed = urls.get(part.partNumber)
-        if (signed === undefined) {
+    const required = unsigned().slice(0, laneLimit)
+    await Promise.all(required.map((part) => checksums.wait(part.partNumber)))
+    const batch: UploadPartSignature[] = []
+    for (const part of unsigned()) {
+      if (batch.length >= signWindow) break
+      const crc32cBase64 = checksums.ready(part.partNumber)
+      if (crc32cBase64 === undefined) break
+      batch.push({ partNumber: part.partNumber, crc32cBase64 })
+    }
+    if (batch.length === 0) return
+    for (let attempt = 1; ; attempt += 1) {
+      assertNotAborted(signal)
+      try {
+        const urls = await transport.signParts(batch)
+        const signedAt = Date.now()
+        for (const [partNumber, part] of urls) {
+          signed.set(partNumber, { part, signedAt })
+        }
+        return
+      } catch (error) {
+        if (
+          (error instanceof HubApiClientError && !error.details.retryable) ||
+          attempt >= maxPartAttempts
+        ) {
+          throw error
+        }
+        await wait(retryWaitMilliseconds(error, attempt))
+      }
+    }
+  }
+
+  const ensureSigned = async (partNumber: number) => {
+    while (signatureFor(partNumber) === undefined) {
+      if (signing) {
+        await signing
+        continue
+      }
+      signing = signNextParts().finally(() => {
+        signing = undefined
+      })
+      await signing
+      return signatureFor(partNumber)
+    }
+    return signatureFor(partNumber)
+  }
+
+  const uploadPart = async (part: UploadPart) => {
+    let failures = 0
+    let progressAtFailure = progress
+    for (;;) {
+      assertNotAborted(signal)
+      const url = await ensureSigned(part.partNumber)
+      try {
+        if (url === undefined) {
           throw new Error("The upload session did not sign a requested part.")
         }
         try {
           await transport.putPart(
             part,
-            signed,
+            url,
             file.slice(part.start, part.end),
             signal,
             (loaded) => onPartProgress?.(part.partNumber, loaded)
           )
         } catch (error) {
+          signed.delete(part.partNumber)
           onPartProgress?.(part.partNumber, 0)
           throw error
         }
+        uploaded.add(part.partNumber)
+        progress += 1
         onPartUploaded?.(part.partNumber)
-      })
-      remaining = result.failed
-      lastError = result.lastError
-    } catch (error) {
-      lastError = error
+        return
+      } catch (error) {
+        assertNotAborted(signal)
+        failures = progress === progressAtFailure ? failures + 1 : 1
+        progressAtFailure = progress
+        const wrapped =
+          error instanceof UploadPartError
+            ? error
+            : new UploadPartError(
+                part.partNumber,
+                readErrorRetryAfterSeconds(error)
+              )
+        if (failures >= maxPartAttempts || fatal) throw wrapped
+        await wait(retryWaitMilliseconds(wrapped, failures))
+      }
     }
-    if (remaining.length === 0) {
-      return
-    }
-    assertNotAborted(signal)
-    if (
-      lastError instanceof HubApiClientError &&
-      !lastError.details.retryable
-    ) {
-      throw lastError
-    }
-    failedAttempts = remaining.length < outstanding ? 1 : failedAttempts + 1
-    if (failedAttempts >= maxPartAttempts) {
-      throw lastError ?? new Error("The upload could not transfer all parts.")
-    }
-    await wait(retryWaitMilliseconds(lastError, failedAttempts))
   }
-}
-
-type PartAttemptResult = {
-  failed: UploadPart[]
-  lastError: unknown
-}
-
-async function attemptParts(
-  parts: readonly UploadPart[],
-  limit: number,
-  worker: (part: UploadPart) => Promise<void>
-): Promise<PartAttemptResult> {
-  const failed: UploadPart[] = []
-  let lastError: unknown
-  let nextIndex = 0
 
   await Promise.all(
-    Array.from({ length: Math.min(limit, parts.length) }, async () => {
-      while (nextIndex < parts.length) {
-        const part = parts[nextIndex]
-        nextIndex += 1
+    Array.from({ length: Math.min(laneLimit, queue.length) }, async () => {
+      while (!fatal) {
+        const part = queue.shift()
+        if (part === undefined) return
         try {
-          await worker(part)
+          await uploadPart(part)
         } catch (error) {
-          const wrapped =
-            error instanceof UploadPartError
-              ? error
-              : new UploadPartError(
-                  part.partNumber,
-                  readErrorRetryAfterSeconds(error)
-                )
-          failed.push(part)
-          if (
-            lastError === undefined ||
-            (wrapped.retryAfterSeconds !== undefined &&
-              readErrorRetryAfterSeconds(lastError) === undefined)
-          ) {
-            lastError = wrapped
-          }
+          fatal ??= { error }
         }
       }
     })
   )
-
-  return { failed, lastError }
+  if (fatal) throw fatal.error
 }
 
 function assertNotAborted(signal: AbortSignal | undefined): void {

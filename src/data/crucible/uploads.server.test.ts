@@ -152,6 +152,7 @@ describe("dataset upload transport", () => {
       vi.fn(async (request: Request) => {
         requests.push(request)
         return crucibleApiResponse({
+          part_size: 9 * 1024 * 1024,
           parts: [],
           state: "uploading",
           upload_id: "upload-1",
@@ -166,7 +167,11 @@ describe("dataset upload transport", () => {
         idempotencyKey: "4b1d5c6e-2f3a-4b5c-8d9e-0f1a2b3c4d5e",
         size: 128,
       })
-    ).resolves.toEqual({ state: "uploading", uploadId: "upload-1" })
+    ).resolves.toEqual({
+      partSize: 9 * 1024 * 1024,
+      state: "uploading",
+      uploadId: "upload-1",
+    })
     expect(new URL(requests[0].url).pathname).toBe(
       `/datasets/${datasetMfid}/upload/multipart/initiate`
     )
@@ -202,7 +207,11 @@ describe("dataset upload transport", () => {
         replace: { etag: '"abc"', fileMfid: "file-1" },
         size: 256,
       })
-    ).resolves.toEqual({ state: "uploading", uploadId: "upload-2" })
+    ).resolves.toEqual({
+      partSize: 64 * 1024 * 1024,
+      state: "uploading",
+      uploadId: "upload-2",
+    })
     expect(new URL(requests[0].url).pathname).toBe(
       "/files/file-1/upload/multipart/initiate"
     )

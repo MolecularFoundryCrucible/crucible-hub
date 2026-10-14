@@ -338,6 +338,39 @@ describe("part uploads", () => {
     }
   })
 
+  it("keeps the other lanes busy while one part is slow", async () => {
+    const file = new Blob([new Uint8Array(6)])
+    let releaseSlowPart: () => void = () => undefined
+    const slowPart = new Promise<void>((resolve) => {
+      releaseSlowPart = resolve
+    })
+    const { transport, puts, signRequests } = signedTransport({
+      onPut: async (partNumber) => {
+        if (partNumber === 1) await slowPart
+      },
+    })
+    const run = runUploadParts({
+      file,
+      parts: planUploadParts(file.size, 1),
+      signatures: Array.from({ length: file.size }, () => "c2ln"),
+      transport,
+      maxConcurrentParts: 2,
+      signWindowParts: 2,
+      wait: async () => {},
+    })
+
+    await vi.waitFor(() => expect(puts).toHaveLength(5))
+    releaseSlowPart()
+    await run
+
+    expect(puts.map((put) => put.partNumber)).toEqual([2, 3, 4, 5, 6, 1])
+    expect(signRequests).toEqual([
+      [1, 2],
+      [3, 4],
+      [5, 6],
+    ])
+  })
+
   it("skips acknowledged parts", async () => {
     const file = new Blob(["abcd"])
     const { transport, puts } = signedTransport({ acknowledged: [1] })
