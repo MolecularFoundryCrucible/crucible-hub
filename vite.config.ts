@@ -80,6 +80,7 @@ const config = defineConfig({
     nitro({
       baseURL: "/hub/",
       compressPublicAssets: { gzip: true, brotli: true },
+      traceDeps: ["pg", "@google-cloud/cloud-sql-connector"],
     }),
     viteReact(),
   ],

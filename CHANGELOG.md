@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- Added a shared session store in a Hub-owned Postgres database (`HUB_AUTH_SESSION_MODE=postgres`) so restarts and deployments no longer sign people out once production switches to it; operators apply its migrations with `scripts/migrate-session-store.mjs`. Shared sessions also recover from a refresh left unfinished by a stopped instance and keep working through a rate-limited refresh instead of signing out.
+
 - The footer of a deployed Hub now shows its release version, linked to the release tag, instead of a git revision; the development server still shows the revision. The system status popover shows the version with the short commit, which release builds now pass into the image.
 
 ## 1.0.1 - 2026-10-14

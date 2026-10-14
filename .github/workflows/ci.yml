@@ -16,6 +16,19 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: crucible_hub
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d crucible_hub"
+          --health-interval 2s --health-timeout 5s --health-retries 15
+    env:
+      HUB_TEST_SESSION_DATABASE_URL: postgres://crucible_hub_app:app@127.0.0.1:5432/crucible_hub
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -23,6 +36,9 @@ jobs:
           node-version: 22.22.2
           cache: npm
       - run: npm ci
+      - run: node scripts/prepare-session-test-database.mjs
+        env:
+          HUB_TEST_SESSION_ADMIN_DATABASE_URL: postgres://postgres:test@127.0.0.1:5432/crucible_hub
       - run: npm run validate:static
       - run: npm run audit
       - run: npm run skills:list

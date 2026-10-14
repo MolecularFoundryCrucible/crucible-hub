@@ -4,7 +4,7 @@ Status: Pilot active since October 13, 2026 (v1.0.0), with uploads and ingestion
 
 The Hub's public address is `https://crucible.lbl.gov/hub/`. The separate `crucible-hub` Cloud Run service in `mf-crucible/us-central1` runs with 2 vCPU, 1 GiB, manual scaling fixed at one instance, request-based billing, session affinity, and `internal` ingress, with `HUB_UPLOADS_ENABLED` and `HUB_UPLOAD_INGESTION_ENABLED` set. It is reached through the `crucible-web` proxy. The Hub uses API-owned ORCID sign-in, server-held API tokens, and an opaque `HttpOnly`, `Secure` browser session cookie. API-key mode is local development only.
 
-The pilot uses `HUB_AUTH_SESSION_MODE=single-instance` with process-local sessions. Cloud Run can [briefly exceed a configured maximum](https://docs.cloud.google.com/run/docs/configuring/max-instances), and [affinity is best effort](https://docs.cloud.google.com/run/docs/configuring/session-affinity). A deployment, replacement, or routing change can sign users out. Keep all traffic on one revision and do not promise session continuity. [Decision 0033](../decisions/0033-use-existing-cloud-sql-for-shared-hub-sessions.md) selects a future Hub-owned Cloud SQL session store before scaling; it is not implemented for this pilot. The [pilot risk review](cloud-run-pilot-risk-review.md) records remaining ingress and transport limitations.
+The pilot uses `HUB_AUTH_SESSION_MODE=single-instance` with process-local sessions. Cloud Run can [briefly exceed a configured maximum](https://docs.cloud.google.com/run/docs/configuring/max-instances), and [affinity is best effort](https://docs.cloud.google.com/run/docs/configuring/session-affinity). A deployment, replacement, or routing change can sign users out. Keep all traffic on one revision and do not promise session continuity until the service runs on the [shared session store](#shared-session-store). The [pilot risk review](cloud-run-pilot-risk-review.md) records remaining ingress and transport limitations.
 
 ## Pause and resume the pilot
 
@@ -26,6 +26,48 @@ gcloud run services add-iam-policy-binding crucible-hub --project mf-crucible --
 ```
 
 Confirm that the service annotations show `scalingMode` `manual` with `manualInstanceCount` `1`, the intended image digest serves 100% of traffic, and `/hub/health` returns HTTP 200. Then smoke-test sign-in, navigation, and logout with a disposable account. Users must sign in again because sessions were held in the stopped instance. Do not change `crucible-web` or the API to resume this service.
+
+## Shared session store
+
+The Hub can keep sessions in the Hub-owned `crucible_hub` database on `mf-crucible:us-central1:crucible-db`, so restarts and deployments no longer sign users out and more than one instance becomes possible. The database, schema `hub`, roles `crucible_hub_owner` and `crucible_hub_app`, and secrets `crucible-hub-main-db-owner-password` and `crucible-hub-main-db-app-password` are provisioned by the API operators; the runtime identity can read only the app password and holds `roles/cloudsql.client`. The [authentication transition](authentication-transition.md) describes the store.
+
+Switch in this order, at a quiet moment, because the configuration change signs everyone out once:
+
+1. Deploy a release that contains the Postgres store while the service stays in `single-instance` mode.
+2. Apply the migrations as the owner from a clean checkout of that release, with Application Default Credentials that hold `roles/cloudsql.client`. The script reports the applied versions and is safe to repeat.
+
+   ```sh
+   HUB_SESSION_DATABASE_INSTANCE=mf-crucible:us-central1:crucible-db \
+   HUB_SESSION_DATABASE_USER=crucible_hub_owner \
+   HUB_SESSION_DATABASE_PASSWORD="$(gcloud secrets versions access latest \
+     --secret crucible-hub-main-db-owner-password --project mf-crucible)" \
+   node scripts/migrate-session-store.mjs
+   ```
+
+3. Create the session key ring secret once and let only the runtime identity read it. Each entry is `id:` followed by a base64url 32-byte key.
+
+   ```sh
+   printf 'k1:%s' "$(openssl rand 32 | basenc --base64url | tr -d '=\n')" |
+     gcloud secrets create crucible-hub-session-keys --project mf-crucible \
+       --replication-policy automatic --data-file -
+   gcloud secrets add-iam-policy-binding crucible-hub-session-keys \
+     --project mf-crucible \
+     --member serviceAccount:crucible-hub-runtime@mf-crucible.iam.gserviceaccount.com \
+     --role roles/secretmanager.secretAccessor
+   ```
+
+4. Switch the service to the shared store.
+
+   ```sh
+   gcloud run services update crucible-hub --project mf-crucible \
+     --region us-central1 \
+     --update-env-vars HUB_AUTH_SESSION_MODE=postgres,HUB_SESSION_DATABASE_INSTANCE=mf-crucible:us-central1:crucible-db \
+     --update-secrets HUB_SESSION_KEYS=crucible-hub-session-keys:latest,HUB_SESSION_DATABASE_PASSWORD=crucible-hub-main-db-app-password:latest
+   ```
+
+5. Check `/hub/health`, sign in, deploy the same image again or restart the revision, and confirm the session survives.
+
+Roll back by setting `HUB_AUTH_SESSION_MODE=single-instance` and removing `HUB_SESSION_KEYS`, `HUB_SESSION_DATABASE_INSTANCE`, and `HUB_SESSION_DATABASE_PASSWORD` in one update; production sign-in stays unavailable while single-instance mode sees any shared-store setting. Rotate the key ring by adding a new first entry and keeping the old one for at least twelve hours. Scaling beyond one instance stays a separate decision that waits for the API ingress reinforcement.
 
 ## Build and deploy
 

@@ -7,8 +7,15 @@ import {
   randomBytes,
 } from "node:crypto"
 
-import { createClient } from "redis"
 import { z } from "zod"
+
+import type { HubSessionBackend } from "./hub-session-backend.server"
+import {
+  postgresSessionBackend,
+  postgresSessionsConfigured,
+  postgresSessionsRequested,
+} from "./hub-session-postgres.server"
+import { redisSessionBackend } from "./hub-session-redis.server"
 
 const tokenSchema = z.object({
   access_token: z.string().min(1),
@@ -25,6 +32,8 @@ const sessionSchema = z.object({
   expiresAt: z.number().int(),
   idleExpiresAt: z.number().int(),
   refreshing: z.boolean().default(false),
+  refreshingSince: z.number().int().optional(),
+  refreshRetryAt: z.number().int().optional(),
 })
 
 const transactionSchema = z.object({
@@ -37,61 +46,17 @@ const transactionSchema = z.object({
 export type SharedSession = z.infer<typeof sessionSchema>
 export type SharedTransaction = z.infer<typeof transactionSchema>
 export type StoredSession = { raw: string; session: SharedSession }
+export type SharedSessionStoreKind = "postgres" | "redis"
 
 const prefix = "crucible:hub:v1:"
 const absoluteLifetime = 12 * 60 * 60 * 1000
 const idleLifetime = 8 * 60 * 60 * 1000
-const compareAndSetScript = `
-if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
-redis.call('SET', KEYS[1], ARGV[2], 'PX', ARGV[3])
-return 1
-`
-const closeScript = `
-local old = redis.call('GET', KEYS[1])
-redis.call('DEL', KEYS[1])
-return old
-`
-const createAfterCallbackScript = `
-if redis.call('EXISTS', KEYS[1]) == 1 then return 0 end
-redis.call('SET', KEYS[2], ARGV[1], 'PX', ARGV[2])
-if KEYS[3] ~= KEYS[2] then redis.call('DEL', KEYS[3]) end
-redis.call('SET', KEYS[4], KEYS[2], 'PX', ARGV[3])
-return 1
-`
-const cancelTransactionScript = `
-redis.call('SET', KEYS[1], '1', 'PX', ARGV[1])
-redis.call('DEL', KEYS[2])
-return 1
-`
-const rotateSessionScript = `
-if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
-redis.call('SET', KEYS[2], ARGV[2], 'PX', ARGV[3])
-redis.call('DEL', KEYS[1])
-return 1
-`
-
-function createSessionRedisClient() {
-  return createClient({
-    url: configuration().url,
-    socket: { connectTimeout: 5000, reconnectStrategy: false },
-  })
-}
-
-type SessionRedisClient = ReturnType<typeof createSessionRedisClient>
-let connection: SessionRedisClient | undefined
-let connecting: Promise<SessionRedisClient> | undefined
+const issuedLifetime = 10 * 60 * 1000
 
 function configuration() {
-  const url = process.env.HUB_SESSION_REDIS_URL
   const value = process.env.HUB_SESSION_KEYS
-  if (!url || !value) throw new Error("Shared Hub sessions are not configured.")
-  const parsed = new URL(url)
-  if (
-    parsed.protocol !== "rediss:" &&
-    !(process.env.NODE_ENV !== "production" && parsed.protocol === "redis:")
-  ) {
-    throw new Error("Shared Hub sessions require a trusted Redis connection.")
-  }
+  if (!value || !sharedSessionStoreKind())
+    throw new Error("Shared Hub sessions are not configured.")
   const keys = value.split(",").map((entry) => {
     const separator = entry.indexOf(":")
     const id = entry.slice(0, separator)
@@ -108,42 +73,33 @@ function configuration() {
   if (new Set(keys.map(({ id }) => id)).size !== keys.length) {
     throw new Error("Shared Hub session key IDs must be unique.")
   }
-  return { url, keys }
+  return { keys }
+}
+
+export function sharedSessionStoreKind(): SharedSessionStoreKind | null {
+  const redisRequested = Boolean(process.env.HUB_SESSION_REDIS_URL)
+  const postgresRequested = postgresSessionsRequested()
+  if (redisRequested && postgresRequested) {
+    throw new Error("Configure only one shared Hub session store.")
+  }
+  if (postgresRequested) return "postgres"
+  return redisRequested ? "redis" : null
 }
 
 export function sharedSessionsConfigured() {
-  return Boolean(
-    process.env.HUB_SESSION_REDIS_URL && process.env.HUB_SESSION_KEYS
-  )
+  const kind = sharedSessionStoreKind()
+  if (!kind || !process.env.HUB_SESSION_KEYS) return false
+  return kind === "redis" || postgresSessionsConfigured()
 }
 
 export function sharedSessionsRequested() {
-  return Boolean(
-    process.env.HUB_SESSION_REDIS_URL || process.env.HUB_SESSION_KEYS
-  )
+  return Boolean(sharedSessionStoreKind() || process.env.HUB_SESSION_KEYS)
 }
 
-async function redis() {
-  if (connection?.isReady) return connection
-  if (connection?.isOpen) throw new Error("Hub session storage is unavailable.")
-  if (connection) {
-    connection = undefined
-    connecting = undefined
-  }
-  if (connecting) return connecting
-  const client = createSessionRedisClient()
-  client.on("error", () => {})
-  connecting = client
-    .connect()
-    .then(() => {
-      connection = client
-      return client
-    })
-    .catch((error: unknown) => {
-      connecting = undefined
-      throw error
-    })
-  return connecting
+function backend(): HubSessionBackend {
+  return sharedSessionStoreKind() === "postgres"
+    ? postgresSessionBackend
+    : redisSessionBackend
 }
 
 function key(kind: string, id: string) {
@@ -215,28 +171,29 @@ export async function saveTransaction(
   transaction: SharedTransaction
 ) {
   const storageKey = key("transaction", id)
-  await (
-    await redis()
-  ).set(storageKey, seal(transaction, storageKey), {
-    PX: lifetime(transaction.expiresAt),
-  })
+  await backend().set(
+    storageKey,
+    seal(transaction, storageKey),
+    lifetime(transaction.expiresAt)
+  )
 }
 
 export async function consumeTransaction(id: string) {
   const storageKey = key("transaction", id)
-  const raw = await (await redis()).getDel(storageKey)
+  const raw = await backend().take(storageKey)
   return raw ? transactionSchema.parse(open(raw, storageKey)) : null
 }
 
 export async function cancelTransaction(id: string) {
-  const client = await redis()
-  await client.eval(cancelTransactionScript, {
-    keys: [key("cancel", id), key("transaction", id)],
-    arguments: [String(10 * 60 * 1000)],
-  })
-  const issued = await client.getDel(key("issued", id))
+  const store = backend()
+  await store.cancelLogin(
+    key("cancel", id),
+    key("transaction", id),
+    issuedLifetime
+  )
+  const issued = await store.take(key("issued", id))
   if (!issued) return null
-  const raw = await client.getDel(issued)
+  const raw = await store.take(issued)
   return raw ? sessionSchema.parse(open(raw, issued)) : null
 }
 
@@ -247,27 +204,20 @@ export async function createSessionAfterCallback(
   session: SharedSession
 ) {
   const sessionKey = key("session", sessionId)
-  const result = await (
-    await redis()
-  ).eval(createAfterCallbackScript, {
-    keys: [
-      key("cancel", id),
-      sessionKey,
-      key("session", previousId ?? sessionId),
-      key("issued", id),
-    ],
-    arguments: [
-      seal(session, sessionKey),
-      String(sessionLifetime(session)),
-      String(10 * 60 * 1000),
-    ],
+  return backend().issueAfterLogin({
+    cancelKey: key("cancel", id),
+    sessionKey,
+    previousKey: key("session", previousId ?? sessionId),
+    issuedKey: key("issued", id),
+    value: seal(session, sessionKey),
+    lifetimeMs: sessionLifetime(session),
+    issuedLifetimeMs: issuedLifetime,
   })
-  return result === 1
 }
 
 export async function readSession(id: string): Promise<StoredSession | null> {
   const storageKey = key("session", id)
-  const raw = await (await redis()).get(storageKey)
+  const raw = await backend().get(storageKey)
   if (!raw) return null
   const session = sessionSchema.parse(open(raw, storageKey))
   if (
@@ -287,17 +237,12 @@ export async function replaceSession(
   session: SharedSession
 ) {
   const storageKey = key("session", id)
-  const result = await (
-    await redis()
-  ).eval(compareAndSetScript, {
-    keys: [storageKey],
-    arguments: [
-      previous.raw,
-      seal(session, storageKey),
-      String(sessionLifetime(session)),
-    ],
-  })
-  return result === 1
+  return backend().compareAndSet(
+    storageKey,
+    previous.raw,
+    seal(session, storageKey),
+    sessionLifetime(session)
+  )
 }
 
 export async function touchSession(id: string, previous: StoredSession) {
@@ -323,25 +268,17 @@ export async function rotateSession(
   session: SharedSession
 ) {
   const nextKey = key("session", nextId)
-  const result = await (
-    await redis()
-  ).eval(rotateSessionScript, {
-    keys: [key("session", id), nextKey],
-    arguments: [
-      previous.raw,
-      seal(session, nextKey),
-      String(sessionLifetime(session)),
-    ],
-  })
-  return result === 1
+  return backend().move(
+    key("session", id),
+    nextKey,
+    previous.raw,
+    seal(session, nextKey),
+    sessionLifetime(session)
+  )
 }
 
 export async function closeSession(id: string) {
   const storageKey = key("session", id)
-  const raw = await (
-    await redis()
-  ).eval(closeScript, { keys: [storageKey], arguments: [] })
-  return typeof raw === "string"
-    ? sessionSchema.parse(open(raw, storageKey))
-    : null
+  const raw = await backend().take(storageKey)
+  return raw ? sessionSchema.parse(open(raw, storageKey)) : null
 }

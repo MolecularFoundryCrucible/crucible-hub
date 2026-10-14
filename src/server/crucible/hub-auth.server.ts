@@ -28,6 +28,7 @@ import {
   saveTransaction,
   sharedSessionsConfigured,
   sharedSessionsRequested,
+  sharedSessionStoreKind,
   touchSession,
 } from "./hub-session-store.server"
 import type { SharedSession } from "./hub-session-store.server"
@@ -85,6 +86,14 @@ class TokenRequestError extends Error {
 }
 
 const transientRefreshDelay = 5000
+const refreshClaimLifetime = 30_000
+
+function refreshClaimed(shared: SharedSession) {
+  return (
+    shared.refreshing &&
+    (shared.refreshingSince ?? 0) > Date.now() - refreshClaimLifetime
+  )
+}
 
 function refreshFailure(error: unknown) {
   return {
@@ -183,8 +192,9 @@ export function enforceHubLoginRateLimit() {
 export function productionHubAuthReady() {
   if (process.env.NODE_ENV !== "production") return true
   if (process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true") return false
-  if (process.env.HUB_AUTH_SESSION_MODE === "redis")
-    return sharedSessionsConfigured()
+  const mode = process.env.HUB_AUTH_SESSION_MODE
+  if (mode === "postgres" || mode === "redis")
+    return sharedSessionsConfigured() && sharedSessionStoreKind() === mode
   if (process.env.HUB_AUTH_SESSION_MODE === "single-instance")
     return !sharedSessionsRequested()
   return false
@@ -257,7 +267,7 @@ export async function updateSharedPrivilegeMode(mode: "normal" | "elevated") {
   for (let attempt = 0; attempt < 4; attempt++) {
     const current = await readSession(id)
     if (!current) throw new Error("The Hub session has ended.")
-    if (current.session.refreshing)
+    if (refreshClaimed(current.session))
       throw new Error("The Hub session is refreshing. Try again.")
     const updated = { ...current.session, privilegeMode: mode }
     const nextId = randomValue()
@@ -553,7 +563,7 @@ async function refreshSharedSession(
   sessionId: string,
   previousRefreshToken: string
 ): Promise<Tokens | null> {
-  for (let attempt = 0; attempt < 90; attempt++) {
+  for (let attempt = 0; attempt < 40; attempt++) {
     const current = await readSession(sessionId)
     if (!current) {
       clearSharedRequestSession()
@@ -561,10 +571,11 @@ async function refreshSharedSession(
     }
     if (current.session.tokens.refresh_token !== previousRefreshToken)
       return current.session.tokens
-    if (!current.session.refreshing) {
+    if (!refreshClaimed(current.session)) {
       const claimed = await replaceSession(sessionId, current, {
         ...current.session,
         refreshing: true,
+        refreshingSince: Date.now(),
       })
       if (!claimed) continue
       try {
@@ -577,7 +588,13 @@ async function refreshSharedSession(
           clearSharedRequestSession()
           return null
         }
-        const updated = { ...claimedState.session, tokens, refreshing: false }
+        const updated = {
+          ...claimedState.session,
+          tokens,
+          refreshing: false,
+          refreshingSince: undefined,
+          refreshRetryAt: undefined,
+        }
         if (!(await replaceSession(sessionId, claimedState, updated))) {
           await revokeRefreshToken(tokens.refresh_token)
           clearSharedRequestSession()
@@ -594,6 +611,8 @@ async function refreshSharedSession(
             await replaceSession(sessionId, claimedState, {
               ...claimedState.session,
               refreshing: false,
+              refreshingSince: undefined,
+              refreshRetryAt: Date.now() + failure.retryAfterMs,
             })
           throw refreshUnavailable(failure.retryAfterMs)
         }
@@ -604,11 +623,7 @@ async function refreshSharedSession(
     }
     await new Promise((resolve) => setTimeout(resolve, 250))
   }
-  await closeSession(sessionId)
-  clearSharedRequestSession()
-  throw new Error(
-    "The Hub session refresh could not be confirmed. Sign in again."
-  )
+  throw refreshUnavailable(refreshClaimLifetime)
 }
 
 function sharedSessionApiFetch(sessionId: string): typeof fetch {
@@ -624,19 +639,34 @@ function sharedSessionApiFetch(sessionId: string): typeof fetch {
       clearSharedRequestSession()
       throw new Error("The Hub session has ended.")
     }
+    const accessExpiresAt = Date.parse(current.session.tokens.access_expires_at)
+    const retryAt = current.session.refreshRetryAt ?? 0
     if (
-      current.session.refreshing ||
-      Date.parse(current.session.tokens.access_expires_at) <= Date.now() + 30000
+      refreshClaimed(current.session) ||
+      accessExpiresAt <= Date.now() + 30000
     ) {
-      const tokens = await refreshSharedSession(
-        sessionId,
-        current.session.tokens.refresh_token
-      )
-      if (!tokens) throw new Error("The Hub session has ended.")
-      current = await readSession(sessionId)
-      if (!current) {
-        clearSharedRequestSession()
-        throw new Error("The Hub session has ended.")
+      if (retryAt > Date.now() && !refreshClaimed(current.session)) {
+        if (accessExpiresAt <= Date.now())
+          throw refreshUnavailable(retryAt - Date.now())
+      } else {
+        try {
+          const tokens = await refreshSharedSession(
+            sessionId,
+            current.session.tokens.refresh_token
+          )
+          if (!tokens) throw new Error("The Hub session has ended.")
+        } catch (error) {
+          if (!(
+            accessExpiresAt > Date.now() &&
+            error instanceof CrucibleResponseError
+          ))
+            throw error
+        }
+        current = await readSession(sessionId)
+        if (!current) {
+          clearSharedRequestSession()
+          throw new Error("The Hub session has ended.")
+        }
       }
     }
     const usedToken = current.session.tokens.access_token
