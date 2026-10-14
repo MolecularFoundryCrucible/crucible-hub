@@ -54,6 +54,12 @@ import {
 import { useStagedCreation } from "./creation-submission"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 import { CreationFormActions } from "@/components/crucible/creation-form-actions"
+import {
+  CreationMetadataField,
+  creationMetadataSchema,
+  emptyCreationMetadata,
+  useCreationMetadataSubmission,
+} from "./creation-metadata"
 
 const sampleSchema = z.object({
   description: z
@@ -64,6 +70,7 @@ const sampleSchema = z.object({
       `Use ${SAMPLE_DESCRIPTION_MAX_LENGTH.toLocaleString()} characters or fewer.`
     ),
   project: workspaceSelectionOf("project").nullable(),
+  metadata: creationMetadataSchema,
   relationships: z.array(creationRelationshipDraftSchema).max(10),
   sample_name: z
     .string()
@@ -119,6 +126,10 @@ export function SampleCreationForm({
         })
       ),
   })
+  const metadata = useCreationMetadataSubmission({
+    resourceKind: "sample",
+    scope,
+  })
   const relationships = useCreationRelationshipSubmission({
     onApplied: (resource) => {
       if (resource.kind === "sample") setCreated(resource)
@@ -148,10 +159,11 @@ export function SampleCreationForm({
         queryKey: crucibleKeys.searches(scope),
       })
     },
+    metadata,
     relationships,
   })
-  const form = useSampleForm(initialProject, async (value, submittedForm) => {
-    await submit(value, submittedForm, async (resource) => {
+  const form = useSampleForm(initialProject, async (value) => {
+    await submit(value, async (resource) => {
       await navigate({
         params: { sampleMfid: resource.unique_id },
         to: "/samples/$sampleMfid",
@@ -160,9 +172,14 @@ export function SampleCreationForm({
   })
   useCreationTimestampDefault(form)
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
-  const busy = isSubmitting || mutation.isPending || relationships.isPending
+  const busy =
+    isSubmitting ||
+    mutation.isPending ||
+    metadata.isPending ||
+    relationships.isPending
+  const incompleteStages = metadata.failed || relationships.failures.length > 0
   const discard = useDiscardProtection(
-    () => form.state.isDirty,
+    () => form.state.isDirty && !createdSample,
     () => {
       void navigate({ to: "/data" })
     },
@@ -341,12 +358,19 @@ export function SampleCreationForm({
                 </fieldset>
                 <FormErrorRegion padded>
                   {saveError ? <p>{saveError}</p> : null}
-                  {createdSample && relationships.failures.length ? (
+                  {createdSample && incompleteStages ? (
                     <p>
-                      The sample was created, but relationships with{" "}
-                      {relationships.failures
-                        .map((draft) => draft.target.name)
-                        .join(", ")}{" "}
+                      The sample was created, but{" "}
+                      {[
+                        metadata.failed ? "scientific metadata" : null,
+                        relationships.failures.length
+                          ? `relationships with ${relationships.failures
+                              .map((draft) => draft.target.name)
+                              .join(", ")}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" and ")}{" "}
                       still need recovery.
                     </p>
                   ) : null}
@@ -358,8 +382,8 @@ export function SampleCreationForm({
               formId={formId}
               label={
                 createdSample
-                  ? relationships.failures.length
-                    ? "Retry missing relationships"
+                  ? incompleteStages
+                    ? "Retry missing stages"
                     : "Created"
                   : busy
                     ? "Creating"
@@ -370,7 +394,7 @@ export function SampleCreationForm({
               submitDisabled={
                 busy ||
                 uncertainOutcome ||
-                (Boolean(createdSample) && relationships.failures.length === 0)
+                (Boolean(createdSample) && !incompleteStages)
               }
             />
           </Card>
@@ -393,6 +417,23 @@ export function SampleCreationForm({
                 </form.Field>
               </CardContent>
             </Card>
+            <Card aria-busy={busy}>
+              <CardHeader>
+                <CardTitle>Scientific metadata</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form.Field name="metadata">
+                  {(field) => (
+                    <CreationMetadataField
+                      disabled={busy || Boolean(createdSample)}
+                      errors={fieldErrors(field)}
+                      onChange={field.handleChange}
+                      value={field.state.value}
+                    />
+                  )}
+                </form.Field>
+              </CardContent>
+            </Card>
           </div>
         </ContentGrid>
       </ContentBoundary>
@@ -409,6 +450,7 @@ function useSampleForm(
     defaultValues: {
       description: "",
       project: initialProject ?? null,
+      metadata: emptyCreationMetadata(),
       relationships: [] as CreationRelationshipDraft[],
       sample_name: "",
       sample_type: "",

@@ -1878,6 +1878,9 @@ export async function writeWorkspaceResourceMetadata(
       scenario,
       requestSignal
     )
+    if (!resource && resourceMfid.startsWith(`fixture-${resourceKind}-`)) {
+      return { scientific_metadata: update.metadata, unique_id: resourceMfid }
+    }
     if (!resource || resource.kind !== resourceKind) {
       throw new CrucibleResponseError(404)
     }

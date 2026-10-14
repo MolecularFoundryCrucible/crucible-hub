@@ -1,27 +1,37 @@
 import { useState } from "react"
-import type { AnyFormApi } from "@tanstack/react-form"
 
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 import {
   creationFailureMessage,
   isUncertainCreationError,
 } from "@/features/resource-creation/creation-error"
+import type { CreationMetadataDraft } from "@/features/resource-creation/creation-metadata"
 import type { CreationRelationshipDraft } from "@/features/resource-creation/creation-relationships"
 
 type StagedCreationKind = "dataset" | "sample"
 
-type StagedValues = { relationships: CreationRelationshipDraft[] }
+type StagedValues = {
+  metadata: CreationMetadataDraft
+  relationships: CreationRelationshipDraft[]
+}
 
 export function useStagedCreation<TValues extends StagedValues>({
   create,
   files,
   kind,
+  metadata,
   onCreated,
   relationships,
 }: {
   create: (value: TValues) => Promise<WorkspaceResourceDetail>
   files?: { apply: (resourceMfid: string) => Promise<boolean> }
   kind: StagedCreationKind
+  metadata: {
+    apply: (
+      resourceMfid: string,
+      draft: CreationMetadataDraft
+    ) => Promise<boolean>
+  }
   onCreated?: (resource: WorkspaceResourceDetail) => void
   relationships: {
     apply: (
@@ -36,7 +46,6 @@ export function useStagedCreation<TValues extends StagedValues>({
 
   async function submit(
     value: TValues,
-    formApi: AnyFormApi,
     onApplied: (resource: WorkspaceResourceDetail) => Promise<void>
   ) {
     setSaveError(undefined)
@@ -53,7 +62,6 @@ export function useStagedCreation<TValues extends StagedValues>({
       }
       setCreated(resource)
       onCreated?.(resource)
-      formApi.reset(value)
       const complete = await applyStages(resource.unique_id, value)
       if (complete) await onApplied(resource)
     } catch (error) {
@@ -63,12 +71,13 @@ export function useStagedCreation<TValues extends StagedValues>({
   }
 
   async function applyStages(resourceMfid: string, value: TValues) {
+    const metadataComplete = await metadata.apply(resourceMfid, value.metadata)
     const relationshipsComplete = await relationships.apply(
       resourceMfid,
       value.relationships
     )
     const filesComplete = files ? await files.apply(resourceMfid) : true
-    return relationshipsComplete && filesComplete
+    return metadataComplete && relationshipsComplete && filesComplete
   }
 
   return { created, saveError, setCreated, submit, uncertainOutcome }

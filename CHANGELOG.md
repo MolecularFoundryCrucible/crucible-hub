@@ -6,6 +6,9 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- Sample and dataset creation can add scientific metadata in a separate card, as name and value fields, as JSON, or by uploading a JSON file; it is saved right after the record is created and retried with the other missing stages if that fails.
+- Fixed creation forms dropping entered relationships after the record was created, which made a retry report success without adding them.
+
 - Creation pages and dialogs now label their submit button Create (Register for instruments), since the page or dialog title already names the record.
 
 - The footer API status now refreshes every minute while the tab is visible and shows a check or cross instead of status words. The status check uses the public readiness probe without the signed-in session, and its background polling does not count as activity, so the idle sign-out still applies.

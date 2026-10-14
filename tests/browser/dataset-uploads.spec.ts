@@ -155,7 +155,10 @@ test("opens the created dataset after uploading its files without a leave prompt
     mimeType: "application/octet-stream",
     name: `created-${runId}.h5`,
   })
-  await page.getByRole("button", { name: "Create", exact: true }).click()
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Create", exact: true })
+    .click()
 
   await expect(page).toHaveURL(/\/hub\/datasets\/(?!new)[^/?]+/)
   await expect(page.getByRole("alertdialog")).toHaveCount(0)

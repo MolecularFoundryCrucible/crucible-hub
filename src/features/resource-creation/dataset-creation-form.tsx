@@ -59,6 +59,12 @@ import { useUploadsEnabled } from "@/components/crucible/workspace-provider"
 import { UploadLeaveDialog } from "@/features/dataset-files/upload-leave-guard"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 import { CreationFormActions } from "@/components/crucible/creation-form-actions"
+import {
+  CreationMetadataField,
+  creationMetadataSchema,
+  emptyCreationMetadata,
+  useCreationMetadataSubmission,
+} from "./creation-metadata"
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -75,6 +81,7 @@ const datasetFormSchema = z.object({
   measurement: optionalText(DATASET_MEASUREMENT_MAX_LENGTH, "measurement"),
   project: workspaceSelectionOf("project").optional(),
   public: z.boolean(),
+  metadata: creationMetadataSchema,
   relationships: z.array(creationRelationshipDraftSchema).max(10),
   session_name: optionalText(DATASET_SESSION_NAME_MAX_LENGTH, "session name"),
   timestamp: z
@@ -121,6 +128,10 @@ export function DatasetCreationForm({
         })
       ),
   })
+  const metadata = useCreationMetadataSubmission({
+    resourceKind: "dataset",
+    scope,
+  })
   const relationships = useCreationRelationshipSubmission({
     onApplied: (resource) => {
       if (resource.kind === "dataset") setCreated(resource)
@@ -143,6 +154,7 @@ export function DatasetCreationForm({
     onCreated: (resource) => {
       if (resource.kind === "dataset") cacheDataset(resource)
     },
+    metadata,
     relationships,
   })
   const form = useDatasetForm(
@@ -154,12 +166,13 @@ export function DatasetCreationForm({
       measurement: "",
       project: initialProject,
       public: false,
+      metadata: emptyCreationMetadata(),
       relationships: [] as CreationRelationshipDraft[],
       session_name: "",
       timestamp: "",
     },
-    async ({ formApi, value }) => {
-      await submit(value, formApi, async (resource) => {
+    async ({ value }) => {
+      await submit(value, async (resource) => {
         await openCreatedDataset(resource.unique_id)
       })
     }
@@ -168,17 +181,20 @@ export function DatasetCreationForm({
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(
     () =>
-      form.state.isDirty || (!createdDataset && files.batch.items.length > 0),
+      !createdDataset && (form.state.isDirty || files.batch.items.length > 0),
     () => {
       void navigate({ search: { kind: "datasets" }, to: "/data" })
     },
     true
   )
   const incompleteStages =
-    relationships.failures.length > 0 || files.failures.length > 0
+    metadata.failed ||
+    relationships.failures.length > 0 ||
+    files.failures.length > 0
   const busy =
     isSubmitting ||
     createMutation.isPending ||
+    metadata.isPending ||
     relationships.isPending ||
     files.isPending
   const formId = "dataset-creation"
@@ -410,6 +426,7 @@ export function DatasetCreationForm({
                       <p>
                         The dataset was created, but{" "}
                         {[
+                          metadata.failed ? "scientific metadata" : null,
                           relationships.failures.length
                             ? `relationships with ${relationships.failures
                                 .map((draft) => draft.target.name)
@@ -464,6 +481,23 @@ export function DatasetCreationForm({
                       onChange={field.handleChange}
                       resourceKind="dataset"
                       scope={scope}
+                      value={field.state.value}
+                    />
+                  )}
+                </form.Field>
+              </CardContent>
+            </Card>
+            <Card aria-busy={busy}>
+              <CardHeader>
+                <CardTitle>Scientific metadata</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form.Field name="metadata">
+                  {(field) => (
+                    <CreationMetadataField
+                      disabled={busy || Boolean(createdDataset)}
+                      errors={fieldErrors(field)}
+                      onChange={field.handleChange}
                       value={field.state.value}
                     />
                   )}
