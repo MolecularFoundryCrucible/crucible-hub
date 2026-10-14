@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { useState } from "react"
 import { createFileRoute, notFound } from "@tanstack/react-router"
 
 import { ContentBoundary } from "@/components/crucible/content-layout"
@@ -29,6 +30,10 @@ import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.quer
 import { recentScopeOptions } from "@/features/home/home-data"
 import { useThemePreference } from "@/features/preferences/theme-preference"
 import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { useClearRecentHistory } from "@/features/recently-viewed/recently-viewed"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 
 const themeOptions = [
   { label: "System", value: "system" },
@@ -118,6 +123,8 @@ function PreferencesPage() {
   useSuspenseQuery(accountPreferencesQueryOptions(scope))
   const { preferences, saving, update } = useAccountPreferences()
   const { setTheme, theme } = useThemePreference()
+  const [clearOpen, setClearOpen] = useState(false)
+  const clearHistory = useClearRecentHistory(() => setClearOpen(false))
 
   return (
     <PageLayout>
@@ -190,6 +197,35 @@ function PreferencesPage() {
               </FieldSet>
               <FieldSeparator />
               <FieldSet>
+                <FieldLegend>History</FieldLegend>
+                <PreferenceField
+                  description="Keep a list of the samples, datasets, projects, and instruments you open, shown in the sidebar and on Home on every device."
+                  id="record-recent-resources"
+                  title="Remember recently viewed resources"
+                >
+                  <Switch
+                    checked={preferences.record_recent_resources !== false}
+                    id="record-recent-resources"
+                    onCheckedChange={(checked) =>
+                      update({ record_recent_resources: checked })
+                    }
+                  />
+                </PreferenceField>
+                <PreferenceField
+                  description="Remove every resource from your recently viewed list."
+                  title="Clear history"
+                >
+                  <Button
+                    onClick={() => setClearOpen(true)}
+                    type="button"
+                    variant="outline"
+                  >
+                    Clear history
+                  </Button>
+                </PreferenceField>
+              </FieldSet>
+              <FieldSeparator />
+              <FieldSet>
                 <FieldLegend>Home</FieldLegend>
                 <PreferenceField
                   description="Show recently added data from everyone you can see, or only your own."
@@ -221,6 +257,18 @@ function PreferencesPage() {
           ) : null}
         </p>
       </ContentBoundary>
+      <ConfirmationDialog
+        confirmLabel="Clear history"
+        description="Your recently viewed list will be empty on every device. Resources themselves are not affected."
+        kind="alert"
+        onConfirm={() => clearHistory.mutate()}
+        onOpenChange={setClearOpen}
+        open={clearOpen}
+        pending={clearHistory.isPending}
+        pendingLabel="Clearing history"
+        title="Clear recently viewed history?"
+        variant="destructive"
+      />
     </PageLayout>
   )
 }

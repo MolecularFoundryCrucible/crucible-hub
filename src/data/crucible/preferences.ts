@@ -19,6 +19,7 @@ const dataGroupByPatchSchema = z
 export const accountPreferencesSchema = z.object({
   theme: themePreferenceSchema.optional().catch(undefined),
   default_record_kind: recordKindPreferenceSchema.optional().catch(undefined),
+  record_recent_resources: z.boolean().optional().catch(undefined),
   hub: z
     .object({
       data_group_by: dataGroupByPreferenceSchema.optional().catch(undefined),
@@ -34,6 +35,7 @@ export const accountPreferencesPatchSchema = z
   .object({
     theme: themePreferenceSchema.nullable().optional(),
     default_record_kind: recordKindPreferenceSchema.nullable().optional(),
+    record_recent_resources: z.boolean().nullable().optional(),
     hub: z
       .object({
         data_group_by: dataGroupByPatchSchema.nullable().optional(),

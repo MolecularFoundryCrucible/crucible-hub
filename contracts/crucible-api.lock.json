@@ -1,8 +1,8 @@
 {
   "sourceRepository": "crucible-api",
-  "sourceRevision": "9c974d6b261e0b796d291a002ad0821578f6782f",
+  "sourceRevision": "2fa43bcc67fa01e7e1158e1d8750f5650fd6f3f9",
   "sourcePath": "openapi/crucible-api.json",
-  "sha256": "62402a94fdd4664edbf5fa93efc84c01b6eb20dc201aebb51030fa818f2678ed",
+  "sha256": "0465676443704eae555b2e25f10ad540c563aa09e9b02e5adbeb00beffda626d",
   "openapi": "3.1.0",
-  "generatedAt": "2026-10-14T14:20:45.073Z"
+  "generatedAt": "2026-10-14T17:34:12.553Z"
 }

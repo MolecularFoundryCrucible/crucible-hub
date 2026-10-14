@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   createContext,
   useCallback,
@@ -7,13 +8,27 @@ import {
   useState,
 } from "react"
 
-export type RecentlyViewedResource = {
-  kind: "dataset" | "instrument" | "project" | "sample"
-  name: string
-  projectId: string | null
-  uniqueId: string
-  viewedAt: string
-}
+import {
+  useAccountPreferencesEnabled,
+  useOptionalWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
+import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
+import { identityScope } from "@/data/crucible/query-keys"
+import type { RecentResource } from "@/data/crucible/recent-resources"
+import { recentResourceLimit } from "@/data/crucible/recent-resources"
+import {
+  clearRecentResourceHistory,
+  recordRecentResourceView,
+} from "@/data/crucible/recent-resources.functions"
+import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import { notifyError, notifySuccess } from "@/components/crucible/notifications"
+import { recentResourcesQueryOptions } from "@/data/crucible/recent-resources.queries"
+import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+
+export type RecentlyViewedResource = RecentResource
+
+const recordInterval = 60 * 1000
+const lastRecorded = new Map<string, number>()
 
 type RecentlyViewedResourceInput = Omit<RecentlyViewedResource, "viewedAt">
 
@@ -113,9 +128,21 @@ function useRecentlyViewedContext() {
   return { context, identityKey }
 }
 
+function useAccountHistory() {
+  const workspaceScope = useOptionalWorkspaceScope()
+  const enabled = useAccountPreferencesEnabled() && Boolean(workspaceScope)
+  const scope =
+    workspaceScope ?? identityScope("anonymous", "anonymous", "normal")
+  return { enabled, options: recentResourcesQueryOptions(scope), scope }
+}
+
 export function useRecentlyViewed() {
   const { context, identityKey } = useRecentlyViewedContext()
-  return context.identityKey === identityKey ? context.items : []
+  const history = useAccountHistory()
+  const query = useQuery({ ...history.options, enabled: history.enabled })
+  const local = context.identityKey === identityKey ? context.items : []
+  if (!history.enabled || !query.data) return local
+  return query.data
 }
 
 export function useRememberRecentlyViewed(
@@ -123,15 +150,75 @@ export function useRememberRecentlyViewed(
 ) {
   const { context, identityKey } = useRecentlyViewedContext()
   const { remember } = context
+  const history = useAccountHistory()
+  const queryClient = useQueryClient()
+  const recording =
+    useAccountPreferences().preferences.record_recent_resources !== false
 
   useEffect(() => {
-    if (item) remember(identityKey, item)
+    if (!item) return
+    remember(identityKey, item)
+    if (!history.enabled || !recording) return
+    const viewedAt = new Date().toISOString()
+    queryClient.setQueryData(history.options.queryKey, (current) =>
+      current
+        ? [
+            { ...item, viewedAt },
+            ...current.filter(
+              (candidate) => candidate.uniqueId !== item.uniqueId
+            ),
+          ].slice(0, recentResourceLimit)
+        : current
+    )
+    const key = `${identityKey}:${item.uniqueId}`
+    const now = Date.now()
+    if (now - (lastRecorded.get(key) ?? 0) < recordInterval) return
+    lastRecorded.set(key, now)
+    void recordRecentResourceView({
+      data: {
+        resourceMfid: item.uniqueId,
+        scenario: fixtureScenarioFromScope(history.scope),
+      },
+    })
+      .then((result) => {
+        if (result.status === "error") lastRecorded.delete(key)
+      })
+      .catch(() => lastRecorded.delete(key))
   }, [
+    history.enabled,
     identityKey,
     item?.kind,
     item?.name,
     item?.projectId,
     item?.uniqueId,
+    recording,
     remember,
   ])
+}
+
+export function useClearRecentHistory(onCleared: () => void) {
+  const history = useAccountHistory()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () =>
+      unwrapHubResult(
+        await clearRecentResourceHistory({
+          data: { scenario: fixtureScenarioFromScope(history.scope) },
+        })
+      ),
+    onError: (error) =>
+      notifyError(
+        "History not cleared",
+        hubErrorMessage(error, "Crucible could not clear your history.")
+      ),
+    onSuccess: () => {
+      lastRecorded.clear()
+      queryClient.setQueryData(history.options.queryKey, [])
+      onCleared()
+      notifySuccess(
+        "History cleared",
+        "Your recently viewed list is now empty."
+      )
+    },
+  })
 }
