@@ -1997,7 +1997,8 @@ export interface paths {
          *     and the caller's own membership role.
          *     Pass affiliation=owner to return only projects authoritatively owned by the caller.
          *     Pass member_ref (and optionally member_role) to return only projects where the given users are members.
-         *     Pass sort=project_id|title|created|updated with direction=asc|desc to change the order.
+         *     Pass sort=project_id|title|created|updated|activity with direction=asc|desc to change the order,
+         *     and active_since to keep only projects with recent activity.
          *     Pass include_total=false to omit the exact authorization-filtered count.
          */
         get: operations["list_projects_projects_get"];
@@ -3349,6 +3350,11 @@ export interface components {
              * @default false
              */
             is_service_account: boolean | null;
+            /**
+             * Last Active At
+             * @description Last authenticated request, recorded at most hourly. Returned to platform administrators and to the user themselves.
+             */
+            last_active_at?: string | null;
             /** Last Name */
             last_name: string;
             platform_role?: components["schemas"]["PlatformRole"] | null;
@@ -3388,6 +3394,8 @@ export interface components {
             created_at: string;
             /** Expires At */
             expires_at: string;
+            /** Last Used At */
+            last_used_at?: string | null;
             /** Valid */
             valid: boolean;
         };
@@ -4299,6 +4307,8 @@ export interface components {
             instrument_name: string;
             /** Instrument Type */
             instrument_type?: string | null;
+            /** Last Activity At */
+            last_activity_at?: string | null;
             /** Location */
             location: string;
             /** Manufacturer */
@@ -4342,7 +4352,7 @@ export interface components {
          * InstrumentSort
          * @enum {string}
          */
-        InstrumentSort: "instrument_id" | "name" | "created" | "updated";
+        InstrumentSort: "instrument_id" | "name" | "created" | "updated" | "activity";
         /**
          * InstrumentStatus
          * @enum {string}
@@ -4865,7 +4875,7 @@ export interface components {
          * ProjectSort
          * @enum {string}
          */
-        ProjectSort: "project_id" | "title" | "created" | "updated";
+        ProjectSort: "project_id" | "title" | "created" | "updated" | "activity";
         /** ProjectSyncResult */
         ProjectSyncResult: {
             /** Orcid */
@@ -4920,6 +4930,8 @@ export interface components {
             deletion_request?: {
                 [key: string]: unknown;
             } | null;
+            /** Last Activity At */
+            last_activity_at?: string | null;
             lead?: components["schemas"]["UserPublicRead"] | null;
             /** Members */
             members?: components["schemas"]["AccessGroupMemberRead"][] | null;
@@ -5347,6 +5359,11 @@ export interface components {
             created_at: string;
             /** Expires At */
             expires_at: string;
+            /**
+             * Last Used At
+             * @description Last authenticated use, recorded at most every 10 minutes.
+             */
+            last_used_at?: string | null;
             /** Valid */
             valid: boolean;
         };
@@ -5638,6 +5655,11 @@ export interface components {
              * @default false
              */
             is_service_account: boolean | null;
+            /**
+             * Last Active At
+             * @description Last authenticated request, recorded at most hourly. Returned to platform administrators and to the user themselves.
+             */
+            last_active_at?: string | null;
             /** Last Name */
             last_name: string;
             platform_role?: components["schemas"]["PlatformRole"] | null;
@@ -5656,7 +5678,7 @@ export interface components {
          * UserSort
          * @enum {string}
          */
-        UserSort: "name" | "username" | "unique_id" | "email";
+        UserSort: "name" | "username" | "unique_id" | "email" | "last_active";
         /**
          * UserUpdate
          * @description Admin partial update schema for mutable user profile fields.
@@ -9729,9 +9751,9 @@ export interface operations {
                 include_members?: boolean;
                 /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
                 include_total?: boolean | null;
-                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. Omit to keep the default newest-first order. */
+                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. activity is the last time a dataset recorded on the instrument changed, recorded at most hourly. Omit to keep the default newest-first order. */
                 sort?: components["schemas"]["InstrumentSort"] | null;
-                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
+                /** @description Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422. */
                 direction?: components["schemas"]["SortDirection"] | null;
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous page. */
@@ -9754,6 +9776,8 @@ export interface operations {
                 instrument_type?: string | null;
                 /** @description Restrict results to one lifecycle status. */
                 status?: components["schemas"]["InstrumentStatus"] | null;
+                /** @description Only records with activity at or after this time. Activity is recorded at most hourly. */
+                active_since?: string | null;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
@@ -10442,9 +10466,11 @@ export interface operations {
                 member_ref?: string[] | null;
                 /** @description Restrict member_ref to these project roles. Repeated values use OR semantics. Requires member_ref. */
                 member_role?: components["schemas"]["AccessPermission"][] | null;
-                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order. */
+                /** @description Only records with activity at or after this time. Activity is recorded at most hourly. */
+                active_since?: string | null;
+                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. activity is the last change to the project's datasets, samples, files, or membership, recorded at most hourly. Omit to keep the default project_id ascending order. */
                 sort?: components["schemas"]["ProjectSort"] | null;
-                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
+                /** @description Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422. */
                 direction?: components["schemas"]["SortDirection"] | null;
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous page. */
@@ -12640,6 +12666,12 @@ export interface operations {
                 q?: string | null;
                 /** @description Repeatable list of fields searched by q, with OR semantics. Requires q. email is administrator only; other callers receive 403. */
                 search_fields?: components["schemas"]["UserSearchField"][] | null;
+                /** @description Users active at or after this time (hourly precision). Administrator only. */
+                active_since?: string | null;
+                /** @description Users not active since this time, including users never seen active. Administrator only. */
+                inactive_since?: string | null;
+                /** @description True for users never seen active, false for users seen at least once. Administrator only. */
+                never_active?: boolean | null;
                 /** @description Repeatable platform-role filter, administrator only. Repeated values use OR semantics. Other callers receive 403. */
                 platform_role?: components["schemas"]["PlatformRole"][] | null;
                 /** @description Exact authorization-filtered total. Omission preserves the legacy behavior that always returns a total. */
@@ -12649,7 +12681,7 @@ export interface operations {
                 cursor?: string | null;
                 /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
-                /** @description Explicit ordering, case-insensitive, with unique_id as tie-breaker and nulls last. name sorts by last name then first name. email is administrator only. Omission keeps the default last name, first name order. */
+                /** @description Explicit ordering, case-insensitive, with unique_id as tie-breaker and nulls last. name sorts by last name then first name. email and last_active are administrator only. Omission keeps the default last name, first name order. */
                 sort?: components["schemas"]["UserSort"] | null;
                 /** @description Direction for an explicit sort. */
                 direction?: components["schemas"]["SortDirection"];
@@ -13446,9 +13478,9 @@ export interface operations {
                 include_metadata?: boolean;
                 /** @description Exact total. Computed unless include_total=false. */
                 include_total?: boolean | null;
-                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order. */
+                /** @description Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. activity is the last change to the project's datasets, samples, files, or membership, recorded at most hourly. Omit to keep the default project_id ascending order. */
                 sort?: components["schemas"]["ProjectSort"] | null;
-                /** @description Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422. */
+                /** @description Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422. */
                 direction?: components["schemas"]["SortDirection"] | null;
                 limit?: number;
                 /** @description Opaque continuation cursor returned by a previous page. */

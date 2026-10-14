@@ -67,6 +67,7 @@ export class CrucibleResponseError extends Error {
   readonly conflictFields?: HubConflictField[]
   readonly conflictCode?: string
   readonly reauthenticationRequired: boolean = false
+  readonly valueIssues?: { field: string; kind: ValueIssueKind }[]
 
   constructor(source: number | Response, body?: unknown) {
     super("The Crucible API rejected the request.")
@@ -82,7 +83,33 @@ export class CrucibleResponseError extends Error {
       this.conflictFields = readConflictFields(body)
       this.conflictCode = readConflictCode(body)
     }
+    if (source.status === 422) {
+      const issues = readValueIssues(body)
+      if (issues.length > 0) this.valueIssues = issues
+    }
   }
+}
+
+export type ValueIssueKind = "invalid_number" | "unsupported_character"
+
+function readValueIssues(
+  body: unknown
+): { field: string; kind: ValueIssueKind }[] {
+  const detail = (body as { detail?: unknown } | null)?.detail
+  if (!Array.isArray(detail)) return []
+  return detail.flatMap((entry: unknown) => {
+    const issue = entry as { loc?: unknown; type?: unknown }
+    if (
+      issue.type !== "invalid_number" &&
+      issue.type !== "unsupported_character"
+    )
+      return []
+    const path = Array.isArray(issue.loc)
+      ? issue.loc.filter((part) => part !== "body").map(String)
+      : []
+    const kind: ValueIssueKind = issue.type
+    return [{ field: path.join(".") || "value", kind }]
+  })
 }
 
 export class CrucibleContractError extends Error {

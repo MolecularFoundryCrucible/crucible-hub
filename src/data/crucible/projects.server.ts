@@ -52,6 +52,8 @@ export function toWorkspaceProject(
       "creation_time" in project ? project.creation_time : undefined,
     modification_time:
       "modification_time" in project ? project.modification_time : undefined,
+    last_activity_at:
+      "last_activity_at" in project ? project.last_activity_at : undefined,
   }
 }
 
@@ -161,6 +163,11 @@ export async function readWorkspaceProjects(
         if (sort === "created")
           return (
             dir * ((a.creation_time || "") > (b.creation_time || "") ? 1 : -1)
+          )
+        if (sort === "activity")
+          return (
+            dir *
+            ((a.last_activity_at || "") > (b.last_activity_at || "") ? 1 : -1)
           )
         return (
           dir *

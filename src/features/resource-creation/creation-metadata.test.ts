@@ -64,3 +64,22 @@ describe("creation metadata", () => {
     })
   })
 })
+
+describe("unsupported metadata characters", () => {
+  it("rejects NUL, lone surrogates, and noncharacters before sending", () => {
+    for (const bad of ["a\u0000b", "\ud800", "\udc00x", "﷐", "￿"]) {
+      expect(
+        creationMetadataResult({
+          ...emptyCreationMetadata(),
+          rows: [{ id: "1", name: "note", value: bad }],
+        }).ok
+      ).toBe(false)
+    }
+    expect(
+      creationMetadataResult({
+        ...emptyCreationMetadata(),
+        rows: [{ id: "1", name: "note", value: "ok 😀 Å" }],
+      }).ok
+    ).toBe(true)
+  })
+})

@@ -25,7 +25,7 @@ import { PersonLink } from "@/components/crucible/person-link"
 import {
   ResourceCreatedCell,
   ResourceOpenCell,
-  ResourceUpdatedCell,
+  ResourceActivityCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -71,7 +71,12 @@ import {
 } from "@/data/crucible/cursor-pages"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
-const instrumentSortFieldSchema = z.enum(["name", "created", "updated"])
+const instrumentSortFieldSchema = z.enum([
+  "name",
+  "created",
+  "updated",
+  "activity",
+])
 export type InstrumentSortField = z.infer<typeof instrumentSortFieldSchema>
 
 const instrumentSearchSchema = z.object({
@@ -391,11 +396,11 @@ function InstrumentCollection({
                     preferredDirection="desc"
                   />
                   <SortableTableHead
-                    active={sort === "updated"}
+                    active={sort === "activity"}
                     direction={direction}
-                    field="updated"
+                    field="activity"
                     kind="date"
-                    label="Updated"
+                    label="Last activity"
                     onChange={onSortChange}
                     preferredDirection="desc"
                   />
@@ -444,8 +449,8 @@ function InstrumentCollection({
                         className="hidden xl:table-cell"
                         value={instrument.creation_time}
                       />
-                      <ResourceUpdatedCell
-                        value={instrument.modification_time}
+                      <ResourceActivityCell
+                        value={instrument.last_activity_at}
                       />
                       <ResourceOpenCell
                         kind="instrument"

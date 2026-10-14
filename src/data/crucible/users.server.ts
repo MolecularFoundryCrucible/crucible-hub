@@ -18,8 +18,11 @@ import type {
   WorkspaceUserSort,
   WorkspaceUserUpdate,
 } from "./workspace-source"
+import { userActivityQuery } from "./user-activity"
+import type { UserActivityFilter } from "./user-activity"
 
 type UserListInput = {
+  activity?: UserActivityFilter
   cursor?: string
   direction?: "asc" | "desc"
   includeTotal?: boolean
@@ -42,6 +45,8 @@ function toWorkspaceAdminUser(
     email: "email" in user ? (user.email ?? null) : null,
     first_name: user.first_name,
     is_service_account: user.is_service_account ?? false,
+    last_active_at:
+      "last_active_at" in user ? (user.last_active_at ?? null) : null,
     last_name: user.last_name,
     platform_role:
       "platform_role" in user && typeof user.platform_role === "string"
@@ -66,6 +71,7 @@ const fixtureUserCapabilities = {
 const fixtureApiKeyStatus = {
   created_at: "2026-09-01T12:00:00Z",
   expires_at: "2027-09-01T12:00:00Z",
+  last_used_at: "2026-10-13T09:20:00Z",
   valid: true,
 } satisfies components["schemas"]["ServiceAccountKeyStatus"]
 
@@ -78,19 +84,21 @@ function fixtureUsers(scenario?: FixtureScenario): WorkspaceAdminUser[] {
     email: source.workspace.account.email ?? "admin@lbl.gov",
     first_name: source.workspace.account.first_name,
     is_service_account: source.workspace.account.is_service_account,
+    last_active_at: new Date().toISOString(),
     last_name: source.workspace.account.last_name,
     platform_role: source.workspace.account.authorization.platform_role,
     unique_id: source.workspace.account.unique_id,
     user_capabilities: fixtureUserCapabilities,
     username: source.workspace.account.username,
   })
-  for (const person of source.workspace.people) {
+  for (const [index, person] of source.workspace.people.entries()) {
     if (!map.has(person.unique_id)) {
       map.set(person.unique_id, {
         api_key_status: fixtureApiKeyStatus,
         email: `${person.username ?? "user"}@lbl.gov`,
         first_name: person.first_name,
         is_service_account: person.is_service_account,
+        last_active_at: index === 0 ? "2026-09-28T10:00:00Z" : null,
         last_name: person.last_name,
         platform_role: null,
         unique_id: person.unique_id,
@@ -128,6 +136,19 @@ export async function readWorkspaceUsers(
           (u.email && u.email.toLowerCase().includes(q))
       )
     }
+    const activity = userActivityQuery(input.activity)
+    items = items.filter((u) => {
+      if (activity.never_active) return !u.last_active_at
+      if (activity.active_since) {
+        return Boolean(
+          u.last_active_at && u.last_active_at >= activity.active_since
+        )
+      }
+      if (activity.inactive_since) {
+        return !u.last_active_at || u.last_active_at < activity.inactive_since
+      }
+      return true
+    })
     items = sortFixtureUsers(items, input.sort, input.direction)
     const page = fixtureCursorPage(items, {
       cursor: input.cursor,
@@ -149,6 +170,7 @@ export async function readWorkspaceUsers(
         limit: input.limit,
         q: input.query,
         sort: input.sort,
+        ...userActivityQuery(input.activity),
       },
     },
     signal: crucibleRequestSignal(requestSignal),
@@ -176,6 +198,10 @@ function sortFixtureUsers(
         .localeCompare(`${b.first_name} ${b.last_name}`.trim())
     } else if (sort === "unique_id") {
       comparison = a.unique_id.localeCompare(b.unique_id)
+    } else if (sort === "last_active") {
+      comparison = (a.last_active_at ?? "").localeCompare(
+        b.last_active_at ?? ""
+      )
     } else if (sort === "email") {
       comparison = (a.email ?? "").localeCompare(b.email ?? "")
     } else {

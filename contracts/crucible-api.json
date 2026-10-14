@@ -348,6 +348,19 @@
             "default": false,
             "title": "Is Service Account"
           },
+          "last_active_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last authenticated request, recorded at most hourly. Returned to platform administrators and to the user themselves.",
+            "title": "Last Active At"
+          },
           "last_name": {
             "title": "Last Name",
             "type": "string"
@@ -479,6 +492,18 @@
           "expires_at": {
             "title": "Expires At",
             "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
           },
           "valid": {
             "title": "Valid",
@@ -3273,6 +3298,18 @@
             ],
             "title": "Instrument Type"
           },
+          "last_activity_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity At"
+          },
           "location": {
             "title": "Location",
             "type": "string"
@@ -3428,7 +3465,8 @@
           "instrument_id",
           "name",
           "created",
-          "updated"
+          "updated",
+          "activity"
         ],
         "title": "InstrumentSort",
         "type": "string"
@@ -5320,7 +5358,8 @@
           "project_id",
           "title",
           "created",
-          "updated"
+          "updated",
+          "activity"
         ],
         "title": "ProjectSort",
         "type": "string"
@@ -5450,6 +5489,18 @@
               }
             ],
             "title": "Deletion Request"
+          },
+          "last_activity_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity At"
           },
           "lead": {
             "anyOf": [
@@ -6832,6 +6883,19 @@
             "title": "Expires At",
             "type": "string"
           },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last authenticated use, recorded at most every 10 minutes.",
+            "title": "Last Used At"
+          },
           "valid": {
             "title": "Valid",
             "type": "boolean"
@@ -7518,6 +7582,19 @@
             "default": false,
             "title": "Is Service Account"
           },
+          "last_active_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last authenticated request, recorded at most hourly. Returned to platform administrators and to the user themselves.",
+            "title": "Last Active At"
+          },
           "last_name": {
             "title": "Last Name",
             "type": "string"
@@ -7582,7 +7659,8 @@
           "name",
           "username",
           "unique_id",
-          "email"
+          "email",
+          "last_active"
         ],
         "title": "UserSort",
         "type": "string"
@@ -17921,7 +17999,7 @@
             }
           },
           {
-            "description": "Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. Omit to keep the default newest-first order.",
+            "description": "Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. activity is the last time a dataset recorded on the instrument changed, recorded at most hourly. Omit to keep the default newest-first order.",
             "in": "query",
             "name": "sort",
             "required": false,
@@ -17934,12 +18012,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. Omit to keep the default newest-first order.",
+              "description": "Explicit ordering with unique_id as tie-breaker and nulls last. instrument_id and name (instrument_name) are case-insensitive. activity is the last time a dataset recorded on the instrument changed, recorded at most hourly. Omit to keep the default newest-first order.",
               "title": "Sort"
             }
           },
           {
-            "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+            "description": "Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422.",
             "in": "query",
             "name": "direction",
             "required": false,
@@ -17952,7 +18030,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+              "description": "Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422.",
               "title": "Direction"
             }
           },
@@ -18182,6 +18260,25 @@
               ],
               "description": "Restrict results to one lifecycle status.",
               "title": "Status"
+            }
+          },
+          {
+            "description": "Only records with activity at or after this time. Activity is recorded at most hourly.",
+            "in": "query",
+            "name": "active_since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only records with activity at or after this time. Activity is recorded at most hourly.",
+              "title": "Active Since"
             }
           },
           {
@@ -19681,7 +19778,7 @@
     },
     "/projects": {
       "get": {
-        "description": "Returns a paginated list of projects the user is authorized to see, including the resolved project lead\nand the caller's own membership role.\nPass affiliation=owner to return only projects authoritatively owned by the caller.\nPass member_ref (and optionally member_role) to return only projects where the given users are members.\nPass sort=project_id|title|created|updated with direction=asc|desc to change the order.\nPass include_total=false to omit the exact authorization-filtered count.",
+        "description": "Returns a paginated list of projects the user is authorized to see, including the resolved project lead\nand the caller's own membership role.\nPass affiliation=owner to return only projects authoritatively owned by the caller.\nPass member_ref (and optionally member_role) to return only projects where the given users are members.\nPass sort=project_id|title|created|updated|activity with direction=asc|desc to change the order,\nand active_since to keep only projects with recent activity.\nPass include_total=false to omit the exact authorization-filtered count.",
         "operationId": "list_projects_projects_get",
         "parameters": [
           {
@@ -19858,7 +19955,26 @@
             }
           },
           {
-            "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order.",
+            "description": "Only records with activity at or after this time. Activity is recorded at most hourly.",
+            "in": "query",
+            "name": "active_since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only records with activity at or after this time. Activity is recorded at most hourly.",
+              "title": "Active Since"
+            }
+          },
+          {
+            "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. activity is the last change to the project's datasets, samples, files, or membership, recorded at most hourly. Omit to keep the default project_id ascending order.",
             "in": "query",
             "name": "sort",
             "required": false,
@@ -19871,12 +19987,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order.",
+              "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. activity is the last change to the project's datasets, samples, files, or membership, recorded at most hourly. Omit to keep the default project_id ascending order.",
               "title": "Sort"
             }
           },
           {
-            "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+            "description": "Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422.",
             "in": "query",
             "name": "direction",
             "required": false,
@@ -19889,7 +20005,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+              "description": "Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422.",
               "title": "Direction"
             }
           },
@@ -25873,6 +25989,62 @@
             }
           },
           {
+            "description": "Users active at or after this time (hourly precision). Administrator only.",
+            "in": "query",
+            "name": "active_since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Users active at or after this time (hourly precision). Administrator only.",
+              "title": "Active Since"
+            }
+          },
+          {
+            "description": "Users not active since this time, including users never seen active. Administrator only.",
+            "in": "query",
+            "name": "inactive_since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Users not active since this time, including users never seen active. Administrator only.",
+              "title": "Inactive Since"
+            }
+          },
+          {
+            "description": "True for users never seen active, false for users seen at least once. Administrator only.",
+            "in": "query",
+            "name": "never_active",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "True for users never seen active, false for users seen at least once. Administrator only.",
+              "title": "Never Active"
+            }
+          },
+          {
             "description": "Repeatable platform-role filter, administrator only. Repeated values use OR semantics. Other callers receive 403.",
             "in": "query",
             "name": "platform_role",
@@ -25958,7 +26130,7 @@
             }
           },
           {
-            "description": "Explicit ordering, case-insensitive, with unique_id as tie-breaker and nulls last. name sorts by last name then first name. email is administrator only. Omission keeps the default last name, first name order.",
+            "description": "Explicit ordering, case-insensitive, with unique_id as tie-breaker and nulls last. name sorts by last name then first name. email and last_active are administrator only. Omission keeps the default last name, first name order.",
             "in": "query",
             "name": "sort",
             "required": false,
@@ -25971,7 +26143,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Explicit ordering, case-insensitive, with unique_id as tie-breaker and nulls last. name sorts by last name then first name. email is administrator only. Omission keeps the default last name, first name order.",
+              "description": "Explicit ordering, case-insensitive, with unique_id as tie-breaker and nulls last. name sorts by last name then first name. email and last_active are administrator only. Omission keeps the default last name, first name order.",
               "title": "Sort"
             }
           },
@@ -27692,7 +27864,7 @@
             }
           },
           {
-            "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order.",
+            "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. activity is the last change to the project's datasets, samples, files, or membership, recorded at most hourly. Omit to keep the default project_id ascending order.",
             "in": "query",
             "name": "sort",
             "required": false,
@@ -27705,12 +27877,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. Omit to keep the default project_id ascending order.",
+              "description": "Explicit ordering with unique_id as tie-breaker and nulls last. title is case-insensitive; project_id uses the stored slug, matching the default order. activity is the last change to the project's datasets, samples, files, or membership, recorded at most hourly. Omit to keep the default project_id ascending order.",
               "title": "Sort"
             }
           },
           {
-            "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+            "description": "Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422.",
             "in": "query",
             "name": "direction",
             "required": false,
@@ -27723,7 +27895,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Direction for an explicit sort. Defaults to desc for created and updated, asc otherwise. Supplying direction without sort returns 422.",
+              "description": "Direction for an explicit sort. Defaults to desc for created, updated, activity, and last_active, asc otherwise. Supplying direction without sort returns 422.",
               "title": "Direction"
             }
           },

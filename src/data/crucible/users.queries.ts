@@ -4,6 +4,7 @@ import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
+import type { UserActivityFilter } from "./user-activity"
 import { getWorkspaceUserDetail, getWorkspaceUsers } from "./users.functions"
 
 export const userAdminPageLimit = 50
@@ -11,13 +12,14 @@ export const userAdminPageLimit = 50
 export function usersCursorQueryOptions(
   scope: IdentityScope,
   filters: {
+    activity?: UserActivityFilter
     cursor?: string
     direction?: "asc" | "desc"
     includeTotal?: boolean
     is_service_account?: boolean
     limit: number
     query?: string
-    sort?: "name" | "unique_id" | "email" | "username"
+    sort?: "name" | "unique_id" | "email" | "username" | "last_active"
   }
 ) {
   const scenario = fixtureScenarioFromScope(scope)
@@ -27,6 +29,7 @@ export function usersCursorQueryOptions(
       unwrapHubResult(
         await getWorkspaceUsers({
           data: {
+            activity: filters.activity,
             cursor: pageParam,
             direction: filters.direction,
             includeTotal: filters.includeTotal,
@@ -40,6 +43,7 @@ export function usersCursorQueryOptions(
         })
       ),
     queryKey: crucibleKeys.userAdminCursorChain(scope, {
+      activity: filters.activity,
       direction: filters.direction,
       includeTotal: filters.includeTotal ?? true,
       initialCursor: filters.cursor ?? null,

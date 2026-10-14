@@ -58,6 +58,7 @@ export async function readWorkspaceAccountCredentialStatus(
     return {
       created_at: source.workspace.referenceTime,
       expires_at: "2027-09-01T16:00:00Z",
+      last_used_at: null,
       valid: true,
     }
   }

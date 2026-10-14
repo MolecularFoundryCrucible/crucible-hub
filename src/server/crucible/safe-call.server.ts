@@ -3,6 +3,7 @@ import "@tanstack/react-start/server-only"
 import type { HubResult } from "@/data/crucible/result"
 
 import { toHubApiError } from "./errors.server"
+import type { ValueIssueKind } from "./request-error.server"
 import {
   CrucibleContractError,
   CrucibleResponseError,
@@ -61,7 +62,24 @@ export async function safeCrucibleCall<T>(
         reauthenticationRequired:
           error instanceof CrucibleResponseError &&
           error.reauthenticationRequired,
+        ...(error instanceof CrucibleResponseError && error.valueIssues
+          ? {
+              fieldErrors: Object.fromEntries(
+                error.valueIssues.map((issue) => [
+                  issue.field,
+                  [valueIssueMessage(issue.kind)],
+                ])
+              ),
+              message: `${valueIssueMessage(error.valueIssues[0].kind)} (${error.valueIssues[0].field})`,
+            }
+          : {}),
       }),
     }
   }
+}
+
+function valueIssueMessage(kind: ValueIssueKind) {
+  return kind === "invalid_number"
+    ? "A number is not a valid finite value."
+    : "A value contains a character Crucible cannot store."
 }

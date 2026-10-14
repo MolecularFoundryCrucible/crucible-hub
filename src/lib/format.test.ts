@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  formatRecentActivity,
   formatLocalDateTime,
   isValidLocalDateTime,
   localDateTimeToUtc,
@@ -39,5 +40,28 @@ describe("local date and time formatting", () => {
   it("preserves a nonstandard timestamp for fallback display", () => {
     expect(formatLocalDateTime("beamtime cycle 4")).toBe("beamtime cycle 4")
     expect(timestampToLocalInput("beamtime cycle 4")).toBe("")
+  })
+})
+
+describe("recent activity", () => {
+  const now = new Date(2026, 9, 14, 15, 30)
+
+  it("uses coarse, hour-safe wording", () => {
+    expect(
+      formatRecentActivity(new Date(2026, 9, 14, 15, 0).toISOString(), now)
+    ).toBe("Within the last hour")
+    expect(
+      formatRecentActivity(new Date(2026, 9, 14, 8, 0).toISOString(), now)
+    ).toBe("Today")
+    expect(
+      formatRecentActivity(new Date(2026, 9, 13, 23, 0).toISOString(), now)
+    ).toBe("Yesterday")
+    expect(
+      formatRecentActivity(new Date(2026, 9, 10, 12, 0).toISOString(), now)
+    ).toBe("4 days ago")
+    expect(
+      formatRecentActivity(new Date(2026, 8, 1, 12, 0).toISOString(), now)
+    ).toBe("Sep 1, 2026")
+    expect(formatRecentActivity(null, now)).toBeNull()
   })
 })

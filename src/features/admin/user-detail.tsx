@@ -19,6 +19,7 @@ import {
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { notifySuccess } from "@/components/crucible/notifications"
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
@@ -415,6 +416,14 @@ function UserProfileCard({
                 </dt>
                 <dd className="mt-1">
                   <MfidValue value={user.unique_id} />
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-label text-muted-foreground">
+                  Last active
+                </dt>
+                <dd className="mt-1 text-body">
+                  <ActivityTime fallback="Never" value={user.last_active_at} />
                 </dd>
               </div>
             </dl>

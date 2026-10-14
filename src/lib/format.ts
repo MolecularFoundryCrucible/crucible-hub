@@ -131,3 +131,32 @@ export function localDateTimeToUtc(value: string) {
   }
   return new Date(value).toISOString()
 }
+
+const localDateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+})
+
+function startOfLocalDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+export function formatRecentActivity(
+  value: string | null | undefined,
+  now = new Date()
+) {
+  const date = value ? timestampDate(value) : null
+  if (!date) return null
+  if (now.getTime() - date.getTime() < 60 * 60 * 1000) {
+    return "Within the last hour"
+  }
+  const days = Math.round(
+    (startOfLocalDay(now).getTime() - startOfLocalDay(date).getTime()) /
+      (24 * 60 * 60 * 1000)
+  )
+  if (days <= 0) return "Today"
+  if (days === 1) return "Yesterday"
+  if (days < 7) return `${days} days ago`
+  return localDateFormatter.format(date)
+}

@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- Projects and instruments show when they were last active and can be sorted by it, Home lists your most recently active projects first, the Users administration list shows when each person was last active with an activity filter, and API key cards show when the key was last used. Requires the API activity release (PR #331).
+- Values Crucible cannot store, such as NUL characters, are rejected in metadata before saving, and API rejections for them name the field.
 - When a project is chosen on dataset or sample creation, the measurement or sample type field suggests the values most used in that project.
 - The Add relationship dialog no longer opens its resource list straight away; the list opens and loads when the search field is focused.
 - Sample and dataset creation can add scientific metadata in a separate card, as name and value fields, as JSON, or by uploading a JSON file; it is saved right after the record is created and retried with the other missing stages if that fails.

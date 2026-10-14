@@ -29,6 +29,7 @@ export const projectSortSchema = z.enum([
   "title",
   "created",
   "updated",
+  "activity",
 ])
 
 export const projectMemberRoleFilterSchema = z.enum([

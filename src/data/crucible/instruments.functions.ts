@@ -29,6 +29,7 @@ export const instrumentSortSchema = z.enum([
   "name",
   "created",
   "updated",
+  "activity",
 ])
 
 export const instrumentListInputSchema = z.object({

@@ -25,7 +25,7 @@ import { ProjectRoleBadge } from "@/components/crucible/project-members"
 import {
   ResourceCreatedCell,
   ResourceOpenCell,
-  ResourceUpdatedCell,
+  ResourceActivityCell,
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -64,7 +64,12 @@ import {
 import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 
-const projectSortFieldSchema = z.enum(["name", "created", "updated"])
+const projectSortFieldSchema = z.enum([
+  "name",
+  "created",
+  "updated",
+  "activity",
+])
 export type ProjectSortField = z.infer<typeof projectSortFieldSchema>
 
 const projectSearchSchema = z.object({
@@ -336,11 +341,11 @@ function ProjectCollection({
                     preferredDirection="desc"
                   />
                   <SortableTableHead
-                    active={sort === "updated"}
+                    active={sort === "activity"}
                     direction={direction}
-                    field="updated"
+                    field="activity"
                     kind="date"
-                    label="Updated"
+                    label="Last activity"
                     onChange={onSortChange}
                     preferredDirection="desc"
                   />
@@ -397,8 +402,8 @@ function ProjectCollection({
                         className="hidden xl:table-cell"
                         value={complete ? project.creation_time : undefined}
                       />
-                      <ResourceUpdatedCell
-                        value={complete ? project.modification_time : undefined}
+                      <ResourceActivityCell
+                        value={complete ? project.last_activity_at : undefined}
                       />
                       <ResourceOpenCell
                         kind="project"

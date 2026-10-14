@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start"
 import { setResponseHeader } from "@tanstack/react-start/server"
 import { z } from "zod"
 
+import { userActivityFilters } from "./user-activity"
+
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import { fixtureScenarioSchema } from "./fixture-scenarios"
@@ -32,7 +34,10 @@ export const userListInputSchema = z
     limit: z.number().int().min(1).max(1000),
     query: z.string().trim().min(1).max(200).optional(),
     scenario: fixtureScenarioSchema.optional(),
-    sort: z.enum(["name", "unique_id", "email", "username"]).optional(),
+    activity: z.enum(userActivityFilters).optional(),
+    sort: z
+      .enum(["name", "unique_id", "email", "username", "last_active"])
+      .optional(),
   })
   .strict()
 

@@ -190,6 +190,29 @@ const canonicalResourceMfidSchema = z
   .max(RESOURCE_MFID_MAX_LENGTH)
   .regex(/^[a-zA-Z0-9_-]+$/)
 
+export function hasUnsupportedCharacter(text: string) {
+  for (let index = 0; index < text.length; index += 1) {
+    const unit = text.charCodeAt(index)
+    if (unit === 0) return true
+    if (unit >= 0xd800 && unit <= 0xdbff) {
+      const next = text.charCodeAt(index + 1)
+      if (!(next >= 0xdc00 && next <= 0xdfff)) return true
+      const point = text.codePointAt(index) ?? 0
+      if ((point & 0xfffe) === 0xfffe) return true
+      index += 1
+      continue
+    }
+    if (unit >= 0xdc00 && unit <= 0xdfff) return true
+    if ((unit >= 0xfdd0 && unit <= 0xfdef) || (unit & 0xfffe) === 0xfffe) {
+      return true
+    }
+  }
+  return false
+}
+
+const unsupportedCharacterMessage =
+  "Metadata cannot contain control characters like NUL or invalid Unicode."
+
 export function scientificMetadataValidationError(
   value: unknown
 ): string | null {
@@ -197,11 +220,12 @@ export function scientificMetadataValidationError(
   let fields = 0
 
   function visit(current: unknown, depth: number): string | null {
-    if (
-      current === null ||
-      typeof current === "boolean" ||
-      typeof current === "string"
-    ) {
+    if (typeof current === "string") {
+      return hasUnsupportedCharacter(current)
+        ? unsupportedCharacterMessage
+        : null
+    }
+    if (current === null || typeof current === "boolean") {
       return null
     }
     if (typeof current === "number") {
@@ -240,6 +264,10 @@ export function scientificMetadataValidationError(
         if (key.trim().length === 0) {
           ancestors.delete(current)
           return "Metadata keys must not be blank."
+        }
+        if (hasUnsupportedCharacter(key)) {
+          ancestors.delete(current)
+          return unsupportedCharacterMessage
         }
         if (key.length > SCIENTIFIC_METADATA_KEY_MAX_LENGTH) {
           ancestors.delete(current)

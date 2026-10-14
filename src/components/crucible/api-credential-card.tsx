@@ -1,4 +1,5 @@
 import { CredentialIcon } from "@/components/crucible/icons"
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -71,7 +72,7 @@ function CredentialStatus({
   status: WorkspaceApiCredentialStatus
 }) {
   return (
-    <dl className="grid grid-cols-2 gap-4 xl:grid-cols-3">
+    <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
       <div className="col-span-2 min-w-0 xl:col-span-1">
         <dt className="text-label text-muted-foreground">Status</dt>
         <dd className="mt-1">
@@ -92,16 +93,22 @@ function CredentialStatus({
           <LocalDateTime value={status.expires_at} />
         </dd>
       </div>
+      <div className="min-w-0">
+        <dt className="text-label text-muted-foreground">Last used</dt>
+        <dd className="mt-1 text-body">
+          <ActivityTime fallback="Not used yet" value={status.last_used_at} />
+        </dd>
+      </div>
     </dl>
   )
 }
 
 function CredentialStatusSkeleton() {
-  const fields = ["Status", "Created", "Expires"] as const
+  const fields = ["Status", "Created", "Expires", "Last used"] as const
   return (
     <dl
       aria-label="Loading API credential status"
-      className="grid grid-cols-2 gap-4 xl:grid-cols-3"
+      className="grid grid-cols-2 gap-4 xl:grid-cols-4"
       role="status"
     >
       {fields.map((field, index) => (

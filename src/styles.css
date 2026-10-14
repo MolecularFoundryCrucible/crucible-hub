@@ -1361,7 +1361,8 @@ body {
 
   .identity-directory-table .identity-directory-mfid,
   .identity-directory-table .identity-directory-email,
-  .identity-directory-table .identity-directory-role {
+  .identity-directory-table .identity-directory-role,
+  .identity-directory-table .identity-directory-activity {
     align-items: center;
     column-gap: calc(var(--spacing) * 1);
     display: flex;
@@ -1371,13 +1372,15 @@ body {
 
   .identity-directory-table .identity-directory-mfid > *,
   .identity-directory-table .identity-directory-email > *,
-  .identity-directory-table .identity-directory-role > * {
+  .identity-directory-table .identity-directory-role > *,
+  .identity-directory-table .identity-directory-activity > * {
     min-width: 0;
   }
 
   .identity-directory-table .identity-directory-mfid::before,
   .identity-directory-table .identity-directory-email::before,
-  .identity-directory-table .identity-directory-role::before {
+  .identity-directory-table .identity-directory-role::before,
+  .identity-directory-table .identity-directory-activity::before {
     color: var(--muted-foreground);
     content: attr(data-label) ": ";
     flex: none;

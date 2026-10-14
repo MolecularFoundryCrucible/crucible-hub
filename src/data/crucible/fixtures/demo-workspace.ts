@@ -136,6 +136,7 @@ export const demoWorkspace = {
       },
       creation_time: "2026-06-12T18:30:00Z",
       modification_time: "2026-08-30T21:14:00Z",
+      last_activity_at: "2026-08-31T19:11:00Z",
       members: [
         {
           unique_id: account.unique_id,
@@ -166,6 +167,7 @@ export const demoWorkspace = {
       scientific_metadata: null,
       creation_time: "2026-07-02T09:45:00Z",
       modification_time: "2026-07-02T09:45:00Z",
+      last_activity_at: "2026-07-02T09:45:00Z",
     },
   ],
   instruments: [
@@ -181,6 +183,7 @@ export const demoWorkspace = {
       resource_type: "instrument",
       creation_time: "2025-11-04T20:00:00Z",
       modification_time: "2026-08-20T14:25:00Z",
+      last_activity_at: "2026-08-31T19:11:00Z",
       scientific_metadata: {
         energy_range_kev: [5, 18],
         spatial_resolution_nm: 120,

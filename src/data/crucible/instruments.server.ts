@@ -70,6 +70,7 @@ function toWorkspaceInstrument(
     manufacturer: instrument.manufacturer,
     model: instrument.model,
     modification_time: instrument.modification_time,
+    last_activity_at: instrument.last_activity_at,
     other_id: instrument.other_id,
     other_id_source: instrument.other_id_source,
     capabilities: instrument.capabilities ?? null,
@@ -457,6 +458,11 @@ export async function readWorkspaceInstruments(
         if (sort === "created")
           return (
             dir * ((a.creation_time || "") > (b.creation_time || "") ? 1 : -1)
+          )
+        if (sort === "activity")
+          return (
+            dir *
+            ((a.last_activity_at || "") > (b.last_activity_at || "") ? 1 : -1)
           )
         return (
           dir *

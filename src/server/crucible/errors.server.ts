@@ -17,6 +17,7 @@ type ErrorInput = {
   conflictFields?: HubConflictField[]
   conflictCode?: HubConflictCode
   reauthenticationRequired?: boolean
+  message?: string
 }
 
 const statusKinds: Partial<Record<number, HubApiErrorKind>> = {
@@ -57,7 +58,7 @@ export function toHubApiError(input: ErrorInput): HubApiError {
 
   return {
     kind,
-    message: messages[kind],
+    message: input.message ?? messages[kind],
     correlationId: input.correlationId,
     retryable: ["rate-limited", "timeout", "upstream", "unexpected"].includes(
       kind

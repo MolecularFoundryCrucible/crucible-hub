@@ -79,8 +79,16 @@ import type {
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import { UserCreateDialog } from "@/features/admin/user-create-dialog"
 import { formatUsername } from "@/lib/username"
+import { ActivityTime } from "@/components/crucible/activity-time"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { userActivityFilters } from "@/data/crucible/user-activity"
 
-const userSortFieldSchema = z.enum(["account", "unique_id", "email"])
+const userSortFieldSchema = z.enum([
+  "account",
+  "unique_id",
+  "email",
+  "last_active",
+])
 export type UserSortField = z.infer<typeof userSortFieldSchema>
 
 function apiUserSort(sort: UserSortField | undefined) {
@@ -89,6 +97,7 @@ function apiUserSort(sort: UserSortField | undefined) {
 }
 
 const userSearchSchema = z.object({
+  activity: z.enum(userActivityFilters).optional().catch(undefined),
   create: z.boolean().optional().catch(undefined),
   cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional().catch(undefined),
@@ -100,6 +109,7 @@ export const Route = createFileRoute("/_app/admin/users/")({
   head: () => ({ meta: [{ title: "Users | Crucible Hub" }] }),
   validateSearch: userSearchSchema,
   loaderDeps: ({ search }) => ({
+    activity: search.activity,
     cursor: search.cursor,
     direction: search.direction,
     query: search.q,
@@ -118,6 +128,7 @@ export const Route = createFileRoute("/_app/admin/users/")({
       "elevated"
     )
     const options = usersCursorQueryOptions(administrationScope, {
+      activity: deps.activity,
       cursor: deps.cursor,
       direction: deps.direction,
       includeTotal: true,
@@ -149,6 +160,7 @@ function UsersAdminPage() {
   const direction = search.direction ?? "asc"
   const result = useInfiniteQuery(
     usersCursorQueryOptions(administrationScope, {
+      activity: search.activity,
       cursor: search.cursor,
       direction,
       includeTotal: true,
@@ -204,6 +216,7 @@ function UsersAdminPage() {
     void navigate({
       replace: true,
       search: {
+        activity: search.activity,
         create: open ? true : undefined,
         cursor: search.cursor,
         direction: search.direction,
@@ -218,7 +231,10 @@ function UsersAdminPage() {
   return (
     <PageLayout>
       <UsersPageHeader canCreate />
-      <UserSearchField />
+      <div className="flex flex-wrap items-center gap-3">
+        <UserSearchField />
+        <UserActivityFilterField />
+      </div>
       {result.isPending ? (
         <CollectionTablePending label="users" presentation="service-accounts" />
       ) : result.isError && !result.data ? (
@@ -315,6 +331,7 @@ function UserSearchField() {
         void navigate({
           replace: true,
           search: {
+            activity: search.activity,
             cursor: undefined,
             direction: search.direction,
             q: query,
@@ -392,6 +409,15 @@ function UserCollection({
                     preferredDirection="asc"
                   />
                   <TableHead>Platform role</TableHead>
+                  <SortableTableHead
+                    active={sort === "last_active"}
+                    direction={direction}
+                    field="last_active"
+                    kind="date"
+                    label="Last active"
+                    onChange={onSortChange}
+                    preferredDirection="desc"
+                  />
                   <TableHead kind="action">
                     <span className="sr-only">Open</span>
                   </TableHead>
@@ -455,6 +481,16 @@ function UserCollection({
                         )}
                       </TableCell>
                       <TableCell
+                        className="identity-directory-activity"
+                        data-label="Last active"
+                        kind="date"
+                      >
+                        <ActivityTime
+                          fallback="Never"
+                          value={user.last_active_at}
+                        />
+                      </TableCell>
+                      <TableCell
                         kind="action"
                         className="identity-directory-action"
                       >
@@ -500,5 +536,42 @@ function UserCollection({
         />
       ) : null}
     </>
+  )
+}
+
+const activityFilterOptions = [
+  { label: "Any activity", value: "" },
+  { label: "Active in the last 7 days", value: "active_7" },
+  { label: "Active in the last 30 days", value: "active_30" },
+  { label: "Active in the last 90 days", value: "active_90" },
+  { label: "Inactive for 90 days or more", value: "inactive_90" },
+  { label: "Never active", value: "never" },
+] as const
+
+function UserActivityFilterField() {
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  return (
+    <NativeSelect
+      aria-label="Activity"
+      onChange={(event) => {
+        const activity = userActivityFilters.find(
+          (filter) => filter === event.target.value
+        )
+        void navigate({
+          replace: true,
+          search: { ...search, activity, cursor: undefined },
+          state: {},
+          to: "/admin/users",
+        })
+      }}
+      value={search.activity ?? ""}
+    >
+      {activityFilterOptions.map((option) => (
+        <NativeSelectOption key={option.value} value={option.value}>
+          {option.label}
+        </NativeSelectOption>
+      ))}
+    </NativeSelect>
   )
 }

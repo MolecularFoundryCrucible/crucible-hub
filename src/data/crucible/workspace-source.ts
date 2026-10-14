@@ -36,7 +36,7 @@ export type WorkspaceAccountProfileUpdate = {
 
 export type WorkspaceApiCredentialStatus = Pick<
   Schema<"ApiKeyVerify">,
-  "created_at" | "expires_at" | "valid"
+  "created_at" | "expires_at" | "last_used_at" | "valid"
 >
 
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
@@ -44,6 +44,7 @@ export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 export type WorkspaceProject = Pick<
   Schema<"ProjectWithLead">,
   | "creation_time"
+  | "last_activity_at"
   | "lead"
   | "modification_time"
   | "organization"
@@ -132,6 +133,7 @@ export type WorkspaceInstrument = Pick<
   Schema<"InstrumentResponse">,
   | "creation_time"
   | "description"
+  | "last_activity_at"
   | "instrument_id"
   | "instrument_name"
   | "instrument_type"

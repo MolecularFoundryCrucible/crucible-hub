@@ -1,5 +1,6 @@
 import type { PersonIdentityProfile } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
@@ -43,6 +44,27 @@ export function ResourceUpdatedCell({
       label="Updated"
       value={value}
     />
+  )
+}
+
+export function ResourceActivityCell({
+  className,
+  value,
+}: {
+  className?: string
+  value: string | null | undefined
+}) {
+  return (
+    <TableCell
+      kind="date"
+      className={cn(
+        "resource-collection-date resource-directory-date",
+        className
+      )}
+      data-label="Last activity"
+    >
+      <ActivityTime fallback="None yet" value={value} />
+    </TableCell>
   )
 }
 

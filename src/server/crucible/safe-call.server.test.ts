@@ -187,3 +187,32 @@ describe("safe Crucible calls", () => {
     })
   })
 })
+
+describe("value issues from the API", () => {
+  it("names the field with an unsupported character or invalid number", async () => {
+    const result = await safeCrucibleCall("correlation-1", () => {
+      throw new CrucibleResponseError(new Response(null, { status: 422 }), {
+        detail: [
+          {
+            loc: ["body", "scientific_metadata", "note"],
+            msg: "NUL is not allowed",
+            type: "unsupported_character",
+          },
+        ],
+      })
+    })
+    expect(result).toMatchObject({
+      error: {
+        fieldErrors: {
+          "scientific_metadata.note": [
+            "A value contains a character Crucible cannot store.",
+          ],
+        },
+        kind: "validation",
+        message:
+          "A value contains a character Crucible cannot store. (scientific_metadata.note)",
+      },
+      status: "error",
+    })
+  })
+})

@@ -63,9 +63,11 @@ export const Route = createFileRoute("/_app/")({
     await Promise.allSettled([
       context.queryClient.prefetchQuery(
         projectsQueryOptions(source.scope, {
+          direction: "desc",
           includeTotal: false,
           limit: homeProjectLimit,
           memberRef: source.scope[2],
+          sort: "activity",
         })
       ),
       context.queryClient.prefetchQuery(
@@ -90,9 +92,11 @@ function HomePage() {
     chosenRecentScope ?? preferences.hub?.home_recent_scope ?? "all"
   const homeProjectQuery = useMemo(
     () => ({
+      direction: "desc" as const,
       includeTotal: false,
       limit: homeProjectLimit,
       memberRef: scope[2],
+      sort: "activity" as const,
     }),
     [scope]
   )
