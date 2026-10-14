@@ -5,7 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Link, Navigate, createFileRoute } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import {
@@ -25,6 +25,7 @@ import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import {
   useAdministrationScope,
+  useWorkspacePrivilegeMode,
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
@@ -53,6 +54,7 @@ import {
 } from "@/components/crucible/collection-state"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { canOpenUserAdministration } from "@/data/crucible/administration"
+import { AdministrationUnavailable } from "@/components/crucible/administrator-view-required"
 import type { SortDirection } from "@/data/crucible/collection-query"
 import {
   collectionCursorSchema,
@@ -109,7 +111,8 @@ export const Route = createFileRoute("/_app/admin/users/")({
     const account = context.queryClient.getQueryData<WorkspaceAccount>(
       crucibleKeys.accountProfile(source.scope)
     )
-    if (!account || !canOpenUserAdministration(account)) return
+    if (!account || !canOpenUserAdministration(account, source.privilegeMode))
+      return
     const administrationScope = identityScopeWithPrivilegeMode(
       source.scope,
       "elevated"
@@ -136,6 +139,7 @@ export const Route = createFileRoute("/_app/admin/users/")({
 function UsersAdminPage() {
   const scope = useWorkspaceScope()
   const administrationScope = useAdministrationScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
   const mode = useWorkspaceMode()
   const queryClient = useQueryClient()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
@@ -162,8 +166,14 @@ function UsersAdminPage() {
   const updating = result.isFetching && !result.isFetchingNextPage
   const createOpen = search.create === true
 
-  if (!canOpenUserAdministration(account)) {
-    return <Navigate replace to="/" />
+  if (!canOpenUserAdministration(account, privilegeMode)) {
+    return (
+      <AdministrationUnavailable
+        account={account}
+        description="Turn on administrator view to find, create, and manage Crucible users."
+        title="Users"
+      />
+    )
   }
 
   function handleCreated() {
@@ -252,11 +262,14 @@ function UsersAdminPage() {
 
 function UsersPending() {
   const scope = useWorkspaceScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
   const { data: account } = useQuery(accountQueryOptions(scope))
   return (
     <PageLayout>
       <UsersPageHeader
-        canCreate={account ? canOpenUserAdministration(account) : false}
+        canCreate={
+          account ? canOpenUserAdministration(account, privilegeMode) : false
+        }
       />
       <UserSearchField />
       <CollectionTablePending label="users" presentation="service-accounts" />

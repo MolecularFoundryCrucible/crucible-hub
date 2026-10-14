@@ -7,6 +7,7 @@ import {
 } from "@/components/crucible/resource-type-icon"
 import { Button } from "@/components/ui/button"
 import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
+import { useWorkspacePrivilegeMode } from "@/components/crucible/workspace-provider"
 import type { WorkspaceAccount } from "@/data/crucible/workspace-source"
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function CreateMenu({ account }: { account: WorkspaceAccount }) {
+  const privilegeMode = useWorkspacePrivilegeMode()
   const { capabilities } = account
 
   return (
@@ -67,7 +69,7 @@ export function CreateMenu({ account }: { account: WorkspaceAccount }) {
               Instrument
             </DropdownMenuItem>
           ) : null}
-          {canOpenServiceAccountAdministration(account) ? (
+          {canOpenServiceAccountAdministration(account, privilegeMode) ? (
             <DropdownMenuItem
               render={
                 <Link

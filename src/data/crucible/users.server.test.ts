@@ -13,10 +13,41 @@ import {
   updateWorkspaceUserPlatformRole,
 } from "./users.server"
 
+const administratorView = vi.hoisted(() => ({ on: true }))
+
+vi.mock("@/server/crucible/privilege-mode.server", async (importOriginal) => {
+  const original = await importOriginal<Record<string, unknown>>()
+  const { CrucibleResponseError } =
+    await import("@/server/crucible/request-error.server")
+  return {
+    ...original,
+    requireAdministratorView: () => {
+      if (!administratorView.on) throw new CrucibleResponseError(403)
+      return "elevated" as const
+    },
+  }
+})
+
 describe("workspace user source", () => {
   afterEach(() => {
+    administratorView.on = true
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
+  })
+
+  it("refuses API administration while the administrator view is off", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    administratorView.on = false
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(readWorkspaceUsers({ limit: 2 })).rejects.toMatchObject({
+      status: 403,
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it("resolves fixture user detail by unique_id", async () => {

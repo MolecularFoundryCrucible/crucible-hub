@@ -3,6 +3,7 @@ import "@tanstack/react-start/server-only"
 import { z } from "zod"
 
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
+import { requireAdministratorView } from "@/server/crucible/privilege-mode.server"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -280,7 +281,8 @@ export async function readWorkspaceDeletionAudit(
   }
 
   const result = await createCrucibleClient(configuration, {
-    privilegeMode: input.scope === "all" ? "elevated" : "normal",
+    privilegeMode:
+      input.scope === "all" ? requireAdministratorView() : "normal",
   }).GET("/deletion_audit", {
     params: {
       query: {

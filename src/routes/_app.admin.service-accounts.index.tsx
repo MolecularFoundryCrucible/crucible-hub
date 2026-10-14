@@ -4,7 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Link, Navigate, createFileRoute } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import {
@@ -25,6 +25,7 @@ import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import {
   useAdministrationScope,
   useWorkspaceMode,
+  useWorkspacePrivilegeMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
@@ -54,6 +55,7 @@ import { accountQueryOptions } from "@/data/crucible/account.queries"
 import type { SortDirection } from "@/data/crucible/collection-query"
 import { sortDirectionSchema } from "@/data/crucible/collection-query"
 import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
+import { AdministrationUnavailable } from "@/components/crucible/administrator-view-required"
 import {
   crucibleKeys,
   identityScopeWithPrivilegeMode,
@@ -103,7 +105,11 @@ export const Route = createFileRoute("/_app/admin/service-accounts/")({
     const account = context.queryClient.getQueryData<WorkspaceAccount>(
       crucibleKeys.accountProfile(source.scope)
     )
-    if (!account || !canOpenServiceAccountAdministration(account)) return
+    if (
+      !account ||
+      !canOpenServiceAccountAdministration(account, source.privilegeMode)
+    )
+      return
     const administrationScope = identityScopeWithPrivilegeMode(
       source.scope,
       "elevated"
@@ -128,6 +134,7 @@ export const Route = createFileRoute("/_app/admin/service-accounts/")({
 function ServiceAccountsPage() {
   const scope = useWorkspaceScope()
   const administrationScope = useAdministrationScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
   const mode = useWorkspaceMode()
   const queryClient = useQueryClient()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
@@ -143,14 +150,20 @@ function ServiceAccountsPage() {
   })
   const result = useQuery({
     ...options,
-    enabled: canOpenServiceAccountAdministration(account),
+    enabled: canOpenServiceAccountAdministration(account, privilegeMode),
   })
   const createOpen = search.create === true
   const [credential, setCredential] =
     useState<WorkspaceServiceAccountCredential>()
 
-  if (!canOpenServiceAccountAdministration(account)) {
-    return <Navigate replace to="/" />
+  if (!canOpenServiceAccountAdministration(account, privilegeMode)) {
+    return (
+      <AdministrationUnavailable
+        account={account}
+        description="Turn on administrator view to create and manage service accounts."
+        title="Service accounts"
+      />
+    )
   }
 
   function handleCreated(created: WorkspaceServiceAccountCredential) {
@@ -269,12 +282,15 @@ function ServiceAccountsPage() {
 
 function ServiceAccountsPending() {
   const scope = useWorkspaceScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
   const { data: account } = useQuery(accountQueryOptions(scope))
   return (
     <PageLayout>
       <ServiceAccountsPageHeader
         canCreate={
-          account ? canOpenServiceAccountAdministration(account) : false
+          account
+            ? canOpenServiceAccountAdministration(account, privilegeMode)
+            : false
         }
       />
       <ServiceAccountSearchField />

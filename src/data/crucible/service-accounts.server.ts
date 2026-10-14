@@ -1,6 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
+import { requireAdministratorView } from "@/server/crucible/privilege-mode.server"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -77,7 +78,7 @@ export async function readWorkspaceServiceAccounts(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.GET("/service_accounts", {
     params: {
@@ -122,7 +123,7 @@ export async function readWorkspaceServiceAccount(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.GET("/service_accounts/{service_account_ref}", {
     params: { path: { service_account_ref: serviceAccountMfid } },
@@ -151,7 +152,7 @@ export async function createWorkspaceServiceAccount(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.POST("/service_accounts", {
     body: account,
@@ -195,7 +196,7 @@ export async function patchWorkspaceServiceAccount(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.PATCH("/users/{user_ref}", {
     body: changes,
@@ -233,7 +234,7 @@ export async function patchWorkspaceServiceAccountPlatformRole(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.PATCH("/service_accounts/{service_account_ref}", {
     body: { platform_role: platformRole },
@@ -268,7 +269,7 @@ export async function rotateWorkspaceServiceAccountKey(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.POST(
     "/service_accounts/{service_account_ref}/rotate_key",

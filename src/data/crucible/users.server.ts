@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only"
 
 import type { components } from "@/generated/crucible-api"
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
+import { requireAdministratorView } from "@/server/crucible/privilege-mode.server"
 import { createCrucibleClient } from "@/server/crucible/client.server"
 import { crucibleRequestSignal } from "@/server/crucible/request-signal.server"
 
@@ -136,7 +137,7 @@ export async function readWorkspaceUsers(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.GET("/users", {
     params: {
@@ -200,7 +201,7 @@ export async function readWorkspaceUserDetail(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.GET("/users/{user_ref}", {
     params: { path: { user_ref: userId } },
@@ -238,7 +239,7 @@ export async function patchWorkspaceUser(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.PATCH("/users/{user_ref}", {
     body: changes,
@@ -276,7 +277,7 @@ export async function updateWorkspaceUserPlatformRole(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.PATCH("/users/{user_ref}/platform_role", {
     body: { platform_role: platformRole },
@@ -301,7 +302,7 @@ export async function revokeWorkspaceUserApiKey(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.DELETE("/users/{user_ref}/apikey", {
     params: { path: { user_ref: userId } },
@@ -336,7 +337,7 @@ export async function createWorkspaceUser(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.POST("/users", {
     body: {
@@ -372,7 +373,7 @@ export async function provisionWorkspaceUserApiKey(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.POST("/users/{user_ref}/apikey/regenerate", {
     params: { path: { user_ref: userId } },
@@ -399,7 +400,7 @@ export async function checkWorkspaceEmailExactMatch(
   }
 
   const client = createCrucibleClient(configuration, {
-    privilegeMode: "elevated",
+    privilegeMode: requireAdministratorView(),
   })
   const result = await client.GET("/users", {
     params: { query: { email, limit: 1 } },

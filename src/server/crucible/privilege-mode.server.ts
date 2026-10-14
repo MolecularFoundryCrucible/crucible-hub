@@ -12,6 +12,7 @@ import {
   sharedRequestPrivilegeMode,
   updateSharedPrivilegeMode,
 } from "./hub-auth.server"
+import { CrucibleResponseError } from "./request-error.server"
 
 const privilegeModeCookie = "crucible_hub_administrator_view"
 
@@ -46,4 +47,11 @@ export async function writeGlobalPrivilegeMode(mode: WorkspacePrivilegeMode) {
   }
 
   setCookie(privilegeModeCookie, mode, cookieOptions())
+}
+
+export function requireAdministratorView() {
+  if (readGlobalPrivilegeMode() !== "elevated") {
+    throw new CrucibleResponseError(403)
+  }
+  return "elevated" as const
 }

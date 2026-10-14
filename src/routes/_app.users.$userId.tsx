@@ -18,6 +18,7 @@ import {
 } from "@/components/crucible/route-content-pending"
 import {
   useAdministrationScope,
+  useWorkspacePrivilegeMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import {
@@ -60,7 +61,10 @@ export const Route = createFileRoute("/_app/users/$userId")({
       context.queryClient.ensureQueryData(accountQueryOptions(source.scope)),
     ])
     let adminUser: WorkspaceAdminUser | null | undefined
-    if (canOpenUserAdministration(account) && !person?.is_service_account) {
+    if (
+      canOpenUserAdministration(account, source.privilegeMode) &&
+      !person?.is_service_account
+    ) {
       const administrationScope = identityScopeWithPrivilegeMode(
         source.scope,
         "elevated"
@@ -89,10 +93,11 @@ function UserPage() {
   const { userId } = Route.useParams()
   const scope = useWorkspaceScope()
   const administrationScope = useAdministrationScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const { data: person } = useSuspenseQuery(personQueryOptions(scope, userId))
 
-  const canAdminUsers = canOpenUserAdministration(account)
+  const canAdminUsers = canOpenUserAdministration(account, privilegeMode)
   const isServiceAccount = Boolean(person?.is_service_account)
   const isSelf = account.unique_id === userId
 
@@ -127,7 +132,7 @@ function UserPage() {
         <BreadcrumbList>
           <BreadcrumbItem>
             {isServiceAccount ? (
-              canOpenServiceAccountAdministration(account) ? (
+              canOpenServiceAccountAdministration(account, privilegeMode) ? (
                 <BreadcrumbLink render={<Link to="/admin/service-accounts" />}>
                   Service accounts
                 </BreadcrumbLink>
@@ -160,7 +165,7 @@ function UserPage() {
       <PageHeader
         actions={
           isServiceAccount &&
-          canOpenServiceAccountAdministration(account) &&
+          canOpenServiceAccountAdministration(account, privilegeMode) &&
           person ? (
             <Link
               className={buttonVariants({ variant: "outline" })}

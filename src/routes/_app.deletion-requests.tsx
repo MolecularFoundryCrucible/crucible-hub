@@ -14,17 +14,12 @@ import {
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import {
-  WorkspaceProvider,
-  useWorkspaceMode,
+  useWorkspacePrivilegeMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import {
-  identityScopeWithPrivilegeMode,
-  privilegeModeFromScope,
-} from "@/data/crucible/query-keys"
-import type { IdentityScope } from "@/data/crucible/query-keys"
+import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import {
   deletionAuditInfiniteQueryOptions,
@@ -80,13 +75,14 @@ export const Route = createFileRoute("/_app/deletion-requests")({
     const account = context.queryClient.getQueryData(
       accountQueryOptions(source.scope).queryKey
     )
-    const scope = account
-      ? deletionAdministrationScope(source.scope, account)
-      : source.scope
+    const scope = source.scope
     if (deps.view === "approved") {
       if (account && !account.is_service_account)
         void context.queryClient.prefetchInfiniteQuery(
-          deletionAuditInfiniteQueryOptions(scope, deletionAuditScope(account))
+          deletionAuditInfiniteQueryOptions(
+            scope,
+            deletionAuditScope(source.privilegeMode)
+          )
         )
       return
     }
@@ -105,19 +101,8 @@ export const Route = createFileRoute("/_app/deletion-requests")({
 
 function DeletionRequestsPage() {
   const baseScope = useWorkspaceScope()
-  const mode = useWorkspaceMode()
   const { data: account } = useSuspenseQuery(accountQueryOptions(baseScope))
-  const scope = deletionAdministrationScope(baseScope, account)
-
-  return (
-    <WorkspaceProvider
-      mode={mode}
-      privilegeMode={privilegeModeFromScope(scope)}
-      scope={scope}
-    >
-      <DeletionRequestsContent account={account} />
-    </WorkspaceProvider>
-  )
+  return <DeletionRequestsContent account={account} />
 }
 
 function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
@@ -146,7 +131,8 @@ function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
     kind: "deletion-requests",
     preview: search.preview,
   })
-  const auditScope = deletionAuditScope(account)
+  const privilegeMode = useWorkspacePrivilegeMode()
+  const auditScope = deletionAuditScope(privilegeMode)
 
   return (
     <ResourcePreviewContext.Provider value={navigation}>
@@ -261,22 +247,10 @@ function deletionRequestScope(view: "approved" | "reviewable" | "submitted") {
   return view === "reviewable" ? "reviewable" : "submitted"
 }
 
-function deletionAuditScope(account: {
-  authorization: { can_elevate: boolean }
-}) {
-  return account.authorization.can_elevate
+function deletionAuditScope(privilegeMode: WorkspacePrivilegeMode) {
+  return privilegeMode === "elevated"
     ? ("all" as const)
     : ("submitted" as const)
-}
-
-function deletionAdministrationScope(
-  scope: IdentityScope,
-  account: { authorization: { can_elevate: boolean } }
-) {
-  return identityScopeWithPrivilegeMode(
-    scope,
-    account.authorization.can_elevate ? "elevated" : "normal"
-  )
 }
 
 function deletionRequestStatus(view: "approved" | "reviewable" | "submitted") {

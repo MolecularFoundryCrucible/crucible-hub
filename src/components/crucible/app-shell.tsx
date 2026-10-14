@@ -17,7 +17,6 @@ import {
   AccountIcon,
   AdministratorViewDisabledIcon,
   AdministratorViewEnabledIcon,
-  AdministratorViewIcon,
   CollapseSidebarIcon,
   PreferencesIcon,
   CreateResourceIcon,
@@ -37,7 +36,6 @@ import { ResourceSiblingNavigationProvider } from "@/components/crucible/resourc
 import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -81,6 +79,7 @@ import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import {
   canOpenPlatformAdministration,
   canOpenServiceAccountAdministration,
+  canUseAdministratorView,
 } from "@/data/crucible/administration"
 import { pendingDeletionRequestsCountQueryOptions } from "@/data/crucible/deletion-requests.queries"
 import { identityScope } from "@/data/crucible/query-keys"
@@ -99,6 +98,8 @@ import { useAccountPreferences } from "@/features/preferences/use-account-prefer
 import { resourceDisplayName } from "@/lib/resource-name"
 
 const sidebarRecentLimit = 4
+const administrationRevealClassName =
+  "animate-in fade-in-0 slide-in-from-top-1 duration-standard ease-enter"
 
 export function AppShell({
   account,
@@ -368,13 +369,15 @@ export function AppShell({
                 <SidebarGroupLabel>Administration</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {account.authorization.can_elevate ? (
+                    {canUseAdministratorView(account) ? (
                       <SidebarMenuItem>
                         <SidebarAdministratorViewControl />
                       </SidebarMenuItem>
                     ) : null}
-                    {canOpenPlatformAdministration(account) ? (
-                      <SidebarMenuItem>
+                    {canOpenPlatformAdministration(account, privilegeMode) ? (
+                      <SidebarMenuItem
+                        className={administrationRevealClassName}
+                      >
                         <SidebarMenuButton
                           isActive={pathname.startsWith("/admin/users")}
                           tooltip="Users"
@@ -395,8 +398,13 @@ export function AppShell({
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ) : null}
-                    {canOpenServiceAccountAdministration(account) ? (
-                      <SidebarMenuItem>
+                    {canOpenServiceAccountAdministration(
+                      account,
+                      privilegeMode
+                    ) ? (
+                      <SidebarMenuItem
+                        className={administrationRevealClassName}
+                      >
                         <SidebarMenuButton
                           isActive={pathname.startsWith(
                             "/admin/service-accounts"
@@ -470,7 +478,6 @@ export function AppShell({
             {account && scope ? (
               <AccountControls
                 account={account}
-                administrationActive={pathname.startsWith("/admin")}
                 privilegeMode={privilegeMode}
                 sessionAuth={sessionAuth}
               />
@@ -506,26 +513,17 @@ export function AppShell({
 
 function AccountControls({
   account,
-  administrationActive,
   privilegeMode,
   sessionAuth,
 }: {
   account: Workspace["account"]
-  administrationActive: boolean
   privilegeMode: WorkspacePrivilegeMode
   sessionAuth: boolean
 }) {
   const preferencesEnabled = useAccountPreferencesEnabled()
   return (
     <div className="ml-auto flex items-center gap-2">
-      {privilegeMode === "elevated" ? (
-        <AdministratorViewStatus />
-      ) : administrationActive ? (
-        <Badge aria-label="Platform administration" variant="warning">
-          <AdministratorViewIcon />
-          <span className="hidden md:inline">Platform administration</span>
-        </Badge>
-      ) : null}
+      {privilegeMode === "elevated" ? <AdministratorViewStatus /> : null}
       <div className="border-l pl-3">
         {sessionAuth ? (
           <form action="/hub/auth/logout" id="hub-sign-out" method="post" />

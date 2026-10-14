@@ -100,6 +100,8 @@ test("validates service account usernames before creating", async ({
   page,
 }) => {
   await page.goto("/hub/admin/service-accounts")
+  await expect(page.getByText("Administrator view is off")).toBeVisible()
+  await page.getByRole("button", { name: "Turn on administrator view" }).click()
   await page.getByRole("link", { name: "Create service account" }).click()
   const dialog = page.getByRole("dialog", { name: "Create service account" })
   const username = dialog.getByRole("textbox", { name: "Username" })

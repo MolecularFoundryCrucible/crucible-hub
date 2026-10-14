@@ -1,5 +1,5 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { Link, Navigate, createFileRoute } from "@tanstack/react-router"
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -7,6 +7,7 @@ import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { IdentityDetailPending } from "@/components/crucible/route-content-pending"
 import {
   useAdministrationScope,
+  useWorkspacePrivilegeMode,
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/card"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
+import { AdministrationUnavailable } from "@/components/crucible/administrator-view-required"
 import {
   crucibleKeys,
   identityScopeWithPrivilegeMode,
@@ -45,7 +47,11 @@ export const Route = createFileRoute(
     const account = context.queryClient.getQueryData<WorkspaceAccount>(
       crucibleKeys.accountProfile(source.scope)
     )
-    if (!account || !canOpenServiceAccountAdministration(account)) return
+    if (
+      !account ||
+      !canOpenServiceAccountAdministration(account, source.privilegeMode)
+    )
+      return
     const administrationScope = identityScopeWithPrivilegeMode(
       source.scope,
       "elevated"
@@ -62,6 +68,7 @@ export const Route = createFileRoute(
     meta: [{ title: hubPageTitle(loaderData?.username) }],
   }),
   pendingComponent: () => <IdentityDetailPending kind="service_account" />,
+  errorComponent: ServiceAccountLoadError,
   component: ServiceAccountAdminPage,
 })
 
@@ -69,31 +76,55 @@ function ServiceAccountAdminPage() {
   const { serviceAccountMfid } = Route.useParams()
   const scope = useWorkspaceScope()
   const administrationScope = useAdministrationScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
   const mode = useWorkspaceMode()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
-  const serviceAccountResult = useQuery({
-    ...serviceAccountAdminQueryOptions(administrationScope, serviceAccountMfid),
-    enabled: canOpenServiceAccountAdministration(account),
-  })
 
-  if (!canOpenServiceAccountAdministration(account)) {
-    return <Navigate replace to="/" />
-  }
-
-  if (serviceAccountResult.isPending) {
-    return <IdentityDetailPending kind="service_account" />
-  }
-
-  if (serviceAccountResult.isError) {
+  if (!canOpenServiceAccountAdministration(account, privilegeMode)) {
     return (
-      <Card className="mx-auto mt-16 max-w-state">
-        <CardHeader>
-          <CardTitle>Service account could not be loaded</CardTitle>
-          <CardDescription>Try opening this account again.</CardDescription>
-        </CardHeader>
-      </Card>
+      <AdministrationUnavailable
+        account={account}
+        description="Turn on administrator view to manage this service account."
+        title="Service account"
+      />
     )
   }
+
+  return (
+    <ServiceAccountAdminDetail
+      administrationScope={administrationScope}
+      canChangePlatformRole={!account.is_service_account}
+      mode={mode}
+      serviceAccountMfid={serviceAccountMfid}
+    />
+  )
+}
+
+function ServiceAccountLoadError() {
+  return (
+    <Card className="mx-auto mt-16 max-w-state">
+      <CardHeader>
+        <CardTitle>Service account could not be loaded</CardTitle>
+        <CardDescription>Try opening this account again.</CardDescription>
+      </CardHeader>
+    </Card>
+  )
+}
+
+function ServiceAccountAdminDetail({
+  administrationScope,
+  canChangePlatformRole,
+  mode,
+  serviceAccountMfid,
+}: {
+  administrationScope: ReturnType<typeof useAdministrationScope>
+  canChangePlatformRole: boolean
+  mode: ReturnType<typeof useWorkspaceMode>
+  serviceAccountMfid: string
+}) {
+  const serviceAccountResult = useSuspenseQuery(
+    serviceAccountAdminQueryOptions(administrationScope, serviceAccountMfid)
+  )
 
   if (!serviceAccountResult.data) {
     return (
@@ -137,7 +168,7 @@ function ServiceAccountAdminPage() {
       <ServiceAccountDetail
         key={serviceAccount.unique_id}
         account={serviceAccount}
-        canChangePlatformRole={!account.is_service_account}
+        canChangePlatformRole={canChangePlatformRole}
         mode={mode}
         scope={administrationScope}
       />

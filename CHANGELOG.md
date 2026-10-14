@@ -8,6 +8,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## 1.1.0 - 2026-10-14
 
+- The Administrator view switch is now the only way to elevate. Users and Service accounts, the platform-wide deletion review and approved history, and the admin panel on profiles appear only while it is on; with it off, their pages offer a Turn on action and their server calls are refused instead of elevating on their own. People who cannot elevate never see the switch. Direct links to a service account no longer briefly mismatch while loading.
+
 - Added a Preferences page, opened from a gear in the account menu and the sidebar, that saves the theme, the default Data view (Samples or Datasets), a default grouping for samples and for datasets, and the Home recently added scope to the Crucible account so they follow people across devices. It appears once the API serves `/account/preferences` and `HUB_ACCOUNT_PREFERENCES_ENABLED` is set.
 
 - Added a shared session store in a Hub-owned Postgres database (`HUB_AUTH_SESSION_MODE=postgres`) so restarts and deployments no longer sign people out once production switches to it; operators apply its migrations with `scripts/migrate-session-store.mjs`. Shared sessions also recover from a refresh left unfinished by a stopped instance and keep working through a rate-limited refresh instead of signing out.
