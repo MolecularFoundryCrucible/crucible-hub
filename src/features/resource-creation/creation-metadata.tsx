@@ -7,16 +7,8 @@ import {
   RemoveMetadataFieldIcon,
   UploadMetadataIcon,
 } from "@/components/crucible/icons"
+import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -333,33 +325,19 @@ export function CreationMetadataField({
         </p>
       ) : null}
       <FieldError errors={errors} />
-      <AlertDialog
+      <ConfirmationDialog
+        confirmLabel="Replace"
+        description="Replace the metadata you entered with the file, or merge the file into it. When both have a field, the file's value wins."
+        kind="alert"
+        onConfirm={() => applyUpload("replace")}
         onOpenChange={(open) => !open && setUploaded(undefined)}
         open={uploaded !== undefined}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Use the uploaded metadata?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Replace the metadata you entered with the file, or merge the file
-              into it. When both have a field, the file's value wins.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button
-              onClick={() => applyUpload("merge")}
-              type="button"
-              variant="outline"
-            >
-              Merge
-            </Button>
-            <Button onClick={() => applyUpload("replace")} type="button">
-              Replace
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        secondaryAction={{
+          label: "Merge",
+          onClick: () => applyUpload("merge"),
+        }}
+        title="Use the uploaded metadata?"
+      />
     </div>
   )
 }

@@ -33,6 +33,7 @@ type ConfirmationProps = {
   open: boolean
   pendingCancelDisabled?: boolean
   pendingCancelLabel?: string
+  secondaryAction?: { label: string; onClick: () => void }
   title: React.ReactNode
   variant?: "default" | "destructive"
 } & (
@@ -56,9 +57,20 @@ export function ConfirmationDialog({
   pendingCancelDisabled = false,
   pendingCancelLabel = "Stop",
   pendingLabel,
+  secondaryAction,
   title,
   variant = "default",
 }: ConfirmationProps) {
+  const secondary = secondaryAction ? (
+    <Button
+      disabled={pending}
+      onClick={secondaryAction.onClick}
+      type="button"
+      variant="outline"
+    >
+      {secondaryAction.label}
+    </Button>
+  ) : null
   const activeCancelLabel =
     pending && onCancelPending ? pendingCancelLabel : cancelLabel
   const cancelDisabled = pending && (!onCancelPending || pendingCancelDisabled)
@@ -88,6 +100,7 @@ export function ConfirmationDialog({
             >
               {activeCancelLabel}
             </AlertDialogCancel>
+            {secondary}
             <AlertDialogAction
               disabled={pending || confirmDisabled}
               onClick={(event) => {
@@ -130,6 +143,7 @@ export function ConfirmationDialog({
           >
             {activeCancelLabel}
           </Button>
+          {secondary}
           <Button
             disabled={pending || confirmDisabled}
             onClick={onConfirm}
