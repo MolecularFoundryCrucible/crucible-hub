@@ -101,8 +101,16 @@ test("validates service account usernames before creating", async ({
 }) => {
   await page.goto("/hub/admin/service-accounts")
   await expect(page.getByText("Administrator view is off")).toBeVisible()
-  await page.getByRole("button", { name: "Turn on administrator view" }).click()
-  await page.getByRole("link", { name: "Create service account" }).click()
+  const createLink = page.getByRole("link", { name: "Create service account" })
+  await expect(async () => {
+    if (!(await createLink.isVisible())) {
+      await page
+        .getByRole("button", { name: "Turn on administrator view" })
+        .click({ timeout: 2000 })
+    }
+    await expect(createLink).toBeVisible({ timeout: 2000 })
+  }).toPass({ timeout: 20000 })
+  await createLink.click()
   const dialog = page.getByRole("dialog", { name: "Create service account" })
   const username = dialog.getByRole("textbox", { name: "Username" })
   const create = dialog.getByRole("button", { name: "Create service account" })
