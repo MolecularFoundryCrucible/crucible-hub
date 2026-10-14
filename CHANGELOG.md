@@ -6,6 +6,12 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+## 1.0.1 - 2026-10-14
+
+- Sped up uploads of files under 512 MiB: the Hub now splits each file into the part size the API chooses for its session (between 8 and 64 MiB, about eight parts for medium files) instead of a fixed 64 MiB, and uploads parts through a rolling pool so a slow part no longer holds the other lanes.
+
+- Release tags now build and deploy the Hub: pushing a `vX.Y.Z` tag runs the `crucible-hub-release` Cloud Build trigger, which builds the tagged commit and deploys its image digest to production; pushing to `main` never deploys.
+
 - Improved responsive layouts and touch interactions on narrow viewports: paired short scalar fields (`Created` and `Updated`, `Owner` and `Visibility`, and summary/identity pairs) in two-column grids; kept page, section-tab, and card header actions (`Refresh`, `Graph`, `Add`, `Manage`, `Add files`, and `Request ingestion`) inline on the title row whenever space permits; condensed secondary columns into inline subtitles on narrow dataset Files and Processing tables so long filenames truncate without pushing actions off-screen; kept access grant roles, operator badges, and public/private visibility controls on the same row as their subject and removed the duplicate internal icon from `VisibilityBadge`; and added cooperative touch gestures to the resource graph canvas (single-finger page scroll outside fullscreen with a transient two-finger hint, two-finger pan and pinch-zoom, and double-tap-and-hold vertical drag to zoom).
 
 ## 1.0.0 - 2026-10-13
