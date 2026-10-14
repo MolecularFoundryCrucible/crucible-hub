@@ -55,7 +55,7 @@ function toDocument(
   etag?: string | null
 ): AccountPreferencesDocument {
   return {
-    etag: etag ?? etagFor(revision),
+    etag: etag?.replace(/^W\//, "") ?? etagFor(revision),
     preferences: accountPreferencesSchema.parse(preferences),
     revision,
     updatedAt,

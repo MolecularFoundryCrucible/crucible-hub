@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- Fixed saving preferences when the API's ETag arrives in weak form (`W/"p1"`), which made every save fail, and made toast titles and messages selectable so error references can be copied.
+
 ## 1.2.0 - 2026-10-14
 
 - Recently viewed resources are now stored on the Crucible account, so the sidebar and Home list survives reloads and follows people across devices; Preferences can turn recording off or clear the history. It appears with the other account features once `HUB_ACCOUNT_PREFERENCES_ENABLED` is set.

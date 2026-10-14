@@ -80,6 +80,30 @@ describe("account preferences transport", () => {
     )
   })
 
+  it("sends a weak ETag back as its strong form", async () => {
+    stubApiMode()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            preferences: {},
+            revision: 2,
+            schema_version: 1,
+            updated_at: null,
+          },
+          {
+            headers: { "Crucible-Privilege-Mode": "normal", ETag: 'W/"p2"' },
+          }
+        )
+      )
+    )
+
+    await expect(readAccountPreferences()).resolves.toMatchObject({
+      etag: '"p2"',
+    })
+  })
+
   it("sends the changed keys as a merge patch with If-Match", async () => {
     stubApiMode()
     const requests: Request[] = []
