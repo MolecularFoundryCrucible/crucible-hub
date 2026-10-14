@@ -14,7 +14,9 @@ export function ActivityTime({
 }) {
   const hydrated = useHydrated()
   if (!value) {
-    return <span className="text-muted-foreground">{fallback}</span>
+    return (
+      <span className={cn("text-muted-foreground", className)}>{fallback}</span>
+    )
   }
   return (
     <time
