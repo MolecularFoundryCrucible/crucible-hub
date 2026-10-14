@@ -4,6 +4,10 @@ import { Link, useRouterState } from "@tanstack/react-router"
 import { AppFooter } from "@/components/crucible/app-footer"
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
+  DiscordIcon,
+  discordInviteUrl,
+} from "@/components/crucible/discord-icon"
+import {
   AdministratorViewProvider,
   AdministratorViewStatus,
   useAdministratorViewControl,
@@ -867,6 +871,17 @@ function SidebarUtilities({
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            tooltip="Discord"
+            render={
+              <a href={discordInviteUrl} rel="noreferrer" target="_blank" />
+            }
+          >
+            <DiscordIcon />
+            <span>Discord</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
         <SidebarMenuItem>
           <KeyboardShortcuts
             pathname={pathname}

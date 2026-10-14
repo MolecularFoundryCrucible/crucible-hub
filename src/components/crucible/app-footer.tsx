@@ -1,4 +1,8 @@
 import { BrandMark } from "@/components/crucible/brand-mark"
+import {
+  DiscordIcon,
+  discordInviteUrl,
+} from "@/components/crucible/discord-icon"
 import { SystemStatusPopover } from "@/components/crucible/system-status-popover"
 import { hubBuild } from "@/lib/build-info"
 import type { HubBuild } from "@/lib/build-info"
@@ -16,14 +20,14 @@ function buildReference(build: HubBuild) {
   if (!build.development) {
     return {
       href: `${REPOSITORY_URL}/tree/v${build.version}`,
-      label: "Version",
-      value: build.version,
+      label: `Version ${build.version}`,
+      value: `v${build.version}`,
     }
   }
   return build.commit
     ? {
         href: `${REPOSITORY_URL}/commit/${build.commit}`,
-        label: "Revision",
+        label: `Revision ${build.commit}`,
         value: build.commit,
       }
     : undefined
@@ -75,6 +79,18 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
             •
           </span>
           <a
+            className="inline-flex items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            href={discordInviteUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <DiscordIcon className="size-4" />
+            Discord
+          </a>
+          <span aria-hidden="true" className="select-none">
+            •
+          </span>
+          <a
             className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href={`${REPOSITORY_URL}/issues`}
             rel="noreferrer"
@@ -91,17 +107,15 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
               <span aria-hidden="true" className="select-none">
                 •
               </span>
-              <div className="flex items-center gap-1.5">
-                <span>{reference.label}</span>
-                <a
-                  className="inline-flex items-center rounded-sm py-1 font-mono transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  href={reference.href}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {reference.value}
-                </a>
-              </div>
+              <a
+                aria-label={reference.label}
+                className="inline-flex items-center rounded-sm py-1 tabular-nums transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                href={reference.href}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {reference.value}
+              </a>
             </>
           ) : null}
         </div>

@@ -64,6 +64,15 @@ describe("AppFooter", () => {
     expect(issuesLink.classList.contains("underline")).toBe(false)
   })
 
+  it("links the community Discord server with secure targets", () => {
+    renderFooter()
+
+    const discord = screen.getByRole("link", { name: "Discord" })
+    expect(discord.getAttribute("href")).toBe("https://discord.gg/Wrepphsgbx")
+    expect(discord.getAttribute("target")).toBe("_blank")
+    expect(discord.getAttribute("rel")).toBe("noreferrer")
+  })
+
   it("renders center dots separating external navigation links", () => {
     renderFooter()
 
@@ -84,16 +93,14 @@ describe("AppFooter", () => {
       build: { commit: "7386cff", development: false, version: "1.0.1" },
     })
 
-    expect(screen.getByText("Version")).toBeTruthy()
-    expect(screen.queryByText("Revision")).toBeNull()
-    const versionLink = screen.getByRole("link", { name: "1.0.1" })
+    const versionLink = screen.getByRole("link", { name: "Version 1.0.1" })
+    expect(versionLink.textContent).toBe("v1.0.1")
     expect(versionLink.getAttribute("href")).toBe(
       "https://github.com/MolecularFoundryCrucible/crucible-hub/tree/v1.0.1"
     )
     expect(versionLink.getAttribute("target")).toBe("_blank")
-    expect(versionLink.classList.contains("font-mono")).toBe(true)
 
-    const rightCluster = versionLink.parentElement?.parentElement
+    const rightCluster = versionLink.parentElement
     expect(rightCluster?.textContent).toContain("•")
     expect(rightCluster?.classList.contains("justify-center")).toBe(true)
     expect(rightCluster?.classList.contains("md:justify-end")).toBe(true)
@@ -104,8 +111,8 @@ describe("AppFooter", () => {
       build: { commit: "7386cff", development: true, version: "1.0.1" },
     })
 
-    expect(screen.getByText("Revision")).toBeTruthy()
-    const revisionLink = screen.getByRole("link", { name: "7386cff" })
+    const revisionLink = screen.getByRole("link", { name: "Revision 7386cff" })
+    expect(revisionLink.textContent).toBe("7386cff")
     expect(revisionLink.getAttribute("href")).toBe(
       "https://github.com/MolecularFoundryCrucible/crucible-hub/commit/7386cff"
     )
@@ -115,7 +122,7 @@ describe("AppFooter", () => {
   it("omits the revision and separator dot in development without a commit", () => {
     renderFooter({ build: { development: true, version: "1.0.1" } })
 
-    expect(screen.queryByText("Revision")).toBeNull()
+    expect(screen.queryByRole("link", { name: /^Revision/ })).toBeNull()
     const statusButton = screen.getByRole("button", { name: "API status" })
     const rightCluster = statusButton.parentElement
     expect(rightCluster?.textContent).not.toContain("•")

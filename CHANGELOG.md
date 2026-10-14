@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- Added links to the Crucible community Discord server in the footer and the sidebar, and the footer now shows the release as `v1.1.0` without a label.
+
 ## 1.1.0 - 2026-10-14
 
 - The Administrator view switch is now the only way to elevate. Users and Service accounts, the platform-wide deletion review and approved history, and the admin panel on profiles appear only while it is on; with it off, their pages offer a Turn on action and their server calls are refused instead of elevating on their own. People who cannot elevate never see the switch. Direct links to a service account no longer briefly mismatch while loading.
