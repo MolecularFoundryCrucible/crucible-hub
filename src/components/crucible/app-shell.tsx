@@ -19,6 +19,7 @@ import {
   AdministratorViewEnabledIcon,
   AdministratorViewIcon,
   CollapseSidebarIcon,
+  PreferencesIcon,
   CreateResourceIcon,
   DeletionRequestsIcon,
   ExpandSidebarIcon,
@@ -34,7 +35,7 @@ import {
 } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { SessionTabSync } from "@/components/crucible/session-tab-sync"
-import { useTheme } from "@/components/theme-provider"
+import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -93,6 +94,8 @@ import {
   useRecentlyViewed,
 } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
+import { useThemePreference } from "@/features/preferences/theme-preference"
+import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
 import { resourceDisplayName } from "@/lib/resource-name"
 
 const sidebarRecentLimit = 4
@@ -126,6 +129,11 @@ export function AppShell({
     enabled: Boolean(account && scope),
   })
   const pendingReviewCount = pendingCountQuery.data ?? 0
+  const { preferences } = useAccountPreferences()
+  const defaultDataSearch =
+    preferences.default_record_kind === "datasets"
+      ? { kind: "datasets" as const }
+      : {}
 
   const isDataActive =
     pathname === "/data" ||
@@ -196,6 +204,7 @@ export function AppShell({
                           aria-current={
                             pathname === "/data" ? "page" : undefined
                           }
+                          search={defaultDataSearch}
                           to="/data"
                         />
                       }
@@ -506,6 +515,7 @@ function AccountControls({
   privilegeMode: WorkspacePrivilegeMode
   sessionAuth: boolean
 }) {
+  const preferencesEnabled = useAccountPreferencesEnabled()
   return (
     <div className="ml-auto flex items-center gap-2">
       {privilegeMode === "elevated" ? (
@@ -544,6 +554,12 @@ function AccountControls({
                 <AccountIcon />
                 My profile
               </DropdownMenuItem>
+              {preferencesEnabled ? (
+                <DropdownMenuItem render={<Link to="/preferences" />}>
+                  <PreferencesIcon />
+                  Preferences
+                </DropdownMenuItem>
+              ) : null}
               {sessionAuth ? (
                 <>
                   <DropdownMenuSeparator />
@@ -827,12 +843,32 @@ function SidebarUtilities({
   projectActive: boolean
 }) {
   const { isMobile, state, toggleSidebar } = useSidebar()
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme } = useThemePreference()
+  const preferencesEnabled = useAccountPreferencesEnabled()
   const expanded = isMobile || state === "expanded"
 
   return (
     <SidebarFooter>
       <SidebarMenu>
+        {preferencesEnabled ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname === "/preferences"}
+              tooltip="Preferences"
+              render={
+                <Link
+                  aria-current={
+                    pathname === "/preferences" ? "page" : undefined
+                  }
+                  to="/preferences"
+                />
+              }
+            >
+              <PreferencesIcon aria-hidden="true" />
+              <span>Preferences</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
         <SidebarMenuItem>
           <KeyboardShortcuts
             pathname={pathname}

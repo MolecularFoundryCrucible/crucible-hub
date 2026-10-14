@@ -303,7 +303,7 @@ export function applyDataFilters(
   )
   return {
     ...previous,
-    ...(previous.view === "grouped"
+    ...(previous.view !== "list"
       ? collectionBrowseSearchState({ kind: "all" })
       : {}),
     affiliation: filters.affiliation,

@@ -5030,6 +5030,42 @@
         "title": "PlatformRole",
         "type": "string"
       },
+      "PreferencesRead": {
+        "properties": {
+          "preferences": {
+            "additionalProperties": true,
+            "title": "Preferences",
+            "type": "object"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "schema_version",
+          "revision",
+          "preferences"
+        ],
+        "title": "PreferencesRead",
+        "type": "object"
+      },
       "PrivilegeMode": {
         "enum": [
           "normal",
@@ -7582,7 +7618,7 @@
   },
   "info": {
     "title": "FastAPI",
-    "version": "3.0.0"
+    "version": "3.1.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -8252,6 +8288,180 @@
           }
         ],
         "summary": "Get Account Join Requests",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/preferences": {
+      "get": {
+        "description": "Return the caller's preferences. A caller who never saved any gets an empty document at revision 0.",
+        "operationId": "get_account_preferences_account_preferences_get",
+        "parameters": [
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "ETag": {
+                "description": "Current preferences revision; send it as `If-Match` on PATCH",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Account Preferences",
+        "tags": [
+          "account"
+        ]
+      },
+      "patch": {
+        "description": "Merge a JSON Merge Patch (RFC 7396) into the caller's preferences: `null` removes a key. Send `If-Match` with the ETag from GET to refuse the change when another write happened first; `If-Match: *` matches any revision.",
+        "operationId": "update_account_preferences_account_preferences_patch",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Patch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "ETag": {
+                "description": "New preferences revision",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "412": {
+            "description": "If-Match does not match the current revision: `{\"detail\": {\"code\": \"etag_mismatch\", \"etag\": ..., \"message\": ...}}`"
+          },
+          "422": {
+            "description": "The patch is not an object, or the merged document has an unknown key, an invalid value, or exceeds a size limit"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Account Preferences",
         "tags": [
           "account"
         ]

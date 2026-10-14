@@ -96,6 +96,8 @@ import {
 } from "@/data/crucible/facets.queries"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { RefreshButton } from "@/components/crucible/refresh-button"
+import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.queries"
+import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
 
 export const Route = createFileRoute("/_app/data")({
   head: () => ({ meta: [{ title: "Data | Crucible Hub" }] }),
@@ -138,16 +140,31 @@ export const Route = createFileRoute("/_app/data")({
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
+    const groupBy = source.accountPreferencesEnabled
+      ? (
+          await context.queryClient
+            .ensureQueryData(accountPreferencesQueryOptions(source.scope))
+            .catch(() => undefined)
+        )?.preferences.hub?.data_group_by
+      : undefined
     const resolution = resolveDataFilters(deps)
-    if (!resolution.valid) return
+    if (!resolution.valid) return { dataGroupBy: groupBy }
     const baseFilters = collectionQueryFilters(resolution.filters)
     const sampleBrowse =
       resolution.filters.kind === "samples"
-        ? resolveCollectionBrowse(deps, globalSampleBrowseOptions)
+        ? resolveCollectionBrowse(
+            deps,
+            globalSampleBrowseOptions,
+            groupBy?.samples
+          )
         : undefined
     const datasetBrowse =
       resolution.filters.kind === "datasets"
-        ? resolveCollectionBrowse(deps, globalDatasetBrowseOptions)
+        ? resolveCollectionBrowse(
+            deps,
+            globalDatasetBrowseOptions,
+            groupBy?.datasets
+          )
         : undefined
     const hasGroupedSelection =
       (sampleBrowse?.view !== "grouped" ||
@@ -197,6 +214,7 @@ export const Route = createFileRoute("/_app/data")({
       if (request) missing.push(request)
     }
     if (cause !== "stay") await Promise.all(missing)
+    return { dataGroupBy: groupBy }
   },
   pendingComponent: DataRoutePending,
   staleTime: Infinity,
@@ -285,13 +303,24 @@ function DataResults({
   const showSamples = kind === "samples"
   const showDatasets = kind === "datasets"
   const collectionFilters = collectionQueryFilters(filters)
+  const { loaded, preferences } = useAccountPreferences()
+  const loadedGroupBy = Route.useLoaderData()?.dataGroupBy
+  const groupBy = loaded ? preferences.hub?.data_group_by : loadedGroupBy
   const sampleBrowse =
     kind === "samples"
-      ? resolveCollectionBrowse(search, globalSampleBrowseOptions)
+      ? resolveCollectionBrowse(
+          search,
+          globalSampleBrowseOptions,
+          groupBy?.samples
+        )
       : undefined
   const datasetBrowse =
     kind === "datasets"
-      ? resolveCollectionBrowse(search, globalDatasetBrowseOptions)
+      ? resolveCollectionBrowse(
+          search,
+          globalDatasetBrowseOptions,
+          groupBy?.datasets
+        )
       : undefined
   const sampleCollectionFilters =
     sampleBrowse?.view === "grouped"
@@ -661,7 +690,7 @@ function DataBrowseFrame({
         groupBy: field,
         preview: undefined,
         sampleCursor: undefined,
-        view: field ? "grouped" : undefined,
+        view: field ? "grouped" : "list",
       }),
       state: {},
       to: "/data",

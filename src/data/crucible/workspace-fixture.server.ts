@@ -8,6 +8,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import {
   readUploadIngestionEnabled,
+  readAccountPreferencesEnabled,
   readUploadsEnabled,
 } from "./workspace-config.server"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
@@ -239,6 +240,7 @@ export function readWorkspaceFixture(
   return {
     status: "ready",
     mode: "fixture",
+    accountPreferencesEnabled: readAccountPreferencesEnabled("fixture"),
     privilegeMode,
     uploadIngestionEnabled: readUploadIngestionEnabled("fixture"),
     uploadsEnabled: readUploadsEnabled("fixture"),

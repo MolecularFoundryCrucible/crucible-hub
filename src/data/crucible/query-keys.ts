@@ -46,6 +46,8 @@ export const crucibleKeys = {
     [...scope, "account", "credential-status"] as const,
   accountProfile: (scope: IdentityScope) =>
     [...scope, "account", "profile"] as const,
+  accountPreferences: (scope: IdentityScope) =>
+    [...scope.slice(0, 3), "account", "preferences"] as const,
   projectQueries: (scope: IdentityScope) => [...scope, "projects"] as const,
   projects: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "projects", "list", normalizeFilters(filters)] as const,

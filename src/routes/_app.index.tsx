@@ -50,6 +50,7 @@ import {
 } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { useHomeGreeting } from "@/features/home/home-greeting"
+import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 import { resourceDisplayName } from "@/lib/resource-name"
@@ -83,7 +84,10 @@ export const Route = createFileRoute("/_app/")({
 
 function HomePage() {
   const scope = useWorkspaceScope()
-  const [recentScope, setRecentScope] = useState<"all" | "mine">("all")
+  const { preferences } = useAccountPreferences()
+  const [chosenRecentScope, setRecentScope] = useState<"all" | "mine">()
+  const recentScope =
+    chosenRecentScope ?? preferences.hub?.home_recent_scope ?? "all"
   const homeProjectQuery = useMemo(
     () => ({
       includeTotal: false,

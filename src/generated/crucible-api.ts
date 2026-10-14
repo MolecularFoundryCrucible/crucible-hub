@@ -165,6 +165,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/account/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Account Preferences
+         * @description Return the caller's preferences. A caller who never saved any gets an empty document at revision 0.
+         */
+        get: operations["get_account_preferences_account_preferences_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Account Preferences
+         * @description Merge a JSON Merge Patch (RFC 7396) into the caller's preferences: `null` removes a key. Send `If-Match` with the ETag from GET to refuse the change when another write happened first; `If-Match: *` matches any revision.
+         */
+        patch: operations["update_account_preferences_account_preferences_patch"];
+        trace?: never;
+    };
     "/account/profile": {
         parameters: {
             query?: never;
@@ -4702,6 +4726,19 @@ export interface components {
          * @enum {string}
          */
         PlatformRole: "none" | "contributor" | "support" | "admin";
+        /** PreferencesRead */
+        PreferencesRead: {
+            /** Preferences */
+            preferences: {
+                [key: string]: unknown;
+            };
+            /** Revision */
+            revision: number;
+            /** Schema Version */
+            schema_version: number;
+            /** Updated At */
+            updated_at?: string | null;
+        };
         /**
          * PrivilegeMode
          * @enum {string}
@@ -5906,6 +5943,92 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    get_account_preferences_account_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    /** @description Current preferences revision; send it as `If-Match` on PATCH */
+                    ETag?: string;
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_account_preferences_account_preferences_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-match"?: string | null;
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    /** @description New preferences revision */
+                    ETag?: string;
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesRead"];
+                };
+            };
+            /** @description If-Match does not match the current revision: `{"detail": {"code": "etag_mismatch", "etag": ..., "message": ...}}` */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The patch is not an object, or the merged document has an unknown key, an invalid value, or exceeds a size limit */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

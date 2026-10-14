@@ -23,6 +23,7 @@ import {
 } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys, identityScope } from "@/data/crucible/query-keys"
 import { getWorkspace } from "@/data/crucible/workspace.functions"
+import { AccountThemeSync } from "@/features/preferences/theme-preference"
 
 export const Route = createFileRoute("/_app")({
   validateSearch: z.object({
@@ -85,6 +86,7 @@ export const Route = createFileRoute("/_app")({
     return {
       status: "ready" as const,
       mode: source.mode,
+      accountPreferencesEnabled: source.accountPreferencesEnabled,
       privilegeMode: source.privilegeMode,
       sessionAuth: source.sessionAuth ?? false,
       scope,
@@ -116,6 +118,7 @@ function WorkspaceLayout() {
 
   return (
     <ReadyWorkspace
+      accountPreferencesEnabled={source.accountPreferencesEnabled}
       mode={source.mode}
       privilegeMode={source.privilegeMode}
       sessionAuth={source.sessionAuth}
@@ -127,6 +130,7 @@ function WorkspaceLayout() {
 }
 
 function ReadyWorkspace({
+  accountPreferencesEnabled,
   mode,
   privilegeMode,
   sessionAuth,
@@ -134,6 +138,7 @@ function ReadyWorkspace({
   uploadIngestionEnabled,
   uploadsEnabled,
 }: {
+  accountPreferencesEnabled: boolean
   mode: "api" | "fixture"
   privilegeMode: "elevated" | "normal"
   sessionAuth: boolean
@@ -146,12 +151,14 @@ function ReadyWorkspace({
 
   return (
     <WorkspaceProvider
+      accountPreferencesEnabled={accountPreferencesEnabled}
       mode={mode}
       privilegeMode={privilegeMode}
       scope={scope}
       uploadIngestionEnabled={uploadIngestionEnabled}
       uploadsEnabled={uploadsEnabled}
     >
+      <AccountThemeSync />
       <AppShell
         account={account}
         privilegeMode={privilegeMode}

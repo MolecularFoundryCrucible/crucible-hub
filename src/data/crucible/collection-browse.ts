@@ -37,7 +37,7 @@ export const collectionBrowseSearchFields = {
     .transform(() => true as const)
     .optional()
     .catch(undefined),
-  view: z.enum(["grouped"]).optional().catch(undefined),
+  view: z.enum(["grouped", "list"]).optional().catch(undefined),
 }
 
 export type CollectionBrowseSearch = {
@@ -47,7 +47,7 @@ export type CollectionBrowseSearch = {
   groupValue?: string
   groupValueIsNull?: true
   groupValueSet?: true
-  view?: "grouped"
+  view?: "grouped" | "list"
 }
 
 export type CollectionGroupOrder = "name" | "count"
@@ -95,10 +95,16 @@ export const instrumentDatasetBrowseOptions = [
 
 export function resolveCollectionBrowse<TField extends string>(
   search: CollectionBrowseSearch,
-  options: readonly CollectionBrowseOption<TField>[]
+  options: readonly CollectionBrowseOption<TField>[],
+  defaultGroupBy?: string
 ) {
+  const preferred =
+    search.view === undefined
+      ? options.find((option) => option.value === defaultGroupBy)?.value
+      : undefined
   const field =
     options.find((option) => option.value === search.groupBy)?.value ??
+    preferred ??
     options[0].value
   const selection: FacetSelection = search.groupValueIsNull
     ? { kind: "null" }
@@ -111,7 +117,8 @@ export function resolveCollectionBrowse<TField extends string>(
     field,
     order,
     selection,
-    view: search.view === "grouped" ? "grouped" : "list",
+    view:
+      search.view === "grouped" || preferred !== undefined ? "grouped" : "list",
   } as const
 }
 

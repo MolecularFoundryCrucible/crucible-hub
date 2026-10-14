@@ -9,6 +9,7 @@ import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import type { WorkspaceMode } from "@/data/crucible/workspace-source"
 
 type WorkspaceContextValue = {
+  accountPreferencesEnabled: boolean
   mode: WorkspaceMode
   privilegeMode: WorkspacePrivilegeMode
   scope: IdentityScope
@@ -21,6 +22,7 @@ const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(
 )
 
 export function WorkspaceProvider({
+  accountPreferencesEnabled = false,
   children,
   mode,
   scope,
@@ -28,6 +30,7 @@ export function WorkspaceProvider({
   uploadIngestionEnabled = false,
   uploadsEnabled = false,
 }: {
+  accountPreferencesEnabled?: boolean
   children: React.ReactNode
   mode: WorkspaceMode
   privilegeMode?: WorkspacePrivilegeMode
@@ -38,6 +41,7 @@ export function WorkspaceProvider({
   return (
     <WorkspaceContext.Provider
       value={{
+        accountPreferencesEnabled,
         mode,
         privilegeMode,
         scope,
@@ -96,4 +100,12 @@ export function useUploadIngestionEnabled() {
 
 export function useAdministrationScope() {
   return identityScopeWithPrivilegeMode(useWorkspaceScope(), "elevated")
+}
+
+export function useAccountPreferencesEnabled() {
+  return useContext(WorkspaceContext)?.accountPreferencesEnabled ?? false
+}
+
+export function useOptionalWorkspaceScope() {
+  return useContext(WorkspaceContext)?.scope
 }

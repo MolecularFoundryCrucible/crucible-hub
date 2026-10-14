@@ -1,0 +1,226 @@
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { createFileRoute, notFound } from "@tanstack/react-router"
+
+import { ContentBoundary } from "@/components/crucible/content-layout"
+import { PageHeader } from "@/components/crucible/page-header"
+import { PageLayout } from "@/components/crucible/page-layout"
+import { PendingIcon } from "@/components/crucible/pending-icon"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  globalDatasetBrowseOptions,
+  globalSampleBrowseOptions,
+} from "@/data/crucible/collection-browse"
+import type { CollectionBrowseOption } from "@/data/crucible/collection-browse"
+import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.queries"
+import { recentScopeOptions } from "@/features/home/home-data"
+import { useThemePreference } from "@/features/preferences/theme-preference"
+import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+
+const themeOptions = [
+  { label: "System", value: "system" },
+  { label: "Light", value: "light" },
+  { label: "Dark", value: "dark" },
+] as const
+
+const recordKindOptions = [
+  { label: "Samples", value: "samples" },
+  { label: "Datasets", value: "datasets" },
+] as const
+
+export const Route = createFileRoute("/_app/preferences")({
+  head: () => ({ meta: [{ title: "Preferences | Crucible Hub" }] }),
+  loader: async ({ context, parentMatchPromise }) => {
+    const source = (await parentMatchPromise).loaderData
+    if (source?.status !== "ready" || !source.accountPreferencesEnabled) {
+      throw notFound()
+    }
+    await context.queryClient.ensureQueryData(
+      accountPreferencesQueryOptions(source.scope)
+    )
+  },
+  component: PreferencesPage,
+})
+
+function PreferenceField({
+  children,
+  description,
+  id,
+  title,
+}: {
+  children: React.ReactNode
+  description: string
+  id?: string
+  title: string
+}) {
+  return (
+    <Field orientation="responsive">
+      <FieldContent>
+        {id ? (
+          <FieldLabel htmlFor={id}>{title}</FieldLabel>
+        ) : (
+          <FieldTitle>{title}</FieldTitle>
+        )}
+        <FieldDescription>{description}</FieldDescription>
+      </FieldContent>
+      <div>{children}</div>
+    </Field>
+  )
+}
+
+function GroupingSelect<TField extends string>({
+  id,
+  onChange,
+  options,
+  value,
+}: {
+  id: string
+  onChange: (value: TField | null) => void
+  options: readonly CollectionBrowseOption<TField>[]
+  value: TField | undefined
+}) {
+  return (
+    <NativeSelect
+      id={id}
+      onChange={(event) =>
+        onChange(
+          options.find((option) => option.value === event.target.value)
+            ?.value ?? null
+        )
+      }
+      value={value ?? ""}
+    >
+      <NativeSelectOption value="">None (flat list)</NativeSelectOption>
+      {options.map((option) => (
+        <NativeSelectOption key={option.value} value={option.value}>
+          {option.label}
+        </NativeSelectOption>
+      ))}
+    </NativeSelect>
+  )
+}
+
+function PreferencesPage() {
+  const scope = useWorkspaceScope()
+  useSuspenseQuery(accountPreferencesQueryOptions(scope))
+  const { preferences, saving, update } = useAccountPreferences()
+  const { setTheme, theme } = useThemePreference()
+
+  return (
+    <PageLayout>
+      <PageHeader
+        description="Saved to your Crucible account and applied wherever you sign in."
+        title="Preferences"
+      />
+      <ContentBoundary width="reading">
+        <Card>
+          <CardContent>
+            <FieldGroup>
+              <FieldSet>
+                <FieldLegend>Appearance</FieldLegend>
+                <PreferenceField
+                  description="System follows your device setting."
+                  title="Theme"
+                >
+                  <SegmentedControl
+                    ariaLabel="Theme"
+                    onValueChange={setTheme}
+                    options={themeOptions}
+                    value={preferences.theme ?? theme}
+                  />
+                </PreferenceField>
+              </FieldSet>
+              <FieldSeparator />
+              <FieldSet>
+                <FieldLegend>Data</FieldLegend>
+                <PreferenceField
+                  description="The Data page opens on this record type."
+                  title="Default data view"
+                >
+                  <SegmentedControl
+                    ariaLabel="Default data view"
+                    onValueChange={(value) =>
+                      update({ default_record_kind: value })
+                    }
+                    options={recordKindOptions}
+                    value={preferences.default_record_kind ?? "samples"}
+                  />
+                </PreferenceField>
+                <PreferenceField
+                  description="Samples open grouped by this field instead of as a flat list."
+                  id="preferred-sample-grouping"
+                  title="Group samples by"
+                >
+                  <GroupingSelect
+                    id="preferred-sample-grouping"
+                    onChange={(value) =>
+                      update({ hub: { data_group_by: { samples: value } } })
+                    }
+                    options={globalSampleBrowseOptions}
+                    value={preferences.hub?.data_group_by?.samples}
+                  />
+                </PreferenceField>
+                <PreferenceField
+                  description="Datasets open grouped by this field instead of as a flat list."
+                  id="preferred-dataset-grouping"
+                  title="Group datasets by"
+                >
+                  <GroupingSelect
+                    id="preferred-dataset-grouping"
+                    onChange={(value) =>
+                      update({ hub: { data_group_by: { datasets: value } } })
+                    }
+                    options={globalDatasetBrowseOptions}
+                    value={preferences.hub?.data_group_by?.datasets}
+                  />
+                </PreferenceField>
+              </FieldSet>
+              <FieldSeparator />
+              <FieldSet>
+                <FieldLegend>Home</FieldLegend>
+                <PreferenceField
+                  description="Show recently added data from everyone you can see, or only your own."
+                  title="Recently added data"
+                >
+                  <SegmentedControl
+                    ariaLabel="Recently added data"
+                    onValueChange={(value) =>
+                      update({ hub: { home_recent_scope: value } })
+                    }
+                    options={recentScopeOptions}
+                    value={preferences.hub?.home_recent_scope ?? "all"}
+                  />
+                </PreferenceField>
+              </FieldSet>
+            </FieldGroup>
+          </CardContent>
+        </Card>
+        <p
+          aria-live="polite"
+          className="mt-3 flex min-h-5 items-center gap-1.5 text-supporting text-muted-foreground"
+          role="status"
+        >
+          {saving ? (
+            <>
+              <PendingIcon className="size-3.5" />
+              Saving…
+            </>
+          ) : null}
+        </p>
+      </ContentBoundary>
+    </PageLayout>
+  )
+}

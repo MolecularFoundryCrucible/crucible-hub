@@ -64,6 +64,7 @@ export {
   ArrowLeft as BackToSearchIcon,
   CircleQuestionMark as KeyboardShortcutsIcon,
   History as RecentResourcesIcon,
+  Settings as PreferencesIcon,
   SunMoon as ThemeIcon,
   PanelLeftClose as CollapseSidebarIcon,
   PanelLeftOpen as ExpandSidebarIcon,

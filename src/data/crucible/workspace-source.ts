@@ -679,6 +679,7 @@ export type WorkspaceSource =
   | {
       status: "ready"
       mode: WorkspaceMode
+      accountPreferencesEnabled: boolean
       privilegeMode: WorkspacePrivilegeMode
       uploadIngestionEnabled: boolean
       uploadsEnabled: boolean
