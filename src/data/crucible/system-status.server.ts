@@ -56,6 +56,16 @@ function unreachableStatus(latencyMs?: number, url?: string): SystemStatus {
   }
 }
 
+function readStatusConfiguration() {
+  if (process.env.HUB_DATA_SOURCE === "hub-auth") {
+    const baseUrl = process.env.CRUCIBLE_API_BASE_URL
+    return baseUrl?.startsWith("https://")
+      ? { mode: "api" as const, baseUrl }
+      : { mode: "unavailable" as const }
+  }
+  return readWorkspaceConfiguration()
+}
+
 export async function readSystemStatus(
   requestSignal?: AbortSignal,
   bypassCache = false
@@ -65,7 +75,7 @@ export async function readSystemStatus(
     return cachedStatus.status
   }
 
-  const configuration = readWorkspaceConfiguration()
+  const configuration = readStatusConfiguration()
   if (configuration.mode === "fixture") {
     const fixture = readFixtureSystemStatus()
     cachedStatus = { status: fixture, expiresAt: now + CACHE_TTL_MS }
@@ -83,11 +93,7 @@ export async function readSystemStatus(
   }
 
   const client = createCrucibleClient(
-    {
-      baseUrl: configuration.baseUrl,
-      bearerToken: configuration.bearerToken,
-      fetch: configuration.fetch,
-    },
+    { baseUrl: configuration.baseUrl },
     { privilegeMode: null }
   )
 

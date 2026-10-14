@@ -37,6 +37,7 @@ import {
   isStepUpChallenge,
 } from "./request-error.server"
 import { readRetryAfterSeconds } from "@/lib/retry-after"
+import { backgroundRequestHeader } from "@/data/crucible/background-request"
 
 const clientId = "crucible-hub"
 const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
@@ -244,8 +245,13 @@ export async function withHubAuthRequest<T>(
   next: () => T | Promise<T>
 ): Promise<T> {
   if (!sharedMode()) return await next()
-  const path = new URL(getRequest().url).pathname
-  if (path.startsWith("/hub/auth/") || path === "/hub/health") {
+  const request = getRequest()
+  const path = new URL(request.url).pathname
+  if (
+    path.startsWith("/hub/auth/") ||
+    path === "/hub/health" ||
+    request.headers.get(backgroundRequestHeader) === "1"
+  ) {
     return await next()
   }
   const id = getCookie(sessionCookie)

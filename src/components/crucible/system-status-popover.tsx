@@ -2,13 +2,14 @@ import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  AvailabilityAvailableIcon,
+  AvailabilityTakenIcon,
   CloseIcon,
   DatabaseIcon,
   ExternalLinkIcon,
   ServerIcon,
 } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -28,19 +29,44 @@ import { cn } from "@/lib/utils"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { RefreshButton } from "@/components/crucible/refresh-button"
 
-function statusBadgeVariant(status: ServiceStatus) {
-  if (status === "ok") return "success" as const
-  if (status === "degraded") return "warning" as const
-  return "destructive" as const
-}
-
 function statusBadgeLabel(status: ServiceStatus) {
   if (status === "ok") return "Operational"
   if (status === "degraded") return "Degraded"
   return "Unreachable"
 }
 
-function databaseBadgeVariant(status: "ok" | "error" | "unknown") {
+function StatusMark({
+  label,
+  tone,
+}: {
+  label: string
+  tone: "success" | "warning" | "destructive"
+}) {
+  const Icon =
+    tone === "success" ? AvailabilityAvailableIcon : AvailabilityTakenIcon
+  return (
+    <span className="inline-flex shrink-0" title={label}>
+      <Icon
+        aria-hidden="true"
+        className={cn(
+          "size-5",
+          tone === "success" && "text-success",
+          tone === "warning" && "text-warning",
+          tone === "destructive" && "text-destructive"
+        )}
+      />
+      <span className="sr-only">{label}</span>
+    </span>
+  )
+}
+
+function serviceTone(status: ServiceStatus) {
+  if (status === "ok") return "success" as const
+  if (status === "degraded") return "warning" as const
+  return "destructive" as const
+}
+
+function databaseTone(status: "ok" | "error" | "unknown") {
   if (status === "ok") return "success" as const
   if (status === "error") return "destructive" as const
   return "warning" as const
@@ -65,7 +91,7 @@ export function SystemStatusPopover({
   const [refreshing, setRefreshing] = useState(false)
   const queryClient = useQueryClient()
 
-  const statusQuery = useQuery(systemStatusQueryOptions({ enabled: open }))
+  const statusQuery = useQuery(systemStatusQueryOptions())
   const isFetching = statusQuery.isFetching || refreshing
 
   async function handleRefresh() {
@@ -122,9 +148,10 @@ export function SystemStatusPopover({
           </div>
           <div className="flex items-center gap-1.5">
             {statusQuery.data ? (
-              <Badge variant={statusBadgeVariant(statusQuery.data.status)}>
-                {statusBadgeLabel(statusQuery.data.status)}
-              </Badge>
+              <StatusMark
+                label={statusBadgeLabel(statusQuery.data.status)}
+                tone={serviceTone(statusQuery.data.status)}
+              />
             ) : null}
             <PopoverClose
               render={
@@ -191,12 +218,10 @@ export function SystemStatusPopover({
                     </span>
                   </div>
                 </div>
-                <Badge
-                  className="shrink-0"
-                  variant={statusBadgeVariant(statusQuery.data.api.status)}
-                >
-                  {statusBadgeLabel(statusQuery.data.api.status)}
-                </Badge>
+                <StatusMark
+                  label={statusBadgeLabel(statusQuery.data.api.status)}
+                  tone={serviceTone(statusQuery.data.api.status)}
+                />
               </div>
 
               <div className="flex items-center justify-between rounded-md border border-border p-2.5">
@@ -224,13 +249,10 @@ export function SystemStatusPopover({
                     </span>
                   </div>
                 </div>
-                <Badge
-                  variant={databaseBadgeVariant(
-                    statusQuery.data.database.status
-                  )}
-                >
-                  {databaseBadgeLabel(statusQuery.data.database.status)}
-                </Badge>
+                <StatusMark
+                  label={databaseBadgeLabel(statusQuery.data.database.status)}
+                  tone={databaseTone(statusQuery.data.database.status)}
+                />
               </div>
 
               <div className="flex items-center justify-between rounded-md border border-border p-2.5">
