@@ -10,6 +10,13 @@ import {
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -135,12 +142,14 @@ const modeOptions = [
   { label: "JSON", value: "json" },
 ] as const
 
-export function CreationMetadataField({
+export function CreationMetadataCard({
+  busy,
   disabled,
   errors,
   onChange,
   value,
 }: {
+  busy: boolean
   disabled: boolean
   errors: React.ComponentProps<typeof FieldError>["errors"]
   onChange: (value: CreationMetadataDraft) => void
@@ -215,24 +224,32 @@ export function CreationMetadataField({
     })
   }
 
+  const uploadButton = (
+    <Button
+      disabled={disabled}
+      onClick={() => fileInput.current?.click()}
+      type="button"
+      variant="outline"
+    >
+      <UploadMetadataIcon aria-hidden="true" data-icon="inline-start" />
+      Upload JSON
+    </Button>
+  )
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <SegmentedControl
-          ariaLabel="Metadata editor"
-          onValueChange={changeMode}
-          options={modeOptions}
-          value={value.mode}
-        />
-        <Button
-          disabled={disabled}
-          onClick={() => fileInput.current?.click()}
-          type="button"
-          variant="outline"
-        >
-          <UploadMetadataIcon data-icon="inline-start" />
-          Upload JSON
-        </Button>
+    <Card aria-busy={busy}>
+      <CardHeader actionLayout="inline">
+        <CardTitle>Scientific metadata</CardTitle>
+        <CardAction>
+          <SegmentedControl
+            ariaLabel="Metadata editor"
+            onValueChange={changeMode}
+            options={modeOptions}
+            value={value.mode}
+          />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
         <input
           accept="application/json,.json"
           className="sr-only"
@@ -245,100 +262,105 @@ export function CreationMetadataField({
           tabIndex={-1}
           type="file"
         />
-      </div>
-      {value.mode === "fields" ? (
-        <div className="flex flex-col gap-2">
-          {value.rows.length > 0 ? (
-            <ul aria-label="Metadata fields" className="flex flex-col gap-2">
-              {value.rows.map((row, index) => (
-                <li className="flex items-center gap-2" key={row.id}>
-                  <Input
-                    aria-label={`Field ${index + 1} name`}
-                    disabled={disabled}
-                    onChange={(event) =>
-                      updateRow(row.id, { name: event.target.value })
-                    }
-                    placeholder="Name"
-                    value={row.name}
-                  />
-                  <Input
-                    aria-label={`Field ${index + 1} value`}
-                    disabled={disabled}
-                    onChange={(event) =>
-                      updateRow(row.id, { value: event.target.value })
-                    }
-                    placeholder="Value"
-                    value={row.value}
-                  />
-                  <Button
-                    aria-label={`Remove field ${index + 1}`}
-                    disabled={disabled}
-                    onClick={() =>
-                      onChange({
-                        ...value,
-                        rows: value.rows.filter(
-                          (candidate) => candidate.id !== row.id
-                        ),
-                      })
-                    }
-                    size="icon-sm"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <RemoveMetadataFieldIcon aria-hidden="true" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <div>
-            <Button
+        {value.mode === "fields" ? (
+          <>
+            {value.rows.length > 0 ? (
+              <ul aria-label="Metadata fields" className="flex flex-col gap-2">
+                {value.rows.map((row, index) => (
+                  <li className="flex items-center gap-2" key={row.id}>
+                    <Input
+                      aria-label={`Field ${index + 1} name`}
+                      disabled={disabled}
+                      onChange={(event) =>
+                        updateRow(row.id, { name: event.target.value })
+                      }
+                      placeholder="Name"
+                      value={row.name}
+                    />
+                    <Input
+                      aria-label={`Field ${index + 1} value`}
+                      disabled={disabled}
+                      onChange={(event) =>
+                        updateRow(row.id, { value: event.target.value })
+                      }
+                      placeholder="Value"
+                      value={row.value}
+                    />
+                    <Button
+                      aria-label={`Remove field ${index + 1}`}
+                      disabled={disabled}
+                      onClick={() =>
+                        onChange({
+                          ...value,
+                          rows: value.rows.filter(
+                            (candidate) => candidate.id !== row.id
+                          ),
+                        })
+                      }
+                      size="icon-sm"
+                      type="button"
+                      variant="ghost"
+                    >
+                      <RemoveMetadataFieldIcon aria-hidden="true" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                disabled={disabled}
+                onClick={() =>
+                  onChange({ ...value, rows: [...value.rows, newRow()] })
+                }
+                type="button"
+                variant="outline"
+              >
+                <AddMetadataFieldIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
+                Add field
+              </Button>
+              {uploadButton}
+            </div>
+          </>
+        ) : (
+          <>
+            <Textarea
+              aria-label="Scientific metadata JSON"
+              className="h-metadata-editor-height resize-y font-mono text-supporting"
               disabled={disabled}
-              onClick={() =>
-                onChange({ ...value, rows: [...value.rows, newRow()] })
+              onChange={(event) =>
+                onChange({ ...value, json: event.target.value })
               }
-              type="button"
-              variant="outline"
-            >
-              <AddMetadataFieldIcon data-icon="inline-start" />
-              Add field
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <Textarea
-            aria-label="Scientific metadata JSON"
-            className="h-metadata-editor-height resize-y font-mono text-supporting"
-            disabled={disabled}
-            onChange={(event) =>
-              onChange({ ...value, json: event.target.value })
-            }
-            spellCheck={false}
-            value={value.json}
-          />
-        </div>
-      )}
-      {notice ? (
-        <p className="text-supporting text-destructive" role="status">
-          {notice}
-        </p>
-      ) : null}
-      <FieldError errors={errors} />
-      <ConfirmationDialog
-        confirmLabel="Replace"
-        description="Replace the metadata you entered with the file, or merge the file into it. When both have a field, the file's value wins."
-        kind="alert"
-        onConfirm={() => applyUpload("replace")}
-        onOpenChange={(open) => !open && setUploaded(undefined)}
-        open={uploaded !== undefined}
-        secondaryAction={{
-          label: "Merge",
-          onClick: () => applyUpload("merge"),
-        }}
-        title="Use the uploaded metadata?"
-      />
-    </div>
+              spellCheck={false}
+              value={value.json}
+            />
+            <div>{uploadButton}</div>
+          </>
+        )}
+        {notice ? (
+          <p className="text-supporting text-destructive" role="status">
+            {notice}
+          </p>
+        ) : null}
+        <FieldError errors={errors} />
+        <ConfirmationDialog
+          confirmLabel="Replace"
+          description="Replace the metadata you entered with the file, or merge the file into it. When both have a field, the file's value wins."
+          kind="alert"
+          onConfirm={() => applyUpload("replace")}
+          onOpenChange={(open) => !open && setUploaded(undefined)}
+          open={uploaded !== undefined}
+          secondaryAction={{
+            label: "Merge",
+            onClick: () => applyUpload("merge"),
+          }}
+          title="Use the uploaded metadata?"
+        />
+      </CardContent>
+    </Card>
   )
 }
 

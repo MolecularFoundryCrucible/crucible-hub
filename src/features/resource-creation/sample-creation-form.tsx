@@ -55,7 +55,7 @@ import { useStagedCreation } from "./creation-submission"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 import { CreationFormActions } from "@/components/crucible/creation-form-actions"
 import {
-  CreationMetadataField,
+  CreationMetadataCard,
   creationMetadataSchema,
   emptyCreationMetadata,
   useCreationMetadataSubmission,
@@ -427,23 +427,17 @@ export function SampleCreationForm({
                 </form.Field>
               </CardContent>
             </Card>
-            <Card aria-busy={busy}>
-              <CardHeader>
-                <CardTitle>Scientific metadata</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form.Field name="metadata">
-                  {(field) => (
-                    <CreationMetadataField
-                      disabled={busy || Boolean(createdSample)}
-                      errors={fieldErrors(field)}
-                      onChange={field.handleChange}
-                      value={field.state.value}
-                    />
-                  )}
-                </form.Field>
-              </CardContent>
-            </Card>
+            <form.Field name="metadata">
+              {(field) => (
+                <CreationMetadataCard
+                  busy={busy}
+                  disabled={busy || Boolean(createdSample)}
+                  errors={fieldErrors(field)}
+                  onChange={field.handleChange}
+                  value={field.state.value}
+                />
+              )}
+            </form.Field>
           </div>
         </ContentGrid>
       </ContentBoundary>
