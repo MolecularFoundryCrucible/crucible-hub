@@ -6,6 +6,7 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- When a project is chosen on dataset or sample creation, the measurement or sample type field suggests the values most used in that project.
 - The Add relationship dialog no longer opens its resource list straight away; the list opens and loads when the search field is focused.
 - Sample and dataset creation can add scientific metadata in a separate card, as name and value fields, as JSON, or by uploading a JSON file; it is saved right after the record is created and retried with the other missing stages if that fails.
 - Fixed creation forms dropping entered relationships after the record was created, which made a retry report success without adding them.

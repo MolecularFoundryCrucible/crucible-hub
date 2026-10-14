@@ -65,6 +65,10 @@ import {
   emptyCreationMetadata,
   useCreationMetadataSubmission,
 } from "./creation-metadata"
+import {
+  ProjectSuggestions,
+  useDatasetFacetSuggestions,
+} from "./project-suggestions"
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -198,6 +202,11 @@ export function DatasetCreationForm({
     relationships.isPending ||
     files.isPending
   const formId = "dataset-creation"
+  const measurementSuggestions = useDatasetFacetSuggestions(
+    scope,
+    "measurement",
+    useStore(form.store, (state) => state.values.project?.unique_id)
+  )
 
   function cacheDataset(dataset: DatasetResource) {
     queryClient.setQueryData(
@@ -363,6 +372,7 @@ export function DatasetCreationForm({
                         form={form}
                         label="Measurement"
                         maxLength={DATASET_MEASUREMENT_MAX_LENGTH}
+                        suggestions={measurementSuggestions}
                       />
                       <form.Field name="timestamp">
                         {(field) => {
@@ -532,11 +542,13 @@ function DatasetTextField({
   form,
   label,
   maxLength,
+  suggestions = [],
 }: {
   fieldName: "data_format" | "data_type" | "measurement" | "session_name"
   form: ReturnType<typeof useDatasetForm>
   label: string
   maxLength: number
+  suggestions?: readonly string[]
 }) {
   return (
     <form.Field name={fieldName}>
@@ -557,6 +569,12 @@ function DatasetTextField({
               name={field.name}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
+              value={field.state.value}
+            />
+            <ProjectSuggestions
+              label={label}
+              onPick={field.handleChange}
+              suggestions={suggestions}
               value={field.state.value}
             />
             <FieldError errors={fieldErrors(field)} id={errorId} />

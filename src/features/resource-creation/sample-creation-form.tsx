@@ -60,6 +60,10 @@ import {
   emptyCreationMetadata,
   useCreationMetadataSubmission,
 } from "./creation-metadata"
+import {
+  ProjectSuggestions,
+  useSampleFacetSuggestions,
+} from "./project-suggestions"
 
 const sampleSchema = z.object({
   description: z
@@ -186,6 +190,11 @@ export function SampleCreationForm({
     true
   )
   const formId = "sample-creation"
+  const sampleTypeSuggestions = useSampleFacetSuggestions(
+    scope,
+    "sample_type",
+    useStore(form.store, (state) => state.values.project?.unique_id)
+  )
 
   return (
     <PageLayout>
@@ -287,6 +296,7 @@ export function SampleCreationForm({
                         fieldName="sample_type"
                         form={form}
                         label="Sample type"
+                        suggestions={sampleTypeSuggestions}
                       />
                       <form.Field name="timestamp">
                         {(field) => {
@@ -468,12 +478,14 @@ function SampleTextField({
   form,
   label,
   required = false,
+  suggestions = [],
 }: {
   autoFocus?: boolean
   fieldName: "sample_name" | "sample_type"
   form: ReturnType<typeof useSampleForm>
   label: string
   required?: boolean
+  suggestions?: readonly string[]
 }) {
   return (
     <form.Field name={fieldName}>
@@ -503,6 +515,12 @@ function SampleTextField({
               name={field.name}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
+              value={field.state.value}
+            />
+            <ProjectSuggestions
+              label={label}
+              onPick={field.handleChange}
+              suggestions={suggestions}
               value={field.state.value}
             />
             <FieldError errors={fieldErrors(field)} id={errorId} />
