@@ -22,6 +22,7 @@ export type SearchableResourceKind =
   "dataset" | "instrument" | "person" | "project" | "sample"
 
 export function useResourceComboboxState({
+  active = true,
   allowBrowse,
   excludedIds,
   excludeServiceAccounts,
@@ -31,6 +32,7 @@ export function useResourceComboboxState({
   scope,
   serviceAccountsOnly = false,
 }: {
+  active?: boolean
   allowBrowse: boolean
   excludedIds: readonly string[]
   excludeServiceAccounts: boolean
@@ -44,7 +46,7 @@ export function useResourceComboboxState({
 
   const browse = useQuery({
     ...searchQueryOptions(scope, "", [kind], undefined, serviceAccountsOnly),
-    enabled: allowBrowse,
+    enabled: allowBrowse && active,
   })
 
   const search = useQuery({
@@ -269,9 +271,10 @@ export function ResourceSearchCombobox({
         }
       : resourceLabels[kind]
   const normalizedQuery = query.trim()
-  const [open, setOpen] = useState(allowBrowse)
+  const [open, setOpen] = useState(false)
 
   const state = useResourceComboboxState({
+    active: open,
     allowBrowse,
     excludedIds,
     excludeServiceAccounts,
