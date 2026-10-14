@@ -1,8 +1,9 @@
 import { BrandMark } from "@/components/crucible/brand-mark"
 import {
   DiscordIcon,
+  GitHubIcon,
   discordInviteUrl,
-} from "@/components/crucible/discord-icon"
+} from "@/components/crucible/brand-icons"
 import { SystemStatusPopover } from "@/components/crucible/system-status-popover"
 import { hubBuild } from "@/lib/build-info"
 import type { HubBuild } from "@/lib/build-info"
@@ -91,11 +92,12 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
             •
           </span>
           <a
-            className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href={`${REPOSITORY_URL}/issues`}
             rel="noreferrer"
             target="_blank"
           >
+            <GitHubIcon className="size-4" />
             Issues
           </a>
         </nav>

@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
-- Added a link to the Crucible community Discord server in the footer, removed the Preferences entry from the sidebar (it stays in the account menu), and the footer now shows the release as `v1.1.0` without a label.
+- Added a link to the Crucible community Discord server in the footer and the GitHub mark to its Issues link, removed the Preferences entry from the sidebar (it stays in the account menu), and the footer now shows the release as `v1.1.0` without a label.
 
 ## 1.1.0 - 2026-10-14
 
