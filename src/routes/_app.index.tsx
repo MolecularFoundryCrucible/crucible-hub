@@ -11,10 +11,9 @@ import {
   CreateResourceIcon,
   ForwardNavigationIcon,
 } from "@/components/crucible/icons"
-import { LocalDateTime } from "@/components/crucible/local-date-time"
+import { LabeledTimestamp } from "@/components/crucible/labeled-timestamp"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { ProjectRoleBadge } from "@/components/crucible/project-members"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
@@ -51,7 +50,6 @@ import {
 import type { HomeRecentResource } from "@/features/home/home-data"
 import { useHomeGreeting } from "@/features/home/home-greeting"
 import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
-import { ActivityTime } from "@/components/crucible/activity-time"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
 import { resourceDisplayName } from "@/lib/resource-name"
@@ -274,7 +272,7 @@ function HomePage() {
               <CardContent>
                 {recentlyViewed.length === 0 ? (
                   <p className="text-body text-muted-foreground">
-                    Resources opened during this session will appear here.
+                    Resources you open will appear here.
                   </p>
                 ) : (
                   <ResourceList>
@@ -347,9 +345,9 @@ function HomePage() {
                       mfid: project.unique_id,
                     })}
                     trailing={
-                      <ActivityTime
-                        className="text-supporting text-muted-foreground"
-                        fallback="No activity yet"
+                      <LabeledTimestamp
+                        label="Last activity"
+                        presentation="activity"
                         value={project.last_activity_at}
                       />
                     }
@@ -406,9 +404,11 @@ function HomePage() {
                     mfid={instrument.unique_id}
                     name={instrumentName(instrument)}
                     trailing={
-                      instrument.role ? (
-                        <ProjectRoleBadge role={instrument.role} />
-                      ) : null
+                      <LabeledTimestamp
+                        label="Last activity"
+                        presentation="activity"
+                        value={instrument.last_activity_at}
+                      />
                     }
                   />
                 ))}
@@ -455,10 +455,10 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
           projectId={item.projectId}
         />
         {item.timestamp ? (
-          <div className="flex shrink-0 flex-wrap items-baseline gap-x-1.5 text-supporting text-muted-foreground sm:block sm:text-right">
-            <span className="sm:block">{item.timestamp.label}</span>
-            <LocalDateTime className="sm:block" value={item.timestamp.value} />
-          </div>
+          <LabeledTimestamp
+            label={item.timestamp.label}
+            value={item.timestamp.value}
+          />
         ) : null}
       </ResourceListItemContent>
     </ResourceListItem>
