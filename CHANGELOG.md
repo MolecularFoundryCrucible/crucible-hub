@@ -6,7 +6,7 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
-- The default grouping preference now also applies to sample and dataset lists inside projects and to an instrument's datasets, not only the Data page.
+- Fixed the default grouping preference applying only on the Data page; sample and dataset lists inside projects and an instrument's datasets now open with it too.
 
 ## 1.2.1 - 2026-10-14
 
