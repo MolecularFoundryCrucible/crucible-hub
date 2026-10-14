@@ -4,7 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { ContentBoundary } from "@/components/crucible/content-layout"
+import {
+  ContentBoundary,
+  ContentGrid,
+} from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
@@ -176,154 +179,50 @@ export function SampleCreationForm({
   return (
     <PageLayout>
       <PageHeader title="Create sample" />
-      <ContentBoundary width="reading">
-        <Card aria-busy={busy}>
-          <CardHeader>
-            <CardTitle>Sample details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form
-              id={formId}
-              noValidate
-              onSubmit={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                void form.handleSubmit()
-              }}
-            >
-              <fieldset disabled={busy || Boolean(createdSample)}>
-                <FieldGroup>
-                  <SampleTextField
-                    autoFocus
-                    fieldName="sample_name"
-                    form={form}
-                    label="Name"
-                    required
-                  />
-                  <form.Field name="project">
-                    {(field) => {
-                      const invalid = shouldShowFieldError(field)
-                      const errorId = `${field.name}-error`
-                      return (
-                        <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name} optional>
-                            Project
-                          </FieldLabel>
-                          <ResourceChooser
-                            describedBy={invalid ? errorId : undefined}
-                            emptyLabel="Choose a project"
-                            invalid={invalid}
-                            kind="project"
-                            onChange={(value) =>
-                              field.handleChange(value ?? null)
-                            }
-                            triggerId={field.name}
-                            value={field.state.value ?? undefined}
-                          />
-                          <FieldError
-                            errors={fieldErrors(field)}
-                            id={errorId}
-                          />
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-                  <form.Field name="visibility">
-                    {(field) => {
-                      const invalid = shouldShowFieldError(field)
-                      const errorId = `${field.name}-error`
-                      return (
-                        <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name} required>
-                            Visibility
-                          </FieldLabel>
-                          <NativeSelect
-                            aria-describedby={invalid ? errorId : undefined}
-                            aria-errormessage={invalid ? errorId : undefined}
-                            aria-invalid={invalid || undefined}
-                            id={field.name}
-                            name={field.name}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(
-                                event.target.value as SampleValues["visibility"]
-                              )
-                            }
-                            value={field.state.value}
-                          >
-                            <NativeSelectOption value="private">
-                              Private
-                            </NativeSelectOption>
-                            <NativeSelectOption value="public">
-                              Public
-                            </NativeSelectOption>
-                          </NativeSelect>
-                          <FieldError
-                            errors={fieldErrors(field)}
-                            id={errorId}
-                          />
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-                  <CreationFormSection title="Details">
+      <ContentBoundary>
+        <ContentGrid variant="split">
+          <Card aria-busy={busy}>
+            <CardHeader>
+              <CardTitle>Sample details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form
+                id={formId}
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  void form.handleSubmit()
+                }}
+              >
+                <fieldset disabled={busy || Boolean(createdSample)}>
+                  <FieldGroup>
                     <SampleTextField
-                      fieldName="sample_type"
+                      autoFocus
+                      fieldName="sample_name"
                       form={form}
-                      label="Sample type"
+                      label="Name"
+                      required
                     />
-                    <form.Field name="timestamp">
-                      {(field) => {
-                        const invalid = shouldShowFieldError(field)
-                        const errorId = `${field.name}-error`
-                        return (
-                          <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name} required>
-                              Local date and time
-                            </FieldLabel>
-                            <Input
-                              aria-describedby={invalid ? errorId : undefined}
-                              aria-errormessage={invalid ? errorId : undefined}
-                              aria-invalid={invalid || undefined}
-                              id={field.name}
-                              name={field.name}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
-                              }
-                              type="datetime-local"
-                              value={field.state.value}
-                            />
-                            <FieldError
-                              errors={fieldErrors(field)}
-                              id={errorId}
-                            />
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
-                    <form.Field name="description">
+                    <form.Field name="project">
                       {(field) => {
                         const invalid = shouldShowFieldError(field)
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
                             <FieldLabel htmlFor={field.name} optional>
-                              Description
+                              Project
                             </FieldLabel>
-                            <Textarea
-                              aria-describedby={invalid ? errorId : undefined}
-                              aria-errormessage={invalid ? errorId : undefined}
-                              aria-invalid={invalid || undefined}
-                              id={field.name}
-                              maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
-                              name={field.name}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
+                            <ResourceChooser
+                              describedBy={invalid ? errorId : undefined}
+                              emptyLabel="Choose a project"
+                              invalid={invalid}
+                              kind="project"
+                              onChange={(value) =>
+                                field.handleChange(value ?? null)
                               }
-                              rows={4}
-                              value={field.state.value}
+                              triggerId={field.name}
+                              value={field.state.value ?? undefined}
                             />
                             <FieldError
                               errors={fieldErrors(field)}
@@ -333,67 +232,186 @@ export function SampleCreationForm({
                         )
                       }}
                     </form.Field>
-                  </CreationFormSection>
-                  <CreationFormSection title="Relationships">
-                    <form.Field name="relationships">
-                      {(field) => (
-                        <CreationRelationshipsField
-                          disabled={busy || Boolean(createdSample)}
-                          onChange={field.handleChange}
-                          resourceKind="sample"
-                          scope={scope}
-                          value={field.state.value}
-                        />
-                      )}
+                    <form.Field name="visibility">
+                      {(field) => {
+                        const invalid = shouldShowFieldError(field)
+                        const errorId = `${field.name}-error`
+                        return (
+                          <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor={field.name} required>
+                              Visibility
+                            </FieldLabel>
+                            <NativeSelect
+                              aria-describedby={invalid ? errorId : undefined}
+                              aria-errormessage={invalid ? errorId : undefined}
+                              aria-invalid={invalid || undefined}
+                              id={field.name}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(
+                                  event.target
+                                    .value as SampleValues["visibility"]
+                                )
+                              }
+                              value={field.state.value}
+                            >
+                              <NativeSelectOption value="private">
+                                Private
+                              </NativeSelectOption>
+                              <NativeSelectOption value="public">
+                                Public
+                              </NativeSelectOption>
+                            </NativeSelect>
+                            <FieldError
+                              errors={fieldErrors(field)}
+                              id={errorId}
+                            />
+                          </Field>
+                        )
+                      }}
                     </form.Field>
-                  </CreationFormSection>
-                </FieldGroup>
-              </fieldset>
-              <FormErrorRegion padded>
-                {saveError ? <p>{saveError}</p> : null}
-                {createdSample && relationships.failures.length ? (
-                  <p>
-                    The sample was created, but relationships with{" "}
-                    {relationships.failures
-                      .map((draft) => draft.target.name)
-                      .join(", ")}{" "}
-                    still need recovery.
-                  </p>
-                ) : null}
-              </FormErrorRegion>
-            </form>
-          </CardContent>
-          <CardFooter className="justify-end gap-2">
-            <Button
-              disabled={busy}
-              onClick={discard.requestCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              className="sm:min-w-52"
-              disabled={
-                busy ||
-                uncertainOutcome ||
-                (Boolean(createdSample) && relationships.failures.length === 0)
-              }
-              form={formId}
-              type="submit"
-            >
-              {createdSample
-                ? relationships.failures.length
-                  ? "Retry missing relationships"
-                  : "Sample created"
-                : uncertainOutcome
-                  ? "Create sample"
-                  : busy
-                    ? "Creating sample"
-                    : "Create sample"}
-            </Button>
-          </CardFooter>
-        </Card>
+                    <CreationFormSection title="Details">
+                      <SampleTextField
+                        fieldName="sample_type"
+                        form={form}
+                        label="Sample type"
+                      />
+                      <form.Field name="timestamp">
+                        {(field) => {
+                          const invalid = shouldShowFieldError(field)
+                          const errorId = `${field.name}-error`
+                          return (
+                            <Field data-invalid={invalid}>
+                              <FieldLabel htmlFor={field.name} required>
+                                Local date and time
+                              </FieldLabel>
+                              <Input
+                                aria-describedby={invalid ? errorId : undefined}
+                                aria-errormessage={
+                                  invalid ? errorId : undefined
+                                }
+                                aria-invalid={invalid || undefined}
+                                id={field.name}
+                                name={field.name}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(event.target.value)
+                                }
+                                type="datetime-local"
+                                value={field.state.value}
+                              />
+                              <FieldError
+                                errors={fieldErrors(field)}
+                                id={errorId}
+                              />
+                            </Field>
+                          )
+                        }}
+                      </form.Field>
+                      <form.Field name="description">
+                        {(field) => {
+                          const invalid = shouldShowFieldError(field)
+                          const errorId = `${field.name}-error`
+                          return (
+                            <Field data-invalid={invalid}>
+                              <FieldLabel htmlFor={field.name} optional>
+                                Description
+                              </FieldLabel>
+                              <Textarea
+                                aria-describedby={invalid ? errorId : undefined}
+                                aria-errormessage={
+                                  invalid ? errorId : undefined
+                                }
+                                aria-invalid={invalid || undefined}
+                                id={field.name}
+                                maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
+                                name={field.name}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(event.target.value)
+                                }
+                                rows={4}
+                                value={field.state.value}
+                              />
+                              <FieldError
+                                errors={fieldErrors(field)}
+                                id={errorId}
+                              />
+                            </Field>
+                          )
+                        }}
+                      </form.Field>
+                    </CreationFormSection>
+                  </FieldGroup>
+                </fieldset>
+                <FormErrorRegion padded>
+                  {saveError ? <p>{saveError}</p> : null}
+                  {createdSample && relationships.failures.length ? (
+                    <p>
+                      The sample was created, but relationships with{" "}
+                      {relationships.failures
+                        .map((draft) => draft.target.name)
+                        .join(", ")}{" "}
+                      still need recovery.
+                    </p>
+                  ) : null}
+                </FormErrorRegion>
+              </form>
+            </CardContent>
+            <CardFooter className="justify-end gap-2">
+              <Button
+                disabled={busy}
+                onClick={discard.requestCancel}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                className="sm:min-w-52"
+                disabled={
+                  busy ||
+                  uncertainOutcome ||
+                  (Boolean(createdSample) &&
+                    relationships.failures.length === 0)
+                }
+                form={formId}
+                type="submit"
+              >
+                {createdSample
+                  ? relationships.failures.length
+                    ? "Retry missing relationships"
+                    : "Sample created"
+                  : uncertainOutcome
+                    ? "Create sample"
+                    : busy
+                      ? "Creating sample"
+                      : "Create sample"}
+              </Button>
+            </CardFooter>
+          </Card>
+          <div className="flex min-w-0 flex-col gap-page-section">
+            <Card aria-busy={busy}>
+              <CardHeader>
+                <CardTitle>Relationships</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <form.Field name="relationships">
+                  {(field) => (
+                    <CreationRelationshipsField
+                      disabled={busy || Boolean(createdSample)}
+                      onChange={field.handleChange}
+                      resourceKind="sample"
+                      scope={scope}
+                      value={field.state.value}
+                    />
+                  )}
+                </form.Field>
+              </CardContent>
+            </Card>
+          </div>
+        </ContentGrid>
       </ContentBoundary>
       <DiscardChangesDialog {...discard.dialog} />
     </PageLayout>

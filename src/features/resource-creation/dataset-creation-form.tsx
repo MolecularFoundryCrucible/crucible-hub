@@ -4,7 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { ContentBoundary } from "@/components/crucible/content-layout"
+import {
+  ContentBoundary,
+  ContentGrid,
+} from "@/components/crucible/content-layout"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
 import { Button } from "@/components/ui/button"
 import {
@@ -214,162 +217,46 @@ export function DatasetCreationForm({
 
   return (
     <>
-      <ContentBoundary width="reading">
-        <Card aria-busy={busy}>
-          <CardHeader>
-            <CardTitle>Dataset details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form
-              id={formId}
-              noValidate
-              onSubmit={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                void form.handleSubmit()
-              }}
-            >
-              <fieldset disabled={busy || Boolean(createdDataset)}>
-                <FieldGroup>
-                  <form.Field name="dataset_name">
-                    {(field) => {
-                      const invalid = shouldShowFieldError(field)
-                      const errorId = `${field.name}-error`
-                      return (
-                        <Field data-invalid={invalid}>
-                          <FieldLabel htmlFor={field.name} required>
-                            Name
-                          </FieldLabel>
-                          <Input
-                            aria-describedby={invalid ? errorId : undefined}
-                            aria-errormessage={invalid ? errorId : undefined}
-                            autoFocus
-                            aria-invalid={invalid || undefined}
-                            id={field.name}
-                            maxLength={DATASET_NAME_MAX_LENGTH}
-                            name={field.name}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            required
-                            value={field.state.value}
-                          />
-                          <FieldError
-                            errors={fieldErrors(field)}
-                            id={errorId}
-                          />
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-                  <form.Field name="project">
-                    {(field) => {
-                      const invalid = shouldShowFieldError(field)
-                      return (
-                        <Field
-                          data-invalid={invalid}
-                          data-disabled={Boolean(createdDataset)}
-                        >
-                          <FieldLabel
-                            htmlFor="dataset-project-trigger"
-                            optional
-                          >
-                            Project
-                          </FieldLabel>
-                          <ResourceChooser
-                            describedBy={
-                              invalid ? "dataset-project-error" : undefined
-                            }
-                            emptyLabel="Choose a project"
-                            invalid={invalid}
-                            kind="project"
-                            onChange={field.handleChange}
-                            triggerId="dataset-project-trigger"
-                            value={field.state.value}
-                          />
-                          <FieldError
-                            id="dataset-project-error"
-                            errors={fieldErrors(field)}
-                          />
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-                  <form.Field name="public">
-                    {(field) => {
-                      return (
-                        <Field data-disabled={Boolean(createdDataset)}>
-                          <FieldLabel htmlFor={field.name} required>
-                            Visibility
-                          </FieldLabel>
-                          <NativeSelect
-                            id={field.name}
-                            name={field.name}
-                            onChange={(event) =>
-                              field.handleChange(
-                                event.target.value === "public"
-                              )
-                            }
-                            value={field.state.value ? "public" : "private"}
-                          >
-                            <NativeSelectOption value="private">
-                              Private
-                            </NativeSelectOption>
-                            <NativeSelectOption value="public">
-                              Public
-                            </NativeSelectOption>
-                          </NativeSelect>
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-                  <CreationFormSection title="Acquisition">
-                    <form.Field name="instrument">
-                      {(field) => (
-                        <Field data-disabled={Boolean(createdDataset)}>
-                          <FieldLabel
-                            htmlFor="dataset-instrument-trigger"
-                            optional
-                          >
-                            Acquisition instrument
-                          </FieldLabel>
-                          <ResourceChooser
-                            emptyLabel="Choose an instrument"
-                            kind="instrument"
-                            onChange={field.handleChange}
-                            triggerId="dataset-instrument-trigger"
-                            value={field.state.value}
-                          />
-                        </Field>
-                      )}
-                    </form.Field>
-                    <DatasetTextField
-                      fieldName="measurement"
-                      form={form}
-                      label="Measurement"
-                      maxLength={DATASET_MEASUREMENT_MAX_LENGTH}
-                    />
-                    <form.Field name="timestamp">
+      <ContentBoundary>
+        <ContentGrid variant="split">
+          <Card aria-busy={busy}>
+            <CardHeader>
+              <CardTitle>Dataset details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form
+                id={formId}
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  void form.handleSubmit()
+                }}
+              >
+                <fieldset disabled={busy || Boolean(createdDataset)}>
+                  <FieldGroup>
+                    <form.Field name="dataset_name">
                       {(field) => {
                         const invalid = shouldShowFieldError(field)
                         const errorId = `${field.name}-error`
                         return (
                           <Field data-invalid={invalid}>
                             <FieldLabel htmlFor={field.name} required>
-                              Local date and time
+                              Name
                             </FieldLabel>
                             <Input
                               aria-describedby={invalid ? errorId : undefined}
                               aria-errormessage={invalid ? errorId : undefined}
+                              autoFocus
                               aria-invalid={invalid || undefined}
                               id={field.name}
+                              maxLength={DATASET_NAME_MAX_LENGTH}
                               name={field.name}
                               onBlur={field.handleBlur}
                               onChange={(event) =>
                                 field.handleChange(event.target.value)
                               }
-                              type="datetime-local"
+                              required
                               value={field.state.value}
                             />
                             <FieldError
@@ -380,114 +267,246 @@ export function DatasetCreationForm({
                         )
                       }}
                     </form.Field>
-                    <DatasetTextField
-                      fieldName="session_name"
-                      form={form}
-                      label="Session name"
-                      maxLength={DATASET_SESSION_NAME_MAX_LENGTH}
-                    />
-                  </CreationFormSection>
-                  <CreationFormSection title="Data">
-                    <DatasetTextField
-                      fieldName="data_format"
-                      form={form}
-                      label="Data format"
-                      maxLength={DATASET_DATA_FORMAT_MAX_LENGTH}
-                    />
-                    <DatasetTextField
-                      fieldName="data_type"
-                      form={form}
-                      label="Data type"
-                      maxLength={DATASET_DATA_TYPE_MAX_LENGTH}
-                    />
-                  </CreationFormSection>
-                  {uploadsEnabled ? (
-                    <CreationFormSection title="Files">
-                      <CreationFilesField
-                        batch={files.batch}
-                        datasetMfid={createdDataset?.unique_id}
-                        disabled={busy}
+                    <form.Field name="project">
+                      {(field) => {
+                        const invalid = shouldShowFieldError(field)
+                        return (
+                          <Field
+                            data-invalid={invalid}
+                            data-disabled={Boolean(createdDataset)}
+                          >
+                            <FieldLabel
+                              htmlFor="dataset-project-trigger"
+                              optional
+                            >
+                              Project
+                            </FieldLabel>
+                            <ResourceChooser
+                              describedBy={
+                                invalid ? "dataset-project-error" : undefined
+                              }
+                              emptyLabel="Choose a project"
+                              invalid={invalid}
+                              kind="project"
+                              onChange={field.handleChange}
+                              triggerId="dataset-project-trigger"
+                              value={field.state.value}
+                            />
+                            <FieldError
+                              id="dataset-project-error"
+                              errors={fieldErrors(field)}
+                            />
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                    <form.Field name="public">
+                      {(field) => {
+                        return (
+                          <Field data-disabled={Boolean(createdDataset)}>
+                            <FieldLabel htmlFor={field.name} required>
+                              Visibility
+                            </FieldLabel>
+                            <NativeSelect
+                              id={field.name}
+                              name={field.name}
+                              onChange={(event) =>
+                                field.handleChange(
+                                  event.target.value === "public"
+                                )
+                              }
+                              value={field.state.value ? "public" : "private"}
+                            >
+                              <NativeSelectOption value="private">
+                                Private
+                              </NativeSelectOption>
+                              <NativeSelectOption value="public">
+                                Public
+                              </NativeSelectOption>
+                            </NativeSelect>
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                    <CreationFormSection title="Acquisition">
+                      <form.Field name="instrument">
+                        {(field) => (
+                          <Field data-disabled={Boolean(createdDataset)}>
+                            <FieldLabel
+                              htmlFor="dataset-instrument-trigger"
+                              optional
+                            >
+                              Acquisition instrument
+                            </FieldLabel>
+                            <ResourceChooser
+                              emptyLabel="Choose an instrument"
+                              kind="instrument"
+                              onChange={field.handleChange}
+                              triggerId="dataset-instrument-trigger"
+                              value={field.state.value}
+                            />
+                          </Field>
+                        )}
+                      </form.Field>
+                      <DatasetTextField
+                        fieldName="measurement"
+                        form={form}
+                        label="Measurement"
+                        maxLength={DATASET_MEASUREMENT_MAX_LENGTH}
+                      />
+                      <form.Field name="timestamp">
+                        {(field) => {
+                          const invalid = shouldShowFieldError(field)
+                          const errorId = `${field.name}-error`
+                          return (
+                            <Field data-invalid={invalid}>
+                              <FieldLabel htmlFor={field.name} required>
+                                Local date and time
+                              </FieldLabel>
+                              <Input
+                                aria-describedby={invalid ? errorId : undefined}
+                                aria-errormessage={
+                                  invalid ? errorId : undefined
+                                }
+                                aria-invalid={invalid || undefined}
+                                id={field.name}
+                                name={field.name}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(event.target.value)
+                                }
+                                type="datetime-local"
+                                value={field.state.value}
+                              />
+                              <FieldError
+                                errors={fieldErrors(field)}
+                                id={errorId}
+                              />
+                            </Field>
+                          )
+                        }}
+                      </form.Field>
+                      <DatasetTextField
+                        fieldName="session_name"
+                        form={form}
+                        label="Session name"
+                        maxLength={DATASET_SESSION_NAME_MAX_LENGTH}
                       />
                     </CreationFormSection>
+                    <CreationFormSection title="Data">
+                      <DatasetTextField
+                        fieldName="data_format"
+                        form={form}
+                        label="Data format"
+                        maxLength={DATASET_DATA_FORMAT_MAX_LENGTH}
+                      />
+                      <DatasetTextField
+                        fieldName="data_type"
+                        form={form}
+                        label="Data type"
+                        maxLength={DATASET_DATA_TYPE_MAX_LENGTH}
+                      />
+                    </CreationFormSection>
+                  </FieldGroup>
+                </fieldset>
+                <FormErrorRegion padded>
+                  {saveError ? <p>{saveError}</p> : null}
+                  {createdDataset && incompleteStages ? (
+                    <div className="flex flex-col gap-2">
+                      <p>
+                        The dataset was created, but{" "}
+                        {[
+                          relationships.failures.length
+                            ? `relationships with ${relationships.failures
+                                .map((draft) => draft.target.name)
+                                .join(", ")}`
+                            : null,
+                          files.failures.length
+                            ? `files ${files.failures
+                                .map((failure) => failure.filename)
+                                .join(", ")}`
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" and ")}{" "}
+                        still need recovery.
+                      </p>
+                    </div>
                   ) : null}
-                  <CreationFormSection title="Relationships">
-                    <form.Field name="relationships">
-                      {(field) => (
-                        <CreationRelationshipsField
-                          disabled={busy || Boolean(createdDataset)}
-                          onChange={field.handleChange}
-                          resourceKind="dataset"
-                          scope={scope}
-                          value={field.state.value}
-                        />
-                      )}
-                    </form.Field>
-                  </CreationFormSection>
-                </FieldGroup>
-              </fieldset>
-              <FormErrorRegion padded>
-                {saveError ? <p>{saveError}</p> : null}
-                {createdDataset && incompleteStages ? (
-                  <div className="flex flex-col gap-2">
-                    <p>
-                      The dataset was created, but{" "}
-                      {[
-                        relationships.failures.length
-                          ? `relationships with ${relationships.failures
-                              .map((draft) => draft.target.name)
-                              .join(", ")}`
-                          : null,
-                        files.failures.length
-                          ? `files ${files.failures
-                              .map((failure) => failure.filename)
-                              .join(", ")}`
-                          : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" and ")}{" "}
-                      still need recovery.
-                    </p>
-                  </div>
-                ) : null}
-              </FormErrorRegion>
-            </form>
-          </CardContent>
-          <CardFooter className="justify-end gap-2">
-            <Button
-              disabled={busy}
-              onClick={discard.requestCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              aria-disabled={
-                busy ||
-                uncertainOutcome ||
-                (Boolean(createdDataset) && !incompleteStages)
-              }
-              disabled={
-                busy ||
-                uncertainOutcome ||
-                (Boolean(createdDataset) && !incompleteStages)
-              }
-              className="sm:min-w-52"
-              form={formId}
-              type="submit"
-            >
-              {createdDataset
-                ? incompleteStages
-                  ? "Retry missing stages"
-                  : "Dataset created"
-                : uncertainOutcome
-                  ? "Create dataset"
-                  : isSubmitting || createMutation.isPending
-                    ? "Creating dataset"
-                    : "Create dataset"}
-            </Button>
-          </CardFooter>
-        </Card>
+                </FormErrorRegion>
+              </form>
+            </CardContent>
+            <CardFooter className="justify-end gap-2">
+              <Button
+                disabled={busy}
+                onClick={discard.requestCancel}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                aria-disabled={
+                  busy ||
+                  uncertainOutcome ||
+                  (Boolean(createdDataset) && !incompleteStages)
+                }
+                disabled={
+                  busy ||
+                  uncertainOutcome ||
+                  (Boolean(createdDataset) && !incompleteStages)
+                }
+                className="sm:min-w-52"
+                form={formId}
+                type="submit"
+              >
+                {createdDataset
+                  ? incompleteStages
+                    ? "Retry missing stages"
+                    : "Dataset created"
+                  : uncertainOutcome
+                    ? "Create dataset"
+                    : isSubmitting || createMutation.isPending
+                      ? "Creating dataset"
+                      : "Create dataset"}
+              </Button>
+            </CardFooter>
+          </Card>
+          <div className="flex min-w-0 flex-col gap-page-section">
+            <Card aria-busy={busy}>
+              <CardHeader>
+                <CardTitle>Relationships</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <form.Field name="relationships">
+                  {(field) => (
+                    <CreationRelationshipsField
+                      disabled={busy || Boolean(createdDataset)}
+                      onChange={field.handleChange}
+                      resourceKind="dataset"
+                      scope={scope}
+                      value={field.state.value}
+                    />
+                  )}
+                </form.Field>
+              </CardContent>
+            </Card>
+            {uploadsEnabled ? (
+              <Card aria-busy={busy}>
+                <CardHeader>
+                  <CardTitle>Files</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CreationFilesField
+                    batch={files.batch}
+                    datasetMfid={createdDataset?.unique_id}
+                    disabled={busy}
+                  />
+                </CardContent>
+              </Card>
+            ) : null}
+          </div>
+        </ContentGrid>
       </ContentBoundary>
       <DiscardChangesDialog {...discard.dialog} />
       <UploadLeaveDialog {...files.batch.leaveGuard} />
