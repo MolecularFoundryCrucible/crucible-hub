@@ -9,14 +9,7 @@ import {
   ContentGrid,
 } from "@/components/crucible/content-layout"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
@@ -65,6 +58,7 @@ import { useStagedCreation } from "./creation-submission"
 import { useUploadsEnabled } from "@/components/crucible/workspace-provider"
 import { UploadLeaveDialog } from "@/features/dataset-files/upload-leave-guard"
 import { FormErrorRegion } from "@/components/crucible/form-error"
+import { CreationFormActions } from "@/components/crucible/creation-form-actions"
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -436,41 +430,26 @@ export function DatasetCreationForm({
                 </FormErrorRegion>
               </form>
             </CardContent>
-            <CardFooter className="justify-end gap-2">
-              <Button
-                disabled={busy}
-                onClick={discard.requestCancel}
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                aria-disabled={
-                  busy ||
-                  uncertainOutcome ||
-                  (Boolean(createdDataset) && !incompleteStages)
-                }
-                disabled={
-                  busy ||
-                  uncertainOutcome ||
-                  (Boolean(createdDataset) && !incompleteStages)
-                }
-                className="sm:min-w-52"
-                form={formId}
-                type="submit"
-              >
-                {createdDataset
+            <CreationFormActions
+              cancelDisabled={busy}
+              formId={formId}
+              label={
+                createdDataset
                   ? incompleteStages
                     ? "Retry missing stages"
                     : "Created"
-                  : uncertainOutcome
-                    ? "Create"
-                    : isSubmitting || createMutation.isPending
-                      ? "Creating"
-                      : "Create"}
-              </Button>
-            </CardFooter>
+                  : busy
+                    ? "Creating"
+                    : "Create"
+              }
+              onCancel={discard.requestCancel}
+              pending={busy}
+              submitDisabled={
+                busy ||
+                uncertainOutcome ||
+                (Boolean(createdDataset) && !incompleteStages)
+              }
+            />
           </Card>
           <div className="flex min-w-0 flex-col gap-page-section">
             <Card aria-busy={busy}>

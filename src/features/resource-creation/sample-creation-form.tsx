@@ -11,14 +11,7 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
   FieldError,
@@ -60,6 +53,7 @@ import {
 } from "./creation-form"
 import { useStagedCreation } from "./creation-submission"
 import { FormErrorRegion } from "@/components/crucible/form-error"
+import { CreationFormActions } from "@/components/crucible/creation-form-actions"
 
 const sampleSchema = z.object({
   description: z
@@ -359,37 +353,26 @@ export function SampleCreationForm({
                 </FormErrorRegion>
               </form>
             </CardContent>
-            <CardFooter className="justify-end gap-2">
-              <Button
-                disabled={busy}
-                onClick={discard.requestCancel}
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                className="sm:min-w-52"
-                disabled={
-                  busy ||
-                  uncertainOutcome ||
-                  (Boolean(createdSample) &&
-                    relationships.failures.length === 0)
-                }
-                form={formId}
-                type="submit"
-              >
-                {createdSample
+            <CreationFormActions
+              cancelDisabled={busy}
+              formId={formId}
+              label={
+                createdSample
                   ? relationships.failures.length
                     ? "Retry missing relationships"
                     : "Created"
-                  : uncertainOutcome
-                    ? "Create"
-                    : busy
-                      ? "Creating"
-                      : "Create"}
-              </Button>
-            </CardFooter>
+                  : busy
+                    ? "Creating"
+                    : "Create"
+              }
+              onCancel={discard.requestCancel}
+              pending={busy}
+              submitDisabled={
+                busy ||
+                uncertainOutcome ||
+                (Boolean(createdSample) && relationships.failures.length === 0)
+              }
+            />
           </Card>
           <div className="flex min-w-0 flex-col gap-page-section">
             <Card aria-busy={busy}>

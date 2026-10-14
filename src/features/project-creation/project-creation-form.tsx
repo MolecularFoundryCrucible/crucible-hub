@@ -14,14 +14,7 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
@@ -54,6 +47,7 @@ import type {
 import { ProjectIdField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { FormErrorRegion } from "@/components/crucible/form-error"
+import { CreationFormActions } from "@/components/crucible/creation-form-actions"
 
 const projectCreationSchema = z.object({
   organization: z
@@ -234,35 +228,23 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
               </FormErrorRegion>
             </form>
           </CardContent>
-          <CardFooter className="justify-end gap-2">
-            <Button
-              disabled={isSubmitting}
-              onClick={discard.requestCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <form.Subscribe
-              selector={(state) => [
-                projectIdConflict.isTaken(state.values.project_id),
-                state.isSubmitting,
-              ]}
-            >
-              {([isTaken, submitting]) => (
-                <Button
-                  className="w-40"
-                  disabled={isTaken || submitting}
-                  form={formId}
-                  type="submit"
-                >
-                  <span className="inline-grid min-w-28 place-items-center">
-                    {submitting ? "Creating" : "Create"}
-                  </span>
-                </Button>
-              )}
-            </form.Subscribe>
-          </CardFooter>
+          <form.Subscribe
+            selector={(state) => [
+              projectIdConflict.isTaken(state.values.project_id),
+              state.isSubmitting,
+            ]}
+          >
+            {([isTaken, submitting]) => (
+              <CreationFormActions
+                cancelDisabled={submitting}
+                formId={formId}
+                label={submitting ? "Creating" : "Create"}
+                onCancel={discard.requestCancel}
+                pending={submitting}
+                submitDisabled={isTaken || submitting}
+              />
+            )}
+          </form.Subscribe>
         </Card>
       </ContentBoundary>
       <DiscardChangesDialog {...discard.dialog} />

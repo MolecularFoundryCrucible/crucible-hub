@@ -8,14 +8,7 @@ import { z } from "zod"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
@@ -44,6 +37,7 @@ import { instrumentIdSchema } from "@/data/crucible/slugs"
 import { InstrumentIdField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { FormErrorRegion } from "@/components/crucible/form-error"
+import { CreationFormActions } from "@/components/crucible/creation-form-actions"
 
 const registrationSchema = z.object({
   description: z.string().trim().max(10_000, "Use 10,000 characters or fewer."),
@@ -240,35 +234,23 @@ export function InstrumentRegistrationForm({
               </FormErrorRegion>
             </form>
           </CardContent>
-          <CardFooter className="justify-end gap-2">
-            <Button
-              disabled={isSubmitting}
-              onClick={discard.requestCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <form.Subscribe
-              selector={(state) => [
-                instrumentIdConflict.isTaken(state.values.instrument_id),
-                state.isSubmitting,
-              ]}
-            >
-              {([isTaken, submitting]) => (
-                <Button
-                  className="w-40"
-                  disabled={isTaken || submitting}
-                  form={formId}
-                  type="submit"
-                >
-                  <span className="inline-grid min-w-28 place-items-center">
-                    {submitting ? "Registering" : "Register"}
-                  </span>
-                </Button>
-              )}
-            </form.Subscribe>
-          </CardFooter>
+          <form.Subscribe
+            selector={(state) => [
+              instrumentIdConflict.isTaken(state.values.instrument_id),
+              state.isSubmitting,
+            ]}
+          >
+            {([isTaken, submitting]) => (
+              <CreationFormActions
+                cancelDisabled={submitting}
+                formId={formId}
+                label={submitting ? "Registering" : "Register"}
+                onCancel={discard.requestCancel}
+                pending={submitting}
+                submitDisabled={isTaken || submitting}
+              />
+            )}
+          </form.Subscribe>
         </Card>
       </ContentBoundary>
       <DiscardChangesDialog {...discard.dialog} />
