@@ -108,7 +108,9 @@ export function readUploadsEnabled(mode: WorkspaceMode): boolean {
 }
 
 export function readAccountPreferencesEnabled(mode: WorkspaceMode): boolean {
-  if (mode === "fixture") return true
+  if (mode === "fixture") {
+    return process.env.HUB_ACCOUNT_PREFERENCES_ENABLED !== "false"
+  }
   return process.env.HUB_ACCOUNT_PREFERENCES_ENABLED === "true"
 }
 
