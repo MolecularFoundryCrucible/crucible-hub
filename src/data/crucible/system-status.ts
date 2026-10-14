@@ -4,6 +4,7 @@ export interface SystemStatus {
   status: ServiceStatus
   hub: {
     revision?: string
+    version: string
   }
   api: {
     status: ServiceStatus

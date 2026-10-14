@@ -18,7 +18,7 @@ vi.mock("@/data/crucible/system-status.functions", () => ({
 
 const healthyStatus: SystemStatus = {
   status: "ok",
-  hub: { revision: "hub-123" },
+  hub: { revision: "hub-123", version: "1.0.1" },
   api: {
     status: "ok",
     url: "https://api.example.test",
@@ -71,7 +71,9 @@ describe("SystemStatusPopover", () => {
   it("opens popover on click and loads healthy system status", async () => {
     vi.mocked(getSystemStatus).mockResolvedValue(healthyStatus)
 
-    renderPopover({ gitRevision: "git-rev-test" })
+    renderPopover({
+      build: { commit: "git-rev-test", development: false, version: "1.0.1" },
+    })
 
     const trigger = screen.getByRole("button", { name: "API status" })
     fireEvent.click(trigger)
@@ -86,7 +88,7 @@ describe("SystemStatusPopover", () => {
     expect(screen.getByText("Database")).toBeTruthy()
     expect(screen.getByText("Connected")).toBeTruthy()
     expect(screen.getAllByText(/20260201_update/).length).toBeGreaterThan(0)
-    expect(screen.getByText("git-rev-test")).toBeTruthy()
+    expect(screen.getByText(/v1\.0\.1 • git-rev-test/)).toBeTruthy()
 
     expect(screen.getByRole("button", { name: "Close" })).toBeTruthy()
     expect(screen.getByText("Diagnostic payload")).toBeTruthy()

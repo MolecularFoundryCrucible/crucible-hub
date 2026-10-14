@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- The footer of a deployed Hub now shows its release version, linked to the release tag, instead of a git revision; the development server still shows the revision. The system status popover shows the version with the short commit, which release builds now pass into the image.
+
 ## 1.0.1 - 2026-10-14
 
 - Sped up uploads of files under 512 MiB: the Hub now splits each file into the part size the API chooses for its session (between 8 and 64 MiB, about eight parts for medium files) instead of a fixed 64 MiB, and uploads parts through a rolling pool so a slow part no longer holds the other lanes.

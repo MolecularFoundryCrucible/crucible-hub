@@ -79,28 +79,41 @@ describe("AppFooter", () => {
     expect(statusButton.classList.contains("underline")).toBe(false)
   })
 
-  it("renders git revision with center alignment and separator dot when provided", () => {
-    renderFooter({ gitRevision: "7386cff" })
+  it("renders the release version in deployed builds", () => {
+    renderFooter({
+      build: { commit: "7386cff", development: false, version: "1.0.1" },
+    })
 
-    const revisionLink = screen.getByRole("link", { name: "7386cff" })
-    expect(revisionLink.getAttribute("href")).toBe(
-      "https://github.com/MolecularFoundryCrucible/crucible-hub/commit/7386cff"
+    expect(screen.getByText("Version")).toBeTruthy()
+    expect(screen.queryByText("Revision")).toBeNull()
+    const versionLink = screen.getByRole("link", { name: "1.0.1" })
+    expect(versionLink.getAttribute("href")).toBe(
+      "https://github.com/MolecularFoundryCrucible/crucible-hub/tree/v1.0.1"
     )
-    expect(revisionLink.getAttribute("target")).toBe("_blank")
-    expect(revisionLink.classList.contains("font-mono")).toBe(true)
-    expect(revisionLink.classList.contains("underline")).toBe(false)
+    expect(versionLink.getAttribute("target")).toBe("_blank")
+    expect(versionLink.classList.contains("font-mono")).toBe(true)
 
-    const revisionContainer = revisionLink.parentElement
-    expect(revisionContainer?.classList.contains("items-center")).toBe(true)
-
-    const rightCluster = revisionContainer?.parentElement
+    const rightCluster = versionLink.parentElement?.parentElement
     expect(rightCluster?.textContent).toContain("•")
     expect(rightCluster?.classList.contains("justify-center")).toBe(true)
     expect(rightCluster?.classList.contains("md:justify-end")).toBe(true)
   })
 
-  it("omits revision and separator dot when not provided or empty", () => {
-    renderFooter({ gitRevision: "" })
+  it("renders the git revision in development", () => {
+    renderFooter({
+      build: { commit: "7386cff", development: true, version: "1.0.1" },
+    })
+
+    expect(screen.getByText("Revision")).toBeTruthy()
+    const revisionLink = screen.getByRole("link", { name: "7386cff" })
+    expect(revisionLink.getAttribute("href")).toBe(
+      "https://github.com/MolecularFoundryCrucible/crucible-hub/commit/7386cff"
+    )
+    expect(revisionLink.classList.contains("underline")).toBe(false)
+  })
+
+  it("omits the revision and separator dot in development without a commit", () => {
+    renderFooter({ build: { development: true, version: "1.0.1" } })
 
     expect(screen.queryByText("Revision")).toBeNull()
     const statusButton = screen.getByRole("button", { name: "API status" })

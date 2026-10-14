@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process"
+import { readFileSync } from "node:fs"
 import { resolve, sep } from "node:path"
 import { defineConfig } from "vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
@@ -8,7 +9,7 @@ import { nitro } from "nitro/vite"
 
 function resolveGitCommit(): string {
   if (process.env.VITE_GIT_COMMIT) {
-    return process.env.VITE_GIT_COMMIT
+    return process.env.VITE_GIT_COMMIT.slice(0, 7)
   }
   try {
     return execSync("git rev-parse --short HEAD", {
@@ -26,6 +27,9 @@ const sharedSourceRoots = ["components", "lib", "data"].map(
 )
 
 const gitCommit = resolveGitCommit()
+const appVersion = (
+  JSON.parse(readFileSync("package.json", "utf8")) as { version: string }
+).version
 if (!process.env.VITE_GIT_COMMIT && gitCommit) {
   process.env.VITE_GIT_COMMIT = gitCommit
 }
@@ -33,6 +37,7 @@ if (!process.env.VITE_GIT_COMMIT && gitCommit) {
 const config = defineConfig({
   base: "/hub/",
   define: {
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
     "import.meta.env.VITE_GIT_COMMIT": JSON.stringify(gitCommit),
   },
   resolve: { tsconfigPaths: true },

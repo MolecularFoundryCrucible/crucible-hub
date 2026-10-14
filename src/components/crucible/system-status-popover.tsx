@@ -22,6 +22,8 @@ import { crucibleKeys } from "@/data/crucible/query-keys"
 import { getSystemStatus } from "@/data/crucible/system-status.functions"
 import { systemStatusQueryOptions } from "@/data/crucible/system-status.queries"
 import type { ServiceStatus } from "@/data/crucible/system-status"
+import { hubBuild } from "@/lib/build-info"
+import type { HubBuild } from "@/lib/build-info"
 import { cn } from "@/lib/utils"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { RefreshButton } from "@/components/crucible/refresh-button"
@@ -51,13 +53,13 @@ function databaseBadgeLabel(status: "ok" | "error" | "unknown") {
 }
 
 interface SystemStatusPopoverProps {
+  build?: HubBuild
   className?: string
-  gitRevision?: string
 }
 
 export function SystemStatusPopover({
+  build = hubBuild,
   className,
-  gitRevision,
 }: SystemStatusPopoverProps) {
   const [open, setOpen] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -77,8 +79,6 @@ export function SystemStatusPopover({
       setRefreshing(false)
     }
   }
-
-  const effectiveRevision = gitRevision ?? statusQuery.data?.hub.revision
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -233,18 +233,17 @@ export function SystemStatusPopover({
                 </Badge>
               </div>
 
-              {effectiveRevision ? (
-                <div className="flex items-center justify-between rounded-md border border-border p-2.5">
-                  <div className="flex flex-col">
-                    <span className="text-label-compact text-foreground">
-                      Hub Revision
-                    </span>
-                    <span className="font-mono text-supporting text-muted-foreground">
-                      {effectiveRevision}
-                    </span>
-                  </div>
+              <div className="flex items-center justify-between rounded-md border border-border p-2.5">
+                <div className="flex flex-col">
+                  <span className="text-label-compact text-foreground">
+                    Hub
+                  </span>
+                  <span className="font-mono text-supporting text-muted-foreground">
+                    v{build.version}
+                    {build.commit ? ` • ${build.commit}` : null}
+                  </span>
                 </div>
-              ) : null}
+              </div>
 
               <details className="group border-t border-border pt-1">
                 <summary className="cursor-pointer text-supporting text-muted-foreground underline underline-offset-4 transition-colors outline-none select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">

@@ -2,6 +2,8 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - build
+      - --build-arg
+      - VITE_GIT_COMMIT=${_IMAGE_TAG}
       - --tag
       - us-central1-docker.pkg.dev/$PROJECT_ID/crucible-hub/app:${_IMAGE_TAG}
       - .

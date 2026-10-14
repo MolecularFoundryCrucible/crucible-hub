@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+ARG VITE_GIT_COMMIT
 RUN npm run build
 
 FROM node:22.22.2-bookworm-slim AS runtime

@@ -1,20 +1,37 @@
 import { BrandMark } from "@/components/crucible/brand-mark"
 import { SystemStatusPopover } from "@/components/crucible/system-status-popover"
+import { hubBuild } from "@/lib/build-info"
+import type { HubBuild } from "@/lib/build-info"
 import { cn } from "@/lib/utils"
 
+const REPOSITORY_URL =
+  "https://github.com/MolecularFoundryCrucible/crucible-hub"
+
 interface AppFooterProps {
+  build?: HubBuild
   className?: string
-  gitRevision?: string
 }
 
-export function AppFooter({ className, gitRevision }: AppFooterProps) {
+function buildReference(build: HubBuild) {
+  if (!build.development) {
+    return {
+      href: `${REPOSITORY_URL}/tree/v${build.version}`,
+      label: "Version",
+      value: build.version,
+    }
+  }
+  return build.commit
+    ? {
+        href: `${REPOSITORY_URL}/commit/${build.commit}`,
+        label: "Revision",
+        value: build.commit,
+      }
+    : undefined
+}
+
+export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
   const currentYear = new Date().getFullYear()
-  const revision =
-    gitRevision ??
-    (typeof import.meta.env.VITE_GIT_COMMIT === "string" &&
-    import.meta.env.VITE_GIT_COMMIT.length > 0
-      ? import.meta.env.VITE_GIT_COMMIT
-      : undefined)
+  const reference = buildReference(build)
 
   return (
     <footer
@@ -59,7 +76,7 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
           </span>
           <a
             className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            href="https://github.com/MolecularFoundryCrucible/crucible-hub/issues"
+            href={`${REPOSITORY_URL}/issues`}
             rel="noreferrer"
             target="_blank"
           >
@@ -68,21 +85,21 @@ export function AppFooter({ className, gitRevision }: AppFooterProps) {
         </nav>
 
         <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 md:justify-end">
-          <SystemStatusPopover gitRevision={revision} />
-          {revision ? (
+          <SystemStatusPopover build={build} />
+          {reference ? (
             <>
               <span aria-hidden="true" className="select-none">
                 •
               </span>
               <div className="flex items-center gap-1.5">
-                <span>Revision</span>
+                <span>{reference.label}</span>
                 <a
                   className="inline-flex items-center rounded-sm py-1 font-mono transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  href={`https://github.com/MolecularFoundryCrucible/crucible-hub/commit/${revision}`}
+                  href={reference.href}
                   rel="noreferrer"
                   target="_blank"
                 >
-                  {revision}
+                  {reference.value}
                 </a>
               </div>
             </>

@@ -3,6 +3,8 @@ steps:
     name: gcr.io/cloud-builders/docker
     args:
       - build
+      - --build-arg
+      - VITE_GIT_COMMIT=${SHORT_SHA}
       - --tag
       - ${_IMAGE}:${COMMIT_SHA}
       - --tag

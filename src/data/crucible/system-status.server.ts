@@ -2,11 +2,17 @@ import "@tanstack/react-start/server-only"
 
 import { createCrucibleClient } from "@/server/crucible/client.server"
 import { crucibleRequestSignal } from "@/server/crucible/request-signal.server"
+import { hubBuild } from "@/lib/build-info"
+
 import type { SystemStatus } from "./system-status"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 
 const CACHE_TTL_MS = 15_000
 let cachedStatus: { status: SystemStatus; expiresAt: number } | null = null
+
+function hubStatus(): SystemStatus["hub"] {
+  return { revision: hubBuild.commit, version: hubBuild.version }
+}
 
 export function clearSystemStatusCache() {
   cachedStatus = null
@@ -15,9 +21,7 @@ export function clearSystemStatusCache() {
 export function readFixtureSystemStatus(): SystemStatus {
   return {
     status: "ok",
-    hub: {
-      revision: process.env.VITE_GIT_COMMIT || undefined,
-    },
+    hub: hubStatus(),
     api: {
       status: "ok",
       version: "0.1.0-fixture",
@@ -37,9 +41,7 @@ export function readFixtureSystemStatus(): SystemStatus {
 function unreachableStatus(latencyMs?: number, url?: string): SystemStatus {
   return {
     status: "unreachable",
-    hub: {
-      revision: process.env.VITE_GIT_COMMIT || undefined,
-    },
+    hub: hubStatus(),
     api: {
       status: "unreachable",
       url,
@@ -99,9 +101,7 @@ export async function readSystemStatus(
     if (result.data) {
       const status: SystemStatus = {
         status: result.data.status,
-        hub: {
-          revision: process.env.VITE_GIT_COMMIT || undefined,
-        },
+        hub: hubStatus(),
         api: {
           status: result.data.status,
           url: configuration.baseUrl,
@@ -142,9 +142,7 @@ export async function readSystemStatus(
       }
       const status: SystemStatus = {
         status: "degraded",
-        hub: {
-          revision: process.env.VITE_GIT_COMMIT || undefined,
-        },
+        hub: hubStatus(),
         api: {
           status: "degraded",
           url: configuration.baseUrl,
