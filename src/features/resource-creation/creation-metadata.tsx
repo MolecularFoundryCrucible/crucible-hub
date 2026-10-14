@@ -20,6 +20,11 @@ import {
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
@@ -286,23 +291,30 @@ export function CreationMetadataCard({
                       placeholder="Value"
                       value={row.value}
                     />
-                    <Button
-                      aria-label={`Remove field ${index + 1}`}
-                      disabled={disabled}
-                      onClick={() =>
-                        onChange({
-                          ...value,
-                          rows: value.rows.filter(
-                            (candidate) => candidate.id !== row.id
-                          ),
-                        })
-                      }
-                      size="icon-sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <RemoveMetadataFieldIcon aria-hidden="true" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            aria-label={`Remove field ${index + 1}`}
+                            disabled={disabled}
+                            onClick={() =>
+                              onChange({
+                                ...value,
+                                rows: value.rows.filter(
+                                  (candidate) => candidate.id !== row.id
+                                ),
+                              })
+                            }
+                            size="icon-sm"
+                            type="button"
+                            variant="outline"
+                          />
+                        }
+                      >
+                        <RemoveMetadataFieldIcon aria-hidden="true" />
+                      </TooltipTrigger>
+                      <TooltipContent>Remove field</TooltipContent>
+                    </Tooltip>
                   </li>
                 ))}
               </ul>
