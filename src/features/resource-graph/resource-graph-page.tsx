@@ -11,6 +11,7 @@ import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query"
 
 import {
   ExpandGraphNodeIcon,
+  ExploreGraphFocusIcon,
   GraphAncestorsIcon,
   GraphAssociationsIcon,
   GraphDescendantsIcon,
@@ -25,6 +26,7 @@ import {
   staticResourceSiblingCollection,
   useRegisterResourceSiblings,
 } from "@/components/crucible/resource-sibling-navigation"
+import { ResourceGraphPending } from "@/components/crucible/resource-tab-state"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
@@ -115,6 +117,14 @@ type GraphThumbnailQueryResult = {
   data?: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }
 
+export type GraphRelationshipPresentation = {
+  distance: number
+  label: string
+  relationship:
+    "ancestor" | "associated" | "child" | "descendant" | "indirect" | "parent"
+  typeLabel: string | null
+}
+
 const initialLineageDepth = 3
 const GRAPH_TABLE_ROW_BATCH = 50
 
@@ -166,6 +176,17 @@ export function ResourceGraphPage({
     resourceMfid,
     requests: [] as GraphExpansionRequest[],
   })
+  const [highlightedNodeMfid, setHighlightedNodeMfid] = useState<string | null>(
+    null
+  )
+  const [focusRequest, setFocusRequest] = useState<{
+    mfid: string
+    nonce: number
+  } | null>(null)
+  useEffect(() => {
+    setHighlightedNodeMfid(null)
+    setFocusRequest(null)
+  }, [resourceMfid])
   const expansionRequests =
     expansion.resourceMfid === resourceMfid ? expansion.requests : []
   const query = useQuery({
@@ -239,6 +260,14 @@ export function ResourceGraphPage({
     if (!displayedGraph || display.associations) return displayedGraph
     return graphWithoutAssociations(displayedGraph)
   }, [display.associations, displayedGraph])
+  const canvasNodeIds = useMemo(
+    () =>
+      new Set(
+        (canvasGraph ?? displayedGraph)?.nodes.map((node) => node.unique_id) ??
+          []
+      ),
+    [canvasGraph, displayedGraph]
+  )
   const graphThumbnailBatches = useMemo(() => {
     if (!display.thumbnails || !canvasGraph) return []
     const datasetMfids = canvasGraph.nodes
@@ -348,6 +377,12 @@ export function ResourceGraphPage({
     },
     [navigation, nodesByMfid]
   )
+  const focusNodeInGraph = useCallback((nodeMfid: string) => {
+    setFocusRequest((current) => ({
+      mfid: nodeMfid,
+      nonce: (current?.nonce ?? 0) + 1,
+    }))
+  }, [])
 
   if (
     !displayedGraph &&
@@ -469,7 +504,10 @@ export function ResourceGraphPage({
             display={display}
             expansionStates={expansionStates}
             expansionModesByNode={expansionModesByNode}
+            focusRequest={focusRequest}
             graph={canvasGraph ?? displayedGraph}
+            highlightedMfid={highlightedNodeMfid}
+            inspectedMfid={navigation.preview ?? null}
             loading={
               query.isFetching ||
               descendantQuery.isFetching ||
@@ -493,11 +531,16 @@ export function ResourceGraphPage({
       ) : null}
 
       <ResourceGraphTable
+        associationsHidden={!display.associations}
+        canvasNodeIds={canvasNodeIds}
         expansionModesByNode={expansionModesByNode}
         expansionStates={expansionStates}
         graph={displayedGraph}
+        inspectedMfid={navigation.preview ?? null}
         nodes={relatedNodes}
         onExpand={expandNode}
+        onFocusNode={focusNodeInGraph}
+        onHighlightNode={setHighlightedNodeMfid}
         scope={scope}
       />
     </section>
@@ -510,28 +553,6 @@ function ResourceGraphCanvasSkeleton() {
       aria-label="Loading graph visualization"
       className="min-h-graph-canvas w-full"
     />
-  )
-}
-
-function ResourceGraphPending() {
-  return (
-    <div
-      aria-label="Loading resource graph"
-      className="flex flex-col gap-4"
-      role="status"
-    >
-      <Skeleton className="min-h-graph-canvas w-full" />
-      <Card aria-busy="true">
-        <CardHeader>
-          <CardTitle>Relationships</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 border-t pt-4">
-          <Skeleton className="h-5 w-full" />
-          <Skeleton className="h-5 w-4/5" />
-          <Skeleton className="h-5 w-2/3" />
-        </CardContent>
-      </Card>
-    </div>
   )
 }
 
@@ -575,18 +596,28 @@ function graphExpansionModeIcon(mode: GraphExpansionMode) {
 }
 
 function ResourceGraphTable({
+  associationsHidden,
+  canvasNodeIds,
   expansionModesByNode,
   expansionStates,
   graph,
+  inspectedMfid,
   nodes,
   onExpand,
+  onFocusNode,
+  onHighlightNode,
   scope,
 }: {
+  associationsHidden: boolean
+  canvasNodeIds: ReadonlySet<string>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   graph: WorkspaceResourceGraph
+  inspectedMfid: string | null
   nodes: readonly WorkspaceResourceGraphNode[]
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
+  onFocusNode: (nodeMfid: string) => void
+  onHighlightNode: (nodeMfid: string | null) => void
   scope: IdentityScope
 }) {
   const container = useRef<HTMLDivElement>(null)
@@ -620,6 +651,10 @@ function ResourceGraphTable({
     () => sortedNodes.slice(0, visibleCount),
     [sortedNodes, visibleCount]
   )
+  const hiddenCanvasCount = useMemo(
+    () => nodes.filter((node) => !canvasNodeIds.has(node.unique_id)).length,
+    [canvasNodeIds, nodes]
+  )
   const datasetMfids = useMemo(
     () =>
       visibleNodes
@@ -638,7 +673,10 @@ function ResourceGraphTable({
     <Card ref={container}>
       <CardHeader actionLayout="inline">
         <CardTitle>Relationships</CardTitle>
-        <CardAction>
+        <CardAction className="flex items-center gap-1.5">
+          {associationsHidden && hiddenCanvasCount > 0 ? (
+            <Badge variant="secondary">Associations hidden in graph</Badge>
+          ) : null}
           <Badge variant="outline">{nodes.length}</Badge>
         </CardAction>
       </CardHeader>
@@ -663,8 +701,28 @@ function ResourceGraphTable({
                 {visibleNodes.map((node) => {
                   const thumbnail = thumbnailQuery.data?.[node.unique_id]
                   const relationship = relationships.get(node.unique_id)
+                  const inCanvas = canvasNodeIds.has(node.unique_id)
                   return (
-                    <TableRow key={node.unique_id}>
+                    <TableRow
+                      data-state={
+                        inspectedMfid === node.unique_id
+                          ? "selected"
+                          : undefined
+                      }
+                      key={node.unique_id}
+                      onBlurCapture={(event) => {
+                        const nextTarget = event.relatedTarget
+                        if (
+                          !(nextTarget instanceof Node) ||
+                          !event.currentTarget.contains(nextTarget)
+                        ) {
+                          onHighlightNode(null)
+                        }
+                      }}
+                      onFocusCapture={() => onHighlightNode(node.unique_id)}
+                      onMouseEnter={() => onHighlightNode(node.unique_id)}
+                      onMouseLeave={() => onHighlightNode(null)}
+                    >
                       <TableCell
                         className="resource-graph-relationship"
                         data-label="Relationship"
@@ -711,6 +769,24 @@ function ResourceGraphTable({
                         kind="action"
                       >
                         <span className="flex justify-end gap-1">
+                          {inCanvas ? (
+                            <Tooltip>
+                              <TooltipTrigger
+                                render={
+                                  <Button
+                                    aria-label={`Center ${node.name} in graph`}
+                                    onClick={() => onFocusNode(node.unique_id)}
+                                    size="table-action"
+                                    type="button"
+                                    variant="outline"
+                                  />
+                                }
+                              >
+                                <ExploreGraphFocusIcon aria-hidden="true" />
+                              </TooltipTrigger>
+                              <TooltipContent>Center in graph</TooltipContent>
+                            </Tooltip>
+                          ) : null}
                           <GraphExpansionAction
                             availableModes={expansionModesByNode.get(
                               node.unique_id
@@ -825,53 +901,244 @@ function GraphExpansionAction({
   )
 }
 
-function graphRelationshipPresentations(graph: WorkspaceResourceGraph) {
-  const relationships = new Map<
+export function graphRelationshipPresentations(
+  graph: WorkspaceResourceGraph
+): Map<string, GraphRelationshipPresentation> {
+  const relationships = new Map<string, GraphRelationshipPresentation>()
+  const upstreamEdgesByTarget = new Map<
     string,
-    {
-      label: string
-      relationship: "associated" | "child" | "parent"
-      typeLabel: string | null
-    }
+    Array<{ relationshipType: string | null; source: string }>
   >()
+  const downstreamEdgesBySource = new Map<
+    string,
+    Array<{ relationshipType: string | null; target: string }>
+  >()
+  const neighborsByNode = new Map<
+    string,
+    Array<{ neighbor: string; relationship: "associated" | "parent" }>
+  >()
+  const allNodeIds = new Set<string>(graph.nodes.map((node) => node.unique_id))
+
+  const addNeighbor = (
+    from: string,
+    neighbor: string,
+    relationship: "associated" | "parent"
+  ) => {
+    const list = neighborsByNode.get(from)
+    if (list) {
+      list.push({ neighbor, relationship })
+    } else {
+      neighborsByNode.set(from, [{ neighbor, relationship }])
+    }
+  }
+
   for (const edge of graph.edges) {
-    const relatedMfid =
-      edge.source === graph.rootMfid
-        ? edge.target
-        : edge.target === graph.rootMfid
-          ? edge.source
-          : undefined
-    if (!relatedMfid) continue
-    const label =
-      edge.relationship === "associated"
-        ? "Associated"
-        : edge.target === graph.rootMfid
-          ? "Parent"
-          : "Child"
-    const relationship = edge.target === graph.rootMfid ? "parent" : "child"
-    relationships.set(relatedMfid, {
-      label,
-      relationship:
-        edge.relationship === "associated" ? "associated" : relationship,
-      typeLabel:
-        edge.relationship === "parent" && edge.relationshipType
+    allNodeIds.add(edge.source)
+    allNodeIds.add(edge.target)
+    addNeighbor(edge.source, edge.target, edge.relationship)
+    addNeighbor(edge.target, edge.source, edge.relationship)
+    if (edge.relationship === "parent") {
+      const upstream = upstreamEdgesByTarget.get(edge.target)
+      if (upstream) {
+        upstream.push({
+          relationshipType: edge.relationshipType,
+          source: edge.source,
+        })
+      } else {
+        upstreamEdgesByTarget.set(edge.target, [
+          { relationshipType: edge.relationshipType, source: edge.source },
+        ])
+      }
+      const downstream = downstreamEdgesBySource.get(edge.source)
+      if (downstream) {
+        downstream.push({
+          relationshipType: edge.relationshipType,
+          target: edge.target,
+        })
+      } else {
+        downstreamEdgesBySource.set(edge.source, [
+          { relationshipType: edge.relationshipType, target: edge.target },
+        ])
+      }
+    }
+  }
+
+  const upstreamDistances = new Map<
+    string,
+    { distance: number; relationshipType: string | null }
+  >()
+  const upstreamQueue: string[] = [graph.rootMfid]
+  upstreamDistances.set(graph.rootMfid, {
+    distance: 0,
+    relationshipType: null,
+  })
+  while (upstreamQueue.length > 0) {
+    const current = upstreamQueue.shift()!
+    const currentEntry = upstreamDistances.get(current)!
+    for (const edge of upstreamEdgesByTarget.get(current) ?? []) {
+      if (upstreamDistances.has(edge.source)) continue
+      upstreamDistances.set(edge.source, {
+        distance: currentEntry.distance + 1,
+        relationshipType:
+          currentEntry.distance === 0 ? edge.relationshipType : null,
+      })
+      upstreamQueue.push(edge.source)
+    }
+  }
+
+  const downstreamDistances = new Map<
+    string,
+    { distance: number; relationshipType: string | null }
+  >()
+  const downstreamQueue: string[] = [graph.rootMfid]
+  downstreamDistances.set(graph.rootMfid, {
+    distance: 0,
+    relationshipType: null,
+  })
+  while (downstreamQueue.length > 0) {
+    const current = downstreamQueue.shift()!
+    const currentEntry = downstreamDistances.get(current)!
+    for (const edge of downstreamEdgesBySource.get(current) ?? []) {
+      if (downstreamDistances.has(edge.target)) continue
+      downstreamDistances.set(edge.target, {
+        distance: currentEntry.distance + 1,
+        relationshipType:
+          currentEntry.distance === 0 ? edge.relationshipType : null,
+      })
+      downstreamQueue.push(edge.target)
+    }
+  }
+
+  const directAssociatedMfids = new Set<string>()
+  for (const edge of graph.edges) {
+    if (edge.relationship !== "associated") continue
+    if (edge.source === graph.rootMfid) {
+      directAssociatedMfids.add(edge.target)
+    } else if (edge.target === graph.rootMfid) {
+      directAssociatedMfids.add(edge.source)
+    }
+  }
+
+  const generalDistances = new Map<
+    string,
+    { distance: number; hasAssociation: boolean }
+  >()
+  const generalQueue: string[] = [graph.rootMfid]
+  generalDistances.set(graph.rootMfid, {
+    distance: 0,
+    hasAssociation: false,
+  })
+  while (generalQueue.length > 0) {
+    const current = generalQueue.shift()!
+    const currentEntry = generalDistances.get(current)!
+    for (const edge of neighborsByNode.get(current) ?? []) {
+      if (generalDistances.has(edge.neighbor)) continue
+      generalDistances.set(edge.neighbor, {
+        distance: currentEntry.distance + 1,
+        hasAssociation:
+          currentEntry.hasAssociation || edge.relationship === "associated",
+      })
+      generalQueue.push(edge.neighbor)
+    }
+  }
+
+  for (const nodeMfid of allNodeIds) {
+    if (nodeMfid === graph.rootMfid) continue
+    const upstream = upstreamDistances.get(nodeMfid)
+    const downstream = downstreamDistances.get(nodeMfid)
+
+    if (upstream && upstream.distance === 1) {
+      relationships.set(nodeMfid, {
+        distance: 1,
+        label: "Parent",
+        relationship: "parent",
+        typeLabel: upstream.relationshipType
           ? workspaceRelationshipTypeLabel({
-              relationship,
-              relationship_type: edge.relationshipType,
+              relationship: "parent",
+              relationship_type: upstream.relationshipType,
             })
+          : null,
+      })
+      continue
+    }
+    if (downstream && downstream.distance === 1) {
+      relationships.set(nodeMfid, {
+        distance: 1,
+        label: "Child",
+        relationship: "child",
+        typeLabel: downstream.relationshipType
+          ? workspaceRelationshipTypeLabel({
+              relationship: "child",
+              relationship_type: downstream.relationshipType,
+            })
+          : null,
+      })
+      continue
+    }
+    if (directAssociatedMfids.has(nodeMfid)) {
+      relationships.set(nodeMfid, {
+        distance: 1,
+        label: "Associated",
+        relationship: "associated",
+        typeLabel: null,
+      })
+      continue
+    }
+    if (upstream && (!downstream || upstream.distance <= downstream.distance)) {
+      relationships.set(nodeMfid, {
+        distance: upstream.distance,
+        label: "Ancestor",
+        relationship: "ancestor",
+        typeLabel: `${upstream.distance} hops upstream`,
+      })
+      continue
+    }
+    if (downstream) {
+      relationships.set(nodeMfid, {
+        distance: downstream.distance,
+        label: "Descendant",
+        relationship: "descendant",
+        typeLabel: `${downstream.distance} hops downstream`,
+      })
+      continue
+    }
+    const general = generalDistances.get(nodeMfid)
+    if (general && general.hasAssociation) {
+      relationships.set(nodeMfid, {
+        distance: general.distance,
+        label: "Associated",
+        relationship: "associated",
+        typeLabel:
+          general.distance > 1 ? `${general.distance} hops away` : null,
+      })
+      continue
+    }
+    relationships.set(nodeMfid, {
+      distance: general?.distance ?? 2,
+      label: "Indirect",
+      relationship: "indirect",
+      typeLabel:
+        general && general.distance > 1
+          ? `${general.distance} hops away`
           : null,
     })
   }
+
   return relationships
 }
 
-function graphRelationshipOrder(
-  presentation: { relationship: "associated" | "child" | "parent" } | undefined
+export function graphRelationshipOrder(
+  presentation:
+    Pick<GraphRelationshipPresentation, "distance" | "relationship"> | undefined
 ) {
-  if (presentation?.relationship === "parent") return 0
-  if (presentation?.relationship === "child") return 1
-  if (presentation?.relationship === "associated") return 2
-  return 3
+  if (!presentation) return 6
+  const hopOffset = Math.max(presentation.distance - 1, 0) * 0.01
+  if (presentation.relationship === "parent") return 0
+  if (presentation.relationship === "ancestor") return 1 + hopOffset
+  if (presentation.relationship === "child") return 2
+  if (presentation.relationship === "descendant") return 3 + hopOffset
+  if (presentation.relationship === "associated") return 4 + hopOffset
+  return 5 + hopOffset
 }
 
 function useNearViewport(element: RefObject<HTMLElement | null>) {

@@ -14,16 +14,21 @@ import { createQueryClient } from "@/data/query-client"
 import { identityScope } from "@/data/crucible/query-keys"
 import {
   getWorkspaceDatasetFiles,
+  getWorkspaceDatasetThumbnails,
   getWorkspaceResource,
   requestWorkspaceFileDownload,
 } from "@/data/crucible/resources.functions"
 import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
-import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
+import type {
+  WorkspaceDatasetThumbnail,
+  WorkspaceResourceDetail,
+} from "@/data/crucible/workspace-source"
 import {
   DatasetFiles,
   FilesTable,
   initiateFileDownload,
 } from "@/features/dataset-files/dataset-files-card"
+import { InspectorDatasetThumbnails } from "@/features/resource-inspector/resource-inspector"
 
 import {
   isResourceOverviewPath,
@@ -40,6 +45,7 @@ vi.mock("@/data/crucible/resources.functions", () => ({
   SAMPLE_NAME_MAX_LENGTH: 255,
   SAMPLE_TYPE_MAX_LENGTH: 255,
   getWorkspaceDatasetFiles: vi.fn(),
+  getWorkspaceDatasetThumbnails: vi.fn(),
   getWorkspaceResource: vi.fn(),
   requestWorkspaceFileDownload: vi.fn(),
   updateWorkspaceDatasetDescription: vi.fn(),
@@ -514,5 +520,137 @@ describe("initiateFileDownload", () => {
     expect(click).toHaveBeenCalledOnce()
     expect(document.querySelector(`a[href="${url}"]`)).toBeNull()
     click.mockRestore()
+  })
+})
+
+const sampleThumbnails: readonly WorkspaceDatasetThumbnail[] = [
+  {
+    id: 1,
+    mime_type: "image/jpeg",
+    thumbnail_b64str: "AA==",
+    thumbnail_name: "Operando preview",
+  },
+  {
+    id: 2,
+    mime_type: "image/jpeg",
+    thumbnail_b64str: "AQ==",
+    thumbnail_name: "Bragg peak fit",
+  },
+  {
+    id: 3,
+    mime_type: "image/jpeg",
+    thumbnail_b64str: "Ag==",
+    thumbnail_name: "Reciprocal space map",
+  },
+]
+
+describe("InspectorDatasetThumbnails", () => {
+  afterEach(cleanup)
+
+  beforeEach(() => {
+    vi.mocked(getWorkspaceDatasetThumbnails).mockReset()
+  })
+
+  it("renders up to two thumbnails side by side and steps through pages with arrows", async () => {
+    vi.mocked(getWorkspaceDatasetThumbnails).mockResolvedValue({
+      status: "ok",
+      data: sampleThumbnails,
+    })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    const view = (mfid: string) => (
+      <QueryClientProvider client={queryClient}>
+        <WorkspaceProvider mode="fixture" scope={scope}>
+          <InspectorDatasetThumbnails datasetMfid={mfid} />
+        </WorkspaceProvider>
+      </QueryClientProvider>
+    )
+    const rendered = render(view(datasetMfid))
+
+    expect(
+      await screen.findByRole("img", { name: "Operando preview" })
+    ).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Bragg peak fit" })).toBeTruthy()
+    expect(
+      screen.queryByRole("img", { name: "Reciprocal space map" })
+    ).toBeNull()
+    expect(screen.getByText("1-2 of 3")).toBeTruthy()
+
+    const previousButton = screen.getByRole("button", {
+      name: "Previous thumbnails",
+    })
+    const nextButton = screen.getByRole("button", { name: "Next thumbnails" })
+    expect(previousButton.hasAttribute("disabled")).toBe(true)
+    expect(nextButton.hasAttribute("disabled")).toBe(false)
+
+    fireEvent.click(nextButton)
+
+    expect(screen.queryByRole("img", { name: "Operando preview" })).toBeNull()
+    expect(
+      screen.getByRole("img", { name: "Reciprocal space map" })
+    ).toBeTruthy()
+    expect(screen.getByText("3 of 3")).toBeTruthy()
+    expect(previousButton.hasAttribute("disabled")).toBe(false)
+    expect(nextButton.hasAttribute("disabled")).toBe(true)
+
+    const otherDatasetMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z8"
+    rendered.rerender(view(otherDatasetMfid))
+
+    expect(await screen.findByText("1-2 of 3")).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Operando preview" })).toBeTruthy()
+  })
+
+  it("omits pagination arrows when two or fewer thumbnails exist", async () => {
+    vi.mocked(getWorkspaceDatasetThumbnails).mockResolvedValue({
+      status: "ok",
+      data: sampleThumbnails.slice(0, 2),
+    })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <WorkspaceProvider mode="fixture" scope={scope}>
+          <InspectorDatasetThumbnails datasetMfid={datasetMfid} />
+        </WorkspaceProvider>
+      </QueryClientProvider>
+    )
+
+    expect(
+      await screen.findByRole("img", { name: "Operando preview" })
+    ).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Bragg peak fit" })).toBeTruthy()
+    expect(
+      screen.queryByRole("group", { name: "Thumbnail navigation" })
+    ).toBeNull()
+  })
+
+  it("keeps initial thumbnail failures local and retries", async () => {
+    vi.mocked(getWorkspaceDatasetThumbnails)
+      .mockRejectedValueOnce(new Error("thumbnail load failed"))
+      .mockResolvedValueOnce({
+        status: "ok",
+        data: [],
+      })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <WorkspaceProvider mode="fixture" scope={scope}>
+          <InspectorDatasetThumbnails datasetMfid={datasetMfid} />
+        </WorkspaceProvider>
+      </QueryClientProvider>
+    )
+
+    expect(
+      await screen.findByText("Thumbnails could not be loaded")
+    ).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }))
+    expect(await screen.findByText("No thumbnails")).toBeTruthy()
   })
 })

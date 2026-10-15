@@ -46,6 +46,7 @@ import {
   ZoomInGraphIcon,
   ZoomOutGraphIcon,
 } from "@/components/crucible/icons"
+import { BreakableText } from "@/components/crucible/breakable-text"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useTheme } from "@/components/theme-provider"
@@ -96,6 +97,8 @@ type ResourceFlowNodeData = {
   entering: boolean
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModes: readonly GraphExpansionMode[]
+  highlighted: boolean
+  inspected: boolean
   isRoot: boolean
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
@@ -136,9 +139,12 @@ type ExpansionAnchor = {
 }
 
 type ResourceFlowNodePresentation = {
+  activeHighlightMfid: string | null
+  activeNeighbours: ReadonlySet<string> | undefined
   displayThumbnails: boolean
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
+  inspectedMfid: string | null
   layoutDirection: LayoutDirection
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   portalContainer?: React.RefObject<HTMLDivElement | null>
@@ -185,7 +191,10 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   display,
   expansionStates,
   expansionModesByNode,
+  focusRequest = null,
   graph,
+  highlightedMfid = null,
+  inspectedMfid = null,
   loading,
   onExpand,
   onDisplayChange,
@@ -196,7 +205,10 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   display: ResourceGraphDisplay
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
+  focusRequest?: { mfid: string; nonce: number } | null
   graph: WorkspaceResourceGraph
+  highlightedMfid?: string | null
+  inspectedMfid?: string | null
   loading: boolean
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
@@ -210,7 +222,10 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
         display={display}
         expansionStates={expansionStates}
         expansionModesByNode={expansionModesByNode}
+        focusRequest={focusRequest}
         graph={graph}
+        highlightedMfid={highlightedMfid}
+        inspectedMfid={inspectedMfid}
         loading={loading}
         onExpand={onExpand}
         onDisplayChange={onDisplayChange}
@@ -226,7 +241,10 @@ function ResourceGraphFlow({
   display,
   expansionStates,
   expansionModesByNode,
+  focusRequest,
   graph,
+  highlightedMfid,
+  inspectedMfid,
   loading,
   onExpand,
   onDisplayChange,
@@ -237,7 +255,10 @@ function ResourceGraphFlow({
   display: ResourceGraphDisplay
   expansionStates: ReadonlyMap<string, GraphExpansionState>
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
+  focusRequest: { mfid: string; nonce: number } | null
   graph: WorkspaceResourceGraph
+  highlightedMfid: string | null
+  inspectedMfid: string | null
   loading: boolean
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
@@ -250,6 +271,7 @@ function ResourceGraphFlow({
   const displayedPositions = useRef(new Map<string, LayoutPosition>())
   const visibleEdgeIds = useRef(new Set<string>())
   const pendingExpansionAnchor = useRef<ExpansionAnchor | null>(null)
+  const lastHandledFocusNonce = useRef<number | null>(null)
   const layoutAnimationFrame = useRef<number | null>(null)
   const entryRevealFrame = useRef<number | null>(null)
   const layoutSignature = useMemo(
@@ -284,6 +306,23 @@ function ResourceGraphFlow({
   const [flowNodes, setFlowNodes, handleNodesChange] =
     useNodesState<ResourceFlowNode>([])
 
+  const neighboursByNode = useMemo(() => {
+    const neighbours = new Map<string, Set<string>>()
+    for (const node of graph.nodes) {
+      neighbours.set(node.unique_id, new Set([node.unique_id]))
+    }
+    for (const edge of graph.edges) {
+      neighbours.get(edge.source)?.add(edge.target)
+      neighbours.get(edge.target)?.add(edge.source)
+    }
+    return neighbours
+  }, [graph.edges, graph.nodes])
+
+  const activeHighlightMfid = hoveredNode ?? highlightedMfid ?? null
+  const activeNeighbours = activeHighlightMfid
+    ? neighboursByNode.get(activeHighlightMfid)
+    : undefined
+
   const requestExpansion = useCallback(
     (nodeMfid: string, mode: GraphExpansionMode) => {
       const state = graphExpansionState(expansionStates, nodeMfid, mode)
@@ -301,9 +340,12 @@ function ResourceGraphFlow({
   const nodePresentation = useRef<ResourceFlowNodePresentation | null>(null)
   nodePresentation.current = layoutDirection
     ? {
+        activeHighlightMfid,
+        activeNeighbours,
         displayThumbnails: display.thumbnails,
         expansionModesByNode,
         expansionStates,
+        inspectedMfid,
         layoutDirection,
         onExpand: requestExpansion,
         portalContainer: fullscreen ? surface : undefined,
@@ -351,6 +393,7 @@ function ResourceGraphFlow({
       requestAnimationFrame(() => {
         void flow.fitView({
           ...graphViewportOptions(surface.current),
+          maxZoom: 1,
           padding: 0.16,
         })
       })
@@ -777,18 +820,6 @@ function ResourceGraphFlow({
     []
   )
 
-  const neighboursByNode = useMemo(() => {
-    const neighbours = new Map<string, Set<string>>()
-    for (const node of graph.nodes) {
-      neighbours.set(node.unique_id, new Set([node.unique_id]))
-    }
-    for (const edge of graph.edges) {
-      neighbours.get(edge.source)?.add(edge.target)
-      neighbours.get(edge.target)?.add(edge.source)
-    }
-    return neighbours
-  }, [graph.edges, graph.nodes])
-
   const resetLayout = useCallback(() => {
     resetResourceGraphLayoutEngine()
     resetLayoutRequested.current = true
@@ -835,12 +866,15 @@ function ResourceGraphFlow({
       })
     )
   }, [
+    activeHighlightMfid,
+    activeNeighbours,
     display.thumbnails,
     expansionModesByNode,
     expansionStates,
     fullscreen,
     graph.nodes,
     graph.rootMfid,
+    inspectedMfid,
     layoutDirection,
     requestExpansion,
     rootContext,
@@ -848,20 +882,9 @@ function ResourceGraphFlow({
     thumbnails,
   ])
 
-  const setHoveredResource = useCallback(
-    (nodeMfid: string | null) => {
-      const neighbours = nodeMfid ? neighboursByNode.get(nodeMfid) : undefined
-      setHoveredNode(nodeMfid)
-      setFlowNodes((current) =>
-        current.map((node) => {
-          const dimmed = Boolean(neighbours && !neighbours.has(node.id))
-          if (node.data.dimmed === dimmed) return node
-          return { ...node, data: { ...node.data, dimmed } }
-        })
-      )
-    },
-    [neighboursByNode, setFlowNodes]
-  )
+  const setHoveredResource = useCallback((nodeMfid: string | null) => {
+    setHoveredNode(nodeMfid)
+  }, [])
 
   const persistNodePosition = useCallback((node: ResourceFlowNode) => {
     const previous = displayedPositions.current.get(node.id)
@@ -898,6 +921,13 @@ function ResourceGraphFlow({
     },
     [flow]
   )
+
+  useEffect(() => {
+    if (!focusRequest || !flowReady || layoutPending) return
+    if (lastHandledFocusNonce.current === focusRequest.nonce) return
+    lastHandledFocusNonce.current = focusRequest.nonce
+    centerGraphNode(focusRequest.mfid)
+  }, [centerGraphNode, flowReady, focusRequest, layoutPending])
 
   const handleInit = useCallback(() => setFlowReady(true), [])
   const handleNodeClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
@@ -966,27 +996,29 @@ function ResourceGraphFlow({
   const flowEdges = useMemo<ResourceFlowEdge[]>(
     () =>
       graph.edges.flatMap((edge) => {
-        if (
-          !edgeMetrics ||
-          !layoutPositions.has(edge.source) ||
-          !layoutPositions.has(edge.target)
-        ) {
+        const sourcePosition = layoutPositions.get(edge.source)
+        const targetPosition = layoutPositions.get(edge.target)
+        if (!edgeMetrics || !sourcePosition || !targetPosition) {
           return []
         }
         const highlighted = Boolean(
-          hoveredNode &&
-          (edge.source === hoveredNode || edge.target === hoveredNode)
+          activeHighlightMfid &&
+          (edge.source === activeHighlightMfid ||
+            edge.target === activeHighlightMfid)
         )
-        const dimmed = Boolean(hoveredNode && !highlighted)
+        const dimmed = Boolean(activeHighlightMfid && !highlighted)
         const edgeColor = highlighted
           ? "var(--graph-highlight)"
           : "var(--graph-edge)"
         const isAssociated = edge.relationship === "associated"
-        const sourceHandle = isAssociated
-          ? "association-source"
+        const associationHandles = isAssociated
+          ? resolveAssociationHandleIds(sourcePosition, targetPosition)
+          : null
+        const sourceHandle = associationHandles
+          ? associationHandles.sourceHandle
           : "lineage-source"
-        const targetHandle = isAssociated
-          ? "association-target"
+        const targetHandle = associationHandles
+          ? associationHandles.targetHandle
           : "lineage-target"
         return [
           {
@@ -1027,7 +1059,13 @@ function ResourceGraphFlow({
           },
         ]
       }),
-    [edgeMetrics, enteringEdgeIds, graph.edges, hoveredNode, layoutPositions]
+    [
+      activeHighlightMfid,
+      edgeMetrics,
+      enteringEdgeIds,
+      graph.edges,
+      layoutPositions,
+    ]
   )
 
   return (
@@ -1123,7 +1161,7 @@ function ResourceGraphFlow({
           {loading ? "Loading" : "Arranging"}
         </div>
       ) : null}
-      <ResourceGraphLegend />
+      <ResourceGraphLegend associationsVisible={display.associations} />
     </div>
   )
 }
@@ -1141,6 +1179,8 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       className="resource-graph-flow-node"
       data-dimmed={data.dimmed ? "" : undefined}
       data-entering={data.entering ? "" : undefined}
+      data-highlighted={data.highlighted ? "" : undefined}
+      data-inspected={data.inspected ? "" : undefined}
       data-kind={data.node.kind}
       data-layout-direction={data.layoutDirection}
       data-root={data.isRoot ? "" : undefined}
@@ -1164,46 +1204,74 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       />
       <Handle
         className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source"
+        id="association-source-top"
+        position={Position.Top}
+        type="source"
+      />
+      <Handle
+        className="resource-graph-handle resource-graph-handle-association-source"
+        id="association-source-right"
+        position={Position.Right}
+        type="source"
+      />
+      <Handle
+        className="resource-graph-handle resource-graph-handle-association-source"
+        id="association-source-bottom"
         position={Position.Bottom}
         type="source"
       />
       <Handle
+        className="resource-graph-handle resource-graph-handle-association-source"
+        id="association-source-left"
+        position={Position.Left}
+        type="source"
+      />
+      <Handle
         className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target"
+        id="association-target-top"
+        position={Position.Top}
+        type="target"
+      />
+      <Handle
+        className="resource-graph-handle resource-graph-handle-association-target"
+        id="association-target-right"
+        position={Position.Right}
+        type="target"
+      />
+      <Handle
+        className="resource-graph-handle resource-graph-handle-association-target"
+        id="association-target-bottom"
         position={Position.Bottom}
         type="target"
       />
+      <Handle
+        className="resource-graph-handle resource-graph-handle-association-target"
+        id="association-target-left"
+        position={Position.Left}
+        type="target"
+      />
       <div className="resource-graph-flow-node-content">
-        <div className="resource-graph-flow-node-header">
-          <div
-            className="resource-graph-flow-node-icon-badge"
-            aria-label={
-              data.isRoot ? `Current ${data.node.kind}` : data.node.kind
-            }
-            title={data.isRoot ? `Current ${data.node.kind}` : data.node.kind}
-          >
-            <ResourceTypeIcon
-              className="resource-graph-flow-node-icon"
-              type={data.node.kind}
-            />
-          </div>
-          {data.thumbnail ? (
-            <DatasetThumbnailImage
-              alt=""
-              className="resource-graph-flow-node-thumbnail"
-              decoding="async"
-              loading="lazy"
-              thumbnail={data.thumbnail}
-            />
-          ) : null}
+        <div
+          className="resource-graph-flow-node-icon-badge"
+          aria-label={
+            data.isRoot ? `Current ${data.node.kind}` : data.node.kind
+          }
+          title={data.isRoot ? `Current ${data.node.kind}` : data.node.kind}
+        >
+          <ResourceTypeIcon
+            className="resource-graph-flow-node-icon"
+            type={data.node.kind}
+          />
         </div>
         <div className="resource-graph-flow-node-body">
+          {data.isRoot ? (
+            <span className="resource-graph-flow-node-eyebrow">Current</span>
+          ) : null}
           <span
             className="resource-graph-flow-node-name"
             title={data.node.name}
           >
-            {data.node.name}
+            <BreakableText value={data.node.name} />
           </span>
           {data.context ? (
             <span
@@ -1214,6 +1282,15 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
             </span>
           ) : null}
         </div>
+        {data.thumbnail ? (
+          <DatasetThumbnailImage
+            alt=""
+            className="resource-graph-flow-node-thumbnail"
+            decoding="async"
+            loading="lazy"
+            thumbnail={data.thumbnail}
+          />
+        ) : null}
       </div>
       {expansionModes.length > 0 ? (
         <GraphNodeExpansionControls
@@ -1375,12 +1452,31 @@ function GraphViewportControls({
           onClick={() =>
             void flow.fitView({
               ...graphViewportOptions(surface.current),
+              maxZoom: 1,
               padding: 0.16,
             })
           }
           portalContainer={portalContainer}
         >
           <FitGraphIcon aria-hidden="true" />
+        </GraphControl>
+        <GraphControl
+          label="Center current resource"
+          onClick={() => {
+            const element = surface.current
+            if (element) {
+              centerResourceGraph(
+                flow,
+                element,
+                graph.rootMfid,
+                positions,
+                true
+              )
+            }
+          }}
+          portalContainer={portalContainer}
+        >
+          <ExploreGraphFocusIcon aria-hidden="true" />
         </GraphControl>
       </ButtonGroup>
       <GraphDisplayMenu
@@ -1556,11 +1652,15 @@ function GraphControl({
   )
 }
 
-function ResourceGraphLegend() {
+function ResourceGraphLegend({
+  associationsVisible,
+}: {
+  associationsVisible: boolean
+}) {
   return (
     <div
       aria-label="Graph legend"
-      className="resource-graph-legend absolute bottom-3 left-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-supporting text-muted-foreground"
+      className="resource-graph-legend absolute bottom-3 left-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-supporting text-muted-foreground"
     >
       <span className="flex items-center gap-1.5">
         <ResourceTypeIcon type="sample" /> Sample
@@ -1568,8 +1668,79 @@ function ResourceGraphLegend() {
       <span className="flex items-center gap-1.5">
         <ResourceTypeIcon type="dataset" /> Dataset
       </span>
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="resource-graph-legend-current" />{" "}
+        Current
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span
+          aria-hidden="true"
+          className="resource-graph-legend-edge resource-graph-legend-edge-lineage"
+        />{" "}
+        Lineage
+      </span>
+      {associationsVisible ? (
+        <span className="flex items-center gap-1.5">
+          <span
+            aria-hidden="true"
+            className="resource-graph-legend-edge resource-graph-legend-edge-associated"
+          />{" "}
+          Associated
+        </span>
+      ) : null}
     </div>
   )
+}
+
+export function resolveAssociationHandleIds(
+  sourcePosition: LayoutPosition,
+  targetPosition: LayoutPosition
+): {
+  sourceHandle:
+    | "association-source-bottom"
+    | "association-source-left"
+    | "association-source-right"
+    | "association-source-top"
+  targetHandle:
+    | "association-target-bottom"
+    | "association-target-left"
+    | "association-target-right"
+    | "association-target-top"
+} {
+  const sourceCenterX = sourcePosition.x + sourcePosition.width / 2
+  const sourceCenterY = sourcePosition.y + sourcePosition.height / 2
+  const targetCenterX = targetPosition.x + targetPosition.width / 2
+  const targetCenterY = targetPosition.y + targetPosition.height / 2
+  const dx = targetCenterX - sourceCenterX
+  const dy = targetCenterY - sourceCenterY
+  const avgWidth = Math.max(
+    (sourcePosition.width + targetPosition.width) / 2,
+    1
+  )
+  const avgHeight = Math.max(
+    (sourcePosition.height + targetPosition.height) / 2,
+    1
+  )
+  if (Math.abs(dx) / avgWidth >= Math.abs(dy) / avgHeight) {
+    return dx >= 0
+      ? {
+          sourceHandle: "association-source-right",
+          targetHandle: "association-target-left",
+        }
+      : {
+          sourceHandle: "association-source-left",
+          targetHandle: "association-target-right",
+        }
+  }
+  return dy >= 0
+    ? {
+        sourceHandle: "association-source-bottom",
+        targetHandle: "association-target-top",
+      }
+    : {
+        sourceHandle: "association-source-top",
+        targetHandle: "association-target-bottom",
+      }
 }
 
 export async function layoutResourceGraph(
@@ -1613,44 +1784,14 @@ export async function layoutResourceGraph(
                 y: prev.y,
               }
             : {}),
-          ports: [
-            {
-              id: `${node.unique_id}:lineage-target`,
-              layoutOptions: {
-                "port.side": direction === "DOWN" ? "NORTH" : "WEST",
-              },
-            },
-            {
-              id: `${node.unique_id}:lineage-source`,
-              layoutOptions: {
-                "port.side": direction === "DOWN" ? "SOUTH" : "EAST",
-              },
-            },
-            {
-              id: `${node.unique_id}:association-source`,
-              layoutOptions: {
-                "port.side": direction === "DOWN" ? "SOUTH" : "EAST",
-              },
-            },
-            {
-              id: `${node.unique_id}:association-target`,
-              layoutOptions: {
-                "port.side": direction === "DOWN" ? "SOUTH" : "EAST",
-              },
-            },
-          ],
         }
       }),
       edges: validEdges.map((edge) => {
         const isAssociated = edge.relationship === "associated"
         return {
           id: edge.id,
-          sources: [
-            `${edge.source}:${isAssociated ? "association-source" : "lineage-source"}`,
-          ],
-          targets: [
-            `${edge.target}:${isAssociated ? "association-target" : "lineage-target"}`,
-          ],
+          sources: [edge.source],
+          targets: [edge.target],
           layoutOptions: {
             "org.eclipse.elk.edge.type": isAssociated
               ? "ASSOCIATION"
@@ -1666,11 +1807,11 @@ export async function layoutResourceGraph(
         "elk.algorithm": "layered",
         "elk.direction": direction,
         "elk.edgeRouting": "ORTHOGONAL",
-        "elk.portConstraints": "FIXED_SIDE",
         "elk.layered.cycleBreaking.strategy": "GREEDY",
         "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
         "elk.layered.crossingMinimization.semiInteractive":
           previousPositions && previousPositions.size > 0 ? "true" : "false",
+        "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
         "elk.layered.nodePlacement.favorStraightEdges": "true",
         "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
         "elk.layered.spacing.nodeNodeBetweenLayers": String(layerGap),
@@ -1733,7 +1874,6 @@ function reconcileResourceFlowNodes(
           ...presentedNode,
           data: {
             ...presentedNode.data,
-            dimmed: false,
             entering: enteringNodeIds.has(node.unique_id),
           },
           position: { x: position.x, y: position.y },
@@ -1748,7 +1888,6 @@ function reconcileResourceFlowNodes(
           graph.rootMfid,
           node,
           presentation,
-          false,
           enteringNodeIds.has(node.unique_id)
         ),
         deletable: false,
@@ -1784,7 +1923,6 @@ function updateResourceFlowNodePresentation(
       rootMfid,
       node,
       presentation,
-      flowNode.data.dimmed,
       flowNode.data.entering
     ),
     focusable: true,
@@ -1801,16 +1939,20 @@ function resourceFlowNodeData(
   rootMfid: string,
   node: WorkspaceResourceGraphNode,
   presentation: ResourceFlowNodePresentation,
-  dimmed: boolean,
   entering: boolean
 ): ResourceFlowNodeData {
   return {
     context:
       node.unique_id === rootMfid ? presentation.rootContext : node.context,
-    dimmed,
+    dimmed: Boolean(
+      presentation.activeNeighbours &&
+      !presentation.activeNeighbours.has(node.unique_id)
+    ),
     entering,
     expansionStates: presentation.expansionStates,
     expansionModes: presentation.expansionModesByNode.get(node.unique_id) ?? [],
+    highlighted: presentation.activeHighlightMfid === node.unique_id,
+    inspected: presentation.inspectedMfid === node.unique_id,
     isRoot: node.unique_id === rootMfid,
     layoutDirection: presentation.layoutDirection,
     node,
@@ -1910,35 +2052,39 @@ function centerResourceGraph(
     x: root.x + root.width / 2,
     y: root.y + root.height / 2,
   }
-  const extents = [...positions.values()].reduce(
-    (current, position) => ({
-      x: Math.max(
-        current.x,
-        Math.abs(position.x - rootCenter.x),
-        Math.abs(position.x + position.width - rootCenter.x)
-      ),
-      y: Math.max(
-        current.y,
-        Math.abs(position.y - rootCenter.y),
-        Math.abs(position.y + position.height - rootCenter.y)
-      ),
-    }),
-    { x: root.width / 2, y: root.height / 2 }
+  const allPositions = [...positions.values()]
+  const minX = Math.min(...allPositions.map((position) => position.x))
+  const maxX = Math.max(
+    ...allPositions.map((position) => position.x + position.width)
   )
+  const minY = Math.min(...allPositions.map((position) => position.y))
+  const maxY = Math.max(
+    ...allPositions.map((position) => position.y + position.height)
+  )
+  const boundsWidth = Math.max(maxX - minX, 1)
+  const boundsHeight = Math.max(maxY - minY, 1)
   const padding = graphNumberToken(element, "--graph-fit-padding")
-  const zoom = Math.min(
-    Math.max(element.clientWidth - padding * 2, 1) / Math.max(extents.x * 2, 1),
-    Math.max(element.clientHeight - padding * 2, 1) /
-      Math.max(extents.y * 2, 1),
-    graphNumberToken(element, "--graph-max-zoom")
-  )
-  void flow.setCenter(rootCenter.x, rootCenter.y, {
-    ...(animate ? graphViewportOptions(element) : { duration: 0 }),
-    zoom: Math.max(
-      zoom,
-      graphNumberToken(element, "--graph-readable-zoom"),
-      graphNumberToken(element, "--graph-min-zoom")
+  const availableWidth = Math.max(element.clientWidth - padding * 2, 1)
+  const availableHeight = Math.max(element.clientHeight - padding * 2, 1)
+  const finalZoom = Math.max(
+    Math.min(
+      availableWidth / boundsWidth,
+      availableHeight / boundsHeight,
+      1,
+      graphNumberToken(element, "--graph-max-zoom")
     ),
+    graphNumberToken(element, "--graph-readable-zoom"),
+    graphNumberToken(element, "--graph-min-zoom")
+  )
+  const centerX =
+    boundsWidth * finalZoom <= availableWidth ? (minX + maxX) / 2 : rootCenter.x
+  const centerY =
+    boundsHeight * finalZoom <= availableHeight
+      ? (minY + maxY) / 2
+      : rootCenter.y
+  void flow.setCenter(centerX, centerY, {
+    ...(animate ? graphViewportOptions(element) : { duration: 0 }),
+    zoom: finalZoom,
   })
 }
 

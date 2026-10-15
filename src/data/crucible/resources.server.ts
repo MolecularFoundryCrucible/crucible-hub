@@ -795,6 +795,18 @@ function readFixtureDatasetThumbnails(
             thumbnail_b64str: demoThumbnailBase64,
             thumbnail_name: "Operando preview",
           },
+          {
+            id: 2,
+            mime_type: "image/jpeg" as const,
+            thumbnail_b64str: demoThumbnailBase64,
+            thumbnail_name: "Bragg peak fit",
+          },
+          {
+            id: 3,
+            mime_type: "image/jpeg" as const,
+            thumbnail_b64str: demoThumbnailBase64,
+            thumbnail_name: "Reciprocal space map",
+          },
         ]
       : []
   fixtureThumbnailState.set(key, thumbnails)
@@ -969,8 +981,23 @@ export async function mutateWorkspaceDatasetThumbnails(
 
 function fixtureResourceGraph(
   resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>,
-  requestedDepth: number
+  requestedDepth: number,
+  scenario?: FixtureScenario
 ): WorkspaceResourceGraph {
+  const fixture = readWorkspaceFixture(scenario)
+  const samplesByMfid = new Map(
+    fixture.status === "ready"
+      ? fixture.workspace.samples.map((sample) => [sample.unique_id, sample])
+      : []
+  )
+  const datasetsByMfid = new Map(
+    fixture.status === "ready"
+      ? fixture.workspace.datasets.map((dataset) => [
+          dataset.unique_id,
+          dataset,
+        ])
+      : []
+  )
   const nodes = new Map([
     [
       resource.unique_id,
@@ -1000,19 +1027,30 @@ function fixtureResourceGraph(
       if (link.resource_type !== "dataset" && link.resource_type !== "sample") {
         return []
       }
+      const linkedSample =
+        link.resource_type === "sample"
+          ? samplesByMfid.get(link.unique_id)
+          : undefined
+      const linkedDataset =
+        link.resource_type === "dataset"
+          ? datasetsByMfid.get(link.unique_id)
+          : undefined
       nodes.set(link.unique_id, {
-        context: null,
-        dataFormat: null,
+        context:
+          (link.resource_type === "sample"
+            ? linkedSample?.sample_type
+            : linkedDataset?.measurement) ?? null,
+        dataFormat: linkedDataset?.data_format ?? null,
         expansionAvailability: {
           ancestors: false,
           associations: false,
           descendants: false,
         },
         hasMoreRelationships: false,
-        instrument: null,
+        instrument: linkedDataset?.instrument ?? null,
         kind: link.resource_type,
         name: link.name || link.unique_id,
-        project: null,
+        project: linkedSample?.project ?? linkedDataset?.project ?? null,
         traversalDepth: 1,
         unique_id: link.unique_id,
       })
@@ -1200,7 +1238,7 @@ export async function readWorkspaceResourceGraph(
     ) {
       throw new CrucibleResponseError(404)
     }
-    return fixtureResourceGraph(resource, graphRequest.depth ?? 1)
+    return fixtureResourceGraph(resource, graphRequest.depth ?? 1, scenario)
   }
 
   const client = createCrucibleClient(configuration)

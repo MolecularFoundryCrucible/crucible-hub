@@ -15,7 +15,7 @@ export type ResourceGraphDisplay = {
 export const resourceGraphDisplayDefaults = {
   associations: true,
   orientation: "vertical",
-  thumbnails: false,
+  thumbnails: true,
 } satisfies ResourceGraphDisplay
 
 export const resourceGraphDisplaySearchSchema = z.object({

@@ -7,6 +7,7 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 ## Unreleased
 
 - The Service accounts administration list now shows when each account was last active, supports activity filtering and sorting by Account, Crucible ID, and Last active with cursor pagination, shows Last active and API credential Last used timestamps on the service-account detail page and profile views, and aligns collection and detail loading skeletons with the headers and controls shown once loaded.
+- Redesigned the resource Graph tab with inline horizontal node cards, default dataset thumbnail previews, perimeter association edge routing, an expanded graph legend and Center current resource control, accurate multi-hop lineage and association labels in the Relationships table, and synchronized highlighting and centering between the table and canvas; the right-side resource inspector now also displays up to two dataset thumbnails side by side with arrow navigation when more exist.
 
 ## 1.3.1 - 2026-10-15
 

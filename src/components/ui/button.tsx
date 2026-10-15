@@ -45,7 +45,7 @@ const buttonVariantClasses = cva(
           "size-11 gap-1.5 px-0 sm:w-auto sm:px-3 sm:has-data-[icon=inline-end]:pr-2.5 sm:has-data-[icon=inline-start]:pl-2.5",
         qr: "size-28 overflow-hidden p-0",
         "table-header":
-          "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+          "h-7 gap-1 rounded-[min(var(--radius-md),12px)] border-0 px-2 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         "table-action":
           "size-7 rounded-[min(var(--radius-md),12px)] max-md:size-9 md:[&_svg:not([class*='size-'])]:size-3.5",
       },
