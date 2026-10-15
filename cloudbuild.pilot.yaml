@@ -1,11 +1,60 @@
 steps:
-  - name: gcr.io/cloud-builders/docker
+  - id: build-deps
+    name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - build
+      - --target
+      - deps
+      - --build-arg
+      - BUILDKIT_INLINE_CACHE=1
+      - --cache-from
+      - ${_IMAGE}:deps-cache
+      - --tag
+      - ${_IMAGE}:deps-cache
+      - .
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
     args:
       - build
       - --build-arg
+      - BUILDKIT_INLINE_CACHE=1
+      - --cache-from
+      - ${_IMAGE}:deps-cache
+      - --build-arg
       - VITE_GIT_COMMIT=${_IMAGE_TAG}
       - --tag
-      - us-central1-docker.pkg.dev/$PROJECT_ID/crucible-hub/app:${_IMAGE_TAG}
+      - ${_IMAGE}:${_IMAGE_TAG}
       - .
-images:
-  - us-central1-docker.pkg.dev/$PROJECT_ID/crucible-hub/app:${_IMAGE_TAG}
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - ${_IMAGE}
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [[ "${_DEPLOY}" != "true" ]]; then
+          exit 0
+        fi
+        digest=$(gcloud artifacts docker images describe \
+          "${_IMAGE}:${_IMAGE_TAG}" --format='value(image_summary.digest)')
+        gcloud run deploy ${_SERVICE} --project $PROJECT_ID \
+          --region ${_REGION} --image "${_IMAGE}@$${digest}" --quiet
+substitutions:
+  _DEPLOY: "false"
+  _REGION: us-central1
+  _SERVICE: crucible-hub
+  _IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/crucible-hub/app
+options:
+  dynamicSubstitutions: true
+  logging: CLOUD_LOGGING_ONLY

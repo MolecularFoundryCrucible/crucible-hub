@@ -36,6 +36,7 @@
     "skills:load": "node node_modules/@tanstack/intent/dist/cli.mjs load",
     "skills:stale": "node node_modules/@tanstack/intent/dist/cli.mjs stale",
     "audit": "npm audit --omit=dev --audit-level=high",
+    "release": "node scripts/release.mjs",
     "validate:static": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run api:check && npm run boundary:check && npm run design:check && npm run docs:check && npm run secrets:check",
     "validate": "npm run validate:static && npm run build"
   },

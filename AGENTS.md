@@ -79,7 +79,7 @@ Read only the sources relevant to the change. A proposal or unmerged API contrac
 - Keep changes focused. Do not add speculative abstractions, unrelated refactors, or comments unless the reason cannot be expressed clearly in code.
 - Update the document that owns changed behavior. Use a decision record for a durable architectural choice.
 - Keep Markdown prose and list items unwrapped. Use no emojis or em dashes.
-- Add one concise `CHANGELOG.md` entry under `Unreleased` for user, operator, contributor, privacy, security, contract, deployment, configuration, migration, or supported-workflow changes. Consolidate related visual improvements into a single entry, and omit entries for planning, internal refactors, tests alone, formatting, and documentation corrections.
+- Add one short, direct `CHANGELOG.md` bullet under `Unreleased` for user, operator, contributor, privacy, security, contract, deployment, configuration, migration, or supported-workflow changes. Keep each bullet to a single concise sentence stating what changed without implementation prose, consolidate related visual improvements into one entry, and omit entries for planning, internal refactors, tests alone, formatting, and documentation corrections.
 - Report validation, changelog impact, unresolved dependencies, and cross-repository consequences when finishing.
 
 ## Skills and validation

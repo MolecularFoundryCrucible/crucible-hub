@@ -31,7 +31,7 @@ Prefer supported framework mechanisms, generated contract types, server-only cre
 
 Markdown prose and list items must remain unwrapped. Do not use emojis or em dashes. Do not include credentials, signed URLs, private keys, secret paths, or sensitive production identifiers. Check local links, trailing whitespace, terminology, and decision status.
 
-Add an `Unreleased` changelog entry only for user, operator, contributor, privacy, security, downstream-contract, deployment, configuration, migration, or supported-workflow changes. Planning, internal refactors, tests alone, formatting, and documentation corrections do not require an entry.
+Add one short, direct `Unreleased` changelog bullet only for user, operator, contributor, privacy, security, downstream-contract, deployment, configuration, migration, or supported-workflow changes; state what changed in a single concise sentence without implementation prose. Planning, internal refactors, tests alone, formatting, and documentation corrections do not require an entry.
 
 ## Canonical commands
 
@@ -50,6 +50,7 @@ Add an `Unreleased` changelog entry only for user, operator, contributor, privac
 | `npm run skills:load -- <package>#<skill>` | Load an installed TanStack skill for the current task                                                  |
 | `npm run skills:stale`                     | Report stale TanStack skill sources without updating them                                              |
 | `npm run audit`                            | Fail on high or critical npm advisories                                                                |
+| `npm run release`                          | Stamp `CHANGELOG.md`, commit, and tag `vX.Y.Z` without invalidating lockfile caches                    |
 
 Install Chromium once with `npx playwright install chromium`. CI runs static and unit validation in parallel with one browser job that performs the functional gate, production build, and runtime checks. The bounded browser gate uses one worker without retries so shared server fixtures remain deterministic and failures remain visible. Browser and production specs use [`tests/fixtures.ts`](tests/fixtures.ts), whose automatic fixture fails tests on uncaught page errors.
 

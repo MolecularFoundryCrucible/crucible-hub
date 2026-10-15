@@ -1,8 +1,31 @@
 steps:
-  - id: build
+  - id: build-deps
     name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
     args:
       - build
+      - --target
+      - deps
+      - --build-arg
+      - BUILDKIT_INLINE_CACHE=1
+      - --cache-from
+      - ${_IMAGE}:deps-cache
+      - --tag
+      - ${_IMAGE}:deps-cache
+      - .
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - build
+      - --build-arg
+      - BUILDKIT_INLINE_CACHE=1
+      - --cache-from
+      - ${_IMAGE}:deps-cache
+      - --build-arg
+      - VITE_APP_VERSION=${TAG_NAME}
       - --build-arg
       - VITE_GIT_COMMIT=${SHORT_SHA}
       - --tag

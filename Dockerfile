@@ -1,8 +1,11 @@
-FROM node:22.22.2-bookworm-slim AS build
+FROM node:22.22.2-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
+
+FROM deps AS build
 COPY . .
+ARG VITE_APP_VERSION
 ARG VITE_GIT_COMMIT
 RUN npm run build
 

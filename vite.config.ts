@@ -22,14 +22,28 @@ function resolveGitCommit(): string {
   }
 }
 
+function resolveAppVersion(): string {
+  if (process.env.VITE_APP_VERSION) {
+    return process.env.VITE_APP_VERSION.replace(/^v/, "")
+  }
+  try {
+    const changelog = readFileSync("CHANGELOG.md", "utf8")
+    const match = /^## (\d+\.\d+\.\d+)\b/m.exec(changelog)
+    if (match?.[1]) {
+      return match[1]
+    }
+  } catch {}
+  return (
+    JSON.parse(readFileSync("package.json", "utf8")) as { version: string }
+  ).version
+}
+
 const sharedSourceRoots = ["components", "lib", "data"].map(
   (directory) => resolve("src", directory) + sep
 )
 
 const gitCommit = resolveGitCommit()
-const appVersion = (
-  JSON.parse(readFileSync("package.json", "utf8")) as { version: string }
-).version
+const appVersion = resolveAppVersion()
 if (!process.env.VITE_GIT_COMMIT && gitCommit) {
   process.env.VITE_GIT_COMMIT = gitCommit
 }
