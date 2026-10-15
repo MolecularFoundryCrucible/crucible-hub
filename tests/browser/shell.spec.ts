@@ -46,7 +46,7 @@ test("renders the desktop workspace without development chrome", async ({
   await expect(
     yourProjectsSection.getByText("Operando Catalyst Mapping")
   ).toBeVisible()
-  await expect(yourProjectsSection.getByText("Lead")).toBeVisible()
+  await expect(yourProjectsSection.getByText("Last activity")).toBeVisible()
 })
 
 test("keeps the origin on a native logout form submission", async ({

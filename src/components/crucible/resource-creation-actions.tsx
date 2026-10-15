@@ -1,8 +1,9 @@
+import { useRender } from "@base-ui/react/use-render"
 import type { ReactElement } from "react"
 import { Link } from "@tanstack/react-router"
 
 import { CreateResourceIcon } from "@/components/crucible/icons"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export function ResourceCreationLink({
   label,
@@ -15,12 +16,20 @@ export function ResourceCreationLink({
   size?: "default" | "sm"
   variant?: "default" | "outline"
 }) {
-  return (
-    <Button nativeButton={false} render={render} size={size} variant={variant}>
-      <CreateResourceIcon aria-hidden="true" data-icon="inline-start" />
-      {label}
-    </Button>
-  )
+  return useRender({
+    defaultTagName: "a",
+    props: {
+      children: (
+        <>
+          <CreateResourceIcon aria-hidden="true" data-icon="inline-start" />
+          {label}
+        </>
+      ),
+      className: buttonVariants({ size, variant }),
+    },
+    render,
+    state: { slot: "button" },
+  })
 }
 
 export function ResourceCreationActions({

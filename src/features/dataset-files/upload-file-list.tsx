@@ -19,11 +19,6 @@ import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
   IngestorSelect,
   ingestorChoiceLabel,
   sameIngestorChoice,
@@ -481,23 +476,16 @@ const UploadFileRow = memo(function UploadFileRowItem({
               </span>
             )}
             {!locked && !editing ? (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      aria-label={`Rename ${item.filename}`}
-                      className="shrink-0"
-                      onClick={() => onRenameChange(item.id, true)}
-                      size="icon-xs"
-                      type="button"
-                      variant="ghost"
-                    />
-                  }
-                >
-                  <RenameUploadIcon aria-hidden="true" />
-                </TooltipTrigger>
-                <TooltipContent>Rename {item.filename}</TooltipContent>
-              </Tooltip>
+              <Button
+                aria-label={`Rename ${item.filename}`}
+                className="shrink-0"
+                onClick={() => onRenameChange(item.id, true)}
+                size="icon-xs"
+                type="button"
+                variant="ghost"
+              >
+                <RenameUploadIcon aria-hidden="true" />
+              </Button>
             ) : null}
           </div>
           <span className="ml-auto flex shrink-0 items-center gap-2">
@@ -518,22 +506,15 @@ const UploadFileRow = memo(function UploadFileRowItem({
               )
             ) : null}
             {locked ? null : (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      aria-label={`Remove ${item.filename} from the upload list`}
-                      onClick={() => onRemove(item.id)}
-                      size="icon-sm"
-                      type="button"
-                      variant="ghost"
-                    />
-                  }
-                >
-                  <CloseIcon aria-hidden="true" />
-                </TooltipTrigger>
-                <TooltipContent>Remove from upload list</TooltipContent>
-              </Tooltip>
+              <Button
+                aria-label={`Remove ${item.filename} from the upload list`}
+                onClick={() => onRemove(item.id)}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <CloseIcon aria-hidden="true" />
+              </Button>
             )}
           </span>
         </div>
