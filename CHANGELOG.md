@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+## 1.3.1 - 2026-10-15
+
 - Sample type and dataset measurement, session name, and data format fields on creation and edit forms now open a searchable dropdown of existing values (scoped to the chosen project or across Crucible) that filters as you type and commits a selected or new value on click, Enter, or Tab. Holding Ctrl (Cmd on macOS) while clicking a resource in a list now opens its full page directly in the current tab instead of the side preview.
 - Refined the button and icon hierarchy across the Hub: destructive confirmations use a solid destructive button while inline triggers keep a soft outline, Browse nearby arrows match their center button height, icons share a uniform size, and the footer uses updated theme-aware Crucible, Molecular Foundry, Discord, and GitHub marks with the left Crucible icon linking to `https://crucible.lbl.gov/`.
 
