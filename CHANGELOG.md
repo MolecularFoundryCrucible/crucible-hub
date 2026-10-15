@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+## 1.3.0 - 2026-10-15
+
 - My profile can regenerate your API key: after a confirmation and, if needed, a fresh ORCID sign-in, the new key is shown once and the old one stops working.
 - Projects and instruments show when they were last active and can be sorted by it, Home lists your most recently active projects first and shows when each project and instrument was last active in place of your role, with every Home timestamp sharing one labelled style, the Users administration list shows when each person was last active with an activity filter, and API key cards show when the key was last used. Requires the API activity release (PR #331).
 - Values Crucible cannot store, such as NUL characters, are rejected in metadata before saving, and API rejections for them name the field.
