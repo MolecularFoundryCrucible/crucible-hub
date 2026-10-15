@@ -65,10 +65,7 @@ import {
   emptyCreationMetadata,
   useCreationMetadataSubmission,
 } from "./creation-metadata"
-import {
-  ProjectSuggestions,
-  useDatasetFacetSuggestions,
-} from "./project-suggestions"
+import { FacetCombobox } from "@/components/crucible/facet-combobox"
 
 const datasetFormSchema = z.object({
   data_format: optionalText(DATASET_DATA_FORMAT_MAX_LENGTH, "data format"),
@@ -202,11 +199,11 @@ export function DatasetCreationForm({
     relationships.isPending ||
     files.isPending
   const formId = "dataset-creation"
-  const measurementSuggestions = useDatasetFacetSuggestions(
-    scope,
-    "measurement",
-    useStore(form.store, (state) => state.values.project?.unique_id)
+  const projectMfid = useStore(
+    form.store,
+    (state) => state.values.project?.unique_id
   )
+  const formDisabled = busy || Boolean(createdDataset)
 
   function cacheDataset(dataset: DatasetResource) {
     queryClient.setQueryData(
@@ -252,7 +249,7 @@ export function DatasetCreationForm({
                   void form.handleSubmit()
                 }}
               >
-                <fieldset disabled={busy || Boolean(createdDataset)}>
+                <fieldset disabled={formDisabled}>
                   <FieldGroup>
                     <form.Field name="dataset_name">
                       {(field) => {
@@ -368,11 +365,14 @@ export function DatasetCreationForm({
                         )}
                       </form.Field>
                       <DatasetTextField
+                        disabled={formDisabled}
+                        facetField="measurement"
                         fieldName="measurement"
                         form={form}
                         label="Measurement"
                         maxLength={DATASET_MEASUREMENT_MAX_LENGTH}
-                        suggestions={measurementSuggestions}
+                        projectMfid={projectMfid}
+                        scope={scope}
                       />
                       <form.Field name="timestamp">
                         {(field) => {
@@ -407,18 +407,26 @@ export function DatasetCreationForm({
                         }}
                       </form.Field>
                       <DatasetTextField
+                        disabled={formDisabled}
+                        facetField="session"
                         fieldName="session_name"
                         form={form}
                         label="Session name"
                         maxLength={DATASET_SESSION_NAME_MAX_LENGTH}
+                        projectMfid={projectMfid}
+                        scope={scope}
                       />
                     </CreationFormSection>
                     <CreationFormSection title="Data">
                       <DatasetTextField
+                        disabled={formDisabled}
+                        facetField="data_format"
                         fieldName="data_format"
                         form={form}
                         label="Data format"
                         maxLength={DATASET_DATA_FORMAT_MAX_LENGTH}
+                        projectMfid={projectMfid}
+                        scope={scope}
                       />
                       <DatasetTextField
                         fieldName="data_type"
@@ -532,17 +540,23 @@ export function DatasetCreationForm({
 }
 
 function DatasetTextField({
+  disabled = false,
+  facetField,
   fieldName,
   form,
   label,
   maxLength,
-  suggestions = [],
+  projectMfid,
+  scope,
 }: {
+  disabled?: boolean
+  facetField?: "data_format" | "measurement" | "session"
   fieldName: "data_format" | "data_type" | "measurement" | "session_name"
   form: ReturnType<typeof useDatasetForm>
   label: string
   maxLength: number
-  suggestions?: readonly string[]
+  projectMfid?: string | null
+  scope?: IdentityScope
 }) {
   return (
     <form.Field name={fieldName}>
@@ -554,23 +568,37 @@ function DatasetTextField({
             <FieldLabel htmlFor={field.name} optional>
               {label}
             </FieldLabel>
-            <Input
-              aria-describedby={invalid ? errorId : undefined}
-              aria-errormessage={invalid ? errorId : undefined}
-              aria-invalid={invalid || undefined}
-              id={field.name}
-              maxLength={maxLength}
-              name={field.name}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value)}
-              value={field.state.value}
-            />
-            <ProjectSuggestions
-              label={label}
-              onPick={field.handleChange}
-              suggestions={suggestions}
-              value={field.state.value}
-            />
+            {facetField && scope ? (
+              <FacetCombobox
+                describedBy={invalid ? errorId : undefined}
+                disabled={disabled}
+                errorId={invalid ? errorId : undefined}
+                field={facetField}
+                id={field.name}
+                invalid={invalid}
+                kind="dataset"
+                label={label}
+                maxLength={maxLength}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={field.handleChange}
+                projectMfid={projectMfid}
+                scope={scope}
+                value={field.state.value}
+              />
+            ) : (
+              <Input
+                aria-describedby={invalid ? errorId : undefined}
+                aria-errormessage={invalid ? errorId : undefined}
+                aria-invalid={invalid || undefined}
+                id={field.name}
+                maxLength={maxLength}
+                name={field.name}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                value={field.state.value}
+              />
+            )}
             <FieldError errors={fieldErrors(field)} id={errorId} />
           </Field>
         )

@@ -56,6 +56,7 @@ import {
   localDateTimeToUtc,
   timestampToLocalInput,
 } from "@/lib/format"
+import { FacetCombobox } from "@/components/crucible/facet-combobox"
 import { SaveError } from "@/components/crucible/form-error"
 import { SummaryFields, contextFields } from "./resource-summary-card"
 import type { DatasetDetail, SampleDetail } from "./resource-summary-card"
@@ -138,6 +139,7 @@ type DatasetSummaryChanges = {
 const datasetFieldDefinitions = [
   {
     autoFocus: true,
+    facetField: undefined,
     label: "Name",
     maxLength: DATASET_NAME_MAX_LENGTH,
     name: "dataset_name",
@@ -145,6 +147,7 @@ const datasetFieldDefinitions = [
   },
   {
     autoFocus: false,
+    facetField: "measurement",
     label: "Measurement",
     maxLength: DATASET_MEASUREMENT_MAX_LENGTH,
     name: "measurement",
@@ -152,6 +155,7 @@ const datasetFieldDefinitions = [
   },
   {
     autoFocus: false,
+    facetField: "data_format",
     label: "Data format",
     maxLength: DATASET_DATA_FORMAT_MAX_LENGTH,
     name: "data_format",
@@ -159,6 +163,7 @@ const datasetFieldDefinitions = [
   },
   {
     autoFocus: false,
+    facetField: undefined,
     label: "Data type",
     maxLength: DATASET_DATA_TYPE_MAX_LENGTH,
     name: "data_type",
@@ -166,6 +171,7 @@ const datasetFieldDefinitions = [
   },
   {
     autoFocus: false,
+    facetField: "session",
     label: "Session",
     maxLength: DATASET_SESSION_NAME_MAX_LENGTH,
     name: "session_name",
@@ -424,16 +430,19 @@ export function SampleSummaryForm({
                       <FieldLabel htmlFor={field.name} optional>
                         Sample type
                       </FieldLabel>
-                      <Input
-                        aria-invalid={invalid || undefined}
+                      <FacetCombobox
                         disabled={isSubmitting}
+                        field="sample_type"
                         id={field.name}
+                        invalid={invalid}
+                        kind="sample"
+                        label="Sample type"
                         maxLength={SAMPLE_TYPE_MAX_LENGTH}
                         name={field.name}
                         onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
+                        onChange={field.handleChange}
+                        projectMfid={resource.project?.unique_id}
+                        scope={scope}
                         value={field.state.value}
                       />
                       <FieldError errors={fieldErrors(field, { invalid })} />
@@ -517,7 +526,6 @@ export function SampleSummaryForm({
               formId={formId}
               onCancel={discard.requestCancel}
               pending={submitting}
-              presentation="icon"
             />
           )}
         </form.Subscribe>
@@ -638,20 +646,38 @@ export function DatasetSummaryForm({
                         >
                           {definition.label}
                         </FieldLabel>
-                        <Input
-                          aria-invalid={invalid || undefined}
-                          autoFocus={definition.autoFocus}
-                          disabled={isSubmitting}
-                          id={field.name}
-                          maxLength={definition.maxLength}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          required={definition.required}
-                          value={field.state.value}
-                        />
+                        {definition.facetField ? (
+                          <FacetCombobox
+                            disabled={isSubmitting}
+                            field={definition.facetField}
+                            id={field.name}
+                            invalid={invalid}
+                            kind="dataset"
+                            label={definition.label}
+                            maxLength={definition.maxLength}
+                            name={field.name}
+                            onBlur={field.handleBlur}
+                            onChange={field.handleChange}
+                            projectMfid={resource.project?.unique_id}
+                            scope={scope}
+                            value={field.state.value}
+                          />
+                        ) : (
+                          <Input
+                            aria-invalid={invalid || undefined}
+                            autoFocus={definition.autoFocus}
+                            disabled={isSubmitting}
+                            id={field.name}
+                            maxLength={definition.maxLength}
+                            name={field.name}
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            required={definition.required}
+                            value={field.state.value}
+                          />
+                        )}
                         <FieldError errors={fieldErrors(field, { invalid })} />
                       </Field>
                     )
@@ -706,7 +732,6 @@ export function DatasetSummaryForm({
               formId={formId}
               onCancel={discard.requestCancel}
               pending={submitting}
-              presentation="icon"
             />
           )}
         </form.Subscribe>

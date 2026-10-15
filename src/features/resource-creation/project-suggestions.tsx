@@ -86,7 +86,7 @@ export function ProjectSuggestions({
           onClick={() => onPick(suggestion)}
           size="xs"
           type="button"
-          variant={suggestion === value.trim() ? "secondary" : "outline"}
+          variant="outline"
         >
           {suggestion}
         </Button>

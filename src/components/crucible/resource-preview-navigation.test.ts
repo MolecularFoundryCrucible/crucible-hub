@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   createResourcePreviewOwnerMarker,
   globalDataPreviewOrigin,
+  isDirectCanonicalNavigation,
   isPlainPreviewNavigation,
   resolveResourcePreview,
   resolveResourcePreviewTrail,
@@ -210,12 +211,34 @@ describe("resource preview link activation", () => {
     target: "",
   }
 
-  it("handles only same-tab primary activation as an in-page no-op", () => {
+  it("handles only same-tab primary activation as an in-page preview", () => {
     expect(isPlainPreviewNavigation(click)).toBe(true)
     expect(isPlainPreviewNavigation({ ...click, ctrlKey: true })).toBe(false)
     expect(isPlainPreviewNavigation({ ...click, metaKey: true })).toBe(false)
     expect(isPlainPreviewNavigation({ ...click, shiftKey: true })).toBe(false)
     expect(isPlainPreviewNavigation({ ...click, button: 1 })).toBe(false)
     expect(isPlainPreviewNavigation({ ...click, target: "_blank" })).toBe(false)
+  })
+
+  it("navigates directly in the same page on Ctrl or Meta primary click", () => {
+    expect(isDirectCanonicalNavigation(click)).toBe(false)
+    expect(isDirectCanonicalNavigation({ ...click, ctrlKey: true })).toBe(true)
+    expect(isDirectCanonicalNavigation({ ...click, metaKey: true })).toBe(true)
+    expect(
+      isDirectCanonicalNavigation({ ...click, ctrlKey: true, shiftKey: true })
+    ).toBe(false)
+    expect(
+      isDirectCanonicalNavigation({ ...click, ctrlKey: true, altKey: true })
+    ).toBe(false)
+    expect(
+      isDirectCanonicalNavigation({ ...click, ctrlKey: true, button: 1 })
+    ).toBe(false)
+    expect(
+      isDirectCanonicalNavigation({
+        ...click,
+        ctrlKey: true,
+        target: "_blank",
+      })
+    ).toBe(false)
   })
 })

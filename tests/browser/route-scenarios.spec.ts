@@ -36,7 +36,7 @@ test("keeps compact data records readable and fully actionable", async ({
   ).toBe(true)
 })
 
-test("previews on click and opens the full page on a modifier click", async ({
+test("previews on click and opens the full page in the same tab on a modifier click", async ({
   context,
   page,
 }) => {
@@ -51,17 +51,14 @@ test("previews on click and opens the full page on a modifier click", async ({
   ).pathname
   expect(href).toMatch(/^\/hub\/samples\/[^/?]+$/)
 
-  const opened = context.waitForEvent("page")
-  await resourceName.click({ modifiers: ["ControlOrMeta"] })
-  const fullPage = await opened
-  await fullPage.waitForURL(/\/hub\/samples\//)
-  expect(new URL(fullPage.url()).pathname).toBe(href)
-  await expect(page).toHaveURL(/\/hub\/data\?/)
-  await expect(page).not.toHaveURL(/preview=/)
-  await fullPage.close()
-
   await resourceName.click()
   await expect(page).toHaveURL(/\/hub\/data\?.*preview=/)
+
+  const pagesBefore = context.pages().length
+  await resourceName.click({ modifiers: ["ControlOrMeta"] })
+  await page.waitForURL(/\/hub\/samples\//)
+  expect(new URL(page.url()).pathname).toBe(href)
+  expect(context.pages()).toHaveLength(pagesBefore)
 })
 
 test("supports text spacing without horizontal page overflow", async ({

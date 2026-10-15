@@ -60,10 +60,7 @@ import {
   emptyCreationMetadata,
   useCreationMetadataSubmission,
 } from "./creation-metadata"
-import {
-  ProjectSuggestions,
-  useSampleFacetSuggestions,
-} from "./project-suggestions"
+import { FacetCombobox } from "@/components/crucible/facet-combobox"
 
 const sampleSchema = z.object({
   description: z
@@ -190,11 +187,11 @@ export function SampleCreationForm({
     true
   )
   const formId = "sample-creation"
-  const sampleTypeSuggestions = useSampleFacetSuggestions(
-    scope,
-    "sample_type",
-    useStore(form.store, (state) => state.values.project?.unique_id)
+  const projectMfid = useStore(
+    form.store,
+    (state) => state.values.project?.unique_id
   )
+  const formDisabled = busy || Boolean(createdSample)
 
   return (
     <PageLayout>
@@ -215,15 +212,39 @@ export function SampleCreationForm({
                   void form.handleSubmit()
                 }}
               >
-                <fieldset disabled={busy || Boolean(createdSample)}>
+                <fieldset disabled={formDisabled}>
                   <FieldGroup>
-                    <SampleTextField
-                      autoFocus
-                      fieldName="sample_name"
-                      form={form}
-                      label="Name"
-                      required
-                    />
+                    <form.Field name="sample_name">
+                      {(field) => {
+                        const invalid = shouldShowFieldError(field)
+                        const errorId = `${field.name}-error`
+                        return (
+                          <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor={field.name} required>
+                              Name
+                            </FieldLabel>
+                            <Input
+                              aria-describedby={invalid ? errorId : undefined}
+                              aria-errormessage={invalid ? errorId : undefined}
+                              aria-invalid={invalid || undefined}
+                              autoFocus
+                              id={field.name}
+                              maxLength={SAMPLE_NAME_MAX_LENGTH}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              value={field.state.value}
+                            />
+                            <FieldError
+                              errors={fieldErrors(field)}
+                              id={errorId}
+                            />
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
                     <form.Field name="project">
                       {(field) => {
                         const invalid = shouldShowFieldError(field)
@@ -292,12 +313,40 @@ export function SampleCreationForm({
                       }}
                     </form.Field>
                     <CreationFormSection title="Details">
-                      <SampleTextField
-                        fieldName="sample_type"
-                        form={form}
-                        label="Sample type"
-                        suggestions={sampleTypeSuggestions}
-                      />
+                      <form.Field name="sample_type">
+                        {(field) => {
+                          const invalid = shouldShowFieldError(field)
+                          const errorId = `${field.name}-error`
+                          return (
+                            <Field data-invalid={invalid}>
+                              <FieldLabel htmlFor={field.name} optional>
+                                Sample type
+                              </FieldLabel>
+                              <FacetCombobox
+                                describedBy={invalid ? errorId : undefined}
+                                disabled={formDisabled}
+                                errorId={invalid ? errorId : undefined}
+                                field="sample_type"
+                                id={field.name}
+                                invalid={invalid}
+                                kind="sample"
+                                label="Sample type"
+                                maxLength={SAMPLE_TYPE_MAX_LENGTH}
+                                name={field.name}
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
+                                projectMfid={projectMfid}
+                                scope={scope}
+                                value={field.state.value}
+                              />
+                              <FieldError
+                                errors={fieldErrors(field)}
+                                id={errorId}
+                              />
+                            </Field>
+                          )
+                        }}
+                      </form.Field>
                       <form.Field name="timestamp">
                         {(field) => {
                           const invalid = shouldShowFieldError(field)
@@ -464,63 +513,4 @@ function useSampleForm(
     validators: { onChange: sampleSchema },
     onSubmit: ({ formApi, value }) => onSubmit(value, formApi),
   })
-}
-
-function SampleTextField({
-  autoFocus,
-  fieldName,
-  form,
-  label,
-  required = false,
-  suggestions = [],
-}: {
-  autoFocus?: boolean
-  fieldName: "sample_name" | "sample_type"
-  form: ReturnType<typeof useSampleForm>
-  label: string
-  required?: boolean
-  suggestions?: readonly string[]
-}) {
-  return (
-    <form.Field name={fieldName}>
-      {(field) => {
-        const invalid = shouldShowFieldError(field)
-        const errorId = `${field.name}-error`
-        return (
-          <Field data-invalid={invalid}>
-            <FieldLabel
-              htmlFor={field.name}
-              optional={!required}
-              required={required}
-            >
-              {label}
-            </FieldLabel>
-            <Input
-              aria-describedby={invalid ? errorId : undefined}
-              aria-errormessage={invalid ? errorId : undefined}
-              aria-invalid={invalid || undefined}
-              autoFocus={autoFocus}
-              id={field.name}
-              maxLength={
-                fieldName === "sample_name"
-                  ? SAMPLE_NAME_MAX_LENGTH
-                  : SAMPLE_TYPE_MAX_LENGTH
-              }
-              name={field.name}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value)}
-              value={field.state.value}
-            />
-            <ProjectSuggestions
-              label={label}
-              onPick={field.handleChange}
-              suggestions={suggestions}
-              value={field.state.value}
-            />
-            <FieldError errors={fieldErrors(field)} id={errorId} />
-          </Field>
-        )
-      }}
-    </form.Field>
-  )
 }

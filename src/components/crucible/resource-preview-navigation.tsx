@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router"
 import { z } from "zod"
 
+import { useResourceSiblingCandidate } from "./resource-sibling-navigation"
 import { useWorkspaceScope } from "./workspace-provider"
 
 const previewMfidSchema = z
@@ -102,6 +103,23 @@ export function isPlainPreviewNavigation(event: {
     !event.altKey &&
     !event.ctrlKey &&
     !event.metaKey &&
+    !event.shiftKey &&
+    event.target !== "_blank"
+  )
+}
+
+export function isDirectCanonicalNavigation(event: {
+  altKey: boolean
+  button: number
+  ctrlKey: boolean
+  metaKey: boolean
+  shiftKey: boolean
+  target: string
+}) {
+  return (
+    event.button === 0 &&
+    !event.altKey &&
+    (event.ctrlKey || event.metaKey) &&
     !event.shiftKey &&
     event.target !== "_blank"
   )
@@ -401,12 +419,14 @@ type CanonicalLinkProps = Omit<
 function CanonicalResourceLink({
   children,
   className,
+  fromProject,
   mfid,
   resourceKind,
   ...props
 }: {
   children: React.ReactNode
   className?: string
+  fromProject?: string
   mfid: string
   resourceKind?: "dataset" | "instrument" | "project" | "sample"
 } & CanonicalLinkProps) {
@@ -416,6 +436,7 @@ function CanonicalResourceLink({
         {...props}
         to="/samples/$sampleMfid"
         params={{ sampleMfid: mfid }}
+        search={{ fromProject, preview: undefined }}
         className={className}
       >
         {children}
@@ -428,6 +449,7 @@ function CanonicalResourceLink({
         {...props}
         to="/datasets/$datasetMfid"
         params={{ datasetMfid: mfid }}
+        search={{ fromProject, preview: undefined }}
         className={className}
       >
         {children}
@@ -440,6 +462,7 @@ function CanonicalResourceLink({
         {...props}
         to="/projects/$projectMfid"
         params={{ projectMfid: mfid }}
+        search={{ preview: undefined }}
         className={className}
       >
         {children}
@@ -452,6 +475,7 @@ function CanonicalResourceLink({
         {...props}
         to="/instruments/$instrumentMfid"
         params={{ instrumentMfid: mfid }}
+        search={{}}
         className={className}
       >
         {children}
@@ -463,6 +487,7 @@ function CanonicalResourceLink({
       {...props}
       to="/resources/$resourceMfid"
       params={{ resourceMfid: mfid }}
+      search={{ preview: undefined }}
       className={className}
     >
       {children}
@@ -488,11 +513,68 @@ export function ResourcePreviewLink({
 } & CanonicalLinkProps) {
   const navigation = useContext(ResourcePreviewContext)
   const router = useRouter()
+  const siblingCandidate = useResourceSiblingCandidate(
+    mfid,
+    resourceKind === "dataset" || resourceKind === "sample"
+      ? resourceKind
+      : undefined
+  )
+  const host = navigation?.host
+  const fromProject =
+    host?.kind === "project-data"
+      ? host.projectMfid
+      : host?.kind === "resource"
+        ? host.fromProject
+        : undefined
+  const openCanonical = () => {
+    const state = siblingCandidate.sessionId
+      ? { resourceSiblingSession: siblingCandidate.sessionId }
+      : {}
+    if (resourceKind === "sample") {
+      return router.navigate({
+        params: { sampleMfid: mfid },
+        search: { fromProject, preview: undefined },
+        state,
+        to: "/samples/$sampleMfid",
+      })
+    }
+    if (resourceKind === "dataset") {
+      return router.navigate({
+        params: { datasetMfid: mfid },
+        search: { fromProject, preview: undefined },
+        state,
+        to: "/datasets/$datasetMfid",
+      })
+    }
+    if (resourceKind === "project") {
+      return router.navigate({
+        params: { projectMfid: mfid },
+        search: { preview: undefined },
+        state,
+        to: "/projects/$projectMfid",
+      })
+    }
+    if (resourceKind === "instrument") {
+      return router.navigate({
+        params: { instrumentMfid: mfid },
+        search: {},
+        state,
+        to: "/instruments/$instrumentMfid",
+      })
+    }
+    return router.navigate({
+      params: { resourceMfid: mfid },
+      search: { preview: undefined },
+      state,
+      to: "/resources/$resourceMfid",
+    })
+  }
   if (!navigation) {
     return (
       <CanonicalResourceLink
         {...props}
         className={className}
+        fromProject={fromProject}
         mfid={mfid}
         resourceKind={resourceKind}
       >
@@ -501,7 +583,6 @@ export function ResourcePreviewLink({
     )
   }
 
-  const host = navigation.host
   const sameTarget = navigation.preview === mfid
   const preparePreview = () =>
     navigation.preparePreview({
@@ -517,7 +598,7 @@ export function ResourcePreviewLink({
       state: navigation.state(mfid, back),
     }
     const preview = navigation.targetPreview(mfid)
-    if (host.kind === "resource") {
+    if (host?.kind === "resource") {
       const search = (currentSearch: ResourceSearch) => ({
         ...currentSearch,
         preview,
@@ -543,7 +624,7 @@ export function ResourcePreviewLink({
             : "/datasets/$datasetMfid",
       })
     }
-    if (host.kind === "data") {
+    if (host?.kind === "data") {
       return router.navigate({
         ...options,
         from: "/data",
@@ -551,7 +632,7 @@ export function ResourcePreviewLink({
         to: "/data",
       })
     }
-    if (host.kind === "deletion-requests") {
+    if (host?.kind === "deletion-requests") {
       return router.navigate({
         ...options,
         from: "/deletion-requests",
@@ -564,7 +645,7 @@ export function ResourcePreviewLink({
     }
     return router.navigate({
       ...options,
-      params: { projectMfid: host.projectMfid },
+      params: { projectMfid: host!.projectMfid },
       search: (currentSearch: ProjectDataSearch) => ({
         ...currentSearch,
         preview,
@@ -575,15 +656,21 @@ export function ResourcePreviewLink({
   const onClick: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
     props.onClick?.(event)
     if (event.defaultPrevented) return
-    const plainNavigation = isPlainPreviewNavigation({
+    const eventState = {
       altKey: event.altKey,
       button: event.button,
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
       shiftKey: event.shiftKey,
       target: event.currentTarget.target,
-    })
-    if (!plainNavigation) return
+    }
+    if (isDirectCanonicalNavigation(eventState)) {
+      event.preventDefault()
+      siblingCandidate.start()
+      void openCanonical()
+      return
+    }
+    if (!isPlainPreviewNavigation(eventState)) return
     event.preventDefault()
     if (!navigation.preview && !navigation.invalidPreview) {
       navigation.trigger.current = event.currentTarget
@@ -596,6 +683,7 @@ export function ResourcePreviewLink({
     <CanonicalResourceLink
       {...props}
       className={className}
+      fromProject={fromProject}
       mfid={mfid}
       onClick={onClick}
       preload={false}
