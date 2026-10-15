@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import type { IdentityScope } from "./query-keys"
@@ -8,23 +8,52 @@ import {
   getWorkspaceServiceAccountAdmin,
   getWorkspaceServiceAccounts,
 } from "./service-accounts.functions"
+import type { UserActivityFilter } from "./user-activity"
+import type { WorkspaceServiceAccountSort } from "./workspace-source"
 
 export const serviceAccountPageLimit = 50
 
-export function serviceAccountsQueryOptions(
+export function serviceAccountsCursorQueryOptions(
   scope: IdentityScope,
-  filters: { limit: number; offset: number; query?: string }
+  filters: {
+    activity?: UserActivityFilter
+    cursor?: string
+    direction?: "asc" | "desc"
+    includeTotal?: boolean
+    limit: number
+    query?: string
+    sort?: WorkspaceServiceAccountSort
+  }
 ) {
   const scenario = fixtureScenarioFromScope(scope)
-  return queryOptions({
-    queryKey: crucibleKeys.serviceAccounts(scope, filters),
-    queryFn: async ({ signal }) =>
+  return infiniteQueryOptions({
+    initialPageParam: filters.cursor,
+    queryFn: async ({ pageParam, signal }) =>
       unwrapHubResult(
         await getWorkspaceServiceAccounts({
-          data: { ...filters, scenario },
+          data: {
+            activity: filters.activity,
+            cursor: pageParam,
+            direction: filters.direction,
+            includeTotal: filters.includeTotal,
+            limit: filters.limit,
+            query: filters.query,
+            scenario,
+            sort: filters.sort,
+          },
           signal,
         })
       ),
+    queryKey: crucibleKeys.serviceAccountCursorChain(scope, {
+      activity: filters.activity,
+      direction: filters.direction,
+      includeTotal: filters.includeTotal ?? true,
+      initialCursor: filters.cursor ?? null,
+      limit: filters.limit,
+      query: filters.query,
+      sort: filters.sort,
+    }),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     retry: scenario ? false : undefined,
   })
 }

@@ -14,8 +14,10 @@ import {
   resourcePreviewSearchSchema,
   useResourcePreviewNavigation,
 } from "@/components/crucible/resource-preview-navigation"
-import { CollectionTablePending } from "@/components/crucible/collection-state"
-import { ProjectDataCollection } from "@/features/project-data/project-data-collection"
+import {
+  ProjectDataCollection,
+  ProjectDataCollectionPending,
+} from "@/features/project-data/project-data-collection"
 import type { ProjectDataKind } from "@/features/project-data/project-data-collection"
 import { resolveProjectDataFilters } from "@/features/project-data/project-data-filter-state"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
@@ -153,32 +155,10 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
   component: ProjectDataPage,
 })
 
-function ProjectDataPending() {
-  const kind = Route.useSearch().kind ?? "samples"
-  return (
-    <CollectionTablePending
-      label={kind}
-      presentation="resources"
-      subtypeLabel={kind === "samples" ? "Sample type" : "Measurement"}
-    />
-  )
-}
-
-function ProjectDataPage() {
-  const search = Route.useSearch()
-  const { projectMfid } = Route.useParams()
-  const project = projectRoute.useLoaderData()
-  const dataGroupBy = useDataGroupBy(project?.dataGroupBy)
-  const navigation = useResourcePreviewNavigation({
-    kind: "project-data",
-    preview: search.preview,
-    projectMfid: project?.isProject ? project.projectMfid : projectMfid,
-  })
-  if (!project?.isProject) return null
-
-  const kind: ProjectDataKind = search.kind ?? "samples"
-  const projectScope: ProjectScope = search.scope ?? "all"
-  const filterValues = {
+function projectDataFilterValues(
+  search: z.infer<typeof projectDataSearchSchema>
+) {
+  return {
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
     dataFormat: search.dataFormat,
@@ -202,6 +182,42 @@ function ProjectDataPage() {
     sort: search.sort,
     visibility: search.visibility,
   }
+}
+
+function ProjectDataPending() {
+  const search = Route.useSearch()
+  const { projectMfid } = Route.useParams()
+  const kind: ProjectDataKind = search.kind ?? "samples"
+  const projectScope: ProjectScope = search.scope ?? "all"
+  const filterValues = projectDataFilterValues(search)
+  const filterResolution = resolveProjectDataFilters(filterValues, kind)
+  return (
+    <ProjectDataCollectionPending
+      browseSearch={search}
+      filterResolution={filterResolution}
+      filterValues={filterValues}
+      kind={kind}
+      projectMfid={projectMfid}
+      projectScope={projectScope}
+    />
+  )
+}
+
+function ProjectDataPage() {
+  const search = Route.useSearch()
+  const { projectMfid } = Route.useParams()
+  const project = projectRoute.useLoaderData()
+  const dataGroupBy = useDataGroupBy(project?.dataGroupBy)
+  const navigation = useResourcePreviewNavigation({
+    kind: "project-data",
+    preview: search.preview,
+    projectMfid: project?.isProject ? project.projectMfid : projectMfid,
+  })
+  if (!project?.isProject) return null
+
+  const kind: ProjectDataKind = search.kind ?? "samples"
+  const projectScope: ProjectScope = search.scope ?? "all"
+  const filterValues = projectDataFilterValues(search)
   const filterResolution = resolveProjectDataFilters(filterValues, kind)
   return (
     <ResourcePreviewContext.Provider value={navigation}>

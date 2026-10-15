@@ -9,6 +9,7 @@ import {
   CollectionTablePending,
   PanelState,
 } from "@/components/crucible/collection-state"
+import { PageHeaderSkeleton } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import {
   ResourceSectionNavigation,
@@ -25,8 +26,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 
@@ -69,15 +84,11 @@ export function EntityWorkspacePending({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <header className="border-b pb-6">
-        <div className="flex min-w-0 items-start gap-2">
-          <ResourceTypeIcon className="mt-1 size-6 shrink-0" type={kind} />
-          <div className="min-w-0 flex-1" role="status">
-            <Skeleton className="h-8 w-80 max-w-full" />
-            <span className="sr-only">Loading resource identity</span>
-          </div>
-        </div>
-      </header>
+      <PageHeaderSkeleton
+        icon={<ResourceTypeIcon className="mt-1 size-6 shrink-0" type={kind} />}
+        identifier={kind === "project" || kind === "instrument"}
+        label="Loading resource identity"
+      />
       <ResourceSectionNavigation label={`${kind} sections`}>
         {sections.map((item) => (
           <span
@@ -135,7 +146,7 @@ function pendingSectionContent(
       <CollectionTablePending
         label={`${kind} data`}
         presentation={kind === "project" ? "resources-scoped" : "resources"}
-        subtypeLabel={kind === "instrument" ? "Measurement" : undefined}
+        subtypeLabel={kind === "instrument" ? "Measurement" : "Sample type"}
       />
     )
   }
@@ -143,34 +154,85 @@ function pendingSectionContent(
   return <ResourceOverviewPending resourceKind={kind} />
 }
 
-function ProjectOverviewPending() {
+export function ProjectOverviewPending() {
   return (
-    <ContentGrid variant="detail">
-      <ContentGridItem span="wide">
-        <ResourceCardPending title="Summary" />
-      </ContentGridItem>
-      <ContentGridItem span="narrow">
-        <ResourceCardPending title="Identity" />
-      </ContentGridItem>
-      <ContentGridItem span="wide">
-        <ResourceCardPending title="People" />
-      </ContentGridItem>
-      <ContentGridItem span="narrow">
-        <ResourceCardPending title="Scientific metadata" />
-      </ContentGridItem>
-    </ContentGrid>
+    <div aria-label="Loading project overview" role="status">
+      <ContentGrid variant="detail">
+        <ContentGridItem span="wide">
+          <ResourceCardPending title="Summary" />
+        </ContentGridItem>
+        <ContentGridItem span="narrow">
+          <ResourceCardPending title="Identity" />
+        </ContentGridItem>
+        <ContentGridItem span="wide">
+          <ResourceCardPending title="People" />
+        </ContentGridItem>
+        <ContentGridItem span="narrow">
+          <ResourceCardPending title="Scientific metadata" />
+        </ContentGridItem>
+      </ContentGrid>
+    </div>
   )
 }
 
-function ResourceGraphPending() {
+export function ResourceGraphPending() {
   return (
     <div
       aria-label="Loading resource graph"
-      className="grid gap-4"
+      className="flex min-w-0 flex-col gap-4"
       role="status"
     >
       <Skeleton className="min-h-graph-canvas w-full" />
-      <ResourceCardPending title="Relationships" />
+      <Card aria-busy="true">
+        <CardHeader actionLayout="inline">
+          <CardTitle>Relationships</CardTitle>
+          <CardAction>
+            <Skeleton className="h-5 w-7 rounded-full" />
+          </CardAction>
+        </CardHeader>
+        <CardContent className="px-0">
+          <div className="border-t">
+            <Table className="resource-graph-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Relationship</TableHead>
+                  <TableHead>Resource</TableHead>
+                  <TableHead kind="action">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {["w-44", "w-56", "w-48"].map((width, index) => (
+                  <TableRow key={index}>
+                    <TableCell
+                      className="resource-graph-relationship"
+                      data-label="Relationship"
+                    >
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </TableCell>
+                    <TableCell className="resource-graph-resource">
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <Skeleton className="size-4 shrink-0 rounded-sm" />
+                        <span className="grid min-w-0 flex-1 gap-1.5">
+                          <Skeleton className={cn("h-4 max-w-full", width)} />
+                          <Skeleton className="h-3.5 w-32 max-w-full" />
+                        </span>
+                      </span>
+                    </TableCell>
+                    <TableCell className="resource-graph-action" kind="action">
+                      <span className="flex justify-end gap-1">
+                        <Skeleton className="size-7 rounded-md" />
+                        <Skeleton className="size-7 rounded-md" />
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

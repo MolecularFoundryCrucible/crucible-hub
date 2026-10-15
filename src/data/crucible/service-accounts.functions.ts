@@ -3,6 +3,7 @@ import { setResponseHeader } from "@tanstack/react-start/server"
 import { z } from "zod"
 
 import { usernameSchema } from "./slugs"
+import { userActivityFilters } from "./user-activity"
 
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
@@ -27,10 +28,14 @@ const optionalProfileTextSchema = z.string().trim().max(255).nullable()
 
 export const serviceAccountListInputSchema = z
   .object({
+    activity: z.enum(userActivityFilters).optional(),
+    cursor: z.string().trim().min(1).max(2048).optional(),
+    direction: z.enum(["asc", "desc"]).optional(),
+    includeTotal: z.boolean().optional(),
     limit: z.number().int().min(1).max(1000),
-    offset: z.number().int().min(0),
-    query: z.string().trim().min(3).max(200).optional(),
+    query: z.string().trim().min(1).max(200).optional(),
     scenario: fixtureScenarioSchema.optional(),
+    sort: z.enum(["username", "unique_id", "last_active"]).optional(),
   })
   .strict()
 

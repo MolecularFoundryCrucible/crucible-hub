@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react"
+import type { InfiniteData } from "@tanstack/react-query"
 import {
+  useInfiniteQuery,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
@@ -7,6 +9,8 @@ import {
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
+import { ActivityTime } from "@/components/crucible/activity-time"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { DirectorySearchField } from "@/components/crucible/directory-search-field"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
@@ -26,7 +30,6 @@ import {
   useWorkspacePrivilegeMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -34,6 +37,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Table,
   TableBody,
@@ -48,10 +52,16 @@ import {
   CollectionUpdateError,
   CollectionUpdateStatus,
 } from "@/components/crucible/collection-state"
-import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import type { SortDirection } from "@/data/crucible/collection-query"
-import { sortDirectionSchema } from "@/data/crucible/collection-query"
+import {
+  collectionCursorSchema,
+  sortDirectionSchema,
+} from "@/data/crucible/collection-query"
+import {
+  cursorPageTotal,
+  flattenCursorPages,
+} from "@/data/crucible/cursor-pages"
 import { canOpenServiceAccountAdministration } from "@/data/crucible/administration"
 import { AdministrationUnavailable } from "@/components/crucible/administrator-view-required"
 import {
@@ -60,13 +70,19 @@ import {
 } from "@/data/crucible/query-keys"
 import {
   serviceAccountPageLimit,
-  serviceAccountsQueryOptions,
+  serviceAccountsCursorQueryOptions,
 } from "@/data/crucible/service-accounts.queries"
+import {
+  userActivityFilterOptions,
+  userActivityFilters,
+} from "@/data/crucible/user-activity"
 import type {
   WorkspaceAccount,
+  WorkspaceServiceAccount,
   WorkspaceServiceAccountCredential,
   WorkspaceServiceAccountPage,
 } from "@/data/crucible/workspace-source"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-credential-dialog"
 import { ServiceAccountCreateDialog } from "@/features/service-accounts/service-account-create-dialog"
 import { formatUsername } from "@/lib/username"
@@ -74,17 +90,23 @@ import { formatUsername } from "@/lib/username"
 const serviceAccountSortFieldSchema = z.enum([
   "account",
   "unique_id",
-  "platform_role",
+  "last_active",
 ])
 export type ServiceAccountSortField = z.infer<
   typeof serviceAccountSortFieldSchema
 >
 
+function apiServiceAccountSort(sort: ServiceAccountSortField | undefined) {
+  if (!sort || sort === "account") return "username" as const
+  return sort
+}
+
 const serviceAccountSearchSchema = z.object({
+  activity: z.enum(userActivityFilters).optional().catch(undefined),
   create: z.boolean().optional().catch(undefined),
+  cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional().catch(undefined),
-  offset: z.coerce.number().int().min(0).optional().catch(undefined),
-  q: z.string().trim().min(3).max(200).optional().catch(undefined),
+  q: z.string().trim().min(1).max(200).optional().catch(undefined),
   sort: serviceAccountSortFieldSchema.optional().catch(undefined),
 })
 
@@ -92,8 +114,9 @@ export const Route = createFileRoute("/_app/admin/service-accounts/")({
   head: () => ({ meta: [{ title: "Service accounts | Crucible Hub" }] }),
   validateSearch: serviceAccountSearchSchema,
   loaderDeps: ({ search }) => ({
+    activity: search.activity,
+    cursor: search.cursor,
     direction: search.direction,
-    offset: search.offset ?? 0,
     query: search.q,
     sort: search.sort,
   }),
@@ -112,18 +135,20 @@ export const Route = createFileRoute("/_app/admin/service-accounts/")({
       source.scope,
       "elevated"
     )
-    const options = serviceAccountsQueryOptions(administrationScope, {
+    const options = serviceAccountsCursorQueryOptions(administrationScope, {
+      activity: deps.activity,
+      cursor: deps.cursor,
+      direction: deps.direction,
+      includeTotal: true,
       limit: serviceAccountPageLimit,
-      ...deps,
+      query: deps.query,
+      sort: apiServiceAccountSort(deps.sort),
     })
-    const hasData =
-      context.queryClient.getQueryData(options.queryKey) !== undefined
-    const request = context.queryClient.prefetchQuery(options)
-    if (cause === "stay" || hasData) {
-      void request
-      return
-    }
-    await request
+    const request = prefetchInfiniteQueryWithReadableCache(
+      context.queryClient,
+      options
+    )
+    if (cause !== "stay" && request) await request
   },
   pendingComponent: ServiceAccountsPending,
   component: ServiceAccountsPage,
@@ -138,18 +163,27 @@ function ServiceAccountsPage() {
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const offset = search.offset ?? 0
   const sort = search.sort ?? "account"
   const direction = search.direction ?? "asc"
-  const options = serviceAccountsQueryOptions(administrationScope, {
+  const options = serviceAccountsCursorQueryOptions(administrationScope, {
+    activity: search.activity,
+    cursor: search.cursor,
+    direction,
+    includeTotal: true,
     limit: serviceAccountPageLimit,
-    offset,
     query: search.q,
+    sort: apiServiceAccountSort(sort),
   })
-  const result = useQuery({
+  const result = useInfiniteQuery({
     ...options,
     enabled: canOpenServiceAccountAdministration(account, privilegeMode),
   })
+  const serviceAccounts = useMemo(
+    () => flattenCursorPages(result.data?.pages),
+    [result.data]
+  )
+  const total = cursorPageTotal(result.data?.pages)
+  const updating = result.isFetching && !result.isFetchingNextPage
   const createOpen = search.create === true
   const [credential, setCredential] =
     useState<WorkspaceServiceAccountCredential>()
@@ -172,28 +206,36 @@ function ServiceAccountsPage() {
       })
       return
     }
-    if (offset === 0 && !search.q) {
-      queryClient.setQueryData<WorkspaceServiceAccountPage>(
+    if (!search.cursor && !search.q && !search.activity) {
+      queryClient.setQueryData<InfiniteData<WorkspaceServiceAccountPage>>(
         options.queryKey,
-        (current) =>
-          current
-            ? {
-                ...current,
+        (current) => {
+          const firstPage = current?.pages[0]
+          if (!current || !firstPage) return current
+          return {
+            ...current,
+            pages: [
+              {
+                ...firstPage,
                 items: [
                   {
                     email: null,
                     first_name: "",
                     is_service_account: true,
+                    last_active_at: null,
                     last_name: "",
                     platform_role: "contributor",
                     unique_id: created.unique_id,
                     username: created.username,
                   },
-                  ...current.items,
+                  ...firstPage.items,
                 ],
-                total: current.total === null ? null : current.total + 1,
-              }
-            : current
+                total: firstPage.total === null ? null : firstPage.total + 1,
+              },
+              ...current.pages.slice(1),
+            ],
+          }
+        }
       )
     }
   }
@@ -206,8 +248,8 @@ function ServiceAccountsPage() {
       replace: true,
       search: {
         ...search,
+        cursor: undefined,
         direction: nextDirection,
-        offset: undefined,
         sort: nextField,
       },
       state: {},
@@ -219,9 +261,10 @@ function ServiceAccountsPage() {
     void navigate({
       replace: true,
       search: {
+        activity: search.activity,
         create: open ? true : undefined,
+        cursor: search.cursor,
         direction: search.direction,
-        offset: search.offset,
         q: search.q,
         sort: search.sort,
       },
@@ -233,7 +276,10 @@ function ServiceAccountsPage() {
   return (
     <PageLayout>
       <ServiceAccountsPageHeader canCreate />
-      <ServiceAccountSearchField />
+      <div className="flex flex-wrap items-center gap-3">
+        <ServiceAccountSearchField />
+        <ServiceAccountActivityFilterField />
+      </div>
       {result.isPending ? (
         <CollectionTablePending
           label="service accounts"
@@ -246,7 +292,7 @@ function ServiceAccountsPage() {
         />
       ) : (
         <>
-          {result.isError ? (
+          {result.isError && !result.isFetchNextPageError ? (
             <CollectionUpdateError
               label="Service accounts"
               preserved
@@ -255,11 +301,16 @@ function ServiceAccountsPage() {
           ) : null}
           <ServiceAccountCollection
             direction={direction}
+            hasNextPage={Boolean(result.hasNextPage)}
+            isLoadingMore={result.isFetchingNextPage}
+            loadMoreError={result.isFetchNextPageError}
+            onLoadMore={() => void result.fetchNextPage()}
             onSortChange={handleSortChange}
-            page={result.data}
             query={search.q}
+            serviceAccounts={serviceAccounts}
             sort={sort}
-            updating={result.isFetching}
+            total={total}
+            updating={updating}
           />
         </>
       )}
@@ -291,7 +342,10 @@ function ServiceAccountsPending() {
             : false
         }
       />
-      <ServiceAccountSearchField />
+      <div className="flex flex-wrap items-center gap-3">
+        <ServiceAccountSearchField />
+        <ServiceAccountActivityFilterField />
+      </div>
       <CollectionTablePending
         label="service accounts"
         presentation="service-accounts"
@@ -310,7 +364,14 @@ function ServiceAccountsPageHeader({ canCreate }: { canCreate: boolean }) {
             label="Create service account"
             render={
               <Link
-                search={{ create: true, offset: search.offset, q: search.q }}
+                search={{
+                  activity: search.activity,
+                  create: true,
+                  cursor: undefined,
+                  direction: search.direction,
+                  q: search.q,
+                  sort: search.sort,
+                }}
                 to="/admin/service-accounts"
               />
             }
@@ -332,7 +393,13 @@ function ServiceAccountSearchField() {
       onSearch={(query) => {
         void navigate({
           replace: true,
-          search: { offset: undefined, q: query },
+          search: {
+            activity: search.activity,
+            cursor: undefined,
+            direction: search.direction,
+            q: query,
+            sort: search.sort,
+          },
           state: {},
           to: "/admin/service-accounts",
         })
@@ -345,56 +412,49 @@ function ServiceAccountSearchField() {
 
 function ServiceAccountCollection({
   direction = "asc",
+  hasNextPage,
+  isLoadingMore,
+  loadMoreError,
+  onLoadMore,
   onSortChange,
-  page,
   query,
+  serviceAccounts,
   sort,
+  total,
   updating,
 }: {
   direction?: SortDirection
+  hasNextPage: boolean
+  isLoadingMore: boolean
+  loadMoreError: boolean
+  onLoadMore: () => void
   onSortChange: (
     field: ServiceAccountSortField,
     direction: SortDirection
   ) => void
-  page: WorkspaceServiceAccountPage
   query?: string
+  serviceAccounts: readonly WorkspaceServiceAccount[]
   sort?: ServiceAccountSortField
+  total: number | null
   updating: boolean
 }) {
-  const hasPrevious = page.offset > 0
-  const hasNext =
-    page.total === null
-      ? page.items.length === page.limit
-      : page.offset + page.items.length < page.total
-
-  const sortedItems = useMemo(() => {
-    const items = [...page.items]
-    if (!sort) return items
-    return items.sort((left, right) => {
-      let comparison = 0
-      if (sort === "account") {
-        comparison = personDisplayName(left).localeCompare(
-          personDisplayName(right)
-        )
-      } else if (sort === "unique_id") {
-        comparison = left.unique_id.localeCompare(right.unique_id)
-      } else {
-        comparison = left.platform_role.localeCompare(right.platform_role)
-      }
-      return direction === "desc" ? -comparison : comparison
-    })
-  }, [page.items, sort, direction])
-
   return (
     <>
       <CollectionUpdateStatus label="service accounts" updating={updating} />
-      {sortedItems.length > 0 ? (
+      {serviceAccounts.length > 0 ? (
         <Card aria-busy={updating}>
           <CardContent className="px-0">
             <Table
               aria-label="Service accounts"
-              className="identity-directory-table"
+              className="identity-directory-table table-fixed"
             >
+              <colgroup>
+                <col className="identity-directory-account-column" />
+                <col className="identity-directory-mfid-column" />
+                <col className="identity-directory-role-column" />
+                <col className="identity-directory-activity-column" />
+                <col className="identity-directory-action-column" />
+              </colgroup>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead
@@ -413,13 +473,15 @@ function ServiceAccountCollection({
                     onChange={onSortChange}
                     preferredDirection="asc"
                   />
+                  <TableHead>Platform role</TableHead>
                   <SortableTableHead
-                    active={sort === "platform_role"}
+                    active={sort === "last_active"}
                     direction={direction}
-                    field="platform_role"
-                    label="Platform role"
+                    field="last_active"
+                    kind="date"
+                    label="Last active"
                     onChange={onSortChange}
-                    preferredDirection="asc"
+                    preferredDirection="desc"
                   />
                   <TableHead kind="action">
                     <span className="sr-only">Open</span>
@@ -427,14 +489,14 @@ function ServiceAccountCollection({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedItems.map((serviceAccount) => (
+                {serviceAccounts.map((serviceAccount) => (
                   <TableRow key={serviceAccount.unique_id}>
                     <TableCell className="identity-directory-account">
                       <PersonIdentity
-                        className="min-w-0 sm:min-w-48"
+                        className="min-w-0"
                         nameContent={
                           <SelectableTextLink
-                            className="block"
+                            className="block truncate"
                             render={
                               <Link
                                 params={{
@@ -456,13 +518,26 @@ function ServiceAccountCollection({
                       className="identity-directory-mfid"
                       data-label="Crucible ID"
                     >
-                      <MfidText value={serviceAccount.unique_id} />
+                      <MfidText
+                        className="block truncate"
+                        value={serviceAccount.unique_id}
+                      />
                     </TableCell>
                     <TableCell
                       className="identity-directory-role"
                       data-label="Platform role"
                     >
                       <PlatformRoleBadge role={serviceAccount.platform_role} />
+                    </TableCell>
+                    <TableCell
+                      className="identity-directory-activity"
+                      data-label="Last active"
+                      kind="date"
+                    >
+                      <ActivityTime
+                        fallback="Never"
+                        value={serviceAccount.last_active_at}
+                      />
                     </TableCell>
                     <TableCell
                       kind="action"
@@ -493,41 +568,46 @@ function ServiceAccountCollection({
           </EmptyHeader>
         </Empty>
       )}
-      <CollectionPageNavigation
-        label="Service-account pages"
-        previous={
-          hasPrevious ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                direction,
-                offset: Math.max(0, page.offset - page.limit) || undefined,
-                q: query,
-                sort,
-              }}
-              to="/admin/service-accounts"
-            >
-              Previous
-            </Link>
-          ) : undefined
-        }
-        next={
-          hasNext ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              search={{
-                direction,
-                offset: page.offset + page.limit,
-                q: query,
-                sort,
-              }}
-              to="/admin/service-accounts"
-            >
-              Next
-            </Link>
-          ) : undefined
-        }
-      />
+      {serviceAccounts.length ? (
+        <CollectionPagination
+          disabled={updating}
+          hasNextPage={hasNextPage}
+          isError={loadMoreError}
+          isLoading={isLoadingMore}
+          label="service accounts"
+          loaded={serviceAccounts.length}
+          onLoadMore={onLoadMore}
+          total={total}
+        />
+      ) : null}
     </>
+  )
+}
+
+function ServiceAccountActivityFilterField() {
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  return (
+    <NativeSelect
+      aria-label="Activity"
+      onChange={(event) => {
+        const activity = userActivityFilters.find(
+          (filter) => filter === event.target.value
+        )
+        void navigate({
+          replace: true,
+          search: { ...search, activity, cursor: undefined },
+          state: {},
+          to: "/admin/service-accounts",
+        })
+      }}
+      value={search.activity ?? ""}
+    >
+      {userActivityFilterOptions.map((option) => (
+        <NativeSelectOption key={option.value} value={option.value}>
+          {option.label}
+        </NativeSelectOption>
+      ))}
+    </NativeSelect>
   )
 }

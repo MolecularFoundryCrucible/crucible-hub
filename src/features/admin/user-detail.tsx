@@ -8,9 +8,9 @@ import {
   RotateCredentialAction,
 } from "@/components/crucible/api-credential-card"
 import {
+  CollectionTablePending,
   PanelState,
   PanelUpdateError,
-  ResourceListPending,
 } from "@/components/crucible/collection-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
@@ -769,7 +769,11 @@ function UserProjectsSection({
       </CardHeader>
       <CardContent className="px-0">
         {projectsQuery.isPending ? (
-          <ResourceListPending label="user projects" />
+          <CollectionTablePending
+            framed={false}
+            label="user projects"
+            presentation="user-projects"
+          />
         ) : projectsQuery.isError && projects.length === 0 ? (
           <div className="px-6 py-4">
             <PanelState

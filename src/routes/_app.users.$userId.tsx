@@ -1,6 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { MfidValue } from "@/components/crucible/mfid-value"
@@ -44,6 +45,7 @@ import {
 } from "@/data/crucible/administration"
 import { identityScopeWithPrivilegeMode } from "@/data/crucible/query-keys"
 import { personQueryOptions } from "@/data/crucible/people.queries"
+import { serviceAccountAdminQueryOptions } from "@/data/crucible/service-accounts.queries"
 import { userDetailQueryOptions } from "@/data/crucible/users.queries"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
 import { UserDetailView } from "@/features/admin/user-detail"
@@ -60,17 +62,30 @@ export const Route = createFileRoute("/_app/users/$userId")({
       ),
       context.queryClient.ensureQueryData(accountQueryOptions(source.scope)),
     ])
+    const canAdminUsers = canOpenUserAdministration(
+      account,
+      source.privilegeMode
+    )
+    const canAdminServiceAccounts = canOpenServiceAccountAdministration(
+      account,
+      source.privilegeMode
+    )
     let adminUser: WorkspaceAdminUser | null | undefined
-    if (
-      canOpenUserAdministration(account, source.privilegeMode) &&
-      !person?.is_service_account
-    ) {
+    if (canAdminUsers && !person?.is_service_account) {
       const administrationScope = identityScopeWithPrivilegeMode(
         source.scope,
         "elevated"
       )
       adminUser = await context.queryClient.ensureQueryData(
         userDetailQueryOptions(administrationScope, params.userId)
+      )
+    } else if (canAdminServiceAccounts && person?.is_service_account) {
+      const administrationScope = identityScopeWithPrivilegeMode(
+        source.scope,
+        "elevated"
+      )
+      await context.queryClient.ensureQueryData(
+        serviceAccountAdminQueryOptions(administrationScope, params.userId)
       )
     }
     const name = person
@@ -98,6 +113,10 @@ function UserPage() {
   const { data: person } = useSuspenseQuery(personQueryOptions(scope, userId))
 
   const canAdminUsers = canOpenUserAdministration(account, privilegeMode)
+  const canAdminServiceAccounts = canOpenServiceAccountAdministration(
+    account,
+    privilegeMode
+  )
   const isServiceAccount = Boolean(person?.is_service_account)
   const isSelf = account.unique_id === userId
 
@@ -105,8 +124,21 @@ function UserPage() {
     ...userDetailQueryOptions(administrationScope, userId),
     enabled: canAdminUsers && !isServiceAccount,
   })
+  const serviceAccountAdminResult = useQuery({
+    ...serviceAccountAdminQueryOptions(administrationScope, userId),
+    enabled: canAdminServiceAccounts && isServiceAccount,
+  })
 
-  const activePerson = adminUserResult.data ?? person
+  const activePerson =
+    adminUserResult.data ?? serviceAccountAdminResult.data ?? person
+  const lastActiveAt =
+    serviceAccountAdminResult.data !== undefined
+      ? serviceAccountAdminResult.data?.last_active_at
+      : adminUserResult.data !== undefined
+        ? adminUserResult.data?.last_active_at
+        : isSelf
+          ? account.last_active_at
+          : undefined
 
   if (!activePerson) {
     if (canAdminUsers && adminUserResult.isPending) {
@@ -132,7 +164,7 @@ function UserPage() {
         <BreadcrumbList>
           <BreadcrumbItem>
             {isServiceAccount ? (
-              canOpenServiceAccountAdministration(account, privilegeMode) ? (
+              canAdminServiceAccounts ? (
                 <BreadcrumbLink render={<Link to="/admin/service-accounts" />}>
                   Service accounts
                 </BreadcrumbLink>
@@ -164,9 +196,7 @@ function UserPage() {
 
       <PageHeader
         actions={
-          isServiceAccount &&
-          canOpenServiceAccountAdministration(account, privilegeMode) &&
-          person ? (
+          isServiceAccount && canAdminServiceAccounts && person ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
               params={{ serviceAccountMfid: person.unique_id }}
@@ -208,18 +238,26 @@ function UserPage() {
             user={adminUserResult.data}
           />
         ) : (
-          <ReadOnlyPersonProfileCard person={activePerson} />
+          <ReadOnlyPersonProfileCard
+            lastActiveAt={lastActiveAt}
+            person={activePerson}
+          />
         )
       ) : (
-        <ReadOnlyPersonProfileCard person={activePerson} />
+        <ReadOnlyPersonProfileCard
+          lastActiveAt={lastActiveAt}
+          person={activePerson}
+        />
       )}
     </PageLayout>
   )
 }
 
 function ReadOnlyPersonProfileCard({
+  lastActiveAt,
   person,
 }: {
+  lastActiveAt?: string | null
   person: PersonIdentityProfile
 }) {
   return (
@@ -248,6 +286,16 @@ function ReadOnlyPersonProfileCard({
                 <MfidValue value={person.unique_id} />
               </dd>
             </div>
+            {lastActiveAt !== undefined ? (
+              <div className="flex min-w-0 flex-col gap-1">
+                <dt className="text-label text-muted-foreground">
+                  Last active
+                </dt>
+                <dd className="text-body">
+                  <ActivityTime fallback="Never" value={lastActiveAt} />
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </CardContent>
       </Card>

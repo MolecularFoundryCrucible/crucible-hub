@@ -30,7 +30,12 @@ export async function readWorkspaceAccount(
       privilegeMode ?? readGlobalPrivilegeMode()
     )
     if (source.status === "unavailable") throw new Error(source.reason)
-    return source.workspace.account
+    return {
+      ...source.workspace.account,
+      last_active_at:
+        source.workspace.account.last_active_at ??
+        source.workspace.referenceTime,
+    }
   }
 
   const client = createCrucibleClient(configuration, { privilegeMode })
@@ -87,6 +92,9 @@ export async function patchWorkspaceAccount(
     if (source.status === "unavailable") throw new Error(source.reason)
     return {
       ...source.workspace.account,
+      last_active_at:
+        source.workspace.account.last_active_at ??
+        source.workspace.referenceTime,
       ...changes,
       first_name: changes.first_name ?? source.workspace.account.first_name,
       last_name: changes.last_name ?? source.workspace.account.last_name,
@@ -141,6 +149,7 @@ function toWorkspaceAccount(account: {
   email?: string | null
   first_name: string
   is_service_account?: boolean | null
+  last_active_at?: string | null
   last_name: string
   unique_id: string
   username?: string | null
@@ -151,6 +160,7 @@ function toWorkspaceAccount(account: {
     email: account.email ?? null,
     first_name: account.first_name,
     is_service_account: account.is_service_account ?? false,
+    last_active_at: account.last_active_at ?? null,
     last_name: account.last_name,
     unique_id: account.unique_id,
     username: account.username ?? null,

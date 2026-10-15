@@ -78,7 +78,10 @@ import { UserCreateDialog } from "@/features/admin/user-create-dialog"
 import { formatUsername } from "@/lib/username"
 import { ActivityTime } from "@/components/crucible/activity-time"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { userActivityFilters } from "@/data/crucible/user-activity"
+import {
+  userActivityFilterOptions,
+  userActivityFilters,
+} from "@/data/crucible/user-activity"
 
 const userSortFieldSchema = z.enum([
   "account",
@@ -233,7 +236,7 @@ function UsersAdminPage() {
         <UserActivityFilterField />
       </div>
       {result.isPending ? (
-        <CollectionTablePending label="users" presentation="service-accounts" />
+        <CollectionTablePending label="users" presentation="users" />
       ) : result.isError && !result.data ? (
         <CollectionLoadError
           label="Users"
@@ -284,8 +287,11 @@ function UsersPending() {
           account ? canOpenUserAdministration(account, privilegeMode) : false
         }
       />
-      <UserSearchField />
-      <CollectionTablePending label="users" presentation="service-accounts" />
+      <div className="flex flex-wrap items-center gap-3">
+        <UserSearchField />
+        <UserActivityFilterField />
+      </div>
+      <CollectionTablePending label="users" presentation="users" />
     </PageLayout>
   )
 }
@@ -378,8 +384,16 @@ function UserCollection({
           <CardContent className="px-0">
             <Table
               aria-label="Users directory"
-              className="identity-directory-table"
+              className="identity-directory-table table-fixed"
             >
+              <colgroup>
+                <col className="identity-directory-account-column" />
+                <col className="identity-directory-mfid-column" />
+                <col className="identity-directory-email-column" />
+                <col className="identity-directory-role-column" />
+                <col className="identity-directory-activity-column" />
+                <col className="identity-directory-action-column" />
+              </colgroup>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead
@@ -427,10 +441,10 @@ function UserCollection({
                     <TableRow key={user.unique_id}>
                       <TableCell className="identity-directory-account">
                         <PersonIdentity
-                          className="min-w-0 sm:min-w-48"
+                          className="min-w-0"
                           nameContent={
                             <SelectableTextLink
-                              className="block"
+                              className="block truncate"
                               render={
                                 <Link
                                   params={{ userId: user.unique_id }}
@@ -450,14 +464,17 @@ function UserCollection({
                         className="identity-directory-mfid"
                         data-label="Crucible ID"
                       >
-                        <MfidText value={user.unique_id} />
+                        <MfidText
+                          className="block truncate"
+                          value={user.unique_id}
+                        />
                       </TableCell>
                       <TableCell
                         className="identity-directory-email"
                         data-label="Email"
                       >
                         {user.email ? (
-                          <span className="text-body break-words">
+                          <span className="block truncate text-body">
                             {user.email}
                           </span>
                         ) : (
@@ -532,15 +549,6 @@ function UserCollection({
   )
 }
 
-const activityFilterOptions = [
-  { label: "Any activity", value: "" },
-  { label: "Active in the last 7 days", value: "active_7" },
-  { label: "Active in the last 30 days", value: "active_30" },
-  { label: "Active in the last 90 days", value: "active_90" },
-  { label: "Inactive for 90 days or more", value: "inactive_90" },
-  { label: "Never active", value: "never" },
-] as const
-
 function UserActivityFilterField() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
@@ -560,7 +568,7 @@ function UserActivityFilterField() {
       }}
       value={search.activity ?? ""}
     >
-      {activityFilterOptions.map((option) => (
+      {userActivityFilterOptions.map((option) => (
         <NativeSelectOption key={option.value} value={option.value}>
           {option.label}
         </NativeSelectOption>

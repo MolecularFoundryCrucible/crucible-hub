@@ -203,6 +203,64 @@ export function ProjectDataCollection({
   )
 }
 
+export function ProjectDataCollectionPending({
+  browseSearch,
+  filterResolution,
+  filterValues,
+  kind,
+  projectMfid,
+  projectScope,
+}: {
+  browseSearch: CollectionBrowseSearch
+  filterResolution: ProjectDataFilterResolution
+  filterValues: ProjectDataFilterSearch
+  kind: ProjectDataKind
+  projectMfid: string
+  projectScope: ProjectScope
+}) {
+  const sampleBrowse =
+    kind === "samples"
+      ? resolveCollectionBrowse(browseSearch, projectSampleBrowseOptions)
+      : undefined
+  const datasetBrowse =
+    kind === "datasets"
+      ? resolveCollectionBrowse(browseSearch, projectDatasetBrowseOptions)
+      : undefined
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <ProjectBrowseFrame
+        datasetBrowse={datasetBrowse}
+        filters={undefined}
+        projectMfid={projectMfid}
+        projectScope={projectScope}
+        sampleBrowse={sampleBrowse}
+        toolbarActions={
+          <ProjectDataFilters
+            errors={filterResolution.valid ? [] : filterResolution.errors}
+            kind={kind}
+            projectMfid={projectMfid}
+            projectScope={projectScope}
+            values={filterValues}
+          />
+        }
+        toolbarPrimary={
+          <ProjectDataTypeFilters
+            kind={kind}
+            projectMfid={projectMfid}
+            projectScope={projectScope}
+          />
+        }
+      >
+        <CollectionTablePending
+          label={kind}
+          presentation="resources-scoped"
+          subtypeLabel={kind === "samples" ? "Sample type" : "Measurement"}
+        />
+      </ProjectBrowseFrame>
+    </div>
+  )
+}
+
 type ProjectBrowseState<TField extends string> = {
   direction: SortDirection
   field: TField

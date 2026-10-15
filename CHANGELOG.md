@@ -6,6 +6,8 @@ The format follows Keep a Changelog principles, and releases follow Semantic Ver
 
 ## Unreleased
 
+- The Service accounts administration list now shows when each account was last active, supports activity filtering and sorting by Account, Crucible ID, and Last active with cursor pagination, shows Last active and API credential Last used timestamps on the service-account detail page and profile views, and aligns collection and detail loading skeletons with the headers and controls shown once loaded.
+
 ## 1.3.1 - 2026-10-15
 
 - Sample type and dataset measurement, session name, and data format fields on creation and edit forms now open a searchable dropdown of existing values (scoped to the chosen project or across Crucible) that filters as you type and commits a selected or new value on click, Enter, or Tab. Holding Ctrl (Cmd on macOS) while clicking a resource in a list now opens its full page directly in the current tab instead of the side preview.

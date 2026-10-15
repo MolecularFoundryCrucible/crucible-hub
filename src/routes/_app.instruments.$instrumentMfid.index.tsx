@@ -128,9 +128,61 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
 })
 
 function InstrumentDatasetsPending() {
+  const { instrumentMfid: routeInstrumentMfid } = Route.useParams()
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const browse = resolveCollectionBrowse(search, instrumentDatasetBrowseOptions)
+
+  function updateBrowse(values: Record<string, unknown>) {
+    void navigate({
+      params: { instrumentMfid: routeInstrumentMfid },
+      search: (previous) => ({
+        ...previous,
+        cursor: undefined,
+        ...values,
+      }),
+      to: "/instruments/$instrumentMfid",
+    })
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <CollectionToolbar
+        actions={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <InstrumentDatasetFilters
+              onApply={(values) =>
+                updateBrowse({
+                  createdFrom: values.createdFrom,
+                  createdTo: values.createdTo,
+                  ...collectionOrderingSearchState(
+                    values.sort,
+                    values.direction
+                  ),
+                })
+              }
+              values={{
+                createdFrom: search.createdFrom,
+                createdTo: search.createdTo,
+                direction: search.direction,
+                sort: search.sort,
+              }}
+            />
+            <CollectionGroupControl
+              field={browse.field}
+              id="instrument-dataset-group-field"
+              onChange={(field) =>
+                updateBrowse({
+                  ...collectionBrowseSearchState({ kind: "all" }),
+                  groupBy: field,
+                  view: field ? "grouped" : "list",
+                })
+              }
+              options={instrumentDatasetBrowseOptions}
+              view={browse.view}
+            />
+          </div>
+        }
         primary={<h2 className="text-title-section">Datasets</h2>}
       />
       <CollectionTablePending

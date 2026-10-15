@@ -41,6 +41,8 @@ type CollectionTablePendingPresentation =
   | "resources"
   | "resources-scoped"
   | "service-accounts"
+  | "user-projects"
+  | "users"
 
 type PendingColumn = {
   className?: string
@@ -80,7 +82,7 @@ const pendingColumns: Record<
     {
       className: "resource-directory-date",
       columnClassName: "resource-directory-date-column",
-      label: "Updated",
+      label: "Last activity",
       kind: "date",
     },
     {
@@ -116,7 +118,7 @@ const pendingColumns: Record<
     {
       className: "resource-directory-date",
       columnClassName: "resource-directory-date-column",
-      label: "Updated",
+      label: "Last activity",
       kind: "date",
     },
     {
@@ -209,18 +211,115 @@ const pendingColumns: Record<
     },
   ],
   "service-accounts": [
-    { className: "identity-directory-account", label: "Account", name: true },
-    { className: "identity-directory-mfid", label: "Crucible ID" },
-    { className: "identity-directory-role", label: "Platform role" },
-    { className: "identity-directory-action", label: "Open" },
+    {
+      className: "identity-directory-account",
+      columnClassName: "identity-directory-account-column",
+      label: "Account",
+      name: true,
+    },
+    {
+      className: "identity-directory-mfid",
+      columnClassName: "identity-directory-mfid-column",
+      label: "Crucible ID",
+    },
+    {
+      className: "identity-directory-role",
+      columnClassName: "identity-directory-role-column",
+      label: "Platform role",
+    },
+    {
+      className: "identity-directory-activity",
+      columnClassName: "identity-directory-activity-column",
+      kind: "date",
+      label: "Last active",
+    },
+    {
+      className: "identity-directory-action",
+      columnClassName: "identity-directory-action-column",
+      kind: "action",
+      label: "Open",
+    },
+  ],
+  "user-projects": [
+    {
+      className: "resource-directory-name",
+      columnClassName: "resource-directory-name-column",
+      label: "Project",
+      name: true,
+    },
+    {
+      className: "resource-directory-person",
+      columnClassName: "resource-directory-person-column",
+      label: "Lead",
+    },
+    {
+      className: "resource-directory-role hidden xl:table-cell",
+      columnClassName: "resource-directory-role-column hidden xl:table-column",
+      label: "Role",
+    },
+    {
+      className: "resource-directory-date hidden xl:table-cell",
+      columnClassName: "resource-directory-date-column hidden xl:table-column",
+      label: "Created",
+      kind: "date",
+    },
+    {
+      className: "resource-directory-date",
+      columnClassName: "resource-directory-date-column",
+      label: "Updated",
+      kind: "date",
+    },
+    {
+      className: "resource-directory-action",
+      columnClassName: "resource-directory-action-column",
+      label: "Open",
+      kind: "action",
+    },
+  ],
+  users: [
+    {
+      className: "identity-directory-account",
+      columnClassName: "identity-directory-account-column",
+      label: "Account",
+      name: true,
+    },
+    {
+      className: "identity-directory-mfid",
+      columnClassName: "identity-directory-mfid-column",
+      label: "Crucible ID",
+    },
+    {
+      className: "identity-directory-email",
+      columnClassName: "identity-directory-email-column",
+      label: "Email",
+    },
+    {
+      className: "identity-directory-role",
+      columnClassName: "identity-directory-role-column",
+      label: "Platform role",
+    },
+    {
+      className: "identity-directory-activity",
+      columnClassName: "identity-directory-activity-column",
+      kind: "date",
+      label: "Last active",
+    },
+    {
+      className: "identity-directory-action",
+      columnClassName: "identity-directory-action-column",
+      kind: "action",
+      label: "Open",
+    },
   ],
 }
 
 export function CollectionTablePending({
+  framed = true,
   label,
   presentation = "resources",
   subtypeLabel,
 }: {
+  framed?: boolean
   label: string
   presentation?: CollectionTablePendingPresentation
   subtypeLabel?: string
@@ -231,72 +330,79 @@ export function CollectionTablePending({
       : column
   )
   const tableClassName =
-    presentation === "service-accounts"
-      ? "identity-directory-table"
-      : presentation === "projects"
+    presentation === "service-accounts" || presentation === "users"
+      ? "identity-directory-table table-fixed"
+      : presentation === "projects" || presentation === "user-projects"
         ? "resource-directory-table resource-directory-project-table table-fixed"
         : presentation === "instruments"
           ? "resource-directory-table resource-directory-instrument-table table-fixed"
           : "resource-collection-table table-fixed"
+  const table = (
+    <Table className={tableClassName}>
+      <colgroup>
+        {columns.map((column) => (
+          <col className={column.columnClassName} key={column.label} />
+        ))}
+      </colgroup>
+      <TableHeader>
+        <TableRow>
+          {columns.map((column) => (
+            <TableHead
+              className={cn(
+                column.className?.includes("hidden") && "hidden xl:table-cell"
+              )}
+              key={column.label}
+              kind={column.kind}
+            >
+              {column.label === "Open" ? (
+                <span className="sr-only">Open</span>
+              ) : (
+                column.label
+              )}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rowPlaceholders.map((placeholder) => (
+          <TableRow key={placeholder}>
+            {columns.map((column) => (
+              <TableCell
+                className={column.className}
+                data-label={column.label}
+                key={column.label}
+                kind={column.kind}
+              >
+                {column.name ? (
+                  <div className="flex min-w-0 items-start gap-2">
+                    <Skeleton className="mt-0.5 size-4 shrink-0" />
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-3 w-1/3" />
+                    </div>
+                  </div>
+                ) : column.label === "Open" ? (
+                  <Skeleton className="ml-auto size-7" />
+                ) : (
+                  <Skeleton className="h-4 w-3/4" />
+                )}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+  if (!framed) {
+    return (
+      <div aria-busy="true" aria-label={`Loading ${label}`} role="status">
+        {table}
+      </div>
+    )
+  }
   return (
     <Card aria-busy="true" aria-label={`Loading ${label}`} role="status">
-      <CardContent className="px-0">
-        <Table className={tableClassName}>
-          <colgroup>
-            {columns.map((column) => (
-              <col className={column.columnClassName} key={column.label} />
-            ))}
-          </colgroup>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead
-                  className={cn(
-                    column.className?.includes("hidden") &&
-                      "hidden xl:table-cell"
-                  )}
-                  key={column.label}
-                  kind={column.kind}
-                >
-                  {column.label === "Open" ? (
-                    <span className="sr-only">Open</span>
-                  ) : (
-                    column.label
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rowPlaceholders.map((placeholder) => (
-              <TableRow key={placeholder}>
-                {columns.map((column) => (
-                  <TableCell
-                    className={column.className}
-                    data-label={column.label}
-                    key={column.label}
-                    kind={column.kind}
-                  >
-                    {column.name ? (
-                      <div className="flex min-w-0 items-start gap-2">
-                        <Skeleton className="mt-0.5 size-4 shrink-0" />
-                        <div className="flex min-w-0 flex-1 flex-col gap-2">
-                          <Skeleton className="h-4 w-2/3" />
-                          <Skeleton className="h-3 w-1/3" />
-                        </div>
-                      </div>
-                    ) : column.label === "Open" ? (
-                      <Skeleton className="ml-auto size-7" />
-                    ) : (
-                      <Skeleton className="h-4 w-3/4" />
-                    )}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+      <CardContent className="px-0">{table}</CardContent>
     </Card>
   )
 }

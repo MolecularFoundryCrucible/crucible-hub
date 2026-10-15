@@ -8,6 +8,15 @@ export const userActivityFilters = [
 
 export type UserActivityFilter = (typeof userActivityFilters)[number]
 
+export const userActivityFilterOptions = [
+  { label: "Any activity", value: "" },
+  { label: "Active in the last 7 days", value: "active_7" },
+  { label: "Active in the last 30 days", value: "active_30" },
+  { label: "Active in the last 90 days", value: "active_90" },
+  { label: "Inactive for 90 days or more", value: "inactive_90" },
+  { label: "Never active", value: "never" },
+] as const
+
 const day = 24 * 60 * 60 * 1000
 
 export function userActivityQuery(

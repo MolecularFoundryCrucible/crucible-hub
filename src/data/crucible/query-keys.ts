@@ -76,12 +76,13 @@ export const crucibleKeys = {
     [...scope, "admin", "service-accounts"] as const,
   serviceAccountLists: (scope: IdentityScope) =>
     [...scope, "admin", "service-accounts", "list"] as const,
-  serviceAccounts: (scope: IdentityScope, filters: ListFilters) =>
+  serviceAccountCursorChain: (scope: IdentityScope, filters: ListFilters) =>
     [
       ...scope,
       "admin",
       "service-accounts",
       "list",
+      "cursor-chain",
       normalizeFilters(filters),
     ] as const,
   serviceAccountAdmin: (scope: IdentityScope, serviceAccountMfid: string) =>

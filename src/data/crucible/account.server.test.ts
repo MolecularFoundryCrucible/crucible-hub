@@ -23,6 +23,7 @@ describe("workspace account source", () => {
 
     expect(account.unique_id).toBe("0000-0000-0000-000X")
     expect(account.email).toBe("avery.chen@example.invalid")
+    expect(account.last_active_at).toBe("2026-09-01T16:00:00Z")
   })
 
   it("matches the account username when checking username availability", async () => {
@@ -91,6 +92,7 @@ describe("workspace account source", () => {
         email: "ada@example.invalid",
         first_name: "Ada",
         is_service_account: false,
+        last_active_at: "2026-04-06T20:00:00Z",
         last_name: "Lovelace",
         unique_id: "0000-0000-0000-0001",
         username: "ada_lovelace",
@@ -105,6 +107,7 @@ describe("workspace account source", () => {
       })
     ).resolves.toMatchObject({
       email: "ada@example.invalid",
+      last_active_at: "2026-04-06T20:00:00Z",
       unique_id: "0000-0000-0000-0001",
       username: "ada_lovelace",
     })

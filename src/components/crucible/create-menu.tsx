@@ -74,7 +74,14 @@ export function CreateMenu({ account }: { account: WorkspaceAccount }) {
               render={
                 <Link
                   preload={false}
-                  search={{ create: true, offset: undefined, q: undefined }}
+                  search={{
+                    activity: undefined,
+                    create: true,
+                    cursor: undefined,
+                    direction: undefined,
+                    q: undefined,
+                    sort: undefined,
+                  }}
                   to="/admin/service-accounts"
                 />
               }

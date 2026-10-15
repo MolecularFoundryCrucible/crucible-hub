@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
+import { ActivityTime } from "@/components/crucible/activity-time"
 import {
   EditableCardActions,
   EditableCardTrigger,
@@ -157,10 +158,16 @@ export function AccountProfileForm({
                 )}
               </dd>
             </div>
-            <div className="col-span-2 min-w-0">
+            <div className="col-span-2 min-w-0 sm:col-span-1">
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd className="mt-1">
                 <MfidValue value={account.unique_id} />
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-label text-muted-foreground">Last active</dt>
+              <dd className="mt-1 text-body">
+                <ActivityTime fallback="Never" value={account.last_active_at} />
               </dd>
             </div>
           </dl>

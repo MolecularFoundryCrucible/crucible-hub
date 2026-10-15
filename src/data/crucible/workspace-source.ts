@@ -18,6 +18,7 @@ export type WorkspaceAccount = Omit<
     | "email"
     | "first_name"
     | "is_service_account"
+    | "last_active_at"
     | "last_name"
     | "unique_id"
     | "username"
@@ -587,9 +588,17 @@ export type WorkspaceSearchResult = {
   unique_id: string
 }
 
-export type WorkspaceServiceAccount = Schema<"ServiceAccountAdminRead">
+export type WorkspaceServiceAccount = Schema<"ServiceAccountAdminRead"> & {
+  last_active_at?: string | null
+}
 
-export type WorkspaceServiceAccountDetail = Schema<"ServiceAccountAdminDetail">
+export type WorkspaceServiceAccountDetail =
+  Schema<"ServiceAccountAdminDetail"> & {
+    last_active_at?: string | null
+  }
+
+export type WorkspaceServiceAccountSort =
+  "username" | "unique_id" | "last_active"
 
 export type WorkspaceServiceAccountCredential = Schema<"ServiceAccountRead">
 
@@ -602,12 +611,8 @@ export type WorkspaceServiceAccountProfileUpdate = {
 export type WorkspaceServiceAccountPlatformRole =
   Schema<"ServiceAccountPlatformRoleUpdate">["platform_role"]
 
-export type WorkspaceServiceAccountPage = {
-  items: readonly WorkspaceServiceAccount[]
-  limit: number
-  offset: number
-  total: number | null
-}
+export type WorkspaceServiceAccountPage =
+  WorkspaceCursorPage<WorkspaceServiceAccount>
 
 export type WorkspaceAdminUser = Schema<"UserRead"> & {
   platform_role?: components["schemas"]["PlatformRole"] | null

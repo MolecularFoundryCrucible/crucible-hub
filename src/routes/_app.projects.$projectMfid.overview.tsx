@@ -8,6 +8,10 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
+import {
+  ProjectOverviewPending,
+  ResourceTabLoadError,
+} from "@/components/crucible/resource-tab-state"
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
@@ -46,6 +50,8 @@ import { projectMembershipActions } from "@/features/project-membership/project-
 type ProjectDetail = Extract<WorkspaceProject, { status: string | null }>
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/overview")({
+  pendingComponent: ProjectOverviewPending,
+  errorComponent: ResourceTabLoadError,
   component: ProjectOverviewPage,
 })
 

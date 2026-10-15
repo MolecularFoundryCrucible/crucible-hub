@@ -484,9 +484,7 @@ function HomeOwnershipCard({
           <CardAction>{viewAll}</CardAction>
         </CardHeader>
         <CardContent>
-          {pending ? (
-            <ResourceListPending label={label} trailing={false} />
-          ) : null}
+          {pending ? <ResourceListPending label={label} /> : null}
           {!pending && error ? (
             <PanelState
               retry={retry}

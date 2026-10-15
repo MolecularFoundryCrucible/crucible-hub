@@ -3,6 +3,7 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
   ApiCredentialCard,
@@ -72,6 +73,25 @@ const platformRoleDescriptions = {
   contributor: "Platform-wide read and create access.",
   none: "No platform-wide role. Resource-specific access and the API key remain unchanged.",
 } satisfies Record<WorkspaceServiceAccountPlatformRole, string>
+
+function mergeServiceAccountDetail(
+  updated: WorkspaceServiceAccountDetail,
+  current: WorkspaceServiceAccountDetail | undefined
+): WorkspaceServiceAccountDetail {
+  return {
+    ...updated,
+    api_key_status: updated.api_key_status
+      ? {
+          ...updated.api_key_status,
+          last_used_at:
+            updated.api_key_status.last_used_at ??
+            current?.api_key_status?.last_used_at ??
+            null,
+        }
+      : (current?.api_key_status ?? null),
+    last_active_at: updated.last_active_at ?? current?.last_active_at ?? null,
+  }
+}
 
 function profileValues(account: WorkspaceServiceAccountDetail): ProfileValues {
   return {
@@ -162,7 +182,8 @@ function ServiceAccountIdentityCard({
         const updated = await mutation.mutateAsync(changes)
         queryClient.setQueryData(
           crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
-          updated
+          (current: WorkspaceServiceAccountDetail | undefined) =>
+            mergeServiceAccountDetail(updated, current)
         )
         void Promise.all([
           applyPersonProfileUpdate(queryClient, scope, updated),
@@ -217,7 +238,8 @@ function ServiceAccountIdentityCard({
     const updated = await roleMutation.mutateAsync(role)
     queryClient.setQueryData(
       crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
-      updated
+      (current: WorkspaceServiceAccountDetail | undefined) =>
+        mergeServiceAccountDetail(updated, current)
     )
     void queryClient.invalidateQueries({
       queryKey: crucibleKeys.serviceAccountLists(scope),
@@ -268,12 +290,23 @@ function ServiceAccountIdentityCard({
                   <PlatformRoleBadge role={account.platform_role} />
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0">
+              <div className="col-span-2 min-w-0 sm:col-span-1">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID
                 </dt>
                 <dd className="mt-1">
                   <MfidValue value={account.unique_id} />
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-label text-muted-foreground">
+                  Last active
+                </dt>
+                <dd className="mt-1 text-body">
+                  <ActivityTime
+                    fallback="Never"
+                    value={account.last_active_at}
+                  />
                 </dd>
               </div>
             </dl>

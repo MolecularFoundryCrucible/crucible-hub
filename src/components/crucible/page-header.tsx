@@ -57,15 +57,26 @@ export function PageHeader({
   )
 }
 
-export function PageHeaderSkeleton({ icon }: { icon?: React.ReactNode }) {
+export function PageHeaderSkeleton({
+  icon,
+  identifier = false,
+  label = "Loading page title",
+}: {
+  icon?: React.ReactNode
+  identifier?: boolean
+  label?: string
+}) {
   return (
-    <header className="flex flex-col gap-4 border-b pb-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="min-w-0 flex-1">
+    <header className="flex flex-wrap items-end justify-between gap-4 border-b pb-6">
+      <div className="min-w-0 flex-1 basis-56">
         <div className="flex min-w-0 items-start gap-2">
           {icon}
           <div className="min-w-0 flex-1" role="status">
             <Skeleton className="h-9 w-64 max-w-full" />
-            <span className="sr-only">Loading page title</span>
+            {identifier ? (
+              <Skeleton className="mt-1 h-5 w-36 max-w-full" />
+            ) : null}
+            <span className="sr-only">{label}</span>
           </div>
         </div>
       </div>

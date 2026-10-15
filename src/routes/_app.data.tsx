@@ -241,13 +241,50 @@ function DataPage() {
 
 function DataRoutePending() {
   const search = Route.useSearch()
+  const kind = dataKind(search.kind)
+  const sampleBrowse =
+    kind === "samples"
+      ? resolveCollectionBrowse(search, globalSampleBrowseOptions)
+      : undefined
+  const datasetBrowse =
+    kind === "datasets"
+      ? resolveCollectionBrowse(search, globalDatasetBrowseOptions)
+      : undefined
+  const browse = sampleBrowse ?? datasetBrowse
   return (
     <PageLayout>
       <DataPageHeader />
       <div className="flex min-w-0 flex-col gap-4">
         <CollectionToolbar
-          actions={<DataFilters errors={[]} values={search} />}
-          primary={<DataTypeFilters kind={dataKind(search.kind)} />}
+          actions={
+            <>
+              <DataFilters errors={[]} values={search} />
+              {browse ? (
+                <CollectionGroupControl
+                  disabled
+                  field={browse.field}
+                  id={
+                    sampleBrowse
+                      ? "data-sample-group-field"
+                      : "data-dataset-group-field"
+                  }
+                  onChange={() => undefined}
+                  options={
+                    sampleBrowse
+                      ? globalSampleBrowseOptions
+                      : globalDatasetBrowseOptions
+                  }
+                  view={browse.view}
+                />
+              ) : null}
+              <RefreshButton
+                label="Refresh data"
+                onClick={() => undefined}
+                refreshing={false}
+              />
+            </>
+          }
+          primary={<DataTypeFilters kind={kind} />}
         />
         <CollectionTablePending label="data" presentation="resources" />
       </div>
