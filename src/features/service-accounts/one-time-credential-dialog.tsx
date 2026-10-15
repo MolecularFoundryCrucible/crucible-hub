@@ -16,6 +16,7 @@ import { formatUsername } from "@/lib/username"
 
 export function OneTimeCredentialDialog({
   credential,
+  keyLabel = "Service-account API key",
   onClose,
   title,
 }: {
@@ -24,6 +25,7 @@ export function OneTimeCredentialDialog({
     unique_id: string
     username: string | null
   }
+  keyLabel?: string
   onClose: () => void
   title: string
 }) {
@@ -78,7 +80,7 @@ export function OneTimeCredentialDialog({
             </dl>
             <div className="flex min-w-0 items-center gap-2">
               <Input
-                aria-label="Service-account API key"
+                aria-label={keyLabel}
                 className="min-w-0 font-mono text-body"
                 readOnly
                 value={credential.api_key}

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
 import {
+  regenerateWorkspaceAccountApiKey,
   checkWorkspaceUsernameExactMatch,
   patchWorkspaceAccount,
   readWorkspaceAccount,
@@ -118,5 +119,32 @@ describe("workspace account source", () => {
     await expect(readWorkspaceAccount()).rejects.toThrow(
       "The Crucible API login exchange is not connected yet."
     )
+  })
+})
+
+describe("account API key regeneration", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it("issues a one-time key in fixture mode", async () => {
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+    const result = await regenerateWorkspaceAccountApiKey()
+    expect(result.api_key).toMatch(/^fixture-key-/)
+  })
+
+  it("refuses when the Hub itself signs in with the API key", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(regenerateWorkspaceAccountApiKey()).rejects.toMatchObject({
+      status: 403,
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

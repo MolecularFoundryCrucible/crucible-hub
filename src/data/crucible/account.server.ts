@@ -156,3 +156,32 @@ function toWorkspaceAccount(account: {
     username: account.username ?? null,
   }
 }
+
+export function accountKeyRegenerationAvailable() {
+  const configuration = readWorkspaceConfiguration()
+  return (
+    configuration.mode === "fixture" ||
+    (configuration.mode === "api" && !configuration.bearerToken)
+  )
+}
+
+export async function regenerateWorkspaceAccountApiKey(
+  requestSignal?: AbortSignal
+): Promise<{ api_key: string }> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (!accountKeyRegenerationAvailable()) {
+    throw new CrucibleResponseError(403)
+  }
+  if (configuration.mode === "fixture") {
+    return { api_key: `fixture-key-${crypto.randomUUID()}` }
+  }
+  const result = await createCrucibleClient(configuration).POST(
+    "/account/apikey/regenerate",
+    { signal: crucibleRequestSignal(requestSignal) }
+  )
+  if (!result.data) throw new CrucibleResponseError(result.response)
+  return { api_key: result.data.api_key }
+}
