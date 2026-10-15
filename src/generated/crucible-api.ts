@@ -1571,7 +1571,7 @@ export interface paths {
         };
         /**
          * Readiness
-         * @description Readiness probe with database, schema, and build provenance.
+         * @description Readiness probe with database, schema, and build provenance. Ready while the database schema is current or ahead of this build (newer additive migrations applied before a deploy); not ready when it is behind.
          */
         get: operations["readiness_health_ready_get"];
         put?: never;
@@ -3599,6 +3599,8 @@ export interface components {
             latency_ms: number | null;
             /** Schema Revisions */
             schema_revisions: string[];
+            /** Schema State */
+            schema_state?: ("current" | "ahead" | "behind" | "mismatch") | null;
             /**
              * Status
              * @enum {string}
