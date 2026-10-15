@@ -61,6 +61,8 @@ export function ConfirmationDialog({
   title,
   variant = "default",
 }: ConfirmationProps) {
+  const confirmVariant =
+    variant === "destructive" ? "destructive-solid" : variant
   const secondary = secondaryAction ? (
     <Button
       disabled={pending}
@@ -107,7 +109,7 @@ export function ConfirmationDialog({
                 event.preventDefault()
                 onConfirm()
               }}
-              variant={variant}
+              variant={confirmVariant}
             >
               {pending ? <PendingIcon data-icon="inline-start" /> : null}
               {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
@@ -148,7 +150,7 @@ export function ConfirmationDialog({
             disabled={pending || confirmDisabled}
             onClick={onConfirm}
             type="button"
-            variant={variant}
+            variant={confirmVariant}
           >
             {pending ? <PendingIcon data-icon="inline-start" /> : null}
             {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}

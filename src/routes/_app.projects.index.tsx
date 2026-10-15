@@ -19,7 +19,6 @@ import {
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ProjectRoleBadge } from "@/components/crucible/project-members"
 import {
@@ -27,10 +26,10 @@ import {
   ResourceOpenCell,
   ResourceActivityCell,
 } from "@/components/crucible/resource-collection-cells"
+import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -222,10 +221,10 @@ function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
     <PageHeader
       actions={
         canCreate ? (
-          <Link className={buttonVariants()} to="/projects/new">
-            <CreateResourceIcon data-icon="inline-start" />
-            Create project
-          </Link>
+          <ResourceCreationLink
+            label="Create project"
+            render={<Link to="/projects/new" />}
+          />
         ) : null
       }
       title="Your projects"

@@ -8,6 +8,8 @@ afterEach(cleanup)
 describe("BrandMark", () => {
   it("renders the hub logo with background by default", () => {
     const { container } = render(<BrandMark />)
+    const span = container.querySelector("span")
+    expect(span?.className).toContain("size-8")
     const images = container.querySelectorAll("img")
     expect(images).toHaveLength(1)
 
@@ -17,6 +19,8 @@ describe("BrandMark", () => {
 
   it("renders light and dark theme icons when variant is icon", () => {
     const { container } = render(<BrandMark variant="icon" />)
+    const span = container.querySelector("span")
+    expect(span?.className).toContain("size-4")
     const images = container.querySelectorAll("img")
     expect(images).toHaveLength(2)
 

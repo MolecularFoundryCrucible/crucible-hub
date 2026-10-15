@@ -495,7 +495,7 @@ function SiblingBoundaryAction({
             aria-label={`${label} item`}
             disabled={!canLoad || loading}
             onClick={onLoad}
-            size="icon-sm"
+            size="icon"
             type="button"
             variant="outline"
           />
@@ -535,7 +535,7 @@ function ResourceSiblingAction({
       <Button
         aria-label={`${label} item`}
         disabled
-        size="icon-sm"
+        size="icon"
         type="button"
         variant="outline"
       >
@@ -562,7 +562,7 @@ function ResourceSiblingAction({
             to="/samples/$sampleMfid"
           />
         }
-        size="icon-sm"
+        size="icon"
         variant="outline"
       />
     ) : (
@@ -576,7 +576,7 @@ function ResourceSiblingAction({
             to="/datasets/$datasetMfid"
           />
         }
-        size="icon-sm"
+        size="icon"
         variant="outline"
       />
     )

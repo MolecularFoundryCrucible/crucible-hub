@@ -1307,11 +1307,7 @@ function GraphNodeExpansionAction({
           />
         }
       >
-        {pending ? (
-          <PendingIcon data-icon="inline-start" />
-        ) : (
-          <Icon aria-hidden="true" data-icon="inline-start" />
-        )}
+        {pending ? <PendingIcon /> : <Icon aria-hidden="true" />}
       </TooltipTrigger>
       <TooltipContent portalContainer={portalContainer}>{label}</TooltipContent>
     </Tooltip>

@@ -2,7 +2,10 @@ import { useEffect, useId, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
-import { AccessGrantRow } from "@/components/crucible/access-grant-row"
+import {
+  AccessGrantListActions,
+  AccessGrantRow,
+} from "@/components/crucible/access-grant-row"
 import { useAccessListManagement } from "@/components/crucible/access-list-management"
 import { ManagementToggle } from "@/components/crucible/management-toggle"
 import {
@@ -16,7 +19,7 @@ import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
-import { AddMemberIcon, RemoveMemberIcon } from "@/components/crucible/icons"
+import { RemoveMemberIcon } from "@/components/crucible/icons"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -473,32 +476,16 @@ export function InstrumentAccessCard({
           )}
 
           {canGrant ? (
-            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-              {removableSelection.length > 0 ? (
-                <Button
-                  disabled={mutationPending}
-                  onClick={() => setRemoveDialogOpen(true)}
-                  type="button"
-                  variant="destructive"
-                >
-                  <RemoveMemberIcon data-icon="inline-start" />
-                  {removableSelection.length > 1
-                    ? `Revoke access for ${removableSelection.length} members`
-                    : "Revoke access"}
-                </Button>
-              ) : null}
-              <Button
-                disabled={mutationPending}
-                onClick={() => {
-                  setError(undefined)
-                  setAddMemberOpen(true)
-                }}
-                type="button"
-              >
-                <AddMemberIcon data-icon="inline-start" />
-                Add member
-              </Button>
-            </div>
+            <AccessGrantListActions
+              addLabel="Add member"
+              disabled={mutationPending}
+              onAdd={() => {
+                setError(undefined)
+                setAddMemberOpen(true)
+              }}
+              onRemove={() => setRemoveDialogOpen(true)}
+              removeCount={removableSelection.length}
+            />
           ) : null}
 
           <div className="mt-6 border-t pt-4">
@@ -589,19 +576,14 @@ export function InstrumentAccessCard({
             )}
 
             {canManage ? (
-              <div className="mt-4 flex justify-end">
-                <Button
-                  disabled={mutationPending}
-                  onClick={() => {
-                    setError(undefined)
-                    setAddOperatorOpen(true)
-                  }}
-                  type="button"
-                >
-                  <AddMemberIcon data-icon="inline-start" />
-                  Add operator
-                </Button>
-              </div>
+              <AccessGrantListActions
+                addLabel="Add operator"
+                disabled={mutationPending}
+                onAdd={() => {
+                  setError(undefined)
+                  setAddOperatorOpen(true)
+                }}
+              />
             ) : null}
           </div>
 

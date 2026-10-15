@@ -11,6 +11,7 @@ export interface RemovablePillProps extends Omit<
   icon?: React.ComponentType<{
     "aria-hidden"?: boolean | "true" | "false"
     className?: string
+    "data-icon"?: "inline-end" | "inline-start"
   }>
   label: string
   onRemove: () => void
@@ -38,7 +39,7 @@ export function RemovablePill({
       {...props}
     >
       <span className="truncate">{label}</span>
-      <Icon aria-hidden="true" />
+      <Icon aria-hidden="true" data-icon="inline-end" />
     </Button>
   )
 }

@@ -3,21 +3,21 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
+import {
+  ApiCredentialCard,
+  RotateCredentialAction,
+} from "@/components/crucible/api-credential-card"
 import {
   PanelState,
   PanelUpdateError,
   ResourceListPending,
 } from "@/components/crucible/collection-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
-import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import {
-  EditResourceIcon,
-  ProjectIcon,
-  RotateCredentialIcon,
-} from "@/components/crucible/icons"
+  EditableCardActions,
+  EditableCardTrigger,
+} from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
-import { PendingIcon } from "@/components/crucible/pending-icon"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { ActivityTime } from "@/components/crucible/activity-time"
 import { PersonIdentity } from "@/components/crucible/person-identity"
@@ -360,15 +360,10 @@ function UserProfileCard({
                   </Button>
                 ) : null}
                 {user.user_capabilities?.can_edit_profile !== false ? (
-                  <Button
+                  <EditableCardTrigger
+                    label="Edit profile"
                     onClick={() => setEditing(true)}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    <EditResourceIcon data-icon="inline-start" />
-                    Edit profile
-                  </Button>
+                  />
                 ) : null}
               </div>
             </CardAction>
@@ -661,23 +656,14 @@ function UserApiCredentialSection({
       <ApiCredentialCard
         action={
           <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              disabled={mutation.isPending}
+            <RotateCredentialAction
+              label={hasValidKey ? "Rotate API key" : "Provision API key"}
               onClick={() => {
                 setProvisionError(undefined)
                 setConfirmOpen(true)
               }}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {mutation.isPending ? (
-                <PendingIcon data-icon="inline-start" />
-              ) : (
-                <RotateCredentialIcon data-icon="inline-start" />
-              )}
-              {hasValidKey ? "Rotate API key" : "Provision API key"}
-            </Button>
+              pending={mutation.isPending}
+            />
             {hasValidKey ? (
               <Button
                 disabled={revokeMutation.isPending}
@@ -774,10 +760,7 @@ function UserProjectsSection({
   return (
     <Card aria-busy={projectsQuery.isFetching}>
       <CardHeader actionLayout="inline">
-        <CardTitle className="flex items-center gap-2">
-          <ProjectIcon aria-hidden="true" />
-          Projects
-        </CardTitle>
+        <CardTitle>Projects</CardTitle>
         {projectsQuery.data !== undefined ? (
           <CardAction>
             <Badge variant="outline">{projects.length}</Badge>

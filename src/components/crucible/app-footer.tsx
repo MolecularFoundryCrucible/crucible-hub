@@ -2,6 +2,7 @@ import { BrandMark } from "@/components/crucible/brand-mark"
 import {
   DiscordIcon,
   GitHubIcon,
+  MolecularFoundryIcon,
   discordInviteUrl,
 } from "@/components/crucible/brand-icons"
 import { SystemStatusPopover } from "@/components/crucible/system-status-popover"
@@ -48,8 +49,16 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
       role="contentinfo"
     >
       <div className="mx-auto flex w-full max-w-content flex-col items-center gap-y-4 px-page-gutter py-6 text-center text-supporting text-muted-foreground sm:px-page-gutter-medium md:flex-row md:items-center md:justify-between md:text-left lg:px-page-gutter-wide">
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 md:justify-start">
-          <BrandMark className="size-4 translate-y-px" variant="icon" />
+        <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 md:justify-start">
+          <a
+            aria-label="Crucible"
+            className="inline-flex items-center rounded-sm py-1 transition-opacity outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring"
+            href="https://crucible.lbl.gov/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <BrandMark variant="icon" />
+          </a>
           <span>© {currentYear} Crucible Dev Team</span>
         </div>
 
@@ -58,22 +67,12 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
           className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1"
         >
           <a
-            className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            href="https://crucible.lbl.gov/"
-            rel="noreferrer"
-            target="_blank"
-          >
-            Crucible
-          </a>
-          <span aria-hidden="true" className="select-none">
-            •
-          </span>
-          <a
-            className="inline-flex items-center rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             href="https://foundry.lbl.gov/"
             rel="noreferrer"
             target="_blank"
           >
+            <MolecularFoundryIcon />
             Molecular Foundry
           </a>
           <span aria-hidden="true" className="select-none">
@@ -85,7 +84,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
             rel="noreferrer"
             target="_blank"
           >
-            <DiscordIcon className="size-4" />
+            <DiscordIcon />
             Discord
           </a>
           <span aria-hidden="true" className="select-none">
@@ -97,7 +96,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
             rel="noreferrer"
             target="_blank"
           >
-            <GitHubIcon className="size-4" />
+            <GitHubIcon />
             Issues
           </a>
         </nav>

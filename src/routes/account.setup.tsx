@@ -53,6 +53,7 @@ function AccountSetupPage() {
           className="mt-4"
           nativeButton={false}
           render={<a href="/hub/account/setup" />}
+          size="lg"
           variant="outline"
         >
           Try again

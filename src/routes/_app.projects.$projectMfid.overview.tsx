@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { EditResourceIcon } from "@/components/crucible/icons"
+import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
@@ -28,7 +28,6 @@ import {
   ProjectMembers,
   ProjectRoleBadge,
 } from "@/components/crucible/project-members"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -125,10 +124,7 @@ function ProjectSummary({
         <CardTitle>Summary</CardTitle>
         {onEdit ? (
           <CardAction>
-            <Button onClick={onEdit} variant="outline">
-              <EditResourceIcon data-icon="inline-start" />
-              Edit project
-            </Button>
+            <EditableCardTrigger label="Edit project" onClick={onEdit} />
           </CardAction>
         ) : null}
       </CardHeader>

@@ -14,16 +14,15 @@ import {
   permittedAccessGrantRoles,
   sortAccessGrants,
 } from "@/components/crucible/access-role-badge"
-import { AccessGrantRow } from "@/components/crucible/access-grant-row"
+import {
+  AccessGrantListActions,
+  AccessGrantRow,
+} from "@/components/crucible/access-grant-row"
 import { useAccessListManagement } from "@/components/crucible/access-list-management"
 import { ManagementToggle } from "@/components/crucible/management-toggle"
 import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
-import {
-  AddAccessGrantIcon,
-  RemoveMemberIcon,
-} from "@/components/crucible/icons"
 import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
@@ -503,35 +502,17 @@ function ManagedResourceAccess({
             </p>
           ) : null}
           {canGrant ? (
-            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-              {removableSelection.length > 0 ? (
-                <Button
-                  disabled={mutationPending}
-                  onClick={() => setRemoveDialogOpen(true)}
-                  type="button"
-                  variant="destructive"
-                >
-                  <RemoveMemberIcon data-icon="inline-start" />
-                  {removableSelection.length > 1
-                    ? `Revoke access for ${removableSelection.length} members`
-                    : "Revoke access"}
-                </Button>
-              ) : null}
-              <Button
-                disabled={mutationPending}
-                onClick={() => {
-                  setError(undefined)
-                  setAddOpen(true)
-                }}
-                type="button"
-              >
-                <AddAccessGrantIcon
-                  aria-hidden="true"
-                  data-icon="inline-start"
-                />
-                Add access
-              </Button>
-            </div>
+            <AccessGrantListActions
+              addIcon="access"
+              addLabel="Add access"
+              disabled={mutationPending}
+              onAdd={() => {
+                setError(undefined)
+                setAddOpen(true)
+              }}
+              onRemove={() => setRemoveDialogOpen(true)}
+              removeCount={removableSelection.length}
+            />
           ) : null}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
             <div className="flex min-w-0 items-center gap-2">
@@ -550,7 +531,7 @@ function ManagedResourceAccess({
                 setPendingPublic(!resource.public)
               }}
               type="button"
-              variant={resource.public ? "outline" : "default"}
+              variant="outline"
             >
               {resource.public ? "Make private" : "Publish"}
             </Button>

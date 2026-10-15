@@ -4,12 +4,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
-import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
-import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import {
-  EditResourceIcon,
-  RotateCredentialIcon,
-} from "@/components/crucible/icons"
+  ApiCredentialCard,
+  RotateCredentialAction,
+} from "@/components/crucible/api-credential-card"
+import {
+  EditableCardActions,
+  EditableCardTrigger,
+} from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
@@ -236,17 +238,10 @@ function ServiceAccountIdentityCard({
                     Change role
                   </Button>
                 ) : null}
-                <Button
+                <EditableCardTrigger
+                  label="Edit profile"
                   onClick={() => setEditing(true)}
-                  size="sm"
-                  variant="outline"
-                >
-                  <EditResourceIcon
-                    aria-hidden="true"
-                    data-icon="inline-start"
-                  />
-                  Edit profile
-                </Button>
+                />
               </div>
             </CardAction>
           </CardHeader>
@@ -442,14 +437,10 @@ function ServiceAccountCredentialCard({
     <>
       <ApiCredentialCard
         action={
-          <Button
+          <RotateCredentialAction
+            label="Rotate key"
             onClick={() => setConfirming(true)}
-            size="sm"
-            variant="destructive"
-          >
-            <RotateCredentialIcon aria-hidden="true" data-icon="inline-start" />
-            Rotate key
-          </Button>
+          />
         }
         status={status}
       />

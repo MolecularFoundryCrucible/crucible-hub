@@ -184,7 +184,7 @@ function UserPage() {
               className={buttonVariants({ variant: "outline" })}
               to="/account"
             >
-              <AccountIcon data-icon="inline-start" />
+              <AccountIcon aria-hidden="true" data-icon="inline-start" />
               Manage account
             </Link>
           ) : null

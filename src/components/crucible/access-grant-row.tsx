@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 
 import {
+  AddAccessGrantIcon,
+  AddMemberIcon,
   RemoveMemberIcon,
   RemoveUnavailableIcon,
 } from "@/components/crucible/icons"
@@ -12,6 +14,59 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+
+export function AccessGrantListActions({
+  addIcon = "member",
+  addLabel,
+  canAdd = true,
+  disabled = false,
+  onAdd,
+  onRemove,
+  removeCount = 0,
+  removeMode = "revoke",
+}: {
+  addIcon?: "access" | "member"
+  addLabel: string
+  canAdd?: boolean
+  disabled?: boolean
+  onAdd: () => void
+  onRemove?: () => void
+  removeCount?: number
+  removeMode?: "remove" | "revoke"
+}) {
+  if (!canAdd && removeCount === 0) return null
+  const AddIcon = addIcon === "access" ? AddAccessGrantIcon : AddMemberIcon
+  const removeLabel =
+    removeMode === "remove"
+      ? removeCount > 1
+        ? `Remove ${removeCount} members`
+        : "Remove member"
+      : removeCount > 1
+        ? `Revoke access for ${removeCount} members`
+        : "Revoke access"
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+      {removeCount > 0 && onRemove ? (
+        <Button
+          disabled={disabled}
+          onClick={onRemove}
+          type="button"
+          variant="destructive"
+        >
+          <RemoveMemberIcon aria-hidden="true" data-icon="inline-start" />
+          {removeLabel}
+        </Button>
+      ) : null}
+      {canAdd ? (
+        <Button disabled={disabled} onClick={onAdd} type="button">
+          <AddIcon aria-hidden="true" data-icon="inline-start" />
+          {addLabel}
+        </Button>
+      ) : null}
+    </div>
+  )
+}
 
 export function AccessGrantRow({
   badge,

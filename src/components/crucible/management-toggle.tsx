@@ -32,7 +32,7 @@ export function ManagementToggle({
           onClick={() => onChange(!active)}
           size="icon-sm"
           type="button"
-          variant={active ? "secondary" : "outline"}
+          variant="outline"
         >
           <Icon aria-hidden="true" />
         </Button>

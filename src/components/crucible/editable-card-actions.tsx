@@ -1,4 +1,8 @@
-import { CancelChangesIcon, SaveChangesIcon } from "@/components/crucible/icons"
+import {
+  CancelChangesIcon,
+  EditResourceIcon,
+  SaveChangesIcon,
+} from "@/components/crucible/icons"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import { CardFooter } from "@/components/ui/card"
@@ -7,6 +11,55 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { intentPreloadProps } from "@/lib/intent-preload"
+
+export function EditableCardTrigger({
+  iconOnly = false,
+  label,
+  onClick,
+  onPreload,
+}: {
+  iconOnly?: boolean
+  label: string
+  onClick: () => void
+  onPreload?: () => void
+}) {
+  const preload = onPreload ? intentPreloadProps(onPreload) : undefined
+  if (iconOnly) {
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              aria-label={label}
+              onClick={onClick}
+              {...preload}
+              size="icon-sm"
+              type="button"
+              variant="outline"
+            />
+          }
+        >
+          <EditResourceIcon aria-hidden="true" />
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return (
+    <Button
+      onClick={onClick}
+      {...preload}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
+      <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
+      {label}
+    </Button>
+  )
+}
 
 export function EditableCardActions({
   canSubmit,
@@ -15,7 +68,6 @@ export function EditableCardActions({
   onCancel,
   pending,
   pendingLabel = "Saving changes",
-  presentation = "text",
   submitLabel = "Save changes",
 }: {
   canSubmit: boolean
@@ -24,32 +76,10 @@ export function EditableCardActions({
   onCancel: () => void
   pending: boolean
   pendingLabel?: string
-  presentation?: "icon" | "text"
   submitLabel?: string
 }) {
   const label = pending ? pendingLabel : submitLabel
   const disabled = !canSubmit || !dirty || pending
-  const submit = (
-    <Button
-      aria-label={presentation === "icon" ? label : undefined}
-      disabled={disabled}
-      form={formId}
-      size={presentation === "icon" ? "icon-sm" : "default"}
-      type="submit"
-    >
-      {pending ? (
-        <PendingIcon
-          data-icon={presentation === "text" ? "inline-start" : undefined}
-        />
-      ) : (
-        <SaveChangesIcon
-          aria-hidden="true"
-          data-icon={presentation === "text" ? "inline-start" : undefined}
-        />
-      )}
-      {presentation === "text" ? label : null}
-    </Button>
-  )
 
   return (
     <CardFooter className="justify-end gap-2">
@@ -62,19 +92,14 @@ export function EditableCardActions({
         <CancelChangesIcon aria-hidden="true" data-icon="inline-start" />
         Cancel
       </Button>
-      {presentation === "icon" ? (
-        <Tooltip>
-          <TooltipTrigger
-            render={<span className="inline-flex" />}
-            tabIndex={-1}
-          >
-            {submit}
-          </TooltipTrigger>
-          <TooltipContent>{label}</TooltipContent>
-        </Tooltip>
-      ) : (
-        submit
-      )}
+      <Button disabled={disabled} form={formId} type="submit">
+        {pending ? (
+          <PendingIcon data-icon="inline-start" />
+        ) : (
+          <SaveChangesIcon aria-hidden="true" data-icon="inline-start" />
+        )}
+        {label}
+      </Button>
     </CardFooter>
   )
 }

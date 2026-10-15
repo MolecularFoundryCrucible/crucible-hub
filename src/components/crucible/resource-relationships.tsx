@@ -1,14 +1,13 @@
 import { useId, useState } from "react"
 import type { ReactNode } from "react"
-import { Link } from "@tanstack/react-router"
 
-import { OpenFullPageIcon } from "@/components/crucible/icons"
+import { UnlinkRelationshipIcon } from "@/components/crucible/icons"
 import {
   COLLAPSED_LIST_LIMIT,
   ListExpansionToggle,
   revealedRowClassName,
 } from "@/components/crucible/list-expansion-toggle"
-import { ResourceName } from "@/components/crucible/resource-name"
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
@@ -16,7 +15,7 @@ import {
   ResourceListItem,
   ResourceListItemContent,
 } from "@/components/crucible/resource-list"
-import { buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
@@ -28,7 +27,38 @@ import {
 } from "@/data/crucible/resource-relationships"
 import type { WorkspaceLinkedResource } from "@/data/crucible/workspace-source"
 import { resourceDisplayName } from "@/lib/resource-name"
-import { cn } from "@/lib/utils"
+
+export function UnlinkRelationshipAction({
+  disabled = false,
+  label,
+  onClick,
+  tooltip,
+}: {
+  disabled?: boolean
+  label: string
+  onClick: () => void
+  tooltip: ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={label}
+            disabled={disabled}
+            onClick={onClick}
+            size="icon-sm"
+            type="button"
+            variant="outline"
+          />
+        }
+      >
+        <UnlinkRelationshipIcon aria-hidden="true" />
+      </TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
+  )
+}
 
 type RelationshipResourceKind = "dataset" | "sample"
 
@@ -203,113 +233,18 @@ function RelationshipRow({
         <div className="flex shrink-0 items-center">
           {managing ? (
             renderManagementAction?.(link)
-          ) : (
-            <CanonicalResourceLink link={link} />
-          )}
+          ) : isKnownResourceType(link.resource_type) ? (
+            <ResourceFullPageLink
+              kind={link.resource_type}
+              mfid={link.unique_id}
+              name={relationshipDisplayName(link)}
+              presentation="table"
+            />
+          ) : null}
         </div>
       </ResourceListItemContent>
     </ResourceListItem>
   )
-}
-
-function CanonicalResourceLink({ link }: { link: WorkspaceLinkedResource }) {
-  const label = relationshipDisplayName(link)
-  const className = cn(buttonVariants({ size: "icon-sm", variant: "outline" }))
-  if (link.resource_type === "sample") {
-    return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Link
-              aria-label={`Open full page: ${label}`}
-              className={className}
-              params={{ sampleMfid: link.unique_id }}
-              preload={false}
-              search={{ preview: undefined }}
-              state={{}}
-              to="/samples/$sampleMfid"
-            />
-          }
-        >
-          <OpenFullPageIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>
-          Open full page: <ResourceName>{label}</ResourceName>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-  if (link.resource_type === "dataset") {
-    return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Link
-              aria-label={`Open full page: ${label}`}
-              className={className}
-              params={{ datasetMfid: link.unique_id }}
-              preload={false}
-              search={{ preview: undefined }}
-              state={{}}
-              to="/datasets/$datasetMfid"
-            />
-          }
-        >
-          <OpenFullPageIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>
-          Open full page: <ResourceName>{label}</ResourceName>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-  if (link.resource_type === "project") {
-    return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Link
-              aria-label={`Open full page: ${label}`}
-              className={className}
-              params={{ projectMfid: link.unique_id }}
-              preload={false}
-              state={{}}
-              to="/projects/$projectMfid"
-            />
-          }
-        >
-          <OpenFullPageIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>
-          Open full page: <ResourceName>{label}</ResourceName>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-  if (link.resource_type === "instrument") {
-    return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Link
-              aria-label={`Open full page: ${label}`}
-              className={className}
-              params={{ instrumentMfid: link.unique_id }}
-              preload={false}
-              state={{}}
-              to="/instruments/$instrumentMfid"
-            />
-          }
-        >
-          <OpenFullPageIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>
-          Open full page: <ResourceName>{label}</ResourceName>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-  return null
 }
 
 function isKnownResourceType(

@@ -113,6 +113,136 @@ function unmodifiedUtility(className) {
   return undefined
 }
 
+const selfHidingIcons = new Set([
+  "FacetFieldIcon",
+  "PendingIcon",
+  "PrincipalTypeIcon",
+  "ResourceTypeIcon",
+  "SummaryFieldIcon",
+])
+
+const iconOnlyButtonSizes = new Set([
+  "icon",
+  "icon-circle",
+  "icon-lg",
+  "icon-sm",
+  "icon-xs",
+  "pill-dismiss",
+  "table-action",
+])
+
+const singleTruthIcons = [
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/editable-card-actions.tsx",
+    ]),
+    icons: ["CancelChangesIcon", "EditResourceIcon"],
+    message:
+      "composes editable card actions instead of using EditableCardActions or EditableCardTrigger",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/resource-full-page-link.tsx",
+    ]),
+    icons: ["OpenFullPageIcon"],
+    message: "composes full-page link instead of using ResourceFullPageLink",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/card-view-all-link.tsx",
+    ]),
+    icons: ["ForwardNavigationIcon"],
+    message: "composes card footer link instead of using CardViewAllLink",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/app-shell.tsx",
+      "components/crucible/create-menu.tsx",
+      "components/crucible/resource-creation-actions.tsx",
+    ]),
+    icons: ["CreateResourceIcon"],
+    message:
+      "composes creation action instead of using ResourceCreationActions or ResourceCreationLink",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/management-toggle.tsx",
+    ]),
+    icons: ["FinishManagingIcon", "ManageIcon"],
+    message: "composes management toggle instead of using ManagementToggle",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/api-credential-card.tsx",
+    ]),
+    icons: ["RotateCredentialIcon"],
+    message:
+      "composes credential rotation trigger instead of using RotateCredentialAction",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/access-grant-row.tsx",
+    ]),
+    icons: ["AddAccessGrantIcon", "AddMemberIcon"],
+    message:
+      "composes access grant list actions instead of using AccessGrantListActions",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/resource-relationships.tsx",
+    ]),
+    icons: ["UnlinkRelationshipIcon"],
+    message:
+      "composes relationship unlink action instead of using UnlinkRelationshipAction",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "components/crucible/summary-field-icon.tsx",
+    ]),
+    icons: [
+      "DataFormatFieldIcon",
+      "DataTypeFieldIcon",
+      "MeasurementFieldIcon",
+      "SessionFieldIcon",
+    ],
+    message: "composes field icon instead of using SummaryFieldIcon",
+  },
+  {
+    allowed: new Set([
+      "components/crucible/icons.ts",
+      "features/resource-graph/resource-graph-link.tsx",
+      "features/resource-graph/resource-graph-page.tsx",
+      "routes/fixtures.design-system.tsx",
+    ]),
+    icons: ["ResourceGraphIcon"],
+    message:
+      "composes graph navigation link instead of using ResourceGraphLink",
+  },
+]
+
+function getJsxAttribute(opening, name) {
+  return opening.attributes.properties.find(
+    (property) => ts.isJsxAttribute(property) && property.name.text === name
+  )
+}
+
+function getJsxAttributeString(opening, name) {
+  const attribute = getJsxAttribute(opening, name)
+  if (!attribute?.initializer) return undefined
+  if (ts.isStringLiteral(attribute.initializer))
+    return attribute.initializer.text
+  return undefined
+}
+
 function scanButtonUsage(path, localPath, content) {
   if (localPath.endsWith(".test.tsx")) return
   const source = ts.createSourceFile(
@@ -128,7 +258,114 @@ function scanButtonUsage(path, localPath, content) {
     if (utility) violations.push(`${localPath}: ${label} overrides ${utility}`)
   }
 
+  function buttonVariantsSize(opening) {
+    const className = getJsxAttribute(opening, "className")
+    if (
+      !className?.initializer ||
+      !ts.isJsxExpression(className.initializer) ||
+      !className.initializer.expression
+    )
+      return undefined
+    const expr = className.initializer.expression
+    if (
+      !ts.isCallExpression(expr) ||
+      expr.expression.getText(source) !== "buttonVariants"
+    )
+      return undefined
+    const arg = expr.arguments[0]
+    if (!arg || !ts.isObjectLiteralExpression(arg)) return "default"
+    const sizeProp = arg.properties.find(
+      (prop) =>
+        ts.isPropertyAssignment(prop) && prop.name.getText(source) === "size"
+    )
+    if (
+      sizeProp &&
+      ts.isPropertyAssignment(sizeProp) &&
+      ts.isStringLiteral(sizeProp.initializer)
+    )
+      return sizeProp.initializer.text
+    return "default"
+  }
+
+  function inspectButtonIconChildren(node, size, elementLabel) {
+    const isIconOnly = iconOnlyButtonSizes.has(size)
+    const icons = []
+    function collectIcons(children) {
+      for (const child of children) {
+        if (ts.isJsxElement(child) || ts.isJsxSelfClosingElement(child)) {
+          const opening = ts.isJsxElement(child) ? child.openingElement : child
+          const tag = opening.tagName.getText(source)
+          if (tag === "Icon" || tag.endsWith("Icon")) icons.push(opening)
+        } else if (ts.isJsxExpression(child) && child.expression) {
+          function visitExpr(expr) {
+            if (ts.isJsxElement(expr) || ts.isJsxSelfClosingElement(expr)) {
+              const opening = ts.isJsxElement(expr) ? expr.openingElement : expr
+              const tag = opening.tagName.getText(source)
+              if (tag === "Icon" || tag.endsWith("Icon")) icons.push(opening)
+            }
+            ts.forEachChild(expr, visitExpr)
+          }
+          visitExpr(child.expression)
+        }
+      }
+    }
+    collectIcons(node.children)
+    for (const icon of icons) {
+      const tag = icon.tagName.getText(source)
+      if (!isIconOnly && !getJsxAttribute(icon, "data-icon")) {
+        violations.push(
+          `${localPath}: ${tag} inside labeled ${elementLabel} must declare data-icon="inline-start" or "inline-end"`
+        )
+      }
+      if (
+        !selfHidingIcons.has(tag) &&
+        getJsxAttributeString(icon, "aria-hidden") !== "true"
+      ) {
+        violations.push(
+          `${localPath}: decorative ${tag} inside ${elementLabel} must set aria-hidden="true"`
+        )
+      }
+    }
+  }
+
+  function renderButtonSize(opening) {
+    const renderAttr = getJsxAttribute(opening, "render")
+    if (
+      !renderAttr?.initializer ||
+      !ts.isJsxExpression(renderAttr.initializer) ||
+      !renderAttr.initializer.expression
+    )
+      return undefined
+    const expr = renderAttr.initializer.expression
+    if (!ts.isJsxSelfClosingElement(expr) && !ts.isJsxElement(expr))
+      return undefined
+    const innerOpening = ts.isJsxElement(expr) ? expr.openingElement : expr
+    if (innerOpening.tagName.getText(source) !== "Button") return undefined
+    return getJsxAttributeString(innerOpening, "size") ?? "default"
+  }
+
   function visit(node) {
+    if (ts.isJsxElement(node)) {
+      const tag = node.openingElement.tagName.getText(source)
+      if (tag === "Button") {
+        const size =
+          getJsxAttributeString(node.openingElement, "size") ?? "default"
+        inspectButtonIconChildren(node, size, "Button")
+      } else {
+        const linkSize = buttonVariantsSize(node.openingElement)
+        if (linkSize) {
+          inspectButtonIconChildren(node, linkSize, `${tag} (buttonVariants)`)
+        } else {
+          const triggerSize = renderButtonSize(node.openingElement)
+          if (triggerSize)
+            inspectButtonIconChildren(
+              node,
+              triggerSize,
+              `${tag} (render Button)`
+            )
+        }
+      }
+    }
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       const tag = node.tagName.getText(source)
       if (tag === "button")
@@ -241,13 +478,13 @@ function scan(directory) {
         `${localPath}: composes MFID typography instead of using MfidText`
       )
     }
-    if (
-      localPath.startsWith("features/") &&
-      content.includes("CancelChangesIcon")
-    ) {
-      violations.push(
-        `${localPath}: composes editable card actions instead of using EditableCardActions`
-      )
+    for (const rule of singleTruthIcons) {
+      if (
+        !rule.allowed.has(localPath) &&
+        rule.icons.some((icon) => content.includes(icon))
+      ) {
+        violations.push(`${localPath}: ${rule.message}`)
+      }
     }
     if (extname(path) === ".tsx") scanButtonUsage(path, localPath, content)
     for (const pattern of patterns) {

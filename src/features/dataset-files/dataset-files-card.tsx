@@ -424,14 +424,10 @@ export function FileDownloadAction({
             aria-label={actionLabel}
             disabled={pending || unavailable}
             onClick={pending || unavailable ? undefined : () => void download()}
-            size="icon-sm"
+            size="table-action"
             variant="outline"
           >
-            {pending ? (
-              <PendingIcon data-icon="inline-start" />
-            ) : (
-              <ActionIcon aria-hidden="true" data-icon="inline-start" />
-            )}
+            {pending ? <PendingIcon /> : <ActionIcon aria-hidden="true" />}
           </Button>
         </TooltipTrigger>
         <TooltipContent>{actionLabel}</TooltipContent>

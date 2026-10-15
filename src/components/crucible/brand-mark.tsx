@@ -13,7 +13,8 @@ export function BrandMark({ className, variant = "logo" }: BrandMarkProps) {
     <span
       aria-hidden="true"
       className={cn(
-        "flex size-8 shrink-0 items-center justify-center",
+        "flex shrink-0 items-center justify-center",
+        variant === "icon" ? "size-4" : "size-8",
         className
       )}
     >

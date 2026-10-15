@@ -179,7 +179,6 @@ function PersonSecondaryLine({
         </>
       ) : null}
       <PrincipalTypeIcon
-        className="size-3.5"
         label={isServiceAccount ? "Service account" : "Person"}
         type={isServiceAccount ? "service_account" : "user"}
       />

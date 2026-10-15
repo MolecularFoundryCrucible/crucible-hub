@@ -49,7 +49,7 @@ function StatusMark({
       <Icon
         aria-hidden="true"
         className={cn(
-          "size-5",
+          "size-4",
           tone === "success" && "text-success",
           tone === "warning" && "text-warning",
           tone === "destructive" && "text-destructive"
@@ -165,7 +165,7 @@ export function SystemStatusPopover({
 
         {statusQuery.isLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 py-6 text-supporting text-muted-foreground">
-            <PendingIcon className="size-5" />
+            <PendingIcon />
             <span>Checking system readiness...</span>
           </div>
         ) : null}
@@ -288,7 +288,7 @@ export function SystemStatusPopover({
                     target="_blank"
                   >
                     Hub health
-                    <ExternalLinkIcon aria-hidden="true" className="size-3" />
+                    <ExternalLinkIcon aria-hidden="true" className="size-4" />
                   </a>
                   <RefreshButton
                     onClick={() => void handleRefresh()}

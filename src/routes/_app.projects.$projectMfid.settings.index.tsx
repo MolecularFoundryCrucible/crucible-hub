@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 
+import { CardViewAllLink } from "@/components/crucible/card-view-all-link"
 import {
   ResourceManagementPending,
   ResourceTabLoadError,
@@ -11,7 +12,6 @@ import {
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -84,13 +84,14 @@ function ProjectManagePage() {
           <DeletionRequestQueue
             account={account}
             action={
-              <Link
-                className={buttonVariants({ size: "sm", variant: "outline" })}
-                search={{ projectMfid, view: "reviewable" }}
-                to="/deletion-requests"
-              >
-                View all
-              </Link>
+              <CardViewAllLink
+                render={
+                  <Link
+                    search={{ projectMfid, view: "reviewable" }}
+                    to="/deletion-requests"
+                  />
+                }
+              />
             }
             emptyTitle="No requests need review"
             filters={{

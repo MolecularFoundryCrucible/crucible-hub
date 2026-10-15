@@ -48,15 +48,18 @@ const fieldIcons = {
 
 export function SummaryFieldIcon({
   className,
+  "data-icon": dataIcon,
   type,
 }: {
   className?: string
+  "data-icon"?: "inline-end" | "inline-start"
   type: SummaryFieldType
 }) {
   if (type === "project" || type === "instrument") {
     return (
       <ResourceTypeIcon
         className={cn("mt-0.5 size-4 shrink-0", className)}
+        data-icon={dataIcon}
         type={type}
       />
     )
@@ -66,6 +69,7 @@ export function SummaryFieldIcon({
     <Icon
       aria-hidden="true"
       className={cn("mt-0.5 size-4 shrink-0 text-muted-foreground", className)}
+      data-icon={dataIcon}
       data-summary-field-icon={type}
     />
   )

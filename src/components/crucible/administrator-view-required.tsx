@@ -54,7 +54,10 @@ function AdministratorViewRequired({
                 onClick={() => setActive(true)}
                 variant="warning"
               >
-                <AdministratorViewEnabledIcon data-icon="inline-start" />
+                <AdministratorViewEnabledIcon
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />
                 Turn on administrator view
               </Button>
             </EmptyContent>

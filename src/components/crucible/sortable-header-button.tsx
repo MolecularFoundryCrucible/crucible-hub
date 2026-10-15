@@ -46,7 +46,7 @@ export function SortableHeaderButton({
       variant="ghost"
     >
       {label}
-      <Icon data-icon="inline-end" />
+      <Icon aria-hidden="true" data-icon="inline-end" />
     </Button>
   )
 }

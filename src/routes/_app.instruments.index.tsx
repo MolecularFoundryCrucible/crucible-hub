@@ -20,17 +20,16 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
-import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
   ResourceCreatedCell,
   ResourceOpenCell,
   ResourceActivityCell,
 } from "@/components/crucible/resource-collection-cells"
+import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -283,10 +282,10 @@ function InstrumentsPageHeader({ canRegister }: { canRegister: boolean }) {
     <PageHeader
       actions={
         canRegister ? (
-          <Link className={buttonVariants()} to="/instruments/new">
-            <CreateResourceIcon data-icon="inline-start" />
-            Register instrument
-          </Link>
+          <ResourceCreationLink
+            label="Register instrument"
+            render={<Link to="/instruments/new" />}
+          />
         ) : null
       }
       title="Instrument directory"

@@ -123,10 +123,12 @@ export function AdministratorViewStatus() {
       aria-label="Turn off administrator view"
       disabled={pending}
       onClick={() => setActive(false)}
-      size="sm"
       variant="warning"
     >
-      <AdministratorViewEnabledIcon data-icon="inline-start" />
+      <AdministratorViewEnabledIcon
+        aria-hidden="true"
+        data-icon="inline-start"
+      />
       <span className="hidden sm:inline">Administrator view on</span>
     </Button>
   )

@@ -2,10 +2,12 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getRouteApi } from "@tanstack/react-router"
 
-import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
+import {
+  ApiCredentialCard,
+  RotateCredentialAction,
+} from "@/components/crucible/api-credential-card"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { hubActionError } from "@/components/crucible/reauthentication"
-import { Button } from "@/components/ui/button"
 import { regenerateAccountApiKey } from "@/data/crucible/account.functions"
 import {
   accountCredentialStatusQueryOptions,
@@ -64,14 +66,10 @@ function RegenerateKeyAction({ scope }: { scope: IdentityScope }) {
 
   return (
     <>
-      <Button
+      <RotateCredentialAction
+        label="Regenerate key"
         onClick={() => setConfirming(true)}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        Regenerate key
-      </Button>
+      />
       <ConfirmationDialog
         confirmLabel="Regenerate key"
         description="Your current key stops working immediately. Scripts and tools that use it, such as nano-crucible, will need the new key."

@@ -1,19 +1,11 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 
 import {
-  DataFormatFieldIcon,
-  DataTypeFieldIcon,
-  MeasurementFieldIcon,
-  SessionFieldIcon,
-} from "@/components/crucible/icons"
-import {
   PersonIdentity,
   personIsServiceAccount,
 } from "@/components/crucible/person-identity"
-import {
-  PrincipalTypeIcon,
-  ResourceTypeIcon,
-} from "@/components/crucible/resource-type-icon"
+import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
+import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { SortableHeaderButton } from "@/components/crucible/sortable-header-button"
 import { Button } from "@/components/ui/button"
@@ -449,27 +441,26 @@ function FacetFieldIcon({
   if (field === "owner") {
     return bucket?.owner ? (
       <PrincipalTypeIcon
+        data-icon="inline-start"
         type={personIsServiceAccount(bucket.owner) ? "service_account" : "user"}
       />
     ) : (
-      <PrincipalTypeIcon type="unknown" />
+      <PrincipalTypeIcon data-icon="inline-start" type="unknown" />
     )
   }
-  if (field === "instrument") {
-    return <ResourceTypeIcon data-icon="inline-start" type="instrument" />
-  }
-  if (field === "project") {
-    return <ResourceTypeIcon data-icon="inline-start" type="project" />
-  }
-  const Icon =
-    field === "measurement"
-      ? MeasurementFieldIcon
-      : field === "session"
-        ? SessionFieldIcon
-        : field === "data_format"
-          ? DataFormatFieldIcon
-          : DataTypeFieldIcon
-  return <Icon aria-hidden="true" data-icon="inline-start" />
+  const summaryFieldType =
+    field === "data_format"
+      ? "data-format"
+      : field === "sample_type"
+        ? "data-type"
+        : field
+  return (
+    <SummaryFieldIcon
+      className="mt-0"
+      data-icon="inline-start"
+      type={summaryFieldType}
+    />
+  )
 }
 
 function facetFieldLabel(field: DatasetFacetField | SampleFacetField) {

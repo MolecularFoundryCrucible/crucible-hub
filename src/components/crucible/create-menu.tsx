@@ -25,7 +25,7 @@ export function CreateMenu({ account }: { account: WorkspaceAccount }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button aria-label="Create" />}>
-        <CreateResourceIcon data-icon="inline-start" />
+        <CreateResourceIcon aria-hidden="true" data-icon="inline-start" />
         <span className="hidden sm:inline">Create</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">

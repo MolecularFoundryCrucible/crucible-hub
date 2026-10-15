@@ -12,6 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { formatUsername } from "@/lib/username"
 
 export function OneTimeCredentialDialog({
@@ -47,6 +52,8 @@ export function OneTimeCredentialDialog({
       setCopyState("error")
     }
   }
+
+  const copyLabel = copyState === "success" ? "API key copied" : "Copy API key"
 
   return (
     <Dialog
@@ -85,21 +92,26 @@ export function OneTimeCredentialDialog({
                 readOnly
                 value={credential.api_key}
               />
-              <Button
-                aria-label={
-                  copyState === "success" ? "API key copied" : "Copy API key"
-                }
-                onClick={() => void copyCredential()}
-                size="icon"
-                type="button"
-                variant="outline"
-              >
-                {copyState === "success" ? (
-                  <CopySuccessIcon aria-hidden="true" />
-                ) : (
-                  <CopyIcon aria-hidden="true" />
-                )}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      aria-label={copyLabel}
+                      onClick={() => void copyCredential()}
+                      size="icon"
+                      type="button"
+                      variant="outline"
+                    />
+                  }
+                >
+                  {copyState === "success" ? (
+                    <CopySuccessIcon aria-hidden="true" />
+                  ) : (
+                    <CopyIcon aria-hidden="true" />
+                  )}
+                </TooltipTrigger>
+                <TooltipContent>{copyLabel}</TooltipContent>
+              </Tooltip>
             </div>
             {copyState === "error" ? (
               <p className="text-body text-destructive" role="alert">

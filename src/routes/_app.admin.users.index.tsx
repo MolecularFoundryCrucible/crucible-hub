@@ -8,10 +8,6 @@ import {
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
-import {
-  CreateResourceIcon,
-  OpenFullPageIcon,
-} from "@/components/crucible/icons"
 import { DirectorySearchField } from "@/components/crucible/directory-search-field"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
@@ -21,6 +17,8 @@ import {
   personDisplayName,
 } from "@/components/crucible/person-identity"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
+import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import {
@@ -30,7 +28,6 @@ import {
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
-import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -299,20 +296,21 @@ function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
     <PageHeader
       actions={
         canCreate ? (
-          <Link
-            className={buttonVariants()}
-            search={{
-              create: true,
-              cursor: undefined,
-              direction: search.direction,
-              q: search.q,
-              sort: search.sort,
-            }}
-            to="/admin/users"
-          >
-            <CreateResourceIcon data-icon="inline-start" />
-            Create user
-          </Link>
+          <ResourceCreationLink
+            label="Create user"
+            render={
+              <Link
+                search={{
+                  create: true,
+                  cursor: undefined,
+                  direction: search.direction,
+                  q: search.q,
+                  sort: search.sort,
+                }}
+                to="/admin/users"
+              />
+            }
+          />
         ) : null
       }
       title="Users"
@@ -494,17 +492,12 @@ function UserCollection({
                         kind="action"
                         className="identity-directory-action"
                       >
-                        <Link
-                          aria-label={`Open user ${formatUsername(user.username, "raw")}`}
-                          className={buttonVariants({
-                            size: "table-action",
-                            variant: "ghost",
-                          })}
-                          params={{ userId: user.unique_id }}
-                          to="/users/$userId"
-                        >
-                          <OpenFullPageIcon aria-hidden="true" />
-                        </Link>
+                        <ResourceFullPageLink
+                          kind="user"
+                          mfid={user.unique_id}
+                          name={formatUsername(user.username, "raw")}
+                          presentation="table"
+                        />
                       </TableCell>
                     </TableRow>
                   )

@@ -1,6 +1,10 @@
-import { CredentialIcon } from "@/components/crucible/icons"
+import {
+  CredentialIcon,
+  RotateCredentialIcon,
+} from "@/components/crucible/icons"
 import { ActivityTime } from "@/components/crucible/activity-time"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +16,35 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { WorkspaceApiCredentialStatus } from "@/data/crucible/workspace-source"
+
+export function RotateCredentialAction({
+  disabled = false,
+  label,
+  onClick,
+  pending = false,
+}: {
+  disabled?: boolean
+  label: string
+  onClick: () => void
+  pending?: boolean
+}) {
+  return (
+    <Button
+      disabled={disabled || pending}
+      onClick={onClick}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
+      {pending ? (
+        <PendingIcon data-icon="inline-start" />
+      ) : (
+        <RotateCredentialIcon aria-hidden="true" data-icon="inline-start" />
+      )}
+      {label}
+    </Button>
+  )
+}
 
 export function ApiCredentialCard({
   action,

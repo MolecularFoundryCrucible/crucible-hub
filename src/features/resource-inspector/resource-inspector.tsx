@@ -1,12 +1,10 @@
 import { useEffect, useRef } from "react"
 import type { MouseEventHandler, ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
 
 import {
   BackPreviewIcon,
   CloseInspectorIcon,
-  ExploreGraphFocusIcon,
 } from "@/components/crucible/icons"
 import {
   PanelState,
@@ -52,10 +50,10 @@ import type {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
+import { ResourceGraphLink } from "@/features/resource-graph/resource-graph-link"
 import { formatBytes } from "@/lib/format"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
-import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
 
 export function ResourceInspector({
   navigation,
@@ -327,7 +325,12 @@ function InspectorActions({
       />
       {kind === "sample" || kind === "dataset" ? (
         <>
-          <ResourceGraphLink kind={kind} mfid={mfid} onClick={onClick} />
+          <ResourceGraphLink
+            kind={kind}
+            mfid={mfid}
+            onClick={onClick}
+            presentation="inspector-footer"
+          />
           {resource?.kind === "sample" || resource?.kind === "dataset" ? (
             <ResourceDeletionRequestCard
               mode={mode}
@@ -343,60 +346,6 @@ function InspectorActions({
         </>
       ) : null}
     </>
-  )
-}
-
-function ResourceGraphLink({
-  kind,
-  mfid,
-  onClick,
-}: {
-  kind: WorkspaceResourceDetail["kind"] | undefined
-  mfid: string
-  onClick: MouseEventHandler<HTMLAnchorElement>
-}) {
-  const children = (
-    <>
-      <ExploreGraphFocusIcon aria-hidden="true" data-icon="inline-start" />
-      Graph
-    </>
-  )
-  if (kind === "sample") {
-    return (
-      <Link
-        className={cn(buttonVariants({ variant: "outline" }), "w-full")}
-        onClick={onClick}
-        params={{ sampleMfid: mfid }}
-        preload={false}
-        search={{ preview: undefined }}
-        state={{}}
-        {...resourceGraphWarmupProps}
-        to="/samples/$sampleMfid/graph"
-      >
-        {children}
-      </Link>
-    )
-  }
-  if (kind === "dataset") {
-    return (
-      <Link
-        className={cn(buttonVariants({ variant: "outline" }), "w-full")}
-        onClick={onClick}
-        params={{ datasetMfid: mfid }}
-        preload={false}
-        search={{ preview: undefined }}
-        state={{}}
-        {...resourceGraphWarmupProps}
-        to="/datasets/$datasetMfid/graph"
-      >
-        {children}
-      </Link>
-    )
-  }
-  return (
-    <Button className="w-full" disabled type="button" variant="outline">
-      {children}
-    </Button>
   )
 }
 

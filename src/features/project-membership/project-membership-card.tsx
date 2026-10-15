@@ -6,7 +6,10 @@ import {
   sortProjectMembers,
 } from "@/components/crucible/project-members"
 import { accessRoleLabel } from "@/components/crucible/access-role-badge"
-import { AccessGrantRow } from "@/components/crucible/access-grant-row"
+import {
+  AccessGrantListActions,
+  AccessGrantRow,
+} from "@/components/crucible/access-grant-row"
 import { useAccessListManagement } from "@/components/crucible/access-list-management"
 import { ManagementToggle } from "@/components/crucible/management-toggle"
 import { AddMembersDialog } from "@/components/crucible/add-members-dialog"
@@ -15,9 +18,7 @@ import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personDisplayName } from "@/components/crucible/person-identity"
-import { AddMemberIcon, RemoveMemberIcon } from "@/components/crucible/icons"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -297,33 +298,15 @@ export function ProjectMembershipCard({
             })}
           </ul>
         )}
-        {canManage || removableSelection.length > 0 ? (
-          <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-            {removableSelection.length > 0 ? (
-              <Button
-                disabled={mutationPending}
-                onClick={() => setRemoveDialogOpen(true)}
-                type="button"
-                variant="destructive"
-              >
-                <RemoveMemberIcon data-icon="inline-start" />
-                {removableSelection.length > 1
-                  ? `Remove ${removableSelection.length} members`
-                  : "Remove member"}
-              </Button>
-            ) : null}
-            {canManage ? (
-              <Button
-                disabled={mutationPending}
-                onClick={() => setAddMemberOpen(true)}
-                type="button"
-              >
-                <AddMemberIcon data-icon="inline-start" />
-                Add member
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
+        <AccessGrantListActions
+          addLabel="Add member"
+          canAdd={canManage}
+          disabled={mutationPending}
+          onAdd={() => setAddMemberOpen(true)}
+          onRemove={() => setRemoveDialogOpen(true)}
+          removeCount={removableSelection.length}
+          removeMode="remove"
+        />
       </CardContent>
       <AddMembersDialog
         disabled={mutationPending}

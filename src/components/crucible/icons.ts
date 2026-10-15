@@ -24,7 +24,6 @@ export const SampleIcon = createLucideIcon("Sample", SampleIconNode)
 
 export {
   CircleUserRound as AccountIcon,
-  ShieldCheck as AdministratorViewIcon,
   ShieldMinus as AdministratorViewDisabledIcon,
   ShieldPlus as AdministratorViewEnabledIcon,
   LibraryBig as DataIcon,
@@ -73,7 +72,6 @@ export {
   Pencil as RenameUploadIcon,
   Replace as ReplaceFileIcon,
   Undo2 as KeepExistingFileIcon,
-  Pencil as EditScientificMetadataIcon,
   RotateCcw as RetryDownloadIcon,
   CircleAlert as UploadFailureIcon,
   Save as SaveChangesIcon,
@@ -105,6 +103,7 @@ export {
   LockKeyhole as PrivateAccessIcon,
   RefreshCw as UpdateInstrumentStatusIcon,
   RefreshCw as RefreshResourceIcon,
+  Plus as CreateFacetValueIcon,
   Plus as CreateResourceIcon,
   ImagePlus as AddThumbnailIcon,
   FilePlus2 as AddFilesIcon,

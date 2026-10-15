@@ -74,7 +74,11 @@ export function DirectorySearchField({
       />
       {value ? (
         <InputGroupAddon align="inline-end">
-          <InputGroupButton aria-label="Clear search" onClick={clear}>
+          <InputGroupButton
+            aria-label="Clear search"
+            onClick={clear}
+            size="icon-xs"
+          >
             <CloseIcon aria-hidden="true" />
           </InputGroupButton>
         </InputGroupAddon>

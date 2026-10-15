@@ -251,7 +251,7 @@ function PreferencesPage() {
         >
           {saving ? (
             <>
-              <PendingIcon className="size-3.5" />
+              <PendingIcon />
               Saving…
             </>
           ) : null}

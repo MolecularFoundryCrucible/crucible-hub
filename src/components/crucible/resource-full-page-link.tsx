@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-type ResourceFullPageKind = "dataset" | "instrument" | "project" | "sample"
+type ResourceFullPageKind =
+  "dataset" | "instrument" | "project" | "sample" | "service-account" | "user"
 type ResourceFullPagePresentation = "inspector-footer" | "name" | "table"
 
 export function ResourceFullPageLink({
@@ -37,7 +38,10 @@ export function ResourceFullPageLink({
   onClick?: MouseEventHandler<HTMLAnchorElement>
   presentation: ResourceFullPagePresentation
 }) {
-  const siblingCandidate = useResourceSiblingCandidate(mfid, kind)
+  const siblingCandidate = useResourceSiblingCandidate(
+    mfid,
+    kind === "dataset" || kind === "sample" ? kind : undefined
+  )
   const actionLabel = `Open full page: ${name}`
   const linkClassName = cn(
     presentation === "name"
@@ -126,6 +130,16 @@ export function ResourceFullPageLink({
         to="/datasets/$datasetMfid"
       />
     )
+  } else if (kind === "service-account") {
+    link = (
+      <Link
+        {...common}
+        params={{ serviceAccountMfid: mfid }}
+        to="/admin/service-accounts/$serviceAccountMfid"
+      />
+    )
+  } else if (kind === "user") {
+    link = <Link {...common} params={{ userId: mfid }} to="/users/$userId" />
   } else {
     link = (
       <Link

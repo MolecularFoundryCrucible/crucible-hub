@@ -3,13 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
   AddThumbnailIcon,
-  EditResourceIcon,
   RemoveThumbnailIcon,
   SaveChangesIcon,
 } from "@/components/crucible/icons"
 import { PanelState } from "@/components/crucible/collection-state"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
+import { ManagementToggle } from "@/components/crucible/management-toggle"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,11 +18,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -74,25 +69,11 @@ export function DatasetThumbnailsCard({
         <CardTitle>Thumbnails</CardTitle>
         {canEdit && query.data ? (
           <CardAction>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    aria-label={
-                      editing ? "Finish editing thumbnails" : "Edit thumbnails"
-                    }
-                    onClick={() => setEditing((current) => !current)}
-                    size="icon-sm"
-                    variant="outline"
-                  />
-                }
-              >
-                <EditResourceIcon aria-hidden="true" />
-              </TooltipTrigger>
-              <TooltipContent>
-                {editing ? "Finish editing thumbnails" : "Edit thumbnails"}
-              </TooltipContent>
-            </Tooltip>
+            <ManagementToggle
+              active={editing}
+              onChange={setEditing}
+              subject="thumbnails"
+            />
           </CardAction>
         ) : null}
       </CardHeader>

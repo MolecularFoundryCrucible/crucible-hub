@@ -1,12 +1,11 @@
 import { Suspense, useState } from "react"
 import { lazyRouteComponent } from "@tanstack/react-router"
-import { EditScientificMetadataIcon } from "@/components/crucible/icons"
+import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import {
   ScientificMetadataExpansionAction,
   ScientificMetadataViewer,
   useScientificMetadataExpansion,
 } from "@/components/crucible/scientific-metadata"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -14,14 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
-import { intentPreloadProps } from "@/lib/intent-preload"
 
 export type EditableResource = Extract<
   WorkspaceResourceDetail,
@@ -53,7 +46,9 @@ export function ScientificMetadataEditor({
             <div className="flex items-center justify-end gap-1">
               <ScientificMetadataExpansionAction expansion={expansion} />
               {resource.capabilities?.can_edit === true ? (
-                <EditScientificMetadataButton
+                <EditableCardTrigger
+                  iconOnly
+                  label="Edit scientific metadata"
                   onClick={() => setEditing(true)}
                   onPreload={() => void ScientificMetadataForm.preload?.()}
                 />
@@ -82,32 +77,5 @@ export function ScientificMetadataEditor({
         scope={scope}
       />
     </Suspense>
-  )
-}
-
-function EditScientificMetadataButton({
-  onClick,
-  onPreload,
-}: {
-  onClick: () => void
-  onPreload: () => void
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label="Edit scientific metadata"
-            onClick={onClick}
-            {...intentPreloadProps(onPreload)}
-            size="icon-sm"
-            variant="outline"
-          />
-        }
-      >
-        <EditScientificMetadataIcon aria-hidden="true" />
-      </TooltipTrigger>
-      <TooltipContent>Edit scientific metadata</TooltipContent>
-    </Tooltip>
   )
 }

@@ -1,13 +1,12 @@
 import { Suspense, useState } from "react"
 import type { ReactNode } from "react"
 import { lazyRouteComponent } from "@tanstack/react-router"
-import { EditResourceIcon } from "@/components/crucible/icons"
+import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import type { SummaryFieldType } from "@/components/crucible/summary-field-icon"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -15,15 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 import { resourceDisplayName } from "@/lib/resource-name"
-import { intentPreloadProps } from "@/lib/intent-preload"
 
 export type DatasetDetail = Extract<
   WorkspaceResourceDetail,
@@ -88,7 +81,9 @@ function SampleSummaryCard({
     <SummaryCard
       action={
         resource.capabilities?.can_edit === true ? (
-          <EditSummaryButton
+          <EditableCardTrigger
+            iconOnly
+            label="Edit summary"
             onClick={() => setEditing(true)}
             onPreload={() => void SampleSummaryForm.preload?.()}
           />
@@ -126,7 +121,9 @@ function DatasetSummaryCard({
     <SummaryCard
       action={
         resource.capabilities?.can_edit === true ? (
-          <EditSummaryButton
+          <EditableCardTrigger
+            iconOnly
+            label="Edit summary"
             onClick={() => setEditing(true)}
             onPreload={() => void DatasetSummaryForm.preload?.()}
           />
@@ -134,33 +131,6 @@ function DatasetSummaryCard({
       }
       fields={summaryFields(resource)}
     />
-  )
-}
-
-function EditSummaryButton({
-  onClick,
-  onPreload,
-}: {
-  onClick: () => void
-  onPreload: () => void
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label="Edit summary"
-            onClick={onClick}
-            {...intentPreloadProps(onPreload)}
-            size="icon-sm"
-            variant="outline"
-          />
-        }
-      >
-        <EditResourceIcon aria-hidden="true" />
-      </TooltipTrigger>
-      <TooltipContent>Edit summary</TooltipContent>
-    </Tooltip>
   )
 }
 

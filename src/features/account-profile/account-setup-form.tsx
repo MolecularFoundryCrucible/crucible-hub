@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import { FieldGroup } from "@/components/ui/field"
 import { updateWorkspaceAccount } from "@/data/crucible/account.functions"
@@ -141,7 +142,14 @@ export function AccountSetupForm({
       >
         {(canSubmit) => (
           <Button disabled={!canSubmit || submitting} size="lg" type="submit">
-            {submitting ? "Saving..." : "Continue"}
+            {submitting ? (
+              <>
+                <PendingIcon data-icon="inline-start" />
+                Saving
+              </>
+            ) : (
+              "Continue"
+            )}
           </Button>
         )}
       </form.Subscribe>

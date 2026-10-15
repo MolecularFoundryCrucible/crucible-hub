@@ -66,7 +66,11 @@ export function DeletionAuditQueue({
               <EmptyHeader>
                 <EmptyTitle>Deletion history could not be loaded</EmptyTitle>
               </EmptyHeader>
-              <Button onClick={() => void result.refetch()} variant="outline">
+              <Button
+                onClick={() => void result.refetch()}
+                size="sm"
+                variant="outline"
+              >
                 Retry
               </Button>
             </Empty>

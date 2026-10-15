@@ -123,7 +123,7 @@ export function QrScannerAction() {
                 type="button"
                 variant="outline"
               >
-                <ScanQrCodeIcon aria-hidden="true" />
+                <ScanQrCodeIcon aria-hidden="true" data-icon="inline-start" />
                 Use camera
               </Button>
             </div>

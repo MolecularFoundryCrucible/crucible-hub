@@ -7,10 +7,6 @@ import {
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
-import {
-  CreateResourceIcon,
-  OpenFullPageIcon,
-} from "@/components/crucible/icons"
 import { DirectorySearchField } from "@/components/crucible/directory-search-field"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
@@ -19,6 +15,8 @@ import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
+import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
@@ -308,14 +306,15 @@ function ServiceAccountsPageHeader({ canCreate }: { canCreate: boolean }) {
     <PageHeader
       actions={
         canCreate ? (
-          <Link
-            className={buttonVariants()}
-            search={{ create: true, offset: search.offset, q: search.q }}
-            to="/admin/service-accounts"
-          >
-            <CreateResourceIcon data-icon="inline-start" />
-            Create service account
-          </Link>
+          <ResourceCreationLink
+            label="Create service account"
+            render={
+              <Link
+                search={{ create: true, offset: search.offset, q: search.q }}
+                to="/admin/service-accounts"
+              />
+            }
+          />
         ) : null
       }
       title="Service accounts"
@@ -469,19 +468,12 @@ function ServiceAccountCollection({
                       kind="action"
                       className="identity-directory-action"
                     >
-                      <Link
-                        aria-label={`Open service account ${formatUsername(serviceAccount.username, "raw")}`}
-                        className={buttonVariants({
-                          size: "table-action",
-                          variant: "ghost",
-                        })}
-                        params={{
-                          serviceAccountMfid: serviceAccount.unique_id,
-                        }}
-                        to="/admin/service-accounts/$serviceAccountMfid"
-                      >
-                        <OpenFullPageIcon aria-hidden="true" />
-                      </Link>
+                      <ResourceFullPageLink
+                        kind="service-account"
+                        mfid={serviceAccount.unique_id}
+                        name={formatUsername(serviceAccount.username, "raw")}
+                        presentation="table"
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

@@ -92,7 +92,7 @@ export function RemoveMembersDialog({
             disabled={members.length === 0 || disabled || committing}
             onClick={() => void commit()}
             type="button"
-            variant="destructive"
+            variant="destructive-solid"
           >
             {committing ? <PendingIcon data-icon="inline-start" /> : null}
             {confirmLabel(members.length)}

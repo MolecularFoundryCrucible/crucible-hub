@@ -111,12 +111,12 @@ export function AccountCapabilitiesCard({
                   {available ? (
                     <CapabilityAvailableIcon
                       aria-hidden="true"
-                      className="size-5 text-success"
+                      className="size-4 text-success"
                     />
                   ) : (
                     <CapabilityUnavailableIcon
                       aria-hidden="true"
-                      className="size-5 text-destructive"
+                      className="size-4 text-destructive"
                     />
                   )}
                 </span>

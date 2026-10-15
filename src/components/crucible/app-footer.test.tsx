@@ -40,20 +40,27 @@ describe("AppFooter", () => {
     ).toBeTruthy()
   })
 
-  it("renders external resource navigation links with secure targets", () => {
+  it("links the left-footer Crucible icon and renders center external resource navigation links with icons", () => {
     renderFooter()
 
+    const nav = screen.getByRole("navigation", { name: "External resources" })
     const crucibleLink = screen.getByRole("link", { name: "Crucible" })
     expect(crucibleLink.getAttribute("href")).toBe("https://crucible.lbl.gov/")
     expect(crucibleLink.getAttribute("target")).toBe("_blank")
     expect(crucibleLink.getAttribute("rel")).toBe("noreferrer")
     expect(crucibleLink.classList.contains("underline")).toBe(false)
+    expect(crucibleLink.querySelectorAll("img")).toHaveLength(2)
+    expect(nav.contains(crucibleLink)).toBe(false)
 
     const foundryLink = screen.getByRole("link", { name: "Molecular Foundry" })
     expect(foundryLink.getAttribute("href")).toBe("https://foundry.lbl.gov/")
     expect(foundryLink.getAttribute("target")).toBe("_blank")
     expect(foundryLink.getAttribute("rel")).toBe("noreferrer")
     expect(foundryLink.classList.contains("underline")).toBe(false)
+    expect(foundryLink.querySelector("svg")?.className.baseVal).toContain(
+      "size-4"
+    )
+    expect(nav.contains(foundryLink)).toBe(true)
 
     const issuesLink = screen.getByRole("link", { name: "Issues" })
     expect(issuesLink.getAttribute("href")).toBe(
@@ -62,6 +69,9 @@ describe("AppFooter", () => {
     expect(issuesLink.getAttribute("target")).toBe("_blank")
     expect(issuesLink.getAttribute("rel")).toBe("noreferrer")
     expect(issuesLink.classList.contains("underline")).toBe(false)
+    expect(issuesLink.querySelector("svg")?.className.baseVal).toContain(
+      "size-4"
+    )
   })
 
   it("links the community Discord server with secure targets", () => {
@@ -71,6 +81,7 @@ describe("AppFooter", () => {
     expect(discord.getAttribute("href")).toBe("https://discord.gg/Wrepphsgbx")
     expect(discord.getAttribute("target")).toBe("_blank")
     expect(discord.getAttribute("rel")).toBe("noreferrer")
+    expect(discord.querySelector("svg")?.className.baseVal).toContain("size-4")
   })
 
   it("renders center dots separating external navigation links", () => {

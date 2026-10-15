@@ -2,12 +2,13 @@ import { useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { EditableCardActions } from "@/components/crucible/editable-card-actions"
-import { EditResourceIcon } from "@/components/crucible/icons"
+import {
+  EditableCardActions,
+  EditableCardTrigger,
+} from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -130,14 +131,10 @@ export function AccountProfileForm({
         <CardHeader actionLayout="inline">
           <PersonIdentity person={account} presentation="avatar" size="lg" />
           <CardAction>
-            <Button
+            <EditableCardTrigger
+              label="Edit profile"
               onClick={() => setEditing(true)}
-              size="sm"
-              variant="outline"
-            >
-              <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
-              Edit profile
-            </Button>
+            />
           </CardAction>
         </CardHeader>
         <CardContent>

@@ -3,17 +3,15 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import { useMemo, useState } from "react"
 
+import { CardViewAllLink } from "@/components/crucible/card-view-all-link"
 import {
   PanelState,
   ResourceListPending,
 } from "@/components/crucible/collection-state"
-import {
-  CreateResourceIcon,
-  ForwardNavigationIcon,
-} from "@/components/crucible/icons"
 import { LabeledTimestamp } from "@/components/crucible/labeled-timestamp"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
@@ -23,7 +21,7 @@ import {
 } from "@/components/crucible/resource-list"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -167,20 +165,18 @@ function HomePage() {
                     options={recentScopeOptions}
                     value={recentScope}
                   />
-                  <Link
-                    className={buttonVariants({ variant: "ghost" })}
-                    search={{
-                      affiliation: recentScope === "mine" ? "owner" : undefined,
-                      kind: undefined,
-                    }}
-                    to="/data"
-                  >
-                    View all
-                    <ForwardNavigationIcon
-                      aria-hidden="true"
-                      data-icon="inline-end"
-                    />
-                  </Link>
+                  <CardViewAllLink
+                    render={
+                      <Link
+                        search={{
+                          affiliation:
+                            recentScope === "mine" ? "owner" : undefined,
+                          kind: undefined,
+                        }}
+                        to="/data"
+                      />
+                    }
+                  />
                 </CardAction>
               </CardHeader>
               <CardContent>
@@ -302,13 +298,12 @@ function HomePage() {
           <HomeOwnershipCard
             emptyAction={
               account?.capabilities.can_create_project ? (
-                <Link
-                  className={buttonVariants({ size: "sm", variant: "outline" })}
-                  to="/projects/new"
-                >
-                  <CreateResourceIcon data-icon="inline-start" />
-                  Create project
-                </Link>
+                <ResourceCreationLink
+                  label="Create project"
+                  render={<Link to="/projects/new" />}
+                  size="sm"
+                  variant="outline"
+                />
               ) : undefined
             }
             emptyDescription="Projects you belong to will appear here."
@@ -319,17 +314,9 @@ function HomePage() {
             retry={() => void projectResult.refetch()}
             title="Your projects"
             viewAll={
-              <Link
-                className={buttonVariants({ variant: "ghost" })}
-                search={{ cursor: undefined }}
-                to="/projects"
-              >
-                View all
-                <ForwardNavigationIcon
-                  aria-hidden="true"
-                  data-icon="inline-end"
-                />
-              </Link>
+              <CardViewAllLink
+                render={<Link search={{ cursor: undefined }} to="/projects" />}
+              />
             }
           >
             {projects.length > 0 ? (
@@ -360,13 +347,12 @@ function HomePage() {
           <HomeOwnershipCard
             emptyAction={
               account?.capabilities.can_register_instrument ? (
-                <Link
-                  className={buttonVariants({ size: "sm", variant: "outline" })}
-                  to="/instruments/new"
-                >
-                  <CreateResourceIcon data-icon="inline-start" />
-                  Register instrument
-                </Link>
+                <ResourceCreationLink
+                  label="Register instrument"
+                  render={<Link to="/instruments/new" />}
+                  size="sm"
+                  variant="outline"
+                />
               ) : undefined
             }
             emptyDescription="Active instruments you manage will appear here."
@@ -377,21 +363,18 @@ function HomePage() {
             retry={() => void instrumentResult.refetch()}
             title="Your instruments"
             viewAll={
-              <Link
-                className={buttonVariants({ variant: "ghost" })}
-                search={{
-                  affiliation: "owner",
-                  cursor: undefined,
-                  status: undefined,
-                }}
-                to="/instruments"
-              >
-                View all
-                <ForwardNavigationIcon
-                  aria-hidden="true"
-                  data-icon="inline-end"
-                />
-              </Link>
+              <CardViewAllLink
+                render={
+                  <Link
+                    search={{
+                      affiliation: "owner",
+                      cursor: undefined,
+                      status: undefined,
+                    }}
+                    to="/instruments"
+                  />
+                }
+              />
             }
           >
             {instruments.length > 0 ? (

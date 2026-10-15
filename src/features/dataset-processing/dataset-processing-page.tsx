@@ -18,6 +18,7 @@ import {
 import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
@@ -776,7 +777,14 @@ function IngestionRequestDialog({
               disabled={mutation.isPending || !selectedMfids.length}
               type="submit"
             >
-              {mutation.isPending ? "Requesting…" : "Request ingestion"}
+              {mutation.isPending ? (
+                <>
+                  <PendingIcon data-icon="inline-start" />
+                  Requesting ingestion
+                </>
+              ) : (
+                "Request ingestion"
+              )}
             </Button>
           </DialogFooter>
         </form>

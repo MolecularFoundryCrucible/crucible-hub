@@ -330,7 +330,6 @@ export function ScientificMetadataForm({
               onCancel={discard.requestCancel}
               pending={isSubmitting}
               pendingLabel="Saving scientific metadata"
-              presentation="icon"
               submitLabel="Save scientific metadata"
             />
           )}

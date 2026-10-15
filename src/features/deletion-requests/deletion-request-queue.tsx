@@ -140,7 +140,11 @@ export function DeletionRequestQueue({
               <EmptyHeader>
                 <EmptyTitle>Deletion requests could not be loaded</EmptyTitle>
               </EmptyHeader>
-              <Button onClick={() => void result.refetch()} variant="outline">
+              <Button
+                onClick={() => void result.refetch()}
+                size="sm"
+                variant="outline"
+              >
                 Retry
               </Button>
             </Empty>
@@ -927,7 +931,7 @@ function DeletionRequestTable({
                     onClick={() => onOpen(request)}
                     size="sm"
                     variant={
-                      request.capabilities.can_review ? "default" : "outline"
+                      request.capabilities.can_review ? "secondary" : "outline"
                     }
                   >
                     {request.capabilities.can_review ? "Review" : "View"}
@@ -1188,19 +1192,29 @@ function DeletionRequestDialog({
                     type="button"
                     variant="outline"
                   >
-                    {mutation.isPending && mutation.variables === "rejected"
-                      ? "Rejecting deletion"
-                      : "Reject deletion"}
+                    {mutation.isPending && mutation.variables === "rejected" ? (
+                      <>
+                        <PendingIcon data-icon="inline-start" />
+                        Rejecting deletion
+                      </>
+                    ) : (
+                      "Reject deletion"
+                    )}
                   </Button>
                   <Button
                     disabled={mutation.isPending}
                     onClick={() => void review("approved")}
                     type="button"
-                    variant="destructive"
+                    variant="destructive-solid"
                   >
-                    {mutation.isPending && mutation.variables === "approved"
-                      ? "Approving deletion"
-                      : "Approve deletion"}
+                    {mutation.isPending && mutation.variables === "approved" ? (
+                      <>
+                        <PendingIcon data-icon="inline-start" />
+                        Approving deletion
+                      </>
+                    ) : (
+                      "Approve deletion"
+                    )}
                   </Button>
                 </>
               ) : null}

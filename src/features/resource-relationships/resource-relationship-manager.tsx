@@ -1,16 +1,12 @@
 import { useId, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
 
-import {
-  AddRelationshipIcon,
-  ResourceGraphIcon,
-  UnlinkRelationshipIcon,
-} from "@/components/crucible/icons"
+import { AddRelationshipIcon } from "@/components/crucible/icons"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
   ResourceRelationships,
+  UnlinkRelationshipAction,
   groupResourceRelationships,
 } from "@/components/crucible/resource-relationships"
 import {
@@ -19,7 +15,7 @@ import {
 } from "@/components/crucible/resource-sibling-navigation"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -42,11 +38,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
@@ -71,7 +62,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ManagementToggle } from "@/components/crucible/management-toggle"
-import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
+import { ResourceGraphLink } from "@/features/resource-graph/resource-graph-link"
 
 type RelationshipResource = Extract<
   WorkspaceResourceDetail,
@@ -158,7 +149,11 @@ export function ResourceRelationshipManager({
         </CardTitle>
         <CardAction>
           <div className="flex items-center gap-1">
-            <ResourceGraphLink resource={resource} />
+            <ResourceGraphLink
+              kind={resource.kind}
+              mfid={resource.unique_id}
+              name={resourceDetailDisplayName(resource)}
+            />
             {canManage ? (
               <>
                 <Button
@@ -194,30 +189,21 @@ export function ResourceRelationshipManager({
             canManage
               ? (link) =>
                   isSupportedRelationship(resource, link) ? (
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Button
-                            aria-label={`Unlink ${link.name || link.unique_id}`}
-                            onClick={() => {
-                              setUnlinkError(undefined)
-                              setPendingUnlink(link)
-                            }}
-                            size="icon-sm"
-                            type="button"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <UnlinkRelationshipIcon aria-hidden="true" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Unlink{" "}
-                        <ResourceName>
-                          {link.name || link.unique_id}
-                        </ResourceName>
-                      </TooltipContent>
-                    </Tooltip>
+                    <UnlinkRelationshipAction
+                      label={`Unlink ${link.name || link.unique_id}`}
+                      onClick={() => {
+                        setUnlinkError(undefined)
+                        setPendingUnlink(link)
+                      }}
+                      tooltip={
+                        <>
+                          Unlink{" "}
+                          <ResourceName>
+                            {link.name || link.unique_id}
+                          </ResourceName>
+                        </>
+                      }
+                    />
                   ) : null
               : undefined
           }
@@ -265,43 +251,6 @@ function isPreviewableRelationship(
   link: WorkspaceLinkedResource
 ): link is WorkspaceLinkedResource & { resource_type: "dataset" | "sample" } {
   return link.resource_type === "dataset" || link.resource_type === "sample"
-}
-
-function ResourceGraphLink({ resource }: { resource: RelationshipResource }) {
-  const link =
-    resource.kind === "sample" ? (
-      <Link
-        aria-label={`Explore graph for ${resourceDetailDisplayName(resource)}`}
-        className={buttonVariants({ size: "sm", variant: "outline" })}
-        params={{ sampleMfid: resource.unique_id }}
-        preload={false}
-        search={{ preview: undefined }}
-        {...resourceGraphWarmupProps}
-        to="/samples/$sampleMfid/graph"
-      />
-    ) : (
-      <Link
-        aria-label={`Explore graph for ${resourceDetailDisplayName(resource)}`}
-        className={buttonVariants({ size: "sm", variant: "outline" })}
-        params={{ datasetMfid: resource.unique_id }}
-        preload={false}
-        search={{ preview: undefined }}
-        {...resourceGraphWarmupProps}
-        to="/datasets/$datasetMfid/graph"
-      />
-    )
-  return (
-    <Tooltip>
-      <TooltipTrigger render={link}>
-        <ResourceGraphIcon aria-hidden="true" data-icon="inline-start" />
-        Graph
-      </TooltipTrigger>
-      <TooltipContent>
-        Explore graph for{" "}
-        <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>
-      </TooltipContent>
-    </Tooltip>
-  )
 }
 
 function AddRelationshipDialog({

@@ -3,11 +3,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
-import {
-  AddRelationshipIcon,
-  UnlinkRelationshipIcon,
-} from "@/components/crucible/icons"
+import { AddRelationshipIcon } from "@/components/crucible/icons"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
+import { UnlinkRelationshipAction } from "@/components/crucible/resource-relationships"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,11 +24,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -157,31 +150,19 @@ export function CreationRelationshipsField({
                     })}
                   </Badge>
                 ) : null}
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        aria-label={`Remove relationship with ${draft.target.name}`}
-                        disabled={disabled}
-                        onClick={() =>
-                          onChange(
-                            value.filter(
-                              (candidate) =>
-                                candidate.target.unique_id !==
-                                draft.target.unique_id
-                            )
-                          )
-                        }
-                        size="icon-sm"
-                        type="button"
-                        variant="outline"
-                      />
-                    }
-                  >
-                    <UnlinkRelationshipIcon aria-hidden="true" />
-                  </TooltipTrigger>
-                  <TooltipContent>Remove relationship</TooltipContent>
-                </Tooltip>
+                <UnlinkRelationshipAction
+                  disabled={disabled}
+                  label={`Remove relationship with ${draft.target.name}`}
+                  onClick={() =>
+                    onChange(
+                      value.filter(
+                        (candidate) =>
+                          candidate.target.unique_id !== draft.target.unique_id
+                      )
+                    )
+                  }
+                  tooltip="Remove relationship"
+                />
               </div>
             </li>
           ))}

@@ -7,7 +7,7 @@ import {
   ResourceTabLoadError,
 } from "@/components/crucible/resource-tab-state"
 import { AccessRoleBadge } from "@/components/crucible/access-role-badge"
-import { EditResourceIcon } from "@/components/crucible/icons"
+import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
@@ -30,7 +30,6 @@ import {
   ScientificMetadataViewer,
   useScientificMetadataExpansion,
 } from "@/components/crucible/scientific-metadata"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -131,10 +130,7 @@ function InstrumentSummary({
         <CardTitle>Summary</CardTitle>
         {onEdit ? (
           <CardAction>
-            <Button onClick={onEdit} variant="outline">
-              <EditResourceIcon data-icon="inline-start" />
-              Edit instrument
-            </Button>
+            <EditableCardTrigger label="Edit instrument" onClick={onEdit} />
           </CardAction>
         ) : null}
       </CardHeader>

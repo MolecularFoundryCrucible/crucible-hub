@@ -20,7 +20,6 @@ export function RefreshButton({
     <Button
       aria-busy={refreshing || undefined}
       aria-label={label}
-      className={refreshing ? "translate-y-px" : undefined}
       data-refreshing={refreshing || undefined}
       onClick={refreshing ? undefined : onClick}
       size={size}

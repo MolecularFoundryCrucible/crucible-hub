@@ -193,7 +193,7 @@ export function QrCodeScanner({
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {(state === "error" || state === "invalid") && (
           <Button onClick={retry} type="button">
-            <RetryQrScanIcon aria-hidden="true" />
+            <RetryQrScanIcon aria-hidden="true" data-icon="inline-start" />
             Scan again
           </Button>
         )}
@@ -203,12 +203,12 @@ export function QrCodeScanner({
             type="button"
             variant="outline"
           >
-            <SwitchCameraIcon aria-hidden="true" />
+            <SwitchCameraIcon aria-hidden="true" data-icon="inline-start" />
             Switch camera
           </Button>
         )}
         <Button onClick={onBack} type="button" variant="outline">
-          <BackToSearchIcon aria-hidden="true" />
+          <BackToSearchIcon aria-hidden="true" data-icon="inline-start" />
           Enter MFID instead
         </Button>
       </div>

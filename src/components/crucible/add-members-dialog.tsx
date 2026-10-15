@@ -279,7 +279,7 @@ export function AddMembersDialog({
                             }}
                             size="icon-sm"
                             type="button"
-                            variant="destructive"
+                            variant="outline"
                           />
                         }
                       >

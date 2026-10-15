@@ -3,7 +3,6 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation } from "@tanstack/react-query"
 import { z } from "zod"
 
-import { CreateResourceIcon } from "@/components/crucible/icons"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
@@ -183,11 +182,13 @@ export function ServiceAccountCreateDialog({
                 type="submit"
               >
                 {pending ? (
-                  <PendingIcon data-icon="inline-start" />
+                  <>
+                    <PendingIcon data-icon="inline-start" />
+                    Creating
+                  </>
                 ) : (
-                  <CreateResourceIcon data-icon="inline-start" />
+                  "Create"
                 )}
-                Create
               </Button>
             </DialogFooter>
           )}

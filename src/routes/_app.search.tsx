@@ -214,7 +214,7 @@ function SearchPage() {
             value={query}
           />
           <Button type="submit">
-            <SearchIcon data-icon="inline-start" />
+            <SearchIcon aria-hidden="true" data-icon="inline-start" />
             Search
           </Button>
         </form>

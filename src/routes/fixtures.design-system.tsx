@@ -178,8 +178,13 @@ function DesignSystemFixtures() {
               <Button>Primary action</Button>
               <Button variant="secondary">Secondary</Button>
               <Button variant="outline">Outline</Button>
+              <Button aria-pressed="true" variant="outline">
+                Pressed toggle
+              </Button>
               <Button variant="ghost">Ghost</Button>
+              <Button variant="warning">Administrator view</Button>
               <Button variant="destructive">Remove access</Button>
+              <Button variant="destructive-solid">Confirm delete</Button>
               <Button disabled>Unavailable</Button>
               <div className="max-w-action basis-full">
                 <Input
