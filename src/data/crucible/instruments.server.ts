@@ -412,7 +412,11 @@ export async function readWorkspaceInstruments(
     direction,
     includeOwner,
     includeTotal,
+    instrumentType,
     limit,
+    location,
+    manufacturer,
+    ownerId,
     scenario,
     sort,
     status,
@@ -422,7 +426,11 @@ export async function readWorkspaceInstruments(
     direction?: WorkspaceSortDirection
     includeOwner?: boolean
     includeTotal?: boolean
+    instrumentType?: string
     limit: number
+    location?: string
+    manufacturer?: string
+    ownerId?: string
     scenario?: FixtureScenario
     sort?: WorkspaceInstrumentSort
     status?: WorkspaceInstrumentStatus
@@ -439,9 +447,18 @@ export async function readWorkspaceInstruments(
     if (source.status === "unavailable") throw new Error(source.reason)
     let instruments = source.workspace.instruments.filter(
       (instrument) =>
-        instrument.status === (status ?? "active") &&
+        (!status || instrument.status === status) &&
         (!affiliation ||
-          instrument.owner?.unique_id === source.workspace.account.unique_id)
+          instrument.owner?.unique_id === source.workspace.account.unique_id) &&
+        (!ownerId || instrument.owner?.unique_id === ownerId) &&
+        (!instrumentType ||
+          (instrument.instrument_type ?? "").toLowerCase() ===
+            instrumentType.toLowerCase()) &&
+        (!location ||
+          instrument.location.toLowerCase() === location.toLowerCase()) &&
+        (!manufacturer ||
+          (instrument.manufacturer ?? "").toLowerCase() ===
+            manufacturer.toLowerCase())
     )
     if (sort) {
       const dir = direction === "desc" ? -1 : 1
@@ -490,7 +507,11 @@ export async function readWorkspaceInstruments(
         direction: sort ? direction : undefined,
         include_owner: includeOwner ?? true,
         include_total: includeTotal ?? true,
+        instrument_type: instrumentType,
         limit,
+        location,
+        manufacturer,
+        owner_id: ownerId,
         sort: sort ?? undefined,
         status,
       },

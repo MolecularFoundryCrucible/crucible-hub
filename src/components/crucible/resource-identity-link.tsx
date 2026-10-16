@@ -5,6 +5,7 @@ import { IdentityHoverCard } from "@/components/crucible/identity-hover-card"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import type { ResourceIdentityPresentation } from "@/components/crucible/resource-identity"
+import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
@@ -22,6 +23,7 @@ export function ResourceIdentityLink({
   kind,
   mfid,
   name,
+  navigation = "canonical",
   presentation = "collection",
   showTypeIcon = true,
   triggerContext = context,
@@ -33,13 +35,22 @@ export function ResourceIdentityLink({
   kind: "instrument" | "project"
   mfid: string
   name: string
+  navigation?: "canonical" | "preview"
   presentation?: ResourceIdentityPresentation
   showTypeIcon?: boolean
   triggerContext?: string | null
 }) {
   const displayName = resourceDisplayName(kind, name, { mfid })
   const routeLink =
-    kind === "project" ? (
+    navigation === "preview" ? (
+      <ResourcePreviewLink
+        mfid={mfid}
+        resourceKind={kind}
+        resourceName={displayName}
+      >
+        {children ?? displayName}
+      </ResourcePreviewLink>
+    ) : kind === "project" ? (
       <Link
         params={{ projectMfid: mfid }}
         search={{ preview: undefined }}
@@ -56,6 +67,9 @@ export function ResourceIdentityLink({
     )
   const link = (
     <SelectableTextLink
+      aria-label={
+        navigation === "preview" ? `Preview ${displayName}` : undefined
+      }
       className={cn("group/resource block", children && className)}
       render={routeLink}
     >

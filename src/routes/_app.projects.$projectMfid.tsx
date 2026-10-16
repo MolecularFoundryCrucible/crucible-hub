@@ -33,7 +33,10 @@ import { projectMembershipActions } from "@/features/project-membership/project-
 import { hubPageTitle } from "@/lib/page-title"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
-import { loadDataGroupBy } from "@/features/preferences/data-group-by"
+import {
+  loadDataGroupBy,
+  loadDefaultSort,
+} from "@/features/preferences/data-group-by"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid")({
   staleTime: Infinity,
@@ -41,7 +44,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const [project, dataGroupBy] = await Promise.all([
+    const [project, dataGroupBy, defaultSort] = await Promise.all([
       context.queryClient.ensureQueryData(
         projectQueryOptions(source.scope, params.projectMfid)
       ),
@@ -50,9 +53,15 @@ export const Route = createFileRoute("/_app/projects/$projectMfid")({
         source.scope,
         source.accountPreferencesEnabled
       ),
+      loadDefaultSort(
+        context.queryClient,
+        source.scope,
+        source.accountPreferencesEnabled
+      ),
     ])
     return {
       dataGroupBy,
+      defaultSort,
       isProject: Boolean(project),
       projectMfid: project?.unique_id ?? params.projectMfid,
       projectName: project
@@ -131,9 +140,7 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
-        icon={
-          <ResourceTypeIcon className="mt-1 size-6 shrink-0" type="project" />
-        }
+        icon={<ResourceTypeIcon className="size-5" type="project" />}
         identifier={
           project.title && project.title !== project.project_id
             ? project.project_id
@@ -162,13 +169,7 @@ function ProjectWorkspace() {
           viewTransition
           className={resourceSectionLinkClassName}
           params={{ projectMfid }}
-          search={{
-            datasetCursor: undefined,
-            kind: undefined,
-            preview: undefined,
-            sampleCursor: undefined,
-            scope: undefined,
-          }}
+          search={{}}
           state={{}}
           to="/projects/$projectMfid"
         >

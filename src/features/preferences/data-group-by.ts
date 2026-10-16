@@ -10,6 +10,10 @@ export type DataGroupBy = NonNullable<
   NonNullable<AccountPreferences["hub"]>["data_group_by"]
 >
 
+export type DefaultSort = NonNullable<
+  NonNullable<AccountPreferences["hub"]>["default_sort"]
+>
+
 export async function loadDataGroupBy(
   queryClient: QueryClient,
   scope: IdentityScope,
@@ -25,4 +29,21 @@ export async function loadDataGroupBy(
 export function useDataGroupBy(loaded: DataGroupBy | undefined) {
   const { loaded: preferencesLoaded, preferences } = useAccountPreferences()
   return preferencesLoaded ? preferences.hub?.data_group_by : loaded
+}
+
+export async function loadDefaultSort(
+  queryClient: QueryClient,
+  scope: IdentityScope,
+  enabled: boolean
+): Promise<DefaultSort | undefined> {
+  if (!enabled) return undefined
+  const document = await queryClient
+    .ensureQueryData(accountPreferencesQueryOptions(scope))
+    .catch(() => undefined)
+  return document?.preferences.hub?.default_sort
+}
+
+export function useDefaultSort(loaded: DefaultSort | undefined) {
+  const { loaded: preferencesLoaded, preferences } = useAccountPreferences()
+  return preferencesLoaded ? preferences.hub?.default_sort : loaded
 }

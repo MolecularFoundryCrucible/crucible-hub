@@ -202,12 +202,7 @@ export function ResourceWorkspace({
               />
             ) : undefined
           }
-          icon={
-            <ResourceTypeIcon
-              className="mt-1 size-6 shrink-0"
-              type={resource.kind}
-            />
-          }
+          icon={<ResourceTypeIcon className="size-5" type={resource.kind} />}
           title={displayName}
         />
         <ResourceNavigation
@@ -475,13 +470,6 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
                     Visibility
                   </dt>
                   <dd className="mt-1 flex items-center gap-2 text-body">
-                    <IdentityFieldIcon
-                      type={
-                        resource.public
-                          ? "visibility-public"
-                          : "visibility-private"
-                      }
-                    />
                     <VisibilityBadge isPublic={resource.public} />
                   </dd>
                 </div>

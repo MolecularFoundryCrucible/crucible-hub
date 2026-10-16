@@ -3,6 +3,7 @@ import { setResponseHeader } from "@tanstack/react-start/server"
 import { z } from "zod"
 
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
+import { dateOnlySchema } from "./collection-filters"
 import {
   collectionAffiliationSchema,
   collectionCursorSchema,
@@ -41,6 +42,7 @@ export const projectMemberRoleFilterSchema = z.enum([
 ])
 
 export const projectListInputSchema = z.object({
+  activeSince: dateOnlySchema.optional(),
   affiliation: collectionAffiliationSchema.optional(),
   cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional(),

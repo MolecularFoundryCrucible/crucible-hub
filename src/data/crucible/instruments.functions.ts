@@ -32,18 +32,6 @@ export const instrumentSortSchema = z.enum([
   "activity",
 ])
 
-export const instrumentListInputSchema = z.object({
-  affiliation: collectionAffiliationSchema.optional(),
-  cursor: collectionCursorSchema,
-  direction: sortDirectionSchema.optional(),
-  includeOwner: z.boolean().optional(),
-  includeTotal: z.boolean().optional(),
-  limit: z.number().int().min(1).max(100),
-  scenario: fixtureScenarioSchema.optional(),
-  sort: instrumentSortSchema.optional(),
-  status: z.enum(instrumentStatuses).optional(),
-})
-
 export const INSTRUMENT_MFID_MAX_LENGTH = 255
 export const INSTRUMENT_ID_MAX_LENGTH = 25
 export const INSTRUMENT_NAME_MAX_LENGTH = 255
@@ -54,6 +42,37 @@ export const INSTRUMENT_MANUFACTURER_MAX_LENGTH = 255
 export const INSTRUMENT_MODEL_MAX_LENGTH = 255
 export const INSTRUMENT_OTHER_ID_MAX_LENGTH = 255
 export const INSTRUMENT_OTHER_ID_SOURCE_MAX_LENGTH = 255
+
+export const instrumentListInputSchema = z.object({
+  affiliation: collectionAffiliationSchema.optional(),
+  cursor: collectionCursorSchema,
+  direction: sortDirectionSchema.optional(),
+  includeOwner: z.boolean().optional(),
+  includeTotal: z.boolean().optional(),
+  instrumentType: z
+    .string()
+    .trim()
+    .min(1)
+    .max(INSTRUMENT_TYPE_MAX_LENGTH)
+    .optional(),
+  limit: z.number().int().min(1).max(100),
+  location: z
+    .string()
+    .trim()
+    .min(1)
+    .max(INSTRUMENT_LOCATION_MAX_LENGTH)
+    .optional(),
+  manufacturer: z
+    .string()
+    .trim()
+    .min(1)
+    .max(INSTRUMENT_MANUFACTURER_MAX_LENGTH)
+    .optional(),
+  ownerId: z.string().trim().min(1).max(255).optional(),
+  scenario: fixtureScenarioSchema.optional(),
+  sort: instrumentSortSchema.optional(),
+  status: z.enum(instrumentStatuses).optional(),
+})
 
 const canonicalInstrumentMfidSchema = z
   .string()

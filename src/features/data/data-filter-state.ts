@@ -9,12 +9,14 @@ import {
   collectionOrderingSearchState,
   collectionAffiliationSchema,
   collectionCursorSchema,
+  defaultCollectionOrdering,
   normalizeCollectionQueryOptions,
   resourceSortSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import type {
   CollectionAffiliation,
+  CollectionOrdering,
   NormalizedCollectionQueryOptions,
 } from "@/data/crucible/collection-query"
 import {
@@ -189,7 +191,10 @@ const domainFiltersSchema = z
     }
   })
 
-export function resolveDataFilters(search: DataSearch): DataFilterResolution {
+export function resolveDataFilters(
+  search: DataSearch,
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering
+): DataFilterResolution {
   const collection = collectionFiltersSchema.safeParse({
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
@@ -261,10 +266,13 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
     ...(domain.data.affiliation
       ? { affiliation: domain.data.affiliation }
       : {}),
-    ...normalizeCollectionQueryOptions({
-      direction: domain.data.direction,
-      sort: domain.data.sort,
-    }),
+    ...normalizeCollectionQueryOptions(
+      {
+        direction: domain.data.direction,
+        sort: domain.data.sort,
+      },
+      defaultOrdering
+    ),
     ...(domain.data.kind === "samples"
       ? {
           ownerId: domain.data.ownerId,
@@ -295,11 +303,13 @@ export function resolveDataFilters(search: DataSearch): DataFilterResolution {
 
 export function applyDataFilters(
   previous: Readonly<Record<string, unknown> & DataSearch>,
-  filters: DataFilterValues
+  filters: DataFilterValues,
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering
 ) {
   const ordering = collectionOrderingSearchState(
     filters.sort,
-    filters.direction
+    filters.direction,
+    defaultOrdering
   )
   return {
     ...previous,

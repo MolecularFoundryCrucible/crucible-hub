@@ -62,11 +62,13 @@ const principalIconClasses = {
   user: iconClasses.person,
 } satisfies Record<PrincipalType, string>
 
+const semanticTypeIconClass = "size-4 shrink-0"
+
 export function DataCollectionIcon({ className }: { className?: string }) {
   return (
     <DataIcon
       aria-hidden="true"
-      className={cn("text-(--resource-data)", className)}
+      className={cn(semanticTypeIconClass, "text-(--resource-data)", className)}
       data-resource-collection="data"
     />
   )
@@ -84,7 +86,7 @@ export function ResourceTypeIcon({
   const Icon = icons[type]
   return (
     <Icon
-      className={cn(iconClasses[type], className)}
+      className={cn(semanticTypeIconClass, iconClasses[type], className)}
       data-icon={dataIcon}
       data-resource-type={type}
       aria-hidden="true"
@@ -108,7 +110,11 @@ export function PrincipalTypeIcon({
     <Icon
       aria-hidden={label ? undefined : true}
       aria-label={label}
-      className={cn("size-4 shrink-0", principalIconClasses[type], className)}
+      className={cn(
+        semanticTypeIconClass,
+        principalIconClasses[type],
+        className
+      )}
       data-icon={dataIcon}
       data-principal-type={type}
       role={label ? "img" : undefined}

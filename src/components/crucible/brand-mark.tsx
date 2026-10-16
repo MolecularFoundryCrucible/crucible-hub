@@ -14,7 +14,7 @@ export function BrandMark({ className, variant = "logo" }: BrandMarkProps) {
       aria-hidden="true"
       className={cn(
         "flex shrink-0 items-center justify-center",
-        variant === "icon" ? "size-4" : "size-8",
+        variant === "icon" ? "size-4" : "size-8 overflow-hidden",
         className
       )}
     >
@@ -34,7 +34,7 @@ export function BrandMark({ className, variant = "logo" }: BrandMarkProps) {
       ) : (
         <img
           alt=""
-          className="size-full object-contain"
+          className="size-full object-cover"
           src={crucibleLogoHubUrl}
         />
       )}

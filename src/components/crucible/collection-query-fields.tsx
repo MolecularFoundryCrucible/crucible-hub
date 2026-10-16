@@ -1,10 +1,13 @@
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { defaultCollectionOrdering } from "@/data/crucible/collection-query"
 import type {
+  CollectionOrdering,
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
+import { defaultOrderLabel } from "@/data/crucible/filter-draft"
 
 type CreatedRange = {
   createdFrom?: string
@@ -72,6 +75,7 @@ type CollectionOrderValue = {
 
 export function CollectionOrderFields({
   allowDefault = true,
+  defaultOrdering = defaultCollectionOrdering,
   describedBy,
   idPrefix,
   invalid = () => false,
@@ -79,6 +83,7 @@ export function CollectionOrderFields({
   value,
 }: {
   allowDefault?: boolean
+  defaultOrdering?: CollectionOrdering
   describedBy?: string
   idPrefix: string
   invalid?: (field: keyof CollectionOrder) => boolean
@@ -107,7 +112,7 @@ export function CollectionOrderFields({
         >
           {allowDefault ? (
             <NativeSelectOption value="">
-              Default (newest created)
+              {defaultOrderLabel(defaultOrdering)}
             </NativeSelectOption>
           ) : null}
           <NativeSelectOption value="name">Name</NativeSelectOption>

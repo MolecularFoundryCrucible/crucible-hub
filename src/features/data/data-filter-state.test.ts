@@ -76,6 +76,35 @@ describe("global data filter state", () => {
     })
   })
 
+  it("uses preferred default ordering when URL omits sort and preserves explicit overrides", () => {
+    const preferred = { direction: "asc" as const, sort: "name" as const }
+    const defaultResolution = resolveDataFilters({ kind: "samples" }, preferred)
+    expect(defaultResolution).toMatchObject({
+      filters: { direction: "asc", kind: "samples", sort: "name" },
+      valid: true,
+    })
+    if (!defaultResolution.valid) throw new Error("Expected valid filters")
+    expect(
+      applyDataFilters({}, defaultResolution.filters, preferred)
+    ).toMatchObject({
+      direction: undefined,
+      sort: undefined,
+    })
+
+    const explicitDefaultResolution = resolveDataFilters(
+      { direction: "desc", kind: "samples", sort: "created" },
+      preferred
+    )
+    if (!explicitDefaultResolution.valid)
+      throw new Error("Expected valid filters")
+    expect(
+      applyDataFilters({}, explicitDefaultResolution.filters, preferred)
+    ).toMatchObject({
+      direction: "desc",
+      sort: "created",
+    })
+  })
+
   it.each([
     [{ projectScope: "shared" }, "projectScope"],
     [{ instrumentMfid: "instrument-1", kind: "samples" }, "instrumentMfid"],

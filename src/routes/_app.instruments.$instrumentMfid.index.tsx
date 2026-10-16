@@ -49,11 +49,13 @@ import type { DatasetFacetField, FacetSelection } from "@/data/crucible/facets"
 import { collectionFilterFields } from "@/data/crucible/collection-filters"
 import {
   collectionOrderingSearchState,
+  defaultCollectionOrdering,
   normalizeCollectionQueryOptions,
   resourceSortSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import type {
+  CollectionOrdering,
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
@@ -62,7 +64,10 @@ import {
   datasetsCursorQueryOptions,
 } from "@/data/crucible/data.queries"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
-import { useDataGroupBy } from "@/features/preferences/data-group-by"
+import {
+  useDataGroupBy,
+  useDefaultSort,
+} from "@/features/preferences/data-group-by"
 
 const instrumentDatasetSearchSchema = z.object({
   ...collectionBrowseSearchFields,
@@ -103,10 +108,13 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
       createdFrom: deps.createdFrom,
       createdTo: deps.createdTo,
       instrumentMfid: instrument.instrumentMfid,
-      ...normalizeCollectionQueryOptions({
-        direction: deps.direction,
-        sort: deps.sort,
-      }),
+      ...normalizeCollectionQueryOptions(
+        {
+          direction: deps.direction,
+          sort: deps.sort,
+        },
+        instrument.defaultSort?.data
+      ),
     }
     const filters =
       browse.view === "grouped"
@@ -205,6 +213,10 @@ function InstrumentDatasetsPage() {
   const dataGroupBy = useDataGroupBy(
     instrument?.isInstrument ? instrument.dataGroupBy : undefined
   )
+  const defaultSort = useDefaultSort(
+    instrument?.isInstrument ? instrument.defaultSort : undefined
+  )
+  const defaultOrdering = defaultSort?.data ?? defaultCollectionOrdering
   const browse = resolveCollectionBrowse(
     search,
     instrumentDatasetBrowseOptions,
@@ -214,10 +226,13 @@ function InstrumentDatasetsPage() {
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
     instrumentMfid,
-    ...normalizeCollectionQueryOptions({
-      direction: search.direction,
-      sort: search.sort,
-    }),
+    ...normalizeCollectionQueryOptions(
+      {
+        direction: search.direction,
+        sort: search.sort,
+      },
+      defaultOrdering
+    ),
   }
   const collectionFilters =
     browse.view === "grouped"
@@ -351,7 +366,9 @@ function InstrumentDatasetsPage() {
   }
 
   function changeSort(sort: ResourceSort, direction: SortDirection) {
-    updateBrowse(collectionOrderingSearchState(sort, direction))
+    updateBrowse(
+      collectionOrderingSearchState(sort, direction, defaultOrdering)
+    )
   }
 
   return (
@@ -360,13 +377,15 @@ function InstrumentDatasetsPage() {
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <InstrumentDatasetFilters
+              defaultOrdering={defaultOrdering}
               onApply={(values) =>
                 updateBrowse({
                   createdFrom: values.createdFrom,
                   createdTo: values.createdTo,
                   ...collectionOrderingSearchState(
                     values.sort,
-                    values.direction
+                    values.direction,
+                    defaultOrdering
                   ),
                 })
               }
@@ -415,9 +434,11 @@ type InstrumentDatasetFilterValues = {
 }
 
 function InstrumentDatasetFilters({
+  defaultOrdering = defaultCollectionOrdering,
   onApply,
   values,
 }: {
+  defaultOrdering?: CollectionOrdering
   onApply: (values: InstrumentDatasetFilterValues) => void
   values: InstrumentDatasetFilterValues
 }) {
@@ -520,6 +541,7 @@ function InstrumentDatasetFilters({
             value={draft}
           />
           <CollectionOrderFields
+            defaultOrdering={defaultOrdering}
             idPrefix="instrument-dataset"
             onChange={(value) =>
               setDraft((current) => ({ ...current, ...value }))

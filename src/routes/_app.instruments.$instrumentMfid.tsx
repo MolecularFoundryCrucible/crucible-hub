@@ -33,7 +33,10 @@ import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import { hubPageTitle } from "@/lib/page-title"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
-import { loadDataGroupBy } from "@/features/preferences/data-group-by"
+import {
+  loadDataGroupBy,
+  loadDefaultSort,
+} from "@/features/preferences/data-group-by"
 
 export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
   staleTime: Infinity,
@@ -41,11 +44,16 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const [resource, dataGroupBy] = await Promise.all([
+    const [resource, dataGroupBy, defaultSort] = await Promise.all([
       context.queryClient.ensureQueryData(
         resourceSummaryQueryOptions(source.scope, params.instrumentMfid)
       ),
       loadDataGroupBy(
+        context.queryClient,
+        source.scope,
+        source.accountPreferencesEnabled
+      ),
+      loadDefaultSort(
         context.queryClient,
         source.scope,
         source.accountPreferencesEnabled
@@ -56,6 +64,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
     }
     return {
       dataGroupBy,
+      defaultSort,
       instrumentMfid: resource.unique_id,
       instrumentName: resourceDisplayName("instrument", resource.name, {
         identifier: resource.instrument_id,
@@ -127,12 +136,7 @@ function InstrumentPage() {
       </Breadcrumb>
 
       <PageHeader
-        icon={
-          <ResourceTypeIcon
-            className="mt-1 size-6 shrink-0"
-            type="instrument"
-          />
-        }
+        icon={<ResourceTypeIcon className="size-5" type="instrument" />}
         identifier={
           resource.instrument_id && resource.instrument_id !== resource.name
             ? resource.instrument_id
@@ -165,7 +169,7 @@ function InstrumentPage() {
           viewTransition
           className={resourceSectionLinkClassName}
           params={{ instrumentMfid }}
-          search={{ cursor: undefined }}
+          search={{}}
           to="/instruments/$instrumentMfid"
         >
           Data

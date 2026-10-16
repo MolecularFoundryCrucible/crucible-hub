@@ -25,7 +25,6 @@ import { ContentBoundary } from "@/components/crucible/content-layout"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
-import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -517,11 +516,6 @@ function ManagedResourceAccess({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
             <div className="flex min-w-0 items-center gap-2">
               <h3 className="font-heading text-label">Public access</h3>
-              <IdentityFieldIcon
-                type={
-                  resource.public ? "visibility-public" : "visibility-private"
-                }
-              />
               <VisibilityBadge isPublic={resource.public} />
             </div>
             <Button

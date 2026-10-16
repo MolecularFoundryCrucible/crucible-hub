@@ -34,7 +34,10 @@ import {
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import { facetFilterSearchFields } from "@/data/crucible/facet-filter-search"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
-import { useDataGroupBy } from "@/features/preferences/data-group-by"
+import {
+  useDataGroupBy,
+  useDefaultSort,
+} from "@/features/preferences/data-group-by"
 
 const filterSearchValue = z.string().max(255).optional().catch("")
 const selectedFacetSchema = z
@@ -100,7 +103,11 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     if (cause === "stay") return
     const project = (await parentMatchPromise).loaderData
     if (!project?.isProject || !project.projectMfid) return
-    const resolution = resolveProjectDataFilters(deps, deps.kind)
+    const resolution = resolveProjectDataFilters(
+      deps,
+      deps.kind,
+      project.defaultSort?.data
+    )
     if (!resolution.valid) return
     if (deps.kind === "samples") {
       const browse = resolveCollectionBrowse(
@@ -208,6 +215,7 @@ function ProjectDataPage() {
   const { projectMfid } = Route.useParams()
   const project = projectRoute.useLoaderData()
   const dataGroupBy = useDataGroupBy(project?.dataGroupBy)
+  const defaultSort = useDefaultSort(project?.defaultSort)
   const navigation = useResourcePreviewNavigation({
     kind: "project-data",
     preview: search.preview,
@@ -218,13 +226,18 @@ function ProjectDataPage() {
   const kind: ProjectDataKind = search.kind ?? "samples"
   const projectScope: ProjectScope = search.scope ?? "all"
   const filterValues = projectDataFilterValues(search)
-  const filterResolution = resolveProjectDataFilters(filterValues, kind)
+  const filterResolution = resolveProjectDataFilters(
+    filterValues,
+    kind,
+    defaultSort?.data
+  )
   return (
     <ResourcePreviewContext.Provider value={navigation}>
       <ProjectDataCollection
         browseSearch={search}
-        dataGroupBy={dataGroupBy}
         cursor={kind === "samples" ? search.sampleCursor : search.datasetCursor}
+        dataGroupBy={dataGroupBy}
+        defaultOrdering={defaultSort?.data}
         filterResolution={filterResolution}
         filterValues={filterValues}
         kind={kind}

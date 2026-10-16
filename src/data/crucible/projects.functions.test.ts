@@ -13,6 +13,7 @@ describe("project server-function inputs", () => {
   it("accepts bounded cursor pagination and query parameters", () => {
     expect(
       projectListInputSchema.parse({
+        activeSince: "2026-08-01",
         direction: "asc",
         limit: 20,
         memberRef: "user-123",
@@ -20,6 +21,7 @@ describe("project server-function inputs", () => {
         sort: "title",
       })
     ).toEqual({
+      activeSince: "2026-08-01",
       direction: "asc",
       limit: 20,
       memberRef: "user-123",
@@ -28,13 +30,19 @@ describe("project server-function inputs", () => {
     })
   })
 
-  it("rejects invalid project sort or role filters", () => {
+  it("rejects invalid project sort, role, or activeSince filters", () => {
     expect(
       projectListInputSchema.safeParse({ limit: 20, sort: "invalid" }).success
     ).toBe(false)
     expect(
       projectListInputSchema.safeParse({ limit: 20, memberRole: "invalid" })
         .success
+    ).toBe(false)
+    expect(
+      projectListInputSchema.safeParse({
+        activeSince: "2026-13-01",
+        limit: 20,
+      }).success
     ).toBe(false)
   })
 

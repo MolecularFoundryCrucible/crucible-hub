@@ -176,24 +176,38 @@ describe("instrument registration server function input", () => {
 })
 
 describe("instrument list server function input", () => {
-  it("accepts valid sort and direction parameters", () => {
+  it("accepts valid sort, direction, and directory filter parameters", () => {
     expect(
       instrumentListInputSchema.parse({
         direction: "desc",
+        instrumentType: " X-ray microscope ",
         limit: 20,
+        location: " Beamline 5.3.2 ",
+        manufacturer: " Example Instruments ",
+        ownerId: " 0000-0000-0000-000X ",
         sort: "name",
       })
     ).toEqual({
       direction: "desc",
+      instrumentType: "X-ray microscope",
       limit: 20,
+      location: "Beamline 5.3.2",
+      manufacturer: "Example Instruments",
+      ownerId: "0000-0000-0000-000X",
       sort: "name",
     })
   })
 
-  it("rejects invalid instrument sort", () => {
+  it("rejects invalid instrument sort or empty filter strings", () => {
     expect(
       instrumentListInputSchema.safeParse({ limit: 20, sort: "invalid" })
         .success
+    ).toBe(false)
+    expect(
+      instrumentListInputSchema.safeParse({
+        instrumentType: "   ",
+        limit: 20,
+      }).success
     ).toBe(false)
   })
 })

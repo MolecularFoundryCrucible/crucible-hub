@@ -58,7 +58,7 @@ export function IdentityDetailPending({
       <PageHeaderSkeleton
         icon={
           <PrincipalTypeIcon
-            className="mt-1 size-6 shrink-0"
+            className="size-5"
             type={serviceAccount ? "service_account" : "user"}
           />
         }

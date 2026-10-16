@@ -20,19 +20,25 @@ export const instrumentPageLimit = 100
 
 function instrumentStatusScopedPreviousData<TData>(
   scope: IdentityScope,
-  affiliation: CollectionAffiliation | undefined,
-  direction: WorkspaceSortDirection | undefined,
-  includeOwner: boolean,
-  includeTotal: boolean,
-  sort: WorkspaceInstrumentSort | undefined,
-  status: WorkspaceInstrumentStatus,
+  filters: {
+    affiliation?: CollectionAffiliation
+    direction?: WorkspaceSortDirection
+    includeOwner: boolean
+    includeTotal: boolean
+    instrumentType?: string
+    location?: string
+    manufacturer?: string
+    ownerId?: string
+    sort?: WorkspaceInstrumentSort
+    status?: WorkspaceInstrumentStatus
+  },
   previousData: TData | undefined,
   previousQuery: { queryKey: readonly unknown[] } | undefined
 ) {
   if (
     collectionScopedPreviousData(
       scope,
-      { affiliation, direction, includeOwner, includeTotal, sort, status },
+      filters,
       previousData,
       previousQuery
     ) === undefined
@@ -50,9 +56,13 @@ export function instrumentsQueryOptions(
     direction?: WorkspaceSortDirection
     includeOwner?: boolean
     includeTotal?: boolean
+    instrumentType?: string
     limit: number
+    location?: string
+    manufacturer?: string
+    ownerId?: string
     sort?: WorkspaceInstrumentSort
-    status: WorkspaceInstrumentStatus
+    status?: WorkspaceInstrumentStatus
   }
 ) {
   const scenario = fixtureScenarioFromScope(scope)
@@ -72,12 +82,18 @@ export function instrumentsQueryOptions(
     placeholderData: (previousData, previousQuery) =>
       instrumentStatusScopedPreviousData(
         scope,
-        filters.affiliation,
-        filters.direction,
-        filters.includeOwner ?? true,
-        filters.includeTotal ?? true,
-        filters.sort,
-        filters.status,
+        {
+          affiliation: filters.affiliation,
+          direction: filters.direction,
+          includeOwner: filters.includeOwner ?? true,
+          includeTotal: filters.includeTotal ?? true,
+          instrumentType: filters.instrumentType,
+          location: filters.location,
+          manufacturer: filters.manufacturer,
+          ownerId: filters.ownerId,
+          sort: filters.sort,
+          status: filters.status,
+        },
         previousData,
         previousQuery
       ),
@@ -93,9 +109,13 @@ export function instrumentsCursorQueryOptions(
     direction?: WorkspaceSortDirection
     includeOwner?: boolean
     includeTotal?: boolean
+    instrumentType?: string
     limit: number
+    location?: string
+    manufacturer?: string
+    ownerId?: string
     sort?: WorkspaceInstrumentSort
-    status: WorkspaceInstrumentStatus
+    status?: WorkspaceInstrumentStatus
   }
 ) {
   const scenario = fixtureScenarioFromScope(scope)
@@ -107,7 +127,11 @@ export function instrumentsCursorQueryOptions(
       includeOwner: filters.includeOwner ?? true,
       includeTotal: filters.includeTotal ?? true,
       initialCursor: filters.cursor ?? null,
+      instrumentType: filters.instrumentType,
       limit: filters.limit,
+      location: filters.location,
+      manufacturer: filters.manufacturer,
+      ownerId: filters.ownerId,
       sort: filters.sort,
       status: filters.status,
     }),
@@ -120,7 +144,11 @@ export function instrumentsCursorQueryOptions(
             direction: filters.direction,
             includeOwner: filters.includeOwner,
             includeTotal: filters.includeTotal,
+            instrumentType: filters.instrumentType,
             limit: filters.limit,
+            location: filters.location,
+            manufacturer: filters.manufacturer,
+            ownerId: filters.ownerId,
             scenario,
             sort: filters.sort,
             status: filters.status,
@@ -132,12 +160,18 @@ export function instrumentsCursorQueryOptions(
     placeholderData: (previousData, previousQuery) =>
       instrumentStatusScopedPreviousData(
         scope,
-        filters.affiliation,
-        filters.direction,
-        filters.includeOwner ?? true,
-        filters.includeTotal ?? true,
-        filters.sort,
-        filters.status,
+        {
+          affiliation: filters.affiliation,
+          direction: filters.direction,
+          includeOwner: filters.includeOwner ?? true,
+          includeTotal: filters.includeTotal ?? true,
+          instrumentType: filters.instrumentType,
+          location: filters.location,
+          manufacturer: filters.manufacturer,
+          ownerId: filters.ownerId,
+          sort: filters.sort,
+          status: filters.status,
+        },
         previousData,
         previousQuery
       ),

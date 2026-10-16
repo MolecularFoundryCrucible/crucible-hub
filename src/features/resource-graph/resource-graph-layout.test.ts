@@ -11,6 +11,7 @@ import {
   layoutResourceGraph,
   resetResourceGraphLayoutEngine,
   resolveAssociationHandleIds,
+  resolveGraphNodeClickAction,
 } from "./resource-graph-canvas"
 import {
   graphRelationshipOrder,
@@ -298,5 +299,56 @@ describe("resource graph layout engine resilience", () => {
     await expect(
       layoutResourceGraph(testGraph, element, "RIGHT")
     ).rejects.toThrow()
+  })
+})
+
+describe("resolveGraphNodeClickAction", () => {
+  it("opens the inspector immediately on desktop pointer clicks", () => {
+    expect(
+      resolveGraphNodeClickAction({
+        inspectedMfid: null,
+        nodeMfid: "sample-1",
+        selectedMfid: null,
+        twoTapMode: false,
+      })
+    ).toBe("inspect")
+  })
+
+  it("selects an unselected node on the first tap and inspects on the second tap", () => {
+    expect(
+      resolveGraphNodeClickAction({
+        inspectedMfid: null,
+        nodeMfid: "sample-1",
+        selectedMfid: null,
+        twoTapMode: true,
+      })
+    ).toBe("select")
+
+    expect(
+      resolveGraphNodeClickAction({
+        inspectedMfid: null,
+        nodeMfid: "sample-2",
+        selectedMfid: "sample-1",
+        twoTapMode: true,
+      })
+    ).toBe("select")
+
+    expect(
+      resolveGraphNodeClickAction({
+        inspectedMfid: null,
+        nodeMfid: "sample-1",
+        selectedMfid: "sample-1",
+        twoTapMode: true,
+      })
+    ).toBe("inspect")
+
+    expect(
+      resolveGraphNodeClickAction({
+        inspectedMfid: "sample-1",
+        nodeMfid: "sample-1",
+        selectedMfid: null,
+        twoTapMode: true,
+      })
+    ).toBe("inspect")
   })
 })

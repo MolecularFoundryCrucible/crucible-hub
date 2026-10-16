@@ -4,6 +4,11 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Added default sort field and direction preferences for Data, Projects, and Instruments.
+- Added right-aligned filter sheets, removable filter pills, and refresh actions to Projects (role or lead affiliation, active-since date, and sort order) and Instruments (lifecycle status, management scope, manager, instrument type, location, manufacturer, and sort order), and stopped search parameters from leaking across sidebar and workspace tab navigation.
+- Aligned the right-side resource inspector with canonical detail cards (Back navigation, resource-colored top accent bar, abbreviated owner names, icon-paired context fields with record, creation, and update timestamps, and bounded file lists), refined the resource Graph tab (taller recessed canvas, accented node cards, thicker connectors, two-tap mobile selection, and no duplicate bottom table), and unified the Crucible Foundry resource palette, entity icon wells, group-by headers, filter pills, visibility badges, and Crucible brand icons across the workspace.
+- Aligned the Crucible ID column in Service accounts administration with the Users directory.
+
 ## 1.3.2 - 2026-10-15
 
 - Added last-active timestamps, activity filtering, and sorting to Service accounts administration.

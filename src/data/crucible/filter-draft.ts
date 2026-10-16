@@ -1,3 +1,4 @@
+import type { SortDirection } from "./collection-query"
 import type { FacetSelection } from "./facets"
 
 export type FacetValueKey =
@@ -38,9 +39,22 @@ export function setFacetDraft<TFilters>(
 }
 
 export function sortLabel(sort: string) {
+  if (sort === "activity") return "Last activity"
   if (sort === "created") return "Created"
   if (sort === "updated") return "Updated"
   return "Name"
+}
+
+export function defaultOrderLabel(ordering: {
+  direction: SortDirection
+  sort: string
+}) {
+  if (ordering.sort === "created" && ordering.direction === "desc") {
+    return "Default (newest created)"
+  }
+  return `Default (${sortLabel(ordering.sort).toLowerCase()} ${
+    ordering.direction === "asc" ? "ascending" : "descending"
+  })`
 }
 
 export function capitalize(value: string) {

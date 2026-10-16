@@ -34,6 +34,8 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { defaultCollectionOrdering } from "@/data/crucible/collection-query"
+import type { CollectionOrdering } from "@/data/crucible/collection-query"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
@@ -93,9 +95,11 @@ const dataFilterRemoval: Readonly<
 }
 
 export function DataFilters({
+  defaultOrdering = defaultCollectionOrdering,
   errors,
   values,
 }: {
+  defaultOrdering?: CollectionOrdering
   errors: readonly DataFilterError[]
   values: DataSearch
 }) {
@@ -109,7 +113,7 @@ export function DataFilters({
   const [filtersOpen, setFiltersOpen] = useState(errors.length > 0)
   const [projectName, setProjectName] = useState<string>()
   const scope = useWorkspaceScope()
-  const resolution = resolveDataFilters(values)
+  const resolution = resolveDataFilters(values, defaultOrdering)
   const activeProjectMfid = resolution.valid
     ? resolution.filters.projectMfid
     : undefined
@@ -261,7 +265,7 @@ export function DataFilters({
     : undefined
   function apply(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const next = resolveDataFilters({ ...values, ...draft })
+    const next = resolveDataFilters({ ...values, ...draft }, defaultOrdering)
     if (!next.valid) {
       setDraftErrors(next.errors)
       return
@@ -269,7 +273,8 @@ export function DataFilters({
     setDraftErrors([])
     setFiltersOpen(false)
     void navigate({
-      search: (previous) => applyDataFilters(previous, next.filters),
+      search: (previous) =>
+        applyDataFilters(previous, next.filters, defaultOrdering),
       state: {},
       to: "/data",
     })
@@ -598,6 +603,7 @@ export function DataFilters({
               />
             ) : null}
             <CollectionOrderFields
+              defaultOrdering={defaultOrdering}
               describedBy={errorDescription}
               idPrefix="data"
               invalid={invalid}

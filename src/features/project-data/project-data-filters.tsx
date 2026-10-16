@@ -34,7 +34,11 @@ import {
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { ProjectScope } from "@/data/crucible/data.queries"
-import { collectionOrderingSearchState } from "@/data/crucible/collection-query"
+import {
+  collectionOrderingSearchState,
+  defaultCollectionOrdering,
+} from "@/data/crucible/collection-query"
+import type { CollectionOrdering } from "@/data/crucible/collection-query"
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 
@@ -93,12 +97,14 @@ const projectDataFilterRemoval: Readonly<
 }
 
 export function ProjectDataFilters({
+  defaultOrdering = defaultCollectionOrdering,
   errors,
   kind,
   projectMfid,
   projectScope,
   values,
 }: {
+  defaultOrdering?: CollectionOrdering
   errors: readonly ProjectDataFilterError[]
   kind: ProjectDataKind
   projectMfid: string
@@ -113,7 +119,7 @@ export function ProjectDataFilters({
   const [draftErrors, setDraftErrors] =
     useState<readonly ProjectDataFilterError[]>(errors)
   const [filtersOpen, setFiltersOpen] = useState(errors.length > 0)
-  const resolution = resolveProjectDataFilters(values, kind)
+  const resolution = resolveProjectDataFilters(values, kind, defaultOrdering)
   const activeInstrumentMfid =
     resolution.valid && kind === "datasets"
       ? resolution.filters.instrumentMfid
@@ -244,7 +250,7 @@ export function ProjectDataFilters({
 
   function apply(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const next = resolveProjectDataFilters(draft, kind)
+    const next = resolveProjectDataFilters(draft, kind, defaultOrdering)
     if (!next.valid) {
       setDraftErrors(next.errors)
       return
@@ -253,7 +259,8 @@ export function ProjectDataFilters({
     setFiltersOpen(false)
     const ordering = collectionOrderingSearchState(
       next.filters.sort,
-      next.filters.direction
+      next.filters.direction,
+      defaultOrdering
     )
     void navigate({
       params: { projectMfid },
@@ -639,6 +646,7 @@ export function ProjectDataFilters({
               />
             ) : null}
             <CollectionOrderFields
+              defaultOrdering={defaultOrdering}
               describedBy={errorDescription}
               idPrefix="project-data"
               invalid={invalid}

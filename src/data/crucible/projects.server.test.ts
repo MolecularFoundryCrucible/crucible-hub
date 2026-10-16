@@ -35,6 +35,28 @@ describe("workspace project source", () => {
     expect(first.total).toBe(2)
   })
 
+  it("filters fixture projects by memberRole and activeSince", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    const contributorOnly = await readWorkspaceProjects({
+      limit: 20,
+      memberRef: "0000-0000-0000-000X",
+      memberRole: "contributor",
+    })
+    expect(contributorOnly.items.map((item) => item.project_id)).toEqual([
+      "porous-framework-screening",
+    ])
+
+    const recentOnly = await readWorkspaceProjects({
+      activeSince: "2026-08-01",
+      limit: 20,
+    })
+    expect(recentOnly.items.map((item) => item.project_id)).toEqual([
+      "operando-catalyst-mapping",
+    ])
+  })
+
   it("resolves fixture project detail by canonical MFID", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")

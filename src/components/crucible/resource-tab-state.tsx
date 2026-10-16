@@ -26,22 +26,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 
@@ -85,7 +71,7 @@ export function EntityWorkspacePending({
         </BreadcrumbList>
       </Breadcrumb>
       <PageHeaderSkeleton
-        icon={<ResourceTypeIcon className="mt-1 size-6 shrink-0" type={kind} />}
+        icon={<ResourceTypeIcon className="size-5" type={kind} />}
         identifier={kind === "project" || kind === "instrument"}
         label="Loading resource identity"
       />
@@ -183,56 +169,6 @@ export function ResourceGraphPending() {
       role="status"
     >
       <Skeleton className="min-h-graph-canvas w-full" />
-      <Card aria-busy="true">
-        <CardHeader actionLayout="inline">
-          <CardTitle>Relationships</CardTitle>
-          <CardAction>
-            <Skeleton className="h-5 w-7 rounded-full" />
-          </CardAction>
-        </CardHeader>
-        <CardContent className="px-0">
-          <div className="border-t">
-            <Table className="resource-graph-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Relationship</TableHead>
-                  <TableHead>Resource</TableHead>
-                  <TableHead kind="action">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {["w-44", "w-56", "w-48"].map((width, index) => (
-                  <TableRow key={index}>
-                    <TableCell
-                      className="resource-graph-relationship"
-                      data-label="Relationship"
-                    >
-                      <Skeleton className="h-5 w-20 rounded-full" />
-                    </TableCell>
-                    <TableCell className="resource-graph-resource">
-                      <span className="flex min-w-0 items-center gap-2.5">
-                        <Skeleton className="size-4 shrink-0 rounded-sm" />
-                        <span className="grid min-w-0 flex-1 gap-1.5">
-                          <Skeleton className={cn("h-4 max-w-full", width)} />
-                          <Skeleton className="h-3.5 w-32 max-w-full" />
-                        </span>
-                      </span>
-                    </TableCell>
-                    <TableCell className="resource-graph-action" kind="action">
-                      <span className="flex justify-end gap-1">
-                        <Skeleton className="size-7 rounded-md" />
-                        <Skeleton className="size-7 rounded-md" />
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

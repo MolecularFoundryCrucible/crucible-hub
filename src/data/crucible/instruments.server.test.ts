@@ -99,7 +99,7 @@ describe("workspace instrument source", () => {
     expect(page.items[1]).toMatchObject({ capabilities: null })
   })
 
-  it("sends the selected lifecycle status to the instrument collection", async () => {
+  it("sends the selected lifecycle status and directory filters to the instrument collection", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -119,16 +119,46 @@ describe("workspace instrument source", () => {
     )
 
     await readWorkspaceInstruments({
+      instrumentType: "X-ray microscope",
       limit: 20,
+      location: "Beamline 5.3.2",
+      manufacturer: "Example Instruments",
+      ownerId: "0000-0000-0000-000X",
       status: "decommissioned",
     })
 
     expect(Object.fromEntries(new URL(requests[0].url).searchParams)).toEqual({
       include_owner: "true",
       include_total: "true",
+      instrument_type: "X-ray microscope",
       limit: "20",
+      location: "Beamline 5.3.2",
+      manufacturer: "Example Instruments",
+      owner_id: "0000-0000-0000-000X",
       status: "decommissioned",
     })
+  })
+
+  it("filters fixture instruments by type, location, manufacturer, and manager", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    await expect(
+      readWorkspaceInstruments({
+        instrumentType: "x-ray microscope",
+        limit: 20,
+        location: "beamline 5.3.2",
+        manufacturer: "example instruments",
+        ownerId: "0000-0000-0000-000X",
+      })
+    ).resolves.toMatchObject({ total: 1 })
+
+    await expect(
+      readWorkspaceInstruments({
+        limit: 20,
+        location: "Nonexistent Room",
+      })
+    ).resolves.toMatchObject({ items: [], total: 0 })
   })
 
   it("does not bypass the production fixture guard", async () => {

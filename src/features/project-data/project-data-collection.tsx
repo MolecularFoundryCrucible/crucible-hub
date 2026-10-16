@@ -59,10 +59,14 @@ import type {
   SampleFacetField,
 } from "@/data/crucible/facets"
 import type {
+  CollectionOrdering,
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
-import { collectionOrderingSearchState } from "@/data/crucible/collection-query"
+import {
+  collectionOrderingSearchState,
+  defaultCollectionOrdering,
+} from "@/data/crucible/collection-query"
 import { HubApiClientError } from "@/data/crucible/result"
 import type {
   WorkspaceDataset,
@@ -81,8 +85,9 @@ export type ProjectDataKind = "datasets" | "samples"
 
 export function ProjectDataCollection({
   browseSearch,
-  dataGroupBy,
   cursor,
+  dataGroupBy,
+  defaultOrdering = defaultCollectionOrdering,
   filterResolution,
   filterValues,
   kind,
@@ -92,6 +97,7 @@ export function ProjectDataCollection({
   browseSearch: CollectionBrowseSearch
   cursor: string | undefined
   dataGroupBy: DataGroupBy | undefined
+  defaultOrdering?: CollectionOrdering
   filterResolution: ProjectDataFilterResolution
   filterValues: ProjectDataFilterSearch
   kind: ProjectDataKind
@@ -116,7 +122,11 @@ export function ProjectDataCollection({
         )
       : undefined
   const onSort = (sort: ResourceSort, direction: SortDirection) => {
-    const ordering = collectionOrderingSearchState(sort, direction)
+    const ordering = collectionOrderingSearchState(
+      sort,
+      direction,
+      defaultOrdering
+    )
     void navigate({
       params: { projectMfid },
       search: (previous) => ({
@@ -141,6 +151,7 @@ export function ProjectDataCollection({
         sampleBrowse={sampleBrowse}
         toolbarActions={
           <ProjectDataFilters
+            defaultOrdering={defaultOrdering}
             errors={filterResolution.valid ? [] : filterResolution.errors}
             kind={kind}
             projectMfid={projectMfid}

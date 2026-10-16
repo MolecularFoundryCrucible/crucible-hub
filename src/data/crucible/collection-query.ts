@@ -20,40 +20,45 @@ export type CollectionQueryOptions = {
   sort?: ResourceSort
 }
 
+export type CollectionOrdering = {
+  direction: SortDirection
+  sort: ResourceSort
+}
+
 export const defaultCollectionOrdering = {
   direction: "desc",
   sort: "created",
-} as const satisfies {
-  direction: SortDirection
-  sort: ResourceSort
-}
+} as const satisfies CollectionOrdering
 
-export type NormalizedCollectionQueryOptions = CollectionQueryOptions & {
-  direction: SortDirection
-  sort: ResourceSort
-}
+export type NormalizedCollectionQueryOptions = CollectionQueryOptions &
+  CollectionOrdering
 
 export function normalizeCollectionQueryOptions(
-  options: CollectionQueryOptions
+  options: CollectionQueryOptions,
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering
 ): NormalizedCollectionQueryOptions {
   const hasExplicitSort = Boolean(options.sort)
   return {
     ...(options.affiliation ? { affiliation: options.affiliation } : {}),
     direction: hasExplicitSort
       ? (options.direction ?? defaultCollectionOrdering.direction)
-      : defaultCollectionOrdering.direction,
-    sort: options.sort ?? defaultCollectionOrdering.sort,
+      : defaultOrdering.direction,
+    sort: options.sort ?? defaultOrdering.sort,
   }
 }
 
 export function collectionOrderingSearchState(
   sort: ResourceSort | undefined,
-  direction: SortDirection | undefined
+  direction: SortDirection | undefined,
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering
 ) {
-  const normalized = normalizeCollectionQueryOptions({ direction, sort })
+  const normalized = normalizeCollectionQueryOptions(
+    { direction, sort },
+    defaultOrdering
+  )
   if (
-    normalized.sort === defaultCollectionOrdering.sort &&
-    normalized.direction === defaultCollectionOrdering.direction
+    normalized.sort === defaultOrdering.sort &&
+    normalized.direction === defaultOrdering.direction
   ) {
     return { direction: undefined, sort: undefined }
   }

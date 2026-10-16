@@ -221,7 +221,7 @@ function UserPage() {
         }
         icon={
           <PrincipalTypeIcon
-            className="mt-1 size-6 shrink-0"
+            className="size-5"
             type={isServiceAccount ? "service_account" : "user"}
           />
         }

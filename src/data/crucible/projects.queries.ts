@@ -57,6 +57,7 @@ export function userProjectsQueryOptions(
 export function projectsQueryOptions(
   scope: IdentityScope,
   filters: {
+    activeSince?: string
     affiliation?: CollectionAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
@@ -100,9 +101,12 @@ export function projectsQueryOptions(
       collectionScopedPreviousData(
         scope,
         {
+          activeSince: filters.activeSince,
           affiliation: filters.affiliation,
           direction: filters.direction,
           includeTotal: filters.includeTotal ?? true,
+          memberRef: filters.memberRef,
+          memberRole: filters.memberRole,
           sort: filters.sort,
         },
         previousData,
@@ -114,6 +118,7 @@ export function projectsQueryOptions(
 export function projectsCursorQueryOptions(
   scope: IdentityScope,
   filters: {
+    activeSince?: string
     affiliation?: CollectionAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
@@ -129,6 +134,7 @@ export function projectsCursorQueryOptions(
   return infiniteQueryOptions({
     initialPageParam: filters.cursor,
     queryKey: crucibleKeys.projectCursorChain(scope, {
+      activeSince: filters.activeSince,
       affiliation: filters.affiliation,
       direction: filters.direction,
       includeTotal: filters.includeTotal ?? true,
@@ -142,6 +148,7 @@ export function projectsCursorQueryOptions(
       unwrapHubResult(
         await getWorkspaceProjects({
           data: {
+            activeSince: filters.activeSince,
             affiliation: filters.affiliation,
             cursor: pageParam,
             direction: filters.direction,
@@ -171,9 +178,12 @@ export function projectsCursorQueryOptions(
       collectionScopedPreviousData(
         scope,
         {
+          activeSince: filters.activeSince,
           affiliation: filters.affiliation,
           direction: filters.direction,
           includeTotal: filters.includeTotal ?? true,
+          memberRef: filters.memberRef,
+          memberRole: filters.memberRole,
           sort: filters.sort,
         },
         previousData,

@@ -90,6 +90,7 @@ export function CollectionFilterPanel({
       </Sheet>
       {visibleFilters.map((filter) => (
         <RemovablePill
+          data-filter-id={filter.id}
           key={filter.id}
           label={filter.label}
           onRemove={() => onRemoveFilter(filter.id)}

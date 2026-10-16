@@ -26,6 +26,12 @@ import {
   globalSampleBrowseOptions,
 } from "@/data/crucible/collection-browse"
 import type { CollectionBrowseOption } from "@/data/crucible/collection-browse"
+import { defaultCollectionOrdering } from "@/data/crucible/collection-query"
+import type {
+  ResourceSort,
+  SortDirection,
+} from "@/data/crucible/collection-query"
+import type { DirectorySortField } from "@/data/crucible/preferences"
 import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.queries"
 import { recentScopeOptions } from "@/features/home/home-data"
 import { useThemePreference } from "@/features/preferences/theme-preference"
@@ -45,6 +51,35 @@ const recordKindOptions = [
   { label: "Samples", value: "samples" },
   { label: "Datasets", value: "datasets" },
 ] as const
+
+const dataSortOptions = [
+  { defaultDirection: "desc", label: "Created", value: "created" },
+  { defaultDirection: "desc", label: "Updated", value: "updated" },
+  { defaultDirection: "asc", label: "Name", value: "name" },
+] as const satisfies readonly {
+  defaultDirection: SortDirection
+  label: string
+  value: ResourceSort
+}[]
+
+const directorySortOptions = [
+  { defaultDirection: "asc", label: "Name", value: "name" },
+  { defaultDirection: "desc", label: "Created", value: "created" },
+  { defaultDirection: "desc", label: "Updated", value: "updated" },
+  { defaultDirection: "desc", label: "Last activity", value: "activity" },
+] as const satisfies readonly {
+  defaultDirection: SortDirection
+  label: string
+  value: DirectorySortField
+}[]
+
+const defaultDirectoryOrdering = {
+  direction: "asc",
+  sort: "name",
+} as const satisfies {
+  direction: SortDirection
+  sort: DirectorySortField
+}
 
 export const Route = createFileRoute("/_app/preferences")({
   head: () => ({ meta: [{ title: "Preferences | Crucible Hub" }] }),
@@ -118,6 +153,76 @@ function GroupingSelect<TField extends string>({
   )
 }
 
+function DefaultSortSelect<TSort extends string>({
+  defaultOrdering,
+  idPrefix,
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  defaultOrdering: { direction: SortDirection; sort: TSort }
+  idPrefix: string
+  label: string
+  onChange: (value: { direction: SortDirection; sort: TSort } | null) => void
+  options: readonly {
+    defaultDirection: SortDirection
+    label: string
+    value: TSort
+  }[]
+  value: { direction: SortDirection; sort: TSort } | undefined
+}) {
+  const activeSort = value?.sort ?? defaultOrdering.sort
+  const activeDirection = value?.direction ?? defaultOrdering.direction
+  const applyValue = (next: { direction: SortDirection; sort: TSort }) => {
+    if (
+      next.sort === defaultOrdering.sort &&
+      next.direction === defaultOrdering.direction
+    ) {
+      onChange(null)
+      return
+    }
+    onChange(next)
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <NativeSelect
+        id={`${idPrefix}-sort`}
+        onChange={(event) => {
+          const matched = options.find(
+            (option) => option.value === event.target.value
+          )
+          if (!matched) return
+          applyValue({
+            direction: value?.direction ?? matched.defaultDirection,
+            sort: matched.value,
+          })
+        }}
+        value={activeSort}
+      >
+        {options.map((option) => (
+          <NativeSelectOption key={option.value} value={option.value}>
+            {option.label}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+      <NativeSelect
+        aria-label={`${label} direction`}
+        id={`${idPrefix}-direction`}
+        onChange={(event) => {
+          const direction = event.target.value === "asc" ? "asc" : "desc"
+          applyValue({ direction, sort: activeSort })
+        }}
+        value={activeDirection}
+      >
+        <NativeSelectOption value="asc">Ascending</NativeSelectOption>
+        <NativeSelectOption value="desc">Descending</NativeSelectOption>
+      </NativeSelect>
+    </div>
+  )
+}
+
 function PreferencesPage() {
   const scope = useWorkspaceScope()
   useSuspenseQuery(accountPreferencesQueryOptions(scope))
@@ -167,6 +272,22 @@ function PreferencesPage() {
                   />
                 </PreferenceField>
                 <PreferenceField
+                  description="Sample and dataset lists on the Data page, in projects, and on instruments open in this order."
+                  id="preferred-data-sort-sort"
+                  title="Default data sort"
+                >
+                  <DefaultSortSelect
+                    defaultOrdering={defaultCollectionOrdering}
+                    idPrefix="preferred-data-sort"
+                    label="Default data sort"
+                    onChange={(value) =>
+                      update({ hub: { default_sort: { data: value } } })
+                    }
+                    options={dataSortOptions}
+                    value={preferences.hub?.default_sort?.data}
+                  />
+                </PreferenceField>
+                <PreferenceField
                   description="Sample lists on the Data page and in projects open grouped by this field instead of as a flat list."
                   id="preferred-sample-grouping"
                   title="Group samples by"
@@ -192,6 +313,42 @@ function PreferencesPage() {
                     }
                     options={globalDatasetBrowseOptions}
                     value={preferences.hub?.data_group_by?.datasets}
+                  />
+                </PreferenceField>
+              </FieldSet>
+              <FieldSeparator />
+              <FieldSet>
+                <FieldLegend>Directories</FieldLegend>
+                <PreferenceField
+                  description="The Projects directory opens in this order."
+                  id="preferred-project-sort-sort"
+                  title="Default project sort"
+                >
+                  <DefaultSortSelect
+                    defaultOrdering={defaultDirectoryOrdering}
+                    idPrefix="preferred-project-sort"
+                    label="Default project sort"
+                    onChange={(value) =>
+                      update({ hub: { default_sort: { projects: value } } })
+                    }
+                    options={directorySortOptions}
+                    value={preferences.hub?.default_sort?.projects}
+                  />
+                </PreferenceField>
+                <PreferenceField
+                  description="The Instruments directory opens in this order."
+                  id="preferred-instrument-sort-sort"
+                  title="Default instrument sort"
+                >
+                  <DefaultSortSelect
+                    defaultOrdering={defaultDirectoryOrdering}
+                    idPrefix="preferred-instrument-sort"
+                    label="Default instrument sort"
+                    onChange={(value) =>
+                      update({ hub: { default_sort: { instruments: value } } })
+                    }
+                    options={directorySortOptions}
+                    value={preferences.hub?.default_sort?.instruments}
                   />
                 </PreferenceField>
               </FieldSet>

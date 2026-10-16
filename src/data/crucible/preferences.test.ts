@@ -27,12 +27,26 @@ describe("account preferences", () => {
       accountPreferencesSchema.parse({
         theme: "sepia",
         default_record_kind: "datasets",
-        hub: { home_recent_scope: "mine", future: true },
+        hub: {
+          home_recent_scope: "mine",
+          default_sort: {
+            data: { sort: "name", direction: "asc" },
+            projects: { sort: "activity", direction: "desc" },
+            instruments: { sort: "invalid", direction: "desc" },
+          },
+          future: true,
+        },
         other_client: {},
       })
     ).toEqual({
       default_record_kind: "datasets",
-      hub: { home_recent_scope: "mine" },
+      hub: {
+        home_recent_scope: "mine",
+        default_sort: {
+          data: { sort: "name", direction: "asc" },
+          projects: { sort: "activity", direction: "desc" },
+        },
+      },
     })
   })
 
@@ -46,7 +60,13 @@ describe("account preferences", () => {
     ).toBe(false)
     expect(
       accountPreferencesPatchSchema.safeParse({
-        hub: { home_recent_scope: null },
+        hub: {
+          home_recent_scope: null,
+          default_sort: {
+            data: { sort: "updated", direction: "desc" },
+            projects: null,
+          },
+        },
         theme: null,
       }).success
     ).toBe(true)

@@ -1,27 +1,17 @@
 import {
   CreatedFieldIcon,
   MfidFieldIcon,
-  PrivateAccessIcon,
-  PublicAccessIcon,
   UpdatedFieldIcon,
 } from "@/components/crucible/icons"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { cn } from "@/lib/utils"
 
-export type IdentityFieldType =
-  | "created"
-  | "mfid"
-  | "owner"
-  | "updated"
-  | "visibility-private"
-  | "visibility-public"
+export type IdentityFieldType = "created" | "mfid" | "owner" | "updated"
 
 const identityIcons = {
   created: CreatedFieldIcon,
   mfid: MfidFieldIcon,
   updated: UpdatedFieldIcon,
-  "visibility-private": PrivateAccessIcon,
-  "visibility-public": PublicAccessIcon,
 } as const
 
 export function IdentityFieldIcon({

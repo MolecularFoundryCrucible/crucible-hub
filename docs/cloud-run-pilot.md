@@ -29,7 +29,7 @@ Confirm that the service annotations show `scalingMode` `manual` with `manualIns
 
 ## Shared session store
 
-The Hub can keep sessions in the Hub-owned `crucible_hub` database on `mf-crucible:us-central1:crucible-db`, so restarts and deployments no longer sign users out and more than one instance becomes possible. The database, schema `hub`, roles `crucible_hub_owner` and `crucible_hub_app`, and secrets `crucible-hub-main-db-owner-password` and `crucible-hub-main-db-app-password` are provisioned by the API operators; the runtime identity can read only the app password and holds `roles/cloudsql.client`. The [authentication transition](authentication-transition.md) describes the store.
+The Hub can keep sessions in the Hub-owned `crucible_hub` database on `mf-crucible:us-central1:crucible-db`, so restarts and deployments no longer sign users out and more than one instance becomes possible. The database, schema `hub`, roles `crucible_hub_owner` and `crucible_hub_app`, and secret `crucible-hub-db-app-password` are provisioned by the API operators; the runtime identity can read only the app password and holds `roles/cloudsql.client`. The [authentication transition](authentication-transition.md) describes the store.
 
 Switch in this order, at a quiet moment, because the configuration change signs everyone out once:
 
@@ -39,8 +39,7 @@ Switch in this order, at a quiet moment, because the configuration change signs 
    ```sh
    HUB_SESSION_DATABASE_INSTANCE=mf-crucible:us-central1:crucible-db \
    HUB_SESSION_DATABASE_USER=crucible_hub_owner \
-   HUB_SESSION_DATABASE_PASSWORD="$(gcloud secrets versions access latest \
-     --secret crucible-hub-main-db-owner-password --project mf-crucible)" \
+   HUB_SESSION_DATABASE_PASSWORD="<crucible_hub_owner_password>" \
    node scripts/migrate-session-store.mjs
    ```
 
@@ -62,7 +61,7 @@ Switch in this order, at a quiet moment, because the configuration change signs 
    gcloud run services update crucible-hub --project mf-crucible \
      --region us-central1 \
      --update-env-vars HUB_AUTH_SESSION_MODE=postgres,HUB_SESSION_DATABASE_INSTANCE=mf-crucible:us-central1:crucible-db \
-     --update-secrets HUB_SESSION_KEYS=crucible-hub-session-keys:latest,HUB_SESSION_DATABASE_PASSWORD=crucible-hub-main-db-app-password:latest
+     --update-secrets HUB_SESSION_KEYS=crucible-hub-session-keys:latest,HUB_SESSION_DATABASE_PASSWORD=crucible-hub-db-app-password:latest
    ```
 
 5. Check `/hub/health`, sign in, deploy the same image again or restart the revision, and confirm the session survives.

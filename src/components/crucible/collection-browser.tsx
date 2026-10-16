@@ -47,7 +47,7 @@ export function CollectionToolbar({
   sticky = true,
 }: {
   actions?: React.ReactNode
-  primary: React.ReactNode
+  primary?: React.ReactNode
   sticky?: boolean
 }) {
   return (
@@ -59,9 +59,18 @@ export function CollectionToolbar({
       )}
       data-slot="collection-toolbar"
     >
-      <div className="flex min-w-0 flex-wrap items-center gap-2">{primary}</div>
+      {primary ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {primary}
+        </div>
+      ) : null}
       {actions ? (
-        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">
+        <div
+          className={cn(
+            "flex min-w-0 flex-wrap items-center gap-2",
+            primary ? "sm:ml-auto" : "ml-auto"
+          )}
+        >
           {actions}
         </div>
       ) : null}
@@ -232,9 +241,14 @@ function CollectionBrowser({
   )
   return (
     <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[var(--container-group-directory)_minmax(0,1fr)]">
-      <Card size="sm">
+      <Card className="group-directory-card" data-facet-field={field} size="sm">
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <span className="entity-icon-well entity-icon-well-sm">
+              <FacetFieldIcon field={field} />
+            </span>
+            <span>{title}</span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-2">
           <CollectionGroupHeaders
@@ -439,7 +453,10 @@ function FacetFieldIcon({
   field: DatasetFacetField | SampleFacetField
 }) {
   if (field === "owner") {
-    return bucket?.owner ? (
+    if (!bucket) {
+      return <PrincipalTypeIcon data-icon="inline-start" type="user" />
+    }
+    return bucket.owner ? (
       <PrincipalTypeIcon
         data-icon="inline-start"
         type={personIsServiceAccount(bucket.owner) ? "service_account" : "user"}

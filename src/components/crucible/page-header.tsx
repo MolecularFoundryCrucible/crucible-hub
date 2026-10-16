@@ -27,8 +27,10 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0 flex-1 basis-56">
-        <div className="flex min-w-0 items-start gap-2">
-          {icon}
+        <div className="flex min-w-0 items-start gap-2.5">
+          {icon ? (
+            <span className="entity-icon-well entity-icon-well-lg">{icon}</span>
+          ) : null}
           <div className="min-w-0">
             <h1
               className="min-w-0 scroll-mt-20 text-title-page break-words"
@@ -69,8 +71,10 @@ export function PageHeaderSkeleton({
   return (
     <header className="flex flex-wrap items-end justify-between gap-4 border-b pb-6">
       <div className="min-w-0 flex-1 basis-56">
-        <div className="flex min-w-0 items-start gap-2">
-          {icon}
+        <div className="flex min-w-0 items-start gap-2.5">
+          {icon ? (
+            <span className="entity-icon-well entity-icon-well-lg">{icon}</span>
+          ) : null}
           <div className="min-w-0 flex-1" role="status">
             <Skeleton className="h-9 w-64 max-w-full" />
             {identifier ? (

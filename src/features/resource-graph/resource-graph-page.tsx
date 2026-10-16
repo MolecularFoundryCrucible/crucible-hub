@@ -1,26 +1,7 @@
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
-import type { RefObject } from "react"
+import { Suspense, useCallback, useMemo, useState } from "react"
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query"
 
-import {
-  ExpandGraphNodeIcon,
-  ExploreGraphFocusIcon,
-  GraphAncestorsIcon,
-  GraphAssociationsIcon,
-  GraphDescendantsIcon,
-  ResourceGraphIcon,
-} from "@/components/crucible/icons"
-import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
-import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
-import { ResourceIdentity } from "@/components/crucible/resource-identity"
-import { ResourceNameLink } from "@/components/crucible/resource-name-link"
+import { ResourceGraphIcon } from "@/components/crucible/icons"
 import { useResourcePreviewContext } from "@/components/crucible/resource-preview-navigation"
 import {
   staticResourceSiblingCollection,
@@ -32,21 +13,6 @@ import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -54,44 +20,21 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { THUMBNAIL_PREVIEW_BATCH_MAX } from "@/data/crucible/resources.functions"
 import {
   datasetThumbnailPreviewsQueryOptions,
   resourceGraphQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
-import type { IdentityScope } from "@/data/crucible/query-keys"
-import {
-  compareWorkspaceRelationshipResources,
-  workspaceRelationshipTypeLabel,
-} from "@/data/crucible/resource-relationships"
+import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
 import type {
   WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
-  WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
 import {
   graphExpansionKey,
-  graphExpansionModeLabel,
   graphExpansionModesByNode,
-  graphExpansionModesForNode,
-  graphExpansionPending,
   graphExpansionQuery,
-  graphExpansionState,
-  graphNodeCanExpand,
 } from "./resource-graph-expansion"
 import type {
   GraphExpansionMode,
@@ -101,7 +44,6 @@ import type {
 import { mergeResourceGraphs } from "./resource-graph-merge"
 import { graphWithoutAssociations } from "./resource-graph-display"
 import type { ResourceGraphDisplay } from "./resource-graph-display"
-import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ResourceGraphCanvas } from "./resource-graph-warmup"
 
 type GraphExpansionQueryResult = {
@@ -126,7 +68,6 @@ export type GraphRelationshipPresentation = {
 }
 
 const initialLineageDepth = 3
-const GRAPH_TABLE_ROW_BATCH = 50
 
 function combineResourceGraphExpansionQueries(
   results: readonly GraphExpansionQueryResult[]
@@ -176,17 +117,6 @@ export function ResourceGraphPage({
     resourceMfid,
     requests: [] as GraphExpansionRequest[],
   })
-  const [highlightedNodeMfid, setHighlightedNodeMfid] = useState<string | null>(
-    null
-  )
-  const [focusRequest, setFocusRequest] = useState<{
-    mfid: string
-    nonce: number
-  } | null>(null)
-  useEffect(() => {
-    setHighlightedNodeMfid(null)
-    setFocusRequest(null)
-  }, [resourceMfid])
   const expansionRequests =
     expansion.resourceMfid === resourceMfid ? expansion.requests : []
   const query = useQuery({
@@ -260,14 +190,6 @@ export function ResourceGraphPage({
     if (!displayedGraph || display.associations) return displayedGraph
     return graphWithoutAssociations(displayedGraph)
   }, [display.associations, displayedGraph])
-  const canvasNodeIds = useMemo(
-    () =>
-      new Set(
-        (canvasGraph ?? displayedGraph)?.nodes.map((node) => node.unique_id) ??
-          []
-      ),
-    [canvasGraph, displayedGraph]
-  )
   const graphThumbnailBatches = useMemo(() => {
     if (!display.thumbnails || !canvasGraph) return []
     const datasetMfids = canvasGraph.nodes
@@ -377,12 +299,6 @@ export function ResourceGraphPage({
     },
     [navigation, nodesByMfid]
   )
-  const focusNodeInGraph = useCallback((nodeMfid: string) => {
-    setFocusRequest((current) => ({
-      mfid: nodeMfid,
-      nonce: (current?.nonce ?? 0) + 1,
-    }))
-  }, [])
 
   if (
     !displayedGraph &&
@@ -504,9 +420,7 @@ export function ResourceGraphPage({
             display={display}
             expansionStates={expansionStates}
             expansionModesByNode={expansionModesByNode}
-            focusRequest={focusRequest}
             graph={canvasGraph ?? displayedGraph}
-            highlightedMfid={highlightedNodeMfid}
             inspectedMfid={navigation.preview ?? null}
             loading={
               query.isFetching ||
@@ -529,20 +443,6 @@ export function ResourceGraphPage({
           affected resource.
         </p>
       ) : null}
-
-      <ResourceGraphTable
-        associationsHidden={!display.associations}
-        canvasNodeIds={canvasNodeIds}
-        expansionModesByNode={expansionModesByNode}
-        expansionStates={expansionStates}
-        graph={displayedGraph}
-        inspectedMfid={navigation.preview ?? null}
-        nodes={relatedNodes}
-        onExpand={expandNode}
-        onFocusNode={focusNodeInGraph}
-        onHighlightNode={setHighlightedNodeMfid}
-        scope={scope}
-      />
     </section>
   )
 }
@@ -553,351 +453,6 @@ function ResourceGraphCanvasSkeleton() {
       aria-label="Loading graph visualization"
       className="min-h-graph-canvas w-full"
     />
-  )
-}
-
-function GraphExpansionModeItems({
-  availableModes,
-  expansionStates,
-  node,
-  onExpand,
-}: {
-  availableModes?: readonly GraphExpansionMode[]
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-}) {
-  return graphExpansionModesForNode(node, expansionStates, availableModes).map(
-    (mode) => {
-      const state = graphExpansionState(expansionStates, node.unique_id, mode)
-      const pending = graphExpansionPending(state)
-      const Icon = graphExpansionModeIcon(mode)
-      return (
-        <DropdownMenuItem
-          disabled={pending}
-          key={mode}
-          onClick={() => onExpand(node.unique_id, mode)}
-        >
-          {pending ? <PendingIcon /> : <Icon aria-hidden="true" />}
-          <span className="flex-1">{graphExpansionModeLabel(mode)}</span>
-          {state?.isError ? (
-            <span className="text-supporting text-destructive">Retry</span>
-          ) : null}
-        </DropdownMenuItem>
-      )
-    }
-  )
-}
-
-function graphExpansionModeIcon(mode: GraphExpansionMode) {
-  if (mode === "ancestors") return GraphAncestorsIcon
-  if (mode === "descendants") return GraphDescendantsIcon
-  return GraphAssociationsIcon
-}
-
-function ResourceGraphTable({
-  associationsHidden,
-  canvasNodeIds,
-  expansionModesByNode,
-  expansionStates,
-  graph,
-  inspectedMfid,
-  nodes,
-  onExpand,
-  onFocusNode,
-  onHighlightNode,
-  scope,
-}: {
-  associationsHidden: boolean
-  canvasNodeIds: ReadonlySet<string>
-  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  graph: WorkspaceResourceGraph
-  inspectedMfid: string | null
-  nodes: readonly WorkspaceResourceGraphNode[]
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  onFocusNode: (nodeMfid: string) => void
-  onHighlightNode: (nodeMfid: string | null) => void
-  scope: IdentityScope
-}) {
-  const container = useRef<HTMLDivElement>(null)
-  const nearViewport = useNearViewport(container)
-  const [visibleCount, setVisibleCount] = useState(
-    Math.min(nodes.length, GRAPH_TABLE_ROW_BATCH)
-  )
-  useEffect(() => {
-    setVisibleCount((current) =>
-      Math.min(nodes.length, Math.max(current, GRAPH_TABLE_ROW_BATCH))
-    )
-  }, [nodes.length])
-  const relationships = useMemo(
-    () => graphRelationshipPresentations(graph),
-    [graph]
-  )
-  const sortedNodes = useMemo(
-    () =>
-      [...nodes].sort((left, right) => {
-        const relationshipDifference =
-          graphRelationshipOrder(relationships.get(left.unique_id)) -
-          graphRelationshipOrder(relationships.get(right.unique_id))
-        return (
-          relationshipDifference ||
-          compareWorkspaceRelationshipResources(left, right)
-        )
-      }),
-    [nodes, relationships]
-  )
-  const visibleNodes = useMemo(
-    () => sortedNodes.slice(0, visibleCount),
-    [sortedNodes, visibleCount]
-  )
-  const hiddenCanvasCount = useMemo(
-    () => nodes.filter((node) => !canvasNodeIds.has(node.unique_id)).length,
-    [canvasNodeIds, nodes]
-  )
-  const datasetMfids = useMemo(
-    () =>
-      visibleNodes
-        .filter((node) => node.kind === "dataset")
-        .slice(0, THUMBNAIL_PREVIEW_BATCH_MAX)
-        .map((node) => node.unique_id),
-    [visibleNodes]
-  )
-  const thumbnailQuery = useQuery({
-    ...datasetThumbnailPreviewsQueryOptions(scope, datasetMfids),
-    enabled: nearViewport && datasetMfids.length > 0,
-  })
-  const hasMoreRows = visibleCount < nodes.length
-
-  return (
-    <Card ref={container}>
-      <CardHeader actionLayout="inline">
-        <CardTitle>Relationships</CardTitle>
-        <CardAction className="flex items-center gap-1.5">
-          {associationsHidden && hiddenCanvasCount > 0 ? (
-            <Badge variant="secondary">Associations hidden in graph</Badge>
-          ) : null}
-          <Badge variant="outline">{nodes.length}</Badge>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="px-0">
-        {nodes.length === 0 ? (
-          <p className="border-t px-4 pt-4 text-body text-muted-foreground">
-            No immediate relationships are recorded.
-          </p>
-        ) : (
-          <div className="border-t">
-            <Table className="resource-graph-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Relationship</TableHead>
-                  <TableHead>Resource</TableHead>
-                  <TableHead kind="action">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visibleNodes.map((node) => {
-                  const thumbnail = thumbnailQuery.data?.[node.unique_id]
-                  const relationship = relationships.get(node.unique_id)
-                  const inCanvas = canvasNodeIds.has(node.unique_id)
-                  return (
-                    <TableRow
-                      data-state={
-                        inspectedMfid === node.unique_id
-                          ? "selected"
-                          : undefined
-                      }
-                      key={node.unique_id}
-                      onBlurCapture={(event) => {
-                        const nextTarget = event.relatedTarget
-                        if (
-                          !(nextTarget instanceof Node) ||
-                          !event.currentTarget.contains(nextTarget)
-                        ) {
-                          onHighlightNode(null)
-                        }
-                      }}
-                      onFocusCapture={() => onHighlightNode(node.unique_id)}
-                      onMouseEnter={() => onHighlightNode(node.unique_id)}
-                      onMouseLeave={() => onHighlightNode(null)}
-                    >
-                      <TableCell
-                        className="resource-graph-relationship"
-                        data-label="Relationship"
-                      >
-                        <Badge variant="outline">
-                          {relationship?.label ?? "Related"}
-                        </Badge>
-                        {relationship?.typeLabel ? (
-                          <span className="mt-1 block text-supporting text-muted-foreground">
-                            {relationship.typeLabel}
-                          </span>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="resource-graph-resource">
-                        <span className="flex min-w-0 items-center gap-3">
-                          {thumbnail ? (
-                            <DatasetThumbnailImage
-                              alt=""
-                              className="size-10 shrink-0 rounded-md border bg-card object-contain"
-                              decoding="async"
-                              loading="lazy"
-                              thumbnail={thumbnail}
-                            />
-                          ) : null}
-                          <ResourceIdentity
-                            className="min-w-0 flex-1"
-                            context={node.context}
-                            kind={node.kind}
-                            name={node.name}
-                            nameContent={
-                              <ResourceNameLink
-                                kind={node.kind}
-                                mfid={node.unique_id}
-                                name={node.name}
-                                navigation="preview"
-                              />
-                            }
-                            presentation="collection"
-                          />
-                        </span>
-                      </TableCell>
-                      <TableCell
-                        className="resource-graph-action"
-                        kind="action"
-                      >
-                        <span className="flex justify-end gap-1">
-                          {inCanvas ? (
-                            <Tooltip>
-                              <TooltipTrigger
-                                render={
-                                  <Button
-                                    aria-label={`Center ${node.name} in graph`}
-                                    onClick={() => onFocusNode(node.unique_id)}
-                                    size="table-action"
-                                    type="button"
-                                    variant="outline"
-                                  />
-                                }
-                              >
-                                <ExploreGraphFocusIcon aria-hidden="true" />
-                              </TooltipTrigger>
-                              <TooltipContent>Center in graph</TooltipContent>
-                            </Tooltip>
-                          ) : null}
-                          <GraphExpansionAction
-                            availableModes={expansionModesByNode.get(
-                              node.unique_id
-                            )}
-                            expansionStates={expansionStates}
-                            node={node}
-                            onExpand={onExpand}
-                          />
-                          <ResourceFullPageLink
-                            kind={node.kind}
-                            mfid={node.unique_id}
-                            name={node.name}
-                            presentation="table"
-                          />
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-            {hasMoreRows ? (
-              <div className="flex justify-center border-t p-3">
-                <Button
-                  onClick={() =>
-                    setVisibleCount((current) =>
-                      Math.min(nodes.length, current + GRAPH_TABLE_ROW_BATCH)
-                    )
-                  }
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  Show more
-                </Button>
-              </div>
-            ) : null}
-          </div>
-        )}
-      </CardContent>
-      {thumbnailQuery.isError ? (
-        <p
-          className="border-t px-4 py-3 text-body text-muted-foreground"
-          role="alert"
-        >
-          Thumbnail previews could not be loaded.
-        </p>
-      ) : null}
-    </Card>
-  )
-}
-
-function GraphExpansionAction({
-  availableModes,
-  expansionStates,
-  node,
-  onExpand,
-}: {
-  availableModes?: readonly GraphExpansionMode[]
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-}) {
-  if (!graphNodeCanExpand(node, expansionStates, availableModes)) return null
-  const pending = graphExpansionModesForNode(
-    node,
-    expansionStates,
-    availableModes
-  ).some((mode) =>
-    graphExpansionPending(
-      graphExpansionState(expansionStates, node.unique_id, mode)
-    )
-  )
-
-  return (
-    <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  aria-label={`Expand graph from ${node.name}`}
-                  size="table-action"
-                  type="button"
-                  variant="outline"
-                />
-              }
-            />
-          }
-        >
-          {pending ? (
-            <PendingIcon />
-          ) : (
-            <ExpandGraphNodeIcon aria-hidden="true" />
-          )}
-        </TooltipTrigger>
-        <TooltipContent>Expand graph</TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="end" className="min-w-44">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Expand from {node.name}</DropdownMenuLabel>
-          <GraphExpansionModeItems
-            availableModes={availableModes}
-            expansionStates={expansionStates}
-            node={node}
-            onExpand={onExpand}
-          />
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }
 
@@ -1139,29 +694,6 @@ export function graphRelationshipOrder(
   if (presentation.relationship === "descendant") return 3 + hopOffset
   if (presentation.relationship === "associated") return 4 + hopOffset
   return 5 + hopOffset
-}
-
-function useNearViewport(element: RefObject<HTMLElement | null>) {
-  const [nearViewport, setNearViewport] = useState(false)
-  useEffect(() => {
-    const current = element.current
-    if (!current || nearViewport) return
-    if (typeof IntersectionObserver === "undefined") {
-      setNearViewport(true)
-      return
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return
-        setNearViewport(true)
-        observer.disconnect()
-      },
-      { rootMargin: "320px" }
-    )
-    observer.observe(current)
-    return () => observer.disconnect()
-  }, [element, nearViewport])
-  return nearViewport
 }
 
 function graphErrorMessage(error: Error | null) {

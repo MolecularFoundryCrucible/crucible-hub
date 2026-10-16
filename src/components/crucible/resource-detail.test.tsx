@@ -28,7 +28,10 @@ import {
   FilesTable,
   initiateFileDownload,
 } from "@/features/dataset-files/dataset-files-card"
-import { InspectorDatasetThumbnails } from "@/features/resource-inspector/resource-inspector"
+import {
+  InspectorDatasetFiles,
+  InspectorDatasetThumbnails,
+} from "@/features/resource-inspector/resource-inspector"
 
 import {
   isResourceOverviewPath,
@@ -652,5 +655,54 @@ describe("InspectorDatasetThumbnails", () => {
     ).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Try again" }))
     expect(await screen.findByText("No thumbnails")).toBeTruthy()
+  })
+})
+
+describe("InspectorDatasetFiles", () => {
+  afterEach(cleanup)
+
+  beforeEach(() => {
+    vi.mocked(getWorkspaceDatasetFiles).mockReset()
+  })
+
+  it("sorts files naturally and bounds the list to 10 items with an expansion toggle", async () => {
+    const baseFile = demoWorkspace.files[0]
+    const twelveFiles = [12, 2, 10, 1, 11, 3, 4, 5, 6, 7, 8, 9].map((num) => ({
+      ...baseFile,
+      filename: `scan_${num}.h5`,
+      mfid: `01J6Y8N4Q2R7M9K3T5V0W1X2${String(num).padStart(2, "0")}`,
+    }))
+    vi.mocked(getWorkspaceDatasetFiles).mockResolvedValue({
+      status: "ok",
+      data: twelveFiles,
+    })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <WorkspaceProvider mode="fixture" scope={scope}>
+          <InspectorDatasetFiles datasetMfid={datasetMfid} />
+        </WorkspaceProvider>
+      </QueryClientProvider>
+    )
+
+    expect(
+      await screen.findByRole("heading", { name: "Files (12)" })
+    ).toBeTruthy()
+    expect(screen.getByText("scan_1.h5")).toBeTruthy()
+    expect(screen.getByText("scan_2.h5")).toBeTruthy()
+    expect(screen.getByText("scan_10.h5")).toBeTruthy()
+    expect(screen.queryByText("scan_11.h5")).toBeNull()
+    expect(screen.queryByText("scan_12.h5")).toBeNull()
+
+    fireEvent.click(screen.getByRole("button", { name: "Show all 12 files" }))
+
+    expect(screen.getByText("scan_11.h5")).toBeTruthy()
+    expect(screen.getByText("scan_12.h5")).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Show fewer files" })
+    ).toBeTruthy()
   })
 })

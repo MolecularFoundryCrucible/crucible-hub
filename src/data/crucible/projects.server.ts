@@ -63,8 +63,13 @@ type ProjectDescriptiveChanges = {
   title?: string | null
 }
 
+function fixtureTimestamp(value: string) {
+  return value.endsWith("Z") ? `${value.slice(0, -1)}+00:00` : value
+}
+
 export async function readWorkspaceProjects(
   {
+    activeSince,
     affiliation,
     cursor,
     direction,
@@ -76,6 +81,7 @@ export async function readWorkspaceProjects(
     scenario,
     sort,
   }: {
+    activeSince?: string
     affiliation?: CollectionAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
@@ -95,6 +101,9 @@ export async function readWorkspaceProjects(
   if (configuration.mode === "unavailable") {
     throw new Error(configuration.reason)
   }
+  const activeSinceTimestamp = activeSince
+    ? `${activeSince}T00:00:00+00:00`
+    : undefined
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(scenario, privilegeMode)
     if (source.status === "unavailable") throw new Error(source.reason)
@@ -109,22 +118,21 @@ export async function readWorkspaceProjects(
       projects = projects.filter((project) => {
         return matchRefs.every((ref) => {
           const isAccount = ref === source.workspace.account.unique_id
-          if (!("members" in project) || !project.members) {
-            return (
-              project.lead?.unique_id === ref ||
-              project.project_lead_orcid === ref ||
-              (isAccount && Boolean(project.role))
-            )
-          }
+          const member =
+            "members" in project
+              ? project.members?.find((m) => m.unique_id === ref)
+              : undefined
+          const effectiveRole =
+            member?.role ??
+            (project.lead?.unique_id === ref ||
+            project.project_lead_orcid === ref
+              ? "owner"
+              : isAccount
+                ? (project.role ?? null)
+                : null)
+          if (!effectiveRole) return false
           return (
-            project.lead?.unique_id === ref ||
-            project.project_lead_orcid === ref ||
-            project.members.some(
-              (m) =>
-                m.unique_id === ref &&
-                (!matchRoles || matchRoles.includes(m.role as any))
-            ) ||
-            (isAccount && Boolean(project.role))
+            !matchRoles || matchRoles.some((role) => role === effectiveRole)
           )
         })
       })
@@ -152,6 +160,14 @@ export async function readWorkspaceProjects(
           "lead" in project &&
           project.lead?.unique_id === source.workspace.account.unique_id
       )
+    }
+    if (activeSinceTimestamp) {
+      projects = projects.filter((project) => {
+        const activityTime =
+          "last_activity_at" in project ? project.last_activity_at : undefined
+        if (!activityTime) return false
+        return fixtureTimestamp(activityTime) >= activeSinceTimestamp
+      })
     }
     if (sort) {
       const dir = direction === "desc" ? -1 : 1
@@ -193,6 +209,7 @@ export async function readWorkspaceProjects(
   const projectsResult = await client.GET("/projects", {
     params: {
       query: {
+        active_since: activeSinceTimestamp,
         affiliation: affiliation ? [affiliation] : undefined,
         cursor,
         direction: sort ? direction : undefined,

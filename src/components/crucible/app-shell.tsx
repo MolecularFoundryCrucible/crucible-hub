@@ -88,6 +88,7 @@ import {
   projectQueryOptions,
   projectSummaryQueryOptions,
 } from "@/data/crucible/projects.queries"
+import { switchDataKind } from "@/features/data/data-filter-state"
 import {
   RecentlyViewedScope,
   useRecentlyViewed,
@@ -223,10 +224,12 @@ export function AppShell({
                                 dataKind === "samples" ? "page" : undefined
                               }
                               aria-label="Browse samples"
-                              search={(prev: Record<string, unknown>) => ({
-                                ...prev,
-                                kind: "samples",
-                              })}
+                              search={
+                                pathname === "/data"
+                                  ? (prev: Record<string, unknown>) =>
+                                      switchDataKind(prev, "samples")
+                                  : {}
+                              }
                               to="/data"
                             />
                           }
@@ -261,10 +264,12 @@ export function AppShell({
                                 dataKind === "datasets" ? "page" : undefined
                               }
                               aria-label="Browse datasets"
-                              search={(prev: Record<string, unknown>) => ({
-                                ...prev,
-                                kind: "datasets",
-                              })}
+                              search={
+                                pathname === "/data"
+                                  ? (prev: Record<string, unknown>) =>
+                                      switchDataKind(prev, "datasets")
+                                  : { kind: "datasets" }
+                              }
                               to="/data"
                             />
                           }
@@ -304,6 +309,7 @@ export function AppShell({
                           aria-current={
                             pathname === "/projects" ? "page" : undefined
                           }
+                          search={{}}
                           to="/projects"
                         />
                       }
@@ -337,6 +343,7 @@ export function AppShell({
                           aria-current={
                             pathname === "/instruments" ? "page" : undefined
                           }
+                          search={{}}
                           to="/instruments"
                         />
                       }

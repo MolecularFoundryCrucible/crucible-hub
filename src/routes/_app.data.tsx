@@ -77,11 +77,15 @@ import {
 } from "@/data/crucible/collection-browse"
 import type { CollectionGroupOrder } from "@/data/crucible/collection-browse"
 import type {
+  CollectionOrdering,
   CollectionQueryOptions,
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
-import { collectionOrderingSearchState } from "@/data/crucible/collection-query"
+import {
+  collectionOrderingSearchState,
+  defaultCollectionOrdering,
+} from "@/data/crucible/collection-query"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import type {
   DatasetFacetFilters,
@@ -98,7 +102,9 @@ import { ResourceInspector } from "@/features/resource-inspector/resource-inspec
 import { RefreshButton } from "@/components/crucible/refresh-button"
 import {
   loadDataGroupBy,
+  loadDefaultSort,
   useDataGroupBy,
+  useDefaultSort,
 } from "@/features/preferences/data-group-by"
 
 export const Route = createFileRoute("/_app/data")({
@@ -142,13 +148,20 @@ export const Route = createFileRoute("/_app/data")({
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
-    const groupBy = await loadDataGroupBy(
-      context.queryClient,
-      source.scope,
-      source.accountPreferencesEnabled
-    )
-    const resolution = resolveDataFilters(deps)
-    if (!resolution.valid) return { dataGroupBy: groupBy }
+    const [groupBy, defaultSort] = await Promise.all([
+      loadDataGroupBy(
+        context.queryClient,
+        source.scope,
+        source.accountPreferencesEnabled
+      ),
+      loadDefaultSort(
+        context.queryClient,
+        source.scope,
+        source.accountPreferencesEnabled
+      ),
+    ])
+    const resolution = resolveDataFilters(deps, defaultSort?.data)
+    if (!resolution.valid) return { dataGroupBy: groupBy, defaultSort }
     const baseFilters = collectionQueryFilters(resolution.filters)
     const sampleBrowse =
       resolution.filters.kind === "samples"
@@ -214,7 +227,7 @@ export const Route = createFileRoute("/_app/data")({
       if (request) missing.push(request)
     }
     if (cause !== "stay") await Promise.all(missing)
-    return { dataGroupBy: groupBy }
+    return { dataGroupBy: groupBy, defaultSort }
   },
   pendingComponent: DataRoutePending,
   staleTime: Infinity,
@@ -303,12 +316,20 @@ function DataPageHeader() {
 
 function DataCollection() {
   const search = Route.useSearch()
-  const resolution = resolveDataFilters(search)
+  const defaultSort = useDefaultSort(Route.useLoaderData()?.defaultSort)
+  const defaultOrdering = defaultSort?.data ?? defaultCollectionOrdering
+  const resolution = resolveDataFilters(search, defaultOrdering)
   if (!resolution.valid) {
     return (
       <div className="flex min-w-0 flex-col gap-4">
         <CollectionToolbar
-          actions={<DataFilters errors={resolution.errors} values={search} />}
+          actions={
+            <DataFilters
+              defaultOrdering={defaultOrdering}
+              errors={resolution.errors}
+              values={search}
+            />
+          }
           primary={<DataTypeFilters kind={dataKind(search.kind)} />}
         />
         <Empty className="min-h-state border" role="alert">
@@ -323,13 +344,21 @@ function DataCollection() {
     )
   }
 
-  return <DataResults filters={resolution.filters} search={search} />
+  return (
+    <DataResults
+      defaultOrdering={defaultOrdering}
+      filters={resolution.filters}
+      search={search}
+    />
+  )
 }
 
 function DataResults({
+  defaultOrdering,
   filters,
   search,
 }: {
+  defaultOrdering: CollectionOrdering
   filters: DataFilterValues
   search: DataSearch
 }) {
@@ -522,7 +551,11 @@ function DataResults({
   }
 
   function changeSort(sort: ResourceSort, direction: SortDirection) {
-    const ordering = collectionOrderingSearchState(sort, direction)
+    const ordering = collectionOrderingSearchState(
+      sort,
+      direction,
+      defaultOrdering
+    )
     void navigate({
       search: (previous) => ({
         ...previous,
@@ -554,7 +587,13 @@ function DataResults({
             refreshing={refreshing}
           />
         }
-        toolbarActions={<DataFilters errors={[]} values={search} />}
+        toolbarActions={
+          <DataFilters
+            defaultOrdering={defaultOrdering}
+            errors={[]}
+            values={search}
+          />
+        }
         toolbarPrimary={
           <DataTypeFilters
             datasetLabel={collectionLabel("Datasets", datasetPage)}

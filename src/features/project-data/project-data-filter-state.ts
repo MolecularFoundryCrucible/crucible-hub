@@ -6,11 +6,15 @@ import {
 } from "@/data/crucible/collection-filters"
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
 import {
+  defaultCollectionOrdering,
   normalizeCollectionQueryOptions,
   resourceSortSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
-import type { NormalizedCollectionQueryOptions } from "@/data/crucible/collection-query"
+import type {
+  CollectionOrdering,
+  NormalizedCollectionQueryOptions,
+} from "@/data/crucible/collection-query"
 import type {
   DatasetFacetFilters,
   SampleFacetFilters,
@@ -113,7 +117,8 @@ const domainFiltersSchema = z
 
 export function resolveProjectDataFilters(
   search: ProjectDataFilterSearch,
-  kind: "datasets" | "samples"
+  kind: "datasets" | "samples",
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering
 ): ProjectDataFilterResolution {
   const collection = collectionFiltersSchema.safeParse({
     createdFrom: search.createdFrom,
@@ -200,10 +205,13 @@ export function resolveProjectDataFilters(
   return {
     filters: {
       ...normalizeCollectionFilters(collection.data),
-      ...normalizeCollectionQueryOptions({
-        direction: domain.data.direction,
-        sort: domain.data.sort,
-      }),
+      ...normalizeCollectionQueryOptions(
+        {
+          direction: domain.data.direction,
+          sort: domain.data.sort,
+        },
+        defaultOrdering
+      ),
       ...(kind === "samples"
         ? {
             sampleType: domain.data.sampleType,

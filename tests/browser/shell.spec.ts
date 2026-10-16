@@ -260,10 +260,9 @@ test("renders the independently queried instrument directory", async ({
   ).toBeVisible()
   await expect(page.getByText("Beamline 5.3.2")).toBeVisible()
 
-  await page
-    .getByRole("group", { name: "Instrument lifecycle status" })
-    .getByRole("button", { name: "Maintenance" })
-    .click()
+  await page.getByRole("button", { name: /^Filters/ }).click()
+  await page.getByLabel("Lifecycle status").selectOption("maintenance")
+  await page.getByRole("button", { name: "Apply filters" }).click()
   await expect(page).toHaveURL(/status=maintenance/)
   await expect(
     page.getByText("No maintenance instruments are available to this account.")

@@ -160,9 +160,7 @@ function ServiceAccountAdminDetail({
         </BreadcrumbList>
       </Breadcrumb>
       <PageHeader
-        icon={
-          <PrincipalTypeIcon className="mt-1 size-6" type="service_account" />
-        }
+        icon={<PrincipalTypeIcon className="size-5" type="service_account" />}
         title={title}
       />
       <ServiceAccountDetail

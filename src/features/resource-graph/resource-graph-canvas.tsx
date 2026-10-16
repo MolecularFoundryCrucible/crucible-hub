@@ -74,6 +74,7 @@ import type {
   WorkspaceResourceGraph,
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import {
   graphExpansionModeLabel,
@@ -156,6 +157,23 @@ const GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD = 100
 const ELK_LAYOUT_TIMEOUT_MS = 6000
 const reactFlowProOptions = { hideAttribution: true }
 let elk: ELKInstance | undefined
+
+export function resolveGraphNodeClickAction({
+  inspectedMfid,
+  nodeMfid,
+  selectedMfid,
+  twoTapMode,
+}: {
+  inspectedMfid: string | null
+  nodeMfid: string
+  selectedMfid: string | null
+  twoTapMode: boolean
+}): "inspect" | "select" {
+  if (!twoTapMode) return "inspect"
+  return selectedMfid === nodeMfid || inspectedMfid === nodeMfid
+    ? "inspect"
+    : "select"
+}
 
 export function resetResourceGraphLayoutEngine() {
   if (elk) {
@@ -286,7 +304,10 @@ function ResourceGraphFlow({
   const resetLayoutRequested = useRef(false)
   const previousLayoutDirection = useRef<LayoutDirection | null>(null)
   const flow = useReactFlow<ResourceFlowNode, ResourceFlowEdge>()
+  const isMobile = useIsMobile()
+  const lastTouchTime = useRef(0)
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
+  const [selectedNode, setSelectedNode] = useState<string | null>(null)
   const [layoutDirection, setLayoutDirection] =
     useState<LayoutDirection | null>(null)
   const [zoomRange, setZoomRange] = useState({ max: 2.5, min: 0.35 })
@@ -318,7 +339,10 @@ function ResourceGraphFlow({
     return neighbours
   }, [graph.edges, graph.nodes])
 
-  const activeHighlightMfid = hoveredNode ?? highlightedMfid ?? null
+  const validSelectedNode =
+    selectedNode && neighboursByNode.has(selectedNode) ? selectedNode : null
+  const activeHighlightMfid =
+    hoveredNode ?? validSelectedNode ?? highlightedMfid ?? null
   const activeNeighbours = activeHighlightMfid
     ? neighboursByNode.get(activeHighlightMfid)
     : undefined
@@ -454,6 +478,7 @@ function ResourceGraphFlow({
       )
 
     const handleTouchStart = (event: TouchEvent) => {
+      lastTouchTime.current = performance.now()
       if (isInteractiveControl(event.target)) return
       const isFullscreen = document.fullscreenElement === element
       if (event.touches.length >= 2) {
@@ -466,7 +491,7 @@ function ResourceGraphFlow({
       }
       if (event.touches.length !== 1) return
       const touch = event.touches[0]
-      const now = performance.now()
+      const now = lastTouchTime.current
       if (
         lastTap &&
         now - lastTap.time <= 320 &&
@@ -573,6 +598,7 @@ function ResourceGraphFlow({
     }
 
     const handleTouchEnd = (event: TouchEvent) => {
+      lastTouchTime.current = performance.now()
       if (event.touches.length > 0) {
         if (
           document.fullscreenElement !== element &&
@@ -584,7 +610,7 @@ function ResourceGraphFlow({
         return
       }
       delete element.dataset.touchGestureActive
-      const now = performance.now()
+      const now = lastTouchTime.current
       if (doubleTapZoom) {
         if (!doubleTapZoom.moved && doubleTapZoom.nodeMfid) {
           const position = displayedPositions.current.get(
@@ -932,11 +958,28 @@ function ResourceGraphFlow({
   const handleInit = useCallback(() => setFlowReady(true), [])
   const handleNodeClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
     (event, node) => {
+      const recentTouch =
+        lastTouchTime.current > 0 &&
+        performance.now() - lastTouchTime.current < 1500
+      const coarsePointer =
+        typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(hover: none), (pointer: coarse)").matches
+      const action = resolveGraphNodeClickAction({
+        inspectedMfid,
+        nodeMfid: node.id,
+        selectedMfid: validSelectedNode,
+        twoTapMode: isMobile || recentTouch || coarsePointer,
+      })
+      setSelectedNode(node.id)
+      if (action === "select") {
+        return
+      }
       if (event.currentTarget instanceof HTMLElement) {
         onInspect(node.id, event.currentTarget)
       }
     },
-    [onInspect]
+    [inspectedMfid, isMobile, onInspect, validSelectedNode]
   )
   const handleNodeDoubleClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
     (event, node) => {
@@ -985,13 +1028,25 @@ function ResourceGraphFlow({
     [cancelLayoutForDrag]
   )
   const handleNodeMouseEnter = useCallback<NodeMouseHandler<ResourceFlowNode>>(
-    (_event, node) => setHoveredResource(node.id),
+    (_event, node) => {
+      if (
+        lastTouchTime.current > 0 &&
+        performance.now() - lastTouchTime.current < 1500
+      ) {
+        return
+      }
+      setHoveredResource(node.id)
+    },
     [setHoveredResource]
   )
   const handleNodeMouseLeave = useCallback<NodeMouseHandler<ResourceFlowNode>>(
     () => setHoveredResource(null),
     [setHoveredResource]
   )
+  const handlePaneClick = useCallback(() => {
+    setSelectedNode(null)
+    setHoveredResource(null)
+  }, [setHoveredResource])
 
   const flowEdges = useMemo<ResourceFlowEdge[]>(
     () =>
@@ -1070,7 +1125,7 @@ function ResourceGraphFlow({
 
   return (
     <div
-      className="resource-graph-surface relative overflow-hidden rounded-xl border bg-card"
+      className="resource-graph-surface relative overflow-hidden rounded-xl border"
       data-density={graphDensity(graph.nodes.length)}
       data-resource-preview-trigger=""
       ref={surface}
@@ -1109,6 +1164,7 @@ function ResourceGraphFlow({
         onNodeClick={handleNodeClick}
         onNodeMouseEnter={handleNodeMouseEnter}
         onNodeMouseLeave={handleNodeMouseLeave}
+        onPaneClick={handlePaneClick}
         onlyRenderVisibleElements={
           graph.nodes.length >= GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD
         }
@@ -1120,7 +1176,7 @@ function ResourceGraphFlow({
         <Background
           color="var(--graph-grid)"
           gap={20}
-          size={1}
+          size={1.25}
           variant={BackgroundVariant.Dots}
         />
       </ReactFlow>
@@ -1130,11 +1186,12 @@ function ResourceGraphFlow({
         edges show sample and dataset associations. Expansion controls load
         ancestors, descendants, or associated resources. Nodes can be
         repositioned by dragging. Hold Control, or Command on macOS, while
-        scrolling to zoom. On touch screens, use two fingers to pan or pinch to
-        zoom, or double-tap and hold then drag vertically to zoom. Double-click
-        a node, or focus it and press F, to center it. Reset layout restores the
-        ELK arrangement. The relationship table following the graph provides the
-        same resources with keyboard-accessible inspection and navigation.
+        scrolling to zoom. On touch screens, tap a node once to highlight its
+        connections and reveal expansion controls, and tap again to inspect it;
+        use two fingers to pan or pinch to zoom, or double-tap and hold then
+        drag vertically to zoom. Double-click a node, or focus it and press F,
+        to center it. Press Enter or Space on a focused node to inspect it.
+        Reset layout restores the ELK arrangement.
       </span>
       {touchHintVisible && !fullscreen ? (
         <div
