@@ -682,6 +682,7 @@ export function ResourcePreviewLink({
   return (
     <CanonicalResourceLink
       {...props}
+      aria-current={sameTarget && !back ? "true" : undefined}
       className={className}
       fromProject={fromProject}
       mfid={mfid}

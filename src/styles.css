@@ -11,6 +11,17 @@
   max-width: none;
 }
 
+[data-slot="sidebar-inset"] {
+  transition: padding-right var(--motion-standard) var(--motion-ease-standard);
+}
+
+@media (min-width: 90rem) {
+  body:has([data-slot="sheet-content"].resource-inspector[data-open])
+    [data-slot="sidebar-inset"] {
+    padding-right: var(--spacing-inspector-width);
+  }
+}
+
 [data-slot="sheet-content"].resource-inspector[data-inspector-kind="dataset"] {
   --inspector-accent: var(--resource-dataset);
 }
@@ -168,6 +179,7 @@
 }
 
 @theme inline {
+  --breakpoint-inspector: 90rem;
   --container-collection-wide: 72rem;
   --container-directory-wide: 62rem;
   --container-identity-wide: 66rem;

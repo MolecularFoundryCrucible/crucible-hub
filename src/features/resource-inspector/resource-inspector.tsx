@@ -69,6 +69,7 @@ import type {
   WorkspaceScientificMetadata,
 } from "@/data/crucible/workspace-source"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
 import { ResourceGraphLink } from "@/features/resource-graph/resource-graph-link"
@@ -92,6 +93,7 @@ export function ResourceInspector({
   const restoreFocus = useRef(true)
   const open = Boolean(navigation.preview) || navigation.invalidPreview
   const isMobile = useIsMobile()
+  const docked = useMediaQuery("(min-width: 90rem)")
   const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
   const query = useQuery({
@@ -152,7 +154,10 @@ export function ResourceInspector({
           }
           if (eventDetails.reason === "outside-press") {
             restoreFocus.current = false
-            if (isInteractiveOutsideTarget(eventDetails.event.target)) {
+            if (
+              docked ||
+              isInteractiveOutsideTarget(eventDetails.event.target)
+            ) {
               eventDetails.cancel()
               return
             }
@@ -162,7 +167,7 @@ export function ResourceInspector({
       }}
     >
       <SheetContent
-        className="resource-inspector gap-0"
+        className="resource-inspector gap-0 shadow-2xl inspector:shadow-none"
         data-inspector-kind={previewKind}
         initialFocus={title}
         finalFocus={() => {
