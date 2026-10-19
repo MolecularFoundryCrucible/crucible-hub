@@ -35,6 +35,16 @@
       "AccessGrantRead": {
         "description": "One canonical principal grant on a resource.",
         "properties": {
+          "capabilities": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryCapabilities"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "display_name": {
             "anyOf": [
               {
@@ -106,6 +116,16 @@
       "AccessGroupMemberRead": {
         "description": "A public-safe group member profile plus their standing role.",
         "properties": {
+          "capabilities": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryCapabilities"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "first_name": {
             "title": "First Name",
             "type": "string"
@@ -1444,7 +1464,7 @@
                 "type": "null"
               }
             ],
-            "description": "The dataset's instrument_name before the change. For datasets whose name never named a registered instrument, this is the only record of it.",
+            "description": "Name of the dataset's previous registered instrument, or null when it had none.",
             "title": "Previous Instrument Name"
           }
         },
@@ -2595,53 +2615,34 @@
         "title": "EffectiveResourceAccessRead",
         "type": "object"
       },
-      "ExtractMetadataRequest": {
+      "EntryCapabilities": {
+        "description": "What the caller may do to one member or grant, as the matching routes would decide.",
         "properties": {
-          "api_key": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Api Key"
-          },
-          "api_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Api Url"
-          },
-          "context": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Context"
-          },
-          "images": {
+          "assignable_roles": {
+            "description": "Roles the matching PATCH or PUT would accept for this entry.",
             "items": {
-              "$ref": "#/components/schemas/ImageInput"
+              "$ref": "#/components/schemas/AccessPermission"
             },
-            "title": "Images",
+            "title": "Assignable Roles",
             "type": "array"
+          },
+          "can_change_role": {
+            "description": "The matching PATCH or PUT would succeed for at least one other role.",
+            "title": "Can Change Role",
+            "type": "boolean"
+          },
+          "can_remove": {
+            "description": "The matching DELETE would succeed: removal up to your own role, or leaving yourself.",
+            "title": "Can Remove",
+            "type": "boolean"
           }
         },
         "required": [
-          "images"
+          "can_remove",
+          "can_change_role",
+          "assignable_roles"
         ],
-        "title": "ExtractMetadataRequest",
+        "title": "EntryCapabilities",
         "type": "object"
       },
       "FacetBucket": {
@@ -2702,6 +2703,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/InstrumentFacetBucket"
+                },
+                {
+                  "$ref": "#/components/schemas/RequesterFacetBucket"
                 }
               ]
             },
@@ -2908,30 +2912,6 @@
           "user_unique_id"
         ],
         "title": "HubTokenResponse",
-        "type": "object"
-      },
-      "ImageInput": {
-        "properties": {
-          "data": {
-            "title": "Data",
-            "type": "string"
-          },
-          "media_type": {
-            "enum": [
-              "image/jpeg",
-              "image/png",
-              "image/gif",
-              "image/webp"
-            ],
-            "title": "Media Type",
-            "type": "string"
-          }
-        },
-        "required": [
-          "data",
-          "media_type"
-        ],
-        "title": "ImageInput",
         "type": "object"
       },
       "IngestionRequest": {
@@ -3583,12 +3563,34 @@
         "title": "InstrumentUpdate",
         "type": "object"
       },
+      "JoinRequestCapabilities": {
+        "properties": {
+          "can_review": {
+            "description": "Whether the caller may approve or reject this pending request.",
+            "title": "Can Review",
+            "type": "boolean"
+          },
+          "can_withdraw": {
+            "description": "Whether the caller may withdraw this pending request.",
+            "title": "Can Withdraw",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "can_review",
+          "can_withdraw"
+        ],
+        "title": "JoinRequestCapabilities",
+        "type": "object"
+      },
       "JoinRequestCreate": {
-        "description": "Body for POST /projects/{proj_id}/join.",
+        "additionalProperties": false,
+        "description": "Body for POST /projects/{project_ref}/join_requests.",
         "properties": {
           "reason": {
             "anyOf": [
               {
+                "maxLength": 2000,
                 "type": "string"
               },
               {
@@ -3601,16 +3603,63 @@
         "title": "JoinRequestCreate",
         "type": "object"
       },
+      "JoinRequestFacetField": {
+        "enum": [
+          "status",
+          "project",
+          "requester"
+        ],
+        "title": "JoinRequestFacetField",
+        "type": "string"
+      },
       "JoinRequestRead": {
-        "description": "Response model for AccessGroupJoinRequest.",
+        "description": "A request to join a project, with the people involved and what the caller may do with it.",
         "properties": {
+          "capabilities": {
+            "$ref": "#/components/schemas/JoinRequestCapabilities"
+          },
+          "granted_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granted Role"
+          },
           "group_name": {
-            "title": "Group Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "deprecated": true,
+            "description": "Deprecated. Use project.project_id.",
+            "title": "Group Name"
           },
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectReferenceRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the project no longer exists."
+          },
+          "project_mfid": {
+            "title": "Project Mfid",
+            "type": "string"
           },
           "reason": {
             "anyOf": [
@@ -3624,15 +3673,19 @@
             "title": "Reason"
           },
           "request_time": {
+            "format": "date-time",
+            "title": "Request Time",
+            "type": "string"
+          },
+          "requester": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/UserPublicRead"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Request Time"
+            ]
           },
           "requester_id": {
             "title": "Requester Id",
@@ -3641,6 +3694,7 @@
           "review_time": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
@@ -3648,6 +3702,16 @@
               }
             ],
             "title": "Review Time"
+          },
+          "reviewer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserPublicRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reviewer_id": {
             "anyOf": [
@@ -3672,25 +3736,28 @@
             "title": "Reviewer Notes"
           },
           "status": {
-            "title": "Status",
-            "type": "string"
+            "$ref": "#/components/schemas/JoinRequestStatus"
           }
         },
         "required": [
           "id",
-          "group_name",
+          "status",
+          "project_mfid",
           "requester_id",
-          "status"
+          "request_time",
+          "capabilities"
         ],
         "title": "JoinRequestRead",
         "type": "object"
       },
       "JoinRequestReview": {
-        "description": "Body for PATCH /projects/{proj_id}/join_requests/{request_id}.",
+        "additionalProperties": false,
+        "description": "Body for PATCH /join_requests/{request_id}.",
         "properties": {
           "reviewer_notes": {
             "anyOf": [
               {
+                "maxLength": 2000,
                 "type": "string"
               },
               {
@@ -3699,7 +3766,22 @@
             ],
             "title": "Reviewer Notes"
           },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinRequestRole"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Role granted on approval, at most the reviewer's own role. Defaults to contributor. Only with status approved."
+          },
           "status": {
+            "enum": [
+              "approved",
+              "rejected"
+            ],
             "title": "Status",
             "type": "string"
           }
@@ -3709,6 +3791,46 @@
         ],
         "title": "JoinRequestReview",
         "type": "object"
+      },
+      "JoinRequestRole": {
+        "enum": [
+          "viewer",
+          "contributor",
+          "editor",
+          "admin"
+        ],
+        "title": "JoinRequestRole",
+        "type": "string"
+      },
+      "JoinRequestScope": {
+        "enum": [
+          "accessible",
+          "submitted",
+          "reviewable"
+        ],
+        "title": "JoinRequestScope",
+        "type": "string"
+      },
+      "JoinRequestSort": {
+        "enum": [
+          "request_time",
+          "review_time",
+          "status",
+          "project",
+          "requester_name"
+        ],
+        "title": "JoinRequestSort",
+        "type": "string"
+      },
+      "JoinRequestStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "withdrawn"
+        ],
+        "title": "JoinRequestStatus",
+        "type": "string"
       },
       "Keyword": {
         "properties": {
@@ -4636,6 +4758,60 @@
         "title": "PaginatedResponse[JoinRequestRead]",
         "type": "object"
       },
+      "PaginatedResponse_PostprocessingRunRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PostprocessingRunRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "limit",
+          "items"
+        ],
+        "title": "PaginatedResponse[PostprocessingRunRead]",
+        "type": "object"
+      },
       "PaginatedResponse_ProjectRead_": {
         "properties": {
           "items": {
@@ -5075,6 +5251,30 @@
         "title": "PaginatedResponse[Union[UserRead, UserPublicRead]]",
         "type": "object"
       },
+      "PipelineRead": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parameters_schema": {
+            "additionalProperties": true,
+            "title": "Parameters Schema",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "parameters_schema"
+        ],
+        "title": "PipelineRead",
+        "type": "object"
+      },
       "PlatformRole": {
         "enum": [
           "none",
@@ -5084,6 +5284,150 @@
         ],
         "title": "PlatformRole",
         "type": "string"
+      },
+      "PostprocessRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "parameters": {
+            "additionalProperties": true,
+            "description": "Pipeline parameters, validated against the pipeline's parameters_schema.",
+            "title": "Parameters",
+            "type": "object"
+          },
+          "pipeline": {
+            "description": "Name of a pipeline from GET /pipelines.",
+            "title": "Pipeline",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pipeline"
+        ],
+        "title": "PostprocessRequest",
+        "type": "object"
+      },
+      "PostprocessingRunRead": {
+        "properties": {
+          "dataset_mfid": {
+            "title": "Dataset Mfid",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "pipeline": {
+            "title": "Pipeline",
+            "type": "string"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "integer"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "requested",
+              "running",
+              "completed",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "dataset_mfid",
+          "pipeline",
+          "parameters",
+          "status",
+          "requested_at"
+        ],
+        "title": "PostprocessingRunRead",
+        "type": "object"
+      },
+      "PostprocessingRunUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "completed",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "PostprocessingRunUpdate",
+        "type": "object"
       },
       "PreferencesRead": {
         "properties": {
@@ -5805,6 +6149,55 @@
           "resource_mfid"
         ],
         "title": "RecentResourceRecord",
+        "type": "object"
+      },
+      "RequesterFacetBucket": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical display label. Null only for the null bucket.",
+            "title": "Label"
+          },
+          "requester": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserPublicRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "count",
+          "requester"
+        ],
+        "title": "RequesterFacetBucket",
         "type": "object"
       },
       "ResourceACL": {
@@ -7954,7 +8347,8 @@
     },
     "/access_groups/{group_name}/join": {
       "post": {
-        "description": "Request to join an access group (currently only projects). Blocked if the\ncaller is already a member or already has a pending request for this group.\nResubmission is allowed after a request has been rejected or approved.",
+        "deprecated": true,
+        "description": "Deprecated: use POST /projects/{project_ref}/join_requests. group_name takes a project slug or MFID.",
         "operationId": "request_to_join_access_group_access_groups__group_name__join_post",
         "parameters": [
           {
@@ -8348,7 +8742,8 @@
     },
     "/account/join_requests": {
       "get": {
-        "description": "Return the authenticated caller's own join request history across all groups.\nFilter by ?status=pending|approved|rejected.",
+        "deprecated": true,
+        "description": "Deprecated: use GET /join_requests?scope=submitted.",
         "operationId": "get_account_join_requests_account_join_requests_get",
         "parameters": [
           {
@@ -8358,7 +8753,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "$ref": "#/components/schemas/JoinRequestStatus"
                 },
                 {
                   "type": "null"
@@ -9153,7 +9548,7 @@
     },
     "/account/verify": {
       "get": {
-        "description": "Verify the caller's API key and return its validity and expiry date.\nReturns 401 for invalid or expired keys (handled by authorize_user before this runs).",
+        "description": "Report an API key's validity and expiry. With an API key, describes that key (expired keys\nare rejected with 401 before this runs). With a Hub session, describes the account's newest key,\nwith valid false once it has expired.",
         "operationId": "verify_account_apikey_account_verify_get",
         "parameters": [
           {
@@ -9199,6 +9594,9 @@
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "404": {
+            "description": "A Hub session's account has no API key"
           },
           "422": {
             "content": {
@@ -12542,6 +12940,8 @@
     },
     "/datasets/{dataset_mfid}/carrier_segmentation": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"carrier_segmentation\".",
         "operationId": "request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post",
         "parameters": [
           {
@@ -12578,7 +12978,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -12614,166 +13016,6 @@
           }
         ],
         "summary": "Request Carrier Segmentation",
-        "tags": [
-          "datasets"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/dataset_graph": {
-      "get": {
-        "description": "Returns a NetworkX node-link graph of all datasets connected (via parent/child\nrelationships) to the given dataset. Loads all authorized datasets in the\nproject and returns the directed lineage subgraph (ancestors + descendants) of the target.",
-        "operationId": "dataset_graph_datasets__dataset_mfid__dataset_graph_get",
-        "parameters": [
-          {
-            "description": "Dataset MFID.",
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "description": "Dataset MFID.",
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Dataset Graph",
-        "tags": [
-          "datasets"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/dataset_graph_cte": {
-      "get": {
-        "description": "CTE-based implementation (kept for reference). Prefer /dataset_graph.\nReturns a NetworkX node-link graph of all datasets connected (via parent/child\nrelationships) to the given dataset, i.e. its full lineage subgraph.",
-        "operationId": "dataset_graph_cte_datasets__dataset_mfid__dataset_graph_cte_get",
-        "parameters": [
-          {
-            "description": "Dataset MFID.",
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "description": "Dataset MFID.",
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Dataset Graph Cte",
         "tags": [
           "datasets"
         ]
@@ -13178,6 +13420,8 @@
     },
     "/datasets/{dataset_mfid}/insitu_spec_aggregation": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"insitu_aggregation\".",
         "operationId": "request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post",
         "parameters": [
           {
@@ -13214,7 +13458,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -13257,7 +13503,7 @@
     },
     "/datasets/{dataset_mfid}/instrument": {
       "put": {
-        "description": "Assign or reassign the dataset's instrument, by slug or MFID.\n\nThe three instrument columns are written from one resolved instrument row,\nso instrument_id (the integer FK), instrument_mfid, and the instrument_name\nlabel cannot drift apart. Nothing about the instrument is taken from the\nrequest body beyond the identifier used to look it up.\n\nThe instrument's access group is granted contributor on the dataset, the\nsame grant dataset creation makes. Reassignment removes the grant belonging\nto the outgoing instrument's group only — resourceacl records no provenance,\nso a broader sweep could not tell a derived grant from a deliberate one.\n\nResubmitting the dataset's current instrument changes no columns but still\nensures the ACL row exists, which repairs datasets whose instrument columns\nwere backfilled without the accompanying grant.",
+        "description": "Assign or reassign the dataset's instrument, by slug or MFID.\n\nOnly instrument_mfid is stored; the instrument's slug and name in responses\nare read from the instrument row.\n\nThe instrument's access group is granted contributor on the dataset, the\nsame grant dataset creation makes. Reassignment removes the grant belonging\nto the outgoing instrument's group only — resourceacl records no provenance,\nso a broader sweep could not tell a derived grant from a deliberate one.\n\nResubmitting the dataset's current instrument changes no columns but still\nensures the ACL row exists, which repairs datasets whose instrument columns\nwere backfilled without the accompanying grant.",
         "operationId": "assign_dataset_instrument_datasets__dataset_mfid__instrument_put",
         "parameters": [
           {
@@ -13523,6 +13769,8 @@
     },
     "/datasets/{dataset_mfid}/mosaic_stitch": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"mosaic_stitch\".",
         "operationId": "request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post",
         "parameters": [
           {
@@ -13559,7 +13807,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -13600,8 +13850,127 @@
         ]
       }
     },
+    "/datasets/{dataset_mfid}/postprocess": {
+      "post": {
+        "description": "Queue a postprocessing run on a dataset. Requires contributor access. Each request starts a new run unless it repeats an Idempotency-Key.",
+        "operationId": "postprocess_dataset_datasets__dataset_mfid__postprocess_post",
+        "parameters": [
+          {
+            "description": "Dataset MFID.",
+            "in": "path",
+            "name": "dataset_mfid",
+            "required": true,
+            "schema": {
+              "description": "Dataset MFID.",
+              "title": "Dataset Mfid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Retries with the same key return the original run instead of starting another.",
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Retries with the same key return the original run instead of starting another.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostprocessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "403": {
+            "description": "Caller is below contributor on the dataset"
+          },
+          "404": {
+            "description": "Dataset not found, not readable, or pending deletion"
+          },
+          "409": {
+            "description": "The Idempotency-Key was already used for a different pipeline or parameters (`idempotency_key_reused`)"
+          },
+          "422": {
+            "description": "Unknown pipeline (`unknown_pipeline`) or invalid parameters (`invalid_parameters`)"
+          },
+          "503": {
+            "description": "The run could not be queued (`pipeline_unavailable`); it is recorded as failed"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Postprocess Dataset",
+        "tags": [
+          "postprocessing"
+        ]
+      }
+    },
     "/datasets/{dataset_mfid}/rga_analysis": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"rga_analysis\".",
         "operationId": "request_rga_analysis_datasets__dataset_mfid__rga_analysis_post",
         "parameters": [
           {
@@ -13638,7 +14007,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -16421,166 +16792,6 @@
         ]
       }
     },
-    "/entity_graph/{entity_mfid}": {
-      "get": {
-        "description": "Returns a NetworkX node-link graph of all samples and datasets connected to\nthe given entity via sample lineage, dataset lineage, and sample-dataset\nassociations. entity_id may be a sample or dataset unique_id.\nNodes carry entity_type ('sample' or 'dataset') and name attributes.\n\nLoads all samples and datasets in the root entity's project in a small number\nof broad queries, builds the combined graph in Python, then returns the weakly\nconnected component containing the root entity.",
-        "operationId": "entity_graph_entity_graph__entity_mfid__get",
-        "parameters": [
-          {
-            "description": "Sample or dataset MFID.",
-            "in": "path",
-            "name": "entity_mfid",
-            "required": true,
-            "schema": {
-              "description": "Sample or dataset MFID.",
-              "title": "Entity Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Entity Graph",
-        "tags": [
-          "entities"
-        ]
-      }
-    },
-    "/entity_graph_bfs/{entity_mfid}": {
-      "get": {
-        "description": "BFS-based implementation (kept for reference). Prefer /entity_graph/{entity_id}.\nReturns a NetworkX node-link graph of all samples and datasets connected to\nthe given entity via sample lineage, dataset lineage, and sample-dataset\nassociations. entity_id may be a sample or dataset unique_id.\nNodes carry entity_type ('sample' or 'dataset') and name attributes.",
-        "operationId": "entity_graph_bfs_entity_graph_bfs__entity_mfid__get",
-        "parameters": [
-          {
-            "description": "Sample or dataset MFID.",
-            "in": "path",
-            "name": "entity_mfid",
-            "required": true,
-            "schema": {
-              "description": "Sample or dataset MFID.",
-              "title": "Entity Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Entity Graph Bfs",
-        "tags": [
-          "entities"
-        ]
-      }
-    },
     "/entity_graph_cte/{entity_mfid}": {
       "get": {
         "description": "Returns the graph of entities connected to entity_id.\nBy default returns only first-degree neighbours (direct parents, children,\nand cross-linked entities). Pass recursive=true for the full connected component.\nUse /project_graph/{project_ref} to get all entities in a project.",
@@ -16668,85 +16879,6 @@
         "summary": "Entity Graph Cte",
         "tags": [
           "entities"
-        ]
-      }
-    },
-    "/extract_metadata": {
-      "post": {
-        "description": "Extract scientific metadata from one or more lab notebook images using Claude vision.\nReturns a free-form JSON object with the extracted metadata.\nPass an optional context string to guide the extraction (e.g. instrument type, experiment class).",
-        "operationId": "extract_metadata_extract_metadata_post",
-        "parameters": [
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExtractMetadataRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Extract Metadata",
-        "tags": [
-          "ai"
         ]
       }
     },
@@ -19183,10 +19315,130 @@
     },
     "/join_requests": {
       "get": {
-        "description": "List join requests.\n- Admins can list across all groups, optionally filtered by ?group_name=.\n- A non-admin caller who passes ?group_name= must be the lead of that\n  group, otherwise 403.\n- A non-admin caller who omits ?group_name= gets requests scoped to every\n  group they lead (empty list if they lead none) — this is the cheap way\n  for someone leading multiple projects to fetch all their pending\n  requests in one call instead of one request per project.",
+        "description": "List join requests you made or may review. Platform administrators see all of them.",
         "operationId": "list_join_requests_join_requests_get",
         "parameters": [
           {
+            "description": "Text sorts are case-insensitive; nulls are last and the request id breaks ties. Status order is pending, approved, rejected, withdrawn. requester_name orders by last name, first name, username, and ORCID.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/JoinRequestSort",
+              "default": "request_time",
+              "description": "Text sorts are case-insensitive; nulls are last and the request id breaks ties. Status order is pending, approved, rejected, withdrawn. requester_name orders by last name, first name, username, and ORCID."
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque continuation cursor from next_cursor.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor from next_cursor.",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Compatibility offset. A supplied cursor takes precedence.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Compatibility offset. A supplied cursor takes precedence.",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "accessible: your own requests and those you may review; submitted: your own; reviewable: those you may review.",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/JoinRequestScope",
+              "default": "accessible",
+              "description": "accessible: your own requests and those you may review; submitted: your own; reviewable: those you may review."
+            }
+          },
+          {
+            "description": "Repeat to match several statuses.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/JoinRequestStatus"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to match several statuses.",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Repeat to match several projects.",
+            "in": "query",
+            "name": "project_mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to match several projects.",
+              "title": "Project Mfid"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated. Use project_mfid. Accepts a project slug or MFID.",
             "in": "query",
             "name": "group_name",
             "required": false,
@@ -19199,23 +19451,9 @@
                   "type": "null"
                 }
               ],
+              "deprecated": true,
+              "description": "Deprecated. Use project_mfid. Accepts a project slug or MFID.",
               "title": "Group Name"
-            }
-          },
-          {
-            "in": "query",
-            "name": "status",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
             }
           },
           {
@@ -19236,25 +19474,108 @@
           },
           {
             "in": "query",
-            "name": "limit",
+            "name": "reviewer_id",
             "required": false,
             "schema": {
-              "default": 100,
-              "maximum": 1000,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reviewer Id"
             }
           },
           {
             "in": "query",
-            "name": "offset",
+            "name": "requested_after",
             "required": false,
             "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Requested After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "requested_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Requested Before"
+            }
+          },
+          {
+            "description": "Closed at or after this time (reviewed, withdrawn, or closed by a direct add).",
+            "in": "query",
+            "name": "reviewed_after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Closed at or after this time (reviewed, withdrawn, or closed by a direct add).",
+              "title": "Reviewed After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reviewed_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reviewed Before"
+            }
+          },
+          {
+            "description": "Matches the requester's name, username, or ORCID, case-insensitively.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Matches the requester's name, username, or ORCID, case-insensitively.",
+              "title": "Q"
             }
           },
           {
@@ -19319,13 +19640,299 @@
         ],
         "summary": "List Join Requests",
         "tags": [
-          "access_groups"
+          "join_requests"
+        ]
+      }
+    },
+    "/join_requests/facets": {
+      "get": {
+        "description": "Count join requests by status, project, or requester, with the same scope and filters as GET /join_requests. Buckets are ordered by count, largest first, then by label.",
+        "operationId": "join_request_facets_join_requests_facets_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "field",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/JoinRequestFacetField"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "accessible: your own requests and those you may review; submitted: your own; reviewable: those you may review.",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/JoinRequestScope",
+              "default": "accessible",
+              "description": "accessible: your own requests and those you may review; submitted: your own; reviewable: those you may review."
+            }
+          },
+          {
+            "description": "Repeat to match several statuses.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/JoinRequestStatus"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to match several statuses.",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Repeat to match several projects.",
+            "in": "query",
+            "name": "project_mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to match several projects.",
+              "title": "Project Mfid"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated. Use project_mfid. Accepts a project slug or MFID.",
+            "in": "query",
+            "name": "group_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "deprecated": true,
+              "description": "Deprecated. Use project_mfid. Accepts a project slug or MFID.",
+              "title": "Group Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "requester_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Requester Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reviewer_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reviewer Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "requested_after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Requested After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "requested_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Requested Before"
+            }
+          },
+          {
+            "description": "Closed at or after this time (reviewed, withdrawn, or closed by a direct add).",
+            "in": "query",
+            "name": "reviewed_after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Closed at or after this time (reviewed, withdrawn, or closed by a direct add).",
+              "title": "Reviewed After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reviewed_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reviewed Before"
+            }
+          },
+          {
+            "description": "Matches the requester's name, username, or ORCID, case-insensitively.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Matches the requester's name, username, or ORCID, case-insensitively.",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacetResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Join Request Facets",
+        "tags": [
+          "join_requests"
         ]
       }
     },
     "/join_requests/{request_id}": {
       "get": {
-        "description": "Fetch a single join request by id. Visible to admins, the lead of the\nrequest's group, or the user who submitted it.",
+        "description": "Read one join request. Visible to its requester, to those who may review it, and to platform administrators; 404 otherwise.",
         "operationId": "get_join_request_join_requests__request_id__get",
         "parameters": [
           {
@@ -19399,11 +20006,11 @@
         ],
         "summary": "Get Join Request",
         "tags": [
-          "access_groups"
+          "join_requests"
         ]
       },
       "patch": {
-        "description": "Approve or reject a pending join request. Admin or the lead of the\nrequest's group only. Approving adds the requester to the group's\nproject membership and access group.",
+        "description": "Approve or reject a pending request. Requires editor or above in the project (or platform administrator). Approval adds the requester at `role` (default contributor), at most your own role.",
         "operationId": "review_join_request_join_requests__request_id__patch",
         "parameters": [
           {
@@ -19469,6 +20076,12 @@
               }
             }
           },
+          "403": {
+            "description": "Not allowed to review, or the role is not below yours"
+          },
+          "409": {
+            "description": "`join_request_closed`, or the project is gone or pending deletion"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -19487,7 +20100,93 @@
         ],
         "summary": "Review Join Request",
         "tags": [
-          "access_groups"
+          "join_requests"
+        ]
+      }
+    },
+    "/join_requests/{request_id}/withdraw": {
+      "post": {
+        "description": "Withdraw your own pending join request.",
+        "operationId": "withdraw_join_request_join_requests__request_id__withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinRequestRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "403": {
+            "description": "Only the requester can withdraw"
+          },
+          "409": {
+            "description": "`join_request_closed`"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw Join Request",
+        "tags": [
+          "join_requests"
         ]
       }
     },
@@ -19630,6 +20329,400 @@
           }
         },
         "summary": "Metrics"
+      }
+    },
+    "/pipelines": {
+      "get": {
+        "description": "List the pipelines that can postprocess a dataset, with the parameters each accepts.",
+        "operationId": "list_pipelines_pipelines_get",
+        "parameters": [
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineRead"
+                  },
+                  "title": "Response List Pipelines Pipelines Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Pipelines",
+        "tags": [
+          "postprocessing"
+        ]
+      }
+    },
+    "/postprocessing_runs": {
+      "get": {
+        "description": "List postprocessing runs on datasets the caller can read, newest first.",
+        "operationId": "list_postprocessing_runs_postprocessing_runs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "dataset_mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dataset Mfid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pipeline",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pipeline"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "requested",
+                    "running",
+                    "completed",
+                    "failed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_PostprocessingRunRead_"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Postprocessing Runs",
+        "tags": [
+          "postprocessing"
+        ]
+      }
+    },
+    "/postprocessing_runs/{run_id}": {
+      "get": {
+        "description": "Return one postprocessing run. Requires read access to its dataset.",
+        "operationId": "get_postprocessing_run_postprocessing_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Postprocessing Run",
+        "tags": [
+          "postprocessing"
+        ]
+      },
+      "patch": {
+        "description": "Report a run's progress: running, completed, or failed with an error. Requires edit access to its dataset.",
+        "operationId": "update_postprocessing_run_postprocessing_runs__run_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostprocessingRunUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "409": {
+            "description": "The run already finished (`run_finished`)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Postprocessing Run",
+        "tags": [
+          "postprocessing"
+        ]
       }
     },
     "/print/barcode": {
@@ -20435,7 +21528,7 @@
         ]
       },
       "patch": {
-        "description": "Partially update a project record. Only fields provided in the request body are modified.\nAccessible by admins and the project lead.\nLeadership is not a field here — ProjectUpdate has no project_lead_*\nfields (extra=\"forbid\" 422s if you send one). Use\nPOST /resources/{proj_id}/transfer_ownership instead.\n\nproject_id may be changed (renamed) here. Every foreign key that names a\nproject stores its MFID (Project.unique_id), never project_id, so a\nrename does not orphan any dataset/sample/ACL row.",
+        "description": "Partially update a project record. Only fields provided in the request body are modified.\nAccessible by admins and the project lead.\nLeadership is not a field here — ProjectUpdate has no project_lead_*\nfields (extra=\"forbid\" 422s if you send one). Use\nPOST /resources/{proj_id}/transfer_ownership instead.\n\nproject_id may be changed (renamed) here. Datasets, samples, and memberships\nlink to the project by MFID, so a rename changes only the project row.",
         "operationId": "update_project_projects__project_ref__patch",
         "parameters": [
           {
@@ -20525,9 +21618,10 @@
         ]
       }
     },
-    "/projects/{project_ref}/dataset_graph": {
-      "get": {
-        "operationId": "project_dataset_graph_projects__project_ref__dataset_graph_get",
+    "/projects/{project_ref}/join_requests": {
+      "post": {
+        "description": "Ask to join a project. One pending request per project, at most 20 pending in total.",
+        "operationId": "request_to_join_project_projects__project_ref__join_requests_post",
         "parameters": [
           {
             "description": "Project MFID or project_id slug (case-insensitive).",
@@ -20559,11 +21653,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/JoinRequestRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -20582,85 +21688,11 @@
               }
             }
           },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Project Dataset Graph",
-        "tags": [
-          "projects"
-        ]
-      }
-    },
-    "/projects/{project_ref}/entity_graph": {
-      "get": {
-        "description": "Returns a NetworkX node-link graph of all samples and datasets in the\nproject, connected via sample lineage, dataset lineage, and sample-dataset\nassociations. Nodes carry entity_type ('sample' or 'dataset') and name.",
-        "operationId": "project_entity_graph_projects__project_ref__entity_graph_get",
-        "parameters": [
-          {
-            "description": "Project MFID or project_id slug (case-insensitive).",
-            "in": "path",
-            "name": "project_ref",
-            "required": true,
-            "schema": {
-              "description": "Project MFID or project_id slug (case-insensitive).",
-              "title": "Project Ref",
-              "type": "string"
-            }
+          "403": {
+            "description": "Service accounts cannot request (`service_account_cannot_request`)"
           },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+          "409": {
+            "description": "`already_member`, `join_request_pending`, `too_many_pending_requests`, or `project_not_accepting_requests`"
           },
           "422": {
             "content": {
@@ -20678,88 +21710,9 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Project Entity Graph",
+        "summary": "Request To Join Project",
         "tags": [
-          "projects"
-        ]
-      }
-    },
-    "/projects/{project_ref}/sample_graph": {
-      "get": {
-        "operationId": "project_sample_graph_projects__project_ref__sample_graph_get",
-        "parameters": [
-          {
-            "description": "Project MFID or project_id slug (case-insensitive).",
-            "in": "path",
-            "name": "project_ref",
-            "required": true,
-            "schema": {
-              "description": "Project MFID or project_id slug (case-insensitive).",
-              "title": "Project Ref",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Project Sample Graph",
-        "tags": [
-          "projects"
+          "join_requests"
         ]
       }
     },
@@ -20870,7 +21823,7 @@
     },
     "/projects/{project_ref}/users/{user_ref}": {
       "delete": {
-        "description": "Remove a user from a project and its associated access group.\nAdmins or the project lead can remove any member. A member can also\nremove themselves (leave the project), but the project lead cannot\nremove themselves — transfer leadership first.",
+        "description": "Remove a user from a project. Members may leave on their own; otherwise this\nrequires editor or above in the project and a member whose role is at most\nyour own. The owner cannot be removed; transfer ownership first.",
         "operationId": "remove_user_from_project_projects__project_ref__users__user_ref__delete",
         "parameters": [
           {
@@ -21108,7 +22061,7 @@
         ]
       },
       "post": {
-        "description": "Add a user to a project at `role`, defaulting to contributor.\n\nRequires editor or above in the project. Editors may grant contributor or\nviewer, admins may grant editor or below, and owners may grant admin or below.\nCannot seat someone as owner this way; a project has exactly one owner,\nchanged only via POST /resources/{mfid}/transfer_ownership.",
+        "description": "Add a user to a project at `role`, defaulting to contributor.\n\nRequires editor or above in the project, granting at most your own role.\nCannot seat someone as owner this way; a project has exactly one owner,\nchanged only via POST /resources/{mfid}/transfer_ownership.",
         "operationId": "add_users_to_project_projects__project_ref__users__user_ref__post",
         "parameters": [
           {
@@ -21948,7 +22901,7 @@
         ]
       },
       "put": {
-        "description": "Grant or change a principal's access. Idempotent.\n\n`kind` is `users` or `projects`. Requires admin on the resource, and you\nmay not grant above your own role nor overwrite a grant above it. Owner\ngrants and changes to an existing owner require transfer_ownership.",
+        "description": "Grant or change a principal's access. Idempotent.\n\n`kind` is `users` or `projects`. Requires admin on the resource, and you\nmay not grant above your own role nor overwrite a grant above it. Owner\ngrants and changes to an existing owner require transfer_ownership.\nProjects are shared through /projects/{project_ref}/users, and a record's\nown project grant changes only with POST /resources/{mfid}/project (409).",
         "operationId": "set_resource_access_resources__mfid__access__kind___principal__put",
         "parameters": [
           {
@@ -25200,166 +26153,6 @@
           }
         ],
         "summary": "List Sample Datasets",
-        "tags": [
-          "samples"
-        ]
-      }
-    },
-    "/samples/{sample_mfid}/sample_graph": {
-      "get": {
-        "description": "Returns a NetworkX node-link graph of all samples connected (via parent/child\nrelationships) to the given sample. Loads all samples in the project and\nreturns the directed lineage subgraph (ancestors + descendants) of the target.",
-        "operationId": "sample_graph_samples__sample_mfid__sample_graph_get",
-        "parameters": [
-          {
-            "description": "Sample MFID.",
-            "in": "path",
-            "name": "sample_mfid",
-            "required": true,
-            "schema": {
-              "description": "Sample MFID.",
-              "title": "Sample Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Sample Graph",
-        "tags": [
-          "samples"
-        ]
-      }
-    },
-    "/samples/{sample_mfid}/sample_graph_cte": {
-      "get": {
-        "description": "CTE-based implementation (kept for reference). Prefer /sample_graph.\nReturns a NetworkX node-link graph of all samples connected (via parent/child\nrelationships) to the given sample, i.e. its full lineage subgraph.",
-        "operationId": "sample_graph_cte_samples__sample_mfid__sample_graph_cte_get",
-        "parameters": [
-          {
-            "description": "Sample MFID.",
-            "in": "path",
-            "name": "sample_mfid",
-            "required": true,
-            "schema": {
-              "description": "Sample MFID.",
-              "title": "Sample Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Sample Graph Cte",
         "tags": [
           "samples"
         ]

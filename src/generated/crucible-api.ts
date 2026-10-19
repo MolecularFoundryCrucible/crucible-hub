@@ -49,9 +49,8 @@ export interface paths {
         put?: never;
         /**
          * Request To Join Access Group
-         * @description Request to join an access group (currently only projects). Blocked if the
-         *     caller is already a member or already has a pending request for this group.
-         *     Resubmission is allowed after a request has been rejected or approved.
+         * @deprecated
+         * @description Deprecated: use POST /projects/{project_ref}/join_requests. group_name takes a project slug or MFID.
          */
         post: operations["request_to_join_access_group_access_groups__group_name__join_post"];
         delete?: never;
@@ -153,8 +152,8 @@ export interface paths {
         };
         /**
          * Get Account Join Requests
-         * @description Return the authenticated caller's own join request history across all groups.
-         *     Filter by ?status=pending|approved|rejected.
+         * @deprecated
+         * @description Deprecated: use GET /join_requests?scope=submitted.
          */
         get: operations["get_account_join_requests_account_join_requests_get"];
         put?: never;
@@ -290,8 +289,9 @@ export interface paths {
         };
         /**
          * Verify Account Apikey
-         * @description Verify the caller's API key and return its validity and expiry date.
-         *     Returns 401 for invalid or expired keys (handled by authorize_user before this runs).
+         * @description Report an API key's validity and expiry. With an API key, describes that key (expired keys
+         *     are rejected with 401 before this runs). With a Hub session, describes the account's newest key,
+         *     with valid false once it has expired.
          */
         get: operations["verify_account_apikey_account_verify_get"];
         put?: never;
@@ -666,52 +666,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request Carrier Segmentation */
+        /**
+         * Request Carrier Segmentation
+         * @deprecated
+         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "carrier_segmentation".
+         */
         post: operations["request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/dataset_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dataset Graph
-         * @description Returns a NetworkX node-link graph of all datasets connected (via parent/child
-         *     relationships) to the given dataset. Loads all authorized datasets in the
-         *     project and returns the directed lineage subgraph (ancestors + descendants) of the target.
-         */
-        get: operations["dataset_graph_datasets__dataset_mfid__dataset_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/dataset_graph_cte": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dataset Graph Cte
-         * @description CTE-based implementation (kept for reference). Prefer /dataset_graph.
-         *     Returns a NetworkX node-link graph of all datasets connected (via parent/child
-         *     relationships) to the given dataset, i.e. its full lineage subgraph.
-         */
-        get: operations["dataset_graph_cte_datasets__dataset_mfid__dataset_graph_cte_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -798,7 +758,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request Insitu Aggregation */
+        /**
+         * Request Insitu Aggregation
+         * @deprecated
+         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "insitu_aggregation".
+         */
         post: operations["request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post"];
         delete?: never;
         options?: never;
@@ -818,10 +782,8 @@ export interface paths {
          * Assign Dataset Instrument
          * @description Assign or reassign the dataset's instrument, by slug or MFID.
          *
-         *     The three instrument columns are written from one resolved instrument row,
-         *     so instrument_id (the integer FK), instrument_mfid, and the instrument_name
-         *     label cannot drift apart. Nothing about the instrument is taken from the
-         *     request body beyond the identifier used to look it up.
+         *     Only instrument_mfid is stored; the instrument's slug and name in responses
+         *     are read from the instrument row.
          *
          *     The instrument's access group is granted contributor on the dataset, the
          *     same grant dataset creation makes. Reassignment removes the grant belonging
@@ -872,8 +834,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request Mosaic Stitch */
+        /**
+         * Request Mosaic Stitch
+         * @deprecated
+         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "mosaic_stitch".
+         */
         post: operations["request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/postprocess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Postprocess Dataset
+         * @description Queue a postprocessing run on a dataset. Requires contributor access. Each request starts a new run unless it repeats an Idempotency-Key.
+         */
+        post: operations["postprocess_dataset_datasets__dataset_mfid__postprocess_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -889,7 +875,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request Rga Analysis */
+        /**
+         * Request Rga Analysis
+         * @deprecated
+         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "rga_analysis".
+         */
         post: operations["request_rga_analysis_datasets__dataset_mfid__rga_analysis_post"];
         delete?: never;
         options?: never;
@@ -1311,57 +1301,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/entity_graph/{entity_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Entity Graph
-         * @description Returns a NetworkX node-link graph of all samples and datasets connected to
-         *     the given entity via sample lineage, dataset lineage, and sample-dataset
-         *     associations. entity_id may be a sample or dataset unique_id.
-         *     Nodes carry entity_type ('sample' or 'dataset') and name attributes.
-         *
-         *     Loads all samples and datasets in the root entity's project in a small number
-         *     of broad queries, builds the combined graph in Python, then returns the weakly
-         *     connected component containing the root entity.
-         */
-        get: operations["entity_graph_entity_graph__entity_mfid__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/entity_graph_bfs/{entity_mfid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Entity Graph Bfs
-         * @description BFS-based implementation (kept for reference). Prefer /entity_graph/{entity_id}.
-         *     Returns a NetworkX node-link graph of all samples and datasets connected to
-         *     the given entity via sample lineage, dataset lineage, and sample-dataset
-         *     associations. entity_id may be a sample or dataset unique_id.
-         *     Nodes carry entity_type ('sample' or 'dataset') and name attributes.
-         */
-        get: operations["entity_graph_bfs_entity_graph_bfs__entity_mfid__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/entity_graph_cte/{entity_mfid}": {
         parameters: {
             query?: never;
@@ -1379,28 +1318,6 @@ export interface paths {
         get: operations["entity_graph_cte_entity_graph_cte__entity_mfid__get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/extract_metadata": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Extract Metadata
-         * @description Extract scientific metadata from one or more lab notebook images using Claude vision.
-         *     Returns a free-form JSON object with the extracted metadata.
-         *     Pass an optional context string to guide the extraction (e.g. instrument type, experiment class).
-         */
-        post: operations["extract_metadata_extract_metadata_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1808,16 +1725,29 @@ export interface paths {
         };
         /**
          * List Join Requests
-         * @description List join requests.
-         *     - Admins can list across all groups, optionally filtered by ?group_name=.
-         *     - A non-admin caller who passes ?group_name= must be the lead of that
-         *       group, otherwise 403.
-         *     - A non-admin caller who omits ?group_name= gets requests scoped to every
-         *       group they lead (empty list if they lead none) — this is the cheap way
-         *       for someone leading multiple projects to fetch all their pending
-         *       requests in one call instead of one request per project.
+         * @description List join requests you made or may review. Platform administrators see all of them.
          */
         get: operations["list_join_requests_join_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/join_requests/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Join Request Facets
+         * @description Count join requests by status, project, or requester, with the same scope and filters as GET /join_requests. Buckets are ordered by count, largest first, then by label.
+         */
+        get: operations["join_request_facets_join_requests_facets_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1835,8 +1765,7 @@ export interface paths {
         };
         /**
          * Get Join Request
-         * @description Fetch a single join request by id. Visible to admins, the lead of the
-         *     request's group, or the user who submitted it.
+         * @description Read one join request. Visible to its requester, to those who may review it, and to platform administrators; 404 otherwise.
          */
         get: operations["get_join_request_join_requests__request_id__get"];
         put?: never;
@@ -1846,11 +1775,29 @@ export interface paths {
         head?: never;
         /**
          * Review Join Request
-         * @description Approve or reject a pending join request. Admin or the lead of the
-         *     request's group only. Approving adds the requester to the group's
-         *     project membership and access group.
+         * @description Approve or reject a pending request. Requires editor or above in the project (or platform administrator). Approval adds the requester at `role` (default contributor), at most your own role.
          */
         patch: operations["review_join_request_join_requests__request_id__patch"];
+        trace?: never;
+    };
+    "/join_requests/{request_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Withdraw Join Request
+         * @description Withdraw your own pending join request.
+         */
+        post: operations["withdraw_join_request_join_requests__request_id__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/keywords": {
@@ -1935,6 +1882,70 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/pipelines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Pipelines
+         * @description List the pipelines that can postprocess a dataset, with the parameters each accepts.
+         */
+        get: operations["list_pipelines_pipelines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/postprocessing_runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Postprocessing Runs
+         * @description List postprocessing runs on datasets the caller can read, newest first.
+         */
+        get: operations["list_postprocessing_runs_postprocessing_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/postprocessing_runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Postprocessing Run
+         * @description Return one postprocessing run. Requires read access to its dataset.
+         */
+        get: operations["get_postprocessing_run_postprocessing_runs__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Postprocessing Run
+         * @description Report a run's progress: running, completed, or failed with an error. Requires edit access to its dataset.
+         */
+        patch: operations["update_postprocessing_run_postprocessing_runs__run_id__patch"];
         trace?: never;
     };
     "/print/barcode": {
@@ -2075,63 +2086,26 @@ export interface paths {
          *     fields (extra="forbid" 422s if you send one). Use
          *     POST /resources/{proj_id}/transfer_ownership instead.
          *
-         *     project_id may be changed (renamed) here. Every foreign key that names a
-         *     project stores its MFID (Project.unique_id), never project_id, so a
-         *     rename does not orphan any dataset/sample/ACL row.
+         *     project_id may be changed (renamed) here. Datasets, samples, and memberships
+         *     link to the project by MFID, so a rename changes only the project row.
          */
         patch: operations["update_project_projects__project_ref__patch"];
         trace?: never;
     };
-    "/projects/{project_ref}/dataset_graph": {
+    "/projects/{project_ref}/join_requests": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Project Dataset Graph */
-        get: operations["project_dataset_graph_projects__project_ref__dataset_graph_get"];
+        get?: never;
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{project_ref}/entity_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
         /**
-         * Project Entity Graph
-         * @description Returns a NetworkX node-link graph of all samples and datasets in the
-         *     project, connected via sample lineage, dataset lineage, and sample-dataset
-         *     associations. Nodes carry entity_type ('sample' or 'dataset') and name.
+         * Request To Join Project
+         * @description Ask to join a project. One pending request per project, at most 20 pending in total.
          */
-        get: operations["project_entity_graph_projects__project_ref__entity_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{project_ref}/sample_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Project Sample Graph */
-        get: operations["project_sample_graph_projects__project_ref__sample_graph_get"];
-        put?: never;
-        post?: never;
+        post: operations["request_to_join_project_projects__project_ref__join_requests_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2172,18 +2146,16 @@ export interface paths {
          * Add Users To Project
          * @description Add a user to a project at `role`, defaulting to contributor.
          *
-         *     Requires editor or above in the project. Editors may grant contributor or
-         *     viewer, admins may grant editor or below, and owners may grant admin or below.
+         *     Requires editor or above in the project, granting at most your own role.
          *     Cannot seat someone as owner this way; a project has exactly one owner,
          *     changed only via POST /resources/{mfid}/transfer_ownership.
          */
         post: operations["add_users_to_project_projects__project_ref__users__user_ref__post"];
         /**
          * Remove User From Project
-         * @description Remove a user from a project and its associated access group.
-         *     Admins or the project lead can remove any member. A member can also
-         *     remove themselves (leave the project), but the project lead cannot
-         *     remove themselves — transfer leadership first.
+         * @description Remove a user from a project. Members may leave on their own; otherwise this
+         *     requires editor or above in the project and a member whose role is at most
+         *     your own. The owner cannot be removed; transfer ownership first.
          */
         delete: operations["remove_user_from_project_projects__project_ref__users__user_ref__delete"];
         options?: never;
@@ -2340,6 +2312,8 @@ export interface paths {
          *     `kind` is `users` or `projects`. Requires admin on the resource, and you
          *     may not grant above your own role nor overwrite a grant above it. Owner
          *     grants and changes to an existing owner require transfer_ownership.
+         *     Projects are shared through /projects/{project_ref}/users, and a record's
+         *     own project grant changes only with POST /resources/{mfid}/project (409).
          */
         put: operations["set_resource_access_resources__mfid__access__kind___principal__put"];
         post?: never;
@@ -2720,50 +2694,6 @@ export interface paths {
          *     Deprecated: use GET /datasets?sample_mfid={sample_id}.
          */
         get: operations["list_sample_datasets_samples__sample_mfid__datasets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{sample_mfid}/sample_graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Sample Graph
-         * @description Returns a NetworkX node-link graph of all samples connected (via parent/child
-         *     relationships) to the given sample. Loads all samples in the project and
-         *     returns the directed lineage subgraph (ancestors + descendants) of the target.
-         */
-        get: operations["sample_graph_samples__sample_mfid__sample_graph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/samples/{sample_mfid}/sample_graph_cte": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Sample Graph Cte
-         * @description CTE-based implementation (kept for reference). Prefer /sample_graph.
-         *     Returns a NetworkX node-link graph of all samples connected (via parent/child
-         *     relationships) to the given sample, i.e. its full lineage subgraph.
-         */
-        get: operations["sample_graph_cte_samples__sample_mfid__sample_graph_cte_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3238,6 +3168,7 @@ export interface components {
          * @description One canonical principal grant on a resource.
          */
         AccessGrantRead: {
+            capabilities?: components["schemas"]["EntryCapabilities"] | null;
             /** Display Name */
             display_name?: string | null;
             permission: components["schemas"]["AccessPermission"];
@@ -3267,6 +3198,7 @@ export interface components {
          * @description A public-safe group member profile plus their standing role.
          */
         AccessGroupMemberRead: {
+            capabilities?: components["schemas"]["EntryCapabilities"] | null;
             /** First Name */
             first_name: string;
             /**
@@ -3726,7 +3658,7 @@ export interface components {
             previous_instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
             /**
              * Previous Instrument Name
-             * @description The dataset's instrument_name before the change. For datasets whose name never named a registered instrument, this is the only record of it.
+             * @description Name of the dataset's previous registered instrument, or null when it had none.
              */
             previous_instrument_name?: string | null;
         };
@@ -4080,16 +4012,26 @@ export interface components {
             /** User Id */
             user_id: string;
         };
-        /** ExtractMetadataRequest */
-        ExtractMetadataRequest: {
-            /** Api Key */
-            api_key?: string | null;
-            /** Api Url */
-            api_url?: string | null;
-            /** Context */
-            context?: string | null;
-            /** Images */
-            images: components["schemas"]["ImageInput"][];
+        /**
+         * EntryCapabilities
+         * @description What the caller may do to one member or grant, as the matching routes would decide.
+         */
+        EntryCapabilities: {
+            /**
+             * Assignable Roles
+             * @description Roles the matching PATCH or PUT would accept for this entry.
+             */
+            assignable_roles: components["schemas"]["AccessPermission"][];
+            /**
+             * Can Change Role
+             * @description The matching PATCH or PUT would succeed for at least one other role.
+             */
+            can_change_role: boolean;
+            /**
+             * Can Remove
+             * @description The matching DELETE would succeed: removal up to your own role, or leaving yourself.
+             */
+            can_remove: boolean;
         };
         /** FacetBucket */
         FacetBucket: {
@@ -4108,7 +4050,7 @@ export interface components {
             /** Field */
             field: string;
             /** Items */
-            items: (components["schemas"]["FacetBucket"] | components["schemas"]["OwnerFacetBucket"] | components["schemas"]["ProjectFacetBucket"] | components["schemas"]["InstrumentFacetBucket"])[];
+            items: (components["schemas"]["FacetBucket"] | components["schemas"]["OwnerFacetBucket"] | components["schemas"]["ProjectFacetBucket"] | components["schemas"]["InstrumentFacetBucket"] | components["schemas"]["RequesterFacetBucket"])[];
             /** Limit */
             limit: number;
             /** Next Cursor */
@@ -4195,16 +4137,6 @@ export interface components {
             token_type: string;
             /** User Unique Id */
             user_unique_id: string;
-        };
-        /** ImageInput */
-        ImageInput: {
-            /** Data */
-            data: string;
-            /**
-             * Media Type
-             * @enum {string}
-             */
-            media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
         };
         /** IngestionRequest */
         IngestionRequest: {
@@ -4384,48 +4316,106 @@ export interface components {
             /** Other Id Source */
             other_id_source?: string | null;
         };
+        /** JoinRequestCapabilities */
+        JoinRequestCapabilities: {
+            /**
+             * Can Review
+             * @description Whether the caller may approve or reject this pending request.
+             */
+            can_review: boolean;
+            /**
+             * Can Withdraw
+             * @description Whether the caller may withdraw this pending request.
+             */
+            can_withdraw: boolean;
+        };
         /**
          * JoinRequestCreate
-         * @description Body for POST /projects/{proj_id}/join.
+         * @description Body for POST /projects/{project_ref}/join_requests.
          */
         JoinRequestCreate: {
             /** Reason */
             reason?: string | null;
         };
         /**
+         * JoinRequestFacetField
+         * @enum {string}
+         */
+        JoinRequestFacetField: "status" | "project" | "requester";
+        /**
          * JoinRequestRead
-         * @description Response model for AccessGroupJoinRequest.
+         * @description A request to join a project, with the people involved and what the caller may do with it.
          */
         JoinRequestRead: {
-            /** Group Name */
-            group_name: string;
+            capabilities: components["schemas"]["JoinRequestCapabilities"];
+            /** Granted Role */
+            granted_role?: string | null;
+            /**
+             * Group Name
+             * @deprecated
+             * @description Deprecated. Use project.project_id.
+             */
+            group_name?: string | null;
             /** Id */
             id: number;
+            /** @description Null when the project no longer exists. */
+            project?: components["schemas"]["ProjectReferenceRead"] | null;
+            /** Project Mfid */
+            project_mfid: string;
             /** Reason */
             reason?: string | null;
-            /** Request Time */
-            request_time?: string | null;
+            /**
+             * Request Time
+             * Format: date-time
+             */
+            request_time: string;
+            requester?: components["schemas"]["UserPublicRead"] | null;
             /** Requester Id */
             requester_id: string;
             /** Review Time */
             review_time?: string | null;
+            reviewer?: components["schemas"]["UserPublicRead"] | null;
             /** Reviewer Id */
             reviewer_id?: string | null;
             /** Reviewer Notes */
             reviewer_notes?: string | null;
-            /** Status */
-            status: string;
+            status: components["schemas"]["JoinRequestStatus"];
         };
         /**
          * JoinRequestReview
-         * @description Body for PATCH /projects/{proj_id}/join_requests/{request_id}.
+         * @description Body for PATCH /join_requests/{request_id}.
          */
         JoinRequestReview: {
             /** Reviewer Notes */
             reviewer_notes?: string | null;
-            /** Status */
-            status: string;
+            /** @description Role granted on approval, at most the reviewer's own role. Defaults to contributor. Only with status approved. */
+            role?: components["schemas"]["JoinRequestRole"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved" | "rejected";
         };
+        /**
+         * JoinRequestRole
+         * @enum {string}
+         */
+        JoinRequestRole: "viewer" | "contributor" | "editor" | "admin";
+        /**
+         * JoinRequestScope
+         * @enum {string}
+         */
+        JoinRequestScope: "accessible" | "submitted" | "reviewable";
+        /**
+         * JoinRequestSort
+         * @enum {string}
+         */
+        JoinRequestSort: "request_time" | "review_time" | "status" | "project" | "requester_name";
+        /**
+         * JoinRequestStatus
+         * @enum {string}
+         */
+        JoinRequestStatus: "pending" | "approved" | "rejected" | "withdrawn";
         /** Keyword */
         Keyword: {
             /** Id */
@@ -4677,6 +4667,19 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /** PaginatedResponse[PostprocessingRunRead] */
+        PaginatedResponse_PostprocessingRunRead_: {
+            /** Items */
+            items: components["schemas"]["PostprocessingRunRead"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
         /** PaginatedResponse[ProjectRead] */
         PaginatedResponse_ProjectRead_: {
             /** Items */
@@ -4781,11 +4784,78 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /** PipelineRead */
+        PipelineRead: {
+            /** Description */
+            description: string;
+            /** Name */
+            name: string;
+            /** Parameters Schema */
+            parameters_schema: {
+                [key: string]: unknown;
+            };
+        };
         /**
          * PlatformRole
          * @enum {string}
          */
         PlatformRole: "none" | "contributor" | "support" | "admin";
+        /** PostprocessRequest */
+        PostprocessRequest: {
+            /**
+             * Parameters
+             * @description Pipeline parameters, validated against the pipeline's parameters_schema.
+             */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Pipeline
+             * @description Name of a pipeline from GET /pipelines.
+             */
+            pipeline: string;
+        };
+        /** PostprocessingRunRead */
+        PostprocessingRunRead: {
+            /** Dataset Mfid */
+            dataset_mfid: string;
+            /** Error */
+            error?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Parameters */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /** Pipeline */
+            pipeline: string;
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /** Requested By */
+            requested_by?: string | null;
+            /** Run Id */
+            run_id: number;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "running" | "completed" | "failed";
+        };
+        /** PostprocessingRunUpdate */
+        PostprocessingRunUpdate: {
+            /** Error */
+            error?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "completed" | "failed";
+        };
         /** PreferencesRead */
         PreferencesRead: {
             /** Preferences */
@@ -5025,6 +5095,19 @@ export interface components {
         RecentResourceRecord: {
             /** Resource Mfid */
             resource_mfid: string;
+        };
+        /** RequesterFacetBucket */
+        RequesterFacetBucket: {
+            /** Count */
+            count: number;
+            /**
+             * Label
+             * @description Canonical display label. Null only for the null bucket.
+             */
+            label?: string | null;
+            requester: components["schemas"]["UserPublicRead"] | null;
+            /** Value */
+            value: string | null;
         };
         /** ResourceACL */
         ResourceACL: {
@@ -6005,7 +6088,7 @@ export interface operations {
     get_account_join_requests_account_join_requests_get: {
         parameters: {
             query?: {
-                status?: string | null;
+                status?: components["schemas"]["JoinRequestStatus"] | null;
                 limit?: number;
                 offset?: number;
             };
@@ -6424,6 +6507,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApiKeyVerify"];
                 };
+            };
+            /** @description A Hub session's account has no API key */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -7436,85 +7526,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dataset_graph_datasets__dataset_mfid__dataset_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dataset_graph_cte_datasets__dataset_mfid__dataset_graph_cte_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PostprocessingRunRead"];
                 };
             };
             /** @description Validation Error */
@@ -7727,7 +7739,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PostprocessingRunRead"];
                 };
             };
             /** @description Validation Error */
@@ -7889,7 +7901,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PostprocessingRunRead"];
                 };
             };
             /** @description Validation Error */
@@ -7900,6 +7912,77 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    postprocess_dataset_datasets__dataset_mfid__postprocess_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Retries with the same key return the original run instead of starting another. */
+                "idempotency-key"?: string | null;
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostprocessRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostprocessingRunRead"];
+                };
+            };
+            /** @description Caller is below contributor on the dataset */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Dataset not found, not readable, or pending deletion */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The Idempotency-Key was already used for a different pipeline or parameters (`idempotency_key_reused`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown pipeline (`unknown_pipeline`) or invalid parameters (`invalid_parameters`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The run could not be queued (`pipeline_unavailable`); it is recorded as failed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -7928,7 +8011,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PostprocessingRunRead"];
                 };
             };
             /** @description Validation Error */
@@ -9027,84 +9110,6 @@ export interface operations {
             };
         };
     };
-    entity_graph_entity_graph__entity_mfid__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample or dataset MFID. */
-                entity_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    entity_graph_bfs_entity_graph_bfs__entity_mfid__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample or dataset MFID. */
-                entity_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     entity_graph_cte_entity_graph_cte__entity_mfid__get: {
         parameters: {
             query?: {
@@ -9121,46 +9126,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    extract_metadata_extract_metadata_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtractMetadataRequest"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -10153,11 +10118,34 @@ export interface operations {
     list_join_requests_join_requests_get: {
         parameters: {
             query?: {
-                group_name?: string | null;
-                status?: string | null;
-                requester_id?: string | null;
+                /** @description Text sorts are case-insensitive; nulls are last and the request id breaks ties. Status order is pending, approved, rejected, withdrawn. requester_name orders by last name, first name, username, and ORCID. */
+                sort?: components["schemas"]["JoinRequestSort"];
+                direction?: components["schemas"]["SortDirection"];
                 limit?: number;
+                /** @description Opaque continuation cursor from next_cursor. */
+                cursor?: string | null;
+                /** @description Compatibility offset. A supplied cursor takes precedence. */
                 offset?: number;
+                /** @description accessible: your own requests and those you may review; submitted: your own; reviewable: those you may review. */
+                scope?: components["schemas"]["JoinRequestScope"];
+                /** @description Repeat to match several statuses. */
+                status?: components["schemas"]["JoinRequestStatus"][] | null;
+                /** @description Repeat to match several projects. */
+                project_mfid?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated. Use project_mfid. Accepts a project slug or MFID.
+                 */
+                group_name?: string | null;
+                requester_id?: string | null;
+                reviewer_id?: string | null;
+                requested_after?: string | null;
+                requested_before?: string | null;
+                /** @description Closed at or after this time (reviewed, withdrawn, or closed by a direct add). */
+                reviewed_after?: string | null;
+                reviewed_before?: string | null;
+                /** @description Matches the requester's name, username, or ORCID, case-insensitively. */
+                q?: string | null;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
@@ -10179,6 +10167,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_JoinRequestRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    join_request_facets_join_requests_facets_get: {
+        parameters: {
+            query: {
+                field: components["schemas"]["JoinRequestFacetField"];
+                limit?: number;
+                /** @description accessible: your own requests and those you may review; submitted: your own; reviewable: those you may review. */
+                scope?: components["schemas"]["JoinRequestScope"];
+                /** @description Repeat to match several statuses. */
+                status?: components["schemas"]["JoinRequestStatus"][] | null;
+                /** @description Repeat to match several projects. */
+                project_mfid?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated. Use project_mfid. Accepts a project slug or MFID.
+                 */
+                group_name?: string | null;
+                requester_id?: string | null;
+                reviewer_id?: string | null;
+                requested_after?: string | null;
+                requested_before?: string | null;
+                /** @description Closed at or after this time (reviewed, withdrawn, or closed by a direct add). */
+                reviewed_after?: string | null;
+                reviewed_before?: string | null;
+                /** @description Matches the requester's name, username, or ORCID, case-insensitively. */
+                q?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacetResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10260,6 +10307,72 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["JoinRequestRead"];
                 };
+            };
+            /** @description Not allowed to review, or the role is not below yours */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `join_request_closed`, or the project is gone or pending deletion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_join_request_join_requests__request_id__withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                request_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestRead"];
+                };
+            };
+            /** @description Only the requester can withdraw */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `join_request_closed` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -10365,6 +10478,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_pipelines_pipelines_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_postprocessing_runs_postprocessing_runs_get: {
+        parameters: {
+            query?: {
+                dataset_mfid?: string | null;
+                pipeline?: string | null;
+                status?: ("requested" | "running" | "completed" | "failed") | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_PostprocessingRunRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_postprocessing_run_postprocessing_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                run_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostprocessingRunRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_postprocessing_run_postprocessing_runs__run_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                run_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostprocessingRunUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostprocessingRunRead"];
+                };
+            };
+            /** @description The run already finished (`run_finished`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -10679,7 +10957,7 @@ export interface operations {
             };
         };
     };
-    project_dataset_graph_projects__project_ref__dataset_graph_get: {
+    request_to_join_project_projects__project_ref__join_requests_post: {
         parameters: {
             query?: never;
             header?: {
@@ -10692,10 +10970,14 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinRequestCreate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     "Cache-Control": components["headers"]["PrivateCacheControl"];
                     "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
@@ -10704,86 +10986,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["JoinRequestRead"];
                 };
             };
-            /** @description Validation Error */
-            422: {
+            /** @description Service accounts cannot request (`service_account_cannot_request`) */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
+                content?: never;
             };
-        };
-    };
-    project_entity_graph_projects__project_ref__entity_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
+            /** @description `already_member`, `join_request_pending`, `too_many_pending_requests`, or `project_not_accepting_requests` */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    project_sample_graph_projects__project_ref__sample_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Project MFID or project_id slug (case-insensitive). */
-                project_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -12299,84 +12517,6 @@ export interface operations {
                 include_metadata?: boolean;
                 limit?: number | null;
             };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample MFID. */
-                sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    sample_graph_samples__sample_mfid__sample_graph_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample MFID. */
-                sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    sample_graph_cte_samples__sample_mfid__sample_graph_cte_get: {
-        parameters: {
-            query?: never;
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
