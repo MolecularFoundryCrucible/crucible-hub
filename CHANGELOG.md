@@ -4,6 +4,8 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+## 1.4.0 - 2026-10-19
+
 - Docked the resource preview beside the content on wide screens (1440px and up) instead of covering the table, kept it open until closed there, strengthened its edge shadow when it overlays narrower layouts, and highlighted the previewed row.
 - Gave primary table columns such as Name and Account more width than secondary text columns, capped secondary columns on wide screens, and standardized column widths by content type.
 - Switched tables to cards based on the space each table actually has instead of the window width, so names and IDs no longer collapse or overlap next to the sidebar, added a Sort by control to card layouts (including Users, Service accounts, and Deletion requests), and showed full long project IDs and Crucible IDs on hover.
