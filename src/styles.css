@@ -168,9 +168,9 @@
 }
 
 @theme inline {
-  --container-collection-wide: 68rem;
-  --container-directory-wide: 56rem;
-  --container-identity-wide: 62rem;
+  --container-collection-wide: 72rem;
+  --container-directory-wide: 62rem;
+  --container-identity-wide: 66rem;
   --transition-duration-fast: var(--motion-fast);
   --transition-duration-standard: var(--motion-standard);
   --transition-duration-deliberate: var(--motion-deliberate);
@@ -200,6 +200,17 @@
   --spacing-resource-sequence: 18rem;
   --spacing-breadcrumb-ancestor: 18rem;
   --spacing-identity-preview: 18rem;
+  --spacing-column-action: 3rem;
+  --spacing-column-action-label: 5rem;
+  --spacing-column-compact: 6rem;
+  --spacing-column-badge: 7rem;
+  --spacing-column-label: 9rem;
+  --spacing-column-person: 10rem;
+  --spacing-column-date: 10.5rem;
+  --spacing-column-id: 11rem;
+  --spacing-column-id-wide: 15rem;
+  --spacing-column-secondary: 25%;
+  --spacing-column-secondary-max: 16rem;
   --spacing-group-count-column: 5rem;
   --spacing-inspector-width: 26rem;
   --spacing-dialog-viewport: calc(100dvh - 1rem);
@@ -217,43 +228,7 @@
   --spacing-auth-footer-block: 0.75rem;
   --spacing-auth-footer-gap: 0.25rem;
   --opacity-auth-background-logo: 0.06;
-  --spacing-resource-date-column: 10.5rem;
-  --spacing-resource-person-column: 10rem;
-  --spacing-data-action-column: 3rem;
-  --spacing-processing-storage-column: 6rem;
-  --spacing-processing-size-column: 6rem;
-  --spacing-processing-status-column: 9rem;
-  --spacing-processing-ingestor-column: 10rem;
-  --spacing-processing-updated-column: var(--spacing-resource-date-column);
-  --spacing-directory-action-column: 3rem;
-  --spacing-directory-date-column: var(--spacing-resource-date-column);
-  --spacing-directory-instrument-person-column: var(
-    --spacing-resource-person-column
-  );
-  --spacing-directory-project-person-column: var(
-    --spacing-resource-person-column
-  );
-  --spacing-directory-role-column: 7rem;
-  --spacing-identity-mfid-column: 11rem;
-  --spacing-identity-role-column: 7rem;
-  --spacing-deletion-action-column: 5rem;
-  --spacing-deletion-date-column: var(--spacing-resource-date-column);
-  --spacing-deletion-project-column: 12rem;
-  --spacing-deletion-requester-column: var(--spacing-resource-person-column);
-  --spacing-deletion-selection-column: 3rem;
-  --spacing-deletion-status-column: 7rem;
   --spacing-access-role-control: 6rem;
-  --spacing-data-owner-column-with-action: var(
-    --spacing-resource-person-column
-  );
-  --spacing-data-date-column-with-action: var(--spacing-resource-date-column);
-  --spacing-data-type-column-wide-with-action: 9rem;
-  --spacing-data-owner-column-wide-with-action: var(
-    --spacing-resource-person-column
-  );
-  --spacing-data-date-column-wide-with-action: var(
-    --spacing-resource-date-column
-  );
   --text-title-page: 1.75rem;
   --text-title-page--line-height: 2.25rem;
   --text-title-page--font-weight: 600;
@@ -447,12 +422,6 @@
   gap: var(--spacing-auth-footer-gap);
   padding-block: var(--spacing-auth-footer-block);
   color: var(--muted-foreground);
-}
-
-@container (min-width: 62rem) {
-  .identity-directory-table {
-    --spacing-identity-mfid-column: 15rem;
-  }
 }
 
 :root {
@@ -1292,46 +1261,46 @@ body {
   }
 }
 
-@container (max-width: 43.999rem) {
+@container (min-width: 26rem) and (max-width: 47.999rem) {
   .resource-directory-table .resource-directory-person,
   .resource-directory-table .resource-directory-person-column {
     display: none;
   }
 }
 
-@container (max-width: 33.999rem) {
+@container (min-width: 26rem) and (max-width: 33.999rem) {
   .resource-directory-table .resource-directory-location,
   .resource-directory-table .resource-directory-location-column {
     display: none;
   }
 }
 
-@container (max-width: 47.999rem) {
+@container (min-width: 26rem) and (max-width: 47.999rem) {
   .resource-collection-table .resource-collection-owner,
   .resource-collection-table .resource-collection-owner-column {
     display: none;
   }
 }
 
-@container (max-width: 35.999rem) {
+@container (min-width: 26rem) and (max-width: 35.999rem) {
   .resource-collection-table .resource-collection-project,
   .resource-collection-table .resource-collection-project-column {
     display: none;
   }
 }
 
-@container (max-width: 55.999rem) {
+@container (min-width: 38rem) and (max-width: 59.999rem) {
   .identity-directory-table .identity-directory-role,
-  .identity-directory-table .identity-directory-role-column,
-  .identity-directory-table:has(.identity-directory-email-column)
-    .identity-directory-mfid,
-  .identity-directory-table:has(.identity-directory-email-column)
-    .identity-directory-mfid-column {
+  .identity-directory-table .identity-directory-role-column {
+    display: none;
+  }
+
+  .identity-directory-table .identity-directory-optional {
     display: none;
   }
 }
 
-@container (max-width: 59.999rem) {
+@container (min-width: 38rem) and (max-width: 59.999rem) {
   .deletion-request-table .deletion-request-project,
   .deletion-request-table .deletion-request-project-column,
   .deletion-request-table .deletion-request-requester,
@@ -1674,41 +1643,29 @@ body {
   }
 }
 
-.resource-directory-table .resource-directory-action-column {
-  width: var(--spacing-directory-action-column);
-}
-
-.resource-directory-table .resource-directory-date-column {
-  width: var(--spacing-directory-date-column);
-}
-
-.resource-directory-project-table .resource-directory-person-column {
-  width: var(--spacing-directory-project-person-column);
-}
-
-.resource-directory-project-table .resource-directory-role-column {
-  width: var(--spacing-directory-role-column);
-}
-
-.resource-directory-instrument-table .resource-directory-person-column {
-  width: var(--spacing-directory-instrument-person-column);
-}
-
-.identity-directory-table:has(.identity-directory-email-column)
-  .identity-directory-mfid-column {
-  width: var(--spacing-identity-mfid-column);
-}
-
-.identity-directory-table .identity-directory-role-column {
-  width: var(--spacing-identity-role-column);
-}
-
-.identity-directory-table .identity-directory-activity-column {
-  width: var(--spacing-directory-date-column);
-}
-
+.resource-directory-table .resource-directory-action-column,
 .identity-directory-table .identity-directory-action-column {
-  width: var(--spacing-directory-action-column);
+  width: var(--spacing-column-action);
+}
+
+.resource-directory-table .resource-directory-date-column,
+.identity-directory-table .identity-directory-activity-column {
+  width: var(--spacing-column-date);
+}
+
+.resource-directory-table .resource-directory-person-column {
+  width: var(--spacing-column-person);
+}
+
+.resource-directory-table .resource-directory-role-column,
+.identity-directory-table .identity-directory-role-column {
+  width: var(--spacing-column-badge);
+}
+
+@container (min-width: 64rem) {
+  .w-column-secondary {
+    width: var(--spacing-column-secondary-max);
+  }
 }
 
 .route-progress {

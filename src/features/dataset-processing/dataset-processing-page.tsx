@@ -329,12 +329,12 @@ function ProcessingFilesColumns() {
   return (
     <colgroup>
       <col />
-      <col className="hidden xl:table-column xl:w-processing-storage-column" />
-      <col className="hidden xl:table-column xl:w-processing-size-column" />
-      <col className="w-processing-status-column" />
-      <col className="hidden md:table-column md:w-processing-ingestor-column" />
-      <col className="hidden md:table-column md:w-processing-updated-column" />
-      <col className="w-data-action-column" />
+      <col className="hidden xl:table-column xl:w-column-compact" />
+      <col className="hidden xl:table-column xl:w-column-compact" />
+      <col className="w-column-label" />
+      <col className="hidden md:table-column md:w-column-person" />
+      <col className="hidden md:table-column md:w-column-date" />
+      <col className="w-column-action" />
     </colgroup>
   )
 }

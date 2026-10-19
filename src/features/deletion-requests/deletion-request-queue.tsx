@@ -339,15 +339,15 @@ function DeletionRequestColgroup({
 }) {
   return (
     <colgroup>
-      {bulkReview ? <col className="w-deletion-selection-column" /> : null}
+      {bulkReview ? <col className="w-column-action" /> : null}
       <col />
       {showProject ? (
-        <col className="deletion-request-project-column w-deletion-project-column" />
+        <col className="deletion-request-project-column w-column-secondary" />
       ) : null}
-      <col className="deletion-request-requester-column w-deletion-requester-column" />
-      <col className="w-deletion-date-column" />
-      {showStatus ? <col className="w-deletion-status-column" /> : null}
-      <col className="w-deletion-action-column" />
+      <col className="deletion-request-requester-column w-column-person" />
+      <col className="w-column-date" />
+      {showStatus ? <col className="w-column-badge" /> : null}
+      <col className="w-column-action-label" />
     </colgroup>
   )
 }

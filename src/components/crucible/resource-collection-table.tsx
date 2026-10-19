@@ -76,15 +76,15 @@ export function ResourceCollectionTable({
       <colgroup>
         <col />
         {showSubtypeColumn ? (
-          <col className="hidden @collection-wide:table-column @collection-wide:w-data-type-column-wide-with-action" />
+          <col className="hidden w-column-label @collection-wide:table-column" />
         ) : null}
         {showProjectColumn ? (
-          <col className="resource-collection-project-column" />
+          <col className="resource-collection-project-column w-column-secondary" />
         ) : null}
-        <col className="resource-collection-owner-column w-data-owner-column-with-action @collection-wide:w-data-owner-column-wide-with-action" />
-        <col className="hidden w-data-date-column-with-action @collection-wide:table-column @collection-wide:w-data-date-column-wide-with-action" />
-        <col className="w-data-date-column-with-action @collection-wide:w-data-date-column-wide-with-action" />
-        <col className="w-data-action-column" />
+        <col className="resource-collection-owner-column w-column-person" />
+        <col className="hidden w-column-date @collection-wide:table-column" />
+        <col className="w-column-date" />
+        <col className="w-column-action" />
       </colgroup>
       <TableHeader>
         <TableRow>

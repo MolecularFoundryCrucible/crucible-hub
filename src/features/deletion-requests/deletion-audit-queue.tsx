@@ -124,10 +124,10 @@ function DeletionAuditColgroup() {
   return (
     <colgroup>
       <col />
-      <col className="deletion-request-project-column w-deletion-project-column" />
-      <col className="deletion-request-requester-column w-deletion-requester-column" />
-      <col className="w-deletion-date-column" />
-      <col className="w-deletion-action-column" />
+      <col className="deletion-request-project-column w-column-secondary" />
+      <col className="deletion-request-requester-column w-column-person" />
+      <col className="w-column-date" />
+      <col className="w-column-action-label" />
     </colgroup>
   )
 }

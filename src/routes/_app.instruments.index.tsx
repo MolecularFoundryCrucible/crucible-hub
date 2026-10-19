@@ -739,7 +739,7 @@ function InstrumentCollection({
             >
               <colgroup>
                 <col className="resource-directory-name-column" />
-                <col className="resource-directory-location-column" />
+                <col className="resource-directory-location-column w-column-secondary" />
                 <col className="resource-directory-person-column" />
                 <col className="resource-directory-date-column hidden @directory-wide:table-column" />
                 <col className="resource-directory-date-column" />

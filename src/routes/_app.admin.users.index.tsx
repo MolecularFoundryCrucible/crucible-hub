@@ -405,8 +405,8 @@ function UserCollection({
             >
               <colgroup>
                 <col className="identity-directory-account-column" />
-                <col className="identity-directory-mfid-column" />
-                <col className="identity-directory-email-column" />
+                <col className="identity-directory-mfid-column identity-directory-optional w-column-id @identity-wide:w-column-id-wide" />
+                <col className="identity-directory-email-column w-column-secondary" />
                 <col className="identity-directory-role-column" />
                 <col className="identity-directory-activity-column" />
                 <col className="identity-directory-action-column" />
@@ -423,7 +423,7 @@ function UserCollection({
                   />
                   <SortableTableHead
                     active={sort === "unique_id"}
-                    className="identity-directory-mfid"
+                    className="identity-directory-mfid identity-directory-optional"
                     direction={direction}
                     field="unique_id"
                     label="Crucible ID"
@@ -481,7 +481,7 @@ function UserCollection({
                         />
                       </TableCell>
                       <TableCell
-                        className="identity-directory-mfid"
+                        className="identity-directory-mfid identity-directory-optional"
                         data-label="Crucible ID"
                       >
                         <MfidText

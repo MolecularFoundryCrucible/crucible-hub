@@ -64,7 +64,7 @@ const pendingColumns: Record<
     },
     {
       className: "resource-directory-location",
-      columnClassName: "resource-directory-location-column",
+      columnClassName: "resource-directory-location-column w-column-secondary",
       label: "Location",
     },
     {
@@ -138,38 +138,34 @@ const pendingColumns: Record<
     },
     {
       className: "resource-collection-type hidden @collection-wide:table-cell",
-      columnClassName:
-        "hidden @collection-wide:table-column @collection-wide:w-data-type-column-wide-with-action",
+      columnClassName: "hidden @collection-wide:table-column w-column-label",
       label: "Type",
     },
     {
       className: "resource-collection-project",
-      columnClassName: "resource-collection-project-column",
+      columnClassName: "resource-collection-project-column w-column-secondary",
       label: "Project",
     },
     {
       className: "resource-collection-owner",
-      columnClassName:
-        "resource-collection-owner-column w-data-owner-column-with-action @collection-wide:w-data-owner-column-wide-with-action",
+      columnClassName: "resource-collection-owner-column w-column-person",
       label: "Owner",
     },
     {
       className: "resource-collection-date hidden @collection-wide:table-cell",
-      columnClassName:
-        "hidden w-data-date-column-with-action @collection-wide:table-column @collection-wide:w-data-date-column-wide-with-action",
+      columnClassName: "hidden w-column-date @collection-wide:table-column",
       label: "Created",
       kind: "date",
     },
     {
       className: "resource-collection-date",
-      columnClassName:
-        "w-data-date-column-with-action @collection-wide:w-data-date-column-wide-with-action",
+      columnClassName: "w-column-date",
       label: "Updated",
       kind: "date",
     },
     {
       className: "resource-collection-action",
-      columnClassName: "w-data-action-column",
+      columnClassName: "w-column-action",
       label: "Open",
       kind: "action",
     },
@@ -182,33 +178,29 @@ const pendingColumns: Record<
     },
     {
       className: "resource-collection-type hidden @collection-wide:table-cell",
-      columnClassName:
-        "hidden @collection-wide:table-column @collection-wide:w-data-type-column-wide-with-action",
+      columnClassName: "hidden @collection-wide:table-column w-column-label",
       label: "Type",
     },
     {
       className: "resource-collection-owner",
-      columnClassName:
-        "resource-collection-owner-column w-data-owner-column-with-action @collection-wide:w-data-owner-column-wide-with-action",
+      columnClassName: "resource-collection-owner-column w-column-person",
       label: "Owner",
     },
     {
       className: "resource-collection-date hidden @collection-wide:table-cell",
-      columnClassName:
-        "hidden w-data-date-column-with-action @collection-wide:table-column @collection-wide:w-data-date-column-wide-with-action",
+      columnClassName: "hidden w-column-date @collection-wide:table-column",
       label: "Created",
       kind: "date",
     },
     {
       className: "resource-collection-date",
-      columnClassName:
-        "w-data-date-column-with-action @collection-wide:w-data-date-column-wide-with-action",
+      columnClassName: "w-column-date",
       label: "Updated",
       kind: "date",
     },
     {
       className: "resource-collection-action",
-      columnClassName: "w-data-action-column",
+      columnClassName: "w-column-action",
       label: "Open",
       kind: "action",
     },
@@ -222,7 +214,7 @@ const pendingColumns: Record<
     },
     {
       className: "identity-directory-mfid",
-      columnClassName: "identity-directory-mfid-column",
+      columnClassName: "identity-directory-mfid-column w-column-secondary",
       label: "Crucible ID",
     },
     {
@@ -289,13 +281,14 @@ const pendingColumns: Record<
       name: true,
     },
     {
-      className: "identity-directory-mfid",
-      columnClassName: "identity-directory-mfid-column",
+      className: "identity-directory-mfid identity-directory-optional",
+      columnClassName:
+        "identity-directory-mfid-column identity-directory-optional w-column-id @identity-wide:w-column-id-wide",
       label: "Crucible ID",
     },
     {
       className: "identity-directory-email",
-      columnClassName: "identity-directory-email-column",
+      columnClassName: "identity-directory-email-column w-column-secondary",
       label: "Email",
     },
     {

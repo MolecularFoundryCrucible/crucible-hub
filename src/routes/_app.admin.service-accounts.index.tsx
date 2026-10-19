@@ -466,7 +466,7 @@ function ServiceAccountCollection({
             >
               <colgroup>
                 <col className="identity-directory-account-column" />
-                <col className="identity-directory-mfid-column" />
+                <col className="identity-directory-mfid-column w-column-secondary" />
                 <col className="identity-directory-role-column" />
                 <col className="identity-directory-activity-column" />
                 <col className="identity-directory-action-column" />
