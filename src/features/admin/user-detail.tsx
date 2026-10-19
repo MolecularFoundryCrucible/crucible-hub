@@ -19,7 +19,6 @@ import {
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
-import { ActivityTime } from "@/components/crucible/activity-time"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
@@ -405,20 +404,12 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0 sm:col-span-1">
+              <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID / ORCID
                 </dt>
                 <dd className="mt-1">
                   <MfidValue value={user.unique_id} />
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Last active
-                </dt>
-                <dd className="mt-1 text-body">
-                  <ActivityTime fallback="Never" value={user.last_active_at} />
                 </dd>
               </div>
             </dl>
@@ -680,6 +671,7 @@ function UserApiCredentialSection({
             ) : null}
           </div>
         }
+        lastActiveAt={user.last_active_at}
         status={user.api_key_status}
       />
       <ConfirmationDialog

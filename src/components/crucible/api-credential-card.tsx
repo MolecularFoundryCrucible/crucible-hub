@@ -49,12 +49,14 @@ export function RotateCredentialAction({
 export function ApiCredentialCard({
   action,
   error,
+  lastActiveAt,
   loading = false,
   onRetry,
   status,
 }: {
   action?: React.ReactNode
   error?: React.ReactNode
+  lastActiveAt: string | null | undefined
   loading?: boolean
   onRetry?: () => void
   status?: WorkspaceApiCredentialStatus | null
@@ -64,50 +66,77 @@ export function ApiCredentialCard({
       <CardHeader actionLayout="inline">
         <CardTitle className="flex items-center gap-2">
           <CredentialIcon aria-hidden="true" />
-          API credential
+          Activity and API key
         </CardTitle>
         {action ? <CardAction>{action}</CardAction> : null}
       </CardHeader>
       <CardContent>
         {loading ? (
           <CredentialStatusSkeleton />
-        ) : error ? (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-body text-muted-foreground" role="alert">
-              {error}
-            </p>
-            {onRetry ? (
-              <Button
-                onClick={onRetry}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                Try again
-              </Button>
-            ) : null}
-          </div>
-        ) : status ? (
-          <CredentialStatus status={status} />
+        ) : status && !error ? (
+          <CredentialStatus lastActiveAt={lastActiveAt} status={status} />
         ) : (
-          <p className="text-body text-muted-foreground">
-            No API credential status is available.
-          </p>
+          <div className="flex flex-col gap-4">
+            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <LastActiveField value={lastActiveAt} />
+            </dl>
+            {error ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-body text-muted-foreground" role="alert">
+                  {error}
+                </p>
+                {onRetry ? (
+                  <Button
+                    onClick={onRetry}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    Try again
+                  </Button>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-body text-muted-foreground">
+                No API key status is available.
+              </p>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>
   )
 }
 
+function LastActiveField({ value }: { value: string | null | undefined }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-label text-muted-foreground">Last active</dt>
+      <dd className="mt-1 text-body">
+        <ActivityTime fallback="Never" value={value} />
+      </dd>
+    </div>
+  )
+}
+
 function CredentialStatus({
+  lastActiveAt,
   status,
 }: {
+  lastActiveAt: string | null | undefined
   status: WorkspaceApiCredentialStatus
 }) {
   return (
-    <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-      <div className="col-span-2 min-w-0 xl:col-span-1">
-        <dt className="text-label text-muted-foreground">Status</dt>
+    <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <LastActiveField value={lastActiveAt} />
+      <div className="min-w-0">
+        <dt className="text-label text-muted-foreground">Key last used</dt>
+        <dd className="mt-1 text-body">
+          <ActivityTime fallback="Not used yet" value={status.last_used_at} />
+        </dd>
+      </div>
+      <div className="min-w-0">
+        <dt className="text-label text-muted-foreground">Key status</dt>
         <dd className="mt-1">
           <Badge variant={status.valid ? "success" : "destructive"}>
             {status.valid ? "Valid" : "Invalid"}
@@ -115,21 +144,15 @@ function CredentialStatus({
         </dd>
       </div>
       <div className="min-w-0">
-        <dt className="text-label text-muted-foreground">Created</dt>
+        <dt className="text-label text-muted-foreground">Key created</dt>
         <dd className="mt-1 text-body">
           <LocalDateTime value={status.created_at} />
         </dd>
       </div>
       <div className="min-w-0">
-        <dt className="text-label text-muted-foreground">Expires</dt>
+        <dt className="text-label text-muted-foreground">Key expires</dt>
         <dd className="mt-1 text-body">
           <LocalDateTime value={status.expires_at} />
-        </dd>
-      </div>
-      <div className="min-w-0">
-        <dt className="text-label text-muted-foreground">Last used</dt>
-        <dd className="mt-1 text-body">
-          <ActivityTime fallback="Not used yet" value={status.last_used_at} />
         </dd>
       </div>
     </dl>
@@ -137,20 +160,21 @@ function CredentialStatus({
 }
 
 function CredentialStatusSkeleton() {
-  const fields = ["Status", "Created", "Expires", "Last used"] as const
+  const fields = [
+    "Last active",
+    "Key last used",
+    "Key status",
+    "Key created",
+    "Key expires",
+  ] as const
   return (
     <dl
-      aria-label="Loading API credential status"
-      className="grid grid-cols-2 gap-4 xl:grid-cols-4"
+      aria-label="Loading activity and API key status"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3"
       role="status"
     >
-      {fields.map((field, index) => (
-        <div
-          className={
-            index === 0 ? "col-span-2 min-w-0 xl:col-span-1" : "min-w-0"
-          }
-          key={field}
-        >
+      {fields.map((field) => (
+        <div className="min-w-0" key={field}>
           <dt className="text-label text-muted-foreground">{field}</dt>
           <dd className="mt-1">
             <Skeleton className="h-5 w-28" />

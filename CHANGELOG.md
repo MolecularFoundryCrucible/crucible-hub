@@ -4,6 +4,8 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Renamed the API credential card to Activity and API key and moved account Last active into it on My profile, user administration, and service account pages.
+
 ## 1.4.0 - 2026-10-19
 
 - Docked the resource preview beside the content on wide screens (1440px and up) instead of covering the table, kept it open until closed there, strengthened its edge shadow when it overlays narrower layouts, and highlighted the previewed row.

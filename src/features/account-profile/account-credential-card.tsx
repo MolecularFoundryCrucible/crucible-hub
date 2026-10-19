@@ -21,6 +21,7 @@ const workspaceRoute = getRouteApi("/_app")
 
 export function AccountCredentialCard({ scope }: { scope: IdentityScope }) {
   const query = useQuery(accountCredentialStatusQueryOptions(scope))
+  const account = useQuery(accountQueryOptions(scope)).data
   const workspace = workspaceRoute.useLoaderData()
   const canRegenerate =
     workspace.status === "ready" &&
@@ -33,10 +34,11 @@ export function AccountCredentialCard({ scope }: { scope: IdentityScope }) {
         query.isError
           ? hubErrorMessage(
               query.error,
-              "The API credential status could not be loaded."
+              "The API key status could not be loaded."
             )
           : undefined
       }
+      lastActiveAt={account?.last_active_at}
       loading={query.isPending}
       onRetry={query.isError ? () => void query.refetch() : undefined}
       status={query.data}

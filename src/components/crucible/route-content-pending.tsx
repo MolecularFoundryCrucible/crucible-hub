@@ -111,7 +111,7 @@ export function IdentityDetailContentPending({
             </dl>
           </CardContent>
         </Card>
-        <ApiCredentialCard loading />
+        <ApiCredentialCard lastActiveAt={undefined} loading />
       </div>
       {!serviceAccount ? (
         <Card aria-busy="true">
