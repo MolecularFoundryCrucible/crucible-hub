@@ -7,7 +7,7 @@ export function formatBytes(bytes: number | null | undefined) {
 }
 
 const timestampPattern =
-  /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?(Z|[+-]\d{2}(?::?\d{2})?)$/
+  /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?(Z|[+-]\d{2}(?::?\d{2})?)?$/
 
 const localDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
@@ -18,6 +18,16 @@ const localDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 })
 
+const zonedLocalDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "numeric",
+  hour: "2-digit",
+  hourCycle: "h23",
+  minute: "2-digit",
+  month: "short",
+  timeZoneName: "short",
+  year: "numeric",
+})
+
 const utcDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   hour: "2-digit",
@@ -25,6 +35,7 @@ const utcDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
   month: "short",
   timeZone: "UTC",
+  timeZoneName: "short",
   year: "numeric",
 })
 
@@ -35,7 +46,8 @@ const calendarDateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 })
 
-function timestampDate(value: string) {
+export function parseTimestamp(value: string | null | undefined) {
+  if (!value) return null
   const match = timestampPattern.exec(value)
   if (!match) return null
   const [, calendarDate, hourMinute, seconds, fraction, offset] = match
@@ -43,8 +55,8 @@ function timestampDate(value: string) {
     ? `.${fraction.slice(0, 3).padEnd(3, "0")}`
     : ""
   const normalizedOffset =
-    offset === "Z"
-      ? offset
+    !offset || offset === "Z"
+      ? "Z"
       : offset.length === 3
         ? `${offset}:00`
         : offset.length === 5
@@ -56,7 +68,7 @@ function timestampDate(value: string) {
 }
 
 function formatStandardDateTime(value: string, formatter: Intl.DateTimeFormat) {
-  const date = timestampDate(value)
+  const date = parseTimestamp(value)
   return date ? formatter.format(date) : value
 }
 
@@ -72,6 +84,11 @@ export function formatDate(value: string | null | undefined) {
 export function formatLocalDateTime(value: string | null | undefined) {
   if (!value) return null
   return formatStandardDateTime(value, localDateTimeFormatter)
+}
+
+export function formatZonedLocalDateTime(value: string | null | undefined) {
+  if (!value) return null
+  return formatStandardDateTime(value, zonedLocalDateTimeFormatter)
 }
 
 export function formatUtcDateTime(value: string | null | undefined) {
@@ -93,7 +110,7 @@ export function currentLocalDateTimeInput(date = new Date()) {
 
 export function timestampToLocalInput(value: string | null | undefined) {
   if (!value) return ""
-  const date = timestampDate(value)
+  const date = parseTimestamp(value)
   if (!date) return ""
   return `${date.getFullYear()}-${padDateTimePart(date.getMonth() + 1)}-${padDateTimePart(date.getDate())}T${padDateTimePart(date.getHours())}:${padDateTimePart(date.getMinutes())}:${padDateTimePart(date.getSeconds())}`
 }
@@ -146,7 +163,7 @@ export function formatRecentActivity(
   value: string | null | undefined,
   now = new Date()
 ) {
-  const date = value ? timestampDate(value) : null
+  const date = parseTimestamp(value)
   if (!date) return null
   if (now.getTime() - date.getTime() < 60 * 60 * 1000) {
     return "Within the last hour"

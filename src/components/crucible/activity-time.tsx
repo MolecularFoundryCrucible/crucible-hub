@@ -1,6 +1,10 @@
 import { useHydrated } from "@tanstack/react-router"
 
-import { formatRecentActivity, formatUtcDateTime } from "@/lib/format"
+import {
+  formatRecentActivity,
+  formatUtcDateTime,
+  formatZonedLocalDateTime,
+} from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 export function ActivityTime({
@@ -22,7 +26,11 @@ export function ActivityTime({
     <time
       className={cn("tabular-nums", className)}
       dateTime={value}
-      title={formatUtcDateTime(value) ?? undefined}
+      title={
+        (hydrated
+          ? formatZonedLocalDateTime(value)
+          : formatUtcDateTime(value)) ?? undefined
+      }
     >
       {hydrated
         ? formatRecentActivity(value)

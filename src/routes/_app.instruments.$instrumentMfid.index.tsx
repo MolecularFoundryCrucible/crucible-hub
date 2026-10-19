@@ -449,13 +449,11 @@ function InstrumentDatasetFilters({
   const active = collectionActiveFilters(
     collectionActiveFilter(
       "created-from",
-      values.createdFrom
-        ? `Created from (UTC): ${values.createdFrom}`
-        : undefined
+      values.createdFrom ? `Created from: ${values.createdFrom}` : undefined
     ),
     collectionActiveFilter(
       "created-to",
-      values.createdTo ? `Created to (UTC): ${values.createdTo}` : undefined
+      values.createdTo ? `Created to: ${values.createdTo}` : undefined
     ),
     collectionActiveFilter(
       "order",

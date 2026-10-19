@@ -359,9 +359,7 @@ function ProjectDirectoryFilters({
     ),
     collectionActiveFilter(
       "active-since",
-      values.activeSince
-        ? `Active since (UTC): ${values.activeSince}`
-        : undefined
+      values.activeSince ? `Active since: ${values.activeSince}` : undefined
     ),
     collectionActiveFilter(
       "order",
@@ -475,7 +473,7 @@ function ProjectDirectoryFilters({
             </Field>
             <Field>
               <FieldLabel htmlFor="project-filter-active-since">
-                Active since (UTC)
+                Active since
               </FieldLabel>
               <Input
                 id="project-filter-active-since"

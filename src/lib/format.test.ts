@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest"
 import {
   formatRecentActivity,
   formatLocalDateTime,
+  formatUtcDateTime,
   isValidLocalDateTime,
   localDateTimeToUtc,
+  parseTimestamp,
   timestampToLocalInput,
 } from "./format"
 
@@ -34,6 +36,23 @@ describe("local date and time formatting", () => {
         month: "short",
         year: "numeric",
       }).format(new Date("2026-09-05T19:42:18.000Z"))
+    )
+  })
+
+  it("reads API microseconds, offsets, and offset-free values as instants", () => {
+    const instant = Date.parse("2026-10-19T07:00:00.000Z")
+    expect(parseTimestamp("2026-10-19T07:00:00.000000Z")?.getTime()).toBe(
+      instant
+    )
+    expect(parseTimestamp("2026-10-19T07:00:00+00:00")?.getTime()).toBe(instant)
+    expect(parseTimestamp("2026-10-19T00:00:00-07:00")?.getTime()).toBe(instant)
+    expect(parseTimestamp("2026-10-19T07:00:00")?.getTime()).toBe(instant)
+    expect(parseTimestamp("2026-10-19")).toBeNull()
+  })
+
+  it("labels the UTC fallback so it is not mistaken for local time", () => {
+    expect(formatUtcDateTime("2026-10-19T07:00:00Z")).toBe(
+      "Oct 19, 2026, 07:00 UTC"
     )
   })
 

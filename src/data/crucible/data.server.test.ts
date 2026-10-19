@@ -5,10 +5,47 @@ import { crucibleApiResponse } from "@/test/crucible-api-response"
 import { readWorkspaceDatasets, readWorkspaceSamples } from "./data.server"
 import { demoWorkspace } from "./fixtures/demo-workspace"
 
+const viewer = vi.hoisted(() => ({ timeZone: "UTC" }))
+vi.mock("@/server/crucible/time-zone.server", () => ({
+  viewerTimeZone: () => viewer.timeZone,
+}))
+
 describe("workspace data sources", () => {
   afterEach(() => {
+    viewer.timeZone = "UTC"
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
+  })
+
+  it("sends creation date filters as the viewer's local day in UTC", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    viewer.timeZone = "America/Los_Angeles"
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({
+          items: [],
+          limit: 50,
+          next_cursor: null,
+          total: 0,
+        })
+      })
+    )
+
+    await readWorkspaceDatasets({
+      createdFrom: "2026-10-18",
+      createdTo: "2026-10-18",
+      limit: 50,
+    })
+
+    const query = new URL(requests[0].url).searchParams
+    expect(query.get("creation_time_gte")).toBe("2026-10-18T07:00:00.000Z")
+    expect(query.get("creation_time_lte")).toBe("2026-10-19T06:59:59.999999Z")
   })
 
   it("uses opaque cursor pagination for fixture samples", async () => {
@@ -361,19 +398,19 @@ describe("workspace data sources", () => {
     expect(requestQueries[1]?.has("project_mfid")).toBe(false)
     expect(requestQueries[1]?.get("visibility")).toBe("public")
     expect(requestQueries[1]?.get("creation_time_gte")).toBe(
-      "2026-08-27T00:00:00+00:00"
+      "2026-08-27T00:00:00.000Z"
     )
     expect(requestQueries[1]?.get("creation_time_lte")).toBe(
-      "2026-08-29T23:59:59.999999+00:00"
+      "2026-08-29T23:59:59.999999Z"
     )
     expect(requestQueries[2]?.get("project_mfid")).toBe("fixture-project-1")
     expect(requestQueries[2]?.get("project_scope")).toBe("all")
     expect(requestQueries[2]?.get("visibility")).toBe("private")
     expect(requestQueries[2]?.get("creation_time_gte")).toBe(
-      "2026-08-27T00:00:00+00:00"
+      "2026-08-27T00:00:00.000Z"
     )
     expect(requestQueries[2]?.get("creation_time_lte")).toBe(
-      "2026-08-27T23:59:59.999999+00:00"
+      "2026-08-27T23:59:59.999999Z"
     )
     expect(requestQueries[3]?.get("project_mfid")).toBe("fixture-project-1")
     expect(requestQueries[3]?.get("project_scope")).toBe("shared")

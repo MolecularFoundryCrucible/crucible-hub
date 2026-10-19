@@ -225,13 +225,13 @@ export function DataFilters({
         collectionActiveFilter(
           "created-from",
           resolution.filters.createdFrom
-            ? `Created from (UTC): ${resolution.filters.createdFrom}`
+            ? `Created from: ${resolution.filters.createdFrom}`
             : undefined
         ),
         collectionActiveFilter(
           "created-to",
           resolution.filters.createdTo
-            ? `Created to (UTC): ${resolution.filters.createdTo}`
+            ? `Created to: ${resolution.filters.createdTo}`
             : undefined
         ),
         collectionActiveFilter(

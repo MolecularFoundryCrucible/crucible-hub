@@ -1,7 +1,10 @@
 import "@tanstack/react-start/server-only"
 
 import type { components } from "@/generated/crucible-api"
+import { parseTimestamp } from "@/lib/format"
+import { dayStartUtc } from "@/lib/time-zone"
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
+import { viewerTimeZone } from "@/server/crucible/time-zone.server"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -63,10 +66,6 @@ type ProjectDescriptiveChanges = {
   title?: string | null
 }
 
-function fixtureTimestamp(value: string) {
-  return value.endsWith("Z") ? `${value.slice(0, -1)}+00:00` : value
-}
-
 export async function readWorkspaceProjects(
   {
     activeSince,
@@ -102,7 +101,7 @@ export async function readWorkspaceProjects(
     throw new Error(configuration.reason)
   }
   const activeSinceTimestamp = activeSince
-    ? `${activeSince}T00:00:00+00:00`
+    ? dayStartUtc(activeSince, viewerTimeZone())
     : undefined
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(scenario, privilegeMode)
@@ -165,8 +164,10 @@ export async function readWorkspaceProjects(
       projects = projects.filter((project) => {
         const activityTime =
           "last_activity_at" in project ? project.last_activity_at : undefined
-        if (!activityTime) return false
-        return fixtureTimestamp(activityTime) >= activeSinceTimestamp
+        const activity = parseTimestamp(activityTime)?.getTime()
+        return (
+          activity !== undefined && activity >= Date.parse(activeSinceTimestamp)
+        )
       })
     }
     if (sort) {

@@ -1,7 +1,10 @@
 import "@tanstack/react-start/server-only"
 
 import type { components } from "@/generated/crucible-api"
+import { parseTimestamp } from "@/lib/format"
+import { dayEndUtc, dayStartUtc } from "@/lib/time-zone"
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
+import { viewerTimeZone } from "@/server/crucible/time-zone.server"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
@@ -145,20 +148,15 @@ function normalizedInstrumentMfid(instrumentMfid: string | undefined) {
 
 function creationTimeBounds(input: CollectionFilters) {
   const filters = normalizeCollectionFilters(input)
+  const timeZone = viewerTimeZone()
   return {
     ...(filters.createdFrom
-      ? { creation_time_gte: `${filters.createdFrom}T00:00:00+00:00` }
+      ? { creation_time_gte: dayStartUtc(filters.createdFrom, timeZone) }
       : {}),
     ...(filters.createdTo
-      ? {
-          creation_time_lte: `${filters.createdTo}T23:59:59.999999+00:00`,
-        }
+      ? { creation_time_lte: dayEndUtc(filters.createdTo, timeZone) }
       : {}),
   }
-}
-
-function fixtureTimestamp(value: string) {
-  return value.endsWith("Z") ? `${value.slice(0, -1)}+00:00` : value
 }
 
 function fixtureCollectionRows<
@@ -170,11 +168,13 @@ function fixtureCollectionRows<
     if (filters.visibility === "public" && !item.public) return false
     if (filters.visibility === "private" && item.public) return false
     if (!bounds.creation_time_gte && !bounds.creation_time_lte) return true
-    if (!item.creation_time) return false
-    const creationTime = fixtureTimestamp(item.creation_time)
+    const creationTime = parseTimestamp(item.creation_time)?.getTime()
+    if (creationTime === undefined) return false
     return (
-      (!bounds.creation_time_gte || creationTime >= bounds.creation_time_gte) &&
-      (!bounds.creation_time_lte || creationTime <= bounds.creation_time_lte)
+      (!bounds.creation_time_gte ||
+        creationTime >= Date.parse(bounds.creation_time_gte)) &&
+      (!bounds.creation_time_lte ||
+        creationTime <= Date.parse(bounds.creation_time_lte))
     )
   })
 }

@@ -4,6 +4,7 @@ import type {
   WorkspaceDataset,
   WorkspaceSample,
 } from "@/data/crucible/workspace-source"
+import { parseTimestamp } from "@/lib/format"
 
 export type HomeRecentResource =
   | { kind: "dataset"; resource: WorkspaceDataset }
@@ -75,9 +76,7 @@ export function selectRecentResources(
 }
 
 function creationTime(value: string | null | undefined) {
-  if (!value) return Number.NEGATIVE_INFINITY
-  const timestamp = Date.parse(value)
-  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp
+  return parseTimestamp(value)?.getTime() ?? Number.NEGATIVE_INFINITY
 }
 
 export const homeProjectLimit = 7

@@ -31,7 +31,7 @@ export function CollectionCreatedRangeFields({
     <>
       <Field data-invalid={invalid("createdFrom")}>
         <FieldLabel htmlFor={`${idPrefix}-created-from`}>
-          Created from (UTC)
+          Created from
         </FieldLabel>
         <Input
           aria-describedby={invalid("createdFrom") ? describedBy : undefined}
@@ -45,9 +45,7 @@ export function CollectionCreatedRangeFields({
         />
       </Field>
       <Field data-invalid={invalid("createdTo")}>
-        <FieldLabel htmlFor={`${idPrefix}-created-to`}>
-          Created to (UTC)
-        </FieldLabel>
+        <FieldLabel htmlFor={`${idPrefix}-created-to`}>Created to</FieldLabel>
         <Input
           aria-describedby={invalid("createdTo") ? describedBy : undefined}
           aria-invalid={invalid("createdTo") || undefined}

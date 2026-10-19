@@ -34,6 +34,7 @@ import {
 } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { SessionTabSync } from "@/components/crucible/session-tab-sync"
+import { TimeZoneSync } from "@/components/crucible/time-zone-sync"
 import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -158,6 +159,7 @@ export function AppShell({
 
   const shell = (
     <RecentlyViewedScope identityKey={recentlyViewedIdentity}>
+      <TimeZoneSync />
       {sessionAuth && account ? (
         <SessionTabSync
           accountMfid={account.unique_id}
