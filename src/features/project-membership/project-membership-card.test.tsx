@@ -1,3 +1,4 @@
+import { fixtureEntryCapabilities } from "@/data/crucible/entry-capabilities"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
   cleanup,
@@ -90,8 +91,22 @@ const jamie = {
   unique_id: "jamie-mfid",
 } satisfies WorkspaceSearchResult
 
+function withEntryCapabilities(members: ProjectMember[]): ProjectMember[] {
+  return members.map((member) => ({
+    ...member,
+    capabilities:
+      member.capabilities ??
+      fixtureEntryCapabilities({
+        maxGrantRole: project.capabilities.max_grant_role,
+        role: member.role,
+        self: member.unique_id === "account",
+        serviceAccount: member.is_service_account === true,
+      }),
+  }))
+}
+
 function ok(members: ProjectMember[]): HubResult<ProjectMember[]> {
-  return { data: members, status: "ok" }
+  return { data: withEntryCapabilities(members), status: "ok" }
 }
 
 function searchResponse(items: readonly WorkspaceSearchResult[]) {
@@ -106,6 +121,14 @@ function searchResponse(items: readonly WorkspaceSearchResult[]) {
   }
 }
 
+function withProjectEntryCapabilities(
+  value: MembershipProject
+): MembershipProject {
+  return value.members
+    ? { ...value, members: withEntryCapabilities(value.members) }
+    : value
+}
+
 function renderCard(
   props: Partial<React.ComponentProps<typeof ProjectMembershipCard>> = {}
 ) {
@@ -117,9 +140,9 @@ function renderCard(
       <ProjectMembershipCard
         accountId="account"
         mode="fixture"
-        project={project}
         scope={scope}
         {...props}
+        project={withProjectEntryCapabilities(props.project ?? project)}
       />
     </QueryClientProvider>
   )
@@ -380,6 +403,60 @@ describe("ProjectMembershipCard", () => {
     ).toBeTruthy()
     expect(
       screen.getByRole("button", { name: "Remove Tim Kodalle" })
+    ).toBeTruthy()
+  })
+
+  it("follows the API's per-member capabilities instead of role order", () => {
+    const peer = {
+      capabilities: {
+        assignable_roles: ["viewer", "contributor", "editor"],
+        can_change_role: true,
+        can_remove: true,
+      },
+      first_name: "Tim",
+      is_service_account: false,
+      last_name: "Kodalle",
+      role: "editor",
+      unique_id: "tim",
+      username: "timkodalle",
+    } satisfies ProjectMember
+    const locked = {
+      capabilities: {
+        assignable_roles: [],
+        can_change_role: false,
+        can_remove: false,
+      },
+      first_name: "Jamie",
+      is_service_account: false,
+      last_name: "Patel",
+      role: "viewer",
+      unique_id: "jamie",
+      username: "jamie.patel",
+    } satisfies ProjectMember
+    renderCard({
+      project: {
+        ...project,
+        capabilities: { ...project.capabilities, can_transfer: false },
+        members: [owner, account, peer, locked],
+      },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+
+    expect(
+      screen.getByRole("button", { name: "Remove Tim Kodalle" })
+    ).toBeTruthy()
+    expect(
+      Array.from(
+        screen.getByLabelText<HTMLSelectElement>("Role for Tim Kodalle").options
+      ).map((option) => option.value)
+    ).toEqual(["viewer", "contributor", "editor"])
+    expect(
+      screen.queryByRole("button", { name: "Remove Jamie Patel" })
+    ).toBeNull()
+    expect(screen.queryByLabelText("Role for Jamie Patel")).toBeNull()
+    expect(
+      screen.getByRole("img", { name: "Your role cannot remove this member" })
     ).toBeTruthy()
   })
 

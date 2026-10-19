@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Let project editors and admins change and remove members up to their own role, following per-member permissions from the API instead of owner-only removal.
 - Unified the card layout of all directory and collection tables with the action beside the title, sized the dataset files and processing tables from their own width instead of the window, fixed file sizes and sample types disappearing at some widths, named every table for screen readers, and fixed the project data toolbar overflowing on phones.
 - Showed optional table columns such as Created, Type, Role, and Owner as soon as each fits, with separate cutoffs per table layout, instead of hiding them until the widest layout fit.
 - Fixed sample type and measurement disappearing from data tables at widths where neither the Type column nor the line under the name showed.

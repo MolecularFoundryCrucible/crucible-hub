@@ -1,3 +1,4 @@
+import { entryActions } from "@/data/crucible/entry-capabilities"
 import { useEffect, useId, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
@@ -85,6 +86,8 @@ function operatorName(
 ) {
   return personDisplayName(operator)
 }
+
+const grantRoleOrder = permittedAccessGrantRoles("admin")
 
 export function InstrumentAccessCard({
   instrument,
@@ -338,20 +341,26 @@ export function InstrumentAccessCard({
                   grant.permission === "owner" ||
                   grant.principal_id === instrument.owner?.unique_id
                 const kind = principalKindFor(grant)
+                const actions = entryActions(
+                  grant.capabilities,
+                  grant.permission,
+                  grantRoleOrder
+                )
                 const editable =
                   managing &&
                   !isOwner &&
-                  canGrant &&
                   kind !== undefined &&
-                  isAccessGrantRole(grant.permission) &&
-                  roles.includes(grant.permission)
+                  actions.canChangeRole
                 const revocable =
-                  managing && !isOwner && kind !== undefined && canGrant
+                  managing &&
+                  !isOwner &&
+                  kind !== undefined &&
+                  actions.canRemove
                 const revokeBlockedReason = isOwner
                   ? "The manager cannot be revoked here"
                   : kind === undefined
                     ? "This grant is read-only"
-                    : "This member cannot be revoked here"
+                    : "Your role cannot revoke this grant"
 
                 return (
                   <AccessGrantRow
@@ -429,7 +438,7 @@ export function InstrumentAccessCard({
                           size="sm"
                           value={grant.permission}
                         >
-                          {roles.map((role) => (
+                          {actions.roleOptions.map((role) => (
                             <NativeSelectOption key={role} value={role}>
                               {accessRoleLabel(role)}
                             </NativeSelectOption>

@@ -10,6 +10,7 @@ import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
+import { fixtureEntryCapabilities } from "./entry-capabilities"
 import { normalizeScientificMetadata } from "./scientific-metadata"
 import type { CollectionAffiliation } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
@@ -316,11 +317,20 @@ export async function readWorkspaceProject(
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(scenario)
     if (source.status === "unavailable") throw new Error(source.reason)
-    return (
-      source.workspace.projects.find(
-        (project) => project.unique_id === projectMfid
-      ) ?? null
+    const project = source.workspace.projects.find(
+      (candidate) => candidate.unique_id === projectMfid
     )
+    if (!project) return null
+    return "members" in project && project.members
+      ? {
+          ...project,
+          members: withFixtureMemberCapabilities(
+            projectMfid,
+            scenario,
+            project.members
+          ),
+        }
+      : project
   }
 
   const client = createCrucibleClient(configuration, { privilegeMode })
@@ -425,6 +435,28 @@ function fixtureProjectMembers(
   return "members" in project && project.members ? [...project.members] : []
 }
 
+function withFixtureMemberCapabilities(
+  projectMfid: string,
+  scenario: FixtureScenario | undefined,
+  members: readonly WorkspaceProjectMember[]
+): WorkspaceProjectMember[] {
+  const source = readWorkspaceFixture(scenario)
+  if (source.status === "unavailable") throw new Error(source.reason)
+  const project = source.workspace.projects.find(
+    (candidate) => candidate.unique_id === projectMfid
+  )
+  const maxGrantRole = project?.capabilities?.max_grant_role
+  return members.map((member) => ({
+    ...member,
+    capabilities: fixtureEntryCapabilities({
+      maxGrantRole,
+      role: member.role,
+      self: member.unique_id === source.workspace.account.unique_id,
+      serviceAccount: member.is_service_account === true,
+    }),
+  }))
+}
+
 function fixtureMemberForUser(
   userId: string,
   role: WorkspaceProjectMembershipRole,
@@ -461,9 +493,12 @@ export async function addWorkspaceProjectMember(
     const existingMember = members.find((member) => member.unique_id === userId)
     if (existingMember) {
       if (existingMember.role !== role) throw new CrucibleResponseError(409)
-      return members
+      return withFixtureMemberCapabilities(projectMfid, scenario, members)
     }
-    return [...members, fixtureMemberForUser(userId, role, scenario)]
+    return withFixtureMemberCapabilities(projectMfid, scenario, [
+      ...members,
+      fixtureMemberForUser(userId, role, scenario),
+    ])
   }
 
   const client = createCrucibleClient(configuration)
@@ -503,8 +538,12 @@ export async function updateWorkspaceProjectMemberRole(
     if (!members.some((member) => member.unique_id === userId)) {
       throw new CrucibleResponseError(404)
     }
-    return members.map((member) =>
-      member.unique_id === userId ? { ...member, role } : member
+    return withFixtureMemberCapabilities(
+      projectMfid,
+      scenario,
+      members.map((member) =>
+        member.unique_id === userId ? { ...member, role } : member
+      )
     )
   }
 
@@ -540,7 +579,11 @@ export async function removeWorkspaceProjectMember(
     const member = members.find((candidate) => candidate.unique_id === userId)
     if (!member) throw new CrucibleResponseError(404)
     if (member.role === "owner") throw new CrucibleResponseError(403)
-    return members.filter((candidate) => candidate.unique_id !== userId)
+    return withFixtureMemberCapabilities(
+      projectMfid,
+      scenario,
+      members.filter((candidate) => candidate.unique_id !== userId)
+    )
   }
 
   const client = createCrucibleClient(configuration)

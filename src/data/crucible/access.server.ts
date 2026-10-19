@@ -6,6 +6,7 @@ import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
+import { fixtureEntryCapabilities } from "./entry-capabilities"
 import { readWorkspaceResource } from "./resources.server"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type {
@@ -30,8 +31,25 @@ function fixtureAccessStateKey(
   return `${scenario ?? "populated"}:${resourceMfid}`
 }
 
-function cloneFixtureGrants(grants: readonly WorkspaceResourceAccessGrant[]) {
-  return grants.map((grant) => ({ ...grant }))
+function cloneFixtureGrants(state: {
+  grants: readonly WorkspaceResourceAccessGrant[]
+  resource: WorkspaceResourceDetail
+}) {
+  const owningProject =
+    state.resource.kind === "sample" || state.resource.kind === "dataset"
+      ? state.resource.project?.unique_id
+      : undefined
+  return state.grants.map((grant) => ({
+    ...grant,
+    capabilities: fixtureEntryCapabilities({
+      fixed:
+        grant.principal_type === "public" ||
+        (grant.principal_type === "project" &&
+          grant.principal_id === owningProject),
+      maxGrantRole: state.resource.capabilities?.max_grant_role,
+      role: grant.permission,
+    }),
+  }))
 }
 
 export function resetWorkspaceFixtureAccessState() {
@@ -204,7 +222,7 @@ export async function readWorkspaceResourceAccess(
   }
   if (configuration.mode === "fixture") {
     return cloneFixtureGrants(
-      (await fixtureAccessState(resourceMfid, scenario, requestSignal)).grants
+      await fixtureAccessState(resourceMfid, scenario, requestSignal)
     )
   }
 
@@ -247,7 +265,7 @@ export async function setWorkspaceResourceAccessGrant(
     state.grants = existing
       ? grants.map((grant) => (grant === existing ? replacement : grant))
       : [...grants, replacement]
-    return cloneFixtureGrants(state.grants)
+    return cloneFixtureGrants(state)
   }
 
   const client = createCrucibleClient(configuration)
@@ -292,7 +310,7 @@ export async function revokeWorkspaceResourceAccessGrant(
     if (!existing) throw new CrucibleResponseError(404)
     if (existing.permission === "owner") throw new CrucibleResponseError(403)
     state.grants = grants.filter((grant) => grant !== existing)
-    return cloneFixtureGrants(state.grants)
+    return cloneFixtureGrants(state)
   }
 
   const client = createCrucibleClient(configuration)
@@ -332,7 +350,7 @@ async function mutateWorkspaceResourcePublicAccess(
       ...(publicGrant ? [publicGrant] : []),
     ]
     return {
-      grants: cloneFixtureGrants(state.grants),
+      grants: cloneFixtureGrants(state),
       resource: { ...state.resource },
     }
   }

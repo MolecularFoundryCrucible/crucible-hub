@@ -1,3 +1,4 @@
+import { fixtureEntryCapabilities } from "@/data/crucible/entry-capabilities"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
   cleanup,
@@ -91,7 +92,19 @@ const instrument = {
   unique_id: "0tndsmbcwny6x000yd463w8mjw",
 }
 
-const initialGrants: WorkspaceResourceAccessGrant[] = [
+function withEntryCapabilities(
+  grants: WorkspaceResourceAccessGrant[]
+): WorkspaceResourceAccessGrant[] {
+  return grants.map((grant) => ({
+    ...grant,
+    capabilities: fixtureEntryCapabilities({
+      maxGrantRole: "admin",
+      role: grant.permission,
+    }),
+  }))
+}
+
+const initialGrants: WorkspaceResourceAccessGrant[] = withEntryCapabilities([
   {
     display_name: "Fabrice Roncoroni",
     permission: "owner",
@@ -106,7 +119,7 @@ const initialGrants: WorkspaceResourceAccessGrant[] = [
     principal_type: "user",
     slug: "timkodalle",
   },
-]
+])
 
 const initialOperators: WorkspaceInstrumentOperator[] = [
   {
@@ -569,13 +582,15 @@ describe("InstrumentAccessCard", () => {
   })
 
   it("revokes multiple selected members through the batch dialog", async () => {
-    const secondGrant: WorkspaceResourceAccessGrant = {
-      display_name: "Avery Chen",
-      permission: "viewer",
-      principal_id: "0000-0000-0000-000X",
-      principal_type: "user",
-      slug: "avery.chen",
-    }
+    const [secondGrant] = withEntryCapabilities([
+      {
+        display_name: "Avery Chen",
+        permission: "viewer",
+        principal_id: "0000-0000-0000-000X",
+        principal_type: "user",
+        slug: "avery.chen",
+      },
+    ])
     queryClient.setQueryData(
       resourceAccessQueryOptions(scope, instrument.unique_id).queryKey,
       [...initialGrants, secondGrant]

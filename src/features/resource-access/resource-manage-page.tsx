@@ -1,3 +1,4 @@
+import { entryActions } from "@/data/crucible/entry-capabilities"
 import { useState } from "react"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
 import { Link } from "@tanstack/react-router"
@@ -83,6 +84,8 @@ type AccessResource = Extract<
 >
 type GrantRole = "viewer" | "contributor" | "editor" | "admin"
 type PrincipalKind = WorkspaceResourceAccessPrincipalKind
+
+const grantRoleOrder = permittedAccessGrantRoles("admin")
 
 export function ResourceManagePage({
   resourceKind,
@@ -406,26 +409,28 @@ function ManagedResourceAccess({
                   resource,
                   grant
                 )
+                const actions = entryActions(
+                  grant.capabilities,
+                  grant.permission,
+                  grantRoleOrder
+                )
                 const editable =
                   managing &&
                   !primaryProject &&
-                  canGrant &&
                   kind !== undefined &&
-                  isAccessGrantRole(grant.permission) &&
-                  roles.includes(grant.permission)
+                  actions.canChangeRole
                 const revocable =
                   managing &&
                   !primaryProject &&
                   kind !== undefined &&
-                  grant.permission !== "owner" &&
-                  canGrant
+                  actions.canRemove
                 const revokeBlockedReason = primaryProject
                   ? "Managed through project assignment"
                   : grant.permission === "owner"
                     ? "The manager cannot be revoked here"
                     : kind === undefined
                       ? "This grant is read-only"
-                      : "This member cannot be revoked here"
+                      : "Your role cannot revoke this grant"
                 return (
                   <AccessGrantRow
                     badge={
@@ -482,7 +487,7 @@ function ManagedResourceAccess({
                           size="sm"
                           value={grant.permission}
                         >
-                          {roles.map((role) => (
+                          {actions.roleOptions.map((role) => (
                             <NativeSelectOption key={role} value={role}>
                               {accessRoleLabel(role)}
                             </NativeSelectOption>

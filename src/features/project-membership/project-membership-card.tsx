@@ -1,3 +1,4 @@
+import { entryActions } from "@/data/crucible/entry-capabilities"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
@@ -86,10 +87,18 @@ export function ProjectMembershipCard({
   const canManage = Boolean(
     members !== null && capabilities?.can_manage_access && roles.length
   )
-  const canManageMembers = Boolean(
-    members !== null && (canManage || capabilities?.can_transfer)
-  )
   const memberList = members ?? []
+  const canManageMembers = Boolean(
+    members !== null &&
+    (canManage ||
+      capabilities?.can_transfer ||
+      memberList.some(
+        (member) =>
+          member.unique_id !== accountId &&
+          (member.capabilities?.can_remove === true ||
+            member.capabilities?.can_change_role === true)
+      ))
+  )
   const mutationPending = savingAnything
   const selectedMembers = sortProjectMembers(memberList).filter((member) =>
     selectedForRemoval.has(member.unique_id)
@@ -226,27 +235,20 @@ export function ProjectMembershipCard({
         ) : (
           <ul className="flex flex-col gap-3" aria-label="Project members">
             {sortProjectMembers(memberList).map((member) => {
-              const memberRoles = permittedTargetRoles(
-                roles,
-                member.is_service_account === true
+              const actions = entryActions(
+                member.capabilities,
+                member.role,
+                grantRoles
               )
-              const canChangeRole =
-                canManage &&
-                managing &&
-                member.role !== "owner" &&
-                isGrantRole(member.role) &&
-                memberRoles.includes(member.role)
+              const canChangeRole = managing && actions.canChangeRole
               const canRemove =
-                managing &&
-                Boolean(capabilities?.can_transfer) &&
-                member.role !== "owner" &&
-                member.unique_id !== accountId
+                managing && actions.canRemove && member.unique_id !== accountId
               const removeBlockedReason =
                 member.role === "owner"
                   ? "The manager cannot be removed here"
                   : member.unique_id === accountId
                     ? "You cannot remove your own membership here"
-                    : "This member cannot be removed here"
+                    : "Your role cannot remove this member"
               return (
                 <AccessGrantRow
                   error={memberErrors[member.unique_id]}
@@ -279,7 +281,7 @@ export function ProjectMembershipCard({
                         size="sm"
                         value={member.role}
                       >
-                        {memberRoles.map((role) => (
+                        {actions.roleOptions.map((role) => (
                           <NativeSelectOption key={role} value={role}>
                             {accessRoleLabel(role)}
                           </NativeSelectOption>
