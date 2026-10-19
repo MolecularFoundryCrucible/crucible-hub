@@ -66,7 +66,7 @@ Switch in this order, at a quiet moment, because the configuration change signs 
 
 5. Check `/hub/health`, sign in, deploy the same image again or restart the revision, and confirm the session survives.
 
-Roll back by setting `HUB_AUTH_SESSION_MODE=single-instance` and removing `HUB_SESSION_KEYS`, `HUB_SESSION_DATABASE_INSTANCE`, and `HUB_SESSION_DATABASE_PASSWORD` in one update; production sign-in stays unavailable while single-instance mode sees any shared-store setting. Rotate the key ring by adding a new first entry and keeping the old one for at least twelve hours. Scaling beyond one instance stays a separate decision that waits for the API ingress reinforcement.
+Roll back by setting `HUB_AUTH_SESSION_MODE=single-instance` and removing `HUB_SESSION_KEYS`, `HUB_SESSION_DATABASE_INSTANCE`, and `HUB_SESSION_DATABASE_PASSWORD` in one update; production sign-in stays unavailable while single-instance mode sees any shared-store setting. Rotate the key ring by adding a new first entry and keeping the old one for at least thirty days. Scaling beyond one instance stays a separate decision that waits for the API ingress reinforcement.
 
 ## Build and deploy
 

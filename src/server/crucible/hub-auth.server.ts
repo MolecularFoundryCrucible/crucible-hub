@@ -26,6 +26,7 @@ import {
   replaceSession,
   rotateSession,
   saveTransaction,
+  sessionPrivilegeMode,
   sharedSessionsConfigured,
   sharedSessionsRequested,
   sharedSessionStoreKind,
@@ -44,8 +45,8 @@ const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
 const sessionCookie = "crucible_hub_session"
 const transactionCookie = "crucible_hub_login"
 const transactionLifetime = 10 * 60 * 1000
-const sessionIdleLifetime = 8 * 60 * 60 * 1000
-const sessionAbsoluteLifetime = 12 * 60 * 60 * 1000
+const sessionIdleLifetime = 7 * 24 * 60 * 60 * 1000
+const sessionAbsoluteLifetime = 30 * 24 * 60 * 60 * 1000
 
 const tokenSchema = z.object({
   access_token: z.string().min(1),
@@ -261,9 +262,9 @@ export async function withHubAuthRequest<T>(
 }
 
 export function sharedRequestPrivilegeMode() {
-  return sharedMode()
-    ? (requestSession.getStore()?.session?.privilegeMode ?? "normal")
-    : null
+  if (!sharedMode()) return null
+  const current = requestSession.getStore()?.session
+  return current ? sessionPrivilegeMode(current) : "normal"
 }
 
 export async function updateSharedPrivilegeMode(mode: "normal" | "elevated") {
@@ -275,10 +276,14 @@ export async function updateSharedPrivilegeMode(mode: "normal" | "elevated") {
     if (!current) throw new Error("The Hub session has ended.")
     if (refreshClaimed(current.session))
       throw new Error("The Hub session is refreshing. Try again.")
-    const updated = { ...current.session, privilegeMode: mode }
+    const updated = {
+      ...current.session,
+      privilegeMode: mode,
+      elevatedAt: mode === "elevated" ? Date.now() : undefined,
+    }
     const nextId = randomValue()
     if (await rotateSession(id, nextId, current, updated)) {
-      setCookie(sessionCookie, nextId, cookieOptions("/hub"))
+      setCookie(sessionCookie, nextId, sessionCookieOptions())
       const context = requestSession.getStore()
       if (context) context.session = updated
       return true
@@ -346,6 +351,10 @@ function safeReturnTo(value: string | null) {
   } catch {
     return "/hub/"
   }
+}
+
+function sessionCookieOptions() {
+  return { ...cookieOptions("/hub"), maxAge: sessionAbsoluteLifetime / 1000 }
 }
 
 function cookieOptions(path: string) {
@@ -485,7 +494,7 @@ export async function finishHubLogin(code: string, state: string) {
       throw new Error("The sign-in request has expired.")
     }
     clearLegacyPrivilegeModeCookie()
-    setCookie(sessionCookie, sessionId, cookieOptions("/hub"))
+    setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
   }
   const transaction = store.transactions.get(transactionId)
@@ -529,7 +538,7 @@ export async function finishHubLogin(code: string, state: string) {
       idleExpiresAt: now + sessionIdleLifetime,
     })
     await writeGlobalPrivilegeMode("normal")
-    setCookie(sessionCookie, sessionId, cookieOptions("/hub"))
+    setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
   } finally {
     if (store.transactions.get(transactionId) === transaction) {

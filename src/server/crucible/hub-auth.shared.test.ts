@@ -20,6 +20,8 @@ import {
   logoutHubSession,
   productionHubAuthReady,
   sessionApiFetch,
+  sharedRequestPrivilegeMode,
+  updateSharedPrivilegeMode,
   withHubAuthRequest,
 } from "./hub-auth.server"
 import { closePostgresSessionPool } from "./hub-session-postgres.server"
@@ -111,17 +113,22 @@ async function signedInSession(
     .split(";")[0]
   const sessionId = sessionCookie.slice("crucible_hub_session=".length)
 
-  const inRequest = <T>(work: () => Promise<T>) =>
-    eventStorage.run(
-      {
-        h3Event: new H3Event(
-          new Request("http://127.0.0.1:3000/hub/data", {
-            headers: { cookie: sessionCookie },
-          })
-        ),
-      },
-      () => withHubAuthRequest(work)
+  let currentCookie = sessionCookie
+  const inRequest = <T>(work: () => Promise<T>) => {
+    const event = new H3Event(
+      new Request("http://127.0.0.1:3000/hub/data", {
+        headers: { cookie: currentCookie },
+      })
     )
+    return eventStorage
+      .run({ h3Event: event }, () => withHubAuthRequest(work))
+      .finally(() => {
+        const rotated = event.res.headers
+          .getSetCookie()
+          .find((value) => value.startsWith("crucible_hub_session="))
+        if (rotated) currentCookie = rotated.split(";")[0]
+      })
+  }
   const call = () =>
     inRequest(async () => {
       try {
@@ -285,6 +292,26 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     const result = await call()
     expect(result.error).toBeInstanceOf(Error)
     expect(result.signedIn).toBe(false)
+  })
+
+  it("keeps a session for days and returns administrator mode to normal after twelve hours", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T22:00:00.000Z"))
+    stubSharedEnv()
+    const { inRequest } = await signedInSession(() => Response.json([]))
+
+    await inRequest(() => updateSharedPrivilegeMode("elevated"))
+    expect(await inRequest(async () => sharedRequestPrivilegeMode())).toBe(
+      "elevated"
+    )
+
+    vi.setSystemTime(new Date("2026-10-07T10:00:01.000Z"))
+    expect(
+      await inRequest(async () => ({
+        mode: sharedRequestPrivilegeMode(),
+        signedIn: hasHubSession(),
+      }))
+    ).toEqual({ mode: "normal", signedIn: true })
   })
 
   it("removes the session and revokes its refresh token on logout", async () => {

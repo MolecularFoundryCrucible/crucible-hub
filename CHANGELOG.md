@@ -4,6 +4,8 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Extended Hub sign-in sessions to 7 days idle and 30 days absolute with a persistent session cookie, so closing the browser or switching devices no longer signs people out early, and returned administrator mode to standard access 12 hours after it is turned on.
+
 ## 1.3.3 - 2026-10-16
 
 - Added default sort field and direction preferences for Data, Projects, and Instruments.

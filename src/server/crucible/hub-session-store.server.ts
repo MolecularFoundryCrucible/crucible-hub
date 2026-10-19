@@ -29,6 +29,7 @@ const tokenSchema = z.object({
 const sessionSchema = z.object({
   tokens: tokenSchema,
   privilegeMode: z.enum(["normal", "elevated"]),
+  elevatedAt: z.number().int().optional(),
   expiresAt: z.number().int(),
   idleExpiresAt: z.number().int(),
   refreshing: z.boolean().default(false),
@@ -49,8 +50,9 @@ export type StoredSession = { raw: string; session: SharedSession }
 export type SharedSessionStoreKind = "postgres" | "redis"
 
 const prefix = "crucible:hub:v1:"
-const absoluteLifetime = 12 * 60 * 60 * 1000
-const idleLifetime = 8 * 60 * 60 * 1000
+const absoluteLifetime = 30 * 24 * 60 * 60 * 1000
+const idleLifetime = 7 * 24 * 60 * 60 * 1000
+const elevatedLifetime = 12 * 60 * 60 * 1000
 const issuedLifetime = 10 * 60 * 1000
 
 function configuration() {
@@ -149,6 +151,14 @@ function lifetime(expiresAt: number) {
 
 function sessionLifetime(session: SharedSession) {
   return lifetime(Math.min(session.expiresAt, session.idleExpiresAt))
+}
+
+export function sessionPrivilegeMode(session: SharedSession) {
+  return session.privilegeMode === "elevated" &&
+    session.elevatedAt !== undefined &&
+    session.elevatedAt + elevatedLifetime > Date.now()
+    ? "elevated"
+    : "normal"
 }
 
 export function newSharedSession(

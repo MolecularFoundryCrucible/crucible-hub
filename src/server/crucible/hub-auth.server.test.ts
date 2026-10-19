@@ -148,6 +148,7 @@ describe("hub login exchange", () => {
     expect(sessionCookie).toContain("HttpOnly")
     expect(sessionCookie).toContain("SameSite=Lax")
     expect(sessionCookie).toContain("Path=/hub")
+    expect(sessionCookie).toContain("Max-Age=2592000")
 
     const revokedLoginCookie = cookies.find((value) =>
       value.startsWith("crucible_hub_login=")
