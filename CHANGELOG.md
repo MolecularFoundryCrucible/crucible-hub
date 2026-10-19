@@ -4,7 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
-- Renamed the API credential card to Activity and API key and moved account Last active into it on My profile, user administration, and service account pages.
+- Renamed the API credential card to Security, kept its field layout when no key exists or its status cannot load, and moved account Last active into it on My profile, user administration, and service account pages.
 
 ## 1.4.0 - 2026-10-19
 

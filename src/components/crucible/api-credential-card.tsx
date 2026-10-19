@@ -66,43 +66,37 @@ export function ApiCredentialCard({
       <CardHeader actionLayout="inline">
         <CardTitle className="flex items-center gap-2">
           <CredentialIcon aria-hidden="true" />
-          Activity and API key
+          Security
         </CardTitle>
         {action ? <CardAction>{action}</CardAction> : null}
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-4">
         {loading ? (
           <CredentialStatusSkeleton />
-        ) : status && !error ? (
-          <CredentialStatus lastActiveAt={lastActiveAt} status={status} />
         ) : (
-          <div className="flex flex-col gap-4">
-            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <LastActiveField value={lastActiveAt} />
-            </dl>
-            {error ? (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-body text-muted-foreground" role="alert">
-                  {error}
-                </p>
-                {onRetry ? (
-                  <Button
-                    onClick={onRetry}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    Try again
-                  </Button>
-                ) : null}
-              </div>
-            ) : (
-              <p className="text-body text-muted-foreground">
-                No API key status is available.
-              </p>
-            )}
-          </div>
+          <CredentialStatus
+            lastActiveAt={lastActiveAt}
+            status={error ? null : status}
+            unavailable={Boolean(error)}
+          />
         )}
+        {!loading && error ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-body text-muted-foreground" role="alert">
+              {error}
+            </p>
+            {onRetry ? (
+              <Button
+                onClick={onRetry}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                Try again
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )
@@ -122,37 +116,50 @@ function LastActiveField({ value }: { value: string | null | undefined }) {
 function CredentialStatus({
   lastActiveAt,
   status,
+  unavailable,
 }: {
   lastActiveAt: string | null | undefined
-  status: WorkspaceApiCredentialStatus
+  status: WorkspaceApiCredentialStatus | null | undefined
+  unavailable: boolean
 }) {
+  const empty = <span className="text-muted-foreground">-</span>
   return (
     <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
       <LastActiveField value={lastActiveAt} />
       <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Key last used</dt>
         <dd className="mt-1 text-body">
-          <ActivityTime fallback="Not used yet" value={status.last_used_at} />
+          {status ? (
+            <ActivityTime fallback="Not used yet" value={status.last_used_at} />
+          ) : (
+            empty
+          )}
         </dd>
       </div>
       <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Key status</dt>
         <dd className="mt-1">
-          <Badge variant={status.valid ? "success" : "destructive"}>
-            {status.valid ? "Valid" : "Invalid"}
-          </Badge>
+          {status ? (
+            <Badge variant={status.valid ? "success" : "destructive"}>
+              {status.valid ? "Valid" : "Invalid"}
+            </Badge>
+          ) : unavailable ? (
+            empty
+          ) : (
+            <Badge variant="outline">No key</Badge>
+          )}
         </dd>
       </div>
       <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Key created</dt>
         <dd className="mt-1 text-body">
-          <LocalDateTime value={status.created_at} />
+          {status ? <LocalDateTime value={status.created_at} /> : empty}
         </dd>
       </div>
       <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Key expires</dt>
         <dd className="mt-1 text-body">
-          <LocalDateTime value={status.expires_at} />
+          {status ? <LocalDateTime value={status.expires_at} /> : empty}
         </dd>
       </div>
     </dl>
@@ -169,7 +176,7 @@ function CredentialStatusSkeleton() {
   ] as const
   return (
     <dl
-      aria-label="Loading activity and API key status"
+      aria-label="Loading security details"
       className="grid grid-cols-2 gap-4 sm:grid-cols-3"
       role="status"
     >
