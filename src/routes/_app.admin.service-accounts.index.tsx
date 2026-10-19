@@ -23,6 +23,8 @@ import { ResourceCreationLink } from "@/components/crucible/resource-creation-ac
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { TableSortControl } from "@/components/crucible/table-sort-control"
+import type { TableSortField } from "@/components/crucible/table-sort-control"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import {
   useAdministrationScope,
@@ -153,6 +155,12 @@ export const Route = createFileRoute("/_app/admin/service-accounts/")({
   pendingComponent: ServiceAccountsPending,
   component: ServiceAccountsPage,
 })
+
+const sortFields = [
+  { field: "account", label: "Account", preferredDirection: "asc" },
+  { field: "unique_id", label: "Crucible ID", preferredDirection: "asc" },
+  { field: "last_active", kind: "date", label: "Last active" },
+] as const satisfies readonly TableSortField<ServiceAccountSortField>[]
 
 function ServiceAccountsPage() {
   const scope = useWorkspaceScope()
@@ -446,6 +454,14 @@ function ServiceAccountCollection({
           <CardContent className="px-0">
             <Table
               aria-label="Service accounts"
+              before={
+                <TableSortControl
+                  direction={direction}
+                  fields={sortFields}
+                  onChange={onSortChange}
+                  sort={sort}
+                />
+              }
               className="identity-directory-table table-fixed"
             >
               <colgroup>
@@ -473,7 +489,9 @@ function ServiceAccountCollection({
                     onChange={onSortChange}
                     preferredDirection="asc"
                   />
-                  <TableHead>Platform role</TableHead>
+                  <TableHead className="identity-directory-role">
+                    Platform role
+                  </TableHead>
                   <SortableTableHead
                     active={sort === "last_active"}
                     direction={direction}
@@ -520,6 +538,7 @@ function ServiceAccountCollection({
                     >
                       <MfidText
                         className="block truncate"
+                        title={serviceAccount.unique_id}
                         value={serviceAccount.unique_id}
                       />
                     </TableCell>

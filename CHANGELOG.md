@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Switched tables to cards based on the space each table actually has instead of the window width, so names and IDs no longer collapse or overlap next to the sidebar, added a Sort by control to card layouts (including Users, Service accounts, and Deletion requests), and showed full long project IDs and Crucible IDs on hover.
 - Applied Created and Active since date filters to the viewer's local calendar day instead of the UTC day, read offset-free API timestamps as UTC, and showed activity time tooltips in local time.
 - Extended Hub sign-in sessions to 7 days idle and 30 days absolute with a persistent session cookie, so closing the browser or switching devices no longer signs people out early, and returned administrator mode to standard access 12 hours after it is turned on.
 

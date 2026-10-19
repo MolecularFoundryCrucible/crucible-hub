@@ -800,8 +800,8 @@ function UserProjectsSection({
               <colgroup>
                 <col className="resource-directory-name-column" />
                 <col className="resource-directory-person-column" />
-                <col className="resource-directory-role-column hidden xl:table-column" />
-                <col className="resource-directory-date-column hidden xl:table-column" />
+                <col className="resource-directory-role-column hidden @directory-wide:table-column" />
+                <col className="resource-directory-date-column hidden @directory-wide:table-column" />
                 <col className="resource-directory-date-column" />
                 <col className="resource-directory-action-column" />
               </colgroup>
@@ -815,11 +815,15 @@ function UserProjectsSection({
                     onChange={handleSortChange}
                     preferredDirection="asc"
                   />
-                  <TableHead>Lead</TableHead>
-                  <TableHead className="hidden xl:table-cell">Role</TableHead>
+                  <TableHead className="resource-directory-person">
+                    Lead
+                  </TableHead>
+                  <TableHead className="hidden @directory-wide:table-cell">
+                    Role
+                  </TableHead>
                   <SortableTableHead
                     active={sortColumn === "created"}
-                    className="hidden xl:table-cell"
+                    className="hidden @directory-wide:table-cell"
                     direction={sortDirection}
                     field="created"
                     kind="date"
@@ -878,7 +882,7 @@ function UserProjectsSection({
                         )}
                       </TableCell>
                       <TableCell
-                        className="resource-directory-role hidden xl:table-cell"
+                        className="resource-directory-role hidden @directory-wide:table-cell"
                         data-label="Role"
                       >
                         {effectiveRole ? (
@@ -888,7 +892,7 @@ function UserProjectsSection({
                         )}
                       </TableCell>
                       <ResourceCreatedCell
-                        className="hidden xl:table-cell"
+                        className="hidden @directory-wide:table-cell"
                         value={
                           complete && "creation_time" in project
                             ? project.creation_time

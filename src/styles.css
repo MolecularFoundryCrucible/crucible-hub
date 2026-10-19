@@ -168,6 +168,9 @@
 }
 
 @theme inline {
+  --container-collection-wide: 68rem;
+  --container-directory-wide: 56rem;
+  --container-identity-wide: 62rem;
   --transition-duration-fast: var(--motion-fast);
   --transition-duration-standard: var(--motion-standard);
   --transition-duration-deliberate: var(--motion-deliberate);
@@ -215,7 +218,7 @@
   --spacing-auth-footer-gap: 0.25rem;
   --opacity-auth-background-logo: 0.06;
   --spacing-resource-date-column: 10.5rem;
-  --spacing-resource-person-column: 12rem;
+  --spacing-resource-person-column: 10rem;
   --spacing-data-action-column: 3rem;
   --spacing-processing-storage-column: 6rem;
   --spacing-processing-size-column: 6rem;
@@ -224,72 +227,21 @@
   --spacing-processing-updated-column: var(--spacing-resource-date-column);
   --spacing-directory-action-column: 3rem;
   --spacing-directory-date-column: var(--spacing-resource-date-column);
-  --spacing-directory-date-columns: var(--spacing-directory-date-column);
-  --spacing-directory-instrument-location-column: calc(
-    (
-        100% - var(--spacing-directory-action-column) -
-          var(--spacing-directory-date-columns) -
-          var(--spacing-resource-person-column)
-      ) *
-      0.364
-  );
-  --spacing-directory-instrument-name-column: calc(
-    (
-        100% - var(--spacing-directory-action-column) -
-          var(--spacing-directory-date-columns) -
-          var(--spacing-resource-person-column)
-      ) *
-      0.636
-  );
   --spacing-directory-instrument-person-column: var(
     --spacing-resource-person-column
-  );
-  --spacing-directory-project-name-column: calc(
-    100% - var(--spacing-directory-action-column) -
-      var(--spacing-directory-date-columns) -
-      var(--spacing-directory-project-person-column) -
-      var(--spacing-directory-role-columns)
   );
   --spacing-directory-project-person-column: var(
     --spacing-resource-person-column
   );
   --spacing-directory-role-column: 7rem;
-  --spacing-directory-role-columns: 0px;
-  --spacing-identity-account-column: calc(
-    (
-        100% - var(--spacing-identity-mfid-column) -
-          var(--spacing-identity-role-column) -
-          var(--spacing-directory-date-column) -
-          var(--spacing-directory-action-column)
-      ) /
-      2
-  );
-  --spacing-identity-mfid-column: 10rem;
-  --spacing-identity-role-column: 8rem;
+  --spacing-identity-mfid-column: 11rem;
+  --spacing-identity-role-column: 7rem;
   --spacing-deletion-action-column: 5rem;
   --spacing-deletion-date-column: var(--spacing-resource-date-column);
-  --spacing-deletion-project-column: 16rem;
+  --spacing-deletion-project-column: 12rem;
   --spacing-deletion-requester-column: var(--spacing-resource-person-column);
   --spacing-deletion-selection-column: 3rem;
   --spacing-deletion-status-column: 7rem;
-  --spacing-deletion-resource-column: calc(
-    100% - var(--spacing-deletion-action-column) -
-      var(--spacing-deletion-date-column) -
-      var(--spacing-deletion-requester-column) -
-      var(--spacing-deletion-status-column)
-  );
-  --spacing-deletion-resource-column-with-project: calc(
-    var(--spacing-deletion-resource-column) -
-      var(--spacing-deletion-project-column)
-  );
-  --spacing-deletion-resource-column-with-selection: calc(
-    var(--spacing-deletion-resource-column) -
-      var(--spacing-deletion-selection-column)
-  );
-  --spacing-deletion-resource-column-with-project-and-selection: calc(
-    var(--spacing-deletion-resource-column-with-project) -
-      var(--spacing-deletion-selection-column)
-  );
   --spacing-access-role-control: 6rem;
   --spacing-data-owner-column-with-action: var(
     --spacing-resource-person-column
@@ -497,14 +449,9 @@
   color: var(--muted-foreground);
 }
 
-@media (min-width: 80rem) {
-  :root {
-    --spacing-directory-date-columns: calc(
-      var(--spacing-directory-date-column) * 2
-    );
-    --spacing-directory-role-columns: var(--spacing-directory-role-column);
+@container (min-width: 62rem) {
+  .identity-directory-table {
     --spacing-identity-mfid-column: 15rem;
-    --spacing-identity-role-column: 8.5rem;
   }
 }
 
@@ -1308,6 +1255,26 @@ body {
   border-top-color: var(--graph-association-edge);
 }
 
+.table-card-only {
+  display: none;
+}
+
+.resource-directory-table {
+  min-width: 26rem;
+}
+
+.resource-collection-table {
+  min-width: 26rem;
+}
+
+.identity-directory-table {
+  min-width: 38rem;
+}
+
+.deletion-request-table {
+  min-width: 38rem;
+}
+
 @media (max-width: 47.999rem) {
   .resource-graph-canvas {
     --graph-center-offset-y: -48;
@@ -1323,7 +1290,57 @@ body {
   .resource-graph-surface[data-density="sparse"] .resource-graph-canvas {
     height: var(--spacing-graph-canvas);
   }
+}
 
+@container (max-width: 43.999rem) {
+  .resource-directory-table .resource-directory-person,
+  .resource-directory-table .resource-directory-person-column {
+    display: none;
+  }
+}
+
+@container (max-width: 33.999rem) {
+  .resource-directory-table .resource-directory-location,
+  .resource-directory-table .resource-directory-location-column {
+    display: none;
+  }
+}
+
+@container (max-width: 47.999rem) {
+  .resource-collection-table .resource-collection-owner,
+  .resource-collection-table .resource-collection-owner-column {
+    display: none;
+  }
+}
+
+@container (max-width: 35.999rem) {
+  .resource-collection-table .resource-collection-project,
+  .resource-collection-table .resource-collection-project-column {
+    display: none;
+  }
+}
+
+@container (max-width: 55.999rem) {
+  .identity-directory-table .identity-directory-role,
+  .identity-directory-table .identity-directory-role-column,
+  .identity-directory-table:has(.identity-directory-email-column)
+    .identity-directory-mfid,
+  .identity-directory-table:has(.identity-directory-email-column)
+    .identity-directory-mfid-column {
+    display: none;
+  }
+}
+
+@container (max-width: 59.999rem) {
+  .deletion-request-table .deletion-request-project,
+  .deletion-request-table .deletion-request-project-column,
+  .deletion-request-table .deletion-request-requester,
+  .deletion-request-table .deletion-request-requester-column {
+    display: none;
+  }
+}
+
+@container (max-width: 25.999rem) {
   .resource-directory-table,
   .resource-directory-table tbody {
     display: block;
@@ -1396,6 +1413,16 @@ body {
     grid-row: 1;
   }
 
+  .resource-directory-table {
+    min-width: 0;
+  }
+
+  .table-card-only:has(~ .resource-directory-table) {
+    display: flex;
+  }
+}
+
+@container (max-width: 25.999rem) {
   .resource-collection-table,
   .resource-collection-table tbody {
     display: block;
@@ -1456,6 +1483,16 @@ body {
     grid-row: 2 / 6;
   }
 
+  .resource-collection-table {
+    min-width: 0;
+  }
+
+  .table-card-only:has(~ .resource-collection-table) {
+    display: flex;
+  }
+}
+
+@container (max-width: 37.999rem) {
   .identity-directory-table,
   .identity-directory-table tbody {
     display: block;
@@ -1517,6 +1554,16 @@ body {
     grid-row: 1;
   }
 
+  .identity-directory-table {
+    min-width: 0;
+  }
+
+  .table-card-only:has(~ .identity-directory-table) {
+    display: flex;
+  }
+}
+
+@container (max-width: 37.999rem) {
   .deletion-request-table,
   .deletion-request-table tbody {
     display: block;
@@ -1595,6 +1642,14 @@ body {
   .deletion-request-table.has-selection .deletion-request-action {
     grid-column: 3;
   }
+
+  .deletion-request-table {
+    min-width: 0;
+  }
+
+  .table-card-only:has(~ .deletion-request-table) {
+    display: flex;
+  }
 }
 
 @media (max-width: 39.999rem) {
@@ -1627,10 +1682,6 @@ body {
   width: var(--spacing-directory-date-column);
 }
 
-.resource-directory-project-table .resource-directory-name-column {
-  width: var(--spacing-directory-project-name-column);
-}
-
 .resource-directory-project-table .resource-directory-person-column {
   width: var(--spacing-directory-project-person-column);
 }
@@ -1639,20 +1690,8 @@ body {
   width: var(--spacing-directory-role-column);
 }
 
-.resource-directory-instrument-table .resource-directory-name-column {
-  width: var(--spacing-directory-instrument-name-column);
-}
-
-.resource-directory-instrument-table .resource-directory-location-column {
-  width: var(--spacing-directory-instrument-location-column);
-}
-
 .resource-directory-instrument-table .resource-directory-person-column {
   width: var(--spacing-directory-instrument-person-column);
-}
-
-.identity-directory-table .identity-directory-account-column {
-  width: var(--spacing-identity-account-column);
 }
 
 .identity-directory-table:has(.identity-directory-email-column)

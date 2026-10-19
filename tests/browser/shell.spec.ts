@@ -232,6 +232,7 @@ test("fits prioritized data columns within a laptop viewport", async ({
 })
 
 test("uses scientific subtypes in the wide data table", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
   await page.goto("/hub/data")
   await page.waitForLoadState("networkidle")
 

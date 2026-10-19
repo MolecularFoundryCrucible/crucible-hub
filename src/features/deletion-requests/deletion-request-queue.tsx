@@ -18,6 +18,8 @@ import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { TableSortControl } from "@/components/crucible/table-sort-control"
+import type { TableSortField } from "@/components/crucible/table-sort-control"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -239,16 +241,18 @@ function DeletionRequestPending({
       className="px-0"
       role="status"
     >
-      {bulkReview ? (
-        <div className="flex min-h-11 items-center gap-2 border-b px-3 py-2 md:hidden">
-          <Checkbox
-            aria-label="Select all loaded reviewable requests"
-            disabled
-          />
-          <span className="text-label">Select all loaded</span>
-        </div>
-      ) : null}
       <Table
+        before={
+          bulkReview ? (
+            <div className="table-card-only min-h-11 items-center gap-2 border-b px-3 py-2">
+              <Checkbox
+                aria-label="Select all loaded reviewable requests"
+                disabled
+              />
+              <span className="text-label">Select all loaded</span>
+            </div>
+          ) : null
+        }
         className={cn(
           "deletion-request-table table-fixed",
           bulkReview && "has-selection"
@@ -336,24 +340,49 @@ function DeletionRequestColgroup({
   return (
     <colgroup>
       {bulkReview ? <col className="w-deletion-selection-column" /> : null}
-      <col
-        className={
-          bulkReview
-            ? showProject
-              ? "w-deletion-resource-column-with-project-and-selection"
-              : "w-deletion-resource-column-with-selection"
-            : showProject
-              ? "w-deletion-resource-column-with-project"
-              : "w-deletion-resource-column"
-        }
-      />
-      {showProject ? <col className="w-deletion-project-column" /> : null}
-      <col className="w-deletion-requester-column" />
+      <col />
+      {showProject ? (
+        <col className="deletion-request-project-column w-deletion-project-column" />
+      ) : null}
+      <col className="deletion-request-requester-column w-deletion-requester-column" />
       <col className="w-deletion-date-column" />
       {showStatus ? <col className="w-deletion-status-column" /> : null}
       <col className="w-deletion-action-column" />
     </colgroup>
   )
+}
+
+function deletionSortFields(
+  showProject: boolean,
+  showStatus: boolean
+): TableSortField<WorkspaceDeletionRequestSort>[] {
+  return [
+    { field: "resource_name", label: "Resource", preferredDirection: "asc" },
+    ...(showProject
+      ? [
+          {
+            field: "project_id",
+            label: "Project",
+            preferredDirection: "asc",
+          } as const,
+        ]
+      : []),
+    {
+      field: "requester_name",
+      label: "Requested by",
+      preferredDirection: "asc",
+    },
+    { field: "request_time", kind: "date", label: "Requested" },
+    ...(showStatus
+      ? [
+          {
+            field: "status",
+            label: "Status",
+            preferredDirection: "asc",
+          } as const,
+        ]
+      : []),
+  ]
 }
 
 function DeletionRequestTableHeader({
@@ -419,6 +448,7 @@ function DeletionRequestTableHeader({
           onSortChange ? (
             <SortableTableHead
               active={sort === "project_id"}
+              className="deletion-request-project"
               direction={direction}
               field="project_id"
               label="Project"
@@ -426,13 +456,14 @@ function DeletionRequestTableHeader({
               preferredDirection="asc"
             />
           ) : (
-            <TableHead>Project</TableHead>
+            <TableHead className="deletion-request-project">Project</TableHead>
           )
         ) : null}
         {!bulkReviewActions ? (
           onSortChange ? (
             <SortableTableHead
               active={sort === "requester_name"}
+              className="deletion-request-requester"
               direction={direction}
               field="requester_name"
               label="Requested by"
@@ -440,7 +471,9 @@ function DeletionRequestTableHeader({
               preferredDirection="asc"
             />
           ) : (
-            <TableHead>Requested by</TableHead>
+            <TableHead className="deletion-request-requester">
+              Requested by
+            </TableHead>
           )
         ) : null}
         {!bulkReviewActions ? (
@@ -799,33 +832,46 @@ function DeletionRequestTable({
 
   return (
     <>
-      {bulkReview ? (
-        <div className="flex min-h-11 items-center gap-2 border-b px-3 py-2 md:hidden">
-          <Checkbox
-            aria-label="Select all loaded reviewable requests"
-            checked={
-              selectableRequests.length > 0 &&
-              selectedCount === selectableRequests.length
-            }
-            disabled={selectableRequests.length === 0}
-            id={mobileSelectAllId}
-            indeterminate={
-              selectedCount > 0 && selectedCount < selectableRequests.length
-            }
-            onCheckedChange={selectAll}
-          />
-          {bulkReviewActions ?? (
-            <label
-              className="cursor-pointer text-label"
-              htmlFor={mobileSelectAllId}
-            >
-              Select all loaded
-            </label>
-          )}
-        </div>
-      ) : null}
       <Table
         aria-label="Deletion requests"
+        before={
+          <>
+            {bulkReview ? (
+              <div className="table-card-only min-h-11 items-center gap-2 border-b px-3 py-2">
+                <Checkbox
+                  aria-label="Select all loaded reviewable requests"
+                  checked={
+                    selectableRequests.length > 0 &&
+                    selectedCount === selectableRequests.length
+                  }
+                  disabled={selectableRequests.length === 0}
+                  id={mobileSelectAllId}
+                  indeterminate={
+                    selectedCount > 0 &&
+                    selectedCount < selectableRequests.length
+                  }
+                  onCheckedChange={selectAll}
+                />
+                {bulkReviewActions ?? (
+                  <label
+                    className="cursor-pointer text-label"
+                    htmlFor={mobileSelectAllId}
+                  >
+                    Select all loaded
+                  </label>
+                )}
+              </div>
+            ) : null}
+            {onSortChange && !bulkReviewActions ? (
+              <TableSortControl
+                direction={direction}
+                fields={deletionSortFields(showProject, showStatus)}
+                onChange={onSortChange}
+                sort={sort}
+              />
+            ) : null}
+          </>
+        }
         className={cn(
           "deletion-request-table table-fixed",
           bulkReview && "has-selection"
@@ -979,15 +1025,22 @@ function DeletionRequestProject({
   if (!projectId)
     return <span className="text-muted-foreground">Not assigned</span>
   if (!request.project_mfid)
-    return <span className="truncate">{projectId}</span>
+    return (
+      <span className="block truncate" title={projectId}>
+        {projectId}
+      </span>
+    )
   return (
     <ResourceIdentityLink
+      className="block min-w-0"
       kind="project"
       mfid={request.project_mfid}
       name={projectId}
       showTypeIcon={false}
     >
-      <span className="block truncate hover:underline">{projectId}</span>
+      <span className="block truncate hover:underline" title={projectId}>
+        {projectId}
+      </span>
     </ResourceIdentityLink>
   )
 }

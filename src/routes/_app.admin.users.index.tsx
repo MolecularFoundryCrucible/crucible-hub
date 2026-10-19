@@ -21,6 +21,8 @@ import { ResourceCreationLink } from "@/components/crucible/resource-creation-ac
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { TableSortControl } from "@/components/crucible/table-sort-control"
+import type { TableSortField } from "@/components/crucible/table-sort-control"
 import {
   useAdministrationScope,
   useWorkspacePrivilegeMode,
@@ -146,6 +148,13 @@ export const Route = createFileRoute("/_app/admin/users/")({
   pendingComponent: UsersPending,
   component: UsersAdminPage,
 })
+
+const sortFields = [
+  { field: "account", label: "Account", preferredDirection: "asc" },
+  { field: "unique_id", label: "Crucible ID", preferredDirection: "asc" },
+  { field: "email", label: "Email", preferredDirection: "asc" },
+  { field: "last_active", kind: "date", label: "Last active" },
+] as const satisfies readonly TableSortField<UserSortField>[]
 
 function UsersAdminPage() {
   const scope = useWorkspaceScope()
@@ -384,6 +393,14 @@ function UserCollection({
           <CardContent className="px-0">
             <Table
               aria-label="Users directory"
+              before={
+                <TableSortControl
+                  direction={direction}
+                  fields={sortFields}
+                  onChange={onSortChange}
+                  sort={sort}
+                />
+              }
               className="identity-directory-table table-fixed"
             >
               <colgroup>
@@ -406,6 +423,7 @@ function UserCollection({
                   />
                   <SortableTableHead
                     active={sort === "unique_id"}
+                    className="identity-directory-mfid"
                     direction={direction}
                     field="unique_id"
                     label="Crucible ID"
@@ -420,7 +438,9 @@ function UserCollection({
                     onChange={onSortChange}
                     preferredDirection="asc"
                   />
-                  <TableHead>Platform role</TableHead>
+                  <TableHead className="identity-directory-role">
+                    Platform role
+                  </TableHead>
                   <SortableTableHead
                     active={sort === "last_active"}
                     direction={direction}
@@ -466,6 +486,7 @@ function UserCollection({
                       >
                         <MfidText
                           className="block truncate"
+                          title={user.unique_id}
                           value={user.unique_id}
                         />
                       </TableCell>

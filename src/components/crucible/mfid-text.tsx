@@ -3,10 +3,12 @@ import { cn } from "@/lib/utils"
 export function MfidText({
   className,
   presentation = "default",
+  title,
   value,
 }: {
   className?: string
   presentation?: "default" | "supporting"
+  title?: string
   value: string
 }) {
   return (
@@ -18,6 +20,7 @@ export function MfidText({
           : "text-identifier",
         className
       )}
+      title={title}
     >
       {value}
     </span>

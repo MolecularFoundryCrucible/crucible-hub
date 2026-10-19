@@ -31,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { TableColumnKind } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
 
 const rowPlaceholders = ["first", "second", "third", "fourth"] as const
 
@@ -74,8 +73,9 @@ const pendingColumns: Record<
       label: "Manager",
     },
     {
-      className: "resource-directory-date hidden xl:table-cell",
-      columnClassName: "resource-directory-date-column hidden xl:table-column",
+      className: "resource-directory-date hidden @directory-wide:table-cell",
+      columnClassName:
+        "resource-directory-date-column hidden @directory-wide:table-column",
       label: "Created",
       kind: "date",
     },
@@ -105,13 +105,15 @@ const pendingColumns: Record<
       label: "Lead",
     },
     {
-      className: "resource-directory-role hidden xl:table-cell",
-      columnClassName: "resource-directory-role-column hidden xl:table-column",
+      className: "resource-directory-role hidden @directory-wide:table-cell",
+      columnClassName:
+        "resource-directory-role-column hidden @directory-wide:table-column",
       label: "Role",
     },
     {
-      className: "resource-directory-date hidden xl:table-cell",
-      columnClassName: "resource-directory-date-column hidden xl:table-column",
+      className: "resource-directory-date hidden @directory-wide:table-cell",
+      columnClassName:
+        "resource-directory-date-column hidden @directory-wide:table-column",
       label: "Created",
       kind: "date",
     },
@@ -135,32 +137,33 @@ const pendingColumns: Record<
       name: true,
     },
     {
-      className: "resource-collection-type hidden xl:table-cell",
+      className: "resource-collection-type hidden @collection-wide:table-cell",
       columnClassName:
-        "hidden xl:table-column xl:w-data-type-column-wide-with-action",
+        "hidden @collection-wide:table-column @collection-wide:w-data-type-column-wide-with-action",
       label: "Type",
     },
     {
       className: "resource-collection-project",
+      columnClassName: "resource-collection-project-column",
       label: "Project",
     },
     {
       className: "resource-collection-owner",
       columnClassName:
-        "w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action",
+        "resource-collection-owner-column w-data-owner-column-with-action @collection-wide:w-data-owner-column-wide-with-action",
       label: "Owner",
     },
     {
-      className: "resource-collection-date hidden xl:table-cell",
+      className: "resource-collection-date hidden @collection-wide:table-cell",
       columnClassName:
-        "hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action",
+        "hidden w-data-date-column-with-action @collection-wide:table-column @collection-wide:w-data-date-column-wide-with-action",
       label: "Created",
       kind: "date",
     },
     {
       className: "resource-collection-date",
       columnClassName:
-        "w-data-date-column-with-action xl:w-data-date-column-wide-with-action",
+        "w-data-date-column-with-action @collection-wide:w-data-date-column-wide-with-action",
       label: "Updated",
       kind: "date",
     },
@@ -178,28 +181,28 @@ const pendingColumns: Record<
       name: true,
     },
     {
-      className: "resource-collection-type hidden xl:table-cell",
+      className: "resource-collection-type hidden @collection-wide:table-cell",
       columnClassName:
-        "hidden xl:table-column xl:w-data-type-column-wide-with-action",
+        "hidden @collection-wide:table-column @collection-wide:w-data-type-column-wide-with-action",
       label: "Type",
     },
     {
       className: "resource-collection-owner",
       columnClassName:
-        "w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action",
+        "resource-collection-owner-column w-data-owner-column-with-action @collection-wide:w-data-owner-column-wide-with-action",
       label: "Owner",
     },
     {
-      className: "resource-collection-date hidden xl:table-cell",
+      className: "resource-collection-date hidden @collection-wide:table-cell",
       columnClassName:
-        "hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action",
+        "hidden w-data-date-column-with-action @collection-wide:table-column @collection-wide:w-data-date-column-wide-with-action",
       label: "Created",
       kind: "date",
     },
     {
       className: "resource-collection-date",
       columnClassName:
-        "w-data-date-column-with-action xl:w-data-date-column-wide-with-action",
+        "w-data-date-column-with-action @collection-wide:w-data-date-column-wide-with-action",
       label: "Updated",
       kind: "date",
     },
@@ -253,13 +256,15 @@ const pendingColumns: Record<
       label: "Lead",
     },
     {
-      className: "resource-directory-role hidden xl:table-cell",
-      columnClassName: "resource-directory-role-column hidden xl:table-column",
+      className: "resource-directory-role hidden @directory-wide:table-cell",
+      columnClassName:
+        "resource-directory-role-column hidden @directory-wide:table-column",
       label: "Role",
     },
     {
-      className: "resource-directory-date hidden xl:table-cell",
-      columnClassName: "resource-directory-date-column hidden xl:table-column",
+      className: "resource-directory-date hidden @directory-wide:table-cell",
+      columnClassName:
+        "resource-directory-date-column hidden @directory-wide:table-column",
       label: "Created",
       kind: "date",
     },
@@ -348,9 +353,7 @@ export function CollectionTablePending({
         <TableRow>
           {columns.map((column) => (
             <TableHead
-              className={cn(
-                column.className?.includes("hidden") && "hidden xl:table-cell"
-              )}
+              className={column.className}
               key={column.label}
               kind={column.kind}
             >

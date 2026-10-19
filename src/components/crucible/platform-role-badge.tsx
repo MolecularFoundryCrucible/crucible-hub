@@ -10,7 +10,7 @@ export function PlatformRoleBadge({ role }: { role: PlatformRole }) {
   }
   return (
     <Badge variant={role === "support" ? "secondary" : "outline"}>
-      {role === "support" ? "Support" : "No platform role"}
+      {role === "support" ? "Support" : "None"}
     </Badge>
   )
 }

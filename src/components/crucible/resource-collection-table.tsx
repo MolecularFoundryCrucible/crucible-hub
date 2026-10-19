@@ -9,6 +9,8 @@ import {
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceCollectionNameCell } from "@/components/crucible/resource-collection-name-cell"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { TableSortControl } from "@/components/crucible/table-sort-control"
+import type { TableSortField } from "@/components/crucible/table-sort-control"
 import {
   Table,
   TableBody,
@@ -61,17 +63,27 @@ export function ResourceCollectionTable({
   return (
     <Table
       aria-label={ariaLabel}
+      before={
+        <TableSortControl
+          direction={direction}
+          fields={resourceSortFields}
+          onChange={onSort}
+          sort={sort}
+        />
+      }
       className="resource-collection-table table-fixed"
     >
       <colgroup>
         <col />
         {showSubtypeColumn ? (
-          <col className="hidden xl:table-column xl:w-data-type-column-wide-with-action" />
+          <col className="hidden @collection-wide:table-column @collection-wide:w-data-type-column-wide-with-action" />
         ) : null}
-        {showProjectColumn ? <col /> : null}
-        <col className="w-data-owner-column-with-action xl:w-data-owner-column-wide-with-action" />
-        <col className="hidden w-data-date-column-with-action xl:table-column xl:w-data-date-column-wide-with-action" />
-        <col className="w-data-date-column-with-action xl:w-data-date-column-wide-with-action" />
+        {showProjectColumn ? (
+          <col className="resource-collection-project-column" />
+        ) : null}
+        <col className="resource-collection-owner-column w-data-owner-column-with-action @collection-wide:w-data-owner-column-wide-with-action" />
+        <col className="hidden w-data-date-column-with-action @collection-wide:table-column @collection-wide:w-data-date-column-wide-with-action" />
+        <col className="w-data-date-column-with-action @collection-wide:w-data-date-column-wide-with-action" />
         <col className="w-data-action-column" />
       </colgroup>
       <TableHeader>
@@ -84,15 +96,19 @@ export function ResourceCollectionTable({
             onChange={onSort}
           />
           {showSubtypeColumn ? (
-            <TableHead className="hidden xl:table-cell">
+            <TableHead className="hidden @collection-wide:table-cell">
               {subtypeLabel}
             </TableHead>
           ) : null}
-          {showProjectColumn ? <TableHead>Project</TableHead> : null}
-          <TableHead>Owner</TableHead>
+          {showProjectColumn ? (
+            <TableHead className="resource-collection-project">
+              Project
+            </TableHead>
+          ) : null}
+          <TableHead className="resource-collection-owner">Owner</TableHead>
           <SortableTableHead
             active={sort === "created"}
-            className="hidden xl:table-cell"
+            className="hidden @collection-wide:table-cell"
             direction={direction}
             field="created"
             kind="date"
@@ -139,6 +155,12 @@ export function ResourceCollectionTable({
   )
 }
 
+const resourceSortFields = [
+  { field: "name", label: "Name" },
+  { field: "created", kind: "date", label: "Created" },
+  { field: "updated", kind: "date", label: "Updated" },
+] as const satisfies readonly TableSortField<ResourceSort>[]
+
 type CollectionRowProps = {
   fromProject?: string
   showProjectColumn: boolean
@@ -174,7 +196,7 @@ const SampleCollectionRow = memo(function SampleRow({
       ) : null}
       <ResourceOwnerCell owner={sample.owner} />
       <ResourceCreatedCell
-        className="hidden xl:table-cell"
+        className="hidden @collection-wide:table-cell"
         value={sample.creation_time}
       />
       <ResourceUpdatedCell value={sample.modification_time} />
@@ -216,7 +238,7 @@ const DatasetCollectionRow = memo(function DatasetRow({
       ) : null}
       <ResourceOwnerCell owner={dataset.owner} />
       <ResourceCreatedCell
-        className="hidden xl:table-cell"
+        className="hidden @collection-wide:table-cell"
         value={dataset.creation_time}
       />
       <ResourceUpdatedCell value={dataset.modification_time} />
@@ -232,7 +254,7 @@ const DatasetCollectionRow = memo(function DatasetRow({
 
 function SubtypeCell({ value }: { value?: string | null }) {
   return (
-    <TableCell className="resource-collection-type hidden xl:table-cell">
+    <TableCell className="resource-collection-type hidden @collection-wide:table-cell">
       <span className="block truncate" title={value ?? undefined}>
         {value ?? "Unspecified"}
       </span>

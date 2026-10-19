@@ -123,9 +123,9 @@ export function DeletionAuditQueue({
 function DeletionAuditColgroup() {
   return (
     <colgroup>
-      <col className="w-deletion-resource-column-with-project" />
-      <col className="w-deletion-project-column" />
-      <col className="w-deletion-requester-column" />
+      <col />
+      <col className="deletion-request-project-column w-deletion-project-column" />
+      <col className="deletion-request-requester-column w-deletion-requester-column" />
       <col className="w-deletion-date-column" />
       <col className="w-deletion-action-column" />
     </colgroup>
@@ -137,8 +137,10 @@ function DeletionAuditHeader() {
     <TableHeader>
       <TableRow>
         <TableHead>Resource</TableHead>
-        <TableHead>Project</TableHead>
-        <TableHead>Requested by</TableHead>
+        <TableHead className="deletion-request-project">Project</TableHead>
+        <TableHead className="deletion-request-requester">
+          Requested by
+        </TableHead>
         <TableHead kind="date">Deleted</TableHead>
         <TableHead kind="action">
           <span className="sr-only">Actions</span>
