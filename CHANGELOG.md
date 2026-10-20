@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Showed optional table columns such as Created, Type, Role, and Owner as soon as each fits, with separate cutoffs per table layout, instead of hiding them until the widest layout fit.
 - Fixed sample type and measurement disappearing from data tables at widths where neither the Type column nor the line under the name showed.
 - Showed instruments you manage (owner, admin, or editor) in Home's Your instruments, and split the Instruments Management filter into Owned by me and Managed by me.
 - Replaced the scientific metadata JSON text box with a CodeMirror editor that highlights syntax, marks errors at their line and column, flags duplicate keys, and offers a Format button, loading only when the JSON editor opens.

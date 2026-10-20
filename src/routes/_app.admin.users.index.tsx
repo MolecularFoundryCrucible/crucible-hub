@@ -401,7 +401,7 @@ function UserCollection({
                   sort={sort}
                 />
               }
-              className="identity-directory-table table-fixed"
+              className="identity-directory-table identity-users-table table-fixed"
             >
               <colgroup>
                 <col className="identity-directory-account-column" />

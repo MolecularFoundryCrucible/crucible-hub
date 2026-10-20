@@ -157,7 +157,7 @@ function DeletionAuditPending() {
       className="px-0"
       role="status"
     >
-      <Table className="deletion-request-table table-fixed">
+      <Table className="deletion-request-table deletion-audit-table table-fixed">
         <DeletionAuditColgroup />
         <DeletionAuditHeader />
         <TableBody>
@@ -214,7 +214,7 @@ function DeletionAuditTable({
   return (
     <Table
       aria-label="Approved deletion requests"
-      className="deletion-request-table table-fixed"
+      className="deletion-request-table deletion-audit-table table-fixed"
     >
       <DeletionAuditColgroup />
       <DeletionAuditHeader />

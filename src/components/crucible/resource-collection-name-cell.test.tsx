@@ -86,7 +86,7 @@ describe("ResourceCollectionNameCell", () => {
       container.querySelector('[data-resource-type="dataset"]')
     ).toBeTruthy()
     expect(container.querySelector("td > span")?.className).toContain(
-      "@collection-wide:[&_[data-resource-context]]:hidden"
+      "resource-collection-subtype-compact"
     )
   })
 

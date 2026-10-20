@@ -792,8 +792,8 @@ function UserProjectsSection({
               <colgroup>
                 <col className="resource-directory-name-column" />
                 <col className="resource-directory-person-column" />
-                <col className="resource-directory-role-column hidden @directory-wide:table-column" />
-                <col className="resource-directory-date-column hidden @directory-wide:table-column" />
+                <col className="resource-directory-role-column" />
+                <col className="resource-directory-date-column resource-directory-created-column" />
                 <col className="resource-directory-date-column" />
                 <col className="resource-directory-action-column" />
               </colgroup>
@@ -810,12 +810,12 @@ function UserProjectsSection({
                   <TableHead className="resource-directory-person">
                     Lead
                   </TableHead>
-                  <TableHead className="hidden @directory-wide:table-cell">
+                  <TableHead className="resource-directory-role">
                     Role
                   </TableHead>
                   <SortableTableHead
                     active={sortColumn === "created"}
-                    className="hidden @directory-wide:table-cell"
+                    className="resource-directory-created"
                     direction={sortDirection}
                     field="created"
                     kind="date"
@@ -874,7 +874,7 @@ function UserProjectsSection({
                         )}
                       </TableCell>
                       <TableCell
-                        className="resource-directory-role hidden @directory-wide:table-cell"
+                        className="resource-directory-role"
                         data-label="Role"
                       >
                         {effectiveRole ? (
@@ -884,7 +884,7 @@ function UserProjectsSection({
                         )}
                       </TableCell>
                       <ResourceCreatedCell
-                        className="hidden @directory-wide:table-cell"
+                        className="resource-directory-created"
                         value={
                           complete && "creation_time" in project
                             ? project.creation_time

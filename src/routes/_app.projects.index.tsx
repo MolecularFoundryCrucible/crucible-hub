@@ -613,8 +613,8 @@ function ProjectCollection({
               <colgroup>
                 <col className="resource-directory-name-column" />
                 <col className="resource-directory-person-column" />
-                <col className="resource-directory-role-column hidden @directory-wide:table-column" />
-                <col className="resource-directory-date-column hidden @directory-wide:table-column" />
+                <col className="resource-directory-role-column" />
+                <col className="resource-directory-date-column resource-directory-created-column" />
                 <col className="resource-directory-date-column" />
                 <col className="resource-directory-action-column" />
               </colgroup>
@@ -631,12 +631,12 @@ function ProjectCollection({
                   <TableHead className="resource-directory-person">
                     Lead
                   </TableHead>
-                  <TableHead className="hidden @directory-wide:table-cell">
+                  <TableHead className="resource-directory-role">
                     Role
                   </TableHead>
                   <SortableTableHead
                     active={sort === "created"}
-                    className="hidden @directory-wide:table-cell"
+                    className="resource-directory-created"
                     direction={direction}
                     field="created"
                     kind="date"
@@ -693,7 +693,7 @@ function ProjectCollection({
                         )}
                       </TableCell>
                       <TableCell
-                        className="resource-directory-role hidden @directory-wide:table-cell"
+                        className="resource-directory-role"
                         data-label="Role"
                       >
                         {effectiveRole ? (
@@ -703,7 +703,7 @@ function ProjectCollection({
                         )}
                       </TableCell>
                       <ResourceCreatedCell
-                        className="hidden @directory-wide:table-cell"
+                        className="resource-directory-created"
                         value={complete ? project.creation_time : undefined}
                       />
                       <ResourceActivityCell

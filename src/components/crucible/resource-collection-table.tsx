@@ -28,6 +28,7 @@ import type {
   WorkspaceSample,
 } from "@/data/crucible/workspace-source"
 import { resourceDisplayName } from "@/lib/resource-name"
+import { cn } from "@/lib/utils"
 
 type SharedProps = {
   ariaLabel?: string
@@ -71,18 +72,22 @@ export function ResourceCollectionTable({
           sort={sort}
         />
       }
-      className="resource-collection-table table-fixed"
+      className={cn(
+        "resource-collection-table table-fixed",
+        showProjectColumn && "has-project",
+        showSubtypeColumn && "has-type"
+      )}
     >
       <colgroup>
         <col />
         {showSubtypeColumn ? (
-          <col className="hidden w-column-label @collection-wide:table-column" />
+          <col className="resource-collection-type-column w-column-label" />
         ) : null}
         {showProjectColumn ? (
           <col className="resource-collection-project-column w-column-secondary" />
         ) : null}
         <col className="resource-collection-owner-column w-column-person" />
-        <col className="hidden w-column-date @collection-wide:table-column" />
+        <col className="resource-collection-created-column w-column-date" />
         <col className="w-column-date" />
         <col className="w-column-action" />
       </colgroup>
@@ -96,7 +101,7 @@ export function ResourceCollectionTable({
             onChange={onSort}
           />
           {showSubtypeColumn ? (
-            <TableHead className="hidden @collection-wide:table-cell">
+            <TableHead className="resource-collection-type">
               {subtypeLabel}
             </TableHead>
           ) : null}
@@ -108,7 +113,7 @@ export function ResourceCollectionTable({
           <TableHead className="resource-collection-owner">Owner</TableHead>
           <SortableTableHead
             active={sort === "created"}
-            className="hidden @collection-wide:table-cell"
+            className="resource-collection-created"
             direction={direction}
             field="created"
             kind="date"
@@ -196,7 +201,7 @@ const SampleCollectionRow = memo(function SampleRow({
       ) : null}
       <ResourceOwnerCell owner={sample.owner} />
       <ResourceCreatedCell
-        className="hidden @collection-wide:table-cell"
+        className="resource-collection-created"
         value={sample.creation_time}
       />
       <ResourceUpdatedCell value={sample.modification_time} />
@@ -238,7 +243,7 @@ const DatasetCollectionRow = memo(function DatasetRow({
       ) : null}
       <ResourceOwnerCell owner={dataset.owner} />
       <ResourceCreatedCell
-        className="hidden @collection-wide:table-cell"
+        className="resource-collection-created"
         value={dataset.creation_time}
       />
       <ResourceUpdatedCell value={dataset.modification_time} />
@@ -254,7 +259,7 @@ const DatasetCollectionRow = memo(function DatasetRow({
 
 function SubtypeCell({ value }: { value?: string | null }) {
   return (
-    <TableCell className="resource-collection-type hidden @collection-wide:table-cell">
+    <TableCell className="resource-collection-type">
       <span className="block truncate" title={value ?? undefined}>
         {value ?? "Unspecified"}
       </span>

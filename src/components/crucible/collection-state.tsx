@@ -22,6 +22,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -73,9 +74,9 @@ const pendingColumns: Record<
       label: "Manager",
     },
     {
-      className: "resource-directory-date hidden @directory-wide:table-cell",
+      className: "resource-directory-date resource-directory-created",
       columnClassName:
-        "resource-directory-date-column hidden @directory-wide:table-column",
+        "resource-directory-date-column resource-directory-created-column",
       label: "Created",
       kind: "date",
     },
@@ -105,15 +106,14 @@ const pendingColumns: Record<
       label: "Lead",
     },
     {
-      className: "resource-directory-role hidden @directory-wide:table-cell",
-      columnClassName:
-        "resource-directory-role-column hidden @directory-wide:table-column",
+      className: "resource-directory-role",
+      columnClassName: "resource-directory-role-column",
       label: "Role",
     },
     {
-      className: "resource-directory-date hidden @directory-wide:table-cell",
+      className: "resource-directory-date resource-directory-created",
       columnClassName:
-        "resource-directory-date-column hidden @directory-wide:table-column",
+        "resource-directory-date-column resource-directory-created-column",
       label: "Created",
       kind: "date",
     },
@@ -137,8 +137,8 @@ const pendingColumns: Record<
       name: true,
     },
     {
-      className: "resource-collection-type hidden @collection-wide:table-cell",
-      columnClassName: "hidden @collection-wide:table-column w-column-label",
+      className: "resource-collection-type",
+      columnClassName: "resource-collection-type-column w-column-label",
       label: "Type",
     },
     {
@@ -152,8 +152,8 @@ const pendingColumns: Record<
       label: "Owner",
     },
     {
-      className: "resource-collection-date hidden @collection-wide:table-cell",
-      columnClassName: "hidden w-column-date @collection-wide:table-column",
+      className: "resource-collection-date resource-collection-created",
+      columnClassName: "resource-collection-created-column w-column-date",
       label: "Created",
       kind: "date",
     },
@@ -177,8 +177,8 @@ const pendingColumns: Record<
       name: true,
     },
     {
-      className: "resource-collection-type hidden @collection-wide:table-cell",
-      columnClassName: "hidden @collection-wide:table-column w-column-label",
+      className: "resource-collection-type",
+      columnClassName: "resource-collection-type-column w-column-label",
       label: "Type",
     },
     {
@@ -187,8 +187,8 @@ const pendingColumns: Record<
       label: "Owner",
     },
     {
-      className: "resource-collection-date hidden @collection-wide:table-cell",
-      columnClassName: "hidden w-column-date @collection-wide:table-column",
+      className: "resource-collection-date resource-collection-created",
+      columnClassName: "resource-collection-created-column w-column-date",
       label: "Created",
       kind: "date",
     },
@@ -248,15 +248,14 @@ const pendingColumns: Record<
       label: "Lead",
     },
     {
-      className: "resource-directory-role hidden @directory-wide:table-cell",
-      columnClassName:
-        "resource-directory-role-column hidden @directory-wide:table-column",
+      className: "resource-directory-role",
+      columnClassName: "resource-directory-role-column",
       label: "Role",
     },
     {
-      className: "resource-directory-date hidden @directory-wide:table-cell",
+      className: "resource-directory-date resource-directory-created",
       columnClassName:
-        "resource-directory-date-column hidden @directory-wide:table-column",
+        "resource-directory-date-column resource-directory-created-column",
       label: "Created",
       kind: "date",
     },
@@ -328,13 +327,23 @@ export function CollectionTablePending({
       : column
   )
   const tableClassName =
-    presentation === "service-accounts" || presentation === "users"
-      ? "identity-directory-table table-fixed"
-      : presentation === "projects" || presentation === "user-projects"
-        ? "resource-directory-table resource-directory-project-table table-fixed"
-        : presentation === "instruments"
-          ? "resource-directory-table resource-directory-instrument-table table-fixed"
-          : "resource-collection-table table-fixed"
+    presentation === "users"
+      ? "identity-directory-table identity-users-table table-fixed"
+      : presentation === "service-accounts"
+        ? "identity-directory-table table-fixed"
+        : presentation === "projects" || presentation === "user-projects"
+          ? "resource-directory-table resource-directory-project-table table-fixed"
+          : presentation === "instruments"
+            ? "resource-directory-table resource-directory-instrument-table table-fixed"
+            : cn(
+                "resource-collection-table table-fixed",
+                columns.some(
+                  (column) => column.className === "resource-collection-project"
+                ) && "has-project",
+                columns.some(
+                  (column) => column.className === "resource-collection-type"
+                ) && "has-type"
+              )
   const table = (
     <Table className={tableClassName}>
       <colgroup>

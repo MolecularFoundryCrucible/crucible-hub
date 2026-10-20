@@ -255,7 +255,8 @@ function DeletionRequestPending({
         }
         className={cn(
           "deletion-request-table table-fixed",
-          bulkReview && "has-selection"
+          bulkReview && "has-selection",
+          showProject && "has-project"
         )}
       >
         <DeletionRequestColgroup
@@ -874,7 +875,8 @@ function DeletionRequestTable({
         }
         className={cn(
           "deletion-request-table table-fixed",
-          bulkReview && "has-selection"
+          bulkReview && "has-selection",
+          showProject && "has-project"
         )}
       >
         <DeletionRequestColgroup

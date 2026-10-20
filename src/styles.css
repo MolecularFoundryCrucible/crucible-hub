@@ -180,8 +180,6 @@
 
 @theme inline {
   --breakpoint-inspector: 90rem;
-  --container-collection-wide: 72rem;
-  --container-directory-wide: 62rem;
   --container-identity-wide: 66rem;
   --transition-duration-fast: var(--motion-fast);
   --transition-duration-standard: var(--motion-standard);
@@ -1281,23 +1279,47 @@ body {
   }
 }
 
-@container (min-width: 26rem) and (max-width: 47.999rem) {
-  .resource-directory-table .resource-directory-person,
-  .resource-directory-table .resource-directory-person-column {
+@container (min-width: 26rem) and (max-width: 71.999rem) {
+  .resource-collection-table.has-project .resource-collection-type,
+  .resource-collection-table.has-project .resource-collection-type-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 33.999rem) {
-  .resource-directory-table .resource-directory-location,
-  .resource-directory-table .resource-directory-location-column {
+@container (min-width: 26rem) and (max-width: 55.999rem) {
+  .resource-collection-table:not(.has-project) .resource-collection-type,
+  .resource-collection-table:not(.has-project)
+    .resource-collection-type-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 61.999rem) {
+  .resource-collection-table.has-project .resource-collection-created,
+  .resource-collection-table.has-project .resource-collection-created-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 45.999rem) {
+  .resource-collection-table:not(.has-project) .resource-collection-created,
+  .resource-collection-table:not(.has-project)
+    .resource-collection-created-column {
     display: none;
   }
 }
 
 @container (min-width: 26rem) and (max-width: 47.999rem) {
-  .resource-collection-table .resource-collection-owner,
-  .resource-collection-table .resource-collection-owner-column {
+  .resource-collection-table.has-project .resource-collection-owner,
+  .resource-collection-table.has-project .resource-collection-owner-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 35.999rem) {
+  .resource-collection-table:not(.has-project) .resource-collection-owner,
+  .resource-collection-table:not(.has-project)
+    .resource-collection-owner-column {
     display: none;
   }
 }
@@ -1309,22 +1331,113 @@ body {
   }
 }
 
-@container (min-width: 38rem) and (max-width: 59.999rem) {
-  .identity-directory-table .identity-directory-role,
-  .identity-directory-table .identity-directory-role-column {
+@container (min-width: 72rem) {
+  .resource-collection-table.has-type.has-project
+    .resource-collection-subtype-compact
+    [data-resource-context] {
     display: none;
   }
+}
 
-  .identity-directory-table .identity-directory-optional {
+@container (min-width: 56rem) {
+  .resource-collection-table.has-type:not(.has-project)
+    .resource-collection-subtype-compact
+    [data-resource-context] {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 53.999rem) {
+  .resource-directory-project-table .resource-directory-role,
+  .resource-directory-project-table .resource-directory-role-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 45.999rem) {
+  .resource-directory-project-table .resource-directory-created,
+  .resource-directory-project-table .resource-directory-created-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 35.999rem) {
+  .resource-directory-project-table .resource-directory-person,
+  .resource-directory-project-table .resource-directory-person-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 61.999rem) {
+  .resource-directory-instrument-table .resource-directory-created,
+  .resource-directory-instrument-table .resource-directory-created-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 47.999rem) {
+  .resource-directory-instrument-table .resource-directory-person,
+  .resource-directory-instrument-table .resource-directory-person-column {
+    display: none;
+  }
+}
+
+@container (min-width: 26rem) and (max-width: 33.999rem) {
+  .resource-directory-instrument-table .resource-directory-location,
+  .resource-directory-instrument-table .resource-directory-location-column {
     display: none;
   }
 }
 
 @container (min-width: 38rem) and (max-width: 59.999rem) {
-  .deletion-request-table .deletion-request-project,
-  .deletion-request-table .deletion-request-project-column,
-  .deletion-request-table .deletion-request-requester,
-  .deletion-request-table .deletion-request-requester-column {
+  .identity-directory-table .identity-directory-optional {
+    display: none;
+  }
+}
+
+@container (min-width: 38rem) and (max-width: 43.999rem) {
+  .identity-directory-table .identity-directory-role,
+  .identity-directory-table .identity-directory-role-column {
+    display: none;
+  }
+}
+
+@container (min-width: 38rem) and (max-width: 59.999rem) {
+  .deletion-request-table.has-project:not(.has-selection)
+    .deletion-request-project,
+  .deletion-request-table.has-project:not(.has-selection)
+    .deletion-request-project-column {
+    display: none;
+  }
+}
+
+@container (min-width: 38rem) and (max-width: 63.999rem) {
+  .deletion-request-table.has-project.has-selection .deletion-request-project,
+  .deletion-request-table.has-project.has-selection
+    .deletion-request-project-column {
+    display: none;
+  }
+}
+
+@container (min-width: 38rem) and (max-width: 45.999rem) {
+  .deletion-request-table:not(.deletion-audit-table):not(.has-selection)
+    .deletion-request-requester,
+  .deletion-request-table:not(.deletion-audit-table):not(.has-selection)
+    .deletion-request-requester-column {
+    display: none;
+  }
+}
+
+@container (min-width: 38rem) and (max-width: 47.999rem) {
+  .deletion-request-table.has-selection .deletion-request-requester,
+  .deletion-request-table.has-selection .deletion-request-requester-column {
+    display: none;
+  }
+}
+
+@container (min-width: 38rem) and (max-width: 49.999rem) {
+  .deletion-audit-table .deletion-request-project,
+  .deletion-audit-table .deletion-request-project-column {
     display: none;
   }
 }

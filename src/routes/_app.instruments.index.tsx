@@ -754,7 +754,7 @@ function InstrumentCollection({
                 <col className="resource-directory-name-column" />
                 <col className="resource-directory-location-column w-column-secondary" />
                 <col className="resource-directory-person-column" />
-                <col className="resource-directory-date-column hidden @directory-wide:table-column" />
+                <col className="resource-directory-date-column resource-directory-created-column" />
                 <col className="resource-directory-date-column" />
                 <col className="resource-directory-action-column" />
               </colgroup>
@@ -776,7 +776,7 @@ function InstrumentCollection({
                   </TableHead>
                   <SortableTableHead
                     active={sort === "created"}
-                    className="hidden @directory-wide:table-cell"
+                    className="resource-directory-created"
                     direction={direction}
                     field="created"
                     kind="date"
@@ -835,7 +835,7 @@ function InstrumentCollection({
                         )}
                       </TableCell>
                       <ResourceCreatedCell
-                        className="hidden @directory-wide:table-cell"
+                        className="resource-directory-created"
                         value={instrument.creation_time}
                       />
                       <ResourceActivityCell
