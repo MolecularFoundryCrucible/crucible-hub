@@ -36,22 +36,26 @@ export function ResourceCreationActions({
   instrumentMfid,
   kinds = ["sample", "dataset"],
   projectMfid,
+  variant = "default",
 }: {
   instrumentMfid?: string
   kinds?: readonly ("dataset" | "sample")[]
   projectMfid?: string
+  variant?: "default" | "outline"
 }) {
   return (
     <div className="flex flex-wrap gap-2">
       {kinds.includes("sample") ? (
         <ResourceCreationLink
           label="Create sample"
+          variant={variant}
           render={<Link search={{ projectMfid }} to="/samples/new" />}
         />
       ) : null}
       {kinds.includes("dataset") ? (
         <ResourceCreationLink
           label="Create dataset"
+          variant={variant}
           render={
             <Link search={{ instrumentMfid, projectMfid }} to="/datasets/new" />
           }

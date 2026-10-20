@@ -24,7 +24,7 @@ export function RefreshButton({
       onClick={refreshing ? undefined : onClick}
       size={size}
       type="button"
-      variant={failed ? "destructive" : "outline"}
+      variant={failed ? "destructive" : "ghost"}
     >
       <RefreshResourceIcon
         aria-hidden="true"

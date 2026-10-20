@@ -42,7 +42,7 @@ export function CopyMfidButton({ value }: { value: string }) {
               className="shrink-0"
               onClick={() => void copyMfid()}
               size="icon-xs"
-              variant="outline"
+              variant="ghost"
             />
           }
         >

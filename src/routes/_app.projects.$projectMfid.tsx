@@ -152,7 +152,10 @@ function ProjectWorkspace() {
       <ResourceSectionNavigation
         actions={
           <>
-            <ResourceCreationActions projectMfid={project.unique_id} />
+            <ResourceCreationActions
+              projectMfid={project.unique_id}
+              variant="outline"
+            />
             <EntityRefreshAction
               label={`Refresh details for ${displayName}`}
               queryKey={projectOptions.queryKey}

@@ -60,7 +60,7 @@ export function PrintLabelButton({
                     className="shrink-0"
                     size="icon-xs"
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                   />
                 }
               />

@@ -29,7 +29,7 @@ export function ManagementToggle({
       onClick={() => onChange(!active)}
       size="sm"
       type="button"
-      variant="outline"
+      variant="ghost"
     >
       <Icon aria-hidden="true" data-icon="inline-start" />
       {active ? "Done" : "Edit"}

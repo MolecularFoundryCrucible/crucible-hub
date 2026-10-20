@@ -151,6 +151,7 @@ function InstrumentPage() {
             <ResourceCreationActions
               instrumentMfid={resource.unique_id}
               kinds={["dataset"]}
+              variant="outline"
             />
             <EntityRefreshAction
               exact={false}

@@ -27,7 +27,7 @@ export function EditableCardTrigger({
       {...preload}
       size="sm"
       type="button"
-      variant="outline"
+      variant="ghost"
     >
       <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
       {compact ? "Edit" : label}

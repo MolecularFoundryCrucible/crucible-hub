@@ -91,7 +91,7 @@ export function ResourceSiblingConfigurationAction({
             aria-label={`Change resource sequence. ${title}`}
             className="max-w-resource-sequence min-w-0"
             type="button"
-            variant="outline"
+            variant="ghost"
           />
         }
       >

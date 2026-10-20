@@ -48,7 +48,7 @@ export function ResourceFullPageLink({
       ? undefined
       : buttonVariants(
           presentation === "table"
-            ? { size: "table-action", variant: "outline" }
+            ? { size: "table-action", variant: "ghost" }
             : { variant: "outline" }
         ),
     className
