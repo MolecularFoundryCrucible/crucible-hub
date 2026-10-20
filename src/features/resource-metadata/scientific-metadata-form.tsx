@@ -17,17 +17,12 @@ import {
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from "@/components/ui/field"
-import { Textarea } from "@/components/ui/textarea"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
-import {
-  scientificMetadataValidationError,
-  updateWorkspaceResourceMetadata,
-} from "@/data/crucible/resources.functions"
+import { updateWorkspaceResourceMetadata } from "@/data/crucible/resources.functions"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import type {
   WorkspaceMetadataValue,
@@ -43,35 +38,12 @@ import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { SaveError } from "@/components/crucible/form-error"
 import type { EditableResource } from "./scientific-metadata-editor"
-
-export type ScientificMetadataParseResult =
-  | { metadata: WorkspaceScientificMetadata; ok: true }
-  | { message: string; ok: false }
-
-function isMetadataValue(value: unknown): value is WorkspaceMetadataValue {
-  if (
-    value === null ||
-    typeof value === "boolean" ||
-    typeof value === "string"
-  ) {
-    return true
-  }
-  if (typeof value === "number") return Number.isFinite(value)
-  if (Array.isArray(value)) return value.every(isMetadataValue)
-  if (typeof value !== "object") return false
-  return Object.values(value).every(isMetadataValue)
-}
-
-function isMetadataObject(
-  value: unknown
-): value is WorkspaceScientificMetadata {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    isMetadataValue(value)
-  )
-}
+import {
+  MetadataInput,
+  draftFromMetadata,
+  metadataDraftResult,
+  metadataDraftSchema,
+} from "./metadata-input"
 
 function metadataEqual(
   left: WorkspaceMetadataValue,
@@ -108,27 +80,6 @@ export function prettyScientificMetadata(
   return JSON.stringify(metadata ?? {}, null, 2)
 }
 
-export function parseScientificMetadata(
-  input: string
-): ScientificMetadataParseResult {
-  let value: unknown
-  try {
-    value = JSON.parse(input)
-  } catch {
-    return { message: "Enter valid JSON.", ok: false }
-  }
-  if (!isMetadataObject(value)) {
-    return {
-      message:
-        "Scientific metadata must be a JSON object with finite JSON values.",
-      ok: false,
-    }
-  }
-  const validationError = scientificMetadataValidationError(value)
-  if (validationError) return { message: validationError, ok: false }
-  return { metadata: value, ok: true }
-}
-
 export function scientificMetadataWrite(
   original: WorkspaceScientificMetadata | null,
   edited: WorkspaceScientificMetadata
@@ -153,12 +104,7 @@ export function scientificMetadataWrite(
 }
 
 const scientificMetadataFormSchema = z.object({
-  metadata: z.string().superRefine((value, context) => {
-    const result = parseScientificMetadata(value)
-    if (!result.ok) {
-      context.addIssue({ code: "custom", message: result.message })
-    }
-  }),
+  metadata: metadataDraftSchema,
 })
 
 export function mergeScientificMetadataUpdate(
@@ -206,16 +152,16 @@ export function ScientificMetadataForm({
   })
   const form = useForm({
     defaultValues: {
-      metadata: prettyScientificMetadata(resource.scientific_metadata),
+      metadata: draftFromMetadata(resource.scientific_metadata),
     },
     validators: { onChange: scientificMetadataFormSchema },
     onSubmit: async ({ value }) => {
       setSaveError(undefined)
-      const parsed = parseScientificMetadata(value.metadata)
-      if (!parsed.ok) return
+      const result = metadataDraftResult(value.metadata)
+      if (!result.ok) return
       const update = scientificMetadataWrite(
         resource.scientific_metadata,
-        parsed.metadata
+        result.metadata ?? {}
       )
       if (!update) {
         form.reset()
@@ -258,7 +204,7 @@ export function ScientificMetadataForm({
         })
       }
       form.reset({
-        metadata: prettyScientificMetadata(confirmed.scientific_metadata),
+        metadata: draftFromMetadata(confirmed.scientific_metadata),
       })
       notifySuccess("Scientific metadata saved")
       onSaved()
@@ -291,26 +237,16 @@ export function ScientificMetadataForm({
                 {(field) => {
                   const invalid = shouldShowFieldError(field)
                   return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Scientific metadata
-                      </FieldLabel>
-                      <Textarea
-                        aria-invalid={invalid || undefined}
-                        className="h-metadata-editor-height resize-y font-mono text-supporting"
+                    <Field data-invalid={invalid} onBlur={field.handleBlur}>
+                      <MetadataInput
                         disabled={isSubmitting}
-                        id={field.name}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        spellCheck={false}
+                        invalid={invalid}
+                        onChange={field.handleChange}
                         value={field.state.value}
                       />
                       <FieldDescription>
-                        Edit the complete JSON object. Arrays, nested objects,
-                        and primitive values keep their JSON types.
+                        Fields keep text, numbers, and true or false. Use JSON
+                        for arrays, nested objects, and exact value types.
                       </FieldDescription>
                       <FieldError errors={fieldErrors(field, { invalid })} />
                     </Field>

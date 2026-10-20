@@ -4,10 +4,10 @@ import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 
 import {
   mergeScientificMetadataUpdate,
-  parseScientificMetadata,
   prettyScientificMetadata,
   scientificMetadataWrite,
 } from "./scientific-metadata-form"
+import { parseScientificMetadata } from "./scientific-metadata-parse"
 
 const sample: Extract<WorkspaceResourceDetail, { kind: "sample" }> = {
   capabilities: null,
