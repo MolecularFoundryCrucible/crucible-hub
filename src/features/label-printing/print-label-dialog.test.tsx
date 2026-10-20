@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -51,7 +52,7 @@ function renderButton() {
       <PrintLabelButton mfid="01J6Y8N4Q2R7M9K3T5V0W1X2Z9" name="Catalyst map" />
     </QueryClientProvider>
   )
-  fireEvent.click(screen.getByRole("button", { name: "Print label" }))
+  fireEvent.click(screen.getByRole("button", { name: "Print" }))
 }
 
 function printResult(status: "ok" | "error" | "timeout", detail?: string) {
@@ -103,7 +104,11 @@ describe("PrintLabelButton", () => {
     await waitFor(() => expect(printer.value).toBe("spinbot"))
     fireEvent.change(printer, { target: { value: "bench-lab" } })
 
-    fireEvent.click(screen.getByRole("button", { name: "Print" }))
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Print",
+      })
+    )
 
     await waitFor(() =>
       expect(printWorkspaceResourceLabel).toHaveBeenCalledWith(
@@ -134,7 +139,11 @@ describe("PrintLabelButton", () => {
       )
     )
 
-    fireEvent.click(screen.getByRole("button", { name: "Print" }))
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Print",
+      })
+    )
 
     expect((await screen.findByRole("alert")).textContent).toBe(
       "The printer did not respond. Requested printer not currently online."

@@ -10,7 +10,7 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { MfidValue } from "@/components/crucible/mfid-value"
+import { CopyMfidButton, MfidValue } from "@/components/crucible/mfid-value"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -447,7 +447,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
-                  <MfidValue value={resource.unique_id} />
+                  <MfidValue copyable={false} value={resource.unique_id} />
                 </dd>
               </div>
               <div className="min-w-0">
@@ -496,11 +496,25 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               </dd>
             </div>
           </dl>
-          <div className="content-grid-identity-qr flex flex-col items-center gap-2">
-            <MfidQrCode value={resource.unique_id} />
-            <PrintLabelButton
-              mfid={resource.unique_id}
-              name={resourceDetailDisplayName(resource)}
+          <div className="content-grid-identity-qr">
+            <MfidQrCode
+              actions={
+                <>
+                  <CopyMfidButton value={resource.unique_id} />
+                  <PrintLabelButton
+                    mfid={resource.unique_id}
+                    name={resourceDetailDisplayName(resource)}
+                    variant="icon"
+                  />
+                </>
+              }
+              dialogActions={
+                <PrintLabelButton
+                  mfid={resource.unique_id}
+                  name={resourceDetailDisplayName(resource)}
+                />
+              }
+              value={resource.unique_id}
             />
           </div>
         </ContentGrid>

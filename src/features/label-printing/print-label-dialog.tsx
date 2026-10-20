@@ -18,6 +18,11 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { labelNameMaxLength } from "@/data/crucible/print"
 import { printWorkspaceResourceLabel } from "@/data/crucible/print.functions"
@@ -28,9 +33,11 @@ import { useAccountPreferences } from "@/features/preferences/use-account-prefer
 export function PrintLabelButton({
   mfid,
   name,
+  variant = "button",
 }: {
   mfid: string
   name: string
+  variant?: "button" | "icon"
 }) {
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState(false)
@@ -42,12 +49,35 @@ export function PrintLabelButton({
       }}
       open={open}
     >
-      <DialogTrigger
-        render={<Button size="sm" type="button" variant="outline" />}
-      >
-        <PrintLabelIcon aria-hidden="true" data-icon="inline-start" />
-        Print label
-      </DialogTrigger>
+      {variant === "icon" ? (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <DialogTrigger
+                render={
+                  <Button
+                    aria-label="Print"
+                    className="shrink-0"
+                    size="icon-xs"
+                    type="button"
+                    variant="outline"
+                  />
+                }
+              />
+            }
+          >
+            <PrintLabelIcon aria-hidden="true" />
+          </TooltipTrigger>
+          <TooltipContent>Print</TooltipContent>
+        </Tooltip>
+      ) : (
+        <DialogTrigger
+          render={<Button size="sm" type="button" variant="outline" />}
+        >
+          <PrintLabelIcon aria-hidden="true" data-icon="inline-start" />
+          Print
+        </DialogTrigger>
+      )}
       {open ? (
         <PrintLabelDialogContent
           mfid={mfid}
@@ -143,7 +173,7 @@ function PrintLabelDialogContent({
   return (
     <DialogContent showCloseButton={!pending}>
       <DialogHeader>
-        <DialogTitle>Print label</DialogTitle>
+        <DialogTitle>Print</DialogTitle>
       </DialogHeader>
       <form
         className="contents"

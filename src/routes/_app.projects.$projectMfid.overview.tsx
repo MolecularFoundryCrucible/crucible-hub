@@ -8,7 +8,7 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { resourceDisplayName } from "@/lib/resource-name"
-import { MfidValue } from "@/components/crucible/mfid-value"
+import { CopyMfidButton, MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
   ProjectOverviewPending,
@@ -189,7 +189,7 @@ function ProjectIdentity({
               <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
-                  <MfidValue value={project.unique_id} />
+                  <MfidValue copyable={false} value={project.unique_id} />
                 </dd>
               </div>
               <div className={userRole ? "grid grid-cols-2 gap-4" : "min-w-0"}>
@@ -228,14 +228,31 @@ function ProjectIdentity({
               </div>
             </dl>
           </div>
-          <div className="content-grid-identity-qr flex flex-col items-center gap-2">
-            <MfidQrCode value={project.unique_id} />
-            <PrintLabelButton
-              mfid={project.unique_id}
-              name={resourceDisplayName("project", project.title, {
-                identifier: project.project_id,
-                mfid: project.unique_id,
-              })}
+          <div className="content-grid-identity-qr">
+            <MfidQrCode
+              actions={
+                <>
+                  <CopyMfidButton value={project.unique_id} />
+                  <PrintLabelButton
+                    mfid={project.unique_id}
+                    name={resourceDisplayName("project", project.title, {
+                      identifier: project.project_id,
+                      mfid: project.unique_id,
+                    })}
+                    variant="icon"
+                  />
+                </>
+              }
+              dialogActions={
+                <PrintLabelButton
+                  mfid={project.unique_id}
+                  name={resourceDisplayName("project", project.title, {
+                    identifier: project.project_id,
+                    mfid: project.unique_id,
+                  })}
+                />
+              }
+              value={project.unique_id}
             />
           </div>
           <dl className="content-grid-identity-timestamps grid grid-cols-2 gap-4">

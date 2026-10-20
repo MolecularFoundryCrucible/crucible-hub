@@ -13,7 +13,7 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
-import { MfidValue } from "@/components/crucible/mfid-value"
+import { CopyMfidButton, MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personIsServiceAccount } from "@/components/crucible/person-identity"
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
@@ -189,7 +189,7 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
               <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
-                  <MfidValue value={instrument.unique_id} />
+                  <MfidValue copyable={false} value={instrument.unique_id} />
                 </dd>
               </div>
               <div
@@ -232,11 +232,25 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
               </div>
             </dl>
           </div>
-          <div className="content-grid-identity-qr flex flex-col items-center gap-2">
-            <MfidQrCode value={instrument.unique_id} />
-            <PrintLabelButton
-              mfid={instrument.unique_id}
-              name={resourceDetailDisplayName(instrument)}
+          <div className="content-grid-identity-qr">
+            <MfidQrCode
+              actions={
+                <>
+                  <CopyMfidButton value={instrument.unique_id} />
+                  <PrintLabelButton
+                    mfid={instrument.unique_id}
+                    name={resourceDetailDisplayName(instrument)}
+                    variant="icon"
+                  />
+                </>
+              }
+              dialogActions={
+                <PrintLabelButton
+                  mfid={instrument.unique_id}
+                  name={resourceDetailDisplayName(instrument)}
+                />
+              }
+              value={instrument.unique_id}
             />
           </div>
           <dl className="content-grid-identity-timestamps grid grid-cols-2 gap-4">

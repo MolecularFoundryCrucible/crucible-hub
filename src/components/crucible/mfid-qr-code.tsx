@@ -18,10 +18,18 @@ import {
 
 const QRCodeSVG = lazyRouteComponent(() => import("qrcode.react"), "QRCodeSVG")
 
-export function MfidQrCode({ value }: { value: string }) {
+export function MfidQrCode({
+  actions,
+  dialogActions,
+  value,
+}: {
+  actions?: React.ReactNode
+  dialogActions?: React.ReactNode
+  value: string
+}) {
   const label = "Enlarge MFID QR code"
 
-  return (
+  const qrCode = (
     <Dialog>
       <Tooltip>
         <TooltipTrigger
@@ -59,7 +67,18 @@ export function MfidQrCode({ value }: { value: string }) {
           </Suspense>
         </div>
         <MfidValue className="justify-center" value={value} />
+        {dialogActions ? (
+          <div className="flex justify-center">{dialogActions}</div>
+        ) : null}
       </DialogContent>
     </Dialog>
+  )
+
+  if (!actions) return qrCode
+  return (
+    <div className="flex flex-col items-center gap-2">
+      {qrCode}
+      <div className="flex items-center gap-2">{actions}</div>
+    </div>
   )
 }
