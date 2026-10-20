@@ -26,7 +26,7 @@ export function ResourceCollectionNameCell({
       <ResourceIdentity
         className={cn(
           subtypeVisibility === "compact" &&
-            "[&_[data-resource-context]]:xl:hidden"
+            "@collection-wide:[&_[data-resource-context]]:hidden"
         )}
         context={subtype}
         kind={kind}

@@ -65,9 +65,7 @@ describe("ResourceCollectionNameCell", () => {
     expect(
       container.querySelector('[data-resource-type="sample"]')
     ).toBeTruthy()
-    expect(screen.getByText("oxide powder").className).not.toContain(
-      "xl:hidden"
-    )
+    expect(screen.getByText("oxide powder").className).not.toContain(":hidden")
     expect(container.querySelectorAll("td")).toHaveLength(1)
     expect(previewProps).toHaveBeenCalledWith(expect.objectContaining({ mfid }))
   })
@@ -88,7 +86,7 @@ describe("ResourceCollectionNameCell", () => {
       container.querySelector('[data-resource-type="dataset"]')
     ).toBeTruthy()
     expect(container.querySelector("td > span")?.className).toContain(
-      "[&_[data-resource-context]]:xl:hidden"
+      "@collection-wide:[&_[data-resource-context]]:hidden"
     )
   })
 

@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Fixed sample type and measurement disappearing from data tables at widths where neither the Type column nor the line under the name showed.
 - Showed instruments you manage (owner, admin, or editor) in Home's Your instruments, and split the Instruments Management filter into Owned by me and Managed by me.
 - Replaced the scientific metadata JSON text box with a CodeMirror editor that highlights syntax, marks errors at their line and column, flags duplicate keys, and offers a Format button, loading only when the JSON editor opens.
 - Shortened card save buttons to Save and removed redundant helper text from the scientific metadata and timestamp editors.
