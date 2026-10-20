@@ -829,23 +829,23 @@ function ProjectDataLoadError({
   projectMfid: string
   retry: () => void
 }) {
-  const message =
+  const forbidden =
     error instanceof HubApiClientError && error.details.kind === "forbidden"
-      ? "You do not have permission to view this project data."
-      : error instanceof HubApiClientError && error.details.kind === "conflict"
-        ? "This project data selection could not be resolved."
-        : "Project data could not be loaded."
+  const message = forbidden
+    ? "You do not have permission to view this project data."
+    : error instanceof HubApiClientError && error.details.kind === "conflict"
+      ? "This project data selection could not be resolved."
+      : "Project data could not be loaded."
   return (
     <div className="flex flex-col gap-4">
       <Empty className="min-h-state border" role="alert">
         <EmptyHeader>
           <EmptyTitle>{message}</EmptyTitle>
-          <EmptyDescription>
-            The selected project data filters remain unchanged.
-          </EmptyDescription>
-          <Button onClick={retry} variant="outline">
-            Try again
-          </Button>
+          {forbidden ? null : (
+            <Button onClick={retry} variant="outline">
+              Try again
+            </Button>
+          )}
         </EmptyHeader>
       </Empty>
       {cursor ? <FirstPageLink kind={kind} projectMfid={projectMfid} /> : null}

@@ -67,6 +67,7 @@ export function createQueryClient() {
         refetchOnWindowFocus: false,
         retry: shouldRetryQuery,
         retryDelay: queryRetryDelay,
+        retryOnMount: false,
       },
       dehydrate: {
         shouldDehydrateQuery: shouldDehydrateCrucibleQuery,
