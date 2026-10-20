@@ -14,7 +14,7 @@ function toggleClasses({
 }) {
   return buttonVariants({
     className: cn(
-      "data-pressed:border-action-border data-pressed:bg-action-surface data-pressed:shadow-xs data-pressed:hover:bg-[color-mix(in_oklch,var(--action-surface),var(--foreground)_5%)]",
+      "data-pressed:border-action-border data-pressed:bg-action-surface data-pressed:shadow-xs data-pressed:hover:bg-action-hover",
       className
     ),
     size,

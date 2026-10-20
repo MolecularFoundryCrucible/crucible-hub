@@ -978,9 +978,7 @@ function DeletionRequestTable({
                   <Button
                     onClick={() => onOpen(request)}
                     size="sm"
-                    variant={
-                      request.capabilities.can_review ? "secondary" : "outline"
-                    }
+                    variant={request.capabilities.can_review ? "outline" : "ghost"}
                   >
                     {request.capabilities.can_review ? "Review" : "View"}
                   </Button>

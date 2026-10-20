@@ -176,7 +176,6 @@ function DesignSystemFixtures() {
             </CardHeader>
             <CardContent className="flex flex-wrap items-center gap-3">
               <Button>Primary action</Button>
-              <Button variant="secondary">Secondary</Button>
               <Button variant="outline">Outline</Button>
               <Button aria-pressed="true" variant="outline">
                 Pressed toggle

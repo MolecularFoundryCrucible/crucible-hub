@@ -304,10 +304,6 @@
   --color-border-strong: var(--border-strong);
   --color-primary-hover: var(--primary-hover);
   --color-overlay: var(--overlay);
-  --color-graph-action: var(--graph-action);
-  --color-graph-action-border: var(--graph-action-border);
-  --color-graph-action-foreground: var(--graph-action-foreground);
-  --color-graph-action-hover: var(--graph-action-hover);
   --color-graph-highlight: var(--graph-highlight);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -561,10 +557,6 @@
   --graph-current: var(--selection);
   --graph-edge: #52525b;
   --graph-highlight: var(--resource-data);
-  --graph-action: var(--card);
-  --graph-action-border: var(--action-border);
-  --graph-action-foreground: var(--foreground);
-  --graph-action-hover: var(--accent);
   --graph-association-edge: color-mix(
     in oklch,
     var(--graph-edge) 85%,
@@ -711,10 +703,6 @@
   --graph-current: var(--selection);
   --graph-edge: #b4b4bb;
   --graph-highlight: var(--resource-data);
-  --graph-action: var(--card);
-  --graph-action-border: var(--action-border);
-  --graph-action-foreground: var(--foreground);
-  --graph-action-hover: var(--accent);
   --graph-grid: color-mix(in srgb, var(--foreground) 18%, transparent);
 }
 

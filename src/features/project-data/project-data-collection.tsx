@@ -771,7 +771,7 @@ function ProjectDataFilterLink({
     <Link
       activeOptions={{ exact: true, explicitUndefined: true }}
       aria-current={active ? "page" : undefined}
-      className={buttonVariants({ variant: active ? "secondary" : "ghost" })}
+      className={buttonVariants({ variant: "ghost" })}
       from="/projects/$projectMfid/"
       params={{ projectMfid }}
       search={(previous) => ({

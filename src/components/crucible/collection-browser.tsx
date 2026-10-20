@@ -294,7 +294,7 @@ function CollectionBrowser({
                   className="group-directory-columns grid w-full text-left"
                   onClick={() => onSelect(selection)}
                   type="button"
-                  variant="secondary"
+                  variant="ghost"
                 >
                   <span className="flex min-w-0 items-center gap-2 overflow-hidden">
                     <FacetFieldIcon field={field} />
@@ -325,7 +325,7 @@ function CollectionBrowser({
                     key={bucket.value === null ? "null" : bucket.value}
                     onClick={() => onSelect(bucketSelection)}
                     type="button"
-                    variant={active ? "secondary" : "ghost"}
+                    variant="ghost"
                   >
                     <span className="flex min-w-0 items-center gap-2 overflow-hidden">
                       <FacetFieldIcon bucket={bucket} field={field} />

@@ -10,22 +10,17 @@ const buttonVariantClasses = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary-hover",
         outline:
-          "border-action-border bg-action-surface text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--action-surface),var(--foreground)_5%)] aria-expanded:bg-action-surface aria-pressed:border-transparent aria-pressed:bg-secondary aria-pressed:text-secondary-foreground aria-pressed:hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "border-action-border bg-action-surface text-foreground shadow-xs hover:bg-action-hover aria-expanded:bg-action-hover aria-pressed:bg-action-pressed aria-pressed:hover:bg-action-pressed",
         ghost:
-          "border-transparent hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground aria-pressed:bg-secondary aria-pressed:text-secondary-foreground dark:hover:bg-muted/50",
+          "border-transparent hover:bg-action-hover hover:text-foreground aria-expanded:bg-action-hover aria-expanded:text-foreground aria-pressed:bg-action-pressed aria-pressed:text-foreground aria-[current=page]:bg-secondary aria-[current=page]:text-secondary-foreground",
         destructive:
           "border-destructive/30 bg-destructive/10 text-destructive shadow-xs hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         "destructive-solid":
           "border-transparent bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:border-destructive focus-visible:ring-destructive/30 dark:focus-visible:ring-destructive/40",
         warning:
           "border-warning/30 bg-warning/10 text-warning shadow-xs hover:bg-warning/20 focus-visible:border-warning/50 focus-visible:ring-warning/25 dark:bg-warning/15 dark:hover:bg-warning/25",
-        graph:
-          "border-graph-action-border bg-graph-action text-graph-action-foreground shadow-xs hover:border-graph-highlight hover:bg-graph-action-hover focus-visible:border-graph-highlight focus-visible:ring-graph-highlight/30",
-        link: "border-transparent text-primary underline-offset-4 hover:underline",
       },
       size: {
         default:
@@ -50,6 +45,13 @@ const buttonVariantClasses = cva(
           "size-7 rounded-[min(var(--radius-md),12px)] max-md:size-9 md:[&_svg:not([class*='size-'])]:size-3.5",
       },
     },
+    compoundVariants: [
+      {
+        variant: "outline",
+        size: ["icon", "icon-xs", "icon-sm", "icon-circle", "table-action"],
+        className: "border-border-strong",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

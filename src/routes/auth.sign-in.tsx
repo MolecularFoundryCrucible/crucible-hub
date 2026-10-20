@@ -57,7 +57,8 @@ function SignInPage() {
                 rel="noopener noreferrer"
               />
             }
-            variant="link"
+            size="sm"
+            variant="ghost"
           >
             {signedOut ? "Open ORCID" : "Learn more"}
           </Button>

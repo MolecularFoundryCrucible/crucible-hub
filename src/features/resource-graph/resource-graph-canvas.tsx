@@ -1437,7 +1437,7 @@ function GraphNodeExpansionAction({
             }}
             size="icon-circle"
             type="button"
-            variant={state?.isError ? "destructive" : "graph"}
+            variant={state?.isError ? "destructive" : "outline"}
           />
         }
       >
