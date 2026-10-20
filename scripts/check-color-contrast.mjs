@@ -106,6 +106,10 @@ for (const [theme, values] of Object.entries(themes)) {
   expectContrast(theme, values, "foreground", "action-pressed", 4.5)
   expectContrast(theme, values, "foreground", "action-hover", 4.5)
   expectContrast(theme, values, "muted-foreground", "muted", 4.5)
+  expectContrast(theme, values, "foreground", "action-selected", 4.5)
+  expectContrast(theme, values, "action-pressed", "action-hover", 1.1)
+  expectContrast(theme, values, "action-selected", "muted", 1.1)
+  expectContrast(theme, values, "action-selected", "action-hover", 1.1)
 
   for (const status of ["destructive", "success", "warning", "info"]) {
     expectContrast(theme, values, status, "card", 3)
@@ -140,9 +144,19 @@ for (const [theme, values] of Object.entries(themes)) {
 const darkValues = declarations("\n.dark {")
 for (const [name, value] of shared) {
   if (/^(palette|brand)-/.test(name)) continue
-  if (!/^(#|oklch\()/.test(value)) continue
+  if (!/^(#|oklch\(|var\(--(palette|brand)-)/.test(value)) continue
   if (!darkValues.has(name)) {
-    failures.push(`dark: --${name} has a literal light value but no dark value`)
+    failures.push(`dark: --${name} has a light color value but no dark value`)
+  }
+}
+
+const tailwindProvided = /^--(?:spacing|shadow-[\w-]+)$/
+const declaredProperties = new Set(
+  [...source.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1])
+)
+for (const [, name] of source.matchAll(/var\(\s*(--[\w-]+)/g)) {
+  if (!declaredProperties.has(name) && !tailwindProvided.test(name)) {
+    failures.push(`src/styles.css references undefined ${name}`)
   }
 }
 

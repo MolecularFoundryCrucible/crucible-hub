@@ -281,6 +281,7 @@
   --color-action-surface: var(--action-surface);
   --color-action-hover: var(--action-hover);
   --color-action-pressed: var(--action-pressed);
+  --color-action-selected: var(--action-selected);
   --color-border-strong: var(--border-strong);
   --color-primary-hover: var(--primary-hover);
   --color-overlay: var(--overlay);
@@ -484,7 +485,8 @@
   --primary-hover: var(--palette-blue-7);
   --border-strong: var(--palette-neutral-7);
   --action-hover: var(--palette-neutral-3);
-  --action-pressed: var(--palette-blue-2);
+  --action-pressed: var(--palette-blue-3);
+  --action-selected: oklch(1 0 0);
   --overlay: oklch(0.165 0.012 240 / 10%);
   --ring: var(--palette-blue-9);
   --selection: var(--palette-orange-6);
@@ -635,7 +637,8 @@
   --primary-hover: var(--palette-blue-3);
   --border-strong: var(--palette-neutral-8);
   --action-hover: var(--palette-neutral-10);
-  --action-pressed: var(--palette-blue-8);
+  --action-pressed: var(--palette-blue-7);
+  --action-selected: var(--palette-neutral-9);
   --overlay: oklch(0 0 0 / 40%);
   --ring: var(--palette-blue-4);
   --selection: var(--palette-orange-5);
@@ -1058,8 +1061,6 @@ body {
   pointer-events: none;
   scale: 0.8;
   border-radius: 9999px;
-  background-color: var(--graph-action);
-  border: 1px solid var(--graph-action-border);
   box-shadow: var(--shadow-xs);
   transition:
     opacity var(--motion-fast) var(--motion-ease-standard),
@@ -1086,7 +1087,6 @@ body {
   scale: 1.15;
   border-color: var(--graph-ring);
   box-shadow: var(--shadow-sm);
-  background-color: var(--graph-action-hover);
 }
 
 .resource-graph-expansion-ancestors {
