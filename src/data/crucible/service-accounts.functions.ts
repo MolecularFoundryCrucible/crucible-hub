@@ -24,7 +24,7 @@ export const serviceAccountPlatformRoleSchema = z.enum([
   "contributor",
   "admin",
 ])
-const optionalProfileTextSchema = z.string().trim().max(255).nullable()
+const profileNameSchema = z.string().trim().min(1).max(255)
 
 export const serviceAccountListInputSchema = z
   .object({
@@ -58,8 +58,8 @@ export const serviceAccountUpdateInputSchema = z
   .object({
     changes: z
       .object({
-        first_name: optionalProfileTextSchema.optional(),
-        last_name: optionalProfileTextSchema.optional(),
+        first_name: profileNameSchema.optional(),
+        last_name: profileNameSchema.optional(),
         username: usernameSchema.optional(),
       })
       .strict()

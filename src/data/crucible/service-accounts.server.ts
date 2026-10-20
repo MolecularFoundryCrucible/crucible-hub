@@ -272,15 +272,9 @@ export async function patchWorkspaceServiceAccount(
     return {
       ...account,
       ...changes,
-      first_name:
-        changes.first_name === null
-          ? ""
-          : (changes.first_name ?? account.first_name),
+      first_name: changes.first_name ?? account.first_name,
       is_service_account: true,
-      last_name:
-        changes.last_name === null
-          ? ""
-          : (changes.last_name ?? account.last_name),
+      last_name: changes.last_name ?? account.last_name,
       username: changes.username ?? account.username,
     }
   }

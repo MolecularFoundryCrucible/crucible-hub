@@ -67,6 +67,25 @@ const serviceAccountProfileSchema = z.object({
 
 type ProfileValues = z.infer<typeof serviceAccountProfileSchema>
 
+function serviceAccountProfileFormSchema(
+  account: WorkspaceServiceAccountDetail
+) {
+  return serviceAccountProfileSchema.superRefine((values, context) => {
+    for (const field of ["first_name", "last_name"] as const) {
+      if (!values[field] && account[field].trim()) {
+        context.addIssue({
+          code: "custom",
+          message:
+            field === "first_name"
+              ? "Enter a first name."
+              : "Enter a last name.",
+          path: [field],
+        })
+      }
+    }
+  })
+}
+
 const platformRoleDescriptions = {
   admin: "Full platform administration.",
   contributor: "Platform-wide read and create access.",
@@ -108,7 +127,7 @@ function profileChanges(
   const initial = profileValues(account)
   const changes: WorkspaceServiceAccountProfileUpdate = {}
   for (const field of ["first_name", "last_name"] as const) {
-    if (normalized[field] !== initial[field]) {
+    if (normalized[field] && normalized[field] !== initial[field]) {
       changes[field] = normalized[field]
     }
   }
@@ -172,7 +191,7 @@ function ServiceAccountIdentityCard({
   })
   const form = useForm({
     defaultValues: profileValues(account),
-    validators: { onChange: serviceAccountProfileSchema },
+    validators: { onChange: serviceAccountProfileFormSchema(account) },
     onSubmit: async ({ value }) => {
       setError(undefined)
       const changes = profileChanges(account, value)

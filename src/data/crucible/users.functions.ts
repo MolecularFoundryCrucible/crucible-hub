@@ -21,7 +21,7 @@ import {
 } from "./users.server"
 
 const userIdSchema = z.string().trim().min(1).max(255)
-const profileNameSchema = z.string().trim().max(255).nullable()
+const profileNameSchema = z.string().trim().min(1).max(255)
 const profileEmailSchema = z.string().trim().email().max(320).nullable()
 const profileUsernameSchema = usernameSchema.nullable()
 

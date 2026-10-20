@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
@@ -38,7 +38,7 @@ import {
   ProfileField,
   accountProfileChanges,
   accountProfileHasChanges,
-  accountProfileSchema,
+  accountProfileFormSchema,
   accountProfileValues,
   matchesRejectedValue,
   profileNameMissing,
@@ -71,11 +71,15 @@ export function AccountProfileForm({
         })
       ),
   })
+  const profileSchema = useMemo(
+    () => accountProfileFormSchema(account),
+    [account]
+  )
   const form = useForm({
     defaultValues: accountProfileValues(account),
     validators: {
-      onChange: accountProfileSchema,
-      onSubmit: accountProfileSchema,
+      onChange: profileSchema,
+      onSubmit: profileSchema,
     },
     onSubmit: async ({ value }) => {
       setSaveError(undefined)

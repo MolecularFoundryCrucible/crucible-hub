@@ -30,8 +30,8 @@ export type WorkspaceAccount = Omit<
 
 export type WorkspaceAccountProfileUpdate = {
   email?: string | null
-  first_name?: string | null
-  last_name?: string | null
+  first_name?: string
+  last_name?: string
   username?: string | null
 }
 
@@ -603,8 +603,8 @@ export type WorkspaceServiceAccountSort =
 export type WorkspaceServiceAccountCredential = Schema<"ServiceAccountRead">
 
 export type WorkspaceServiceAccountProfileUpdate = {
-  first_name?: string | null
-  last_name?: string | null
+  first_name?: string
+  last_name?: string
   username?: string
 }
 
@@ -636,8 +636,8 @@ export type WorkspaceUserCreate = {
 
 export type WorkspaceUserUpdate = {
   email?: string | null
-  first_name?: string | null
-  last_name?: string | null
+  first_name?: string
+  last_name?: string
   username?: string | null
 }
 

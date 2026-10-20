@@ -57,14 +57,31 @@ export function accountProfileChanges(
   const changes: WorkspaceAccountProfileUpdate = {}
 
   for (const field of profileFields) {
-    if (normalized[field] !== initial[field].trim()) {
-      changes[field] =
-        (field === "first_name" || field === "last_name") && !normalized[field]
-          ? null
-          : normalized[field]
+    if (normalized[field] === initial[field].trim()) continue
+    if (field === "first_name" || field === "last_name") {
+      if (normalized[field]) changes[field] = normalized[field]
+    } else {
+      changes[field] = normalized[field]
     }
   }
   return changes
+}
+
+export function accountProfileFormSchema(account: WorkspaceAccount) {
+  return accountProfileSchema.superRefine((values, context) => {
+    for (const field of ["first_name", "last_name"] as const) {
+      if (!values[field] && account[field].trim()) {
+        context.addIssue({
+          code: "custom",
+          message:
+            field === "first_name"
+              ? "Enter a first name."
+              : "Enter a last name.",
+          path: [field],
+        })
+      }
+    }
+  })
 }
 
 export function profileNameMissing(state: {

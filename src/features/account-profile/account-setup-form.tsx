@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm, useStore } from "@tanstack/react-form"
 
 import { PendingIcon } from "@/components/crucible/pending-icon"
@@ -18,7 +18,7 @@ import type { WorkspaceAccount } from "@/data/crucible/workspace-source"
 import {
   ProfileField,
   accountProfileChanges,
-  accountProfileSchema,
+  accountProfileFormSchema,
   accountProfileValues,
   matchesRejectedValue,
   profileNameMissing,
@@ -37,11 +37,15 @@ export function AccountSetupForm({
   const [saveError, setSaveError] = useState<string>()
   const usernameConflict = useSlugConflict()
   const [rejectedEmail, setRejectedEmail] = useState<string>()
+  const profileSchema = useMemo(
+    () => accountProfileFormSchema(account),
+    [account]
+  )
   const form = useForm({
     defaultValues: accountProfileValues(account),
     validators: {
-      onChange: accountProfileSchema,
-      onSubmit: accountProfileSchema,
+      onChange: profileSchema,
+      onSubmit: profileSchema,
     },
     onSubmit: async ({ value }) => {
       setSaveError(undefined)
