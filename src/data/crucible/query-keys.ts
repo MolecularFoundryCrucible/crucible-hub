@@ -222,4 +222,5 @@ export const crucibleKeys = {
     [...scope, "search", normalizeFilters(filters)] as const,
   searches: (scope: IdentityScope) => [...scope, "search"] as const,
   systemStatus: () => ["crucible", "system-status"] as const,
+  printers: (scope: IdentityScope) => [...scope, "printers"] as const,
 }

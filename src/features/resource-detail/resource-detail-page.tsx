@@ -12,6 +12,7 @@ import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action
 import { PageLayout } from "@/components/crucible/page-layout"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
+import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personIsServiceAccount } from "@/components/crucible/person-identity"
 import {
@@ -67,7 +68,10 @@ import { ScientificMetadataEditor } from "@/features/resource-metadata/scientifi
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
 import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
-import { resourceDisplayName } from "@/lib/resource-name"
+import {
+  resourceDetailDisplayName,
+  resourceDisplayName,
+} from "@/lib/resource-name"
 
 export { isResourceOverviewPath, preloadResourceShell }
 
@@ -492,8 +496,12 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               </dd>
             </div>
           </dl>
-          <div className="content-grid-identity-qr">
+          <div className="content-grid-identity-qr flex flex-col items-center gap-2">
             <MfidQrCode value={resource.unique_id} />
+            <PrintLabelButton
+              mfid={resource.unique_id}
+              name={resourceDetailDisplayName(resource)}
+            />
           </div>
         </ContentGrid>
       </CardContent>

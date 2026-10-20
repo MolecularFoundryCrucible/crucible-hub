@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Added Print label to sample, dataset, project, and instrument pages, listing reachable label printers, prefilling the resource name, and remembering the last printer used.
 - Kept first and last names from being cleared once set on profiles, user administration, and service accounts, matching the API's rejection of empty names.
 - Let project editors and admins change and remove members up to their own role, following per-member permissions from the API instead of owner-only removal.
 - Unified the card layout of all directory and collection tables with the action beside the title, sized the dataset files and processing tables from their own width instead of the window, fixed file sizes and sample types disappearing at some widths, named every table for screen readers, and fixed the project data toolbar overflowing on phones.

@@ -2,10 +2,12 @@ import { z } from "zod"
 
 import { resourceSortSchema, sortDirectionSchema } from "./collection-query"
 import { datasetFacetFieldSchema, sampleFacetFieldSchema } from "./facets"
+import { printerIdSchema } from "./print"
 
 export const themePreferenceSchema = z.enum(["system", "light", "dark"])
 export const recordKindPreferenceSchema = z.enum(["samples", "datasets"])
 export const homeRecentScopePreferenceSchema = z.enum(["all", "mine"])
+export const labelPrinterPreferenceSchema = printerIdSchema
 export const directorySortFieldSchema = z.enum([
   "name",
   "created",
@@ -58,6 +60,7 @@ export const accountPreferencesSchema = z.object({
       home_recent_scope: homeRecentScopePreferenceSchema
         .optional()
         .catch(undefined),
+      label_printer: labelPrinterPreferenceSchema.optional().catch(undefined),
     })
     .optional()
     .catch(undefined),
@@ -75,6 +78,7 @@ export const accountPreferencesPatchSchema = z
         home_recent_scope: homeRecentScopePreferenceSchema
           .nullable()
           .optional(),
+        label_printer: labelPrinterPreferenceSchema.nullable().optional(),
       })
       .strict()
       .optional(),
