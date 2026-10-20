@@ -1901,7 +1901,7 @@ function workspaceScientificMetadataUpdate(
 
 export async function writeWorkspaceResourceMetadata(
   resourceMfid: string,
-  resourceKind: "sample" | "dataset",
+  resourceKind: "sample" | "dataset" | "project" | "instrument",
   update: WorkspaceScientificMetadataWrite,
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal

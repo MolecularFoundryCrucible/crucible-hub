@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
@@ -22,11 +23,6 @@ import {
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import {
-  ScientificMetadataExpansionAction,
-  ScientificMetadataViewer,
-  useScientificMetadataExpansion,
-} from "@/components/crucible/scientific-metadata"
-import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
@@ -42,10 +38,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
-import type {
-  WorkspaceProject,
-  WorkspaceScientificMetadata,
-} from "@/data/crucible/workspace-source"
+import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 import { ProjectSettingsForm } from "@/features/management-settings/settings-forms"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
 
@@ -113,7 +106,16 @@ function ProjectOverviewPage() {
       </ContentGridItem>
 
       <ContentGridItem span="narrow">
-        <ProjectMetadata metadata={project.scientific_metadata} />
+        <ScientificMetadataEditor
+          mode={mode}
+          resource={{
+            capabilities: project.capabilities,
+            kind: "project",
+            scientific_metadata: project.scientific_metadata,
+            unique_id: project.unique_id,
+          }}
+          scope={scope}
+        />
       </ContentGridItem>
     </ContentGrid>
   )
@@ -272,33 +274,6 @@ function ProjectIdentity({
             </div>
           </dl>
         </ContentGrid>
-      </CardContent>
-    </Card>
-  )
-}
-
-function ProjectMetadata({
-  metadata,
-}: {
-  metadata: WorkspaceScientificMetadata | null
-}) {
-  const expansion = useScientificMetadataExpansion(metadata)
-  return (
-    <Card>
-      <CardHeader actionLayout="inline">
-        <CardTitle>Scientific metadata</CardTitle>
-        {expansion.canExpand ? (
-          <CardAction>
-            <ScientificMetadataExpansionAction expansion={expansion} />
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent>
-        <ScientificMetadataViewer
-          emptyMessage="This project does not currently expose scientific metadata."
-          expansion={expansion}
-          metadata={metadata}
-        />
       </CardContent>
     </Card>
   )

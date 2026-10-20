@@ -335,7 +335,7 @@ const scientificMetadataWriteSchema = z.discriminatedUnion("kind", [
 
 export const resourceScientificMetadataUpdateInputSchema = z
   .object({
-    resourceKind: z.enum(["sample", "dataset"]),
+    resourceKind: z.enum(["sample", "dataset", "project", "instrument"]),
     resourceMfid: canonicalResourceMfidSchema,
     scenario: fixtureScenarioSchema.optional(),
     update: scientificMetadataWriteSchema,

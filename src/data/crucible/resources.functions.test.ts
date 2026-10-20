@@ -308,7 +308,7 @@ describe("resource server function input", () => {
   it("rejects invalid resource metadata write envelopes", () => {
     expect(() =>
       resourceScientificMetadataUpdateInputSchema.parse({
-        resourceKind: "instrument",
+        resourceKind: "file",
         resourceMfid: "sample-mfid",
         update: { kind: "replace", metadata: {} },
       })

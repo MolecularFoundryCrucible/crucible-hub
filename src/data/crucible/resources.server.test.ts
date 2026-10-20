@@ -862,6 +862,22 @@ describe("workspace resource sources", () => {
     })
   })
 
+  it.each([
+    { kind: "project" as const, mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z3" },
+    { kind: "instrument" as const, mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z4" },
+  ])("writes fixture scientific metadata for a $kind", async ({ kind, mfid }) => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    const result = await writeWorkspaceResourceMetadata(mfid, kind, {
+      kind: "merge",
+      metadata: { beamline: "8.3.2" },
+    })
+
+    expect(result.unique_id).toBe(mfid)
+    expect(result.scientific_metadata).toMatchObject({ beamline: "8.3.2" })
+  })
+
   it("merges fixture scientific metadata without persisting it", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")

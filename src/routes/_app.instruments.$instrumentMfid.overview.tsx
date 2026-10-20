@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
@@ -28,11 +29,6 @@ import {
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import {
-  ScientificMetadataExpansionAction,
-  ScientificMetadataViewer,
-  useScientificMetadataExpansion,
-} from "@/components/crucible/scientific-metadata"
-import {
   Card,
   CardAction,
   CardContent,
@@ -44,10 +40,7 @@ import {
   resourceQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { InstrumentSettingsForm } from "@/features/management-settings/settings-forms"
-import type {
-  WorkspaceResourceDetail,
-  WorkspaceScientificMetadata,
-} from "@/data/crucible/workspace-source"
+import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 
@@ -105,7 +98,11 @@ function InstrumentOverviewPage() {
         <InstrumentIdentity instrument={resource} />
       </ContentGridItem>
       <ContentGridItem span="full">
-        <InstrumentMetadata metadata={resource.scientific_metadata} />
+        <ScientificMetadataEditor
+          mode={mode}
+          resource={resource}
+          scope={scope}
+        />
       </ContentGridItem>
     </ContentGrid>
   )
@@ -273,33 +270,6 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
             </div>
           </dl>
         </ContentGrid>
-      </CardContent>
-    </Card>
-  )
-}
-
-function InstrumentMetadata({
-  metadata,
-}: {
-  metadata: WorkspaceScientificMetadata | null
-}) {
-  const expansion = useScientificMetadataExpansion(metadata)
-  return (
-    <Card>
-      <CardHeader actionLayout="inline">
-        <CardTitle>Scientific metadata</CardTitle>
-        {expansion.canExpand ? (
-          <CardAction>
-            <ScientificMetadataExpansionAction expansion={expansion} />
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent>
-        <ScientificMetadataViewer
-          emptyMessage="This instrument does not currently expose scientific metadata."
-          expansion={expansion}
-          metadata={metadata}
-        />
       </CardContent>
     </Card>
   )

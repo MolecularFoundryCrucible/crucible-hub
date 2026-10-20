@@ -16,6 +16,7 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
+import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { updateWorkspaceResourceMetadata } from "@/data/crucible/resources.functions"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
@@ -108,7 +109,9 @@ export function mergeScientificMetadataUpdate(
 ): WorkspaceResourceDetail | null | undefined {
   if (
     !resource ||
-    (resource.kind !== "dataset" && resource.kind !== "sample")
+    (resource.kind !== "dataset" &&
+      resource.kind !== "sample" &&
+      resource.kind !== "instrument")
   ) {
     return resource
   }
@@ -179,20 +182,43 @@ export function ScientificMetadataForm({
   async function save(update: WorkspaceScientificMetadataWrite) {
     try {
       const confirmed = await mutation.mutateAsync(update)
-      const resourceQuery = resourceQueryOptions(scope, resource.unique_id)
-      queryClient.setQueryData(resourceQuery.queryKey, (current) =>
-        mergeScientificMetadataUpdate(current, confirmed.scientific_metadata)
-      )
+      const detailKey =
+        resource.kind === "project"
+          ? projectQueryOptions(scope, resource.unique_id).queryKey
+          : resourceQueryOptions(scope, resource.unique_id).queryKey
+      if (resource.kind === "project") {
+        queryClient.setQueryData(
+          projectQueryOptions(scope, resource.unique_id).queryKey,
+          (current) =>
+            current
+              ? {
+                  ...current,
+                  scientific_metadata: confirmed.scientific_metadata,
+                }
+              : current
+        )
+      } else {
+        queryClient.setQueryData(
+          resourceQueryOptions(scope, resource.unique_id).queryKey,
+          (current) =>
+            mergeScientificMetadataUpdate(
+              current,
+              confirmed.scientific_metadata
+            )
+        )
+      }
       if (mode === "api") {
         void queryClient.invalidateQueries({
           exact: true,
-          queryKey: resourceQuery.queryKey,
+          queryKey: detailKey,
         })
         void queryClient.invalidateQueries({
-          queryKey:
-            resource.kind === "sample"
-              ? crucibleKeys.sampleLists(scope)
-              : crucibleKeys.datasetLists(scope),
+          queryKey: {
+            dataset: crucibleKeys.datasetLists,
+            instrument: crucibleKeys.instrumentLists,
+            project: crucibleKeys.projectLists,
+            sample: crucibleKeys.sampleLists,
+          }[resource.kind](scope),
         })
         void queryClient.invalidateQueries({
           queryKey: crucibleKeys.searches(scope),

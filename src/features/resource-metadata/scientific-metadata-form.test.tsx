@@ -135,4 +135,27 @@ describe("scientific metadata editor", () => {
       },
     })
   })
+
+  it("updates scientific metadata on instrument resource detail", () => {
+    const instrument = {
+      ...sample,
+      description: null,
+      instrument_id: "hxm",
+      instrument_type: null,
+      kind: "instrument",
+      location: "Bldg 72",
+      manufacturer: null,
+      model: null,
+      other_id: null,
+      other_id_source: null,
+      status: null,
+    } as unknown as WorkspaceResourceDetail
+
+    expect(
+      mergeScientificMetadataUpdate(instrument, { beamline: "8.3.2" })
+    ).toMatchObject({
+      kind: "instrument",
+      scientific_metadata: { beamline: "8.3.2" },
+    })
+  })
 })

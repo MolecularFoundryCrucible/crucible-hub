@@ -14,12 +14,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
+import type { WorkspaceScientificMetadata } from "@/data/crucible/workspace-source"
 
-export type EditableResource = Extract<
-  WorkspaceResourceDetail,
-  { kind: "dataset" | "sample" }
->
+export type EditableResource = {
+  capabilities?: { can_edit?: boolean } | null
+  kind: "dataset" | "instrument" | "project" | "sample"
+  scientific_metadata: WorkspaceScientificMetadata | null
+  unique_id: string
+}
 
 const ScientificMetadataForm = lazyRouteComponent(
   () => import("./scientific-metadata-form"),
@@ -58,7 +60,7 @@ export function ScientificMetadataEditor({
       </CardHeader>
       <CardContent>
         <ScientificMetadataViewer
-          emptyMessage="This resource does not currently expose scientific metadata."
+          emptyMessage={`This ${resource.kind} does not currently expose scientific metadata.`}
           expansion={expansion}
           metadata={resource.scientific_metadata}
         />
