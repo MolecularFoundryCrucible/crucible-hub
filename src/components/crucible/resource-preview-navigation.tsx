@@ -28,7 +28,13 @@ export const resourceDetailSearchSchema = resourcePreviewSearchSchema.extend({
 })
 const trailSchema = z.object({
   hostKind: z
-    .enum(["data", "deletion-requests", "project-data", "resource"])
+    .enum([
+      "data",
+      "deletion-requests",
+      "instrument-data",
+      "project-data",
+      "resource",
+    ])
     .default("resource"),
   owner: z.string(),
   origin: previewMfidSchema,
@@ -40,6 +46,7 @@ type PreviewTrail = z.infer<typeof trailSchema>
 export type ResourcePreviewHost =
   | { kind: "data"; preview: unknown }
   | { kind: "deletion-requests"; preview: unknown }
+  | { kind: "instrument-data"; instrumentMfid: string; preview: unknown }
   | { kind: "project-data"; preview: unknown; projectMfid: string }
   | {
       kind: "resource"
@@ -144,10 +151,12 @@ const dataRoute = getRouteApi("/_app/data")
 const deletionRequestsRoute = getRouteApi("/_app/deletion-requests")
 const sampleRoute = getRouteApi("/_app/samples/$sampleMfid")
 const projectDataRoute = getRouteApi("/_app/projects/$projectMfid/")
+const instrumentDataRoute = getRouteApi("/_app/instruments/$instrumentMfid/")
 type DataSearch = ReturnType<typeof dataRoute.useSearch>
 type DeletionRequestsSearch = ReturnType<typeof deletionRequestsRoute.useSearch>
 type ResourceSearch = ReturnType<typeof sampleRoute.useSearch>
 type ProjectDataSearch = ReturnType<typeof projectDataRoute.useSearch>
+type InstrumentDataSearch = ReturnType<typeof instrumentDataRoute.useSearch>
 
 export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
   const origin =
@@ -155,9 +164,11 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       ? host.resourceMfid
       : host.kind === "project-data"
         ? host.projectMfid
-        : host.kind === "deletion-requests"
-          ? deletionRequestsPreviewOrigin
-          : globalDataPreviewOrigin
+        : host.kind === "instrument-data"
+          ? host.instrumentMfid
+          : host.kind === "deletion-requests"
+            ? deletionRequestsPreviewOrigin
+            : globalDataPreviewOrigin
   const { preview, invalidPreview } = resolveResourcePreview(host.preview)
   const hasPreview = preview !== undefined || invalidPreview
   const scope = useWorkspaceScope()
@@ -287,6 +298,19 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       })
       return
     }
+    if (host.kind === "instrument-data") {
+      void router.navigate({
+        ...common,
+        from: "/instruments/$instrumentMfid",
+        params: { instrumentMfid: host.instrumentMfid },
+        search: (currentSearch: InstrumentDataSearch) => ({
+          ...currentSearch,
+          preview: targetPreview(target),
+        }),
+        to: "/instruments/$instrumentMfid",
+      })
+      return
+    }
     void router.navigate({
       ...common,
       from: "/projects/$projectMfid",
@@ -359,6 +383,19 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
         from: "/deletion-requests",
         to: "/deletion-requests",
         search: (currentSearch: DeletionRequestsSearch) => ({
+          ...currentSearch,
+          preview: undefined,
+        }),
+      })
+      return
+    }
+    if (host.kind === "instrument-data") {
+      void router.navigate({
+        ...common,
+        from: "/instruments/$instrumentMfid",
+        to: "/instruments/$instrumentMfid",
+        params: { instrumentMfid: host.instrumentMfid },
+        search: (currentSearch: InstrumentDataSearch) => ({
           ...currentSearch,
           preview: undefined,
         }),
@@ -641,6 +678,17 @@ export function ResourcePreviewLink({
           preview,
         }),
         to: "/deletion-requests",
+      })
+    }
+    if (host?.kind === "instrument-data") {
+      return router.navigate({
+        ...options,
+        params: { instrumentMfid: host.instrumentMfid },
+        search: (currentSearch: InstrumentDataSearch) => ({
+          ...currentSearch,
+          preview,
+        }),
+        to: "/instruments/$instrumentMfid",
       })
     }
     return router.navigate({

@@ -30,6 +30,12 @@ import {
 } from "@/components/crucible/cursor-resource-collection"
 import { InstrumentDatasetCollection } from "@/components/crucible/instrument-dataset-collection"
 import {
+  ResourcePreviewContext,
+  resourcePreviewSearchSchema,
+  useResourcePreviewNavigation,
+} from "@/components/crucible/resource-preview-navigation"
+import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
+import {
   resourceSiblingSequenceLabel,
   useRegisterResourceSiblings,
 } from "@/components/crucible/resource-sibling-navigation"
@@ -69,7 +75,7 @@ import {
   useDefaultSort,
 } from "@/features/preferences/data-group-by"
 
-const instrumentDatasetSearchSchema = z.object({
+const instrumentDatasetSearchSchema = resourcePreviewSearchSchema.extend({
   ...collectionBrowseSearchFields,
   createdFrom: collectionFilterFields.createdFrom.catch(undefined),
   createdTo: collectionFilterFields.createdTo.catch(undefined),
@@ -210,6 +216,11 @@ function InstrumentDatasetsPage() {
   const instrument = instrumentRoute.useLoaderData()
   const scope = useWorkspaceScope()
   const instrumentMfid = instrument?.instrumentMfid ?? ""
+  const navigation = useResourcePreviewNavigation({
+    instrumentMfid: instrumentMfid || routeInstrumentMfid,
+    kind: "instrument-data",
+    preview: search.preview,
+  })
   const dataGroupBy = useDataGroupBy(
     instrument?.isInstrument ? instrument.dataGroupBy : undefined
   )
@@ -372,57 +383,60 @@ function InstrumentDatasetsPage() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <CollectionToolbar
-        actions={
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <InstrumentDatasetFilters
-              defaultOrdering={defaultOrdering}
-              onApply={(values) =>
-                updateBrowse({
-                  createdFrom: values.createdFrom,
-                  createdTo: values.createdTo,
-                  ...collectionOrderingSearchState(
-                    values.sort,
-                    values.direction,
-                    defaultOrdering
-                  ),
-                })
-              }
-              values={{
-                createdFrom: search.createdFrom,
-                createdTo: search.createdTo,
-                direction: search.direction,
-                sort: search.sort,
-              }}
-            />
-            <CollectionGroupControl
-              field={browse.field}
-              id="instrument-dataset-group-field"
-              onChange={changeGroup}
-              options={instrumentDatasetBrowseOptions}
-              view={browse.view}
-            />
-          </div>
-        }
-        primary={<h2 className="text-title-section">Datasets</h2>}
-      />
-      {browse.view === "grouped" ? (
-        <DatasetCollectionBrowser
-          direction={browse.direction}
-          field={browse.field}
-          filters={baseFilters}
-          onOrderChange={changeGroupOrder}
-          order={browse.order}
-          onSelect={selectGroup}
-          selection={browse.selection}
-        >
-          {content}
-        </DatasetCollectionBrowser>
-      ) : (
-        content
-      )}
-    </div>
+    <ResourcePreviewContext.Provider value={navigation}>
+      <div className="flex min-w-0 flex-col gap-4">
+        <CollectionToolbar
+          actions={
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <InstrumentDatasetFilters
+                defaultOrdering={defaultOrdering}
+                onApply={(values) =>
+                  updateBrowse({
+                    createdFrom: values.createdFrom,
+                    createdTo: values.createdTo,
+                    ...collectionOrderingSearchState(
+                      values.sort,
+                      values.direction,
+                      defaultOrdering
+                    ),
+                  })
+                }
+                values={{
+                  createdFrom: search.createdFrom,
+                  createdTo: search.createdTo,
+                  direction: search.direction,
+                  sort: search.sort,
+                }}
+              />
+              <CollectionGroupControl
+                field={browse.field}
+                id="instrument-dataset-group-field"
+                onChange={changeGroup}
+                options={instrumentDatasetBrowseOptions}
+                view={browse.view}
+              />
+            </div>
+          }
+          primary={<h2 className="text-title-section">Datasets</h2>}
+        />
+        {browse.view === "grouped" ? (
+          <DatasetCollectionBrowser
+            direction={browse.direction}
+            field={browse.field}
+            filters={baseFilters}
+            onOrderChange={changeGroupOrder}
+            order={browse.order}
+            onSelect={selectGroup}
+            selection={browse.selection}
+          >
+            {content}
+          </DatasetCollectionBrowser>
+        ) : (
+          content
+        )}
+      </div>
+      <ResourceInspector navigation={navigation} />
+    </ResourcePreviewContext.Provider>
   )
 }
 
