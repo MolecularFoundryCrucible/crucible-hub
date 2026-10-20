@@ -24,7 +24,7 @@ export function ResourceSectionNavigation({
         {children}
       </nav>
       {actions ? (
-        <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">
+        <div className="ml-auto flex max-w-full min-w-0 flex-wrap items-center justify-end gap-2">
           {actions}
         </div>
       ) : null}

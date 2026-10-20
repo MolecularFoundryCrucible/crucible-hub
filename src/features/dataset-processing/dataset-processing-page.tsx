@@ -192,7 +192,7 @@ function FilesAndIngestionCard({
                 "date",
                 "action",
               ]}
-              className="table-fixed md:min-w-processing-files-table xl:min-w-processing-files-table-wide"
+              className="table-fixed"
               mdOnly={[4, 5]}
               wideOnly={[1, 2]}
               colgroup={<ProcessingFilesColumns />}
@@ -329,11 +329,11 @@ function ProcessingFilesColumns() {
   return (
     <colgroup>
       <col />
-      <col className="hidden xl:table-column xl:w-column-compact" />
-      <col className="hidden xl:table-column xl:w-column-compact" />
+      <col className="hidden @4xl:table-column @4xl:w-column-compact" />
+      <col className="hidden @4xl:table-column @4xl:w-column-compact" />
       <col className="w-column-label" />
-      <col className="hidden md:table-column md:w-column-person" />
-      <col className="hidden md:table-column md:w-column-date" />
+      <col className="hidden @3xl:table-column @3xl:w-column-person" />
+      <col className="hidden @3xl:table-column @3xl:w-column-date" />
       <col className="w-column-action" />
     </colgroup>
   )
@@ -358,15 +358,15 @@ function ProcessingTablePending({
 }) {
   return (
     <div aria-label={`Loading ${label}`} role="status">
-      <Table className={className}>
+      <Table aria-label={label} className={className}>
         {colgroup}
         <TableHeader>
           <TableRow>
             {columns.map((column, index) => (
               <TableHead
                 className={cn(
-                  mdOnly.includes(index) && "hidden md:table-cell",
-                  wideOnly.includes(index) && "hidden xl:table-cell"
+                  mdOnly.includes(index) && "hidden @3xl:table-cell",
+                  wideOnly.includes(index) && "hidden @4xl:table-cell"
                 )}
                 kind={kinds[index]}
                 key={`${column}-${index}`}
@@ -382,8 +382,8 @@ function ProcessingTablePending({
               {columns.map((column, columnIndex) => (
                 <TableCell
                   className={cn(
-                    mdOnly.includes(columnIndex) && "hidden md:table-cell",
-                    wideOnly.includes(columnIndex) && "hidden xl:table-cell"
+                    mdOnly.includes(columnIndex) && "hidden @3xl:table-cell",
+                    wideOnly.includes(columnIndex) && "hidden @4xl:table-cell"
                   )}
                   key={`${column}-${columnIndex}`}
                   kind={kinds[columnIndex]}
@@ -424,18 +424,18 @@ function ProcessingFilesTable({
   )
 
   return (
-    <Table className="table-fixed md:min-w-processing-files-table xl:min-w-processing-files-table-wide">
+    <Table aria-label="Files and ingestion" className="table-fixed">
       <ProcessingFilesColumns />
       <TableHeader>
         <TableRow>
           <TableHead>File</TableHead>
-          <TableHead className="hidden xl:table-cell">Storage</TableHead>
-          <TableHead kind="numeric" className="hidden pr-4 xl:table-cell">
+          <TableHead className="hidden @4xl:table-cell">Storage</TableHead>
+          <TableHead kind="numeric" className="hidden pr-4 @4xl:table-cell">
             Size
           </TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="hidden md:table-cell">Ingestor</TableHead>
-          <TableHead className="hidden md:table-cell" kind="date">
+          <TableHead className="hidden @3xl:table-cell">Ingestor</TableHead>
+          <TableHead className="hidden @3xl:table-cell" kind="date">
             Updated
           </TableHead>
           <TableHead kind="action">
@@ -456,15 +456,17 @@ function ProcessingFilesTable({
                   nameContent={<FileOpenLink file={file} scenario={scenario} />}
                   presentation="collection"
                 />
-                <span className="mt-0.5 block truncate pl-6 text-supporting text-muted-foreground md:hidden">
-                  {request?.ingestionClass ?? "Auto-detect"} ·{" "}
+                <span className="mt-0.5 block truncate pl-6 text-supporting text-muted-foreground @4xl:hidden">
+                  <span className="@3xl:hidden">
+                    {request?.ingestionClass ?? "Auto-detect"} ·{" "}
+                  </span>
                   {formatBytes(file.size)}
                 </span>
               </TableCell>
-              <TableCell className="hidden truncate xl:table-cell">
+              <TableCell className="hidden truncate @4xl:table-cell">
                 {file.storage_backend}
               </TableCell>
-              <TableCell kind="numeric" className="hidden pr-4 xl:table-cell">
+              <TableCell kind="numeric" className="hidden pr-4 @4xl:table-cell">
                 {formatBytes(file.size)}
               </TableCell>
               <TableCell>
@@ -475,10 +477,10 @@ function ProcessingFilesTable({
                   status={request?.status}
                 />
               </TableCell>
-              <TableCell className="hidden truncate md:table-cell">
+              <TableCell className="hidden truncate @3xl:table-cell">
                 {request?.ingestionClass ?? "Auto-detect"}
               </TableCell>
-              <TableCell className="hidden md:table-cell" kind="date">
+              <TableCell className="hidden @3xl:table-cell" kind="date">
                 <LocalDateTime
                   fallback="-"
                   value={request?.timeCompleted ?? request?.timeCreated}
@@ -513,15 +515,15 @@ function IngestionRequestHistory({
           Showing {requests.length} of {total}
         </p>
       ) : null}
-      <Table>
+      <Table aria-label="Ingestion requests">
         <TableHeader>
           <TableRow>
             <TableHead>Request</TableHead>
-            <TableHead className="hidden md:table-cell">File MFID</TableHead>
+            <TableHead className="hidden @3xl:table-cell">File MFID</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="hidden md:table-cell">Ingestor</TableHead>
+            <TableHead className="hidden @3xl:table-cell">Ingestor</TableHead>
             <TableHead kind="date">Created</TableHead>
-            <TableHead className="hidden md:table-cell" kind="date">
+            <TableHead className="hidden @3xl:table-cell" kind="date">
               Completed
             </TableHead>
           </TableRow>
@@ -533,17 +535,17 @@ function IngestionRequestHistory({
             >
               <TableCell>
                 <span>{request.id ?? "-"}</span>
-                <span className="mt-0.5 block truncate text-supporting text-muted-foreground md:hidden">
+                <span className="mt-0.5 block truncate text-supporting text-muted-foreground @3xl:hidden">
                   {request.ingestionClass ?? "Auto-detect"}
                 </span>
               </TableCell>
-              <TableCell className="hidden md:table-cell">
+              <TableCell className="hidden @3xl:table-cell">
                 {request.fileMfid ? <MfidText value={request.fileMfid} /> : "-"}
               </TableCell>
               <TableCell>
                 <IngestionStatusBadge status={request.status} />
               </TableCell>
-              <TableCell className="hidden md:table-cell">
+              <TableCell className="hidden @3xl:table-cell">
                 <span>{request.ingestionClass ?? "Auto-detect"}</span>
                 {request.ingestionGitHash ? (
                   <span className="block font-mono text-supporting text-muted-foreground">
@@ -554,7 +556,7 @@ function IngestionRequestHistory({
               <TableCell kind="date">
                 <LocalDateTime fallback="-" value={request.timeCreated} />
               </TableCell>
-              <TableCell className="hidden md:table-cell" kind="date">
+              <TableCell className="hidden @3xl:table-cell" kind="date">
                 <LocalDateTime fallback="-" value={request.timeCompleted} />
               </TableCell>
             </TableRow>

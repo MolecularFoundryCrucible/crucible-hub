@@ -138,12 +138,12 @@ export function DatasetFiles({
 function FilesTablePending() {
   return (
     <div aria-label="Loading file metadata" role="status">
-      <Table>
+      <Table aria-label="Files">
         <TableHeader>
           <TableRow>
             <TableHead>Filename</TableHead>
-            <TableHead className="hidden sm:table-cell">Storage</TableHead>
-            <TableHead className="hidden sm:table-cell" kind="numeric">
+            <TableHead className="hidden @md:table-cell">Storage</TableHead>
+            <TableHead className="hidden @md:table-cell" kind="numeric">
               Size
             </TableHead>
             <TableHead kind="action">
@@ -157,10 +157,10 @@ function FilesTablePending() {
               <TableCell className="w-full max-w-0">
                 <Skeleton className="h-5 w-40 max-w-full" />
               </TableCell>
-              <TableCell className="hidden sm:table-cell">
+              <TableCell className="hidden @md:table-cell">
                 <Skeleton className="h-4 w-16" />
               </TableCell>
-              <TableCell className="hidden sm:table-cell" kind="numeric">
+              <TableCell className="hidden @md:table-cell" kind="numeric">
                 <Skeleton className="ml-auto h-4 w-12" />
               </TableCell>
               <TableCell kind="action">
@@ -224,7 +224,7 @@ export function FilesTable({
     setSort({ direction, field })
   return (
     <div>
-      <Table id={tableId}>
+      <Table aria-label="Files" id={tableId}>
         <TableHeader>
           <TableRow>
             <SortableTableHead
@@ -236,7 +236,7 @@ export function FilesTable({
             />
             <SortableTableHead
               active={sort.field === "storage"}
-              className="hidden sm:table-cell"
+              className="hidden @md:table-cell"
               direction={sort.direction}
               field="storage"
               label="Storage"
@@ -245,7 +245,7 @@ export function FilesTable({
             />
             <SortableTableHead
               active={sort.field === "size"}
-              className="hidden sm:table-cell"
+              className="hidden @md:table-cell"
               direction={sort.direction}
               field="size"
               kind="numeric"
@@ -267,14 +267,14 @@ export function FilesTable({
                   nameContent={<FileOpenLink file={file} scenario={scenario} />}
                   presentation="collection"
                 />
-                <span className="mt-0.5 block pl-6 text-supporting text-muted-foreground sm:hidden">
+                <span className="mt-0.5 block pl-6 text-supporting text-muted-foreground @md:hidden">
                   {file.storage_backend} · {formatBytes(file.size)}
                 </span>
               </TableCell>
-              <TableCell className="hidden sm:table-cell">
+              <TableCell className="hidden @md:table-cell">
                 {file.storage_backend}
               </TableCell>
-              <TableCell className="hidden sm:table-cell" kind="numeric">
+              <TableCell className="hidden @md:table-cell" kind="numeric">
                 {formatBytes(file.size)}
               </TableCell>
               <TableCell kind="action">

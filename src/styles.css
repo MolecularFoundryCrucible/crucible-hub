@@ -199,8 +199,6 @@
   --container-action-min: 22rem;
   --container-group-directory: 18rem;
   --container-state: 36rem;
-  --container-processing-files-table: 46.5rem;
-  --container-processing-files-table-wide: 58.5rem;
   --spacing-page-gutter: 1rem;
   --spacing-page-gutter-medium: 1.5rem;
   --spacing-page-gutter-wide: 2rem;
@@ -1443,190 +1441,141 @@ body {
 }
 
 @container (max-width: 25.999rem) {
-  .resource-directory-table,
-  .resource-directory-table tbody {
+  :is(.resource-collection-table, .resource-directory-table),
+  :is(.resource-collection-table, .resource-directory-table) > tbody {
     display: block;
+    min-width: 0;
   }
 
-  .resource-directory-table thead,
-  .resource-directory-table colgroup {
+  :is(.resource-collection-table, .resource-directory-table) > thead,
+  :is(.resource-collection-table, .resource-directory-table) > colgroup {
     display: none;
   }
 
-  .resource-directory-table tr {
+  :is(.resource-collection-table, .resource-directory-table) tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
     padding: calc(var(--spacing) * 3);
   }
 
-  .resource-directory-table td {
+  :is(.resource-collection-table, .resource-directory-table) td {
     display: block;
     padding: 0;
     white-space: normal;
   }
 
-  .resource-directory-table .resource-directory-name {
+  :is(.resource-collection-table, .resource-directory-table) td[data-label] {
+    align-items: center;
+    column-gap: calc(var(--spacing) * 1);
+    display: flex;
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  :is(.resource-collection-table, .resource-directory-table)
+    td[data-label]
+    > * {
+    min-width: 0;
+  }
+
+  :is(.resource-collection-table, .resource-directory-table)
+    td[data-label]::before {
+    color: var(--muted-foreground);
+    content: attr(data-label) ": ";
+    flex: none;
+  }
+
+  :is(.resource-collection-table, .resource-directory-table)
+    td:is(
+      .resource-collection-name,
+      .resource-directory-name,
+      .identity-directory-account,
+      .deletion-request-resource
+    ) {
+    display: block;
     grid-column: 1;
     min-width: 0;
   }
 
-  .resource-directory-table .resource-directory-name [data-directory-name],
-  .resource-directory-table .resource-directory-name [data-directory-name] > *,
-  .resource-collection-table .resource-collection-name [data-directory-name],
-  .resource-collection-table
-    .resource-collection-name
-    [data-directory-name]
-    > * {
+  :is(.resource-collection-table, .resource-directory-table)
+    td:is(
+      .resource-collection-name,
+      .resource-directory-name,
+      .identity-directory-account,
+      .deletion-request-resource
+    )::before {
+    content: none;
+  }
+
+  :is(.resource-collection-table, .resource-directory-table)
+    td:is(
+      .resource-collection-action,
+      .resource-directory-action,
+      .identity-directory-action,
+      .deletion-request-action
+    ) {
+    align-self: start;
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  :is(.resource-collection-table, .resource-directory-table)
+    td:is(
+      .resource-collection-action,
+      .resource-directory-action,
+      .identity-directory-action,
+      .deletion-request-action
+    )::before {
+    content: none;
+  }
+
+  .table-card-only:has(
+    ~ :is(.resource-collection-table, .resource-directory-table)
+  ) {
+    display: flex;
+  }
+
+  :is(.resource-collection-table, .resource-directory-table)
+    :is(.resource-collection-name, .resource-directory-name)
+    :is([data-directory-name], [data-directory-name] > *) {
     overflow: visible;
     overflow-wrap: anywhere;
     white-space: normal;
   }
 
-  .resource-directory-table .resource-directory-location,
-  .resource-directory-table .resource-directory-person,
-  .resource-directory-table .resource-directory-role,
-  .resource-directory-table .resource-directory-date {
-    align-items: center;
-    column-gap: calc(var(--spacing) * 1);
-    display: flex;
-    grid-column: 1 / -1;
-    min-width: 0;
-  }
-
-  .resource-directory-table .resource-directory-location > *,
-  .resource-directory-table .resource-directory-person > *,
-  .resource-directory-table .resource-directory-role > * {
-    min-width: 0;
-  }
-
-  .resource-directory-table .resource-directory-location::before,
-  .resource-directory-table .resource-directory-person::before,
-  .resource-directory-table .resource-directory-role::before,
-  .resource-directory-table .resource-directory-date::before {
-    color: var(--muted-foreground);
-    content: attr(data-label) ": ";
-    flex: none;
-  }
-
-  .resource-directory-table .resource-directory-action {
-    align-self: center;
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .resource-directory-table {
-    min-width: 0;
-  }
-
-  .table-card-only:has(~ .resource-directory-table) {
-    display: flex;
-  }
-}
-
-@container (max-width: 25.999rem) {
-  .resource-collection-table,
-  .resource-collection-table tbody {
-    display: block;
-  }
-
-  .resource-collection-table thead,
-  .resource-collection-table colgroup {
+  .resource-collection-table td.resource-collection-type {
     display: none;
-  }
-
-  .resource-collection-table tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
-    padding: calc(var(--spacing) * 3);
-  }
-
-  .resource-collection-table td {
-    display: block;
-    padding: 0;
-    white-space: normal;
-  }
-
-  .resource-collection-table .resource-collection-name {
-    grid-column: 1 / -1;
-  }
-
-  .resource-collection-table .resource-collection-type {
-    display: none;
-  }
-
-  .resource-collection-table .resource-collection-project,
-  .resource-collection-table .resource-collection-owner,
-  .resource-collection-table .resource-collection-date {
-    align-items: flex-start;
-    column-gap: calc(var(--spacing) * 1);
-    display: flex;
-    grid-column: 1;
-    min-width: 0;
-  }
-
-  .resource-collection-table .resource-collection-project > *,
-  .resource-collection-table .resource-collection-owner > * {
-    min-width: 0;
-  }
-
-  .resource-collection-table .resource-collection-project::before,
-  .resource-collection-table .resource-collection-owner::before,
-  .resource-collection-table .resource-collection-date::before {
-    color: var(--muted-foreground);
-    content: attr(data-label) ": ";
-    flex: none;
-  }
-
-  .resource-collection-table .resource-collection-action {
-    align-self: center;
-    grid-column: 2;
-    grid-row: 2 / 6;
-  }
-
-  .resource-collection-table {
-    min-width: 0;
-  }
-
-  .table-card-only:has(~ .resource-collection-table) {
-    display: flex;
   }
 }
 
 @container (max-width: 37.999rem) {
-  .identity-directory-table,
-  .identity-directory-table tbody {
+  :is(.identity-directory-table, .deletion-request-table),
+  :is(.identity-directory-table, .deletion-request-table) > tbody {
     display: block;
+    min-width: 0;
   }
 
-  .identity-directory-table thead,
-  .identity-directory-table colgroup {
+  :is(.identity-directory-table, .deletion-request-table) > thead,
+  :is(.identity-directory-table, .deletion-request-table) > colgroup {
     display: none;
   }
 
-  .identity-directory-table tr {
+  :is(.identity-directory-table, .deletion-request-table) tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
     padding: calc(var(--spacing) * 3);
   }
 
-  .identity-directory-table td {
+  :is(.identity-directory-table, .deletion-request-table) td {
     display: block;
     padding: 0;
     white-space: normal;
   }
 
-  .identity-directory-table .identity-directory-account {
-    grid-column: 1;
-    min-width: 0;
-  }
-
-  .identity-directory-table .identity-directory-mfid,
-  .identity-directory-table .identity-directory-email,
-  .identity-directory-table .identity-directory-role,
-  .identity-directory-table .identity-directory-activity {
+  :is(.identity-directory-table, .deletion-request-table) td[data-label] {
     align-items: center;
     column-gap: calc(var(--spacing) * 1);
     display: flex;
@@ -1634,123 +1583,88 @@ body {
     min-width: 0;
   }
 
-  .identity-directory-table .identity-directory-mfid > *,
-  .identity-directory-table .identity-directory-email > *,
-  .identity-directory-table .identity-directory-role > *,
-  .identity-directory-table .identity-directory-activity > * {
+  :is(.identity-directory-table, .deletion-request-table) td[data-label] > * {
     min-width: 0;
   }
 
-  .identity-directory-table .identity-directory-mfid::before,
-  .identity-directory-table .identity-directory-email::before,
-  .identity-directory-table .identity-directory-role::before,
-  .identity-directory-table .identity-directory-activity::before {
+  :is(.identity-directory-table, .deletion-request-table)
+    td[data-label]::before {
     color: var(--muted-foreground);
     content: attr(data-label) ": ";
     flex: none;
   }
 
-  .identity-directory-table .identity-directory-action {
-    align-self: center;
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .identity-directory-table {
-    min-width: 0;
-  }
-
-  .table-card-only:has(~ .identity-directory-table) {
-    display: flex;
-  }
-}
-
-@container (max-width: 37.999rem) {
-  .deletion-request-table,
-  .deletion-request-table tbody {
+  :is(.identity-directory-table, .deletion-request-table)
+    td:is(
+      .resource-collection-name,
+      .resource-directory-name,
+      .identity-directory-account,
+      .deletion-request-resource
+    ) {
     display: block;
-  }
-
-  .deletion-request-table thead,
-  .deletion-request-table colgroup {
-    display: none;
-  }
-
-  .deletion-request-table tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
-    padding: calc(var(--spacing) * 3);
-  }
-
-  .deletion-request-table td {
-    display: block;
-    padding: 0;
-    white-space: normal;
-  }
-
-  .deletion-request-table .deletion-request-resource {
     grid-column: 1;
     min-width: 0;
   }
 
-  .deletion-request-table .deletion-request-requester,
-  .deletion-request-table .deletion-request-project,
-  .deletion-request-table .deletion-request-date,
-  .deletion-request-table .deletion-request-status {
-    align-items: center;
-    column-gap: calc(var(--spacing) * 1);
-    display: flex;
-    grid-column: 1 / -1;
-    min-width: 0;
+  :is(.identity-directory-table, .deletion-request-table)
+    td:is(
+      .resource-collection-name,
+      .resource-directory-name,
+      .identity-directory-account,
+      .deletion-request-resource
+    )::before {
+    content: none;
   }
 
-  .deletion-request-table .deletion-request-requester::before,
-  .deletion-request-table .deletion-request-project::before,
-  .deletion-request-table .deletion-request-date::before,
-  .deletion-request-table .deletion-request-status::before {
-    color: var(--muted-foreground);
-    content: attr(data-label) ": ";
-    flex: none;
-  }
-
-  .deletion-request-table .deletion-request-action {
-    align-self: center;
+  :is(.identity-directory-table, .deletion-request-table)
+    td:is(
+      .resource-collection-action,
+      .resource-directory-action,
+      .identity-directory-action,
+      .deletion-request-action
+    ) {
+    align-self: start;
+    display: block;
     grid-column: 2;
     grid-row: 1;
+  }
+
+  :is(.identity-directory-table, .deletion-request-table)
+    td:is(
+      .resource-collection-action,
+      .resource-directory-action,
+      .identity-directory-action,
+      .deletion-request-action
+    )::before {
+    content: none;
+  }
+
+  .table-card-only:has(
+    ~ :is(.identity-directory-table, .deletion-request-table)
+  ) {
+    display: flex;
   }
 
   .deletion-request-table.has-selection tr {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
-  .deletion-request-table.has-selection .deletion-request-select {
+  .deletion-request-table.has-selection td.deletion-request-select {
     align-self: center;
     grid-column: 1;
     grid-row: 1;
   }
 
-  .deletion-request-table.has-selection .deletion-request-resource {
+  .deletion-request-table.has-selection td.deletion-request-resource {
     grid-column: 2;
   }
 
-  .deletion-request-table.has-selection .deletion-request-requester,
-  .deletion-request-table.has-selection .deletion-request-project,
-  .deletion-request-table.has-selection .deletion-request-date,
-  .deletion-request-table.has-selection .deletion-request-status {
+  .deletion-request-table.has-selection td[data-label] {
     grid-column: 2 / -1;
   }
 
-  .deletion-request-table.has-selection .deletion-request-action {
+  .deletion-request-table.has-selection td.deletion-request-action {
     grid-column: 3;
-  }
-
-  .deletion-request-table {
-    min-width: 0;
-  }
-
-  .table-card-only:has(~ .deletion-request-table) {
-    display: flex;
   }
 }
 

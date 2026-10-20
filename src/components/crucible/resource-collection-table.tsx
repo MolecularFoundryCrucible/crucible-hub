@@ -63,7 +63,7 @@ export function ResourceCollectionTable({
 }: ResourceCollectionTableProps) {
   return (
     <Table
-      aria-label={ariaLabel}
+      aria-label={ariaLabel ?? (kind === "dataset" ? "Datasets" : "Samples")}
       before={
         <TableSortControl
           direction={direction}
