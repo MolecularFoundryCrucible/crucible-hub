@@ -22,26 +22,6 @@
   }
 }
 
-[data-slot="sheet-content"].resource-inspector[data-inspector-kind="dataset"] {
-  --inspector-accent: var(--resource-dataset);
-}
-
-[data-slot="sheet-content"].resource-inspector[data-inspector-kind="sample"] {
-  --inspector-accent: var(--resource-sample);
-}
-
-[data-slot="sheet-content"].resource-inspector[data-inspector-kind="project"] {
-  --inspector-accent: var(--resource-project);
-}
-
-[data-slot="sheet-content"].resource-inspector[data-inspector-kind="instrument"] {
-  --inspector-accent: var(--resource-instrument);
-}
-
-[data-slot="sheet-content"].resource-inspector[data-inspector-kind] {
-  border-top: var(--focus-width) solid var(--inspector-accent, var(--border));
-}
-
 .entity-icon-well {
   display: inline-flex;
   flex-shrink: 0;
@@ -354,13 +334,7 @@
   place-items: center;
   padding: var(--spacing-page-gutter);
   position: relative;
-  background:
-    radial-gradient(
-      circle at 50% 0,
-      color-mix(in oklch, var(--sidebar) 28%, transparent),
-      transparent 65%
-    ),
-    var(--background);
+  background: var(--background);
 }
 
 .auth-page-sign-in::before {
@@ -397,7 +371,6 @@
 
 .auth-page-card[data-slot="card"] {
   --card-spacing: var(--spacing-auth-card);
-  border-top: var(--focus-width) solid var(--brand-crucible-orange);
   box-shadow: var(--shadow-sm);
 }
 
@@ -586,7 +559,7 @@
   --graph-node-height: 88;
   --graph-root-node-width: 272;
   --graph-root-node-height: 96;
-  --graph-node-border: 2;
+  --graph-node-border: 1;
   --graph-root-border: 3;
   --graph-root-overlay-opacity: 0.1;
   --graph-root-overlay-padding: 8;
@@ -858,7 +831,7 @@ body {
   width: calc(var(--graph-node-width) * 1px);
   height: calc(var(--graph-node-height) * 1px);
   align-items: center;
-  border: calc(var(--graph-node-border) * 1px) solid var(--graph-edge);
+  border: calc(var(--graph-node-border) * 1px) solid var(--border-strong);
   border-radius: var(--radius-xl);
   background: var(--graph-card);
   color: var(--graph-foreground);
@@ -872,21 +845,10 @@ body {
     transform var(--motion-fast) var(--motion-ease-standard);
 }
 
-.resource-graph-flow-node[data-kind="sample"] {
-  border-color: color-mix(in srgb, var(--resource-sample) 68%, var(--border));
-  border-left: 5px solid var(--resource-sample);
-}
-
-.resource-graph-flow-node[data-kind="dataset"] {
-  border-color: color-mix(in srgb, var(--resource-dataset) 68%, var(--border));
-  border-left: 5px solid var(--resource-dataset);
-}
-
 .resource-graph-flow-node[data-root] {
   width: calc(var(--graph-root-node-width) * 1px);
   height: calc(var(--graph-root-node-height) * 1px);
   border-width: calc(var(--graph-root-border) * 1px);
-  border-left-width: calc(var(--graph-root-border) * 1px);
   border-color: var(--graph-current);
   box-shadow:
     0 0 0 calc(var(--graph-root-overlay-padding) * 1px)

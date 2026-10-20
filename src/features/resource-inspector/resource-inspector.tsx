@@ -187,7 +187,7 @@ export function ResourceInspector({
             <ResourcePreviewLink
               aria-label="Back"
               back
-              className={buttonVariants({ size: "sm", variant: "outline" })}
+              className={buttonVariants({ size: "sm", variant: "ghost" })}
               mfid={navigation.previous}
             >
               <BackPreviewIcon aria-hidden="true" data-icon="inline-start" />
@@ -200,7 +200,7 @@ export function ResourceInspector({
                   aria-label="Back"
                   size="sm"
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                 />
               }
             >
@@ -586,7 +586,7 @@ export function InspectorDatasetThumbnails({
                 }
                 size="icon-sm"
                 type="button"
-                variant="outline"
+                variant="ghost"
               >
                 <PreviousSiblingIcon aria-hidden="true" />
               </Button>
@@ -603,7 +603,7 @@ export function InspectorDatasetThumbnails({
                 }
                 size="icon-sm"
                 type="button"
-                variant="outline"
+                variant="ghost"
               >
                 <NextSiblingIcon aria-hidden="true" />
               </Button>

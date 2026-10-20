@@ -177,7 +177,7 @@ export function ScientificMetadataExpansionAction({
       onClick={expansion.toggleAll}
       size="sm"
       type="button"
-      variant="outline"
+      variant="ghost"
     >
       {expansion.allExpanded ? "Collapse all" : "Expand all"}
     </Button>

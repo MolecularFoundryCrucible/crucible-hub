@@ -75,7 +75,7 @@ export function ResourceGraphLink({
 
   const labelName = name ?? mfid
   const ariaLabel = `Explore graph for ${labelName}`
-  const className = buttonVariants({ size: "sm", variant: "outline" })
+  const className = buttonVariants({ size: "sm", variant: "ghost" })
   const link =
     kind === "sample" ? (
       <Link

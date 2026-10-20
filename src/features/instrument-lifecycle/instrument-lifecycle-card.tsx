@@ -188,7 +188,11 @@ export function InstrumentLifecycleCard({
     <>
       <ManagementAction
         action={
-          <Button onClick={() => openDialog(true)} type="button">
+          <Button
+            onClick={() => openDialog(true)}
+            type="button"
+            variant="outline"
+          >
             Change status
           </Button>
         }

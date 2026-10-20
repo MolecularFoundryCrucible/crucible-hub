@@ -100,7 +100,7 @@ export function OneTimeCredentialDialog({
                       onClick={() => void copyCredential()}
                       size="icon"
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                     />
                   }
                 >

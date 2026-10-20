@@ -430,7 +430,7 @@ export function FileDownloadAction({
             disabled={pending || unavailable}
             onClick={pending || unavailable ? undefined : () => void download()}
             size="table-action"
-            variant="outline"
+            variant="ghost"
           >
             {pending ? <PendingIcon /> : <ActionIcon aria-hidden="true" />}
           </Button>

@@ -56,7 +56,7 @@ export function ProjectMembers({
         {manageMembers && projectMfid ? (
           <CardAction>
             <Link
-              className={buttonVariants({ size: "sm", variant: "outline" })}
+              className={buttonVariants({ size: "sm", variant: "ghost" })}
               params={{ projectMfid }}
               to="/projects/$projectMfid/settings"
             >
