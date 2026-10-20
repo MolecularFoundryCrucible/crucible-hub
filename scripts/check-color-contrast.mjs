@@ -94,11 +94,18 @@ for (const [theme, values] of Object.entries(themes)) {
 
   for (const surface of ["background", "card"]) {
     expectContrast(theme, values, "input", surface, 3)
-    expectContrast(theme, values, "action-border", surface, 3)
+    expectContrast(theme, values, "border-strong", surface, 3)
     expectContrast(theme, values, "ring", surface, 3, 0.5)
     expectContrast(theme, values, "selection", surface, 3)
     expectContrast(theme, values, "graph-edge", surface, 3)
   }
+
+  expectContrast(theme, values, "primary-foreground", "primary", 4.5)
+  expectContrast(theme, values, "primary-foreground", "primary-hover", 4.5)
+  expectContrast(theme, values, "secondary-foreground", "secondary", 4.5)
+  expectContrast(theme, values, "foreground", "action-pressed", 4.5)
+  expectContrast(theme, values, "foreground", "action-hover", 4.5)
+  expectContrast(theme, values, "muted-foreground", "muted", 4.5)
 
   for (const status of ["destructive", "success", "warning", "info"]) {
     expectContrast(theme, values, status, "card", 3)
@@ -127,6 +134,15 @@ for (const [theme, values] of Object.entries(themes)) {
       `access-role-${role}`,
       4.5
     )
+  }
+}
+
+const darkValues = declarations("\n.dark {")
+for (const [name, value] of shared) {
+  if (/^(palette|brand)-/.test(name)) continue
+  if (!/^(#|oklch\()/.test(value)) continue
+  if (!darkValues.has(name)) {
+    failures.push(`dark: --${name} has a literal light value but no dark value`)
   }
 }
 
