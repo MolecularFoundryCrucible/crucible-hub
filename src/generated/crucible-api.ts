@@ -715,9 +715,10 @@ export interface paths {
         /**
          * Add Associated File
          * @description Adds a file record to a dataset.
-         *     Creates the record if one with the same sha256_hash and dataset does not already exist.
+         *     Filenames are unique within a dataset. Repeating a filename with the same sha256_hash and size returns the existing record unchanged;
+         *     repeating it with different content returns 409 `filename_exists` with the existing file's MFID and ETag.
          *     Use POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.
-         *     Requires contributor access. A repeated hash returns the existing record unchanged.
+         *     Requires contributor access.
          */
         post: operations["add_associated_file_datasets__dataset_mfid__files_post"];
         delete?: never;
@@ -2680,28 +2681,6 @@ export interface paths {
         patch: operations["update_sample_samples__sample_mfid__patch"];
         trace?: never;
     };
-    "/samples/{sample_mfid}/datasets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Sample Datasets
-         * @deprecated
-         * @description Returns a list of all datasets linked to a given sample.
-         *     Deprecated: use GET /datasets?sample_mfid={sample_id}.
-         */
-        get: operations["list_sample_datasets_samples__sample_mfid__datasets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/service_accounts": {
         parameters: {
             query?: never;
@@ -2841,32 +2820,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/users/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Current User
-         * @deprecated
-         * @description Deprecated: use GET /account/profile.
-         */
-        get: operations["get_current_user_users_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Current User
-         * @deprecated
-         * @description Deprecated: use GET /account/profile and PATCH /account/profile.
-         */
-        patch: operations["update_current_user_users_me_patch"];
         trace?: never;
     };
     "/users/resolve": {
@@ -3038,7 +2991,10 @@ export interface paths {
         };
         /**
          * Verify User Apikey
+         * @deprecated
          * @description Returns validity and expiry info for the given user's API key. Admin only.
+         *
+         *     Deprecated: administrators get the same status as `api_key_status` from GET /users/{user_ref}.
          */
         get: operations["verify_user_apikey_users__user_ref__apikey_verify_get"];
         put?: never;
@@ -3304,9 +3260,9 @@ export interface components {
             /** Email */
             email?: string | null;
             /** First Name */
-            first_name?: string | null;
+            first_name?: string;
             /** Last Name */
-            last_name?: string | null;
+            last_name?: string;
             /** Username */
             username?: string | null;
         };
@@ -3394,13 +3350,13 @@ export interface components {
             /** Access Note */
             access_note?: string | null;
             /** Filename */
-            filename?: string | null;
+            filename?: string;
             /** Sha256 Hash */
-            sha256_hash?: string | null;
+            sha256_hash?: string;
             /** Size */
-            size?: number | null;
+            size?: number;
             /** Storage Backend */
-            storage_backend?: string | null;
+            storage_backend?: string;
             /** Storage Path */
             storage_path?: string | null;
         };
@@ -3773,7 +3729,7 @@ export interface components {
             /** Dataset Mfid */
             dataset_mfid: string;
             /** Dataset Name */
-            dataset_name: string;
+            dataset_name?: string | null;
             /**
              * Sample Id
              * @deprecated
@@ -4981,9 +4937,9 @@ export interface components {
          */
         ProjectUpdate: {
             /** Organization */
-            organization?: string | null;
+            organization?: string;
             /** Project Id */
-            project_id?: string | null;
+            project_id?: string;
             /** Status */
             status?: string | null;
             /** Title */
@@ -5372,7 +5328,7 @@ export interface components {
             /** Public */
             public?: boolean | null;
             /** Sample Name */
-            sample_name?: string | null;
+            sample_name?: string;
             /** Sample Type */
             sample_type?: string | null;
             /** Timestamp */
@@ -5772,9 +5728,9 @@ export interface components {
             /** Email */
             email?: string | null;
             /** First Name */
-            first_name?: string | null;
+            first_name?: string;
             /** Last Name */
-            last_name?: string | null;
+            last_name?: string;
             /** Username */
             username?: string | null;
         };
@@ -7653,6 +7609,13 @@ export interface operations {
                     "application/json": components["schemas"]["AssociatedFileRead"];
                 };
             };
+            /** @description A file with this filename already exists in the dataset with different content: `{"detail": {"code": "filename_exists", "file_mfid": ..., "etag": ..., "message": ...}}`; update it through `PATCH /files/{file_mfid}` (remote files) or `POST /files/{file_mfid}/upload/multipart/initiate` (GCS files). A filename reserved by an active multipart upload returns a plain string detail */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -7956,14 +7919,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Dataset not found, not readable, or pending deletion */
+            /** @description Dataset not found or not readable */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description The Idempotency-Key was already used for a different pipeline or parameters (`idempotency_key_reused`) */
+            /** @description The dataset has an active deletion request (`pending_deletion`), or the Idempotency-Key was already used for a different pipeline or parameters (`idempotency_key_reused`) */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -12511,48 +12474,6 @@ export interface operations {
             };
         };
     };
-    list_sample_datasets_samples__sample_mfid__datasets_get: {
-        parameters: {
-            query?: {
-                include_metadata?: boolean;
-                limit?: number | null;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Sample MFID. */
-                sample_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_service_accounts_service_accounts_get: {
         parameters: {
             query?: {
@@ -12933,82 +12854,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"] | components["schemas"]["UserPublicRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_current_user_users_me_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_current_user_users_me_patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AccountProfileUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"];
                 };
             };
             /** @description Validation Error */

@@ -447,26 +447,14 @@
             "title": "Email"
           },
           "first_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "First Name"
+            "minLength": 1,
+            "title": "First Name",
+            "type": "string"
           },
           "last_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Name"
+            "minLength": 1,
+            "title": "Last Name",
+            "type": "string"
           },
           "username": {
             "anyOf": [
@@ -677,48 +665,23 @@
             "title": "Access Note"
           },
           "filename": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Filename"
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
           },
           "sha256_hash": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sha256 Hash"
+            "minLength": 1,
+            "title": "Sha256 Hash",
+            "type": "string"
           },
           "size": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Size"
+            "title": "Size",
+            "type": "integer"
           },
           "storage_backend": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Storage Backend"
+            "minLength": 1,
+            "title": "Storage Backend",
+            "type": "string"
           },
           "storage_path": {
             "anyOf": [
@@ -1956,8 +1919,15 @@
             "type": "string"
           },
           "dataset_name": {
-            "title": "Dataset Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
           },
           "sample_id": {
             "deprecated": true,
@@ -1988,7 +1958,6 @@
         "required": [
           "dataset_id",
           "dataset_mfid",
-          "dataset_name",
           "sample_id",
           "sample_mfid",
           "sample_name",
@@ -5767,26 +5736,13 @@
         "description": "Partial update schema for Project. Only provided fields are modified.\n\nNo project_lead_orcid/email/username: leadership changes only through\nPOST /resources/{proj_id}/transfer_ownership, which moves the owner\nstanding and the denormalized lead pointer atomically — a bare field\nedit here never touched the actual owner standing at all. extra=\"forbid\"\nmeans sending one of those fields 422s at the schema layer rather than\nbeing silently dropped or requiring a runtime check in the route.",
         "properties": {
           "organization": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Organization"
+            "minLength": 1,
+            "title": "Organization",
+            "type": "string"
           },
           "project_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Id"
+            "title": "Project Id",
+            "type": "string"
           },
           "status": {
             "anyOf": [
@@ -7097,15 +7053,9 @@
             "title": "Public"
           },
           "sample_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sample Name"
+            "minLength": 1,
+            "title": "Sample Name",
+            "type": "string"
           },
           "sample_type": {
             "anyOf": [
@@ -8091,26 +8041,14 @@
             "title": "Email"
           },
           "first_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "First Name"
+            "minLength": 1,
+            "title": "First Name",
+            "type": "string"
           },
           "last_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Name"
+            "minLength": 1,
+            "title": "Last Name",
+            "type": "string"
           },
           "username": {
             "anyOf": [
@@ -13203,7 +13141,7 @@
         ]
       },
       "post": {
-        "description": "Adds a file record to a dataset.\nCreates the record if one with the same sha256_hash and dataset does not already exist.\nUse POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.\nRequires contributor access. A repeated hash returns the existing record unchanged.",
+        "description": "Adds a file record to a dataset.\nFilenames are unique within a dataset. Repeating a filename with the same sha256_hash and size returns the existing record unchanged;\nrepeating it with different content returns 409 `filename_exists` with the existing file's MFID and ETag.\nUse POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.\nRequires contributor access.",
         "operationId": "add_associated_file_datasets__dataset_mfid__files_post",
         "parameters": [
           {
@@ -13270,6 +13208,9 @@
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "409": {
+            "description": "A file with this filename already exists in the dataset with different content: `{\"detail\": {\"code\": \"filename_exists\", \"file_mfid\": ..., \"etag\": ..., \"message\": ...}}`; update it through `PATCH /files/{file_mfid}` (remote files) or `POST /files/{file_mfid}/upload/multipart/initiate` (GCS files). A filename reserved by an active multipart upload returns a plain string detail"
           },
           "422": {
             "content": {
@@ -13944,10 +13885,10 @@
             "description": "Caller is below contributor on the dataset"
           },
           "404": {
-            "description": "Dataset not found, not readable, or pending deletion"
+            "description": "Dataset not found or not readable"
           },
           "409": {
-            "description": "The Idempotency-Key was already used for a different pipeline or parameters (`idempotency_key_reused`)"
+            "description": "The dataset has an active deletion request (`pending_deletion`), or the Idempotency-Key was already used for a different pipeline or parameters (`idempotency_key_reused`)"
           },
           "422": {
             "description": "Unknown pipeline (`unknown_pipeline`) or invalid parameters (`invalid_parameters`)"
@@ -26051,113 +25992,6 @@
         ]
       }
     },
-    "/samples/{sample_mfid}/datasets": {
-      "get": {
-        "deprecated": true,
-        "description": "Returns a list of all datasets linked to a given sample.\nDeprecated: use GET /datasets?sample_mfid={sample_id}.",
-        "operationId": "list_sample_datasets_samples__sample_mfid__datasets_get",
-        "parameters": [
-          {
-            "description": "Sample MFID.",
-            "in": "path",
-            "name": "sample_mfid",
-            "required": true,
-            "schema": {
-              "description": "Sample MFID.",
-              "title": "Sample Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "include_metadata",
-            "required": false,
-            "schema": {
-              "default": false,
-              "title": "Include Metadata",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Limit"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "List Sample Datasets",
-        "tags": [
-          "samples"
-        ]
-      }
-    },
     "/service_accounts": {
       "get": {
         "description": "List service accounts for platform administration.",
@@ -27204,158 +27038,6 @@
         ]
       }
     },
-    "/users/me": {
-      "get": {
-        "deprecated": true,
-        "description": "Deprecated: use GET /account/profile.",
-        "operationId": "get_current_user_users_me_get",
-        "parameters": [
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Get Current User",
-        "tags": [
-          "users"
-        ]
-      },
-      "patch": {
-        "deprecated": true,
-        "description": "Deprecated: use GET /account/profile and PATCH /account/profile.",
-        "operationId": "update_current_user_users_me_patch",
-        "parameters": [
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AccountProfileUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Update Current User",
-        "tags": [
-          "users"
-        ]
-      }
-    },
     "/users/resolve": {
       "post": {
         "description": "Batch-resolve users by any mix of ORCIDs, usernames, or emails.\n`orcids` is matched against unique_id, so it also accepts service-account\nMFIDs; the response is keyed by unique_id. No email included.\nAny authenticated user can call this. Admins needing email should use GET /users/{user_ref}.",
@@ -28254,7 +27936,8 @@
     },
     "/users/{user_ref}/apikey/verify": {
       "get": {
-        "description": "Returns validity and expiry info for the given user's API key. Admin only.",
+        "deprecated": true,
+        "description": "Returns validity and expiry info for the given user's API key. Admin only.\n\nDeprecated: administrators get the same status as `api_key_status` from GET /users/{user_ref}.",
         "operationId": "verify_user_apikey_users__user_ref__apikey_verify_get",
         "parameters": [
           {
