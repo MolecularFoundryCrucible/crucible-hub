@@ -192,7 +192,11 @@ export function ProjectAssignmentCard({
     <>
       <ManagementAction
         action={
-          <Button onClick={() => setChooserOpen(true)} type="button">
+          <Button
+            onClick={() => setChooserOpen(true)}
+            type="button"
+            variant="outline"
+          >
             Choose project
           </Button>
         }

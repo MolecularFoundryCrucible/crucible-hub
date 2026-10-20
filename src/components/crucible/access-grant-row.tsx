@@ -20,6 +20,7 @@ export function AccessGrantListActions({
   addLabel,
   canAdd = true,
   disabled = false,
+  managing,
   onAdd,
   onRemove,
   removeCount = 0,
@@ -29,12 +30,14 @@ export function AccessGrantListActions({
   addLabel: string
   canAdd?: boolean
   disabled?: boolean
+  managing: boolean
   onAdd: () => void
   onRemove?: () => void
   removeCount?: number
   removeMode?: "remove" | "revoke"
 }) {
-  if (!canAdd && removeCount === 0) return null
+  const showAdd = canAdd && managing
+  if (!showAdd && removeCount === 0) return null
   const AddIcon = addIcon === "access" ? AddAccessGrantIcon : AddMemberIcon
   const removeLabel =
     removeMode === "remove"
@@ -58,8 +61,13 @@ export function AccessGrantListActions({
           {removeLabel}
         </Button>
       ) : null}
-      {canAdd ? (
-        <Button disabled={disabled} onClick={onAdd} type="button">
+      {showAdd ? (
+        <Button
+          disabled={disabled}
+          onClick={onAdd}
+          type="button"
+          variant="outline"
+        >
           <AddIcon aria-hidden="true" data-icon="inline-start" />
           {addLabel}
         </Button>

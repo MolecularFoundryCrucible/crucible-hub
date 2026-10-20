@@ -21,29 +21,28 @@ export function ManagementToggle({
 }) {
   const label = `Manage ${subject}`
   const Icon = active ? FinishManagingIcon : ManageIcon
+  const button = (
+    <Button
+      aria-label={label}
+      aria-pressed={active}
+      disabled={disabled}
+      onClick={() => onChange(!active)}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
+      <Icon aria-hidden="true" data-icon="inline-start" />
+      {active ? "Done" : "Edit"}
+    </Button>
+  )
+  if (!disabled || !disabledReason) return button
 
   return (
     <Tooltip>
       <TooltipTrigger render={<span className="inline-flex" />} tabIndex={-1}>
-        <Button
-          aria-label={label}
-          aria-pressed={active}
-          disabled={disabled}
-          onClick={() => onChange(!active)}
-          size="icon-sm"
-          type="button"
-          variant="outline"
-        >
-          <Icon aria-hidden="true" />
-        </Button>
+        {button}
       </TooltipTrigger>
-      <TooltipContent>
-        {disabled && disabledReason
-          ? disabledReason
-          : active
-            ? `Finish managing ${subject}`
-            : label}
-      </TooltipContent>
+      <TooltipContent>{disabledReason}</TooltipContent>
     </Tooltip>
   )
 }

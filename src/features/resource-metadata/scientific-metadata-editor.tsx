@@ -47,7 +47,7 @@ export function ScientificMetadataEditor({
               <ScientificMetadataExpansionAction expansion={expansion} />
               {resource.capabilities?.can_edit === true ? (
                 <EditableCardTrigger
-                  iconOnly
+                  compact
                   label="Edit scientific metadata"
                   onClick={() => setEditing(true)}
                   onPreload={() => void ScientificMetadataForm.preload?.()}

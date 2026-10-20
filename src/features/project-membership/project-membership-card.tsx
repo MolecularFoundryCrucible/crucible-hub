@@ -302,6 +302,7 @@ export function ProjectMembershipCard({
           addLabel="Add member"
           canAdd={canManage}
           disabled={mutationPending}
+          managing={managing}
           onAdd={() => setAddMemberOpen(true)}
           onRemove={() => setRemoveDialogOpen(true)}
           removeCount={removableSelection.length}

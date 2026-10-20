@@ -126,6 +126,11 @@ function renderCard(
   return queryClient
 }
 
+function ensureManaging(name: string) {
+  const toggle = screen.getByRole("button", { name })
+  if (toggle.getAttribute("aria-pressed") !== "true") fireEvent.click(toggle)
+}
+
 describe("ProjectMembershipCard", () => {
   afterEach(cleanup)
 
@@ -183,6 +188,7 @@ describe("ProjectMembershipCard", () => {
     )
     const queryClient = renderCard()
 
+    ensureManaging("Manage members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)
@@ -239,6 +245,7 @@ describe("ProjectMembershipCard", () => {
     )
     renderCard()
 
+    ensureManaging("Manage members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)
@@ -277,6 +284,7 @@ describe("ProjectMembershipCard", () => {
     vi.mocked(addWorkspaceProjectMember).mockResolvedValue(ok(project.members))
     renderCard()
 
+    ensureManaging("Manage members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)
@@ -329,6 +337,7 @@ describe("ProjectMembershipCard", () => {
     )
     renderCard()
 
+    ensureManaging("Manage members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)

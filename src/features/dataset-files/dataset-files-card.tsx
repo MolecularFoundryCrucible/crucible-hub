@@ -80,7 +80,12 @@ export function DatasetFiles({
         <CardTitle>Files{files?.length ? ` (${files.length})` : ""}</CardTitle>
         {uploadAvailable ? (
           <CardAction>
-            <Button onClick={() => setUploadOpen(true)} size="sm" type="button">
+            <Button
+              onClick={() => setUploadOpen(true)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               <AddFilesIcon aria-hidden="true" data-icon="inline-start" />
               Add files
             </Button>

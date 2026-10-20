@@ -118,28 +118,42 @@ export function ResourceManagePage({
           </Empty>
         </ContentBoundary>
       )}
-      <ContentBoundary width="reading">
-        <Card>
+      <ContentBoundary
+        className="flex flex-col gap-page-section"
+        width="reading"
+      >
+        {canManageAccess ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Resource management</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y px-0">
+              <div className="scroll-mt-page-section" id="manage-project">
+                <ProjectAssignmentCard
+                  mode={mode}
+                  presentation="row"
+                  resource={resource}
+                  scope={scope}
+                />
+              </div>
+              {resource.kind === "dataset" ? (
+                <div className="scroll-mt-page-section" id="manage-instrument">
+                  <DatasetInstrumentAssignmentCard
+                    mode={mode}
+                    presentation="row"
+                    resource={resource}
+                    scope={scope}
+                  />
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        ) : null}
+        <Card variant="destructive">
           <CardHeader>
-            <CardTitle>Resource management</CardTitle>
+            <CardTitle>Danger zone</CardTitle>
           </CardHeader>
           <CardContent className="divide-y px-0">
-            {canManageAccess ? (
-              <ProjectAssignmentCard
-                mode={mode}
-                presentation="row"
-                resource={resource}
-                scope={scope}
-              />
-            ) : null}
-            {canManageAccess && resource.kind === "dataset" ? (
-              <DatasetInstrumentAssignmentCard
-                mode={mode}
-                presentation="row"
-                resource={resource}
-                scope={scope}
-              />
-            ) : null}
             {canTransfer ? (
               <OwnershipTransferCard
                 mode={mode}
@@ -308,7 +322,11 @@ function ManagedResourceAccess({
 
   if (isPending) {
     return (
-      <Card aria-busy="true">
+      <Card
+        aria-busy="true"
+        className="scroll-mt-page-section"
+        id="manage-access"
+      >
         <CardHeader>
           <CardTitle>Access management</CardTitle>
         </CardHeader>
@@ -362,7 +380,7 @@ function ManagedResourceAccess({
 
   return (
     <>
-      <Card>
+      <Card className="scroll-mt-page-section" id="manage-access">
         <CardHeader actionLayout="inline">
           <CardTitle>Access management</CardTitle>
           <CardAction>
@@ -505,6 +523,7 @@ function ManagedResourceAccess({
               addIcon="access"
               addLabel="Add access"
               disabled={mutationPending}
+              managing={managing}
               onAdd={() => {
                 setError(undefined)
                 setAddOpen(true)
@@ -518,17 +537,19 @@ function ManagedResourceAccess({
               <h3 className="font-heading text-label">Public access</h3>
               <VisibilityBadge isPublic={resource.public} />
             </div>
-            <Button
-              disabled={mutationPending}
-              onClick={() => {
-                setError(undefined)
-                setPendingPublic(!resource.public)
-              }}
-              type="button"
-              variant="outline"
-            >
-              {resource.public ? "Make private" : "Publish"}
-            </Button>
+            {managing ? (
+              <Button
+                disabled={mutationPending}
+                onClick={() => {
+                  setError(undefined)
+                  setPendingPublic(!resource.public)
+                }}
+                type="button"
+                variant="outline"
+              >
+                {resource.public ? "Make private" : "Publish"}
+              </Button>
+            ) : null}
             {error?.surface === "public" ? (
               <p className="basis-full text-body text-destructive" role="alert">
                 {error.message}

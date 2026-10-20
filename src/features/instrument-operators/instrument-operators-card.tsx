@@ -479,6 +479,7 @@ export function InstrumentAccessCard({
             <AccessGrantListActions
               addLabel="Add member"
               disabled={mutationPending}
+              managing={managing}
               onAdd={() => {
                 setError(undefined)
                 setAddMemberOpen(true)
@@ -579,6 +580,7 @@ export function InstrumentAccessCard({
               <AccessGrantListActions
                 addLabel="Add operator"
                 disabled={mutationPending}
+                managing={managing}
                 onAdd={() => {
                   setError(undefined)
                   setAddOperatorOpen(true)

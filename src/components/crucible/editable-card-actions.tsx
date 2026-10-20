@@ -6,49 +6,23 @@ import {
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import { CardFooter } from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { intentPreloadProps } from "@/lib/intent-preload"
 
 export function EditableCardTrigger({
-  iconOnly = false,
+  compact = false,
   label,
   onClick,
   onPreload,
 }: {
-  iconOnly?: boolean
+  compact?: boolean
   label: string
   onClick: () => void
   onPreload?: () => void
 }) {
   const preload = onPreload ? intentPreloadProps(onPreload) : undefined
-  if (iconOnly) {
-    return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              aria-label={label}
-              onClick={onClick}
-              {...preload}
-              size="icon-sm"
-              type="button"
-              variant="outline"
-            />
-          }
-        >
-          <EditResourceIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent>{label}</TooltipContent>
-      </Tooltip>
-    )
-  }
-
   return (
     <Button
+      aria-label={compact ? label : undefined}
       onClick={onClick}
       {...preload}
       size="sm"
@@ -56,7 +30,7 @@ export function EditableCardTrigger({
       variant="outline"
     >
       <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
-      {label}
+      {compact ? "Edit" : label}
     </Button>
   )
 }

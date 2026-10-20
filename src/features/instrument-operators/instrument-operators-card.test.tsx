@@ -150,6 +150,11 @@ function searchResponse(items: readonly WorkspaceSearchResult[]) {
   }
 }
 
+function ensureManaging(name: string) {
+  const toggle = screen.getByRole("button", { name })
+  if (toggle.getAttribute("aria-pressed") !== "true") fireEvent.click(toggle)
+}
+
 describe("InstrumentAccessCard", () => {
   let queryClient: QueryClient
 
@@ -301,6 +306,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
+    ensureManaging("Manage access")
     const addMemberButton = screen.getByRole("button", { name: "Add member" })
     fireEvent.click(addMemberButton)
 
@@ -369,6 +375,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
+    ensureManaging("Manage access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -442,6 +449,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
+    ensureManaging("Manage access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -492,6 +500,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
+    ensureManaging("Manage access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -527,6 +536,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
+    ensureManaging("Manage access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -668,6 +678,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
+    ensureManaging("Manage access")
     const addOperatorButton = screen.getByRole("button", {
       name: "Add operator",
     })
@@ -737,6 +748,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
+    ensureManaging("Manage access")
     fireEvent.click(screen.getByRole("button", { name: "Add operator" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add operator" })

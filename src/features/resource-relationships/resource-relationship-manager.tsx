@@ -62,7 +62,6 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ManagementToggle } from "@/components/crucible/management-toggle"
-import { ResourceGraphLink } from "@/features/resource-graph/resource-graph-link"
 
 type RelationshipResource = Extract<
   WorkspaceResourceDetail,
@@ -149,11 +148,6 @@ export function ResourceRelationshipManager({
         </CardTitle>
         <CardAction>
           <div className="flex items-center gap-1">
-            <ResourceGraphLink
-              kind={resource.kind}
-              mfid={resource.unique_id}
-              name={resourceDetailDisplayName(resource)}
-            />
             {canManage ? (
               <>
                 <Button
@@ -161,6 +155,7 @@ export function ResourceRelationshipManager({
                   onClick={() => setAddOpen(true)}
                   size="sm"
                   type="button"
+                  variant="outline"
                 >
                   <AddRelationshipIcon
                     aria-hidden="true"
@@ -168,13 +163,13 @@ export function ResourceRelationshipManager({
                   />
                   Add
                 </Button>
-                <ManagementToggle
-                  active={managementMode}
-                  disabled={!hasRelationships}
-                  disabledReason={`No relationships to manage for ${resourceDetailDisplayName(resource)}`}
-                  onChange={setManaging}
-                  subject={`relationships for ${resourceDetailDisplayName(resource)}`}
-                />
+                {hasRelationships || managementMode ? (
+                  <ManagementToggle
+                    active={managementMode}
+                    onChange={setManaging}
+                    subject={`relationships for ${resourceDetailDisplayName(resource)}`}
+                  />
+                ) : null}
               </>
             ) : null}
           </div>
