@@ -98,9 +98,7 @@ describe("scientific metadata editing", () => {
     fireEvent.change(screen.getByLabelText("Field 2 value"), {
       target: { value: "3" },
     })
-    fireEvent.click(
-      screen.getByRole("button", { name: "Save scientific metadata" })
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     await waitFor(() =>
       expect(updateWorkspaceResourceMetadata).toHaveBeenCalledWith(
@@ -118,9 +116,7 @@ describe("scientific metadata editing", () => {
     renderForm(sample({ phase: "solid", pressure: 2 }))
 
     fireEvent.click(screen.getByRole("button", { name: "Remove field 1" }))
-    fireEvent.click(
-      screen.getByRole("button", { name: "Save scientific metadata" })
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     expect(
       await screen.findByRole("alertdialog", {

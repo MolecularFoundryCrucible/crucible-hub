@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Shortened card save buttons to Save and removed redundant helper text from the scientific metadata and timestamp editors.
 - Edited scientific metadata with the same Fields and JSON editor and JSON upload (merge or replace) used when creating samples and datasets, opening records with more than 30 fields, nested values, or type-sensitive values in JSON.
 - Made resource edit controls consistent with labeled Edit and Done buttons and outline add actions, showed access add and publish actions only while editing, removed the duplicate Graph button from Relationships, and grouped ownership transfer and deletion under a Danger zone.
 - Renamed the API credential card to Security, kept its field layout when no key exists or its status cannot load, and moved account Last active into it on My profile, user administration, and service account pages.

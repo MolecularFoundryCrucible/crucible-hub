@@ -189,11 +189,11 @@ function optionalDatasetField(maxLength: number, label: string) {
     )
 }
 
-function timestampFieldDescription(timestamp: string | null) {
+function nonstandardTimestampNotice(timestamp: string | null) {
   if (timestamp && timestampToLocalInput(timestamp) === "") {
     return `Current nonstandard value: ${timestamp}. Choose a local date and time to replace it.`
   }
-  return "Entered in your local time and stored as UTC."
+  return null
 }
 
 function sampleFormValues(resource: SampleDetail): SampleSummaryFormValues {
@@ -498,9 +498,11 @@ export function SampleSummaryForm({
                         type="datetime-local"
                         value={field.state.value}
                       />
-                      <FieldDescription>
-                        {timestampFieldDescription(resource.timestamp)}
-                      </FieldDescription>
+                      {nonstandardTimestampNotice(resource.timestamp) ? (
+                        <FieldDescription>
+                          {nonstandardTimestampNotice(resource.timestamp)}
+                        </FieldDescription>
+                      ) : null}
                       <FieldError errors={fieldErrors(field, { invalid })} />
                     </Field>
                   )
@@ -705,9 +707,11 @@ export function DatasetSummaryForm({
                         type="datetime-local"
                         value={field.state.value}
                       />
-                      <FieldDescription>
-                        {timestampFieldDescription(resource.timestamp)}
-                      </FieldDescription>
+                      {nonstandardTimestampNotice(resource.timestamp) ? (
+                        <FieldDescription>
+                          {nonstandardTimestampNotice(resource.timestamp)}
+                        </FieldDescription>
+                      ) : null}
                       <FieldError errors={fieldErrors(field, { invalid })} />
                     </Field>
                   )

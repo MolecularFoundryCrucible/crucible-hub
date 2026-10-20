@@ -41,8 +41,8 @@ export function EditableCardActions({
   formId,
   onCancel,
   pending,
-  pendingLabel = "Saving changes",
-  submitLabel = "Save changes",
+  pendingLabel = "Saving",
+  submitLabel = "Save",
 }: {
   canSubmit: boolean
   dirty: boolean

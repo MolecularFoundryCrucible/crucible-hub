@@ -12,12 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-} from "@/components/ui/field"
+import { Field, FieldError, FieldGroup } from "@/components/ui/field"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -244,10 +239,6 @@ export function ScientificMetadataForm({
                         onChange={field.handleChange}
                         value={field.state.value}
                       />
-                      <FieldDescription>
-                        Fields keep text, numbers, and true or false. Use JSON
-                        for arrays, nested objects, and exact value types.
-                      </FieldDescription>
                       <FieldError errors={fieldErrors(field, { invalid })} />
                     </Field>
                   )
@@ -265,8 +256,6 @@ export function ScientificMetadataForm({
               formId={formId}
               onCancel={discard.requestCancel}
               pending={isSubmitting}
-              pendingLabel="Saving scientific metadata"
-              submitLabel="Save scientific metadata"
             />
           )}
         </form.Subscribe>

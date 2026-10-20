@@ -53,7 +53,7 @@ test("opens profile management from the account avatar and saves changes", async
 
   await page.getByLabel("First name").fill("Averie")
   await page.getByLabel("Username").fill("averie_chen")
-  await page.getByRole("button", { name: "Save changes" }).click()
+  await page.getByRole("button", { name: "Save", exact: true }).click()
 
   await expect(page.getByText("Profile saved")).toBeVisible()
   await expect(page.getByText("Averie Chen")).toHaveCount(2)
@@ -78,7 +78,7 @@ test("validates profile fields and protects unsaved changes", async ({
     )
   ).toBeVisible()
   await expect(
-    page.getByRole("button", { name: "Save changes" })
+    page.getByRole("button", { name: "Save", exact: true })
   ).toBeDisabled()
 
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
