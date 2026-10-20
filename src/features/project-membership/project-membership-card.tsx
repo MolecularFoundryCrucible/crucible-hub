@@ -213,16 +213,20 @@ export function ProjectMembershipCard({
         ) : null}
       </CardHeader>
       <CardContent>
-        <h3 className="font-heading text-label">Direct members</h3>
+        <h3
+          className={
+            managing && canManage
+              ? "font-heading text-label"
+              : "mb-3 font-heading text-label"
+          }
+        >
+          Direct members
+        </h3>
         {managing && canManage ? (
           <p className="mb-3 text-body text-muted-foreground" role="status">
             Role changes save automatically.
           </p>
-        ) : (
-          <p className="mb-3 text-body text-muted-foreground">
-            Direct members of this project.
-          </p>
-        )}
+        ) : null}
         {members === null ? (
           <div className="flex items-center gap-2 text-body text-muted-foreground">
             <ResourceTypeIcon type="person" />

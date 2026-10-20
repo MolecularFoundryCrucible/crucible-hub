@@ -82,7 +82,6 @@ function SampleSummaryCard({
       action={
         resource.capabilities?.can_edit === true ? (
           <EditableCardTrigger
-            compact
             label="Edit summary"
             onClick={() => setEditing(true)}
             onPreload={() => void SampleSummaryForm.preload?.()}
@@ -122,7 +121,6 @@ function DatasetSummaryCard({
       action={
         resource.capabilities?.can_edit === true ? (
           <EditableCardTrigger
-            compact
             label="Edit summary"
             onClick={() => setEditing(true)}
             onPreload={() => void DatasetSummaryForm.preload?.()}

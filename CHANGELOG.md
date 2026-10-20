@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Labeled every card edit button just Edit (screen readers still hear what it edits) and removed the descriptive lines under Direct access, Direct members, and Operators.
 - Refreshed the Hub's colors and buttons: primary actions use Crucible dark blue (light blue in dark mode), neutrals carry a cool tint, buttons follow three tiers (solid primary, outline secondary, plain tertiary for Edit, Refresh, copy, print, and row actions), and the top-bar Create menu no longer competes with each page's own primary action.
 - Removed the decorative colored bars on the sign-in card, the resource preview, and graph nodes, and the glow behind the sign-in card; orange now only marks the current location and selection.
 - Rebuilt color tokens as a palette plus semantic roles in both themes, disabled Tailwind's default colors, and split the design system docs into a quick reference and a detailed reference with a matching fixture page.

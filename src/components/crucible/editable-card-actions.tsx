@@ -9,12 +9,10 @@ import { CardFooter } from "@/components/ui/card"
 import { intentPreloadProps } from "@/lib/intent-preload"
 
 export function EditableCardTrigger({
-  compact = false,
   label,
   onClick,
   onPreload,
 }: {
-  compact?: boolean
   label: string
   onClick: () => void
   onPreload?: () => void
@@ -22,7 +20,7 @@ export function EditableCardTrigger({
   const preload = onPreload ? intentPreloadProps(onPreload) : undefined
   return (
     <Button
-      aria-label={compact ? label : undefined}
+      aria-label={label}
       onClick={onClick}
       {...preload}
       size="sm"
@@ -30,7 +28,7 @@ export function EditableCardTrigger({
       variant="ghost"
     >
       <EditResourceIcon aria-hidden="true" data-icon="inline-start" />
-      {compact ? "Edit" : label}
+      Edit
     </Button>
   )
 }

@@ -320,16 +320,20 @@ export function InstrumentAccessCard({
           ) : null}
         </CardHeader>
         <CardContent>
-          <h3 className="font-heading text-label">Direct access</h3>
+          <h3
+            className={
+              managing
+                ? "font-heading text-label"
+                : "mb-3 font-heading text-label"
+            }
+          >
+            Direct access
+          </h3>
           {managing ? (
             <p className="mb-3 text-body text-muted-foreground" role="status">
               Role changes save automatically.
             </p>
-          ) : (
-            <p className="mb-3 text-body text-muted-foreground">
-              Direct access grants for people and projects.
-            </p>
-          )}
+          ) : null}
 
           {directGrants.length > 0 ? (
             <ul
@@ -499,10 +503,7 @@ export function InstrumentAccessCard({
           ) : null}
 
           <div className="mt-6 border-t pt-4">
-            <h3 className="font-heading text-label">Operators</h3>
-            <p className="mb-3 text-body text-muted-foreground">
-              Operators are service accounts assigned to this instrument.
-            </p>
+            <h3 className="mb-3 font-heading text-label">Operators</h3>
 
             {operators.length > 0 ? (
               <ul

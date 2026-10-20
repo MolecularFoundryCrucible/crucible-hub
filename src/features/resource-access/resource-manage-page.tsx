@@ -388,16 +388,20 @@ function ManagedResourceAccess({
           </CardAction>
         </CardHeader>
         <CardContent>
-          <h3 className="font-heading text-label">Direct access</h3>
+          <h3
+            className={
+              managing
+                ? "font-heading text-label"
+                : "mb-3 font-heading text-label"
+            }
+          >
+            Direct access
+          </h3>
           {managing ? (
             <p className="mb-3 text-body text-muted-foreground" role="status">
               Role changes save automatically.
             </p>
-          ) : (
-            <p className="mb-3 text-body text-muted-foreground">
-              Direct access grants for people and projects.
-            </p>
-          )}
+          ) : null}
           {directGrants.length ? (
             <ul
               aria-label="Direct access grants"
