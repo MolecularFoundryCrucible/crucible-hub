@@ -2,7 +2,6 @@ import { Suspense, useState } from "react"
 import type { ReactNode } from "react"
 import { lazyRouteComponent } from "@tanstack/react-router"
 import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
-import { ManageSectionLink } from "@/features/resource-access/manage-section-link"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
@@ -26,12 +25,7 @@ export type DatasetDetail = Extract<
 
 export type SampleDetail = Extract<WorkspaceResourceDetail, { kind: "sample" }>
 
-export type SummaryField = readonly [
-  string,
-  ReactNode,
-  SummaryFieldType,
-  ReactNode?,
-]
+export type SummaryField = readonly [string, ReactNode, SummaryFieldType]
 
 const SampleSummaryForm = lazyRouteComponent(
   () => import("./resource-summary-form"),
@@ -163,15 +157,12 @@ function SummaryCard({
 export function SummaryFields({ fields }: { fields: readonly SummaryField[] }) {
   return (
     <dl className="grid grid-cols-2 gap-4">
-      {fields.map(([label, value, type, action]) => (
+      {fields.map(([label, value, type]) => (
         <div
           className={type === "description" ? "col-span-2 min-w-0" : "min-w-0"}
           key={label}
         >
-          <dt className="flex items-baseline gap-2 text-label text-muted-foreground">
-            {label}
-            {action}
-          </dt>
+          <dt className="text-label text-muted-foreground">{label}</dt>
           <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
             <SummaryFieldIcon type={type} />
             <span className="min-w-0">
@@ -243,15 +234,7 @@ export function contextFields(
   ) : (
     resource.project_id
   )
-  if (resource.kind === "sample")
-    return [
-      [
-        "Project",
-        project,
-        "project",
-        <ManageSectionLink resource={resource} section="project" />,
-      ],
-    ]
+  if (resource.kind === "sample") return [["Project", project, "project"]]
   const instrumentName = resource.instrument
     ? resourceDisplayName("instrument", resource.instrument.instrument_name, {
         identifier: resource.instrument.instrument_id,
@@ -273,17 +256,7 @@ export function contextFields(
     resource.instrument_id
   )
   return [
-    [
-      "Project",
-      project,
-      "project",
-      <ManageSectionLink resource={resource} section="project" />,
-    ],
-    [
-      "Instrument",
-      instrument,
-      "instrument",
-      <ManageSectionLink resource={resource} section="instrument" />,
-    ],
+    ["Project", project, "project"],
+    ["Instrument", instrument, "instrument"],
   ]
 }

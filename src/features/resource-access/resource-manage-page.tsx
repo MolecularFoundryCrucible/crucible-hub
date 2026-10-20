@@ -128,23 +128,19 @@ export function ResourceManagePage({
               <CardTitle>Resource management</CardTitle>
             </CardHeader>
             <CardContent className="divide-y px-0">
-              <div className="scroll-mt-page-section" id="manage-project">
-                <ProjectAssignmentCard
+              <ProjectAssignmentCard
+                mode={mode}
+                presentation="row"
+                resource={resource}
+                scope={scope}
+              />
+              {resource.kind === "dataset" ? (
+                <DatasetInstrumentAssignmentCard
                   mode={mode}
                   presentation="row"
                   resource={resource}
                   scope={scope}
                 />
-              </div>
-              {resource.kind === "dataset" ? (
-                <div className="scroll-mt-page-section" id="manage-instrument">
-                  <DatasetInstrumentAssignmentCard
-                    mode={mode}
-                    presentation="row"
-                    resource={resource}
-                    scope={scope}
-                  />
-                </div>
               ) : null}
             </CardContent>
           </Card>
@@ -322,11 +318,7 @@ function ManagedResourceAccess({
 
   if (isPending) {
     return (
-      <Card
-        aria-busy="true"
-        className="scroll-mt-page-section"
-        id="manage-access"
-      >
+      <Card aria-busy="true">
         <CardHeader>
           <CardTitle>Access management</CardTitle>
         </CardHeader>
@@ -380,7 +372,7 @@ function ManagedResourceAccess({
 
   return (
     <>
-      <Card className="scroll-mt-page-section" id="manage-access">
+      <Card>
         <CardHeader actionLayout="inline">
           <CardTitle>Access management</CardTitle>
           <CardAction>

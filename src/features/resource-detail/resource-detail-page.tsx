@@ -65,7 +65,6 @@ import { DatasetFiles } from "@/features/dataset-files/dataset-files-card"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import { ScientificMetadataEditor } from "@/features/resource-metadata/scientific-metadata-editor"
 import { ResourceInspector } from "@/features/resource-inspector/resource-inspector"
-import { ManageSectionLink } from "@/features/resource-access/manage-section-link"
 import { ResourceRelationshipManager } from "@/features/resource-relationships/resource-relationship-manager"
 import { resourceGraphWarmupProps } from "@/features/resource-graph/resource-graph-warmup"
 import { resourceDisplayName } from "@/lib/resource-name"
@@ -467,9 +466,8 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               </div>
               {"public" in resource && (
                 <div className="min-w-0">
-                  <dt className="flex items-baseline gap-2 text-label text-muted-foreground">
+                  <dt className="text-label text-muted-foreground">
                     Visibility
-                    <ManageSectionLink resource={resource} section="access" />
                   </dt>
                   <dd className="mt-1 flex items-center gap-2 text-body">
                     <VisibilityBadge isPublic={resource.public} />
