@@ -232,7 +232,7 @@ export function ScientificMetadataForm({
                 {(field) => {
                   const invalid = shouldShowFieldError(field)
                   return (
-                    <Field data-invalid={invalid} onBlur={field.handleBlur}>
+                    <Field onBlur={field.handleBlur}>
                       <MetadataInput
                         disabled={isSubmitting}
                         invalid={invalid}

@@ -95,6 +95,7 @@ export {
   Plus as AddMetadataFieldIcon,
   X as RemoveMetadataFieldIcon,
   FileUp as UploadMetadataIcon,
+  Braces as FormatJsonIcon,
   Unlink as UnlinkRelationshipIcon,
   Pencil as ManageIcon,
   Check as FinishManagingIcon,

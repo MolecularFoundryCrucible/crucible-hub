@@ -1,16 +1,17 @@
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { z } from "zod"
 
 import {
   AddMetadataFieldIcon,
+  FormatJsonIcon,
   RemoveMetadataFieldIcon,
   UploadMetadataIcon,
 } from "@/components/crucible/icons"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
+import { JsonEditor } from "@/components/crucible/json-editor"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Tooltip,
   TooltipContent,
@@ -110,6 +111,11 @@ export function draftFromMetadata(
     : { json, mode: "json", rows: [] }
 }
 
+function metadataJsonError(text: string) {
+  const parsed = parseScientificMetadata(text)
+  return parsed.ok ? null : parsed.message
+}
+
 export const metadataDraftSchema = z
   .object({
     json: z.string(),
@@ -145,6 +151,14 @@ export function MetadataInput({
   const [uploaded, setUploaded] = useState<WorkspaceScientificMetadata>()
   const current = metadataDraftResult(value)
   const hasContent = !current.ok || current.metadata !== null
+  const formattable =
+    value.mode === "json" && parseScientificMetadata(value.json).ok
+  const latest = useRef(value)
+  latest.current = value
+  const updateJson = useCallback(
+    (json: string) => onChange({ ...latest.current, json }),
+    [onChange]
+  )
 
   function changeMode(mode: MetadataDraft["mode"]) {
     setNotice(undefined)
@@ -313,18 +327,33 @@ export function MetadataInput({
         </>
       ) : (
         <>
-          <Textarea
-            aria-invalid={invalid || undefined}
-            aria-label="Scientific metadata JSON"
-            className="h-metadata-editor-height resize-y font-mono text-supporting"
+          <JsonEditor
+            ariaLabel="Scientific metadata JSON"
             disabled={disabled}
-            onChange={(event) =>
-              onChange({ ...value, json: event.target.value })
-            }
-            spellCheck={false}
+            invalid={invalid}
+            onChange={updateJson}
+            validate={metadataJsonError}
             value={value.json}
           />
-          <div>{uploadButton}</div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              disabled={disabled || !formattable}
+              onClick={() => {
+                const parsed = parseScientificMetadata(value.json)
+                if (parsed.ok)
+                  onChange({
+                    ...value,
+                    json: JSON.stringify(parsed.metadata, null, 2),
+                  })
+              }}
+              type="button"
+              variant="outline"
+            >
+              <FormatJsonIcon aria-hidden="true" data-icon="inline-start" />
+              Format
+            </Button>
+            {uploadButton}
+          </div>
         </>
       )}
       {notice ? (
