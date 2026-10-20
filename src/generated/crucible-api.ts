@@ -1975,6 +1975,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/print/printers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Printers
+         * @description Lists printers discovered from their retained MQTT status heartbeat.
+         *
+         *     Only printers that have published at least one status message appear;
+         *     there is no separate registry of valid printer_id values. `online`
+         *     uses the same staleness rule as `POST /print/barcode`'s `detail` field.
+         */
+        get: operations["list_printers_print_printers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/project_graph/{project_ref}": {
         parameters: {
             query?: never;
@@ -4888,6 +4912,20 @@ export interface components {
             schema_version: number;
             /** Updated At */
             updated_at?: string | null;
+        };
+        /** PrinterListResponse */
+        PrinterListResponse: {
+            /** Printers */
+            printers: components["schemas"]["PrinterStatus"][];
+        };
+        /** PrinterStatus */
+        PrinterStatus: {
+            /** Online */
+            online: boolean;
+            /** Printer Id */
+            printer_id: string;
+            /** Ts */
+            ts?: number | null;
         };
         /**
          * PrivilegeMode
@@ -10720,6 +10758,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BarcodePrintResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_printers_print_printers_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrinterListResponse"];
                 };
             };
             /** @description Validation Error */

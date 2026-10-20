@@ -5609,6 +5609,51 @@
         "title": "PreferencesRead",
         "type": "object"
       },
+      "PrinterListResponse": {
+        "properties": {
+          "printers": {
+            "items": {
+              "$ref": "#/components/schemas/PrinterStatus"
+            },
+            "title": "Printers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "printers"
+        ],
+        "title": "PrinterListResponse",
+        "type": "object"
+      },
+      "PrinterStatus": {
+        "properties": {
+          "online": {
+            "title": "Online",
+            "type": "boolean"
+          },
+          "printer_id": {
+            "title": "Printer Id",
+            "type": "string"
+          },
+          "ts": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ts"
+          }
+        },
+        "required": [
+          "printer_id",
+          "online"
+        ],
+        "title": "PrinterStatus",
+        "type": "object"
+      },
       "PrivilegeMode": {
         "enum": [
           "normal",
@@ -20919,6 +20964,77 @@
           }
         ],
         "summary": "Print Barcode",
+        "tags": [
+          "print"
+        ]
+      }
+    },
+    "/print/printers": {
+      "get": {
+        "description": "Lists printers discovered from their retained MQTT status heartbeat.\n\nOnly printers that have published at least one status message appear;\nthere is no separate registry of valid printer_id values. `online`\nuses the same staleness rule as `POST /print/barcode`'s `detail` field.",
+        "operationId": "list_printers_print_printers_get",
+        "parameters": [
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrinterListResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Printers",
         "tags": [
           "print"
         ]
