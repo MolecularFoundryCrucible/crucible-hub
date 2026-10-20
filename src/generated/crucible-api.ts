@@ -3955,6 +3955,24 @@ export interface components {
          * @enum {string}
          */
         DeletionReviewDecision: "approved" | "rejected";
+        /** DetailResponse */
+        DetailResponse: {
+            /** Detail */
+            detail: string;
+        };
+        /** DownloadLinkRead */
+        DownloadLinkRead: {
+            /**
+             * Expires In
+             * @description Seconds until the URL expires; null when url is null.
+             */
+            expires_in: number | null;
+            /**
+             * Url
+             * @description Signed URL, or null for files not stored in GCS (catalog-only records).
+             */
+            url: string | null;
+        };
         /**
          * EffectiveAccess
          * @enum {string}
@@ -3967,6 +3985,42 @@ export interface components {
             resource_mfid: string;
             /** User Id */
             user_id: string;
+        };
+        /** EntityGraph */
+        EntityGraph: {
+            /** Directed */
+            directed: boolean;
+            /** Edges */
+            edges: components["schemas"]["EntityGraphEdge"][];
+            /** Graph */
+            graph: {
+                [key: string]: unknown;
+            };
+            /** Multigraph */
+            multigraph: boolean;
+            /** Nodes */
+            nodes: components["schemas"]["EntityGraphNode"][];
+        };
+        /** EntityGraphEdge */
+        EntityGraphEdge: {
+            /** Relationship Type */
+            relationship_type?: string | null;
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+        };
+        /** EntityGraphNode */
+        EntityGraphNode: {
+            /**
+             * Entity Type
+             * @enum {string}
+             */
+            entity_type: "sample" | "dataset";
+            /** Id */
+            id: string;
+            /** Name */
+            name?: string | null;
         };
         /**
          * EntryCapabilities
@@ -4381,6 +4435,11 @@ export interface components {
             /** Num Datasets */
             num_datasets: number | null;
         };
+        /** LegacyApiKeyRead */
+        LegacyApiKeyRead: {
+            /** Crucible Apikey */
+            crucible_apikey: string;
+        };
         /** LineageGraphEdge */
         LineageGraphEdge: {
             /**
@@ -4429,6 +4488,11 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** MessageResponse */
+        MessageResponse: {
+            /** Message */
+            message: string;
         };
         /** MultipartComplete */
         MultipartComplete: {
@@ -6494,15 +6558,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
+            307: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -6512,6 +6573,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description ORCID sign-in failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6524,15 +6592,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description The API key as JSON, or an HTML page asking for an email when the profile has none */
             200: {
                 headers: {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LegacyApiKeyRead"];
+                    "text/html": unknown;
                 };
+            };
+            /** @description Redirect to sign-in when there is no ORCID session cookie */
+            307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6552,8 +6628,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ApiKeyRead"];
                 };
+            };
+            /** @description Redirect to sign-in when there is no ORCID session cookie */
+            307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6569,15 +6652,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
+            307: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -6587,6 +6667,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description ORCID sign-in failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6980,15 +7067,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Redirect to the ORCID sign-in page */
+            307: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
         };
     };
@@ -7524,7 +7608,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        [key: string]: string | null;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -8098,7 +8184,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8741,7 +8827,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9100,7 +9186,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["EntityGraph"];
                 };
             };
             /** @description Validation Error */
@@ -9218,7 +9304,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9301,7 +9387,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DownloadLinkRead"];
                 };
             };
             /** @description Stored file location is outside the file's own dataset or an allowed bucket: `{"detail": {"code": "storage_location_invalid", "reason": ..., "message": ...}}` */
@@ -10412,15 +10498,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Redirect to the ORCID sign-in page */
+            307: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
         };
     };
@@ -10433,14 +10516,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description Prometheus metrics in the text exposition format */
             200: {
                 headers: {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "text/plain": string;
                 };
             };
         };
@@ -10675,7 +10758,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["EntityGraph"];
                 };
             };
             /** @description Validation Error */
@@ -11183,8 +11266,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ApiKeyRead"];
                 };
+            };
+            /** @description Redirect to sign-in when there is no ORCID session cookie */
+            307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -11303,7 +11393,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DeletionPreviewRead"] | components["schemas"]["DetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11417,7 +11507,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11501,7 +11591,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12373,7 +12463,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12698,15 +12788,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description The API key as JSON, or an HTML page asking for an email when the profile has none */
             200: {
                 headers: {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LegacyApiKeyRead"];
+                    "text/html": unknown;
                 };
+            };
+            /** @description Redirect to sign-in when there is no ORCID session cookie */
+            307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -13145,7 +13243,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DetailResponse"];
                 };
             };
             /** @description Validation Error */

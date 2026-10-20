@@ -2549,6 +2549,53 @@
         "title": "DeletionReviewDecision",
         "type": "string"
       },
+      "DetailResponse": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "DetailResponse",
+        "type": "object"
+      },
+      "DownloadLinkRead": {
+        "properties": {
+          "expires_in": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Seconds until the URL expires; null when url is null.",
+            "title": "Expires In"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Signed URL, or null for files not stored in GCS (catalog-only records).",
+            "title": "Url"
+          }
+        },
+        "required": [
+          "url",
+          "expires_in"
+        ],
+        "title": "DownloadLinkRead",
+        "type": "object"
+      },
       "EffectiveAccess": {
         "enum": [
           "none",
@@ -2582,6 +2629,108 @@
           "effective_access"
         ],
         "title": "EffectiveResourceAccessRead",
+        "type": "object"
+      },
+      "EntityGraph": {
+        "properties": {
+          "directed": {
+            "title": "Directed",
+            "type": "boolean"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/EntityGraphEdge"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "graph": {
+            "additionalProperties": true,
+            "title": "Graph",
+            "type": "object"
+          },
+          "multigraph": {
+            "title": "Multigraph",
+            "type": "boolean"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/EntityGraphNode"
+            },
+            "title": "Nodes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "directed",
+          "multigraph",
+          "graph",
+          "nodes",
+          "edges"
+        ],
+        "title": "EntityGraph",
+        "type": "object"
+      },
+      "EntityGraphEdge": {
+        "properties": {
+          "relationship_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationship Type"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "target"
+        ],
+        "title": "EntityGraphEdge",
+        "type": "object"
+      },
+      "EntityGraphNode": {
+        "properties": {
+          "entity_type": {
+            "enum": [
+              "sample",
+              "dataset"
+            ],
+            "title": "Entity Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "id",
+          "entity_type"
+        ],
+        "title": "EntityGraphNode",
         "type": "object"
       },
       "EntryCapabilities": {
@@ -3837,6 +3986,19 @@
         "title": "Keyword",
         "type": "object"
       },
+      "LegacyApiKeyRead": {
+        "properties": {
+          "crucible_apikey": {
+            "title": "Crucible Apikey",
+            "type": "string"
+          }
+        },
+        "required": [
+          "crucible_apikey"
+        ],
+        "title": "LegacyApiKeyRead",
+        "type": "object"
+      },
       "LineageGraphEdge": {
         "properties": {
           "directed": {
@@ -3953,6 +4115,19 @@
           "status"
         ],
         "title": "LivenessResponse",
+        "type": "object"
+      },
+      "MessageResponse": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "MessageResponse",
         "type": "object"
       },
       "MultipartComplete": {
@@ -9584,18 +9759,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+          "307": {
+            "description": "Redirect back to the page that started sign-in, with a short-lived session cookie"
           },
           "422": {
             "content": {
@@ -9606,6 +9771,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "502": {
+            "description": "ORCID sign-in failed"
           }
         },
         "summary": "Redirect Exchange Deprecated",
@@ -9622,15 +9790,21 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
-              }
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyApiKeyRead"
+                }
+              },
+              "text/html": {}
             },
-            "description": "Successful Response",
+            "description": "The API key as JSON, or an HTML page asking for an email when the profile has none",
             "headers": {
               "X-Request-ID": {
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "307": {
+            "description": "Redirect to sign-in when there is no ORCID session cookie"
           }
         },
         "summary": "Get Apikey",
@@ -9647,7 +9821,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -9656,6 +9832,9 @@
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "307": {
+            "description": "Redirect to sign-in when there is no ORCID session cookie"
           }
         },
         "summary": "Regenerate Apikey",
@@ -9689,18 +9868,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+          "307": {
+            "description": "Redirect back to the page that started sign-in, with a short-lived session cookie"
           },
           "422": {
             "content": {
@@ -9711,6 +9880,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "502": {
+            "description": "ORCID sign-in failed"
           }
         },
         "summary": "Redirect Exchange",
@@ -10771,18 +10943,8 @@
         "description": "Redirect the user to the ORCID login page to begin authentication.",
         "operationId": "orcid_login_auth_login_get",
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+          "307": {
+            "description": "Redirect to the ORCID sign-in page"
           }
         },
         "summary": "Orcid Login",
@@ -13014,7 +13176,20 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "title": "Response Generate Dataset Download Links Datasets  Dataset Mfid  Download Links Get",
+                  "type": "object"
+                }
               }
             },
             "description": "Successful Response",
@@ -14146,7 +14321,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
               }
             },
             "description": "Successful Response",
@@ -15595,7 +15772,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
               }
             },
             "description": "Successful Response",
@@ -16782,7 +16961,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EntityGraph"
+                }
               }
             },
             "description": "Successful Response",
@@ -16970,7 +17151,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
               }
             },
             "description": "Successful Response",
@@ -17236,7 +17419,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadLinkRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -20230,18 +20415,8 @@
         "description": "Deprecated: use GET /auth/login.",
         "operationId": "orcid_login_deprecated_login_get",
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+          "307": {
+            "description": "Redirect to the ORCID sign-in page"
           }
         },
         "summary": "Orcid Login Deprecated",
@@ -20257,11 +20432,13 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
-                "schema": {}
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
               }
             },
-            "description": "Successful Response",
+            "description": "Prometheus metrics in the text exposition format",
             "headers": {
               "X-Request-ID": {
                 "$ref": "#/components/headers/CrucibleRequestId"
@@ -20786,7 +20963,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EntityGraph"
+                }
               }
             },
             "description": "Successful Response",
@@ -22155,7 +22334,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyRead"
+                }
               }
             },
             "description": "Successful Response",
@@ -22164,6 +22345,9 @@
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "307": {
+            "description": "Redirect to sign-in when there is no ORCID session cookie"
           }
         },
         "summary": "Regenerate Apikey Deprecated",
@@ -22329,7 +22513,17 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DeletionPreviewRead"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DetailResponse"
+                    }
+                  ],
+                  "title": "Response Hard Delete Resource Route Resources  Mfid  Delete"
+                }
               }
             },
             "description": "Successful Response",
@@ -22627,7 +22821,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DetailResponse"
+                }
               }
             },
             "description": "Successful Response",
@@ -22801,7 +22997,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DetailResponse"
+                }
               }
             },
             "description": "Successful Response",
@@ -25628,7 +25826,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
               }
             },
             "description": "Successful Response",
@@ -26452,15 +26652,21 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
-              }
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyApiKeyRead"
+                }
+              },
+              "text/html": {}
             },
-            "description": "Successful Response",
+            "description": "The API key as JSON, or an HTML page asking for an email when the profile has none",
             "headers": {
               "X-Request-ID": {
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "307": {
+            "description": "Redirect to sign-in when there is no ORCID session cookie"
           }
         },
         "summary": "Get Apikey Deprecated",
@@ -27556,7 +27762,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DetailResponse"
+                }
               }
             },
             "description": "Successful Response",
