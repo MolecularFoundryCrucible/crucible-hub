@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 export const collectionAffiliationSchema = z.enum(["owner"])
+export const instrumentAffiliationSchema = z.enum(["owner", "managed"])
 export const resourceSortSchema = z.enum(["created", "updated", "name"])
 export const sortDirectionSchema = z.enum(["asc", "desc"])
 export const collectionCursorSchema = z
@@ -11,6 +12,7 @@ export const collectionCursorSchema = z
   .catch(undefined)
 
 export type CollectionAffiliation = z.infer<typeof collectionAffiliationSchema>
+export type InstrumentAffiliation = z.infer<typeof instrumentAffiliationSchema>
 export type ResourceSort = z.infer<typeof resourceSortSchema>
 export type SortDirection = z.infer<typeof sortDirectionSchema>
 

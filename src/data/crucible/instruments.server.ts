@@ -12,7 +12,7 @@ import {
   readWorkspaceFixture,
 } from "./workspace-fixture.server"
 import { isWorkspaceInstrumentStatus } from "./instrument-status"
-import type { CollectionAffiliation } from "./collection-query"
+import type { InstrumentAffiliation } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
 import { toWorkspaceResourceDetail } from "./resources.server"
 import type { FixtureScenario } from "./fixture-scenarios"
@@ -421,7 +421,7 @@ export async function readWorkspaceInstruments(
     sort,
     status,
   }: {
-    affiliation?: CollectionAffiliation
+    affiliation?: InstrumentAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
     includeOwner?: boolean
@@ -449,7 +449,9 @@ export async function readWorkspaceInstruments(
       (instrument) =>
         (!status || instrument.status === status) &&
         (!affiliation ||
-          instrument.owner?.unique_id === source.workspace.account.unique_id) &&
+          instrument.owner?.unique_id === source.workspace.account.unique_id ||
+          (affiliation === "managed" &&
+            instrument.capabilities?.can_manage_access === true)) &&
         (!ownerId || instrument.owner?.unique_id === ownerId) &&
         (!instrumentType ||
           (instrument.instrument_type ?? "").toLowerCase() ===
@@ -502,7 +504,12 @@ export async function readWorkspaceInstruments(
   const result = await client.GET("/instruments", {
     params: {
       query: {
-        affiliation: affiliation ? [affiliation] : undefined,
+        affiliation:
+          affiliation === "managed"
+            ? ["owner", "maintainer"]
+            : affiliation
+              ? ["owner"]
+              : undefined,
         cursor,
         direction: sort ? direction : undefined,
         include_owner: includeOwner ?? true,

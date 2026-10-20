@@ -472,3 +472,39 @@ describe("workspace instrument source", () => {
     ).resolves.toBe(false)
   })
 })
+
+describe("instrument affiliation", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it("asks the API for owned or maintained instruments", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({
+          items: [],
+          limit: 7,
+          next_cursor: null,
+          total: 0,
+        })
+      })
+    )
+
+    await readWorkspaceInstruments({ affiliation: "managed", limit: 7 })
+    await readWorkspaceInstruments({ affiliation: "owner", limit: 7 })
+
+    const [managed, owned] = requests.map(
+      (request) => new URL(request.url).searchParams
+    )
+    expect(managed.getAll("affiliation")).toEqual(["owner", "maintainer"])
+    expect(owned.getAll("affiliation")).toEqual(["owner"])
+  })
+})

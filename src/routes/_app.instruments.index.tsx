@@ -66,10 +66,13 @@ import {
   instrumentsCursorQueryOptions,
 } from "@/data/crucible/instruments.queries"
 import { personQueryOptions } from "@/data/crucible/people.queries"
-import type { SortDirection } from "@/data/crucible/collection-query"
+import type {
+  InstrumentAffiliation,
+  SortDirection,
+} from "@/data/crucible/collection-query"
 import {
-  collectionAffiliationSchema,
   collectionCursorSchema,
+  instrumentAffiliationSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import { defaultOrderLabel, sortLabel } from "@/data/crucible/filter-draft"
@@ -103,7 +106,7 @@ const instrumentStatusFilterSchema = z.enum([...instrumentStatuses, "all"])
 type InstrumentStatusFilter = z.infer<typeof instrumentStatusFilterSchema>
 
 const instrumentSearchSchema = z.object({
-  affiliation: collectionAffiliationSchema.optional().catch(undefined),
+  affiliation: instrumentAffiliationSchema.optional().catch(undefined),
   cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional().catch(undefined),
   instrumentType: z.string().trim().min(1).max(255).optional().catch(undefined),
@@ -374,7 +377,11 @@ function InstrumentDirectoryFilters({
     ),
     collectionActiveFilter(
       "affiliation",
-      values.affiliation === "owner" ? "Management: Managed by me" : undefined
+      values.affiliation === "owner"
+        ? "Management: Owned by me"
+        : values.affiliation === "managed"
+          ? "Management: Managed by me"
+          : undefined
     ),
     collectionActiveFilter(
       "owner",
@@ -541,7 +548,10 @@ function InstrumentDirectoryFilters({
                   setDraft((current) => ({
                     ...current,
                     affiliation:
-                      event.target.value === "owner" ? "owner" : undefined,
+                      event.target.value === "owner" ||
+                      event.target.value === "managed"
+                        ? event.target.value
+                        : undefined,
                   }))
                 }
                 value={draft.affiliation ?? ""}
@@ -550,6 +560,9 @@ function InstrumentDirectoryFilters({
                   All instruments
                 </NativeSelectOption>
                 <NativeSelectOption value="owner">
+                  Owned by me
+                </NativeSelectOption>
+                <NativeSelectOption value="managed">
                   Managed by me
                 </NativeSelectOption>
               </NativeSelect>
@@ -713,7 +726,7 @@ function InstrumentCollection({
   total,
   updating,
 }: {
-  affiliation?: "owner"
+  affiliation?: InstrumentAffiliation
   direction?: SortDirection
   hasNextPage: boolean
   hasSecondaryFilters: boolean
@@ -849,12 +862,16 @@ function InstrumentCollection({
                 {hasSecondaryFilters
                   ? "No instruments match the active filters."
                   : status === "all"
-                    ? affiliation
-                      ? "You do not manage any instruments."
-                      : "No instruments are available to this account."
-                    : affiliation
-                      ? `You do not manage any ${instrumentStatusLabel(status).toLowerCase()} instruments.`
-                      : `No ${instrumentStatusLabel(status).toLowerCase()} instruments are available to this account.`}
+                    ? affiliation === "owner"
+                      ? "You do not own any instruments."
+                      : affiliation
+                        ? "You do not manage any instruments."
+                        : "No instruments are available to this account."
+                    : affiliation === "owner"
+                      ? `You do not own any ${instrumentStatusLabel(status).toLowerCase()} instruments.`
+                      : affiliation
+                        ? `You do not manage any ${instrumentStatusLabel(status).toLowerCase()} instruments.`
+                        : `No ${instrumentStatusLabel(status).toLowerCase()} instruments are available to this account.`}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>

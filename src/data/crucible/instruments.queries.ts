@@ -4,7 +4,7 @@ import {
   getWorkspaceInstrumentOperators,
   getWorkspaceInstruments,
 } from "./instruments.functions"
-import type { CollectionAffiliation } from "./collection-query"
+import type { InstrumentAffiliation } from "./collection-query"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { collectionScopedPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
@@ -21,7 +21,7 @@ export const instrumentPageLimit = 100
 function instrumentStatusScopedPreviousData<TData>(
   scope: IdentityScope,
   filters: {
-    affiliation?: CollectionAffiliation
+    affiliation?: InstrumentAffiliation
     direction?: WorkspaceSortDirection
     includeOwner: boolean
     includeTotal: boolean
@@ -51,7 +51,7 @@ function instrumentStatusScopedPreviousData<TData>(
 export function instrumentsQueryOptions(
   scope: IdentityScope,
   filters: {
-    affiliation?: CollectionAffiliation
+    affiliation?: InstrumentAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
     includeOwner?: boolean
@@ -104,7 +104,7 @@ export function instrumentsQueryOptions(
 export function instrumentsCursorQueryOptions(
   scope: IdentityScope,
   filters: {
-    affiliation?: CollectionAffiliation
+    affiliation?: InstrumentAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
     includeOwner?: boolean

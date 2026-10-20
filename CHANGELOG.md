@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Showed instruments you manage (owner, admin, or editor) in Home's Your instruments, and split the Instruments Management filter into Owned by me and Managed by me.
 - Replaced the scientific metadata JSON text box with a CodeMirror editor that highlights syntax, marks errors at their line and column, flags duplicate keys, and offers a Format button, loading only when the JSON editor opens.
 - Shortened card save buttons to Save and removed redundant helper text from the scientific metadata and timestamp editors.
 - Edited scientific metadata with the same Fields and JSON editor and JSON upload (merge or replace) used when creating samples and datasets, opening records with more than 30 fields, nested values, or type-sensitive values in JSON.

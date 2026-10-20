@@ -4,7 +4,7 @@ import { z } from "zod"
 
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 import {
-  collectionAffiliationSchema,
+  instrumentAffiliationSchema,
   collectionCursorSchema,
   sortDirectionSchema,
 } from "./collection-query"
@@ -44,7 +44,7 @@ export const INSTRUMENT_OTHER_ID_MAX_LENGTH = 255
 export const INSTRUMENT_OTHER_ID_SOURCE_MAX_LENGTH = 255
 
 export const instrumentListInputSchema = z.object({
-  affiliation: collectionAffiliationSchema.optional(),
+  affiliation: instrumentAffiliationSchema.optional(),
   cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional(),
   includeOwner: z.boolean().optional(),

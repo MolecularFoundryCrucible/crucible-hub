@@ -84,7 +84,7 @@ export const homeInstrumentLimit = 7
 export const homeRecentResourceLimit = 5
 
 export const homeInstrumentQuery = {
-  affiliation: "owner",
+  affiliation: "managed",
   includeOwner: false,
   includeTotal: false,
   limit: homeInstrumentLimit,
