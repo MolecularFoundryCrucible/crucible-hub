@@ -31,8 +31,18 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
+import { PaletteSwatch, paletteSteps } from "@/components/ui/palette-swatch"
+import type { PaletteRamp } from "@/components/ui/palette-swatch"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 export const Route = createFileRoute("/fixtures/design-system")({
   head: () => ({
@@ -55,6 +65,13 @@ const themeRoles = [
   },
   { name: "Muted", className: "bg-muted text-muted-foreground" },
   { name: "Accent", className: "bg-accent text-accent-foreground" },
+  { name: "Card", className: "border bg-card text-card-foreground" },
+  { name: "Action hover", className: "bg-action-hover text-foreground" },
+  { name: "Action pressed", className: "bg-action-pressed text-foreground" },
+  {
+    name: "Strong border",
+    className: "border border-border-strong bg-card text-foreground",
+  },
   {
     name: "Destructive",
     className: "bg-destructive text-destructive-foreground",
@@ -62,6 +79,33 @@ const themeRoles = [
   { name: "Success", className: "bg-success text-success-foreground" },
   { name: "Warning", className: "bg-warning text-warning-foreground" },
   { name: "Information", className: "bg-info text-info-foreground" },
+] as const
+
+const paletteRamps: {
+  label: string
+  ramp: PaletteRamp
+  anchors: Record<number, string>
+}[] = [
+  { label: "Neutral", ramp: "neutral", anchors: {} },
+  {
+    label: "Brand blue",
+    ramp: "blue",
+    anchors: { 4: "Crucible light blue", 9: "Crucible dark blue" },
+  },
+  {
+    label: "Orange",
+    ramp: "orange",
+    anchors: { 5: "Crucible orange", 6: "Selection on light" },
+  },
+]
+
+const actionTiers = [
+  { tier: "Primary", variant: "default", label: "Primary action" },
+  { tier: "Secondary", variant: "outline", label: "Add files" },
+  { tier: "Tertiary", variant: "ghost", label: "Edit" },
+  { tier: "Destructive", variant: "destructive", label: "Remove access" },
+  { tier: "Confirm", variant: "destructive-solid", label: "Confirm delete" },
+  { tier: "Warning", variant: "warning", label: "Administrator view" },
 ] as const
 
 const resourceTypes = [
@@ -108,11 +152,40 @@ function DesignSystemFixtures() {
         <ThemeSelect />
       </header>
 
+      <section aria-labelledby="palette-title">
+        <SectionHeading
+          description="Raw values. Only roles reference them; components never do."
+          id="palette-title"
+          title="Palette"
+        />
+        <div className="grid gap-4">
+          {paletteRamps.map(({ anchors, label, ramp }) => (
+            <div className="grid gap-2" key={ramp}>
+              <span className="text-label">{label}</span>
+              <ul
+                aria-label={label}
+                className="grid grid-cols-4 gap-2 sm:grid-cols-7 lg:grid-cols-13"
+              >
+                {Array.from({ length: paletteSteps[ramp] }, (_, index) => (
+                  <li className="grid gap-1" key={index}>
+                    <PaletteSwatch ramp={ramp} step={index + 1} />
+                    <span className="text-supporting text-muted-foreground">
+                      {index + 1}
+                      {anchors[index + 1] ? ` ${anchors[index + 1]}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section aria-labelledby="theme-title">
         <SectionHeading
           description="Foreground and background roles remain paired in every theme."
           id="theme-title"
-          title="Theme roles"
+          title="Roles"
         />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {themeRoles.map((role) => (
@@ -160,6 +233,70 @@ function DesignSystemFixtures() {
         </Card>
       </section>
 
+      <section aria-labelledby="action-title">
+        <SectionHeading
+          description="One primary per view. Secondary changes data. Tertiary is frequent, reversible, or navigational."
+          id="action-title"
+          title="Actions"
+        />
+        <Card>
+          <CardContent className="grid gap-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tier</TableHead>
+                  <TableHead>Rest</TableHead>
+                  <TableHead>Pressed</TableHead>
+                  <TableHead>Disabled</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {actionTiers.map(({ label, tier, variant }) => (
+                  <TableRow key={tier}>
+                    <TableHead scope="row">{tier}</TableHead>
+                    <TableCell>
+                      <Button variant={variant}>{label}</Button>
+                    </TableCell>
+                    <TableCell>
+                      {variant === "outline" || variant === "ghost" ? (
+                        <Button aria-pressed="true" variant={variant}>
+                          {label}
+                        </Button>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <Button disabled variant={variant}>
+                        {label}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="max-w-action">
+              <Input aria-label="Input boundary specimen" placeholder="Input" />
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section aria-labelledby="badge-title">
+        <SectionHeading
+          description="Badges are metadata. Status uses a quiet tint; nothing uses the solid primary."
+          id="badge-title"
+          title="Badges"
+        />
+        <div className="flex flex-wrap gap-2">
+          <Badge>Neutral</Badge>
+          <Badge variant="secondary">Member</Badge>
+          <Badge variant="success">Complete</Badge>
+          <Badge variant="info">Processing</Badge>
+          <Badge variant="warning">Retrying</Badge>
+          <Badge variant="outline">Limited details</Badge>
+          <Badge variant="destructive">Failed</Badge>
+        </div>
+      </section>
+
       <section aria-labelledby="component-title">
         <SectionHeading
           description="Shared primitives and domain identities use the same density and focus language."
@@ -167,42 +304,6 @@ function DesignSystemFixtures() {
           title="Components"
         />
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions and status</CardTitle>
-              <CardDescription>
-                Default variants, disabled behavior, and compact status labels
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-3">
-              <Button>Primary action</Button>
-              <Button variant="outline">Outline</Button>
-              <Button aria-pressed="true" variant="outline">
-                Pressed toggle
-              </Button>
-              <Button variant="ghost">Ghost</Button>
-              <Button variant="warning">Administrator view</Button>
-              <Button variant="destructive">Remove access</Button>
-              <Button variant="destructive-solid">Confirm delete</Button>
-              <Button disabled>Unavailable</Button>
-              <div className="max-w-action basis-full">
-                <Input
-                  aria-label="Input boundary specimen"
-                  placeholder="Input"
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex-wrap gap-2">
-              <Badge variant="success">Active</Badge>
-              <Badge variant="secondary">Member</Badge>
-              <Badge variant="success">Complete</Badge>
-              <Badge variant="info">Processing</Badge>
-              <Badge variant="warning">Retrying</Badge>
-              <Badge variant="outline">Limited details</Badge>
-              <Badge variant="destructive">Failed</Badge>
-            </CardFooter>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Resource identity</CardTitle>

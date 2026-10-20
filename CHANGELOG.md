@@ -4,6 +4,9 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Refreshed the Hub's colors and buttons: primary actions use Crucible dark blue (light blue in dark mode), neutrals carry a cool tint, buttons follow three tiers (solid primary, outline secondary, plain tertiary for Edit, Refresh, copy, print, and row actions), and the top-bar Create menu no longer competes with each page's own primary action.
+- Removed the decorative colored bars on the sign-in card, the resource preview, and graph nodes, and the glow behind the sign-in card; orange now only marks the current location and selection.
+- Rebuilt color tokens as a palette plus semantic roles in both themes, disabled Tailwind's default colors, and split the design system docs into a quick reference and a detailed reference with a matching fixture page.
 - Added Print next to Copy under the MFID QR code and in the enlarged QR code on sample, dataset, project, and instrument pages, listing reachable label printers, prefilling the resource name, and remembering the last printer used.
 - Kept first and last names from being cleared once set on profiles, user administration, and service accounts, matching the API's rejection of empty names.
 - Let project editors and admins change and remove members up to their own role, following per-member permissions from the API instead of owner-only removal.
