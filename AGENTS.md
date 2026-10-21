@@ -42,7 +42,7 @@ Read only the sources relevant to the change. A proposal or unmerged API contrac
 - `src/data/crucible/`: browser-safe models, Query ownership, fixtures, and adapters
 - `src/server/crucible/`: server-only API transport and safe errors
 - `src/generated/` and `contracts/`: generated client types and pinned OpenAPI input
-- `docs/` and `decisions/`: product, architecture, and decision authority; `docs/reviews/` holds historical reviews only
+- `docs/` and `decisions/`: product, architecture, and decision authority
 - `.agents/skills/` and `.claude/skills/`: installed external agent skills, described in [`skills/README.md`](skills/README.md)
 
 ## Architecture invariants

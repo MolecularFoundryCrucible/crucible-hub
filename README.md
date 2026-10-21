@@ -77,7 +77,7 @@ Delivery and operations:
 
 - [Roadmap](docs/roadmap.md): status and ordered work
 - [Foundation evidence](docs/phase-0-evidence.md): verification evidence for production readiness
-- [Cloud Run pilot](docs/cloud-run-pilot.md) and its [risk review](docs/cloud-run-pilot-risk-review.md)
+- [Cloud Run pilot](docs/cloud-run-pilot.md)
 - [Crucible API handoff](docs/crucible-api-handoff.md) and [resource graph API handoff](docs/resource-graph-api-handoff.md): requests owned by the API team
 - [Changelog](CHANGELOG.md)
 
@@ -86,7 +86,6 @@ Working on the code:
 - [Contributor guide](CONTRIBUTING.md): setup, scenarios, commands, and review
 - [Agent guide](AGENTS.md): rules for AI coding agents, also a concise summary of repository policy
 - [Skills](skills/README.md): AI agent skills used in this repository
-- Past reviews: the [September 2026 application review](docs/reviews/2026-09-06-app-review.md) and the [October 2026 code review](docs/reviews/2026-10-06-code-review.md), kept as historical snapshots
 
 ## Related repositories
 
@@ -94,4 +93,8 @@ The Hub follows the API contract owned by `crucible-api` and the cross-repositor
 
 ## License
 
-A license has not been selected yet. Do not copy a sibling repository's license without an explicit decision.
+Crucible Hub is released under the [BSD 3-Clause License](LICENSE), copyright the Crucible Development Team. The license covers the source code only: the Crucible and Molecular Foundry names and logos (`src/assets/`, `src/logo.svg`, and the brand icons in `src/components/crucible/brand-icons.tsx`) identify the project and may not be used to endorse or promote derived products, and the ORCID iD icon is used under ORCID's brand guidelines.
+
+The UI primitives in `src/components/ui/` are generated from [shadcn/ui](https://github.com/shadcn-ui/ui) and the agent skill in `.agents/skills/shadcn/` is vendored from it; shadcn/ui is MIT licensed, Copyright (c) 2023 shadcn. Other dependencies keep their own licenses, listed in `package-lock.json`.
+
+To report a security issue, follow [SECURITY.md](SECURITY.md).

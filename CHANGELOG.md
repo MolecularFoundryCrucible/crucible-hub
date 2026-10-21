@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Licensed Crucible Hub under the BSD 3-Clause License, added a security policy for private vulnerability reports, and removed internal deployment details, personal data, and outdated internal reviews from the repository.
+
 ## 1.6.1 - 2026-10-21
 
 - Restyled role badges as three neutral levels instead of one color per role, so roles no longer look like statuses (Contributor read like Valid, Owner like a warning): a filled badge for Owner and Admin, with a crown on Owner, Lead, and Manager, an outline for Editor, Contributor, and Support, and a muted outline for Viewer and None.
