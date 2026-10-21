@@ -6,7 +6,16 @@ The Hub's public address is `https://crucible.lbl.gov/hub/`. A dedicated `crucib
 
 The service runs `HUB_AUTH_SESSION_MODE=postgres`, keeping sessions in a Hub-owned Cloud SQL database, so deployments and restarts keep people signed in. It runs one instance; scaling beyond one is a separate decision.
 
-The commands below use placeholders such as `<project-id>`, `<region>`, `<runtime-service-account>`, and `<db-password-secret>`. Concrete values live in the Google Cloud project configuration, Secret Manager, and the operators' private runbook.
+The commands below use placeholders such as `<project-id>`, `<region>`, `<runtime-service-account>`, and `<db-password-secret>`. The concrete values are not recorded in this repository; read them from the deployed service with an account that has access to the project:
+
+```sh
+gcloud run services list --filter=metadata.name=crucible-hub --format='value(metadata.namespace,region)' --project <project-id>
+gcloud run services describe crucible-hub --project <project-id> --region <region> --format='value(spec.template.spec.serviceAccountName)'
+gcloud run services describe crucible-hub --project <project-id> --region <region> --format=json | jq '.spec.template.spec.containers[0].env[] | select(.valueFrom.secretKeyRef) | {name, secret: .valueFrom.secretKeyRef.name}'
+gcloud run services describe crucible-hub --project <project-id> --region <region> --format=json | jq -r '.spec.template.spec.containers[0].env[] | select(.name=="HUB_SESSION_DATABASE_INSTANCE") | .value'
+```
+
+The first command confirms the region of the service in the project the operator already works in; the others list the runtime service account, the Secret Manager secret behind each environment variable without revealing secret values, and the Cloud SQL instance used for sessions.
 
 ## Pause and resume the pilot
 
