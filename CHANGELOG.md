@@ -2,6 +2,8 @@
 
 Notable changes to Crucible Hub for users, operators, contributors, and downstream integrations. Releases follow Semantic Versioning and deploy from `vX.Y.Z` Git tags.
 
+The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
+
 ## Unreleased
 
 - Restyled role badges as three neutral levels instead of one color per role, so roles no longer look like statuses (Contributor read like Valid, Owner like a warning): a filled badge for Owner and Admin, with a crown on Owner, Lead, and Manager, an outline for Editor, Contributor, and Support, and a muted outline for Viewer and None.
