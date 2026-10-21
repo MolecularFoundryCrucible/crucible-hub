@@ -35,7 +35,14 @@ export function MfidQrCode({
         <TooltipTrigger
           render={
             <DialogTrigger
-              render={<Button aria-label={label} size="qr" variant="outline" />}
+              render={
+                <Button
+                  aria-label={label}
+                  className="mfid-qr-trigger"
+                  size="qr"
+                  variant="outline"
+                />
+              }
             />
           }
         >

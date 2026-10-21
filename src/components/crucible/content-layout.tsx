@@ -65,13 +65,15 @@ type ContentGridProps = React.ComponentProps<"div"> &
   VariantProps<typeof contentGridVariants>
 
 function ContentGrid({ className, variant, ...props }: ContentGridProps) {
-  return (
+  const grid = (
     <div
       data-slot="content-grid"
       className={cn(contentGridVariants({ variant }), className)}
       {...props}
     />
   )
+  if (variant !== "identity") return grid
+  return <div className="content-grid-identity-container">{grid}</div>
 }
 
 type ContentGridItemProps = React.ComponentProps<"div"> &

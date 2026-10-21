@@ -190,6 +190,7 @@
   --spacing-breadcrumb-ancestor: 18rem;
   --spacing-identity-preview: 18rem;
   --spacing-column-action: 3rem;
+  --spacing-qr-compact: 4.25rem;
   --spacing-column-action-label: 5rem;
   --spacing-column-compact: 6rem;
   --spacing-column-badge: 7rem;
@@ -720,6 +721,10 @@ body {
 .content-grid-actions > * {
   width: 100%;
   max-width: var(--container-action);
+}
+
+.content-grid-identity-container {
+  container: identity / inline-size;
 }
 
 .content-grid-identity {
@@ -1664,7 +1669,14 @@ body {
   }
 }
 
-@media (max-width: 39.999rem) {
+@container identity (min-width: 20rem) and (max-width: 22.749rem) {
+  .content-grid-identity-qr .mfid-qr-trigger {
+    width: var(--spacing-qr-compact);
+    height: var(--spacing-qr-compact);
+  }
+}
+
+@container identity (max-width: 19.999rem) {
   .content-grid-identity {
     grid-template-columns: minmax(0, 1fr);
   }
