@@ -10,7 +10,7 @@ Updated: 2026-10-12
 
 Scientific datasets may contain large files. Proxying those bytes through the Hub Node process would add bandwidth, memory pressure, timeout risk, and an unnecessary failure boundary.
 
-Crucible API now exposes a signed multipart upload family (`POST /datasets/{dataset_mfid}/upload/multipart/initiate`, per-part signing, session status, completion, and abort), implemented in API PR #288 (commit `9549802`, merged to staging on 2026-10-09) and redesigned in PR #305 (merged to staging as `a831c2e`) to run initiation, completion, and abort inline without a background worker: initiation returns an uploading session immediately, completion joins and CRC32C-verifies parts within the request and returns the file record, and abort returns 204. The endpoints are gated behind `MULTIPART_UPLOAD_ENABLED`, which is `false` until the API team finishes staging validation. The legacy resumable family, which vends a broad object-storage credential to the browser, remains in the contract and stays unused.
+Crucible API now exposes a signed multipart upload family (`POST /datasets/{dataset_mfid}/upload/multipart/initiate`, per-part signing, session status, completion, and abort), implemented in API PR #288 (commit `9549802`, merged to staging on 2026-10-09) and redesigned in PR #305 (merged to staging as `a831c2e`) to run initiation, completion, and abort inline without a background worker: initiation returns an uploading session immediately, completion joins and CRC32C-verifies parts within the request and returns the file record, and abort returns 204. The legacy resumable family remains in the contract and stays unused.
 
 The multipart contract fixes the client rules: 64 MiB parts except the final part, a 500 GiB maximum, 1-64 parts per signing request, a canonical base64 CRC32C per part frozen at signing, lowercase SHA-256 and canonical base64 CRC32C of the whole object at completion, publication only after server-side CRC32C verification, at most 8 concurrent part transfers (raised from 4 on the API owner's recommendation), `Retry-After` and 15-minute URL expirations, `Cache-Control: no-store` responses, and relative filenames without empty or dot segments, backslashes, or control characters.
 
@@ -62,7 +62,7 @@ Would require API support for streaming large bodies and would still make the AP
 
 ### Use the legacy resumable upload family
 
-Vends a broad object-storage credential to the browser instead of per-part capabilities and predates the CRC32C publication gate.
+Does not issue per-part signed capabilities and predates the CRC32C publication gate.
 
 ### Defer all uploads to Nano or instrument-specific tools
 
