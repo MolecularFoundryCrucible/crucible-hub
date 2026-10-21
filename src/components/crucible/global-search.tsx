@@ -371,7 +371,7 @@ function QuickSearchControl({
         </ComboboxInput>
         <ComboboxContent
           anchor={formRef}
-          className="w-(--available-width) sm:w-[max(var(--anchor-width),var(--container-md))] sm:max-w-(--available-width)"
+          className="w-(--available-width) sm:w-[max(var(--anchor-width),var(--container-md))] sm:max-w-(--available-width) lg:w-[max(var(--anchor-width),var(--container-2xl))]"
           collisionPadding={16}
         >
           {projectMfid ? (

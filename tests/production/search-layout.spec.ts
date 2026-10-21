@@ -3,6 +3,7 @@ import { expect, test } from "../fixtures"
 for (const { width, popupWidth } of [
   { width: 360, popupWidth: 328 },
   { width: 768, popupWidth: 448 },
+  { width: 1440, popupWidth: 672 },
 ]) {
   test(`aligns quick search results with the search field at ${width}px`, async ({
     page,
