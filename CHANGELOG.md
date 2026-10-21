@@ -4,6 +4,8 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+## 1.5.2 - 2026-10-20
+
 - Hid samples and datasets you can see only because they are public from Data, project and instrument data, group counts, Home, and search. An "Include public data" filter (a **Public** pill when on) brings them back, a Preferences setting chooses whether lists start with it on, empty searches and lists offer it, and direct links keep opening public records. Administrator view always shows everything.
 
 ## 1.5.1 - 2026-10-20
