@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+## 1.6.2 - 2026-10-21
+
 - Restored the `no-referrer` policy on the sign-in callback and other routes that set their own, which the site-wide `same-origin` header had been overriding.
 - Fixed a page error on Home when one recent data source failed to load, where the browser replaced the server-rendered list with a loading state.
 - Updated dependencies within their current major versions, including React 19.3, Base UI 1.9, TanStack Query 5.104, Zod 4.6, Playwright 1.64, ESLint 10.12, and Vitest 4.1.12, which fixes a code-injection advisory in its test runner.
