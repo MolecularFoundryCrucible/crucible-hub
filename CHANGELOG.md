@@ -4,6 +4,8 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+## 1.5.0 - 2026-10-20
+
 - Updated TanStack Start to 1.169.3 and Vite to 8.3.4 to fix a critical reflected XSS advisory in the Start server and a high-severity advisory in Vite's editor launcher.
 - Fixed a page error when opening a project or data link with Created date filters on a first visit, which made the page re-render its data, and served the browser icon as a file again.
 - Showed access-denied and other load errors right away instead of requesting the data a second time when the page opens, and removed the filter note and the Try again button from the project data access-denied message.
