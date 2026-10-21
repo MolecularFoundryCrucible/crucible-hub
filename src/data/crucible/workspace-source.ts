@@ -589,6 +589,7 @@ export type WorkspaceSearchResult = {
 }
 
 export type WorkspaceServiceAccount = Schema<"ServiceAccountAdminRead"> & {
+  api_key_status?: WorkspaceApiCredentialStatus | null
   last_active_at?: string | null
 }
 

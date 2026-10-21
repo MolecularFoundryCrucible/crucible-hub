@@ -40,6 +40,9 @@ function toWorkspaceServiceAccount(
     | components["schemas"]["UserRead"]
 ): WorkspaceServiceAccount {
   return {
+    ...("api_key_status" in user
+      ? { api_key_status: user.api_key_status ?? null }
+      : {}),
     email: user.email ?? null,
     first_name: user.first_name,
     is_service_account: true,
@@ -78,6 +81,12 @@ function fixtureServiceAccounts(
         .map((member) => [
           member.unique_id,
           {
+            api_key_status: {
+              created_at: demoWorkspace.referenceTime,
+              expires_at: "2027-09-01T16:00:00Z",
+              last_used_at: "2026-10-13T09:20:00Z",
+              valid: true,
+            },
             email: null,
             first_name: member.first_name,
             is_service_account: true,
@@ -200,15 +209,7 @@ export async function readWorkspaceServiceAccount(
       (candidate) => candidate.unique_id === serviceAccountMfid
     )
     if (!account) return null
-    return {
-      ...account,
-      api_key_status: {
-        created_at: demoWorkspace.referenceTime,
-        expires_at: "2027-09-01T16:00:00Z",
-        last_used_at: "2026-10-13T09:20:00Z",
-        valid: true,
-      },
-    }
+    return { ...account, api_key_status: account.api_key_status ?? null }
   }
 
   const client = createCrucibleClient(configuration, {

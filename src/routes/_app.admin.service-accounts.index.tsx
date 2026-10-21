@@ -1,3 +1,4 @@
+import { ApiKeyStatusBadge } from "@/components/crucible/api-credential-card"
 import { useMemo, useState } from "react"
 import type { InfiniteData } from "@tanstack/react-query"
 import {
@@ -468,6 +469,7 @@ function ServiceAccountCollection({
                 <col className="identity-directory-account-column" />
                 <col className="identity-directory-mfid-column w-column-secondary" />
                 <col className="identity-directory-role-column" />
+                <col className="identity-directory-key-column" />
                 <col className="identity-directory-activity-column" />
                 <col className="identity-directory-action-column" />
               </colgroup>
@@ -491,6 +493,9 @@ function ServiceAccountCollection({
                   />
                   <TableHead className="identity-directory-role">
                     Platform role
+                  </TableHead>
+                  <TableHead className="identity-directory-key">
+                    API key
                   </TableHead>
                   <SortableTableHead
                     active={sort === "last_active"}
@@ -547,6 +552,14 @@ function ServiceAccountCollection({
                       data-label="Platform role"
                     >
                       <PlatformRoleBadge role={serviceAccount.platform_role} />
+                    </TableCell>
+                    <TableCell
+                      className="identity-directory-key"
+                      data-label="API key"
+                    >
+                      <ApiKeyStatusBadge
+                        status={serviceAccount.api_key_status}
+                      />
                     </TableCell>
                     <TableCell
                       className="identity-directory-activity"

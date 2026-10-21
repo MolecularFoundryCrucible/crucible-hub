@@ -105,6 +105,12 @@ describe("workspace service account source", () => {
           {
             items: [
               {
+                api_key_status: {
+                  created_at: "2026-09-01T12:00:00Z",
+                  expires_at: "2027-09-01T12:00:00Z",
+                  last_used_at: null,
+                  valid: true,
+                },
                 email: null,
                 first_name: "Beamline",
                 is_service_account: true,
@@ -138,6 +144,12 @@ describe("workspace service account source", () => {
     expect(result).toEqual({
       items: [
         {
+          api_key_status: {
+            created_at: "2026-09-01T12:00:00Z",
+            expires_at: "2027-09-01T12:00:00Z",
+            last_used_at: null,
+            valid: true,
+          },
           email: null,
           first_name: "Beamline",
           is_service_account: true,

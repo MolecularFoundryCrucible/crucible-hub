@@ -139,14 +139,10 @@ function CredentialStatus({
       <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Key status</dt>
         <dd className="mt-1">
-          {status ? (
-            <Badge variant={status.valid ? "success" : "destructive"}>
-              {status.valid ? "Valid" : "Invalid"}
-            </Badge>
-          ) : unavailable ? (
+          {unavailable && !status ? (
             empty
           ) : (
-            <Badge variant="outline">No key</Badge>
+            <ApiKeyStatusBadge status={status} />
           )}
         </dd>
       </div>
@@ -189,5 +185,18 @@ function CredentialStatusSkeleton() {
         </div>
       ))}
     </dl>
+  )
+}
+
+export function ApiKeyStatusBadge({
+  status,
+}: {
+  status: WorkspaceApiCredentialStatus | null | undefined
+}) {
+  if (!status) return <Badge variant="outline">No key</Badge>
+  return (
+    <Badge variant={status.valid ? "success" : "destructive"}>
+      {status.valid ? "Valid" : "Invalid"}
+    </Badge>
   )
 }

@@ -4,6 +4,8 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Added an API key column (Valid, Invalid, or No key) to the Users and Service accounts administration lists, read from the list itself without extra requests.
+- Loaded a person's profile and their administration details at the same time for administrators, instead of one after the other.
 - Showed the instrument identifier with an instrument icon under instruments in Home's Recently viewed, and the project slug with the project icon instead of the plain text added in 1.6.0, using the identifier the Crucible API now returns with recently viewed items.
 - Updated to the Crucible API contract at `c51a5a6`, which returns people search results as `{ limit, items }`.
 

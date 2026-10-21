@@ -1401,7 +1401,9 @@ body {
 
 @container (min-width: 38rem) and (max-width: 43.999rem) {
   .identity-directory-table .identity-directory-role,
-  .identity-directory-table .identity-directory-role-column {
+  .identity-directory-table .identity-directory-role-column,
+  .identity-directory-table .identity-directory-key,
+  .identity-directory-table .identity-directory-key-column {
     display: none;
   }
 }
@@ -1718,7 +1720,8 @@ body {
 }
 
 .resource-directory-table .resource-directory-role-column,
-.identity-directory-table .identity-directory-role-column {
+.identity-directory-table .identity-directory-role-column,
+.identity-directory-table .identity-directory-key-column {
   width: var(--spacing-column-badge);
 }
 

@@ -56,12 +56,9 @@ export const Route = createFileRoute("/_app/users/$userId")({
   loader: async ({ context, params, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
-    const [person, account] = await Promise.all([
-      context.queryClient.ensureQueryData(
-        personQueryOptions(source.scope, params.userId)
-      ),
-      context.queryClient.ensureQueryData(accountQueryOptions(source.scope)),
-    ])
+    const account = await context.queryClient.ensureQueryData(
+      accountQueryOptions(source.scope)
+    )
     const canAdminUsers = canOpenUserAdministration(
       account,
       source.privilegeMode
@@ -70,20 +67,24 @@ export const Route = createFileRoute("/_app/users/$userId")({
       account,
       source.privilegeMode
     )
+    const administrationScope = identityScopeWithPrivilegeMode(
+      source.scope,
+      "elevated"
+    )
+    const [person, detail] = await Promise.all([
+      context.queryClient.ensureQueryData(
+        personQueryOptions(source.scope, params.userId)
+      ),
+      canAdminUsers
+        ? context.queryClient.ensureQueryData(
+            userDetailQueryOptions(administrationScope, params.userId)
+          )
+        : undefined,
+    ])
     let adminUser: WorkspaceAdminUser | null | undefined
     if (canAdminUsers && !person?.is_service_account) {
-      const administrationScope = identityScopeWithPrivilegeMode(
-        source.scope,
-        "elevated"
-      )
-      adminUser = await context.queryClient.ensureQueryData(
-        userDetailQueryOptions(administrationScope, params.userId)
-      )
+      adminUser = detail
     } else if (canAdminServiceAccounts && person?.is_service_account) {
-      const administrationScope = identityScopeWithPrivilegeMode(
-        source.scope,
-        "elevated"
-      )
       await context.queryClient.ensureQueryData(
         serviceAccountAdminQueryOptions(administrationScope, params.userId)
       )
