@@ -1,7 +1,5 @@
-import type { AsyncLocalStorage } from "node:async_hooks"
 import { randomBytes } from "node:crypto"
 
-import { H3Event } from "h3-v2"
 import { Client } from "pg"
 import {
   afterAll,
@@ -26,18 +24,10 @@ import {
 } from "./hub-auth.server"
 import { closePostgresSessionPool } from "./hub-session-postgres.server"
 import { readSession, replaceSession } from "./hub-session-store.server"
+import { startRequestScope } from "@/test/start-request"
 
 const databaseUrl = process.env.HUB_TEST_SESSION_DATABASE_URL
 const sessionKeys = `k1:${randomBytes(32).toString("base64url")}`
-
-const storageKey = Symbol.for("tanstack-start:event-storage")
-const eventStorage = (
-  globalThis as typeof globalThis &
-    Record<
-      typeof storageKey,
-      AsyncLocalStorage<{ h3Event: H3Event }> | undefined
-    >
-)[storageKey]!
 
 const tokenResponse = {
   access_token: "access-1",
@@ -77,12 +67,8 @@ function pathOf(input: string | URL | Request) {
 async function signedInSession(
   respond: (path: string) => Response | Promise<Response>
 ) {
-  const loginEvent = new H3Event(
-    new Request("http://127.0.0.1:3000/hub/auth/login")
-  )
-  const location = await eventStorage.run({ h3Event: loginEvent }, () =>
-    beginHubLogin("/hub/")
-  )
+  const loginScope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
+  const location = await loginScope.run(() => beginHubLogin("/hub/"))
   const state = new URL(location).searchParams.get("state")!
   const requests: string[] = []
   vi.stubGlobal(
@@ -95,36 +81,31 @@ async function signedInSession(
       return respond(path)
     })
   )
-  const loginCookie = loginEvent.res.headers
-    .getSetCookie()
+  const loginCookie = loginScope
+    .setCookies()
     .find((value) => value.startsWith("crucible_hub_login="))!
     .split(";")[0]
-  const callbackEvent = new H3Event(
-    new Request("http://127.0.0.1:3000/hub/auth/callback", {
-      headers: { cookie: loginCookie },
-    })
+  const callbackScope = startRequestScope(
+    "http://127.0.0.1:3000/hub/auth/callback",
+    { headers: { cookie: loginCookie } }
   )
-  await eventStorage.run({ h3Event: callbackEvent }, () =>
-    finishHubLogin("code", state)
-  )
-  const sessionCookie = callbackEvent.res.headers
-    .getSetCookie()
+  await callbackScope.run(() => finishHubLogin("code", state))
+  const sessionCookie = callbackScope
+    .setCookies()
     .find((value) => value.startsWith("crucible_hub_session="))!
     .split(";")[0]
   const sessionId = sessionCookie.slice("crucible_hub_session=".length)
 
   let currentCookie = sessionCookie
   const inRequest = <T>(work: () => Promise<T>) => {
-    const event = new H3Event(
-      new Request("http://127.0.0.1:3000/hub/data", {
-        headers: { cookie: currentCookie },
-      })
-    )
-    return eventStorage
-      .run({ h3Event: event }, () => withHubAuthRequest(work))
+    const scope = startRequestScope("http://127.0.0.1:3000/hub/data", {
+      headers: { cookie: currentCookie },
+    })
+    return scope
+      .run(() => withHubAuthRequest(work))
       .finally(() => {
-        const rotated = event.res.headers
-          .getSetCookie()
+        const rotated = scope
+          .setCookies()
           .find((value) => value.startsWith("crucible_hub_session="))
         if (rotated) currentCookie = rotated.split(";")[0]
       })

@@ -1,6 +1,3 @@
-import type { AsyncLocalStorage } from "node:async_hooks"
-
-import { H3Event } from "h3-v2"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
@@ -10,15 +7,8 @@ import {
   hubAuthPublicOrigin,
   sessionApiFetch,
 } from "./hub-auth.server"
-
-const storageKey = Symbol.for("tanstack-start:event-storage")
-const eventStorage = (
-  globalThis as typeof globalThis &
-    Record<
-      typeof storageKey,
-      AsyncLocalStorage<{ h3Event: H3Event }> | undefined
-    >
-)[storageKey]!
+import { startRequestScope } from "@/test/start-request"
+import type { StartRequestScope } from "@/test/start-request"
 
 const tokenResponse = {
   access_token: "access-1",
@@ -37,23 +27,21 @@ function stubHubAuthEnv() {
 }
 
 async function beginLogin(returnTo: string | null) {
-  const h3Event = new H3Event(
-    new Request(
-      `http://127.0.0.1:3000/hub/auth/login${
-        returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""
-      }`
-    )
+  const scope = startRequestScope(
+    `http://127.0.0.1:3000/hub/auth/login${
+      returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""
+    }`
   )
   let location: string | undefined
-  await eventStorage.run({ h3Event }, async () => {
+  await scope.run(async () => {
     location = await beginHubLogin(returnTo)
   })
-  return { h3Event, location: location! }
+  return { scope, location: location! }
 }
 
-function loginCookie(h3Event: H3Event): string {
-  const cookie = h3Event.res.headers
-    .getSetCookie()
+function loginCookie(scope: StartRequestScope): string {
+  const cookie = scope
+    .setCookies()
     .find((value) => value.startsWith("crucible_hub_login="))
   expect(cookie).toBeDefined()
   return cookie!
@@ -64,15 +52,11 @@ async function finishLogin(
   code: string,
   state: string
 ) {
-  const h3Event = new H3Event(
-    new Request("http://127.0.0.1:3000/hub/auth/callback", {
-      headers: { cookie: transactionCookie.split(";")[0] },
-    })
-  )
-  const destination = await eventStorage.run({ h3Event }, () =>
-    finishHubLogin(code, state)
-  )
-  return { destination, cookies: h3Event.res.headers.getSetCookie() }
+  const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/callback", {
+    headers: { cookie: transactionCookie.split(";")[0] },
+  })
+  const destination = await scope.run(() => finishHubLogin(code, state))
+  return { destination, cookies: scope.setCookies() }
 }
 
 describe("hub login exchange", () => {
@@ -84,7 +68,7 @@ describe("hub login exchange", () => {
 
   it("begins a login with PKCE parameters and completes it into a session", async () => {
     stubHubAuthEnv()
-    const { h3Event, location } = await beginLogin("/hub/data")
+    const { scope, location } = await beginLogin("/hub/data")
     const providerUrl = new URL(location)
 
     expect(providerUrl.origin).toBe("https://api.example.test")
@@ -99,7 +83,7 @@ describe("hub login exchange", () => {
     )
     expect(providerUrl.searchParams.get("state")).toMatch(/^[A-Za-z0-9_-]{43}$/)
 
-    const transactionCookie = loginCookie(h3Event)
+    const transactionCookie = loginCookie(scope)
     expect(transactionCookie).toContain("HttpOnly")
     expect(transactionCookie).toContain("SameSite=Lax")
     expect(transactionCookie).toContain("Max-Age=600")
@@ -158,10 +142,10 @@ describe("hub login exchange", () => {
 
   it("falls back to the Hub home when returnTo leaves the Hub origin", async () => {
     stubHubAuthEnv()
-    const { h3Event, location } = await beginLogin(
+    const { scope, location } = await beginLogin(
       "https://evil.example/hub/data"
     )
-    const transactionCookie = loginCookie(h3Event)
+    const transactionCookie = loginCookie(scope)
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => Response.json(tokenResponse))
@@ -173,8 +157,8 @@ describe("hub login exchange", () => {
 
   it("rejects a callback whose state does not match the transaction", async () => {
     stubHubAuthEnv()
-    const { h3Event } = await beginLogin("/hub/data")
-    const transactionCookie = loginCookie(h3Event)
+    const { scope } = await beginLogin("/hub/data")
+    const transactionCookie = loginCookie(scope)
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => Response.json(tokenResponse))
@@ -186,8 +170,8 @@ describe("hub login exchange", () => {
 
   it("consumes a sign-in transaction once", async () => {
     stubHubAuthEnv()
-    const { h3Event, location } = await beginLogin("/hub/data")
-    const transactionCookie = loginCookie(h3Event)
+    const { scope, location } = await beginLogin("/hub/data")
+    const transactionCookie = loginCookie(scope)
     const state = new URL(location).searchParams.get("state")!
     vi.stubGlobal(
       "fetch",
@@ -201,8 +185,8 @@ describe("hub login exchange", () => {
 
   it("rejects the callback when the token exchange is rejected", async () => {
     stubHubAuthEnv()
-    const { h3Event, location } = await beginLogin("/hub/data")
-    const transactionCookie = loginCookie(h3Event)
+    const { scope, location } = await beginLogin("/hub/data")
+    const transactionCookie = loginCookie(scope)
     const state = new URL(location).searchParams.get("state")!
     vi.stubGlobal(
       "fetch",
@@ -215,12 +199,8 @@ describe("hub login exchange", () => {
 
   it("forwards max_age to force ORCID re-authentication", async () => {
     stubHubAuthEnv()
-    const h3Event = new H3Event(
-      new Request("http://127.0.0.1:3000/hub/auth/login")
-    )
-    const location = await eventStorage.run({ h3Event }, () =>
-      beginHubLogin("/hub/account", 0)
-    )
+    const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
+    const location = await scope.run(() => beginHubLogin("/hub/account", 0))
     expect(new URL(location).searchParams.get("max_age")).toBe("0")
   })
 
@@ -228,7 +208,7 @@ describe("hub login exchange", () => {
     vi.useFakeTimers({ toFake: ["Date"] })
     vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
     stubHubAuthEnv()
-    const { h3Event, location } = await beginLogin("/hub/")
+    const { scope, location } = await beginLogin("/hub/")
     const state = new URL(location).searchParams.get("state")!
     const requests: string[] = []
     vi.stubGlobal(
@@ -254,17 +234,15 @@ describe("hub login exchange", () => {
         })
       })
     )
-    const { cookies } = await finishLogin(loginCookie(h3Event), "code", state)
+    const { cookies } = await finishLogin(loginCookie(scope), "code", state)
     const sessionCookie = cookies
       .find((value) => value.startsWith("crucible_hub_session="))!
       .split(";")[0]
 
-    const apiEvent = new H3Event(
-      new Request("http://127.0.0.1:3000/hub/account", {
-        headers: { cookie: sessionCookie },
-      })
-    )
-    await eventStorage.run({ h3Event: apiEvent }, async () => {
+    const apiScope = startRequestScope("http://127.0.0.1:3000/hub/account", {
+      headers: { cookie: sessionCookie },
+    })
+    await apiScope.run(async () => {
       const response = await sessionApiFetch()(
         "https://api.example.test/service_accounts",
         { method: "POST" }
@@ -278,7 +256,7 @@ describe("hub login exchange", () => {
   async function signedInSession(
     respond: (path: string) => Response | Promise<Response>
   ) {
-    const { h3Event, location } = await beginLogin("/hub/")
+    const { scope, location } = await beginLogin("/hub/")
     const state = new URL(location).searchParams.get("state")!
     const requests: string[] = []
     vi.stubGlobal(
@@ -298,17 +276,15 @@ describe("hub login exchange", () => {
         return respond(url.pathname)
       })
     )
-    const { cookies } = await finishLogin(loginCookie(h3Event), "code", state)
+    const { cookies } = await finishLogin(loginCookie(scope), "code", state)
     const sessionCookie = cookies
       .find((value) => value.startsWith("crucible_hub_session="))!
       .split(";")[0]
     const call = () => {
-      const apiEvent = new H3Event(
-        new Request("http://127.0.0.1:3000/hub/data", {
-          headers: { cookie: sessionCookie },
-        })
-      )
-      return eventStorage.run({ h3Event: apiEvent }, async () => {
+      const apiScope = startRequestScope("http://127.0.0.1:3000/hub/data", {
+        headers: { cookie: sessionCookie },
+      })
+      return apiScope.run(async () => {
         try {
           const response = await sessionApiFetch()(
             "https://api.example.test/datasets"
@@ -415,11 +391,11 @@ describe("hub login exchange", () => {
     async (callback, origin) => {
       stubHubAuthEnv()
       vi.stubEnv("HUB_AUTH_CALLBACK_URI", callback)
-      const { h3Event, location } = await beginLogin("/hub/data")
+      const { scope, location } = await beginLogin("/hub/data")
 
       expect(new URL(location).searchParams.get("redirect_uri")).toBe(callback)
       expect(hubAuthPublicOrigin()).toBe(origin)
-      expect(loginCookie(h3Event)).not.toContain("Secure")
+      expect(loginCookie(scope)).not.toContain("Secure")
     }
   )
 

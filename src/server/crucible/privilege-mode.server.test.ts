@@ -1,26 +1,15 @@
-import type { AsyncLocalStorage } from "node:async_hooks"
-
-import { H3Event } from "h3-v2"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   clearLegacyPrivilegeModeCookie,
   writeGlobalPrivilegeMode,
 } from "./privilege-mode.server"
-
-const storageKey = Symbol.for("tanstack-start:event-storage")
-const eventStorage = (
-  globalThis as typeof globalThis &
-    Record<
-      typeof storageKey,
-      AsyncLocalStorage<{ h3Event: H3Event }> | undefined
-    >
-)[storageKey]!
+import { startRequestScope } from "@/test/start-request"
 
 function runWithRequest(request: Request, fn: () => Promise<void>) {
-  const h3Event = new H3Event(request)
-  return eventStorage.run({ h3Event }, fn).then(() => {
-    const cookies = h3Event.res.headers.getSetCookie()
+  const scope = startRequestScope(request.url, { headers: request.headers })
+  return scope.run(fn).then(() => {
+    const cookies = scope.setCookies()
     return cookies.filter((cookie) =>
       cookie.startsWith("crucible_hub_administrator_view=")
     )

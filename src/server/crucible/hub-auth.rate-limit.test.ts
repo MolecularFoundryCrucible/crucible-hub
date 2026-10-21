@@ -1,29 +1,16 @@
-import type { AsyncLocalStorage } from "node:async_hooks"
-
-import { H3Event } from "h3-v2"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   enforceHubLoginRateLimit,
   HubLoginRateLimitError,
 } from "./hub-auth.server"
-
-const storageKey = Symbol.for("tanstack-start:event-storage")
-const eventStorage = (
-  globalThis as typeof globalThis &
-    Record<
-      typeof storageKey,
-      AsyncLocalStorage<{ h3Event: H3Event }> | undefined
-    >
-)[storageKey]!
+import { startRequestScope } from "@/test/start-request"
 
 function attempt(ip: string): Promise<void> {
-  const h3Event = new H3Event(
-    new Request("https://hub.example.test/hub/auth/login", {
-      headers: { "x-forwarded-for": ip },
-    })
-  )
-  return eventStorage.run({ h3Event }, async () => {
+  const scope = startRequestScope("https://hub.example.test/hub/auth/login", {
+    headers: { "x-forwarded-for": ip },
+  })
+  return scope.run(async () => {
     enforceHubLoginRateLimit()
   })
 }
