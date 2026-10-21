@@ -37,8 +37,12 @@ const securityHeadersMiddleware = createMiddleware().server(
     )
     setResponseHeader("X-Frame-Options", "DENY")
     setResponseHeader("X-Content-Type-Options", "nosniff")
-    setResponseHeader("Referrer-Policy", "same-origin")
-    return next()
+    const result = await next()
+    // Routes such as the sign-in callback set a stricter policy that must win.
+    if (!result.response.headers.has("Referrer-Policy")) {
+      result.response.headers.set("Referrer-Policy", "same-origin")
+    }
+    return result
   }
 )
 const privateDocumentMiddleware = createMiddleware().server(
