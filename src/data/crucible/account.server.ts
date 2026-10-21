@@ -136,7 +136,7 @@ export async function checkWorkspaceUsernameExactMatch(
 
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/users", {
-    params: { query: { username, limit: 1 } },
+    params: { query: { username: [username], limit: 1 } },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response)

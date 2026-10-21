@@ -221,7 +221,7 @@ export interface paths {
         };
         /**
          * List Recent Resources
-         * @description Return the caller's recently viewed resources, newest first, limited to resources the caller can still read and that are not pending deletion. Entries older than 90 days are omitted.
+         * @description Return the caller's recently viewed resources, newest first, with `identifier` set to the instrument or project slug (null for datasets and samples), limited to resources the caller can still read and that are not pending deletion. Entries older than 90 days are omitted.
          */
         get: operations["list_recent_resources_account_recent_resources_get"];
         put?: never;
@@ -1590,7 +1590,7 @@ export interface paths {
          *     Each item carries the caller's effective role on the instrument record in role.
          *     Pass include_total=false to omit the exact authorization-filtered count.
          *     Defaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.
-         *     An exact instrument_id lookup searches every status unless status is also provided.
+         *     Exact instrument_id and mfid lookups search every status unless status is also provided.
          */
         get: operations["list_instruments_instruments_get"];
         put?: never;
@@ -2038,6 +2038,7 @@ export interface paths {
          *     Pass sort=project_id|title|created|updated|activity with direction=asc|desc to change the order,
          *     and active_since to keep only projects with recent activity.
          *     Pass include_total=false to omit the exact authorization-filtered count.
+         *     Exact project_id and mfid lookups find any project, like GET /projects/{project_ref}.
          */
         get: operations["list_projects_projects_get"];
         put?: never;
@@ -2813,8 +2814,9 @@ export interface paths {
          * @description Returns a paginated list of users. Platform administrators receive the full
          *     directory with email and platform roles; other callers receive public-safe
          *     profiles scoped to users who share an access group with them.
-         *     Exact unique_id, username, and email filters return the same authorized
-         *     representation as GET /users/{user_ref}. Any other query parameter is ignored
+         *     Exact unique_id, username, and email filters search every user and return the same
+         *     authorized representation as GET /users/{user_ref}; unique_id and username are
+         *     repeatable, at most 100 values each. Any other query parameter is ignored
          *     and reported through the Deprecation response header.
          */
         get: operations["list_users_users_get"];
@@ -2859,10 +2861,12 @@ export interface paths {
         put?: never;
         /**
          * Resolve Users
+         * @deprecated
          * @description Batch-resolve users by any mix of ORCIDs, usernames, or emails.
          *     `orcids` is matched against unique_id, so it also accepts service-account
          *     MFIDs; the response is keyed by unique_id. No email included.
          *     Any authenticated user can call this. Admins needing email should use GET /users/{user_ref}.
+         *     Deprecated: use GET /users with repeatable unique_id or username filters, or an exact email filter.
          */
         post: operations["resolve_users_users_resolve_post"];
         delete?: never;
@@ -2880,7 +2884,8 @@ export interface paths {
         };
         /**
          * Search Users
-         * @description Search users by username, first name, or last name. Returns public profiles only (no email).
+         * @description Search users by username, first name, or last name, ordered by match quality.
+         *     Returns public profiles only (no email) in the shared paginated envelope.
          *     Minimum query length: 3 characters. Maximum results: 50.
          */
         get: operations["search_users_users_search_get"];
@@ -4832,6 +4837,19 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /** PaginatedResponse[UserPublicRead] */
+        PaginatedResponse_UserPublicRead_: {
+            /** Items */
+            items: components["schemas"]["UserPublicRead"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
         /** PipelineRead */
         PipelineRead: {
             /** Description */
@@ -5136,6 +5154,8 @@ export interface components {
         };
         /** RecentResourceRead */
         RecentResourceRead: {
+            /** Identifier */
+            identifier?: string | null;
             /** Name */
             name?: string | null;
             /** Project Id */
@@ -7138,6 +7158,13 @@ export interface operations {
                 accessible_to_project?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
+                /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. */
+                mfid?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated alias of mfid. Cannot be combined with mfid.
+                 */
+                unique_id?: string[] | null;
                 include_metadata?: boolean;
                 include_links?: boolean;
                 include_owner?: boolean;
@@ -7177,7 +7204,6 @@ export interface operations {
                 /** @description Filter datasets assigned to this instrument slug (case-insensitive). May be combined with a matching instrument_mfid. */
                 instrument_id?: string | null;
                 keyword?: string | null;
-                unique_id?: string | null;
                 public?: boolean | null;
                 dataset_name?: string | null;
                 /** @description Exact stable owner identifier for a human or service account. */
@@ -9812,6 +9838,8 @@ export interface operations {
             query?: {
                 /** @description Exact instrument slug. */
                 instrument_id?: string | null;
+                /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. Searches every status unless status is also provided. */
+                mfid?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
                 affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
                 include_metadata?: boolean;
@@ -10866,6 +10894,8 @@ export interface operations {
             query?: {
                 /** @description Exact project slug. */
                 project_id?: string | null;
+                /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. */
+                mfid?: string[] | null;
                 /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
@@ -12138,6 +12168,13 @@ export interface operations {
                 accessible_to_project?: string[] | null;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
+                /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. */
+                mfid?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated alias of mfid. Cannot be combined with mfid.
+                 */
+                unique_id?: string[] | null;
                 include_metadata?: boolean;
                 include_links?: boolean;
                 include_owner?: boolean;
@@ -12177,7 +12214,6 @@ export interface operations {
                 include_datasets?: boolean;
                 /** @description Filter samples linked to this canonical dataset MFID. */
                 dataset_mfid?: string | null;
-                unique_id?: string | null;
                 public?: boolean | null;
                 sample_name?: string | null;
                 sample_type?: string | null;
@@ -12902,10 +12938,10 @@ export interface operations {
     list_users_users_get: {
         parameters: {
             query?: {
-                /** @description Exact ORCID or service-account MFID. */
-                unique_id?: string | null;
-                /** @description Exact username, matched case-insensitively. */
-                username?: string | null;
+                /** @description Repeatable exact ORCID or service-account MFID, at most 100 values, OR semantics. */
+                unique_id?: string[] | null;
+                /** @description Repeatable exact username, matched case-insensitively, at most 100 values, OR semantics. */
+                username?: string[] | null;
                 /** @description Exact email address, matched case-insensitively. */
                 email?: string | null;
                 /** @description Matching mode for first_name and last_name. True is a case-insensitive substring match, False an exact match. */
@@ -13126,7 +13162,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserPublicRead"][];
+                    "application/json": components["schemas"]["PaginatedResponse_UserPublicRead_"];
                 };
             };
             /** @description Validation Error */

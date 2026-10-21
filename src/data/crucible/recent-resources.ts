@@ -1,6 +1,7 @@
 export type RecentResourceKind = "dataset" | "instrument" | "project" | "sample"
 
 export type RecentResource = {
+  identifier: string | null
   kind: RecentResourceKind
   name: string
   projectId: string | null

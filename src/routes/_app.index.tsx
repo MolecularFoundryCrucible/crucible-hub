@@ -312,6 +312,7 @@ function HomePage() {
                     {recentlyViewed.map((item) => (
                       <HomeResourceLink
                         item={{
+                          identifier: item.identifier,
                           kind: item.kind,
                           name: item.name,
                           projectId: item.projectId,
@@ -442,6 +443,7 @@ function HomePage() {
 }
 
 type HomeResourceLinkItem = {
+  identifier?: string | null
   kind: RecentlyViewedResource["kind"]
   name: string
   projectId: string | null
@@ -456,13 +458,13 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
   const name = resourceDisplayName(item.kind, item.name, {
     mfid: item.uniqueId,
   })
-  const project = item.kind === "project"
+  const data = item.kind === "sample" || item.kind === "dataset"
   return (
     <ResourceListItem>
       <ResourceListItemContent className="select-text" layout="responsive">
         <ResourceIdentity
           className="w-full flex-1"
-          context={project && item.projectId !== name ? item.projectId : null}
+          context={!data && item.identifier !== name ? item.identifier : null}
           kind={item.kind}
           mfid={item.uniqueId}
           name={name}
@@ -474,7 +476,7 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
             />
           }
           presentation="collection"
-          projectId={project ? null : item.projectId}
+          projectId={data ? item.projectId : null}
         />
         {item.timestamp ? (
           <LabeledTimestamp

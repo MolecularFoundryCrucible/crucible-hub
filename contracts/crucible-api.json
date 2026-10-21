@@ -5395,6 +5395,60 @@
         "title": "PaginatedResponse[Union[UserRead, UserPublicRead]]",
         "type": "object"
       },
+      "PaginatedResponse_UserPublicRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserPublicRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "limit",
+          "items"
+        ],
+        "title": "PaginatedResponse[UserPublicRead]",
+        "type": "object"
+      },
       "PipelineRead": {
         "properties": {
           "description": {
@@ -6261,6 +6315,17 @@
       },
       "RecentResourceRead": {
         "properties": {
+          "identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier"
+          },
           "name": {
             "anyOf": [
               {
@@ -9414,7 +9479,7 @@
         ]
       },
       "get": {
-        "description": "Return the caller's recently viewed resources, newest first, limited to resources the caller can still read and that are not pending deletion. Entries older than 90 days are omitted.",
+        "description": "Return the caller's recently viewed resources, newest first, with `identifier` set to the instrument or project slug (null for datasets and samples), limited to resources the caller can still read and that are not pending deletion. Entries older than 90 days are omitted.",
         "operationId": "list_recent_resources_account_recent_resources_get",
         "parameters": [
           {
@@ -11087,6 +11152,54 @@
             }
           },
           {
+            "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted.",
+            "in": "query",
+            "name": "mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted.",
+              "title": "Mfid"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated alias of mfid. Cannot be combined with mfid.",
+            "in": "query",
+            "name": "unique_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "deprecated": true,
+              "description": "Deprecated alias of mfid. Cannot be combined with mfid.",
+              "title": "Unique Id"
+            }
+          },
+          {
             "in": "query",
             "name": "include_metadata",
             "required": false,
@@ -11447,22 +11560,6 @@
                 }
               ],
               "title": "Keyword"
-            }
-          },
-          {
-            "in": "query",
-            "name": "unique_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Unique Id"
             }
           },
           {
@@ -18238,7 +18335,7 @@
     },
     "/instruments": {
       "get": {
-        "description": "Returns a paginated list of instruments filtered by any provided query parameters that\nmatch Instrument attributes. Matching is case-insensitive exact match.\nUse instrument_id for exact slug lookup. Other filterable fields include\nother_id, other_id_source, instrument_name, manufacturer,\nmodel, owner, location, description, instrument_type, status.\nUse owner_id for an exact owner match; owner remains as a deprecated alias.\nPass affiliation=owner to return only instruments authoritatively owned by the caller.\nPass sort=instrument_id|name|created|updated with direction=asc|desc to change the order.\nEach item carries the caller's effective role on the instrument record in role.\nPass include_total=false to omit the exact authorization-filtered count.\nDefaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.\nAn exact instrument_id lookup searches every status unless status is also provided.",
+        "description": "Returns a paginated list of instruments filtered by any provided query parameters that\nmatch Instrument attributes. Matching is case-insensitive exact match.\nUse instrument_id for exact slug lookup. Other filterable fields include\nother_id, other_id_source, instrument_name, manufacturer,\nmodel, owner, location, description, instrument_type, status.\nUse owner_id for an exact owner match; owner remains as a deprecated alias.\nPass affiliation=owner to return only instruments authoritatively owned by the caller.\nPass sort=instrument_id|name|created|updated with direction=asc|desc to change the order.\nEach item carries the caller's effective role on the instrument record in role.\nPass include_total=false to omit the exact authorization-filtered count.\nDefaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.\nExact instrument_id and mfid lookups search every status unless status is also provided.",
         "operationId": "list_instruments_instruments_get",
         "parameters": [
           {
@@ -18257,6 +18354,29 @@
               ],
               "description": "Exact instrument slug.",
               "title": "Instrument Id"
+            }
+          },
+          {
+            "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. Searches every status unless status is also provided.",
+            "in": "query",
+            "name": "mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. Searches every status unless status is also provided.",
+              "title": "Mfid"
             }
           },
           {
@@ -21138,7 +21258,7 @@
     },
     "/projects": {
       "get": {
-        "description": "Returns a paginated list of projects the user is authorized to see, including the resolved project lead\nand the caller's own membership role.\nPass affiliation=owner to return only projects authoritatively owned by the caller.\nPass member_ref (and optionally member_role) to return only projects where the given users are members.\nPass sort=project_id|title|created|updated|activity with direction=asc|desc to change the order,\nand active_since to keep only projects with recent activity.\nPass include_total=false to omit the exact authorization-filtered count.",
+        "description": "Returns a paginated list of projects the user is authorized to see, including the resolved project lead\nand the caller's own membership role.\nPass affiliation=owner to return only projects authoritatively owned by the caller.\nPass member_ref (and optionally member_role) to return only projects where the given users are members.\nPass sort=project_id|title|created|updated|activity with direction=asc|desc to change the order,\nand active_since to keep only projects with recent activity.\nPass include_total=false to omit the exact authorization-filtered count.\nExact project_id and mfid lookups find any project, like GET /projects/{project_ref}.",
         "operationId": "list_projects_projects_get",
         "parameters": [
           {
@@ -21157,6 +21277,29 @@
               ],
               "description": "Exact project slug.",
               "title": "Project Id"
+            }
+          },
+          {
+            "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted.",
+            "in": "query",
+            "name": "mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted.",
+              "title": "Mfid"
             }
           },
           {
@@ -24365,6 +24508,54 @@
             }
           },
           {
+            "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted.",
+            "in": "query",
+            "name": "mfid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted.",
+              "title": "Mfid"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated alias of mfid. Cannot be combined with mfid.",
+            "in": "query",
+            "name": "unique_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "deprecated": true,
+              "description": "Deprecated alias of mfid. Cannot be combined with mfid.",
+              "title": "Unique Id"
+            }
+          },
+          {
             "in": "query",
             "name": "include_metadata",
             "required": false,
@@ -24687,22 +24878,6 @@
               ],
               "description": "Filter samples linked to this canonical dataset MFID.",
               "title": "Dataset Mfid"
-            }
-          },
-          {
-            "in": "query",
-            "name": "unique_id",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Unique Id"
             }
           },
           {
@@ -26830,42 +27005,52 @@
     },
     "/users": {
       "get": {
-        "description": "Returns a paginated list of users. Platform administrators receive the full\ndirectory with email and platform roles; other callers receive public-safe\nprofiles scoped to users who share an access group with them.\nExact unique_id, username, and email filters return the same authorized\nrepresentation as GET /users/{user_ref}. Any other query parameter is ignored\nand reported through the Deprecation response header.",
+        "description": "Returns a paginated list of users. Platform administrators receive the full\ndirectory with email and platform roles; other callers receive public-safe\nprofiles scoped to users who share an access group with them.\nExact unique_id, username, and email filters search every user and return the same\nauthorized representation as GET /users/{user_ref}; unique_id and username are\nrepeatable, at most 100 values each. Any other query parameter is ignored\nand reported through the Deprecation response header.",
         "operationId": "list_users_users_get",
         "parameters": [
           {
-            "description": "Exact ORCID or service-account MFID.",
+            "description": "Repeatable exact ORCID or service-account MFID, at most 100 values, OR semantics.",
             "in": "query",
             "name": "unique_id",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Exact ORCID or service-account MFID.",
+              "description": "Repeatable exact ORCID or service-account MFID, at most 100 values, OR semantics.",
               "title": "Unique Id"
             }
           },
           {
-            "description": "Exact username, matched case-insensitively.",
+            "description": "Repeatable exact username, matched case-insensitively, at most 100 values, OR semantics.",
             "in": "query",
             "name": "username",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Exact username, matched case-insensitively.",
+              "description": "Repeatable exact username, matched case-insensitively, at most 100 values, OR semantics.",
               "title": "Username"
             }
           },
@@ -27399,7 +27584,8 @@
     },
     "/users/resolve": {
       "post": {
-        "description": "Batch-resolve users by any mix of ORCIDs, usernames, or emails.\n`orcids` is matched against unique_id, so it also accepts service-account\nMFIDs; the response is keyed by unique_id. No email included.\nAny authenticated user can call this. Admins needing email should use GET /users/{user_ref}.",
+        "deprecated": true,
+        "description": "Batch-resolve users by any mix of ORCIDs, usernames, or emails.\n`orcids` is matched against unique_id, so it also accepts service-account\nMFIDs; the response is keyed by unique_id. No email included.\nAny authenticated user can call this. Admins needing email should use GET /users/{user_ref}.\nDeprecated: use GET /users with repeatable unique_id or username filters, or an exact email filter.",
         "operationId": "resolve_users_users_resolve_post",
         "parameters": [
           {
@@ -27483,7 +27669,7 @@
     },
     "/users/search": {
       "get": {
-        "description": "Search users by username, first name, or last name. Returns public profiles only (no email).\nMinimum query length: 3 characters. Maximum results: 50.",
+        "description": "Search users by username, first name, or last name, ordered by match quality.\nReturns public profiles only (no email) in the shared paginated envelope.\nMinimum query length: 3 characters. Maximum results: 50.",
         "operationId": "search_users_users_search_get",
         "parameters": [
           {
@@ -27553,11 +27739,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/UserPublicRead"
-                  },
-                  "title": "Response Search Users Users Search Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/PaginatedResponse_UserPublicRead_"
                 }
               }
             },

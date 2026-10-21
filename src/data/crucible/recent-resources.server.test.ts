@@ -63,11 +63,20 @@ describe("recent resources transport", () => {
         }
         return crucibleApiResponse([
           {
+            identifier: null,
             name: null,
             project_id: "beamline",
             resource_mfid: "dataset-1",
             resource_type: "dataset",
             viewed_at: "2026-10-14T12:00:00Z",
+          },
+          {
+            identifier: "hard-xray-microprobe",
+            name: "Hard X-ray Microprobe",
+            project_id: null,
+            resource_mfid: "instrument-1",
+            resource_type: "instrument",
+            viewed_at: "2026-10-14T11:00:00Z",
           },
         ])
       })
@@ -75,11 +84,20 @@ describe("recent resources transport", () => {
 
     await expect(readRecentResources(10)).resolves.toEqual([
       {
+        identifier: null,
         kind: "dataset",
         name: "dataset-1",
         projectId: "beamline",
         uniqueId: "dataset-1",
         viewedAt: "2026-10-14T12:00:00Z",
+      },
+      {
+        identifier: "hard-xray-microprobe",
+        kind: "instrument",
+        name: "Hard X-ray Microprobe",
+        projectId: null,
+        uniqueId: "instrument-1",
+        viewedAt: "2026-10-14T11:00:00Z",
       },
     ])
     expect(new URL(requests[0].url).searchParams.get("limit")).toBe("10")

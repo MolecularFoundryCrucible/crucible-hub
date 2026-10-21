@@ -100,6 +100,7 @@ function ProjectWorkspace() {
   useRememberRecentlyViewed(
     project
       ? {
+          identifier: project.project_id,
           kind: "project",
           name: displayName,
           projectId: project.project_id,

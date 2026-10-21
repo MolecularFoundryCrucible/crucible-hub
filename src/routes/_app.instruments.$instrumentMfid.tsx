@@ -102,6 +102,7 @@ function InstrumentPage() {
   useRememberRecentlyViewed(
     resource?.kind === "instrument"
       ? {
+          identifier: resource.instrument_id ?? null,
           kind: "instrument",
           name: displayName,
           projectId: null,

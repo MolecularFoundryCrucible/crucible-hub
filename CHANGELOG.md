@@ -4,6 +4,9 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Showed the instrument identifier under instruments in Home's Recently viewed, matching projects and Your instruments, using the identifier the Crucible API now returns with recently viewed items.
+- Updated to the Crucible API contract at `c51a5a6`, which returns people search results as `{ limit, items }`.
+
 ## 1.6.0 - 2026-10-21
 
 - Accepted people search results from the Crucible API either as a list or as the upcoming paginated `{ limit, items }` response, so the API can switch shapes without breaking search or person pickers.

@@ -125,6 +125,7 @@ export function ResourceWorkspace({
   useRememberRecentlyViewed(
     resource && (resource.kind === "sample" || resource.kind === "dataset")
       ? {
+          identifier: null,
           kind: resource.kind,
           name: displayName,
           projectId:

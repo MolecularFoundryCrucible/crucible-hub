@@ -49,6 +49,7 @@ function fixtureResource(
   const sample = workspace.samples.find((item) => item.unique_id === mfid)
   if (sample) {
     return {
+      identifier: null,
       kind: "sample",
       name: sample.sample_name,
       projectId: sample.project_id ?? null,
@@ -58,6 +59,7 @@ function fixtureResource(
   const dataset = workspace.datasets.find((item) => item.unique_id === mfid)
   if (dataset) {
     return {
+      identifier: null,
       kind: "dataset",
       name: dataset.dataset_name ?? mfid,
       projectId: dataset.project_id ?? null,
@@ -67,6 +69,7 @@ function fixtureResource(
   const project = workspace.projects.find((item) => item.unique_id === mfid)
   if (project) {
     return {
+      identifier: project.project_id,
       kind: "project",
       name: project.title ?? mfid,
       projectId: project.project_id,
@@ -78,6 +81,7 @@ function fixtureResource(
   )
   if (instrument) {
     return {
+      identifier: instrument.instrument_id ?? null,
       kind: "instrument",
       name: instrument.instrument_name,
       projectId: null,
@@ -111,6 +115,7 @@ export async function readRecentResources(
   )
   if (!result.data) throw new CrucibleResponseError(result.response)
   return result.data.map((item) => ({
+    identifier: item.identifier ?? null,
     kind: item.resource_type,
     name: item.name ?? item.resource_mfid,
     projectId: item.project_id ?? null,

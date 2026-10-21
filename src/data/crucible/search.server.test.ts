@@ -114,7 +114,8 @@ describe("workspace search source", () => {
       vi.fn(async (request: Request) => {
         const url = new URL(request.url)
         affiliations.set(url.pathname, url.searchParams.getAll("affiliation"))
-        if (url.pathname === "/users/search") return crucibleApiResponse([])
+        if (url.pathname === "/users/search")
+          return crucibleApiResponse({ items: [], limit: 8 })
         return crucibleApiResponse({ items: [], limit: 8, total: 0 })
       })
     )
@@ -285,7 +286,8 @@ describe("workspace search source", () => {
         if (url.pathname === "/instruments/search") {
           return new Response(null, { status: 503 })
         }
-        if (url.pathname === "/users/search") return crucibleApiResponse([])
+        if (url.pathname === "/users/search")
+          return crucibleApiResponse({ items: [], limit: 8 })
         const items =
           url.pathname === "/projects/search"
             ? [
@@ -322,35 +324,6 @@ describe("workspace search source", () => {
     ).toBe(true)
   })
 
-  it("reads people search results as a bare array or a paginated envelope", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "api")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
-    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
-    const person = {
-      first_name: "Riley",
-      is_service_account: false,
-      last_name: "Novak",
-      unique_id: "0000-0000-0000-0059",
-      username: "riley.novak",
-    }
-    const names = async (body: unknown) => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(async () => crucibleApiResponse(body))
-      )
-      const result = await searchWorkspace({
-        kinds: ["person"],
-        limit: 8,
-        query: "Novak",
-      })
-      return result.groups[0].items.map((item) => item.name)
-    }
-
-    expect(await names([person])).toEqual(["Riley Novak"])
-    expect(await names({ items: [person], limit: 8 })).toEqual(["Riley Novak"])
-  })
-
   it("falls back to the username or MFID when a person has no display name", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
@@ -359,29 +332,32 @@ describe("workspace search source", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        crucibleApiResponse([
-          {
-            first_name: "Titanx",
-            is_service_account: true,
-            last_name: "Admin",
-            unique_id: "user-mfid-1",
-            username: "titanx_admin",
-          },
-          {
-            first_name: "",
-            is_service_account: true,
-            last_name: "",
-            unique_id: "user-mfid-2",
-            username: "sa-hip",
-          },
-          {
-            first_name: "",
-            is_service_account: true,
-            last_name: "",
-            unique_id: "user-mfid-3",
-            username: null,
-          },
-        ])
+        crucibleApiResponse({
+          items: [
+            {
+              first_name: "Titanx",
+              is_service_account: true,
+              last_name: "Admin",
+              unique_id: "user-mfid-1",
+              username: "titanx_admin",
+            },
+            {
+              first_name: "",
+              is_service_account: true,
+              last_name: "",
+              unique_id: "user-mfid-2",
+              username: "sa-hip",
+            },
+            {
+              first_name: "",
+              is_service_account: true,
+              last_name: "",
+              unique_id: "user-mfid-3",
+              username: null,
+            },
+          ],
+          limit: 8,
+        })
       )
     )
 
