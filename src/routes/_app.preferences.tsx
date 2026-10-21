@@ -272,9 +272,9 @@ function PreferencesPage() {
                   />
                 </PreferenceField>
                 <PreferenceField
-                  description="Sample and dataset lists and search start with public data from others included."
+                  description="Sample and dataset lists and search start with public data included."
                   id="include-public-data"
-                  title="Include public data from others"
+                  title="Include public data"
                 >
                   <Switch
                     checked={preferences.hub?.include_public_data === true}

@@ -17,7 +17,7 @@
 - Administrator view (`privilegeModeFromScope(scope) === "elevated"`) never sends `member`; the checkbox and pill are hidden there.
 - Ownership ("Owned by me", Home "Mine") sends only `owner`; the Public checkbox is disabled while it is active.
 - URL parameter `publicData`: `"include" | "exclude"`, absent means the viewer's default. Written only when it differs from the default.
-- Pill text exactly `Public`; checkbox label exactly `Public data from others`; offer button exactly `Include public data`; preference title exactly `Include public data from others`.
+- Pill text exactly `Public`; checkbox label exactly `Include public data`; offer button exactly `Include public data`; preference title exactly `Include public data`.
 - Projects, instruments, recently viewed, detail pages, graph, relationships, QR and direct links are unchanged.
 - No em dashes; no filler UI text; no code comments unless the why is non-obvious.
 - Before pushing: `npm run validate:static`, `npm run audit`, `npm run test:production`. Never `npm run test:browser` or a second Vite dev server.
@@ -73,7 +73,7 @@
 
 - [ ] **Step 1: Write failing tests.** Schema parses `{ hub: { include_public_data: true } }` and drops invalid values; the hook returns false with no preferences and true when set.
 - [ ] **Step 2:** Run them. Expected: FAIL.
-- [ ] **Step 3:** Implement; Preferences row title `Include public data from others`, description `Sample and dataset lists and search start with public data from others included.`, Switch updates `hub.include_public_data`.
+- [ ] **Step 3:** Implement; Preferences row title `Include public data`, description `Sample and dataset lists and search start with public data included.`, Switch updates `hub.include_public_data`.
 - [ ] **Step 4:** Run tests and `npx tsc --noEmit`. Expected: PASS.
 - [ ] **Step 5:** Commit `feat(preferences): add the include public data default`.
 
@@ -92,7 +92,7 @@
 - [ ] **Step 2:** Run. Expected: FAIL.
 - [ ] **Step 3:** Implement. The loader and the component must compute the same affiliation (both read the preference through the query cache) so SSR dehydration keys match.
 - [ ] **Step 4:** Run tests, `npx tsc --noEmit`, `npm run design:check`. Expected: PASS.
-- [ ] **Step 5:** Commit `feat(data): filter public data from others on the Data page`.
+- [ ] **Step 5:** Commit `feat(data): filter public data on the Data page`.
 
 ### Task 4: Project and instrument data
 
@@ -123,7 +123,7 @@
 
 - Consumes: Tasks 1 and 2.
 
-- [ ] **Step 1: Write failing tests.** Global search: empty sample and dataset groups with the filter off render `Include public data`, whose href is `/hub/search?q=tf000069&publicData=include`. Production spec: Data hides the fixture public-only dataset by default, shows it after checking `Public data from others` (pill `Public` visible), and the public-only dataset still opens by direct URL; search for its name shows `Include public data` and, after clicking, the result.
+- [ ] **Step 1: Write failing tests.** Global search: empty sample and dataset groups with the filter off render `Include public data`, whose href is `/hub/search?q=tf000069&publicData=include`. Production spec: Data hides the fixture public-only dataset by default, shows it after checking `Include public data` (pill `Public` visible), and the public-only dataset still opens by direct URL; search for its name shows `Include public data` and, after clicking, the result.
 - [ ] **Step 2:** Run `npx vitest run` for the unit tests and `npm run test:production` for the spec. Expected: FAIL.
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** Run both. Expected: PASS.

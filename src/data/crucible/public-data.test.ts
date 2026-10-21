@@ -30,7 +30,7 @@ describe("resolveCollectionAffiliation", () => {
     }
   })
 
-  it("excludes public data from others by default", () => {
+  it("excludes public data by default", () => {
     expect(
       resolveCollectionAffiliation({
         elevated: false,

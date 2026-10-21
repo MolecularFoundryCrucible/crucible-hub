@@ -6,12 +6,12 @@ Date: 2026-10-20
 
 Lists in the Hub currently include every sample and dataset the viewer can read, including records that are readable only because someone made them public. For an active Crucible user, those scattered public samples and datasets from strangers are noise in their first impression of Data and Home.
 
-By default, lists should show what the viewer is actually involved in. Public data from others stays fully reachable: a shared MFID, link or QR code opens normally, and anyone (especially people with no data of their own) can deliberately include public data to browse what others have published.
+By default, lists should show what the viewer is actually involved in. Include public data stays fully reachable: a shared MFID, link or QR code opens normally, and anyone (especially people with no data of their own) can deliberately include public data to browse what others have published.
 
 ## Goals
 
 - Sample and dataset lists, group directories and search hide public-only records by default.
-- One filter, "Public data from others", brings them back in any of those places.
+- One filter, "Include public data", brings them back in any of those places.
 - A saved account preference decides whether that filter starts on or off.
 - Direct access never changes.
 
@@ -43,10 +43,10 @@ By default, lists should show what the viewer is actually involved in. Public da
 
 ## User decisions
 
-- **Placement:** the filter lives in the Filters panel, in an "Include" section, as a "Public data from others" checkbox.
+- **Placement:** the filter lives in the Filters panel, in an "Include" section, as a "Include public data" checkbox.
 - **Pill:** whenever public data is included, whether from the viewer's default or chosen on that list, the active-filter row shows a short removable pill: **Public ×**. The × turns it off for that list. A viewer whose default is on therefore always sees the pill, which is honest about what the list contains.
 - **Clearing:** "Clear" and "Clear all" remove it like any other filter, which returns it to the viewer's saved default.
-- **Preference:** Preferences gets an "Include public data from others" toggle, off by default, in the Data section. It sets the filter's starting value everywhere it applies. It never locks the filter.
+- **Preference:** Preferences gets an "Include public data" toggle, off by default, in the Data section. It sets the filter's starting value everywhere it applies. It never locks the filter.
 - **Links:** like the Hub's other filters, an explicit value is part of the URL. A link without it uses the opener's own default.
 - **Empty search:** when a search returns no samples or datasets and the filter is off, the empty state offers **Include public data**, which retries that search with the filter on. It does not change the saved preference.
 
