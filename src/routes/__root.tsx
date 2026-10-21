@@ -9,7 +9,7 @@ import {
 import { isCancelledError } from "@tanstack/react-query"
 import { useEffect } from "react"
 
-import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg"
+import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg?no-inline"
 import { RouteProgress } from "@/components/route-progress"
 import { useRouteErrorReport } from "@/components/crucible/route-error-report"
 import { ThemeProvider } from "@/components/theme-provider"
