@@ -2,7 +2,7 @@ import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.quer
 import { privilegeModeFromScope } from "@/data/crucible/query-keys"
 import { useIncludePublicByDefault } from "@/features/preferences/public-data"
 import { buttonVariants, Button } from "@/components/ui/button"
-import { useQueries } from "@tanstack/react-query"
+import { hashKey, useQueries } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import { useMemo, useState } from "react"
@@ -73,6 +73,8 @@ export const Route = createFileRoute("/_app/")({
       recentScope: preferences?.hub?.home_recent_scope ?? "all",
     })
 
+    const sampleOptions = samplesQueryOptions(source.scope, recentFilters)
+    const datasetOptions = datasetsQueryOptions(source.scope, recentFilters)
     await Promise.allSettled([
       context.queryClient.prefetchQuery(
         projectsQueryOptions(source.scope, {
@@ -86,14 +88,19 @@ export const Route = createFileRoute("/_app/")({
       context.queryClient.prefetchQuery(
         instrumentsQueryOptions(source.scope, homeInstrumentQuery)
       ),
-      context.queryClient.prefetchQuery(
-        samplesQueryOptions(source.scope, recentFilters)
-      ),
-      context.queryClient.prefetchQuery(
-        datasetsQueryOptions(source.scope, recentFilters)
-      ),
+      context.queryClient.prefetchQuery(sampleOptions),
+      context.queryClient.prefetchQuery(datasetOptions),
     ])
-    return { greetingAt: Date.now() }
+    return {
+      failedRecentQueries: [sampleOptions, datasetOptions]
+        .filter(
+          (options) =>
+            context.queryClient.getQueryState(options.queryKey)?.status ===
+            "error"
+        )
+        .map((options) => hashKey(options.queryKey)),
+      greetingAt: Date.now(),
+    }
   },
   component: HomePage,
 })
@@ -150,26 +157,45 @@ function HomePage() {
     firstName: account?.first_name,
     timeZone: greetingAt ? timeZone : undefined,
   })
+  // Failed queries are not dehydrated, so until the browser retries them the
+  // server's failure decides the first render and hydration matches.
+  const failedOnServer = Route.useLoaderData()?.failedRecentQueries ?? []
+  const retryingServerFailure = (
+    result: { data: unknown; isFetching: boolean },
+    queryKey: readonly unknown[]
+  ) =>
+    result.data === undefined &&
+    result.isFetching &&
+    failedOnServer.includes(hashKey(queryKey))
+  const samplesRetrying = retryingServerFailure(
+    sampleResult,
+    samplesQueryOptions(scope, recentResourceFilters).queryKey
+  )
+  const datasetsRetrying = retryingServerFailure(
+    datasetResult,
+    datasetsQueryOptions(scope, recentResourceFilters).queryKey
+  )
   const projects = projectResult.data?.items ?? []
   const instruments = instrumentResult.data?.items ?? []
   const recentSnapshot = useRecentResourcesSnapshot({
     datasets: datasetResult.data?.items,
-    datasetsFetching: datasetResult.isFetching,
+    datasetsFetching: datasetResult.isFetching && !datasetsRetrying,
     identity: `${JSON.stringify(scope)}:${recentScope}`,
     limit: homeRecentResourceLimit,
     samples: sampleResult.data?.items,
-    samplesFetching: sampleResult.isFetching,
+    samplesFetching: sampleResult.isFetching && !samplesRetrying,
   })
   const recentResources = recentSnapshot.resources
   const recentDataPending = recentSnapshot.pending
+  const recentDataFailed =
+    sampleResult.isError ||
+    datasetResult.isError ||
+    samplesRetrying ||
+    datasetsRetrying
   const recentDataUnavailable =
-    !recentDataPending &&
-    recentResources.length === 0 &&
-    (sampleResult.isError || datasetResult.isError)
+    !recentDataPending && recentResources.length === 0 && recentDataFailed
   const recentDataPartial =
-    !recentDataPending &&
-    recentResources.length > 0 &&
-    (sampleResult.isError || datasetResult.isError)
+    !recentDataPending && recentResources.length > 0 && recentDataFailed
   const recentlyViewed = useRecentlyViewed().slice(0, 5)
 
   return (
