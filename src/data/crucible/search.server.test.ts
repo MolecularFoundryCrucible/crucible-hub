@@ -197,6 +197,22 @@ describe("workspace search source", () => {
     expect(names(all)).toContain("Perovskite film PV-12")
   })
 
+  it("shows the instrument identifier under instrument results", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    const result = await searchWorkspace({
+      kinds: ["instrument"],
+      limit: 8,
+      query: "Microprobe",
+    })
+
+    expect(result.groups[0].items[0]).toMatchObject({
+      context: "hard-xray-microprobe",
+      kind: "instrument",
+    })
+  })
+
   it("shows the project slug under project results", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")

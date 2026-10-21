@@ -456,11 +456,13 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
   const name = resourceDisplayName(item.kind, item.name, {
     mfid: item.uniqueId,
   })
+  const project = item.kind === "project"
   return (
     <ResourceListItem>
       <ResourceListItemContent className="select-text" layout="responsive">
         <ResourceIdentity
           className="w-full flex-1"
+          context={project && item.projectId !== name ? item.projectId : null}
           kind={item.kind}
           mfid={item.uniqueId}
           name={name}
@@ -472,7 +474,7 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
             />
           }
           presentation="collection"
-          projectId={item.projectId}
+          projectId={project ? null : item.projectId}
         />
         {item.timestamp ? (
           <LabeledTimestamp

@@ -69,11 +69,11 @@ function detailResult(
       ? resource.measurement
       : resource.kind === "sample"
         ? resource.sample_type
-        : resource.kind === "instrument"
-          ? (resource.instrument_type ?? resource.location)
-          : resource.name.trim()
-            ? resource.project_id
-            : null
+        : !resource.name.trim()
+          ? null
+          : resource.kind === "instrument"
+            ? resource.instrument_id
+            : resource.project_id
   return {
     context,
     kind: resource.kind,
@@ -140,7 +140,9 @@ function fixtureItems(
   }
   if (kind === "instrument") {
     return workspace.instruments.map((item) => ({
-      context: item.instrument_type ?? item.location,
+      context: item.instrument_name.trim()
+        ? (item.instrument_id ?? null)
+        : null,
       kind,
       name: resourceDisplayName("instrument", item.instrument_name, {
         identifier: item.instrument_id,
@@ -410,7 +412,9 @@ function instrumentResult(
   instrument: Schema<"InstrumentResponse">
 ): WorkspaceSearchResult {
   return {
-    context: instrument.instrument_type ?? instrument.location,
+    context: instrument.instrument_name.trim()
+      ? (instrument.instrument_id ?? null)
+      : null,
     kind: "instrument",
     name: resourceDisplayName("instrument", instrument.instrument_name, {
       identifier: instrument.instrument_id,

@@ -8,7 +8,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 - Rendered the theme, sidebar state, and local dates and times on the server, so pages no longer flash the default theme, an expanded sidebar, or UTC times while loading. Theme and sidebar choices now live in cookies; existing choices carry over.
 - Widened the search results dropdown on phones to the full screen width (it previously matched the narrow search field and truncated every result), lined it up with the search field on all screens, widened it on desktop so long titles fit, and fixed View all results collapsing to a single letter on phones.
 - Added a Filters button to the search page with Include public data, Project, and Ownership filters, showing only the filters each resource type tab supports, and removed the Include public data button that appeared next to results whenever no samples or datasets matched. The button now only appears when a search finds nothing.
-- Showed the project slug under project search results, in the search page and the top-bar search, instead of the organization.
+- Showed the project slug and instrument identifier under project and instrument search results, in the search page and the top-bar search, instead of the organization or instrument type, and showed project slugs in Home's Recently viewed as plain text like Your projects.
 - Kept the Home greeting stable while the page loads instead of switching from the generic text.
 - Fixed a page error on Home and Data in API mode where the browser rendered without your saved preferences and replaced the server-rendered lists.
 
