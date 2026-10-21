@@ -20,6 +20,12 @@ describe("buttonVariants", () => {
     expect(value).not.toContain("border-border-strong")
   })
 
+  it("gives every outline button in a button group the same strong border", () => {
+    expect(
+      classes(buttonVariants({ variant: "outline", size: "sm" }))
+    ).toContain("in-data-[slot=button-group]:border-border-strong")
+  })
+
   it("styles pressed outline and ghost buttons with the pressed role", () => {
     for (const variant of ["outline", "ghost"] as const) {
       expect(classes(buttonVariants({ variant }))).toContain(

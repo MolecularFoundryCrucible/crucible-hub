@@ -12,7 +12,7 @@ const buttonVariantClasses = cva(
         default:
           "border-transparent bg-primary text-primary-foreground hover:bg-primary-hover",
         outline:
-          "border-action-border bg-action-surface text-foreground shadow-xs hover:bg-action-hover aria-expanded:bg-action-hover aria-pressed:bg-action-pressed aria-pressed:hover:bg-action-pressed",
+          "border-action-border bg-action-surface text-foreground shadow-xs hover:bg-action-hover in-data-[slot=button-group]:border-border-strong aria-expanded:bg-action-hover aria-pressed:bg-action-pressed aria-pressed:hover:bg-action-pressed",
         ghost:
           "border-transparent hover:bg-action-hover hover:text-foreground aria-expanded:bg-action-hover aria-expanded:text-foreground aria-pressed:bg-action-pressed aria-pressed:text-foreground aria-[current=page]:bg-secondary aria-[current=page]:text-secondary-foreground",
         destructive:
