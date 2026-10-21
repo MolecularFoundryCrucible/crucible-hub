@@ -134,6 +134,7 @@ function QuickSearchControl({
 }: SearchControlProps & { scope: IdentityScope }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const formRef = useRef<HTMLFormElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const shortcutFocus = useRef(false)
   const highlightedItemRef = useRef<WorkspaceSearchResult | undefined>(
@@ -266,6 +267,7 @@ function QuickSearchControl({
       aria-label="Quick search"
       className="min-w-0 flex-1 sm:max-w-sm"
       onSubmit={submit}
+      ref={formRef}
       role="search"
     >
       <Button
@@ -367,7 +369,11 @@ function QuickSearchControl({
             </kbd>
           ) : null}
         </ComboboxInput>
-        <ComboboxContent className="w-(--anchor-width) max-w-(--available-width) sm:min-w-md">
+        <ComboboxContent
+          anchor={formRef}
+          className="w-(--available-width) sm:w-[max(var(--anchor-width),var(--container-md))] sm:max-w-(--available-width)"
+          collisionPadding={16}
+        >
           {projectMfid ? (
             <div className="border-b p-2">
               <SegmentedControl
@@ -461,7 +467,7 @@ function QuickSearchControl({
               {normalizedQuery.length >= searchMinQueryLength ? (
                 <kbd
                   aria-hidden="true"
-                  className="ml-2 hidden rounded border bg-muted px-1.5 py-0.5 text-label-compact sm:inline"
+                  className="ml-2 rounded border bg-muted px-1.5 py-0.5 text-label-compact max-sm:hidden"
                 >
                   Enter
                 </kbd>
