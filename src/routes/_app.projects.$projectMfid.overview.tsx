@@ -234,7 +234,7 @@ function ProjectIdentity({
             <MfidQrCode
               actions={
                 <>
-                  <CopyMfidButton value={project.unique_id} />
+                  <CopyMfidButton size="icon-sm" value={project.unique_id} />
                   <PrintLabelButton
                     mfid={project.unique_id}
                     name={resourceDisplayName("project", project.title, {

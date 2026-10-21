@@ -233,7 +233,7 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
             <MfidQrCode
               actions={
                 <>
-                  <CopyMfidButton value={instrument.unique_id} />
+                  <CopyMfidButton size="icon-sm" value={instrument.unique_id} />
                   <PrintLabelButton
                     mfid={instrument.unique_id}
                     name={resourceDetailDisplayName(instrument)}

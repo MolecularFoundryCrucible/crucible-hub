@@ -58,7 +58,7 @@ export function PrintLabelButton({
                   <Button
                     aria-label="Print"
                     className="shrink-0"
-                    size="icon-xs"
+                    size="icon-sm"
                     type="button"
                     variant="ghost"
                   />

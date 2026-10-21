@@ -243,6 +243,22 @@ function getJsxAttributeString(opening, name) {
   return undefined
 }
 
+function getButtonSize(opening) {
+  if (getJsxAttribute(opening, "size")?.initializer) {
+    return getJsxAttributeString(opening, "size") ?? "computed"
+  }
+  return "default"
+}
+
+function hasTextContent(node) {
+  return (
+    ts.isJsxElement(node) &&
+    node.children.some(
+      (child) => ts.isJsxText(child) && child.getText().trim() !== ""
+    )
+  )
+}
+
 function scanButtonUsage(path, localPath, content) {
   if (localPath.endsWith(".test.tsx")) return
   const source = ts.createSourceFile(
@@ -288,7 +304,9 @@ function scanButtonUsage(path, localPath, content) {
   }
 
   function inspectButtonIconChildren(node, size, elementLabel) {
-    const isIconOnly = iconOnlyButtonSizes.has(size)
+    const isIconOnly =
+      iconOnlyButtonSizes.has(size) ||
+      (size === "computed" && !hasTextContent(node))
     const icons = []
     function collectIcons(children) {
       for (const child of children) {
@@ -341,15 +359,14 @@ function scanButtonUsage(path, localPath, content) {
       return undefined
     const innerOpening = ts.isJsxElement(expr) ? expr.openingElement : expr
     if (innerOpening.tagName.getText(source) !== "Button") return undefined
-    return getJsxAttributeString(innerOpening, "size") ?? "default"
+    return getButtonSize(innerOpening)
   }
 
   function visit(node) {
     if (ts.isJsxElement(node)) {
       const tag = node.openingElement.tagName.getText(source)
       if (tag === "Button") {
-        const size =
-          getJsxAttributeString(node.openingElement, "size") ?? "default"
+        const size = getButtonSize(node.openingElement)
         inspectButtonIconChildren(node, size, "Button")
       } else {
         const linkSize = buttonVariantsSize(node.openingElement)

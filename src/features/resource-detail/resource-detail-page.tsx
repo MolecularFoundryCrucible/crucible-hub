@@ -500,7 +500,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
             <MfidQrCode
               actions={
                 <>
-                  <CopyMfidButton value={resource.unique_id} />
+                  <CopyMfidButton size="icon-sm" value={resource.unique_id} />
                   <PrintLabelButton
                     mfid={resource.unique_id}
                     name={resourceDetailDisplayName(resource)}

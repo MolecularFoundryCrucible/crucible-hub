@@ -11,7 +11,13 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-export function CopyMfidButton({ value }: { value: string }) {
+export function CopyMfidButton({
+  size = "icon-xs",
+  value,
+}: {
+  size?: "icon-xs" | "icon-sm"
+  value: string
+}) {
   const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
     "idle"
   )
@@ -41,7 +47,7 @@ export function CopyMfidButton({ value }: { value: string }) {
               aria-label={copyLabel}
               className="shrink-0"
               onClick={() => void copyMfid()}
-              size="icon-xs"
+              size={size}
               variant="ghost"
             />
           }
