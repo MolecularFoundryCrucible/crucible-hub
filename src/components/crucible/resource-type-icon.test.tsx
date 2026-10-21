@@ -24,7 +24,7 @@ describe("semantic type icons", () => {
       const icon = container.querySelector(`[data-resource-type="${type}"]`)
 
       expect(icon?.classList.contains(colorClass)).toBe(true)
-      expect(icon?.classList.contains("size-4")).toBe(true)
+      expect(icon?.classList.contains("size-icon-label")).toBe(true)
       expect(icon?.classList.contains("shrink-0")).toBe(true)
     }
   )
@@ -46,7 +46,7 @@ describe("semantic type icons", () => {
       '[data-principal-type="service_account"]:not(.size-6)',
     ]) {
       const icon = container.querySelector(selector)
-      expect(icon?.classList.contains("size-4")).toBe(true)
+      expect(icon?.classList.contains("size-icon-label")).toBe(true)
       expect(icon?.classList.contains("shrink-0")).toBe(true)
     }
 
@@ -56,7 +56,7 @@ describe("semantic type icons", () => {
     ]) {
       const icon = container.querySelector(selector)
       expect(icon?.classList.contains("size-6")).toBe(true)
-      expect(icon?.classList.contains("size-4")).toBe(false)
+      expect(icon?.classList.contains("size-icon-label")).toBe(false)
     }
   })
 

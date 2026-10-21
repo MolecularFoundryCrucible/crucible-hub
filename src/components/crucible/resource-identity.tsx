@@ -91,7 +91,10 @@ export function ResourceIdentity({
         ) : null}
         {mfid ? (
           <span className="mt-1 flex min-w-0 items-center gap-2 text-muted-foreground">
-            <IdentityFieldIcon className="mt-0" type="mfid" />
+            <IdentityFieldIcon
+              className="mt-0 size-icon-supporting"
+              type="mfid"
+            />
             <span className="sr-only">MFID:</span>
             <MfidText
               className={cn("min-w-0", truncate ? "truncate" : "break-all")}
@@ -122,7 +125,7 @@ function ResourceIdentifier({
 }) {
   return (
     <>
-      <ResourceTypeIcon className="size-4 shrink-0" type={type} />
+      <ResourceTypeIcon className="size-icon-supporting" type={type} />
       <span className="sr-only">{label}</span>
       <span
         className={cn("min-w-0", truncate && "truncate")}

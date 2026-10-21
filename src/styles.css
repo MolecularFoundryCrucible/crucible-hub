@@ -247,6 +247,8 @@
   --text-supporting: 0.75rem;
   --text-supporting--line-height: 1rem;
   --text-supporting--font-weight: 400;
+  --spacing-icon-label: 1rem;
+  --spacing-icon-supporting: 0.875rem;
   --text-label-compact: 0.75rem;
   --text-label-compact--line-height: 1rem;
   --text-label-compact--font-weight: 600;

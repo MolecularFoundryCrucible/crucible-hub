@@ -62,6 +62,7 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 - Create follows position: solid in a page header, outline in a toolbar, card, or the top bar.
 - Pick by stakes and frequency. When in doubt, choose the quieter tier.
 - Icon-only buttons need an accessible name and a tooltip; icon-only outline buttons get the strong border automatically.
+- Icons beside text use `size-icon-label` (16 px) with 14 px text and `size-icon-supporting` (14 px) with 12 px supporting text; never a raw `size-*` for identity icons.
 - No other variants exist. TypeScript rejects anything else.
 
 ## Decoration

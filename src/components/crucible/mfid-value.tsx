@@ -89,7 +89,13 @@ export function MfidValue({
         className
       )}
     >
-      <IdentityFieldIcon className="mfid-value-icon" type="mfid" />
+      <IdentityFieldIcon
+        className={cn(
+          "mfid-value-icon",
+          presentation === "supporting" && "size-icon-supporting"
+        )}
+        type="mfid"
+      />
       <MfidText
         className="min-w-0 break-all sm:break-normal sm:whitespace-nowrap"
         presentation={presentation}

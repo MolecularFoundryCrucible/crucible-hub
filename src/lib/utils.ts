@@ -5,6 +5,7 @@ import { extendTailwindMerge } from "tailwind-merge"
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
+      spacing: ["icon-label", "icon-supporting"],
       text: [
         "title-page",
         "title-entity",

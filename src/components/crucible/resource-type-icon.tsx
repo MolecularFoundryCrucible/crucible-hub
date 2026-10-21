@@ -62,7 +62,7 @@ const principalIconClasses = {
   user: iconClasses.person,
 } satisfies Record<PrincipalType, string>
 
-const semanticTypeIconClass = "size-4 shrink-0"
+const semanticTypeIconClass = "size-icon-label shrink-0"
 
 export function DataCollectionIcon({ className }: { className?: string }) {
   return (

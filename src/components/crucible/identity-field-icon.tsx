@@ -26,7 +26,7 @@ export function IdentityFieldIcon({
   if (type === "owner") {
     return (
       <PrincipalTypeIcon
-        className={cn("mt-0.5 size-4 shrink-0", className)}
+        className={cn("mt-0.5 size-icon-label shrink-0", className)}
         type={accountType === "service-account" ? "service_account" : "user"}
       />
     )
@@ -35,7 +35,10 @@ export function IdentityFieldIcon({
   return (
     <Icon
       aria-hidden="true"
-      className={cn("mt-0.5 size-4 shrink-0 text-muted-foreground", className)}
+      className={cn(
+        "mt-0.5 size-icon-label shrink-0 text-muted-foreground",
+        className
+      )}
       data-identity-field-icon={type}
     />
   )

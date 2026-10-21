@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Sized the project, instrument, and MFID icons on secondary lines (Recently viewed, Recently added, search results, and resource lists) at 14 px to match their 12 px text, keeping 16 px beside names, with both sizes defined once as design tokens.
 - Added an API key column (Valid, Invalid, or No key) to the Users and Service accounts administration lists, read from the list itself without extra requests.
 - Loaded a person's profile and their administration details at the same time for administrators, instead of one after the other.
 - Showed the instrument identifier with an instrument icon under instruments in Home's Recently viewed, and the project slug with the project icon instead of the plain text added in 1.6.0, using the identifier the Crucible API now returns with recently viewed items.

@@ -22,4 +22,24 @@ describe("ResourceIdentity", () => {
       context?.querySelector("[data-resource-type='instrument']")
     ).toBeTruthy()
   })
+
+  it("pairs the name icon with label text and secondary icons with supporting text", () => {
+    const { container } = render(
+      <ResourceIdentity
+        kind="sample"
+        mfid="01J6Y8N4Q2R7M9K3T5V0W1X2Z9"
+        name="NiFe oxide catalyst A"
+        presentation="collection"
+        projectId="operando-catalyst-mapping"
+      />
+    )
+    const icons = [...container.querySelectorAll("svg")]
+
+    expect(
+      icons.map((icon) => icon.classList.contains("size-icon-label"))
+    ).toEqual([true, false, false])
+    expect(
+      icons.map((icon) => icon.classList.contains("size-icon-supporting"))
+    ).toEqual([false, true, true])
+  })
 })
