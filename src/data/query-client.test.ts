@@ -66,6 +66,18 @@ describe("Crucible Query client", () => {
     expect(JSON.stringify(dehydrated)).not.toContain("private experiment")
   })
 
+  it("dehydrates account preferences so the client renders with them", () => {
+    const client = createQueryClient()
+    const scope = identityScope("server-a", "account-a", "normal")
+    client.setQueryData(crucibleKeys.accountPreferences(scope), {
+      preferences: { hub: { home_recent_scope: "mine" } },
+    })
+
+    expect(
+      dehydrate(client).queries.map((query) => query.queryKey)
+    ).toContainEqual(crucibleKeys.accountPreferences(scope))
+  })
+
   it("keeps collection rows from overwriting authoritative detail", () => {
     const scope = identityScope("staging", "user-a")
     const client = createQueryClient()

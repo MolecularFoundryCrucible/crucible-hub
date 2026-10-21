@@ -594,7 +594,12 @@
   --graph-hover-overlay-padding: 6;
 }
 
+.light {
+  color-scheme: light;
+}
+
 .dark {
+  color-scheme: dark;
   --background: var(--palette-neutral-13);
   --foreground: var(--palette-neutral-1);
   --card: var(--palette-neutral-12);

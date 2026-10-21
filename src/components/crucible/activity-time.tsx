@@ -3,8 +3,10 @@ import { useHydrated } from "@tanstack/react-router"
 import {
   formatRecentActivity,
   formatUtcDateTime,
+  formatZonedDateTimeInZone,
   formatZonedLocalDateTime,
 } from "@/lib/format"
+import { useViewerPresentation } from "@/hooks/use-viewer-presentation"
 import { cn } from "@/lib/utils"
 
 export function ActivityTime({
@@ -17,6 +19,7 @@ export function ActivityTime({
   value: string | null | undefined
 }) {
   const hydrated = useHydrated()
+  const { timeZone } = useViewerPresentation()
   if (!value) {
     return (
       <span className={cn("text-muted-foreground", className)}>{fallback}</span>
@@ -26,15 +29,20 @@ export function ActivityTime({
     <time
       className={cn("tabular-nums", className)}
       dateTime={value}
+      suppressHydrationWarning
       title={
-        (hydrated
-          ? formatZonedLocalDateTime(value)
-          : formatUtcDateTime(value)) ?? undefined
+        (timeZone
+          ? formatZonedDateTimeInZone(value, timeZone)
+          : hydrated
+            ? formatZonedLocalDateTime(value)
+            : formatUtcDateTime(value)) ?? undefined
       }
     >
-      {hydrated
-        ? formatRecentActivity(value)
-        : (formatUtcDateTime(value) ?? fallback)}
+      {timeZone
+        ? formatRecentActivity(value, new Date(), timeZone)
+        : hydrated
+          ? formatRecentActivity(value)
+          : (formatUtcDateTime(value) ?? fallback)}
     </time>
   )
 }

@@ -1,89 +1,85 @@
 import { ScriptOnce } from "@tanstack/react-router"
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
 
-type Theme = "dark" | "light" | "system"
+import {
+  readDocumentCookies,
+  themeCookie,
+  writePresentationCookie,
+} from "@/lib/viewer-presentation"
+import type { ThemeChoice } from "@/lib/viewer-presentation"
 
 type ThemeContextValue = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
+  theme: ThemeChoice
+  setTheme: (theme: ThemeChoice) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-const storageKey = "crucible-hub-theme"
+const legacyStorageKey = "crucible-hub-theme"
 
-function readStoredTheme(): Theme | undefined {
+function isThemeChoice(value: unknown): value is ThemeChoice {
+  return value === "light" || value === "dark" || value === "system"
+}
+
+function readLegacyTheme(): ThemeChoice | undefined {
   try {
-    const stored = window.localStorage.getItem(storageKey)
-    return stored === "light" || stored === "dark" || stored === "system"
-      ? stored
-      : undefined
+    const stored = window.localStorage.getItem(legacyStorageKey)
+    return isThemeChoice(stored) ? stored : undefined
   } catch {
     return undefined
   }
 }
 
-function storeTheme(theme: Theme) {
-  try {
-    window.localStorage.setItem(storageKey, theme)
-  } catch {
-    return
-  }
-}
-
 function themeScript() {
-  const key = JSON.stringify(storageKey)
-  return `(function(){try{var t=localStorage.getItem(${key});var v=t==='light'||t==='dark'||t==='system'?t:'system';var d=v==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):v;document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(d);document.documentElement.style.colorScheme=d}catch(e){}})()`
+  const cookie = JSON.stringify(themeCookie)
+  const legacy = JSON.stringify(legacyStorageKey)
+  return `(function(){try{var m=document.cookie.match(new RegExp('(?:^|; )'+${cookie}+'=([^;]*)'));var t=m?decodeURIComponent(m[1]):localStorage.getItem(${legacy});var d=t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(d)}catch(e){}})()`
 }
 
-function resolveTheme(theme: Theme) {
+function resolveTheme(theme: ThemeChoice) {
   if (theme !== "system") return theme
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light"
 }
 
-function applyTheme(theme: Theme) {
+function applyTheme(theme: ThemeChoice) {
   const resolved = resolveTheme(theme)
   document.documentElement.classList.remove("light", "dark")
   document.documentElement.classList.add(resolved)
-  document.documentElement.style.colorScheme = resolved
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system")
-  const hydratedRef = useRef(false)
+export function ThemeProvider({
+  children,
+  initialTheme,
+}: {
+  children: React.ReactNode
+  initialTheme: ThemeChoice
+}) {
+  const [theme, setThemeState] = useState<ThemeChoice>(initialTheme)
 
   useEffect(() => {
-    let activeTheme = theme
-    if (!hydratedRef.current) {
-      hydratedRef.current = true
-      const stored = readStoredTheme()
-      if (stored) {
-        activeTheme = stored
-        setThemeState(stored)
-      }
-    }
-    const media = window.matchMedia("(prefers-color-scheme: dark)")
-    const applyCurrentTheme = () => applyTheme(activeTheme)
+    if (readDocumentCookies()[themeCookie]) return
+    const legacy = readLegacyTheme()
+    if (!legacy) return
+    writePresentationCookie(themeCookie, legacy)
+    setThemeState(legacy)
+  }, [])
 
-    applyCurrentTheme()
-    media.addEventListener("change", applyCurrentTheme)
-    return () => media.removeEventListener("change", applyCurrentTheme)
+  useEffect(() => {
+    applyTheme(theme)
+    if (theme !== "system") return
+    const media = window.matchMedia("(prefers-color-scheme: dark)")
+    const applySystemTheme = () => applyTheme("system")
+    media.addEventListener("change", applySystemTheme)
+    return () => media.removeEventListener("change", applySystemTheme)
   }, [theme])
 
   const value = useMemo(
     () => ({
       theme,
-      setTheme: (nextTheme: Theme) => {
-        storeTheme(nextTheme)
+      setTheme: (nextTheme: ThemeChoice) => {
+        writePresentationCookie(themeCookie, nextTheme)
         applyTheme(nextTheme)
         setThemeState(nextTheme)
       },

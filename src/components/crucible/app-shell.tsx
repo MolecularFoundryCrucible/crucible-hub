@@ -1,3 +1,4 @@
+import { useViewerPresentation } from "@/hooks/use-viewer-presentation"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useRouterState } from "@tanstack/react-router"
 
@@ -116,6 +117,7 @@ export function AppShell({
   sessionAuth?: boolean
   scope?: IdentityScope
 }) {
+  const presentation = useViewerPresentation()
   const location = useRouterState({
     select: (state) => state.location,
   })
@@ -166,7 +168,7 @@ export function AppShell({
           privilegeMode={privilegeMode}
         />
       ) : null}
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={presentation.sidebarOpen}>
         <Sidebar
           aria-label="Primary navigation"
           role="navigation"

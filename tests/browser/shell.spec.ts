@@ -534,8 +534,8 @@ test("persists an explicit dark theme without a hydration mismatch", async ({
   await page.getByRole("button", { name: "Theme" }).click()
   await page.getByRole("menuitemradio", { name: "Dark" }).click()
   await expect
-    .poll(() => page.evaluate(() => localStorage.getItem("crucible-hub-theme")))
-    .toBe("dark")
+    .poll(() => page.evaluate(() => document.cookie))
+    .toContain("crucible_hub_theme=dark")
   await expect(page.locator("html")).toHaveClass(/dark/)
 
   await page.reload()

@@ -161,19 +161,85 @@ function startOfLocalDay(date: Date) {
 
 export function formatRecentActivity(
   value: string | null | undefined,
-  now = new Date()
+  now = new Date(),
+  timeZone?: string
 ) {
   const date = parseTimestamp(value)
   if (!date) return null
   if (now.getTime() - date.getTime() < 60 * 60 * 1000) {
     return "Within the last hour"
   }
-  const days = Math.round(
-    (startOfLocalDay(now).getTime() - startOfLocalDay(date).getTime()) /
-      (24 * 60 * 60 * 1000)
-  )
+  const days = timeZone
+    ? zonedDayNumber(now, timeZone) - zonedDayNumber(date, timeZone)
+    : Math.round(
+        (startOfLocalDay(now).getTime() - startOfLocalDay(date).getTime()) /
+          (24 * 60 * 60 * 1000)
+      )
   if (days <= 0) return "Today"
   if (days === 1) return "Yesterday"
   if (days < 7) return `${days} days ago`
-  return localDateFormatter.format(date)
+  return (
+    timeZone ? zonedFormatter("date", timeZone) : localDateFormatter
+  ).format(date)
+}
+
+const zonedFormatters = new Map<string, Intl.DateTimeFormat>()
+
+function zonedFormatter(
+  kind: "date" | "dateTime" | "zonedDateTime",
+  timeZone: string
+) {
+  const key = `${kind}:${timeZone}`
+  let formatter = zonedFormatters.get(key)
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "short",
+      timeZone,
+      year: "numeric",
+      ...(kind === "date"
+        ? {}
+        : { hour: "2-digit", hourCycle: "h23", minute: "2-digit" }),
+      ...(kind === "zonedDateTime" ? { timeZoneName: "short" } : {}),
+    })
+    zonedFormatters.set(key, formatter)
+  }
+  return formatter
+}
+
+function zonedDayNumber(date: Date, timeZone: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "numeric",
+      timeZone,
+      year: "numeric",
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value])
+  )
+  return (
+    Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)) /
+    (24 * 60 * 60 * 1000)
+  )
+}
+
+export function formatDateInZone(
+  value: string | null | undefined,
+  timeZone: string
+) {
+  if (!value) return "Unknown"
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return formatDate(value)
+  return formatStandardDateTime(value, zonedFormatter("dateTime", timeZone))
+}
+
+export function formatZonedDateTimeInZone(
+  value: string | null | undefined,
+  timeZone: string
+) {
+  if (!value) return null
+  return formatStandardDateTime(
+    value,
+    zonedFormatter("zonedDateTime", timeZone)
+  )
 }

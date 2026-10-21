@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  formatDateInZone,
   formatRecentActivity,
+  formatZonedDateTimeInZone,
   formatLocalDateTime,
   formatUtcDateTime,
   isValidLocalDateTime,
@@ -82,5 +84,32 @@ describe("recent activity", () => {
       formatRecentActivity(new Date(2026, 8, 1, 12, 0).toISOString(), now)
     ).toBe("Sep 1, 2026")
     expect(formatRecentActivity(null, now)).toBeNull()
+  })
+})
+
+describe("time zone aware formatting", () => {
+  it("formats absolute times in the given zone, independent of the runtime", () => {
+    expect(
+      formatDateInZone("2026-08-30T17:31:00Z", "America/Los_Angeles")
+    ).toBe("Aug 30, 2026, 10:31")
+    expect(formatDateInZone("2026-08-30T17:31:00Z", "Europe/Zurich")).toBe(
+      "Aug 30, 2026, 19:31"
+    )
+    expect(
+      formatZonedDateTimeInZone("2026-08-30T17:31:00Z", "America/Los_Angeles")
+    ).toBe("Aug 30, 2026, 10:31 PDT")
+  })
+
+  it("counts recent activity days in the given zone", () => {
+    const now = new Date("2026-08-31T06:00:00Z")
+    expect(
+      formatRecentActivity("2026-08-31T01:00:00Z", now, "America/Los_Angeles")
+    ).toBe("Today")
+    expect(
+      formatRecentActivity("2026-08-31T01:00:00Z", now, "Europe/Zurich")
+    ).toBe("Today")
+    expect(
+      formatRecentActivity("2026-08-30T21:00:00Z", now, "Europe/Zurich")
+    ).toBe("Yesterday")
   })
 })

@@ -1,6 +1,7 @@
 import { useHydrated } from "@tanstack/react-router"
 
-import { formatDate, formatUtcDateTime } from "@/lib/format"
+import { useViewerPresentation } from "@/hooks/use-viewer-presentation"
+import { formatDate, formatDateInZone, formatUtcDateTime } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 export function LocalDateTime({
@@ -13,10 +14,15 @@ export function LocalDateTime({
   value: string | null | undefined
 }) {
   const hydrated = useHydrated()
+  const { timeZone } = useViewerPresentation()
   if (!value) return <>{fallback}</>
   return (
     <time className={cn("tabular-nums", className)} dateTime={value}>
-      {hydrated ? formatDate(value) : (formatUtcDateTime(value) ?? fallback)}
+      {timeZone
+        ? formatDateInZone(value, timeZone)
+        : hydrated
+          ? formatDate(value)
+          : (formatUtcDateTime(value) ?? fallback)}
     </time>
   )
 }

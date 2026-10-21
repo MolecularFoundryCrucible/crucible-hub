@@ -1,5 +1,10 @@
 "use client"
 
+import {
+  readDocumentCookies,
+  sidebarCookie,
+  writePresentationCookie,
+} from "@/lib/viewer-presentation"
 import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
@@ -74,10 +79,15 @@ function SidebarProvider({
   const open = openProp ?? _open
 
   React.useEffect(() => {
-    if (openProp !== undefined) return
-    const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY)
-    if (stored === "expanded" || stored === "collapsed") {
-      _setOpen(stored === "expanded")
+    if (openProp !== undefined || readDocumentCookies()[sidebarCookie]) return
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY)
+      if (stored === "expanded" || stored === "collapsed") {
+        writePresentationCookie(sidebarCookie, stored)
+        _setOpen(stored === "expanded")
+      }
+    } catch {
+      return
     }
   }, [openProp])
 
@@ -90,8 +100,8 @@ function SidebarProvider({
         _setOpen(openState)
       }
 
-      window.localStorage.setItem(
-        SIDEBAR_STORAGE_KEY,
+      writePresentationCookie(
+        sidebarCookie,
         openState ? "expanded" : "collapsed"
       )
     },

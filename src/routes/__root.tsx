@@ -13,6 +13,8 @@ import crucibleLogoHubUrl from "@/assets/crucible-logo-hub.svg?no-inline"
 import { RouteProgress } from "@/components/route-progress"
 import { useRouteErrorReport } from "@/components/crucible/route-error-report"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ViewerPresentationProvider } from "@/hooks/use-viewer-presentation"
+import { readViewerPresentation } from "@/lib/read-viewer-presentation"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/toast"
@@ -23,6 +25,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  beforeLoad: () => ({ presentation: readViewerPresentation() }),
   head: () => ({
     meta: [
       {
@@ -68,21 +71,25 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { presentation } = Route.useRouteContext()
+  const theme = presentation.theme === "system" ? undefined : presentation.theme
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html className={theme} lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <RecentlyViewedProvider>
-          <ThemeProvider>
-            <TooltipProvider>
-              <RouteProgress />
-              {children}
-              <Toaster limit={3} timeout={5000} />
-            </TooltipProvider>
-          </ThemeProvider>
-        </RecentlyViewedProvider>
+        <ViewerPresentationProvider value={presentation}>
+          <RecentlyViewedProvider>
+            <ThemeProvider initialTheme={presentation.theme}>
+              <TooltipProvider>
+                <RouteProgress />
+                {children}
+                <Toaster limit={3} timeout={5000} />
+              </TooltipProvider>
+            </ThemeProvider>
+          </RecentlyViewedProvider>
+        </ViewerPresentationProvider>
         <Scripts />
       </body>
     </html>

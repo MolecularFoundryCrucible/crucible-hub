@@ -49,7 +49,8 @@ import {
   useRecentResourcesSnapshot,
 } from "@/features/home/home-data"
 import type { HomeRecentResource } from "@/features/home/home-data"
-import { useHomeGreeting } from "@/features/home/home-greeting"
+import { homeGreeting } from "@/features/home/home-greeting"
+import { useViewerPresentation } from "@/hooks/use-viewer-presentation"
 import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
 import { useRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
@@ -92,6 +93,7 @@ export const Route = createFileRoute("/_app/")({
         datasetsQueryOptions(source.scope, recentFilters)
       ),
     ])
+    return { greetingAt: Date.now() }
   },
   component: HomePage,
 })
@@ -140,9 +142,13 @@ function HomePage() {
     ],
   })
   const account = accountResult.data
-  const greeting = useHomeGreeting({
+  const { timeZone } = useViewerPresentation()
+  const greetingAt = Route.useLoaderData()?.greetingAt
+  const greeting = homeGreeting({
     accountMfid: account?.unique_id,
+    at: greetingAt ?? 0,
     firstName: account?.first_name,
+    timeZone: greetingAt ? timeZone : undefined,
   })
   const projects = projectResult.data?.items ?? []
   const instruments = instrumentResult.data?.items ?? []
