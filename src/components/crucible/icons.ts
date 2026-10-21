@@ -24,6 +24,7 @@ export const SampleIcon = createLucideIcon("Sample", SampleIconNode)
 
 export {
   CircleUserRound as AccountIcon,
+  Crown as OwnerRoleIcon,
   ShieldMinus as AdministratorViewDisabledIcon,
   ShieldPlus as AdministratorViewEnabledIcon,
   LibraryBig as DataIcon,

@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Restyled role badges as three neutral levels instead of one color per role, so roles no longer look like statuses (Contributor read like Valid, Owner like a warning): a filled badge for Owner and Admin, with a crown on Owner, Lead, and Manager, an outline for Editor, Contributor, and Support, and a muted outline for Viewer and None.
 - Sized the project, instrument, and MFID icons on secondary lines (Recently viewed, Recently added, search results, and resource lists) at 14 px to match their 12 px text, keeping 16 px beside names, with both sizes defined once as design tokens.
 - Added an API key column (Valid, Invalid, or No key) to the Users and Service accounts administration lists, read from the list itself without extra requests. Narrowed the API key and Last active columns there so account names get more room, and shortened the activity label Within the last hour to Last hour everywhere.
 - Loaded a person's profile and their administration details at the same time for administrators, instead of one after the other.

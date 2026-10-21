@@ -130,15 +130,8 @@ for (const [theme, values] of Object.entries(themes)) {
     expectContrast(theme, values, `resource-${resource}`, "card", 3)
   }
 
-  for (const role of ["owner", "admin", "editor", "contributor", "viewer"]) {
-    expectContrast(
-      theme,
-      values,
-      `access-role-${role}-foreground`,
-      `access-role-${role}`,
-      4.5
-    )
-  }
+  expectContrast(theme, values, "foreground", "accent", 4.5)
+  expectContrast(theme, values, "border-strong", "accent", 1.5)
 }
 
 const darkValues = declarations("\n.dark {")

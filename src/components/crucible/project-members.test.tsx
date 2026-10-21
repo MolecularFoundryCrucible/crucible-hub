@@ -100,19 +100,15 @@ describe("ProjectMembers", () => {
     expect(
       screen.getByRole("link", { name: "Ada Lovelace" }).getAttribute("href")
     ).toBe("/users/owner")
-    expect(screen.getByText("Lead").className).toContain("bg-access-role-owner")
-    expect(screen.getByText("Admin").className).toContain(
-      "bg-access-role-admin"
-    )
-    expect(screen.getByText("Editor").className).toContain(
-      "bg-access-role-editor"
-    )
-    expect(screen.getByText("Contributor").className).toContain(
-      "bg-access-role-contributor"
-    )
-    expect(screen.getByText("Viewer").className).toContain(
-      "bg-access-role-viewer"
-    )
+    const badge = (label: string) =>
+      screen.getByText(label).closest("[data-slot=badge]")
+    expect(badge("Lead")?.getAttribute("data-variant")).toBe("emphasis")
+    expect(badge("Lead")?.querySelector("svg")).toBeTruthy()
+    expect(badge("Admin")?.getAttribute("data-variant")).toBe("emphasis")
+    expect(badge("Admin")?.querySelector("svg")).toBeNull()
+    expect(badge("Editor")?.getAttribute("data-variant")).toBe("outline")
+    expect(badge("Contributor")?.getAttribute("data-variant")).toBe("outline")
+    expect(badge("Viewer")?.getAttribute("data-variant")).toBe("muted")
     expect(screen.getByText("@beamline-collector")).toBeTruthy()
     expect(screen.getByRole("img", { name: "Service account" })).toBeTruthy()
     expect(screen.getAllByRole("img", { name: "Person" })).toHaveLength(4)
