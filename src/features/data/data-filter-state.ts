@@ -1,5 +1,11 @@
-import { publicDataSearchSchema } from "@/data/crucible/public-data"
-import type { PublicDataChoice } from "@/data/crucible/public-data"
+import {
+  publicDataSearchSchema,
+  resolveCollectionAffiliation,
+} from "@/data/crucible/public-data"
+import type {
+  PublicDataAccess,
+  PublicDataChoice,
+} from "@/data/crucible/public-data"
 import { z } from "zod"
 
 import {
@@ -494,4 +500,18 @@ function dataFilterField(field: PropertyKey | undefined): DataFilterField {
   return typeof field === "string" && field in dataSearchSchema.shape
     ? (field as DataFilterField)
     : "kind"
+}
+
+export function dataFacetContext(
+  filters: DataFilterValues,
+  access: PublicDataAccess
+) {
+  return {
+    ...filters,
+    affiliation: resolveCollectionAffiliation({
+      ...access,
+      ownership: filters.affiliation,
+      publicData: filters.publicData,
+    }),
+  }
 }

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   applyDataFilters,
   clearDataFilters,
+  dataFacetContext,
   dataSearchSchema,
   resolveDataFilters,
   setDataFilterProject,
@@ -194,6 +195,24 @@ describe("global data filter state", () => {
     expect(
       clearDataFilters({ publicData: "include" }).publicData
     ).toBeUndefined()
+  })
+
+  it("gives filter panel facets the same affiliation as the list", () => {
+    const resolution = resolveDataFilters({ kind: "datasets" })
+    if (!resolution.valid) throw new Error("expected valid filters")
+    const access = { elevated: false, includePublicByDefault: false }
+
+    expect(dataFacetContext(resolution.filters, access).affiliation).toBe(
+      "member"
+    )
+    expect(
+      dataFacetContext({ ...resolution.filters, publicData: "include" }, access)
+        .affiliation
+    ).toBeUndefined()
+    expect(
+      dataFacetContext({ ...resolution.filters, affiliation: "owner" }, access)
+        .affiliation
+    ).toBe("owner")
   })
 
   it("clears an invalid kind so malformed URL state can recover", () => {

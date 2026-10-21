@@ -50,6 +50,7 @@ import type { WorkspaceSearchResult } from "@/data/crucible/workspace-source"
 import {
   applyDataFilters,
   clearDataFilters,
+  dataFacetContext,
   resolveDataFilters,
   setDataFilterProject,
 } from "./data-filter-state"
@@ -122,6 +123,7 @@ export function DataFilters({
   const scope = useWorkspaceScope()
   const includePublicByDefault = useIncludePublicByDefault()
   const elevated = privilegeModeFromScope(scope) === "elevated"
+  const publicAccess = { elevated, includePublicByDefault }
   const resolution = resolveDataFilters(values, defaultOrdering)
   const publicState = publicDataFilterState({
     elevated,
@@ -424,7 +426,7 @@ export function DataFilters({
               <SampleFacetFilter
                 enabled={filtersOpen}
                 field="owner"
-                filters={resolution.filters}
+                filters={dataFacetContext(resolution.filters, publicAccess)}
                 id="data-owner"
                 label="Owner"
                 onChange={(selection) =>
@@ -448,7 +450,7 @@ export function DataFilters({
               <DatasetFacetFilter
                 enabled={filtersOpen}
                 field="owner"
-                filters={resolution.filters}
+                filters={dataFacetContext(resolution.filters, publicAccess)}
                 id="data-owner"
                 label="Owner"
                 onChange={(selection) =>
@@ -523,7 +525,7 @@ export function DataFilters({
               <SampleFacetFilter
                 enabled={filtersOpen}
                 field="sample_type"
-                filters={resolution.filters}
+                filters={dataFacetContext(resolution.filters, publicAccess)}
                 id="data-sample-type"
                 label="Sample type"
                 onChange={(selection) =>
@@ -549,7 +551,7 @@ export function DataFilters({
                 <DatasetFacetFilter
                   enabled={filtersOpen}
                   field="measurement"
-                  filters={resolution.filters}
+                  filters={dataFacetContext(resolution.filters, publicAccess)}
                   id="data-measurement"
                   label="Measurement"
                   onChange={(selection) =>
@@ -572,7 +574,7 @@ export function DataFilters({
                 <DatasetFacetFilter
                   enabled={filtersOpen}
                   field="session"
-                  filters={resolution.filters}
+                  filters={dataFacetContext(resolution.filters, publicAccess)}
                   id="data-session"
                   label="Session"
                   onChange={(selection) =>
@@ -595,7 +597,7 @@ export function DataFilters({
                 <DatasetFacetFilter
                   enabled={filtersOpen}
                   field="data_format"
-                  filters={resolution.filters}
+                  filters={dataFacetContext(resolution.filters, publicAccess)}
                   id="data-format"
                   label="Data format"
                   onChange={(selection) =>
@@ -630,7 +632,7 @@ export function DataFilters({
               <DatasetFacetFilter
                 enabled={filtersOpen}
                 field="instrument"
-                filters={resolution.filters}
+                filters={dataFacetContext(resolution.filters, publicAccess)}
                 id="data-instrument"
                 label="Acquisition instrument"
                 onChange={(selection) => {

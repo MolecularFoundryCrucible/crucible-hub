@@ -188,6 +188,7 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
           (item) =>
             input.affiliation !== "member" ||
             (kind !== "sample" && kind !== "dataset") ||
+            mfidPattern.test(input.query.trim()) ||
             !fixturePublicOnlyMfids.has(item.unique_id)
         )
         .filter((item) => {

@@ -161,6 +161,24 @@ describe("workspace search source", () => {
     expect(ids(member).some((id) => fixturePublicOnlyMfids.has(id))).toBe(false)
   })
 
+  it("still finds a public-only record by its MFID", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    const result = await searchWorkspace({
+      affiliation: "member",
+      kinds: ["sample", "dataset"],
+      limit: 8,
+      query: "01J6Y8N4Q2R7M9K3T5V0W1X2ZH",
+    })
+
+    expect(
+      result.groups.flatMap((group) =>
+        group.items.map((item) => item.unique_id)
+      )
+    ).toEqual(["01J6Y8N4Q2R7M9K3T5V0W1X2ZH"])
+  })
+
   it("bounds API aggregation and preserves successful groups", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")

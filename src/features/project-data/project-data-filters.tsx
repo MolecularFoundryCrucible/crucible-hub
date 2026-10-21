@@ -126,7 +126,13 @@ export function ProjectDataFilters({
   const [draftErrors, setDraftErrors] =
     useState<readonly ProjectDataFilterError[]>(errors)
   const [filtersOpen, setFiltersOpen] = useState(errors.length > 0)
-  const resolution = resolveProjectDataFilters(values, kind, defaultOrdering)
+  const scope = useWorkspaceScope()
+  const includePublicByDefault = useIncludePublicByDefault()
+  const elevated = privilegeModeFromScope(scope) === "elevated"
+  const resolution = resolveProjectDataFilters(values, kind, defaultOrdering, {
+    elevated,
+    includePublicByDefault,
+  })
   const activeInstrumentMfid =
     resolution.valid && kind === "datasets"
       ? resolution.filters.instrumentMfid
@@ -134,9 +140,6 @@ export function ProjectDataFilters({
   const activeOwnerId = resolution.valid
     ? resolution.filters.ownerId
     : undefined
-  const scope = useWorkspaceScope()
-  const includePublicByDefault = useIncludePublicByDefault()
-  const elevated = privilegeModeFromScope(scope) === "elevated"
   const publicState = publicDataFilterState({
     elevated,
     includePublicByDefault,
