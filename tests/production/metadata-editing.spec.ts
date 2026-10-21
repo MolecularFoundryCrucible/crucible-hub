@@ -12,6 +12,7 @@ for (const { path, kind } of [
 ]) {
   test(`edits ${kind} scientific metadata`, async ({ page }) => {
     await page.goto(path)
+    await page.waitForLoadState("networkidle")
     await page.getByRole("button", { name: "Edit scientific metadata" }).click()
 
     await expect(page.getByRole("button", { name: "Save" })).toBeVisible()
