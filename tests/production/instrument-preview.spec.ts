@@ -4,6 +4,7 @@ test("opens instrument datasets in the preview panel", async ({ page }) => {
   await page.goto("/hub/instruments/01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
   await page.waitForLoadState("networkidle")
   await page
+    .getByRole("main")
     .getByRole("link", { name: "Activated catalyst morphology" })
     .first()
     .click()
