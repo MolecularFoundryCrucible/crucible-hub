@@ -6,6 +6,9 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Restored the `no-referrer` policy on the sign-in callback and other routes that set their own, which the site-wide `same-origin` header had been overriding.
+- Fixed a page error on Home when one recent data source failed to load, where the browser replaced the server-rendered list with a loading state.
+- Updated dependencies within their current major versions, including React 19.3, Base UI 1.9, TanStack Query 5.104, Zod 4.6, Playwright 1.64, and ESLint 10.12.
 - Licensed Crucible Hub under the BSD 3-Clause License, added a security policy for private vulnerability reports, and removed internal deployment details, personal data, and outdated internal reviews from the repository.
 
 ## 1.6.1 - 2026-10-21
