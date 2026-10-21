@@ -5,7 +5,7 @@ import { z } from "zod"
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 import { dateOnlySchema } from "./collection-filters"
 import {
-  collectionAffiliationSchema,
+  ownershipAffiliationSchema,
   collectionCursorSchema,
   sortDirectionSchema,
 } from "./collection-query"
@@ -43,7 +43,7 @@ export const projectMemberRoleFilterSchema = z.enum([
 
 export const projectListInputSchema = z.object({
   activeSince: dateOnlySchema.optional(),
-  affiliation: collectionAffiliationSchema.optional(),
+  affiliation: ownershipAffiliationSchema.optional(),
   cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional(),
   includeTotal: z.boolean().optional(),

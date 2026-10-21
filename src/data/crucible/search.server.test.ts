@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
-import { searchWorkspace } from "./search.server"
+import { fixturePublicOnlyMfids } from "./fixtures/demo-workspace"
+import { searchWorkspace, searchWorkspaceMetadata } from "./search.server"
 
 const allKinds = [
   "person",
@@ -100,6 +101,64 @@ describe("workspace search source", () => {
         unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z7",
       },
     ])
+  })
+
+  it("sends the member affiliation to sample, dataset and metadata search", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const affiliations = new Map<string, string[]>()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        const url = new URL(request.url)
+        affiliations.set(url.pathname, url.searchParams.getAll("affiliation"))
+        if (url.pathname === "/users/search") return crucibleApiResponse([])
+        return crucibleApiResponse({ items: [], limit: 8, total: 0 })
+      })
+    )
+
+    await searchWorkspace({
+      affiliation: "member",
+      kinds: ["sample", "dataset", "project"],
+      limit: 8,
+      query: "operando",
+    })
+    await searchWorkspaceMetadata({
+      affiliation: "member",
+      limit: 8,
+      query: "operando",
+    })
+
+    expect(affiliations.get("/samples/search")).toEqual(["member"])
+    expect(affiliations.get("/datasets/search")).toEqual(["member"])
+    expect(affiliations.get("/projects/search")).toEqual([])
+    expect(affiliations.get("/resources/metadata/search")).toEqual(["member"])
+  })
+
+  it("hides fixture search results visible only because they are public", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+    const ids = (result: Awaited<ReturnType<typeof searchWorkspace>>) =>
+      result.groups.flatMap((group) =>
+        group.items.map((item) => item.unique_id)
+      )
+
+    const all = await searchWorkspace({
+      kinds: ["sample", "dataset"],
+      limit: 50,
+      query: "",
+    })
+    const member = await searchWorkspace({
+      affiliation: "member",
+      kinds: ["sample", "dataset"],
+      limit: 50,
+      query: "",
+    })
+
+    expect(ids(all).some((id) => fixturePublicOnlyMfids.has(id))).toBe(true)
+    expect(ids(member).some((id) => fixturePublicOnlyMfids.has(id))).toBe(false)
   })
 
   it("bounds API aggregation and preserves successful groups", async () => {

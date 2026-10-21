@@ -5184,6 +5184,11 @@ export interface components {
             /** Write */
             write: boolean;
         };
+        /**
+         * ResourceAffiliation
+         * @enum {string}
+         */
+        ResourceAffiliation: "owner" | "member";
         /** ResourceCapabilities */
         ResourceCapabilities: {
             /** Can Change Status */
@@ -7131,8 +7136,8 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 include_metadata?: boolean;
                 include_links?: boolean;
                 include_owner?: boolean;
@@ -7286,8 +7291,8 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 /** @description Restrict the resources contributing to bucket counts by public visibility. */
                 visibility?: "all" | "public" | "private";
                 /** @description Project slug. May be combined with a matching project_mfid. */
@@ -7416,8 +7421,8 @@ export interface operations {
             query: {
                 /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
                 q: string;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 limit?: number;
                 /** @description Exact stable owner identifier for a human or service account. */
                 owner_id?: string | null;
@@ -11368,6 +11373,8 @@ export interface operations {
                 /** @description Full-text search against scientific metadata content. */
                 q: string;
                 limit?: number;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. Applies to dataset and sample results; project and instrument results are not narrowed. */
+                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
@@ -12129,8 +12136,8 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 include_metadata?: boolean;
                 include_links?: boolean;
                 include_owner?: boolean;
@@ -12270,8 +12277,8 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 /** @description Restrict the resources contributing to bucket counts by public visibility. */
                 visibility?: "all" | "public" | "private";
                 /** @description Project slug. May be combined with a matching project_mfid. */
@@ -12346,8 +12353,8 @@ export interface operations {
             query: {
                 /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
                 q: string;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
-                affiliation?: components["schemas"]["Affiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 limit?: number;
                 /** @description Exact stable owner identifier for a human or service account. */
                 owner_id?: string | null;

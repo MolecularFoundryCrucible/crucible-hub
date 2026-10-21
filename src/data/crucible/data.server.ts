@@ -1,3 +1,10 @@
+import type {
+  CollectionAffiliation,
+  CollectionQueryOptions,
+  ResourceSort,
+  SortDirection,
+} from "./collection-query"
+import { fixturePublicOnlyMfids } from "./fixtures/demo-workspace"
 import "@tanstack/react-start/server-only"
 
 import type { components } from "@/generated/crucible-api"
@@ -10,11 +17,6 @@ import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
-import type {
-  CollectionQueryOptions,
-  ResourceSort,
-  SortDirection,
-} from "./collection-query"
 import { normalizeCollectionQueryOptions } from "./collection-query"
 import { fixtureCursorPage, fixtureResourcePageLimit } from "./pagination"
 import {
@@ -417,9 +419,11 @@ function fixtureQueryRows<
   name: (item: TItem) => string
 ) {
   const options = normalizeCollectionQueryOptions(input)
-  const affiliated = options.affiliation
-    ? items.filter((item) => item.owner?.unique_id === accountMfid)
-    : items
+  const affiliated = fixtureAffiliationRows(
+    items,
+    options.affiliation,
+    accountMfid
+  )
   const sort = options.sort
   const direction = options.direction === "asc" ? 1 : -1
   return [...affiliated].sort((left, right) => {
@@ -432,6 +436,22 @@ function fixtureQueryRows<
     }
     return left.unique_id.localeCompare(right.unique_id) * direction
   })
+}
+
+function fixtureAffiliationRows<
+  TItem extends { owner?: { unique_id: string } | null; unique_id: string },
+>(
+  items: readonly TItem[],
+  affiliation: CollectionAffiliation | undefined,
+  accountMfid: string
+) {
+  if (affiliation === "owner") {
+    return items.filter((item) => item.owner?.unique_id === accountMfid)
+  }
+  if (affiliation === "member") {
+    return items.filter((item) => !fixturePublicOnlyMfids.has(item.unique_id))
+  }
+  return [...items]
 }
 
 function fixtureSortValue<
@@ -724,17 +744,21 @@ export async function readWorkspaceSampleFacets(
     throw new Error(configuration.reason)
   if (configuration.mode === "fixture") {
     const workspace = fixtureWorkspace(input.scenario)
-    const samples = fixtureSampleFacetRows(
-      fixtureCollectionRows(
-        fixtureProjectRows(
-          workspace.samples,
-          input,
-          "samples",
-          workspace.projects
+    const samples = fixtureAffiliationRows(
+      fixtureSampleFacetRows(
+        fixtureCollectionRows(
+          fixtureProjectRows(
+            workspace.samples,
+            input,
+            "samples",
+            workspace.projects
+          ),
+          input
         ),
         input
       ),
-      input
+      input.affiliation,
+      workspace.account.unique_id
     )
     const buckets =
       input.field === "owner"
@@ -796,21 +820,25 @@ export async function readWorkspaceDatasetFacets(
     throw new Error(configuration.reason)
   if (configuration.mode === "fixture") {
     const workspace = fixtureWorkspace(input.scenario)
-    const datasets = fixtureDatasetFacetRows(
-      fixtureCollectionRows(
-        fixtureProjectRows(
-          instrumentMfid
-            ? workspace.datasets.filter(
-                (dataset) => dataset.instrument?.unique_id === instrumentMfid
-              )
-            : workspace.datasets,
-          input,
-          "datasets",
-          workspace.projects
+    const datasets = fixtureAffiliationRows(
+      fixtureDatasetFacetRows(
+        fixtureCollectionRows(
+          fixtureProjectRows(
+            instrumentMfid
+              ? workspace.datasets.filter(
+                  (dataset) => dataset.instrument?.unique_id === instrumentMfid
+                )
+              : workspace.datasets,
+            input,
+            "datasets",
+            workspace.projects
+          ),
+          input
         ),
         input
       ),
-      input
+      input.affiliation,
+      workspace.account.unique_id
     )
     const buckets =
       input.field === "owner"

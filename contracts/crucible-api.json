@@ -6415,6 +6415,14 @@
         "title": "ResourceACL",
         "type": "object"
       },
+      "ResourceAffiliation": {
+        "enum": [
+          "owner",
+          "member"
+        ],
+        "title": "ResourceAffiliation",
+        "type": "string"
+      },
       "ResourceCapabilities": {
         "properties": {
           "can_change_status": {
@@ -11056,7 +11064,7 @@
             }
           },
           {
-            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
             "in": "query",
             "name": "affiliation",
             "required": false,
@@ -11064,7 +11072,7 @@
               "anyOf": [
                 {
                   "items": {
-                    "$ref": "#/components/schemas/Affiliation"
+                    "$ref": "#/components/schemas/ResourceAffiliation"
                   },
                   "maxItems": 5,
                   "minItems": 1,
@@ -11074,7 +11082,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
               "title": "Affiliation"
             }
           },
@@ -11947,7 +11955,7 @@
             }
           },
           {
-            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
             "in": "query",
             "name": "affiliation",
             "required": false,
@@ -11955,7 +11963,7 @@
               "anyOf": [
                 {
                   "items": {
-                    "$ref": "#/components/schemas/Affiliation"
+                    "$ref": "#/components/schemas/ResourceAffiliation"
                   },
                   "maxItems": 5,
                   "minItems": 1,
@@ -11965,7 +11973,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
               "title": "Affiliation"
             }
           },
@@ -12586,7 +12594,7 @@
             }
           },
           {
-            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
             "in": "query",
             "name": "affiliation",
             "required": false,
@@ -12594,7 +12602,7 @@
               "anyOf": [
                 {
                   "items": {
-                    "$ref": "#/components/schemas/Affiliation"
+                    "$ref": "#/components/schemas/ResourceAffiliation"
                   },
                   "maxItems": 5,
                   "minItems": 1,
@@ -12604,7 +12612,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
               "title": "Affiliation"
             }
           },
@@ -22508,6 +22516,29 @@
             }
           },
           {
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. Applies to dataset and sample results; project and instrument results are not narrowed.",
+            "in": "query",
+            "name": "affiliation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/ResourceAffiliation"
+                  },
+                  "maxItems": 5,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. Applies to dataset and sample results; project and instrument results are not narrowed.",
+              "title": "Affiliation"
+            }
+          },
+          {
             "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
             "in": "header",
             "name": "Crucible-Privilege-Mode",
@@ -24311,7 +24342,7 @@
             }
           },
           {
-            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
             "in": "query",
             "name": "affiliation",
             "required": false,
@@ -24319,7 +24350,7 @@
               "anyOf": [
                 {
                   "items": {
-                    "$ref": "#/components/schemas/Affiliation"
+                    "$ref": "#/components/schemas/ResourceAffiliation"
                   },
                   "maxItems": 5,
                   "minItems": 1,
@@ -24329,7 +24360,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
               "title": "Affiliation"
             }
           },
@@ -25043,7 +25074,7 @@
             }
           },
           {
-            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
             "in": "query",
             "name": "affiliation",
             "required": false,
@@ -25051,7 +25082,7 @@
               "anyOf": [
                 {
                   "items": {
-                    "$ref": "#/components/schemas/Affiliation"
+                    "$ref": "#/components/schemas/ResourceAffiliation"
                   },
                   "maxItems": 5,
                   "minItems": 1,
@@ -25061,7 +25092,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
               "title": "Affiliation"
             }
           },
@@ -25471,7 +25502,7 @@
             }
           },
           {
-            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+            "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
             "in": "query",
             "name": "affiliation",
             "required": false,
@@ -25479,7 +25510,7 @@
               "anyOf": [
                 {
                   "items": {
-                    "$ref": "#/components/schemas/Affiliation"
+                    "$ref": "#/components/schemas/ResourceAffiliation"
                   },
                   "maxItems": 5,
                   "minItems": 1,
@@ -25489,7 +25520,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics.",
+              "description": "Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access.",
               "title": "Affiliation"
             }
           },

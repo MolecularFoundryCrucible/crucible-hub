@@ -1,7 +1,10 @@
 import "@tanstack/react-start/server-only"
 
 import type { components } from "@/generated/crucible-api"
-import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
+import {
+  demoWorkspace,
+  fixturePublicOnlyMfids,
+} from "@/data/crucible/fixtures/demo-workspace"
 import { formatUsername } from "@/lib/username"
 import { resourceDisplayName } from "@/lib/resource-name"
 
@@ -29,6 +32,7 @@ type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
 
 type SearchInput = {
+  affiliation?: "member"
   kinds: readonly WorkspaceSearchKind[]
   limit: number
   projectMfid?: string
@@ -38,6 +42,7 @@ type SearchInput = {
 }
 
 type MetadataSearchInput = {
+  affiliation?: "member"
   limit: number
   query: string
   scenario?: FixtureScenario
@@ -179,6 +184,12 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
           (item) =>
             !input.serviceAccountsOnly || item.is_service_account === true
         )
+        .filter(
+          (item) =>
+            input.affiliation !== "member" ||
+            (kind !== "sample" && kind !== "dataset") ||
+            !fixturePublicOnlyMfids.has(item.unique_id)
+        )
         .filter((item) => {
           if (!input.projectMfid) return true
           if (!project || (kind !== "sample" && kind !== "dataset")) {
@@ -294,6 +305,11 @@ function fixtureMetadataSearch(
     })),
   ]
   const results = resources
+    .filter(
+      (resource) =>
+        input.affiliation !== "member" ||
+        !fixturePublicOnlyMfids.has(resource.unique_id)
+    )
     .filter((resource) =>
       JSON.stringify(resource.metadata).toLocaleLowerCase().includes(query)
     )
@@ -525,6 +541,9 @@ const kindSearches: Record<
           await client.GET("/samples/search", {
             params: {
               query: {
+                affiliation: input.affiliation
+                  ? [input.affiliation]
+                  : undefined,
                 limit: input.limit,
                 project_mfid: input.projectMfid,
                 project_scope: input.projectMfid ? "all" : undefined,
@@ -562,6 +581,9 @@ const kindSearches: Record<
           await client.GET("/datasets/search", {
             params: {
               query: {
+                affiliation: input.affiliation
+                  ? [input.affiliation]
+                  : undefined,
                 limit: input.limit,
                 project_mfid: input.projectMfid,
                 project_scope: input.projectMfid ? "all" : undefined,
@@ -641,7 +663,13 @@ export async function searchWorkspaceMetadata(
 
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/resources/metadata/search", {
-    params: { query: { limit: input.limit, q: input.query } },
+    params: {
+      query: {
+        affiliation: input.affiliation ? [input.affiliation] : undefined,
+        limit: input.limit,
+        q: input.query,
+      },
+    },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {

@@ -1,6 +1,6 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
-import type { CollectionAffiliation } from "./collection-query"
+import type { OwnershipAffiliation } from "./collection-query"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys, privilegeModeFromScope } from "./query-keys"
 import {
@@ -58,7 +58,7 @@ export function projectsQueryOptions(
   scope: IdentityScope,
   filters: {
     activeSince?: string
-    affiliation?: CollectionAffiliation
+    affiliation?: OwnershipAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
     includeTotal?: boolean
@@ -119,7 +119,7 @@ export function projectsCursorQueryOptions(
   scope: IdentityScope,
   filters: {
     activeSince?: string
-    affiliation?: CollectionAffiliation
+    affiliation?: OwnershipAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
     includeTotal?: boolean

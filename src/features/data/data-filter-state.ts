@@ -7,7 +7,7 @@ import {
 import type { CollectionFilters } from "@/data/crucible/collection-filters"
 import {
   collectionOrderingSearchState,
-  collectionAffiliationSchema,
+  ownershipAffiliationSchema,
   collectionCursorSchema,
   defaultCollectionOrdering,
   normalizeCollectionQueryOptions,
@@ -15,7 +15,7 @@ import {
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import type {
-  CollectionAffiliation,
+  OwnershipAffiliation,
   CollectionOrdering,
   NormalizedCollectionQueryOptions,
 } from "@/data/crucible/collection-query"
@@ -81,7 +81,7 @@ export type DataFilterValues = CollectionFilters &
   Pick<NormalizedCollectionQueryOptions, "direction" | "sort"> &
   ProjectSelection &
   SampleFacetFilters & {
-    affiliation?: CollectionAffiliation
+    affiliation?: OwnershipAffiliation
     instrumentMfid?: string
     kind: DataKindFilter
   }
@@ -97,6 +97,10 @@ export type DataFilterResolution =
   | { filters: DataFilterValues; valid: true }
   | { errors: readonly DataFilterError[]; valid: false }
 
+function collectionOrdering({ direction, sort }: CollectionOrdering) {
+  return { direction, sort }
+}
+
 const dataKindSchema = z.enum(["samples", "datasets"]).default("samples")
 const projectScopeSchema = z.enum(["all", "assigned", "shared"]).optional()
 const mfidSchema = z
@@ -110,7 +114,7 @@ const exactFacetValueSchema = z.string().max(255).optional()
 
 const domainFiltersSchema = z
   .object({
-    affiliation: collectionAffiliationSchema.optional(),
+    affiliation: ownershipAffiliationSchema.optional(),
     dataFormat: exactFacetValueSchema,
     dataFormatIsNull: z.literal(true).optional(),
     direction: sortDirectionSchema.optional(),
@@ -266,12 +270,14 @@ export function resolveDataFilters(
     ...(domain.data.affiliation
       ? { affiliation: domain.data.affiliation }
       : {}),
-    ...normalizeCollectionQueryOptions(
-      {
-        direction: domain.data.direction,
-        sort: domain.data.sort,
-      },
-      defaultOrdering
+    ...collectionOrdering(
+      normalizeCollectionQueryOptions(
+        {
+          direction: domain.data.direction,
+          sort: domain.data.sort,
+        },
+        defaultOrdering
+      )
     ),
     ...(domain.data.kind === "samples"
       ? {

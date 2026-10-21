@@ -61,6 +61,7 @@ describe("workspace fixture adapter", () => {
       expect(
         source.workspace.datasets.map((dataset) => dataset.unique_id)
       ).toEqual([
+        "01J6Y8N4Q2R7M9K3T5V0W1X2ZH",
         "01J6Y8N4Q2R7M9K3T5V0W1X2Z9",
         "01J6Y8N4Q2R7M9K3T5V0W1X2Z8",
         "01J6Y8N4Q2R7M9K3T5V0W1X2Z7",

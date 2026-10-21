@@ -46,6 +46,24 @@ const collaborator = {
   last_name: "Lee",
 } satisfies Schema<"UserPublicRead">
 
+const externalResearcher = {
+  unique_id: "0000-0000-0000-0059",
+  username: "riley.novak",
+  first_name: "Riley",
+  is_service_account: false,
+  last_name: "Novak",
+} satisfies Schema<"UserPublicRead">
+
+const publicOnlyCapabilities = {
+  can_change_status: false,
+  can_delete: false,
+  can_request_deletion: false,
+  can_edit: false,
+  can_manage_access: false,
+  can_transfer: false,
+  max_grant_role: null,
+} satisfies Schema<"ResourceCapabilities">
+
 const prospectiveMember = {
   unique_id: "0000-0000-0000-0026",
   username: "jamie.patel",
@@ -117,11 +135,69 @@ const diffractionDatasetSummary = {
   session_name: "operando-cycle-04",
 } satisfies Schema<"DatasetRead">
 
+export const publicOnlySamples = [
+  {
+    unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2ZG",
+    sample_name: "Perovskite film PV-12",
+    sample_type: "thin film",
+    owner_orcid: externalResearcher.unique_id,
+    project_id: null,
+    project: null,
+    description: null,
+    timestamp: "2026-08-19T10:00:00Z",
+    public: true,
+    resource_type: "sample",
+    creation_time: "2026-08-19T10:02:00Z",
+    modification_time: null,
+    scientific_metadata: null,
+    datasets: [],
+    deletion_request: null,
+    links: [],
+    owner: externalResearcher,
+    capabilities: publicOnlyCapabilities,
+  },
+] satisfies Schema<"SampleResponse">[]
+
+export const publicOnlyDatasets = [
+  {
+    unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2ZH",
+    public: true,
+    dataset_name: "Perovskite film absorption survey",
+    owner_orcid: externalResearcher.unique_id,
+    project_id: null,
+    project: null,
+    timestamp: "2026-08-20T14:00:00Z",
+    size: 12_582_912,
+    data_format: "CSV",
+    measurement: "UV-vis absorption spectroscopy",
+    data_type: "spectrum series",
+    session_name: "film-survey",
+    resource_type: "dataset",
+    creation_time: "2026-08-20T14:05:00Z",
+    modification_time: null,
+    scientific_metadata: null,
+    deletion_request: null,
+    links: [],
+    owner: externalResearcher,
+    capabilities: publicOnlyCapabilities,
+  },
+] satisfies Schema<"DatasetResponse">[]
+
+export const fixturePublicOnlyMfids: ReadonlySet<string> = new Set(
+  [...publicOnlySamples, ...publicOnlyDatasets].map((item) => item.unique_id)
+)
+
 export const demoWorkspace = {
   id: "operando-catalyst-study",
   referenceTime: "2026-09-01T16:00:00Z",
   account,
-  people: [account, collaborator, prospectiveMember, serviceAccount],
+  people: [
+    account,
+    collaborator,
+    prospectiveMember,
+    serviceAccount,
+    externalResearcher,
+  ],
   projects: [
     {
       ...projectReference,

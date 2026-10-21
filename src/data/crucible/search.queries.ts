@@ -18,7 +18,8 @@ export function searchQueryOptions(
   query: string,
   kinds: readonly WorkspaceSearchKind[],
   projectMfid?: string,
-  serviceAccountsOnly = false
+  serviceAccountsOnly = false,
+  affiliation?: "member"
 ) {
   return workspaceSearchQueryOptions(
     scope,
@@ -26,7 +27,8 @@ export function searchQueryOptions(
     kinds,
     searchGroupLimit,
     projectMfid,
-    serviceAccountsOnly
+    serviceAccountsOnly,
+    affiliation
   )
 }
 
@@ -34,14 +36,17 @@ export function quickSearchQueryOptions(
   scope: IdentityScope,
   query: string,
   kinds: readonly WorkspaceSearchKind[],
-  projectMfid?: string
+  projectMfid?: string,
+  affiliation?: "member"
 ) {
   return workspaceSearchQueryOptions(
     scope,
     query,
     kinds,
     quickSearchGroupLimit,
-    projectMfid
+    projectMfid,
+    false,
+    affiliation
   )
 }
 
@@ -51,12 +56,14 @@ function workspaceSearchQueryOptions(
   kinds: readonly WorkspaceSearchKind[],
   limit: number,
   projectMfid?: string,
-  serviceAccountsOnly = false
+  serviceAccountsOnly = false,
+  affiliation?: "member"
 ) {
   const normalizedKinds = [...kinds].sort()
   const scenario = fixtureScenarioFromScope(scope)
   return queryOptions({
     queryKey: crucibleKeys.search(scope, {
+      affiliation: affiliation ?? null,
       kinds: normalizedKinds,
       limit,
       projectMfid: projectMfid ?? null,
@@ -67,6 +74,7 @@ function workspaceSearchQueryOptions(
       unwrapHubResult(
         await getWorkspaceSearch({
           data: {
+            affiliation,
             kinds: [...kinds],
             limit,
             projectMfid,
@@ -83,11 +91,13 @@ function workspaceSearchQueryOptions(
 
 export function metadataSearchQueryOptions(
   scope: IdentityScope,
-  query: string
+  query: string,
+  affiliation?: "member"
 ) {
   const scenario = fixtureScenarioFromScope(scope)
   return queryOptions({
     queryKey: crucibleKeys.search(scope, {
+      affiliation: affiliation ?? null,
       limit: 40,
       mode: "metadata",
       query,
@@ -95,7 +105,7 @@ export function metadataSearchQueryOptions(
     queryFn: async ({ signal }) =>
       unwrapHubResult(
         await getWorkspaceMetadataSearch({
-          data: { limit: 40, query, scenario },
+          data: { affiliation, limit: 40, query, scenario },
           signal,
         })
       ),

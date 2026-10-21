@@ -12,7 +12,7 @@ import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import { fixtureEntryCapabilities } from "./entry-capabilities"
 import { normalizeScientificMetadata } from "./scientific-metadata"
-import type { CollectionAffiliation } from "./collection-query"
+import type { OwnershipAffiliation } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
 import type {
   WorkspaceProject,
@@ -82,7 +82,7 @@ export async function readWorkspaceProjects(
     sort,
   }: {
     activeSince?: string
-    affiliation?: CollectionAffiliation
+    affiliation?: OwnershipAffiliation
     cursor?: string
     direction?: WorkspaceSortDirection
     includeTotal?: boolean
@@ -212,7 +212,7 @@ export async function readWorkspaceProjects(
     params: {
       query: {
         active_since: activeSinceTimestamp,
-        affiliation: affiliation ? [affiliation] : undefined,
+        affiliation: affiliation === "owner" ? [affiliation] : undefined,
         cursor,
         direction: sort ? direction : undefined,
         include_total: includeTotal ?? true,

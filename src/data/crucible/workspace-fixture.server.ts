@@ -1,5 +1,9 @@
 import type { components } from "@/generated/crucible-api"
-import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
+import {
+  demoWorkspace,
+  publicOnlyDatasets,
+  publicOnlySamples,
+} from "@/data/crucible/fixtures/demo-workspace"
 import { defaultFixtureScenario } from "@/data/crucible/fixture-scenarios"
 import type { FixtureScenario } from "@/data/crucible/fixture-scenarios"
 import type {
@@ -208,8 +212,9 @@ function workspaceForScenario(scenario: FixtureScenario): Workspace {
   if (scenario === "dense") return denseWorkspace()
   return {
     ...demoWorkspace,
-    datasets: [...demoWorkspace.datasets].sort((left, right) =>
-      right.unique_id.localeCompare(left.unique_id)
+    samples: [...demoWorkspace.samples, ...publicOnlySamples],
+    datasets: [...demoWorkspace.datasets, ...publicOnlyDatasets].sort(
+      (left, right) => right.unique_id.localeCompare(left.unique_id)
     ),
   }
 }

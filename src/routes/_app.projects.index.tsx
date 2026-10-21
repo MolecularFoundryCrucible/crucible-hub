@@ -73,7 +73,7 @@ import {
 } from "@/data/crucible/projects.queries"
 import type { SortDirection } from "@/data/crucible/collection-query"
 import {
-  collectionAffiliationSchema,
+  ownershipAffiliationSchema,
   collectionCursorSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
@@ -106,7 +106,7 @@ export type ProjectRoleFilter = z.infer<typeof projectRoleFilterSchema>
 
 const projectSearchSchema = z.object({
   activeSince: dateOnlySchema.optional().catch(undefined),
-  affiliation: collectionAffiliationSchema.optional().catch(undefined),
+  affiliation: ownershipAffiliationSchema.optional().catch(undefined),
   cursor: collectionCursorSchema,
   direction: sortDirectionSchema.optional().catch(undefined),
   role: projectRoleFilterSchema.optional().catch(undefined),

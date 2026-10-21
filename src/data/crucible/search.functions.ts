@@ -17,6 +17,7 @@ export const searchKindSchema = z.enum([
 ])
 
 export const searchInputSchema = z.object({
+  affiliation: z.literal("member").optional(),
   kinds: z.array(searchKindSchema).min(1).max(5),
   limit: z.number().int().min(1).max(50),
   projectMfid: z.string().trim().min(1).max(255).optional(),
@@ -39,6 +40,7 @@ export const getWorkspaceMetadataSearch = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])
   .validator(
     z.object({
+      affiliation: z.literal("member").optional(),
       limit: z.number().int().min(1).max(50),
       query: z.string().trim().min(3).max(200),
       scenario: fixtureScenarioSchema.optional(),

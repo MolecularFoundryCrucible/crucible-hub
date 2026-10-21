@@ -3,6 +3,7 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
 import type {
+  CollectionAffiliation,
   CollectionQueryOptions,
   ResourceSort,
   SortDirection,
@@ -103,7 +104,7 @@ function collectionScopedPreviousData<TData>(
     sessionName?: string
     sessionNameIsNull?: true
     visibility?: "all" | "public" | "private"
-    affiliation?: "owner"
+    affiliation?: CollectionAffiliation
     direction?: "asc" | "desc"
     sort?: "created" | "name" | "updated"
   },

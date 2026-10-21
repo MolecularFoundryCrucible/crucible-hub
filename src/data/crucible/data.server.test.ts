@@ -2,8 +2,15 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
-import { readWorkspaceDatasets, readWorkspaceSamples } from "./data.server"
-import { demoWorkspace } from "./fixtures/demo-workspace"
+import {
+  readWorkspaceDatasetFacets,
+  readWorkspaceDatasets,
+  readWorkspaceSamples,
+} from "./data.server"
+import {
+  demoWorkspace,
+  fixturePublicOnlyMfids,
+} from "./fixtures/demo-workspace"
 
 const viewer = vi.hoisted(() => ({ timeZone: "UTC" }))
 vi.mock("@/server/crucible/time-zone.server", () => ({
@@ -48,12 +55,90 @@ describe("workspace data sources", () => {
     expect(query.get("creation_time_lte")).toBe("2026-10-19T06:59:59.999999Z")
   })
 
+  it("hides fixture records visible only because they are public", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    const all = await readWorkspaceDatasets({ limit: 50 })
+    const member = await readWorkspaceDatasets({
+      affiliation: "member",
+      limit: 50,
+    })
+    const memberSamples = await readWorkspaceSamples({
+      affiliation: "member",
+      limit: 50,
+    })
+    const ids = (items: readonly { unique_id: string }[]) =>
+      items.map((item) => item.unique_id)
+
+    expect(ids(all.items).some((id) => fixturePublicOnlyMfids.has(id))).toBe(
+      true
+    )
+    expect(ids(member.items).some((id) => fixturePublicOnlyMfids.has(id))).toBe(
+      false
+    )
+    expect(
+      ids(memberSamples.items).some((id) => fixturePublicOnlyMfids.has(id))
+    ).toBe(false)
+    expect(ids(member.items)).toContain("01J6Y8N4Q2R7M9K3T5V0W1X2Z9")
+    expect(member.total).toBe(all.total! - 1)
+  })
+
+  it("counts fixture facets with the same affiliation", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    const all = await readWorkspaceDatasetFacets({
+      field: "measurement",
+      limit: 50,
+    })
+    const member = await readWorkspaceDatasetFacets({
+      affiliation: "member",
+      field: "measurement",
+      limit: 50,
+    })
+    const count = (page: { items: readonly { count: number }[] }) =>
+      page.items.reduce((sum, item) => sum + item.count, 0)
+
+    expect(count(member)).toBe(count(all) - 1)
+  })
+
+  it("sends the member affiliation to the API", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({
+          items: [],
+          limit: 50,
+          next_cursor: null,
+          total: 0,
+        })
+      })
+    )
+
+    await readWorkspaceDatasets({ affiliation: "member", limit: 50 })
+
+    expect(new URL(requests[0].url).searchParams.getAll("affiliation")).toEqual(
+      ["member"]
+    )
+  })
+
   it("uses opaque cursor pagination for fixture samples", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
-    const first = await readWorkspaceSamples({ limit: 1 })
+    const first = await readWorkspaceSamples({
+      affiliation: "member",
+      limit: 1,
+    })
     const second = await readWorkspaceSamples({
+      affiliation: "member",
       cursor: first.nextCursor ?? undefined,
       limit: 1,
     })
@@ -70,8 +155,12 @@ describe("workspace data sources", () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
-    const first = await readWorkspaceDatasets({ limit: 2 })
+    const first = await readWorkspaceDatasets({
+      affiliation: "member",
+      limit: 2,
+    })
     const second = await readWorkspaceDatasets({
+      affiliation: "member",
       cursor: first.nextCursor ?? undefined,
       limit: 2,
     })

@@ -1,14 +1,14 @@
 import { SegmentedControl } from "@/components/crucible/segmented-control"
-import type { CollectionAffiliation } from "@/data/crucible/collection-query"
+import type { OwnershipAffiliation } from "@/data/crucible/collection-query"
 
 export function CollectionAffiliationFilter({
   onChange,
   ownerLabel,
   value,
 }: {
-  onChange: (value: CollectionAffiliation | undefined) => void
+  onChange: (value: OwnershipAffiliation | undefined) => void
   ownerLabel: string
-  value?: CollectionAffiliation
+  value?: OwnershipAffiliation
 }) {
   const options = [
     { label: "All", value: "all" },
