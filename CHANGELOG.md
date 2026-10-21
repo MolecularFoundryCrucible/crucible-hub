@@ -4,6 +4,8 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+## 1.5.1 - 2026-10-20
+
 - Showed Request deletion on samples and datasets only to people the API allows to request it (contributor or above), instead of to every viewer including public visitors, while still showing an existing request's status.
 - Enlarged the Copy and Print buttons under the MFID QR code to the standard icon button size.
 - Drew the active Browse nearby sequence (Previous, sequence, Next) as one bordered button group.
