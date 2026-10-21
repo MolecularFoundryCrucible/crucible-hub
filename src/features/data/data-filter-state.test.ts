@@ -178,6 +178,24 @@ describe("global data filter state", () => {
     })
   })
 
+  it("carries the public data choice through the URL and filters", () => {
+    expect(dataSearchSchema.parse({ publicData: "include" }).publicData).toBe(
+      "include"
+    )
+    expect(
+      dataSearchSchema.parse({ publicData: "everything" }).publicData
+    ).toBeUndefined()
+
+    const resolution = resolveDataFilters({ publicData: "exclude" })
+    expect(resolution.valid && resolution.filters.publicData).toBe("exclude")
+    if (!resolution.valid) return
+
+    expect(applyDataFilters({}, resolution.filters).publicData).toBe("exclude")
+    expect(
+      clearDataFilters({ publicData: "include" }).publicData
+    ).toBeUndefined()
+  })
+
   it("clears an invalid kind so malformed URL state can recover", () => {
     expect(
       clearDataFilters({

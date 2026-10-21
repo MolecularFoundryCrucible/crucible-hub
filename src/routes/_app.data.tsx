@@ -1,3 +1,14 @@
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import {
+  publicDataFilterState,
+  publicDataSearchValue,
+  resolveCollectionAffiliation,
+} from "@/data/crucible/public-data"
+import type { PublicDataAccess } from "@/data/crucible/public-data"
+import {
+  loadIncludePublicByDefault,
+  useIncludePublicByDefault,
+} from "@/features/preferences/public-data"
 import { useMemo } from "react"
 import {
   useInfiniteQuery,
@@ -39,9 +50,11 @@ import {
 import { ResourceCreationActions } from "@/components/crucible/resource-creation-actions"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
@@ -134,6 +147,7 @@ export const Route = createFileRoute("/_app/data")({
     ownerIdSet: search.ownerIdSet,
     projectMfid: search.projectMfid,
     projectScope: search.projectScope,
+    publicData: search.publicData,
     sampleCursor: search.sampleCursor,
     sampleType: search.sampleType,
     sampleTypeIsNull: search.sampleTypeIsNull,
@@ -148,7 +162,7 @@ export const Route = createFileRoute("/_app/data")({
   loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
-    const [groupBy, defaultSort] = await Promise.all([
+    const [groupBy, defaultSort, includePublicByDefault] = await Promise.all([
       loadDataGroupBy(
         context.queryClient,
         source.scope,
@@ -159,10 +173,18 @@ export const Route = createFileRoute("/_app/data")({
         source.scope,
         source.accountPreferencesEnabled
       ),
+      source.accountPreferencesEnabled
+        ? loadIncludePublicByDefault(context.queryClient, source.scope)
+        : false,
     ])
     const resolution = resolveDataFilters(deps, defaultSort?.data)
-    if (!resolution.valid) return { dataGroupBy: groupBy, defaultSort }
-    const baseFilters = collectionQueryFilters(resolution.filters)
+    if (!resolution.valid) {
+      return { dataGroupBy: groupBy, defaultSort, includePublicByDefault }
+    }
+    const baseFilters = collectionQueryFilters(resolution.filters, {
+      elevated: privilegeModeFromScope(source.scope) === "elevated",
+      includePublicByDefault,
+    })
     const sampleBrowse =
       resolution.filters.kind === "samples"
         ? resolveCollectionBrowse(
@@ -227,7 +249,7 @@ export const Route = createFileRoute("/_app/data")({
       if (request) missing.push(request)
     }
     if (cause !== "stay") await Promise.all(missing)
-    return { dataGroupBy: groupBy, defaultSort }
+    return { dataGroupBy: groupBy, defaultSort, includePublicByDefault }
   },
   pendingComponent: DataRoutePending,
   staleTime: Infinity,
@@ -368,7 +390,13 @@ function DataResults({
   const kind = filters.kind
   const showSamples = kind === "samples"
   const showDatasets = kind === "datasets"
-  const collectionFilters = collectionQueryFilters(filters)
+  const publicAccess = usePublicDataAccess()
+  const collectionFilters = collectionQueryFilters(filters, publicAccess)
+  const publicState = publicDataFilterState({
+    ...publicAccess,
+    ownership: filters.affiliation,
+    publicData: filters.publicData,
+  })
   const groupBy = useDataGroupBy(Route.useLoaderData()?.dataGroupBy)
   const sampleBrowse =
     kind === "samples"
@@ -537,6 +565,21 @@ function DataResults({
       !datasetResult.isFetchingNextPage)
   const refreshing = updating || facetFetching > 0
 
+  function includePublicData() {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        datasetCursor: undefined,
+        publicData: publicDataSearchValue(
+          true,
+          publicAccess.includePublicByDefault
+        ),
+        sampleCursor: undefined,
+      }),
+      state: {},
+    })
+  }
+
   function retrySelected() {
     if (showSamples) void sampleResult.refetch()
     if (showDatasets) void datasetResult.refetch()
@@ -670,6 +713,13 @@ function DataResults({
                       : "New resources will appear here when they are available."}
                   </EmptyDescription>
                 </EmptyHeader>
+                {publicState.enabled && !publicState.included ? (
+                  <EmptyContent>
+                    <Button onClick={includePublicData} variant="outline">
+                      Include public data
+                    </Button>
+                  </EmptyContent>
+                ) : null}
               </Empty>
             )}
           </>
@@ -940,8 +990,20 @@ type DataCollectionQueryFilters = CollectionFilters &
       }
   )
 
+function usePublicDataAccess(): PublicDataAccess {
+  const scope = useWorkspaceScope()
+  const includePublicByDefault = useIncludePublicByDefault(
+    Route.useLoaderData()?.includePublicByDefault
+  )
+  return {
+    elevated: privilegeModeFromScope(scope) === "elevated",
+    includePublicByDefault,
+  }
+}
+
 function collectionQueryFilters(
-  filters: DataFilterValues
+  filters: DataFilterValues,
+  access: PublicDataAccess
 ): DataCollectionQueryFilters {
   const collectionFilters: CollectionFilters = {
     createdFrom: filters.createdFrom,
@@ -949,7 +1011,11 @@ function collectionQueryFilters(
     visibility: filters.visibility,
   }
   const collectionQuery: CollectionQueryOptions = {
-    affiliation: filters.affiliation,
+    affiliation: resolveCollectionAffiliation({
+      ...access,
+      ownership: filters.affiliation,
+      publicData: filters.publicData,
+    }),
     direction: filters.direction,
     sort: filters.sort,
   }

@@ -1,3 +1,10 @@
+import { Checkbox } from "@/components/ui/checkbox"
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import {
+  publicDataFilterState,
+  publicDataSearchValue,
+} from "@/data/crucible/public-data"
+import { useIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -113,7 +120,21 @@ export function DataFilters({
   const [filtersOpen, setFiltersOpen] = useState(errors.length > 0)
   const [projectName, setProjectName] = useState<string>()
   const scope = useWorkspaceScope()
+  const includePublicByDefault = useIncludePublicByDefault()
+  const elevated = privilegeModeFromScope(scope) === "elevated"
   const resolution = resolveDataFilters(values, defaultOrdering)
+  const publicState = publicDataFilterState({
+    elevated,
+    includePublicByDefault,
+    ownership: resolution.valid ? resolution.filters.affiliation : undefined,
+    publicData: resolution.valid ? resolution.filters.publicData : undefined,
+  })
+  const draftPublicState = publicDataFilterState({
+    elevated,
+    includePublicByDefault,
+    ownership: draft.affiliation === "owner" ? "owner" : undefined,
+    publicData: draft.publicData,
+  })
   const activeProjectMfid = resolution.valid
     ? resolution.filters.projectMfid
     : undefined
@@ -159,6 +180,10 @@ export function DataFilters({
 
   const active = resolution.valid
     ? collectionActiveFilters(
+        collectionActiveFilter(
+          "public",
+          publicState.included ? "Public" : undefined
+        ),
         collectionActiveFilter(
           "affiliation",
           resolution.filters.affiliation ? "Ownership: Owned by me" : undefined
@@ -292,7 +317,10 @@ export function DataFilters({
   }
 
   function removeFilter(id: string) {
-    const changes = dataFilterRemoval[id]
+    const changes =
+      id === "public"
+        ? { publicData: publicDataSearchValue(false, includePublicByDefault) }
+        : dataFilterRemoval[id]
     if (!changes) return
     void navigate({
       search: (previous) => ({
@@ -330,6 +358,27 @@ export function DataFilters({
         <FieldSet>
           <FieldLegend className="sr-only">Data filters</FieldLegend>
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
+            {draftPublicState.available ? (
+              <Field className="sm:col-span-2" orientation="horizontal">
+                <Checkbox
+                  checked={draftPublicState.included}
+                  disabled={!draftPublicState.enabled}
+                  id="data-public"
+                  onCheckedChange={(checked) =>
+                    setDraft((current) => ({
+                      ...current,
+                      publicData: publicDataSearchValue(
+                        checked,
+                        includePublicByDefault
+                      ),
+                    }))
+                  }
+                />
+                <FieldLabel htmlFor="data-public">
+                  Include public data
+                </FieldLabel>
+              </Field>
+            ) : null}
             <Field data-invalid={invalid("projectMfid")}>
               <FieldLabel htmlFor="data-project-trigger">Project</FieldLabel>
               <ResourceChooser
@@ -642,6 +691,7 @@ function filterDraft(values: DataSearch): DataFilterSearch {
     ownerIdSet: values.ownerIdSet,
     projectMfid: values.projectMfid,
     projectScope: values.projectScope,
+    publicData: values.publicData,
     sampleType: values.sampleType,
     sampleTypeIsNull: values.sampleTypeIsNull,
     sampleTypeSet: values.sampleTypeSet,

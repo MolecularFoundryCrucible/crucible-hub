@@ -4,6 +4,11 @@ export const publicDataSearchSchema = z.enum(["include", "exclude"])
 
 export type PublicDataChoice = z.infer<typeof publicDataSearchSchema>
 
+export type PublicDataAccess = {
+  elevated: boolean
+  includePublicByDefault: boolean
+}
+
 export function effectivePublicData(
   publicData: PublicDataChoice | undefined,
   includePublicByDefault: boolean
@@ -37,4 +42,24 @@ export function resolveCollectionAffiliation({
   return effectivePublicData(publicData, includePublicByDefault)
     ? undefined
     : "member"
+}
+
+export function publicDataFilterState({
+  elevated,
+  includePublicByDefault,
+  ownership,
+  publicData,
+}: {
+  elevated: boolean
+  includePublicByDefault: boolean
+  ownership?: "owner"
+  publicData?: PublicDataChoice
+}) {
+  if (elevated) return { available: false, enabled: false, included: false }
+  if (ownership) return { available: true, enabled: false, included: false }
+  return {
+    available: true,
+    enabled: true,
+    included: effectivePublicData(publicData, includePublicByDefault),
+  }
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   effectivePublicData,
+  publicDataFilterState,
   publicDataSearchValue,
   resolveCollectionAffiliation,
 } from "./public-data"
@@ -79,5 +80,42 @@ describe("public data search values", () => {
     expect(publicDataSearchValue(false, false)).toBeUndefined()
     expect(publicDataSearchValue(false, true)).toBe("exclude")
     expect(publicDataSearchValue(true, false)).toBe("include")
+  })
+})
+
+describe("publicDataFilterState", () => {
+  it("shows the Public pill whenever public data is included", () => {
+    expect(
+      publicDataFilterState({
+        elevated: false,
+        includePublicByDefault: true,
+      })
+    ).toEqual({ available: true, enabled: true, included: true })
+    expect(
+      publicDataFilterState({
+        elevated: false,
+        includePublicByDefault: false,
+        publicData: "include",
+      }).included
+    ).toBe(true)
+  })
+
+  it("disables the filter while an ownership filter is active", () => {
+    expect(
+      publicDataFilterState({
+        elevated: false,
+        includePublicByDefault: true,
+        ownership: "owner",
+      })
+    ).toEqual({ available: true, enabled: false, included: false })
+  })
+
+  it("hides the filter in administrator view", () => {
+    expect(
+      publicDataFilterState({
+        elevated: true,
+        includePublicByDefault: false,
+      })
+    ).toEqual({ available: false, enabled: false, included: false })
   })
 })

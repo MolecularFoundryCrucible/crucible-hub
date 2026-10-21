@@ -1,3 +1,5 @@
+import { publicDataSearchSchema } from "@/data/crucible/public-data"
+import type { PublicDataChoice } from "@/data/crucible/public-data"
 import { z } from "zod"
 
 import {
@@ -53,6 +55,7 @@ export const dataSearchSchema = z.object({
   kind: filterSearchValue,
   projectMfid: filterSearchValue,
   projectScope: filterSearchValue,
+  publicData: publicDataSearchSchema.optional().catch(undefined),
   sampleCursor: collectionCursorSchema,
   sort: filterSearchValue,
   visibility: filterSearchValue,
@@ -84,6 +87,7 @@ export type DataFilterValues = CollectionFilters &
     affiliation?: OwnershipAffiliation
     instrumentMfid?: string
     kind: DataKindFilter
+    publicData?: PublicDataChoice
   }
 
 export type DataFilterField = keyof DataFilterSearch
@@ -302,6 +306,7 @@ export function resolveDataFilters(
         }
       : {}),
     kind: domain.data.kind,
+    ...(search.publicData ? { publicData: search.publicData } : {}),
   }
 
   return { filters, valid: true }
@@ -337,6 +342,7 @@ export function applyDataFilters(
     projectScope:
       filters.projectScope === "all" ? undefined : filters.projectScope,
     preview: undefined,
+    publicData: filters.publicData,
     sampleCursor: undefined,
     sort: ordering.sort,
     visibility: filters.visibility,
@@ -363,6 +369,7 @@ export function clearDataFilters(
     projectMfid: undefined,
     projectScope: undefined,
     preview: undefined,
+    publicData: undefined,
     sampleCursor: undefined,
     sort: undefined,
     visibility: undefined,
