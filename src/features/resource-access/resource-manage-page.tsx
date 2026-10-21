@@ -76,7 +76,10 @@ import {
 import { DatasetInstrumentAssignmentCard } from "@/features/dataset-instrument/dataset-instrument-assignment-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 import { ProjectAssignmentCard } from "@/features/resource-project-assignment/project-assignment-card"
-import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
+import {
+  ResourceDeletionRequestCard,
+  canShowResourceDeletionRequest,
+} from "@/features/resource-deletion/resource-deletion-request"
 
 type AccessResource = Extract<
   WorkspaceResourceDetail,
@@ -148,27 +151,29 @@ export function ResourceManagePage({
             </CardContent>
           </Card>
         ) : null}
-        <Card variant="destructive">
-          <CardHeader>
-            <CardTitle>Danger zone</CardTitle>
-          </CardHeader>
-          <CardContent className="divide-y px-0">
-            {canTransfer ? (
-              <OwnershipTransferCard
+        {canTransfer || canShowResourceDeletionRequest(resource) ? (
+          <Card variant="destructive">
+            <CardHeader>
+              <CardTitle>Danger zone</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y px-0">
+              {canTransfer ? (
+                <OwnershipTransferCard
+                  mode={mode}
+                  presentation="row"
+                  resource={resource}
+                  scope={scope}
+                />
+              ) : null}
+              <ResourceDeletionRequestCard
                 mode={mode}
                 presentation="row"
                 resource={resource}
                 scope={scope}
               />
-            ) : null}
-            <ResourceDeletionRequestCard
-              mode={mode}
-              presentation="row"
-              resource={resource}
-              scope={scope}
-            />
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : null}
       </ContentBoundary>
     </div>
   )

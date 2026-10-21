@@ -42,6 +42,13 @@ export function mergeResourceDeletionRequest(
   return { ...resource, deletion_request: deletionRequest }
 }
 
+export function canShowResourceDeletionRequest(resource: DeletableResource) {
+  return (
+    Boolean(resource.deletion_request) ||
+    resource.capabilities?.can_request_deletion === true
+  )
+}
+
 export function ResourceDeletionRequestCard({
   mode,
   presentation,
@@ -102,6 +109,8 @@ export function ResourceDeletionRequestCard({
       setError(deletionRequestError(caught))
     }
   }
+
+  if (!canShowResourceDeletionRequest(resource)) return null
 
   const action = activeRequest ? (
     <Button

@@ -715,8 +715,10 @@ export interface paths {
         /**
          * Add Associated File
          * @description Adds a file record to a dataset.
-         *     Filenames are unique within a dataset. Repeating a filename with the same sha256_hash and size returns the existing record unchanged;
-         *     repeating it with different content returns 409 `filename_exists` with the existing file's MFID and ETag.
+         *     Filenames are unique within a dataset, so identical content under different filenames gets separate records.
+         *     Repeating a filename with the same sha256_hash, size, and storage_backend returns the existing record unchanged
+         *     (storage_path and access_note are not compared); any other difference returns 409 `filename_exists` with the
+         *     existing file's MFID and ETag. Non-GCS filenames must be canonical relative POSIX paths (422 otherwise).
          *     Use POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.
          *     Requires contributor access.
          */
@@ -3319,6 +3321,8 @@ export interface components {
          *     storage_backend defaults to "gcs"; any other value marks this as a catalog-only
          *     reference to a file living outside GCS (e.g. an HPC partition or Globus path) —
          *     Crucible does not verify existence or broker access for non-gcs files.
+         *     For non-gcs files, filename must be a canonical relative POSIX path: no leading,
+         *     trailing, or repeated "/", no "." or ".." components, and no ASCII control characters.
          */
         AssociatedFileCreate: {
             /** Access Note */
@@ -5193,6 +5197,12 @@ export interface components {
             can_edit: boolean;
             /** Can Manage Access */
             can_manage_access: boolean;
+            /**
+             * Can Request Deletion
+             * @description POST /resources/{mfid}/delete would be accepted: contributor for datasets and samples, the same as can_delete for projects and instruments, and no deletion request already active.
+             * @default false
+             */
+            can_request_deletion: boolean;
             /** Can Transfer */
             can_transfer: boolean;
             /** Max Grant Role */

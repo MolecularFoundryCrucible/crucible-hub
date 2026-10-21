@@ -4,6 +4,10 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Showed Request deletion on samples and datasets only to people the API allows to request it (contributor or above), instead of to every viewer including public visitors, while still showing an existing request's status.
+- Enlarged the Copy and Print buttons under the MFID QR code to the standard icon button size.
+- Drew the active Browse nearby sequence (Previous, sequence, Next) as one bordered button group.
+
 ## 1.5.0 - 2026-10-20
 
 - Updated TanStack Start to 1.169.3 and Vite to 8.3.4 to fix a critical reflected XSS advisory in the Start server and a high-severity advisory in Vite's editor launcher.

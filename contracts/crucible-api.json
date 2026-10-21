@@ -527,7 +527,7 @@
         "type": "object"
       },
       "AssociatedFileCreate": {
-        "description": "Fields required to attach an associated file to a dataset.\nfilename should be in the format {cloud-bucket}/{path-to-file}\nIngestion is currently only supported for files in the crucible-uploads cloud-bucket.\nstorage_backend defaults to \"gcs\"; any other value marks this as a catalog-only\nreference to a file living outside GCS (e.g. an HPC partition or Globus path) —\nCrucible does not verify existence or broker access for non-gcs files.",
+        "description": "Fields required to attach an associated file to a dataset.\nfilename should be in the format {cloud-bucket}/{path-to-file}\nIngestion is currently only supported for files in the crucible-uploads cloud-bucket.\nstorage_backend defaults to \"gcs\"; any other value marks this as a catalog-only\nreference to a file living outside GCS (e.g. an HPC partition or Globus path) —\nCrucible does not verify existence or broker access for non-gcs files.\nFor non-gcs files, filename must be a canonical relative POSIX path: no leading,\ntrailing, or repeated \"/\", no \".\" or \"..\" components, and no ASCII control characters.",
         "properties": {
           "access_note": {
             "anyOf": [
@@ -6432,6 +6432,12 @@
           },
           "can_manage_access": {
             "title": "Can Manage Access",
+            "type": "boolean"
+          },
+          "can_request_deletion": {
+            "default": false,
+            "description": "POST /resources/{mfid}/delete would be accepted: contributor for datasets and samples, the same as can_delete for projects and instruments, and no deletion request already active.",
+            "title": "Can Request Deletion",
             "type": "boolean"
           },
           "can_transfer": {
@@ -13361,7 +13367,7 @@
         ]
       },
       "post": {
-        "description": "Adds a file record to a dataset.\nFilenames are unique within a dataset. Repeating a filename with the same sha256_hash and size returns the existing record unchanged;\nrepeating it with different content returns 409 `filename_exists` with the existing file's MFID and ETag.\nUse POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.\nRequires contributor access.",
+        "description": "Adds a file record to a dataset.\nFilenames are unique within a dataset, so identical content under different filenames gets separate records.\nRepeating a filename with the same sha256_hash, size, and storage_backend returns the existing record unchanged\n(storage_path and access_note are not compared); any other difference returns 409 `filename_exists` with the\nexisting file's MFID and ETag. Non-GCS filenames must be canonical relative POSIX paths (422 otherwise).\nUse POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.\nRequires contributor access.",
         "operationId": "add_associated_file_datasets__dataset_mfid__files_post",
         "parameters": [
           {

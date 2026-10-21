@@ -77,6 +77,7 @@ const instrumentReference = {
 const capabilities = {
   can_change_status: true,
   can_delete: true,
+  can_request_deletion: true,
   can_edit: true,
   can_manage_access: true,
   can_transfer: true,
@@ -246,6 +247,7 @@ export const demoWorkspace = {
       capabilities: {
         can_change_status: false,
         can_delete: false,
+        can_request_deletion: false,
         can_edit: false,
         can_manage_access: false,
         can_transfer: false,
