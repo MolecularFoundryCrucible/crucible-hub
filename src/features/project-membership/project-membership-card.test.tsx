@@ -381,12 +381,12 @@ describe("ProjectMembershipCard", () => {
 
   it("shows locked removal state for non-removable members in managing mode", () => {
     const colleague = {
-      first_name: "Tim",
+      first_name: "Jordan",
       is_service_account: false,
-      last_name: "Kodalle",
+      last_name: "Reyes",
       role: "viewer",
       unique_id: "tim",
-      username: "timkodalle",
+      username: "jreyes",
     }
     renderCard({
       project: { ...project, members: [owner, account, colleague] },
@@ -403,7 +403,7 @@ describe("ProjectMembershipCard", () => {
       })
     ).toBeTruthy()
     expect(
-      screen.getByRole("button", { name: "Remove Tim Kodalle" })
+      screen.getByRole("button", { name: "Remove Jordan Reyes" })
     ).toBeTruthy()
   })
 
@@ -414,12 +414,12 @@ describe("ProjectMembershipCard", () => {
         can_change_role: true,
         can_remove: true,
       },
-      first_name: "Tim",
+      first_name: "Jordan",
       is_service_account: false,
-      last_name: "Kodalle",
+      last_name: "Reyes",
       role: "editor",
       unique_id: "tim",
-      username: "timkodalle",
+      username: "jreyes",
     } satisfies ProjectMember
     const locked = {
       capabilities: {
@@ -445,11 +445,12 @@ describe("ProjectMembershipCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
 
     expect(
-      screen.getByRole("button", { name: "Remove Tim Kodalle" })
+      screen.getByRole("button", { name: "Remove Jordan Reyes" })
     ).toBeTruthy()
     expect(
       Array.from(
-        screen.getByLabelText<HTMLSelectElement>("Role for Tim Kodalle").options
+        screen.getByLabelText<HTMLSelectElement>("Role for Jordan Reyes")
+          .options
       ).map((option) => option.value)
     ).toEqual(["viewer", "contributor", "editor"])
     expect(
@@ -463,12 +464,12 @@ describe("ProjectMembershipCard", () => {
 
   it("omits checkboxes from non-removable rows in managing mode", () => {
     const colleague = {
-      first_name: "Tim",
+      first_name: "Jordan",
       is_service_account: false,
-      last_name: "Kodalle",
+      last_name: "Reyes",
       role: "viewer",
       unique_id: "tim",
-      username: "timkodalle",
+      username: "jreyes",
     }
     renderCard({
       project: { ...project, members: [owner, account, colleague] },
@@ -485,18 +486,18 @@ describe("ProjectMembershipCard", () => {
       screen.queryByRole("checkbox", { name: "Select Morgan Lee for removal" })
     ).toBeNull()
     expect(
-      screen.getByRole("checkbox", { name: "Select Tim Kodalle for removal" })
+      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     ).toBeTruthy()
   })
 
   it("removes selected members through the batch dialog", async () => {
     const colleague = {
-      first_name: "Tim",
+      first_name: "Jordan",
       is_service_account: false,
-      last_name: "Kodalle",
+      last_name: "Reyes",
       role: "viewer",
       unique_id: "tim",
-      username: "timkodalle",
+      username: "jreyes",
     }
     const second = {
       first_name: "Robin",
@@ -515,7 +516,7 @@ describe("ProjectMembershipCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
     fireEvent.click(
-      screen.getByRole("checkbox", { name: "Select Tim Kodalle for removal" })
+      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     )
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Select Robin Second for removal" })
@@ -523,7 +524,7 @@ describe("ProjectMembershipCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove 2 members" }))
 
     const dialog = screen.getByRole("dialog", { name: "Remove members?" })
-    expect(within(dialog).getByText("Tim Kodalle")).toBeTruthy()
+    expect(within(dialog).getByText("Jordan Reyes")).toBeTruthy()
     expect(within(dialog).getByText("Robin Second")).toBeTruthy()
     fireEvent.click(
       within(dialog).getByRole("button", { name: "Remove 2 members" })
@@ -551,12 +552,12 @@ describe("ProjectMembershipCard", () => {
 
   it("keeps failed members selected and retries only the remainder", async () => {
     const colleague = {
-      first_name: "Tim",
+      first_name: "Jordan",
       is_service_account: false,
-      last_name: "Kodalle",
+      last_name: "Reyes",
       role: "viewer",
       unique_id: "tim",
-      username: "timkodalle",
+      username: "jreyes",
     }
     const second = {
       first_name: "Robin",
@@ -576,7 +577,7 @@ describe("ProjectMembershipCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
     fireEvent.click(
-      screen.getByRole("checkbox", { name: "Select Tim Kodalle for removal" })
+      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     )
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Select Robin Second for removal" })
@@ -592,7 +593,7 @@ describe("ProjectMembershipCard", () => {
       await screen.findByText("1 member could not be removed. Try again.")
     ).toBeTruthy()
     expect(within(dialog).getByText("Robin Second")).toBeTruthy()
-    expect(within(dialog).queryByText("Tim Kodalle")).toBeNull()
+    expect(within(dialog).queryByText("Jordan Reyes")).toBeNull()
 
     fireEvent.click(
       within(dialog).getByRole("button", { name: "Remove member" })
@@ -613,12 +614,12 @@ describe("ProjectMembershipCard", () => {
 
   it("opens the removal dialog from the per-row remove control", async () => {
     const colleague = {
-      first_name: "Tim",
+      first_name: "Jordan",
       is_service_account: false,
-      last_name: "Kodalle",
+      last_name: "Reyes",
       role: "viewer",
       unique_id: "tim",
-      username: "timkodalle",
+      username: "jreyes",
     }
     vi.mocked(removeWorkspaceProjectMember).mockResolvedValue(
       ok([owner, account])
@@ -628,7 +629,7 @@ describe("ProjectMembershipCard", () => {
     })
 
     fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
-    fireEvent.click(screen.getByRole("button", { name: "Remove Tim Kodalle" }))
+    fireEvent.click(screen.getByRole("button", { name: "Remove Jordan Reyes" }))
 
     const dialog = screen.getByRole("dialog", { name: "Remove member?" })
     fireEvent.click(

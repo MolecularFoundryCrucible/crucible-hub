@@ -56,11 +56,11 @@ vi.mock("@/data/crucible/search.functions", () => ({
 const scope = identityScope("crucible-fixture:populated", "account")
 
 const owner = {
-  first_name: "Fabrice",
+  first_name: "Morgan",
   is_service_account: false,
-  last_name: "Roncoroni",
-  unique_id: "0000-0001-6402-3752",
-  username: "roncofaber",
+  last_name: "Patel",
+  unique_id: "0000-0000-0000-0036",
+  username: "mpatel",
 }
 
 const instrument = {
@@ -107,18 +107,18 @@ function withEntryCapabilities(
 
 const initialGrants: WorkspaceResourceAccessGrant[] = withEntryCapabilities([
   {
-    display_name: "Fabrice Roncoroni",
+    display_name: "Morgan Patel",
     permission: "owner",
     principal_id: owner.unique_id,
     principal_type: "user",
     slug: owner.username,
   },
   {
-    display_name: "Tim Kodalle",
+    display_name: "Jordan Reyes",
     permission: "editor",
-    principal_id: "0000-0002-8792-9669",
+    principal_id: "0000-0000-0000-0034",
     principal_type: "user",
-    slug: "timkodalle",
+    slug: "jreyes",
   },
 ])
 
@@ -216,10 +216,10 @@ describe("InstrumentAccessCard", () => {
     expect(screen.getByText("Direct access")).toBeTruthy()
     expect(screen.getByText("Operators")).toBeTruthy()
 
-    expect(screen.getByText("Fabrice Roncoroni")).toBeTruthy()
+    expect(screen.getByText("Morgan Patel")).toBeTruthy()
     expect(screen.getByText("Manager")).toBeTruthy()
 
-    expect(screen.getByText("Tim Kodalle")).toBeTruthy()
+    expect(screen.getByText("Jordan Reyes")).toBeTruthy()
     expect(screen.getByText("Editor")).toBeTruthy()
 
     expect(screen.getByText("Beamline Collector")).toBeTruthy()
@@ -247,11 +247,11 @@ describe("InstrumentAccessCard", () => {
       screen.getByRole("img", { name: "The manager cannot be revoked here" })
     ).toBeTruthy()
     expect(
-      screen.getByRole("button", { name: "Revoke access for Tim Kodalle" })
+      screen.getByRole("button", { name: "Revoke access for Jordan Reyes" })
     ).toBeTruthy()
 
     const roleSelect = screen.getByLabelText<HTMLSelectElement>(
-      "Role for Tim Kodalle"
+      "Role for Jordan Reyes"
     )
     expect(roleSelect).toBeTruthy()
     expect(roleSelect.value).toBe("editor")
@@ -264,7 +264,7 @@ describe("InstrumentAccessCard", () => {
           data: expect.objectContaining({
             kind: "users",
             permission: "contributor",
-            principal: "0000-0002-8792-9669",
+            principal: "0000-0000-0000-0034",
             resourceMfid: instrument.unique_id,
           }),
         })
@@ -282,7 +282,7 @@ describe("InstrumentAccessCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
 
-    const revokeButton = screen.getByLabelText("Revoke access for Tim Kodalle")
+    const revokeButton = screen.getByLabelText("Revoke access for Jordan Reyes")
     fireEvent.click(revokeButton)
 
     expect(screen.getByText("Revoke access?")).toBeTruthy()
@@ -294,7 +294,7 @@ describe("InstrumentAccessCard", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             kind: "users",
-            principal: "0000-0002-8792-9669",
+            principal: "0000-0000-0000-0034",
             resourceMfid: instrument.unique_id,
           }),
         })
@@ -572,12 +572,12 @@ describe("InstrumentAccessCard", () => {
 
     expect(
       screen.queryByRole("checkbox", {
-        name: "Select Fabrice Roncoroni for revocation",
+        name: "Select Morgan Patel for revocation",
       })
     ).toBeNull()
     expect(
       screen.getByRole("checkbox", {
-        name: "Select Tim Kodalle for revocation",
+        name: "Select Jordan Reyes for revocation",
       })
     ).toBeTruthy()
   })
@@ -605,7 +605,7 @@ describe("InstrumentAccessCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
     fireEvent.click(
       screen.getByRole("checkbox", {
-        name: "Select Tim Kodalle for revocation",
+        name: "Select Jordan Reyes for revocation",
       })
     )
     fireEvent.click(
@@ -616,7 +616,7 @@ describe("InstrumentAccessCard", () => {
     )
 
     const dialog = screen.getByRole("dialog", { name: "Revoke access?" })
-    expect(within(dialog).getByText("Tim Kodalle")).toBeTruthy()
+    expect(within(dialog).getByText("Jordan Reyes")).toBeTruthy()
     expect(within(dialog).getByText("Avery Chen")).toBeTruthy()
     fireEvent.click(
       within(dialog).getByRole("button", {
@@ -631,7 +631,7 @@ describe("InstrumentAccessCard", () => {
       1,
       expect.objectContaining({
         data: expect.objectContaining({
-          principal: "0000-0002-8792-9669",
+          principal: "0000-0000-0000-0034",
         }),
       })
     )
