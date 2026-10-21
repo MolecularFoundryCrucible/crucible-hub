@@ -464,7 +464,11 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
       <ResourceListItemContent className="select-text" layout="responsive">
         <ResourceIdentity
           className="w-full flex-1"
-          context={!data && item.identifier !== name ? item.identifier : null}
+          instrumentId={
+            item.kind === "instrument" && item.identifier !== name
+              ? item.identifier
+              : null
+          }
           kind={item.kind}
           mfid={item.uniqueId}
           name={name}
@@ -476,7 +480,13 @@ function HomeResourceLink({ item }: { item: HomeResourceLinkItem }) {
             />
           }
           presentation="collection"
-          projectId={data ? item.projectId : null}
+          projectId={
+            data
+              ? item.projectId
+              : item.kind === "project" && item.identifier !== name
+                ? item.identifier
+                : null
+          }
         />
         {item.timestamp ? (
           <LabeledTimestamp

@@ -12,6 +12,7 @@ type ResourceIdentityPresentation = "collection" | "stacked"
 export function ResourceIdentity({
   className,
   context,
+  instrumentId,
   kind,
   mfid,
   name,
@@ -23,6 +24,7 @@ export function ResourceIdentity({
 }: {
   className?: string
   context?: string | null
+  instrumentId?: string | null
   kind: ResourceType
   mfid?: string | null
   name: string
@@ -50,26 +52,29 @@ export function ResourceIdentity({
         >
           {nameContent ?? (truncate ? name : <BreakableText value={name} />)}
         </span>
-        {context || projectId ? (
+        {context || projectId || instrumentId ? (
           <span
             className="flex min-w-0 items-center gap-2 text-supporting text-muted-foreground"
             data-resource-context
           >
             {projectId ? (
-              <>
-                <ResourceTypeIcon className="size-4 shrink-0" type="project" />
-                <span className="sr-only">Project ID:</span>
-                <span
-                  className={cn("min-w-0", truncate && "truncate")}
-                  title={
-                    truncate && showTruncationTitle ? projectId : undefined
-                  }
-                >
-                  {truncate ? projectId : <BreakableText value={projectId} />}
-                </span>
-              </>
+              <ResourceIdentifier
+                label="Project ID:"
+                showTitle={truncate && showTruncationTitle}
+                truncate={truncate}
+                type="project"
+                value={projectId}
+              />
+            ) : instrumentId ? (
+              <ResourceIdentifier
+                label="Instrument ID:"
+                showTitle={truncate && showTruncationTitle}
+                truncate={truncate}
+                type="instrument"
+                value={instrumentId}
+              />
             ) : null}
-            {projectId && context ? (
+            {(projectId || instrumentId) && context ? (
               <span aria-hidden="true" className="shrink-0">
                 ·
               </span>
@@ -101,3 +106,30 @@ export function ResourceIdentity({
 }
 
 export type { ResourceIdentityPresentation }
+
+function ResourceIdentifier({
+  label,
+  showTitle,
+  truncate,
+  type,
+  value,
+}: {
+  label: string
+  showTitle: boolean
+  truncate: boolean
+  type: "instrument" | "project"
+  value: string
+}) {
+  return (
+    <>
+      <ResourceTypeIcon className="size-4 shrink-0" type={type} />
+      <span className="sr-only">{label}</span>
+      <span
+        className={cn("min-w-0", truncate && "truncate")}
+        title={showTitle ? value : undefined}
+      >
+        {truncate ? value : <BreakableText value={value} />}
+      </span>
+    </>
+  )
+}
