@@ -167,7 +167,7 @@ export function formatRecentActivity(
   const date = parseTimestamp(value)
   if (!date) return null
   if (now.getTime() - date.getTime() < 60 * 60 * 1000) {
-    return "Within the last hour"
+    return "Last hour"
   }
   const days = timeZone
     ? zonedDayNumber(now, timeZone) - zonedDayNumber(date, timeZone)

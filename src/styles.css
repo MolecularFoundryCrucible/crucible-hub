@@ -1712,9 +1712,16 @@ body {
   width: var(--spacing-column-action);
 }
 
-.resource-directory-table .resource-directory-date-column,
-.identity-directory-table .identity-directory-activity-column {
+.resource-directory-table .resource-directory-date-column {
   width: var(--spacing-column-date);
+}
+
+.identity-directory-table .identity-directory-activity-column {
+  width: var(--spacing-column-label);
+}
+
+.identity-directory-table .identity-directory-key-column {
+  width: var(--spacing-column-compact);
 }
 
 .resource-directory-table .resource-directory-person-column {
@@ -1722,8 +1729,7 @@ body {
 }
 
 .resource-directory-table .resource-directory-role-column,
-.identity-directory-table .identity-directory-role-column,
-.identity-directory-table .identity-directory-key-column {
+.identity-directory-table .identity-directory-role-column {
   width: var(--spacing-column-badge);
 }
 

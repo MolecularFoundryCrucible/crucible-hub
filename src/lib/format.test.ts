@@ -70,7 +70,7 @@ describe("recent activity", () => {
   it("uses coarse, hour-safe wording", () => {
     expect(
       formatRecentActivity(new Date(2026, 9, 14, 15, 0).toISOString(), now)
-    ).toBe("Within the last hour")
+    ).toBe("Last hour")
     expect(
       formatRecentActivity(new Date(2026, 9, 14, 8, 0).toISOString(), now)
     ).toBe("Today")
