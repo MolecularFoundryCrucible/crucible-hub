@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Accepted people search results from the Crucible API either as a list or as the upcoming paginated `{ limit, items }` response, so the API can switch shapes without breaking search or person pickers.
 - Kept the MFID QR code in the top-right corner of the Identity card on most phones, shrinking it slightly where needed so the MFID stays on one line, and stacked it below the fields only on the narrowest screens.
 - Rendered the theme, sidebar state, and local dates and times on the server, so pages no longer flash the default theme, an expanded sidebar, or UTC times while loading. Theme and sidebar choices now live in cookies; existing choices carry over.
 - Widened the search results dropdown on phones to the full screen width (it previously matched the narrow search field and truncated every result), lined it up with the search field on all screens, widened it on desktop so long titles fit, and fixed View all results collapsing to a single letter on phones.

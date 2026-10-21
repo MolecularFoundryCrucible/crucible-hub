@@ -508,7 +508,11 @@ const kindSearches: Record<
         signal,
       })
       if (!result.data) throw new Error("people search failed")
-      const items = result.data.map(personResult)
+      // Accept the planned { limit, items } envelope until the contract is repinned.
+      const people = Array.isArray(result.data)
+        ? result.data
+        : (result.data as { items: typeof result.data }).items
+      const items = people.map(personResult)
       return { items, total: items.length }
     },
   },
