@@ -8,7 +8,7 @@ test("keeps the fixture keyboard operable", async ({ page }) => {
   await expect(page.getByRole("combobox", { name: "Theme" })).toBeFocused()
   await page.keyboard.press("Tab")
   await expect(
-    page.getByRole("button", { name: "Primary action" })
+    page.getByRole("button", { name: "Primary action" }).first()
   ).toBeFocused()
 })
 

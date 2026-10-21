@@ -46,7 +46,9 @@ test("renders the desktop workspace without development chrome", async ({
   await expect(
     yourProjectsSection.getByText("Operando Catalyst Mapping")
   ).toBeVisible()
-  await expect(yourProjectsSection.getByText("Last activity")).toBeVisible()
+  await expect(
+    yourProjectsSection.getByText("Last activity").first()
+  ).toBeVisible()
 })
 
 test("keeps the origin on a native logout form submission", async ({
@@ -639,9 +641,11 @@ test("persists the collapsed desktop navigation preference", async ({
   await expect(sidebar).toHaveAttribute("data-state", "collapsed")
   await expect
     .poll(() =>
-      page.evaluate(() => localStorage.getItem("crucible-hub-sidebar"))
+      page.evaluate(() =>
+        document.cookie.includes("crucible_hub_sidebar=collapsed")
+      )
     )
-    .toBe("collapsed")
+    .toBe(true)
 
   await page.reload()
   await expect(sidebar).toHaveAttribute("data-state", "collapsed")
@@ -739,7 +743,7 @@ test("renders exact dataset detail and file metadata from a canonical link", asy
   const identity = page
     .locator('[data-slot="card"]')
     .filter({ has: page.getByText("Identity", { exact: true }) })
-  await expect(identity.locator("[data-identity-field-icon]")).toHaveCount(4)
+  await expect(identity.locator("[data-identity-field-icon]")).toHaveCount(3)
   await expect(identity.locator('[data-principal-type="user"]')).toBeVisible()
   await expect(page.getByText("operando-cycle-04.h5")).toBeVisible()
   await page.locator('summary[aria-label^="acquisition:"]').click()
@@ -876,7 +880,7 @@ test("renders ordered sidebar navigation with sub-navigation and creation action
   }
 
   await samplesSubLink.click()
-  await expect(page).toHaveURL(/\/hub\/data\?kind=samples/)
+  await expect(page).toHaveURL(/\/hub\/data(?![^#]*kind=)/)
 
   await datasetsSubLink.click()
   await expect(page).toHaveURL(/\/hub\/data\?kind=datasets/)

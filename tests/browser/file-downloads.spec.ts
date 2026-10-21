@@ -21,6 +21,12 @@ function fileRow(page: Page, filename: string) {
   return page.getByRole("row").filter({ hasText: filename })
 }
 
+const attachmentResponse = {
+  body: "",
+  headers: { "content-disposition": 'attachment; filename="file.h5"' },
+  status: 200,
+}
+
 test("keeps download capabilities lazy and accessible on compact screens", async ({
   page,
 }) => {
@@ -107,7 +113,7 @@ test("requests only the selected file and hands off a fresh capability", async (
   await page.route("https://downloads.crucible.invalid/**", async (route) => {
     expect(route.request().headers()["referer"]).toBeUndefined()
     handoffs += 1
-    await route.fulfill({ status: 204 })
+    await route.fulfill(attachmentResponse)
   })
   await page.goto(datasetPath)
   await page.waitForLoadState("networkidle")
@@ -171,7 +177,7 @@ test("keeps a failed download local and retries only that file", async ({
   await page.route("https://downloads.crucible.invalid/**", async (route) => {
     expect(route.request().headers()["referer"]).toBeUndefined()
     handoffs += 1
-    await route.fulfill({ status: 204 })
+    await route.fulfill(attachmentResponse)
   })
   await page.goto(datasetPath)
   await page.waitForLoadState("networkidle")
