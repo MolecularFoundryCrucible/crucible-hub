@@ -1,13 +1,17 @@
-import { RemovablePill } from "@/components/crucible/removable-pill"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { privilegeModeFromScope } from "@/data/crucible/query-keys"
 import {
   publicDataFilterState,
   publicDataSearchSchema,
   publicDataSearchValue,
-  resolveCollectionAffiliation,
 } from "@/data/crucible/public-data"
 import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import {
+  searchAffiliation,
+  searchKindsForFilters,
+} from "@/features/search/search-filter-state"
+import type { SearchTab } from "@/features/search/search-filter-state"
+import { SearchFilters } from "@/features/search/search-filters"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
@@ -21,6 +25,7 @@ import {
   CollectionUpdateStatus,
   ResourceListPending,
 } from "@/components/crucible/collection-state"
+import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { BackToProjectIcon, SearchIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
@@ -77,6 +82,7 @@ const kinds = [
 ] as const satisfies readonly WorkspaceSearchKind[]
 
 const searchSchema = z.object({
+  affiliation: z.enum(["owner"]).optional().catch(undefined),
   kind: z.enum(kinds).optional().catch(undefined),
   mode: z.enum(["metadata"]).optional().catch(undefined),
   projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
@@ -106,14 +112,23 @@ function SearchPage() {
     search.kind === "sample" || search.kind === "dataset"
       ? search.kind
       : undefined
-  const selectedKinds = search.projectMfid
-    ? selectedProjectKind
-      ? [selectedProjectKind]
-      : projectKinds
-    : search.kind
-      ? [search.kind]
-      : kinds
   const metadataMode = !search.projectMfid && search.mode === "metadata"
+  const tab: SearchTab = metadataMode
+    ? "metadata"
+    : search.projectMfid
+      ? (selectedProjectKind ?? "all")
+      : (search.kind ?? "all")
+  const selectedKinds = searchKindsForFilters(
+    tab,
+    search.projectMfid
+      ? selectedProjectKind
+        ? [selectedProjectKind]
+        : projectKinds
+      : search.kind
+        ? [search.kind]
+        : kinds,
+    search
+  )
   const includePublicByDefault = useIncludePublicByDefault()
   const publicAccess = {
     elevated: privilegeModeFromScope(scope) === "elevated",
@@ -121,8 +136,15 @@ function SearchPage() {
   }
   const publicState = publicDataFilterState({
     ...publicAccess,
+    ownership: search.affiliation,
     publicData: search.publicData,
   })
+  const projectName = project
+    ? resourceDisplayName("project", project.title, {
+        identifier: project.project_id,
+        mfid: project.unique_id,
+      })
+    : undefined
 
   function setPublicData(include: boolean) {
     void navigate({
@@ -153,14 +175,7 @@ function SearchPage() {
     <PageLayout>
       <SearchBreadcrumb
         projectMfid={search.projectMfid}
-        projectName={
-          project
-            ? resourceDisplayName("project", project.title, {
-                identifier: project.project_id,
-                mfid: project.unique_id,
-              })
-            : search.projectMfid
-        }
+        projectName={projectName ?? search.projectMfid}
       />
       <PageHeader
         actions={
@@ -202,7 +217,7 @@ function SearchPage() {
         }
         description={
           search.projectMfid
-            ? `Samples and datasets related to ${project ? resourceDisplayName("project", project.title, { identifier: project.project_id, mfid: project.unique_id }) : search.projectMfid}.`
+            ? `Samples and datasets related to ${projectName ?? search.projectMfid}.`
             : undefined
         }
         title={
@@ -248,46 +263,56 @@ function SearchPage() {
           </Button>
         </form>
       </ContentBoundary>
-      <div className="overflow-x-auto pb-1">
-        <SegmentedControl
-          ariaLabel="Resource type filter"
-          className="w-max"
-          onValueChange={(nextValue) => {
-            void navigate({
-              search: (previous) => ({
-                ...previous,
-                kind:
-                  nextValue === "all" || nextValue === "metadata"
-                    ? undefined
-                    : (nextValue as WorkspaceSearchKind),
-                mode: nextValue === "metadata" ? "metadata" : undefined,
-              }),
-              to: "/search",
-            })
-          }}
-          options={[
-            { label: "All", value: "all" },
-            ...(search.projectMfid ? projectKinds : kinds).map((kind) => ({
-              label: kindLabel(kind),
-              value: kind,
-            })),
-            ...(!search.projectMfid
-              ? [{ label: "Scientific metadata", value: "metadata" }]
-              : []),
-          ]}
-          value={metadataMode ? "metadata" : (search.kind ?? "all")}
-        />
-      </div>
+      <CollectionToolbar
+        actions={
+          <SearchFilters
+            access={publicAccess}
+            projectName={projectName}
+            tab={tab}
+            values={{
+              affiliation: search.affiliation,
+              projectMfid: search.projectMfid,
+              publicData: search.publicData,
+            }}
+          />
+        }
+        primary={
+          <div className="max-w-full overflow-x-auto pb-1">
+            <SegmentedControl
+              ariaLabel="Resource type filter"
+              className="w-max"
+              onValueChange={(nextValue) => {
+                void navigate({
+                  search: (previous) => ({
+                    ...previous,
+                    kind:
+                      nextValue === "all" || nextValue === "metadata"
+                        ? undefined
+                        : (nextValue as WorkspaceSearchKind),
+                    mode: nextValue === "metadata" ? "metadata" : undefined,
+                  }),
+                  to: "/search",
+                })
+              }}
+              options={[
+                { label: "All", value: "all" },
+                ...(search.projectMfid ? projectKinds : kinds).map((kind) => ({
+                  label: kindLabel(kind),
+                  value: kind,
+                })),
+                ...(!search.projectMfid
+                  ? [{ label: "Scientific metadata", value: "metadata" }]
+                  : []),
+              ]}
+              value={metadataMode ? "metadata" : (search.kind ?? "all")}
+            />
+          </div>
+        }
+        sticky={false}
+      />
       {validQuery ? (
         <SearchResults
-          affiliation={
-            resolveCollectionAffiliation({
-              ...publicAccess,
-              publicData: search.publicData,
-            }) === "member"
-              ? "member"
-              : undefined
-          }
+          affiliation={searchAffiliation(tab, search, publicAccess)}
           kinds={selectedKinds}
           metadataMode={metadataMode}
           onPublicDataChange={setPublicData}
@@ -395,7 +420,7 @@ function SearchResults({
   publicState,
   query,
 }: {
-  affiliation?: "member"
+  affiliation?: "member" | "owner"
   kinds: readonly WorkspaceSearchKind[]
   metadataMode: boolean
   onPublicDataChange: (include: boolean) => void
@@ -468,13 +493,10 @@ function SearchResults({
       </Empty>
     ) : (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="text-supporting text-muted-foreground" role="status">
-            {resultCount} {resultCount === 1 ? "result" : "results"} for “
-            {data.query}”
-          </p>
-          {includePublicData}
-        </div>
+        <p className="text-supporting text-muted-foreground" role="status">
+          {resultCount} {resultCount === 1 ? "result" : "results"} for “
+          {data.query}”
+        </p>
         {data.groups
           .filter((group) => group.error || group.items.length > 0)
           .map((group) => (
@@ -517,15 +539,6 @@ function SearchResults({
 
   return (
     <>
-      {publicState.included ? (
-        <div className="flex flex-wrap gap-2">
-          <RemovablePill
-            label="Public"
-            onRemove={() => onPublicDataChange(false)}
-            removeAriaLabel="Remove filter: Public"
-          />
-        </div>
-      ) : null}
       <CollectionUpdateStatus
         label="search results"
         updating={result.isFetching}

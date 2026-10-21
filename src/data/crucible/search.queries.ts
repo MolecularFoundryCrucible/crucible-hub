@@ -19,7 +19,7 @@ export function searchQueryOptions(
   kinds: readonly WorkspaceSearchKind[],
   projectMfid?: string,
   serviceAccountsOnly = false,
-  affiliation?: "member"
+  affiliation?: "member" | "owner"
 ) {
   return workspaceSearchQueryOptions(
     scope,
@@ -37,7 +37,7 @@ export function quickSearchQueryOptions(
   query: string,
   kinds: readonly WorkspaceSearchKind[],
   projectMfid?: string,
-  affiliation?: "member"
+  affiliation?: "member" | "owner"
 ) {
   return workspaceSearchQueryOptions(
     scope,
@@ -57,7 +57,7 @@ function workspaceSearchQueryOptions(
   limit: number,
   projectMfid?: string,
   serviceAccountsOnly = false,
-  affiliation?: "member"
+  affiliation?: "member" | "owner"
 ) {
   const normalizedKinds = [...kinds].sort()
   const scenario = fixtureScenarioFromScope(scope)
@@ -92,7 +92,7 @@ function workspaceSearchQueryOptions(
 export function metadataSearchQueryOptions(
   scope: IdentityScope,
   query: string,
-  affiliation?: "member"
+  affiliation?: "member" | "owner"
 ) {
   const scenario = fixtureScenarioFromScope(scope)
   return queryOptions({
