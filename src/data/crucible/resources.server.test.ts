@@ -1579,7 +1579,7 @@ describe("workspace resource sources", () => {
       deleteWorkspaceResource("01J6Y8N4Q2R7M9K3T5V0W1X2Z4", false)
     ).resolves.toMatchObject({
       deleted: false,
-      blocking: { datasets: 2 },
+      blocking: { datasets: 3 },
       resource_type: "instrument",
     })
   })

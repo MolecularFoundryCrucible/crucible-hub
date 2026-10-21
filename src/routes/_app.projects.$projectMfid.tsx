@@ -1,3 +1,4 @@
+import { loadIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
@@ -44,24 +45,29 @@ export const Route = createFileRoute("/_app/projects/$projectMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const [project, dataGroupBy, defaultSort] = await Promise.all([
-      context.queryClient.ensureQueryData(
-        projectQueryOptions(source.scope, params.projectMfid)
-      ),
-      loadDataGroupBy(
-        context.queryClient,
-        source.scope,
+    const [project, dataGroupBy, defaultSort, includePublicByDefault] =
+      await Promise.all([
+        context.queryClient.ensureQueryData(
+          projectQueryOptions(source.scope, params.projectMfid)
+        ),
+        loadDataGroupBy(
+          context.queryClient,
+          source.scope,
+          source.accountPreferencesEnabled
+        ),
+        loadDefaultSort(
+          context.queryClient,
+          source.scope,
+          source.accountPreferencesEnabled
+        ),
         source.accountPreferencesEnabled
-      ),
-      loadDefaultSort(
-        context.queryClient,
-        source.scope,
-        source.accountPreferencesEnabled
-      ),
-    ])
+          ? loadIncludePublicByDefault(context.queryClient, source.scope)
+          : false,
+      ])
     return {
       dataGroupBy,
       defaultSort,
+      includePublicByDefault,
       isProject: Boolean(project),
       projectMfid: project?.unique_id ?? params.projectMfid,
       projectName: project

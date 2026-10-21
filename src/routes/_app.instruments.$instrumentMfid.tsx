@@ -1,3 +1,4 @@
+import { loadIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
@@ -44,27 +45,32 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
 
-    const [resource, dataGroupBy, defaultSort] = await Promise.all([
-      context.queryClient.ensureQueryData(
-        resourceSummaryQueryOptions(source.scope, params.instrumentMfid)
-      ),
-      loadDataGroupBy(
-        context.queryClient,
-        source.scope,
+    const [resource, dataGroupBy, defaultSort, includePublicByDefault] =
+      await Promise.all([
+        context.queryClient.ensureQueryData(
+          resourceSummaryQueryOptions(source.scope, params.instrumentMfid)
+        ),
+        loadDataGroupBy(
+          context.queryClient,
+          source.scope,
+          source.accountPreferencesEnabled
+        ),
+        loadDefaultSort(
+          context.queryClient,
+          source.scope,
+          source.accountPreferencesEnabled
+        ),
         source.accountPreferencesEnabled
-      ),
-      loadDefaultSort(
-        context.queryClient,
-        source.scope,
-        source.accountPreferencesEnabled
-      ),
-    ])
+          ? loadIncludePublicByDefault(context.queryClient, source.scope)
+          : false,
+      ])
     if (!resource || resource.kind !== "instrument") {
       return { isInstrument: false, scope: source.scope }
     }
     return {
       dataGroupBy,
       defaultSort,
+      includePublicByDefault,
       instrumentMfid: resource.unique_id,
       instrumentName: resourceDisplayName("instrument", resource.name, {
         identifier: resource.instrument_id,

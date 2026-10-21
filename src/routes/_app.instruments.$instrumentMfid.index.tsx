@@ -1,3 +1,13 @@
+import { Checkbox } from "@/components/ui/checkbox"
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import {
+  publicDataFilterState,
+  publicDataSearchSchema,
+  publicDataSearchValue,
+  resolveCollectionAffiliation,
+} from "@/data/crucible/public-data"
+import type { PublicDataChoice } from "@/data/crucible/public-data"
+import { useIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useMemo, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, getRouteApi } from "@tanstack/react-router"
@@ -41,7 +51,12 @@ import {
 } from "@/components/crucible/resource-sibling-navigation"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { FieldError, FieldGroup } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import {
   collectionBrowseSearchFields,
   collectionBrowseSearchState,
@@ -81,6 +96,7 @@ const instrumentDatasetSearchSchema = resourcePreviewSearchSchema.extend({
   createdTo: collectionFilterFields.createdTo.catch(undefined),
   cursor: z.string().min(1).max(2048).optional().catch(undefined),
   direction: sortDirectionSchema.optional().catch(undefined),
+  publicData: publicDataSearchSchema.optional().catch(undefined),
   sort: resourceSortSchema.optional().catch(undefined),
 })
 
@@ -97,6 +113,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
     groupValue: search.groupValue,
     groupValueIsNull: search.groupValueIsNull,
     groupValueSet: search.groupValueSet,
+    publicData: search.publicData,
     sort: search.sort,
     view: search.view,
   }),
@@ -121,6 +138,11 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
         },
         instrument.defaultSort?.data
       ),
+      affiliation: resolveCollectionAffiliation({
+        elevated: privilegeModeFromScope(instrument.scope) === "elevated",
+        includePublicByDefault: instrument.includePublicByDefault,
+        publicData: deps.publicData,
+      }),
     }
     const filters =
       browse.view === "grouped"
@@ -169,6 +191,7 @@ function InstrumentDatasetsPending() {
                 updateBrowse({
                   createdFrom: values.createdFrom,
                   createdTo: values.createdTo,
+                  publicData: values.publicData,
                   ...collectionOrderingSearchState(
                     values.sort,
                     values.direction
@@ -179,6 +202,7 @@ function InstrumentDatasetsPending() {
                 createdFrom: search.createdFrom,
                 createdTo: search.createdTo,
                 direction: search.direction,
+                publicData: search.publicData,
                 sort: search.sort,
               }}
             />
@@ -227,6 +251,9 @@ function InstrumentDatasetsPage() {
   const defaultSort = useDefaultSort(
     instrument?.isInstrument ? instrument.defaultSort : undefined
   )
+  const includePublicByDefault = useIncludePublicByDefault(
+    instrument?.isInstrument ? instrument.includePublicByDefault : undefined
+  )
   const defaultOrdering = defaultSort?.data ?? defaultCollectionOrdering
   const browse = resolveCollectionBrowse(
     search,
@@ -244,6 +271,11 @@ function InstrumentDatasetsPage() {
       },
       defaultOrdering
     ),
+    affiliation: resolveCollectionAffiliation({
+      elevated: privilegeModeFromScope(scope) === "elevated",
+      includePublicByDefault,
+      publicData: search.publicData,
+    }),
   }
   const collectionFilters =
     browse.view === "grouped"
@@ -394,6 +426,7 @@ function InstrumentDatasetsPage() {
                   updateBrowse({
                     createdFrom: values.createdFrom,
                     createdTo: values.createdTo,
+                    publicData: values.publicData,
                     ...collectionOrderingSearchState(
                       values.sort,
                       values.direction,
@@ -405,6 +438,7 @@ function InstrumentDatasetsPage() {
                   createdFrom: search.createdFrom,
                   createdTo: search.createdTo,
                   direction: search.direction,
+                  publicData: search.publicData,
                   sort: search.sort,
                 }}
               />
@@ -444,6 +478,7 @@ type InstrumentDatasetFilterValues = {
   createdFrom?: string
   createdTo?: string
   direction?: SortDirection
+  publicData?: PublicDataChoice
   sort?: ResourceSort
 }
 
@@ -459,8 +494,25 @@ function InstrumentDatasetFilters({
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(values)
   const [rangeInvalid, setRangeInvalid] = useState(false)
+  const scope = useWorkspaceScope()
+  const includePublicByDefault = useIncludePublicByDefault()
+  const elevated = privilegeModeFromScope(scope) === "elevated"
+  const publicState = publicDataFilterState({
+    elevated,
+    includePublicByDefault,
+    publicData: values.publicData,
+  })
+  const draftPublicState = publicDataFilterState({
+    elevated,
+    includePublicByDefault,
+    publicData: draft.publicData,
+  })
 
   const active = collectionActiveFilters(
+    collectionActiveFilter(
+      "public",
+      publicState.included ? "Public" : undefined
+    ),
     collectionActiveFilter(
       "created-from",
       values.createdFrom ? `Created from: ${values.createdFrom}` : undefined
@@ -500,6 +552,7 @@ function InstrumentDatasetFilters({
       createdFrom: undefined,
       createdTo: undefined,
       direction: undefined,
+      publicData: undefined,
       sort: undefined,
     })
   }
@@ -511,7 +564,12 @@ function InstrumentDatasetFilters({
   }
 
   function removeFilter(id: string) {
-    if (id === "created-from") {
+    if (id === "public") {
+      onApply({
+        ...values,
+        publicData: publicDataSearchValue(false, includePublicByDefault),
+      })
+    } else if (id === "created-from") {
       onApply({ ...values, createdFrom: undefined })
     } else if (id === "created-to") {
       onApply({ ...values, createdTo: undefined })
@@ -541,6 +599,26 @@ function InstrumentDatasetFilters({
     >
       <form id="instrument-dataset-filters" onSubmit={apply}>
         <FieldGroup className="grid gap-4 sm:grid-cols-2">
+          {draftPublicState.available ? (
+            <Field className="sm:col-span-2" orientation="horizontal">
+              <Checkbox
+                checked={draftPublicState.included}
+                id="instrument-dataset-public"
+                onCheckedChange={(checked) =>
+                  setDraft((current) => ({
+                    ...current,
+                    publicData: publicDataSearchValue(
+                      checked,
+                      includePublicByDefault
+                    ),
+                  }))
+                }
+              />
+              <FieldLabel htmlFor="instrument-dataset-public">
+                Include public data
+              </FieldLabel>
+            </Field>
+          ) : null}
           <CollectionCreatedRangeFields
             describedBy={
               rangeInvalid ? "instrument-dataset-filter-error" : undefined

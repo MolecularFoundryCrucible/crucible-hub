@@ -1,3 +1,10 @@
+import { Checkbox } from "@/components/ui/checkbox"
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import {
+  publicDataFilterState,
+  publicDataSearchValue,
+} from "@/data/crucible/public-data"
+import { useIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -128,6 +135,18 @@ export function ProjectDataFilters({
     ? resolution.filters.ownerId
     : undefined
   const scope = useWorkspaceScope()
+  const includePublicByDefault = useIncludePublicByDefault()
+  const elevated = privilegeModeFromScope(scope) === "elevated"
+  const publicState = publicDataFilterState({
+    elevated,
+    includePublicByDefault,
+    publicData: values.publicData,
+  })
+  const draftPublicState = publicDataFilterState({
+    elevated,
+    includePublicByDefault,
+    publicData: draft.publicData,
+  })
   const instrumentResult = useQuery({
     ...resourceSummaryQueryOptions(scope, activeInstrumentMfid ?? ""),
     enabled: Boolean(activeInstrumentMfid),
@@ -157,6 +176,10 @@ export function ProjectDataFilters({
   }, [errorKey, hasErrors, projectScope, valuesKey])
 
   const active = collectionActiveFilters(
+    collectionActiveFilter(
+      "public",
+      publicState.included ? "Public" : undefined
+    ),
     collectionActiveFilter(
       "project-scope",
       projectScope !== "all"
@@ -285,6 +308,7 @@ export function ProjectDataFilters({
         ownerIdIsNull: next.filters.ownerIdIsNull,
         ownerIdSet: next.filters.ownerId !== undefined || undefined,
         preview: undefined,
+        publicData: draft.publicData,
         sampleCursor: undefined,
         sampleType: next.filters.sampleType,
         sampleTypeIsNull: next.filters.sampleTypeIsNull,
@@ -324,6 +348,7 @@ export function ProjectDataFilters({
         ownerIdIsNull: undefined,
         ownerIdSet: undefined,
         preview: undefined,
+        publicData: undefined,
         sampleCursor: undefined,
         sampleType: undefined,
         sampleTypeIsNull: undefined,
@@ -341,7 +366,10 @@ export function ProjectDataFilters({
   }
 
   function removeFilter(id: string) {
-    const changes = projectDataFilterRemoval[id]
+    const changes =
+      id === "public"
+        ? { publicData: publicDataSearchValue(false, includePublicByDefault) }
+        : projectDataFilterRemoval[id]
     if (!changes) return
     void navigate({
       params: { projectMfid },
@@ -384,6 +412,26 @@ export function ProjectDataFilters({
         <FieldSet>
           <FieldLegend className="sr-only">Project data filters</FieldLegend>
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
+            {draftPublicState.available ? (
+              <Field className="sm:col-span-2" orientation="horizontal">
+                <Checkbox
+                  checked={draftPublicState.included}
+                  id="project-data-public"
+                  onCheckedChange={(checked) =>
+                    setDraft((current) => ({
+                      ...current,
+                      publicData: publicDataSearchValue(
+                        checked,
+                        includePublicByDefault
+                      ),
+                    }))
+                  }
+                />
+                <FieldLabel htmlFor="project-data-public">
+                  Include public data
+                </FieldLabel>
+              </Field>
+            ) : null}
             <Field>
               <FieldLabel htmlFor="project-data-relationship">
                 Relationship to this project

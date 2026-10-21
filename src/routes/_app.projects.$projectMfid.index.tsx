@@ -1,3 +1,7 @@
+import { publicDataSearchSchema } from "@/data/crucible/public-data"
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { createFileRoute, getRouteApi } from "@tanstack/react-router"
 import { z } from "zod"
 
@@ -57,6 +61,7 @@ const projectDataSearchSchema = resourcePreviewSearchSchema.extend({
   scope: z.enum(["all", "assigned", "shared"]).optional().catch(undefined),
   sampleCursor: collectionCursorSchema,
   datasetCursor: collectionCursorSchema,
+  publicData: publicDataSearchSchema.optional().catch(undefined),
   sort: resourceSortSchema.optional().catch(undefined),
   visibility: filterSearchValue,
 })
@@ -88,6 +93,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     ownerIdIsNull: search.ownerIdIsNull,
     ownerIdSet: search.ownerIdSet,
     projectScope: search.scope ?? "all",
+    publicData: search.publicData,
     sampleCursor: search.sampleCursor,
     sampleType: search.sampleType,
     sampleTypeIsNull: search.sampleTypeIsNull,
@@ -106,7 +112,11 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
     const resolution = resolveProjectDataFilters(
       deps,
       deps.kind,
-      project.defaultSort?.data
+      project.defaultSort?.data,
+      {
+        elevated: privilegeModeFromScope(project.scope) === "elevated",
+        includePublicByDefault: project.includePublicByDefault,
+      }
     )
     if (!resolution.valid) return
     if (deps.kind === "samples") {
@@ -186,6 +196,7 @@ function projectDataFilterValues(
     sessionName: search.sessionName,
     sessionNameIsNull: search.sessionNameIsNull,
     sessionNameSet: search.sessionNameSet,
+    publicData: search.publicData,
     sort: search.sort,
     visibility: search.visibility,
   }
@@ -216,6 +227,10 @@ function ProjectDataPage() {
   const project = projectRoute.useLoaderData()
   const dataGroupBy = useDataGroupBy(project?.dataGroupBy)
   const defaultSort = useDefaultSort(project?.defaultSort)
+  const includePublicByDefault = useIncludePublicByDefault(
+    project?.includePublicByDefault
+  )
+  const scope = useWorkspaceScope()
   const navigation = useResourcePreviewNavigation({
     kind: "project-data",
     preview: search.preview,
@@ -229,7 +244,11 @@ function ProjectDataPage() {
   const filterResolution = resolveProjectDataFilters(
     filterValues,
     kind,
-    defaultSort?.data
+    defaultSort?.data,
+    {
+      elevated: privilegeModeFromScope(scope) === "elevated",
+      includePublicByDefault,
+    }
   )
   return (
     <ResourcePreviewContext.Provider value={navigation}>

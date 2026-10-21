@@ -1,3 +1,8 @@
+import { resolveCollectionAffiliation } from "@/data/crucible/public-data"
+import type {
+  PublicDataAccess,
+  PublicDataChoice,
+} from "@/data/crucible/public-data"
 import { z } from "zod"
 
 import {
@@ -54,6 +59,7 @@ export type ProjectDataFilterSearch = {
   sessionName?: string
   sessionNameIsNull?: true
   sessionNameSet?: true
+  publicData?: PublicDataChoice
   sort?: string
   visibility?: string
 }
@@ -62,7 +68,9 @@ export type ProjectDataCollectionFilters = CollectionFilters &
   DatasetFacetFilters &
   Pick<NormalizedCollectionQueryOptions, "direction" | "sort"> &
   SampleFacetFilters & {
+    affiliation?: "member"
     instrumentMfid?: string
+    publicData?: PublicDataChoice
   }
 
 export type ProjectDataFilterError = {
@@ -115,10 +123,15 @@ const domainFiltersSchema = z
     }
   })
 
+function orderingOnly({ direction, sort }: CollectionOrdering) {
+  return { direction, sort }
+}
+
 export function resolveProjectDataFilters(
   search: ProjectDataFilterSearch,
   kind: "datasets" | "samples",
-  defaultOrdering: CollectionOrdering = defaultCollectionOrdering
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering,
+  access?: PublicDataAccess
 ): ProjectDataFilterResolution {
   const collection = collectionFiltersSchema.safeParse({
     createdFrom: search.createdFrom,
@@ -202,15 +215,22 @@ export function resolveProjectDataFilters(
     }
   }
 
+  const affiliation = access
+    ? resolveCollectionAffiliation({ ...access, publicData: search.publicData })
+    : undefined
   return {
     filters: {
+      ...(affiliation === "member" ? { affiliation } : {}),
+      ...(search.publicData ? { publicData: search.publicData } : {}),
       ...normalizeCollectionFilters(collection.data),
-      ...normalizeCollectionQueryOptions(
-        {
-          direction: domain.data.direction,
-          sort: domain.data.sort,
-        },
-        defaultOrdering
+      ...orderingOnly(
+        normalizeCollectionQueryOptions(
+          {
+            direction: domain.data.direction,
+            sort: domain.data.sort,
+          },
+          defaultOrdering
+        )
       ),
       ...(kind === "samples"
         ? {
