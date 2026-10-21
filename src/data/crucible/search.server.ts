@@ -31,8 +31,10 @@ import { normalizeScientificMetadata } from "./scientific-metadata"
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
 
+type SearchAffiliation = "member" | "owner"
+
 type SearchInput = {
-  affiliation?: "member"
+  affiliation?: SearchAffiliation
   kinds: readonly WorkspaceSearchKind[]
   limit: number
   projectMfid?: string
@@ -42,7 +44,7 @@ type SearchInput = {
 }
 
 type MetadataSearchInput = {
-  affiliation?: "member"
+  affiliation?: SearchAffiliation
   limit: number
   query: string
   scenario?: FixtureScenario
@@ -69,7 +71,9 @@ function detailResult(
         ? resource.sample_type
         : resource.kind === "instrument"
           ? (resource.instrument_type ?? resource.location)
-          : resource.organization
+          : resource.name.trim()
+            ? resource.project_id
+            : null
   return {
     context,
     kind: resource.kind,
@@ -147,7 +151,7 @@ function fixtureItems(
     }))
   }
   return workspace.projects.map((item) => ({
-    context: item.organization,
+    context: item.title?.trim() ? item.project_id : null,
     kind,
     name: resourceDisplayName("project", item.title, {
       identifier: item.project_id,
@@ -156,6 +160,34 @@ function fixtureItems(
     projectId: null,
     unique_id: item.unique_id,
   }))
+}
+
+function fixtureOwnedMfids(workspace: Workspace) {
+  const accountMfid = workspace.account.unique_id
+  const ownerOf = (item: object) => {
+    const record = item as {
+      lead?: { unique_id?: string } | null
+      owner?: { unique_id?: string } | null
+      owner_orcid?: string | null
+      project_lead_orcid?: string | null
+    }
+    return (
+      record.owner?.unique_id ??
+      record.owner_orcid ??
+      record.lead?.unique_id ??
+      record.project_lead_orcid
+    )
+  }
+  return new Set(
+    [
+      ...workspace.projects,
+      ...workspace.instruments,
+      ...workspace.samples,
+      ...workspace.datasets,
+    ]
+      .filter((item) => ownerOf(item) === accountMfid)
+      .map((item) => item.unique_id)
+  )
 }
 
 function relevance(item: WorkspaceSearchResult, query: string) {
@@ -169,6 +201,10 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
   const source = readWorkspaceFixture(input.scenario)
   if (source.status === "unavailable") throw new Error(source.reason)
   const query = input.query.toLocaleLowerCase()
+  const owned =
+    input.affiliation === "owner"
+      ? fixtureOwnedMfids(source.workspace)
+      : undefined
   const groups = input.kinds.map((kind) => {
     try {
       if (kind === "dataset" || kind === "instrument") {
@@ -190,6 +226,9 @@ function fixtureSearch(input: SearchInput): WorkspaceSearchResponse {
             (kind !== "sample" && kind !== "dataset") ||
             mfidPattern.test(input.query.trim()) ||
             !fixturePublicOnlyMfids.has(item.unique_id)
+        )
+        .filter(
+          (item) => !owned || kind === "person" || owned.has(item.unique_id)
         )
         .filter((item) => {
           if (!input.projectMfid) return true
@@ -263,6 +302,10 @@ function fixtureMetadataSearch(
   const source = readWorkspaceFixture(input.scenario)
   if (source.status === "unavailable") throw new Error(source.reason)
   const query = input.query.toLocaleLowerCase()
+  const owned =
+    input.affiliation === "owner"
+      ? fixtureOwnedMfids(source.workspace)
+      : undefined
   const resources = [
     ...source.workspace.projects.map((resource) => ({
       kind: "project" as const,
@@ -311,6 +354,7 @@ function fixtureMetadataSearch(
         input.affiliation !== "member" ||
         !fixturePublicOnlyMfids.has(resource.unique_id)
     )
+    .filter((resource) => !owned || owned.has(resource.unique_id))
     .filter((resource) =>
       JSON.stringify(resource.metadata).toLocaleLowerCase().includes(query)
     )
@@ -338,7 +382,7 @@ function projectResult(
   project: Schema<"ProjectRead"> | Schema<"ProjectWithLead">
 ): WorkspaceSearchResult {
   return {
-    context: project.organization,
+    context: project.title?.trim() ? project.project_id : null,
     kind: "project",
     name: resourceDisplayName("project", project.title, {
       identifier: project.project_id,
@@ -480,7 +524,14 @@ const kindSearches: Record<
       searchOutcome(
         (
           await client.GET("/projects/search", {
-            params: { query: { limit: input.limit, q: input.query } },
+            params: {
+              query: {
+                affiliation:
+                  input.affiliation === "owner" ? ["owner"] : undefined,
+                limit: input.limit,
+                q: input.query,
+              },
+            },
             signal,
           })
         ).data,
@@ -506,6 +557,8 @@ const kindSearches: Record<
           await client.GET("/instruments/search", {
             params: {
               query: {
+                affiliation:
+                  input.affiliation === "owner" ? ["owner"] : undefined,
                 include_owner: false,
                 limit: input.limit,
                 q: input.query,

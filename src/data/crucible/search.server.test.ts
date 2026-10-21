@@ -137,6 +137,82 @@ describe("workspace search source", () => {
     expect(affiliations.get("/resources/metadata/search")).toEqual(["member"])
   })
 
+  it("sends the owner affiliation to every owned resource search", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const affiliations = new Map<string, string[]>()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        const url = new URL(request.url)
+        affiliations.set(url.pathname, url.searchParams.getAll("affiliation"))
+        return crucibleApiResponse({ items: [], limit: 8, total: 0 })
+      })
+    )
+
+    await searchWorkspace({
+      affiliation: "owner",
+      kinds: ["project", "instrument", "sample", "dataset"],
+      limit: 8,
+      query: "operando",
+    })
+    await searchWorkspaceMetadata({
+      affiliation: "owner",
+      limit: 8,
+      query: "operando",
+    })
+
+    expect(Object.fromEntries(affiliations)).toEqual({
+      "/datasets/search": ["owner"],
+      "/instruments/search": ["owner"],
+      "/projects/search": ["owner"],
+      "/resources/metadata/search": ["owner"],
+      "/samples/search": ["owner"],
+    })
+  })
+
+  it("keeps only the caller's own fixture records when searching owned resources", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+    const names = (result: Awaited<ReturnType<typeof searchWorkspace>>) =>
+      result.groups.flatMap((group) => group.items.map((item) => item.name))
+
+    const all = await searchWorkspace({
+      kinds: ["project", "sample", "dataset"],
+      limit: 50,
+      query: "",
+    })
+    const owned = await searchWorkspace({
+      affiliation: "owner",
+      kinds: ["project", "sample", "dataset"],
+      limit: 50,
+      query: "",
+    })
+
+    expect(names(owned).length).toBeGreaterThan(0)
+    expect(names(owned).length).toBeLessThan(names(all).length)
+    expect(names(owned)).not.toContain("Perovskite film PV-12")
+    expect(names(all)).toContain("Perovskite film PV-12")
+  })
+
+  it("shows the project slug under project results", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+
+    const result = await searchWorkspace({
+      kinds: ["project"],
+      limit: 8,
+      query: "operando",
+    })
+
+    expect(result.groups[0].items[0]).toMatchObject({
+      context: "operando-catalyst-mapping",
+      kind: "project",
+    })
+  })
+
   it("hides fixture search results visible only because they are public", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")
