@@ -1,5 +1,7 @@
 export const timeZoneCookie = "crucible_hub_time_zone"
 
+export const serverFallbackTimeZone = "UTC"
+
 export function isValidTimeZone(value: string | null | undefined) {
   if (!value || value.length > 64) return false
   try {

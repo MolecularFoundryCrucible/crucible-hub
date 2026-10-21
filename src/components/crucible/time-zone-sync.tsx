@@ -1,7 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 
-import { isValidTimeZone, timeZoneCookie } from "@/lib/time-zone"
+import {
+  isValidTimeZone,
+  serverFallbackTimeZone,
+  timeZoneCookie,
+} from "@/lib/time-zone"
 
 const dateFilterKeys = ['"createdFrom"', '"createdTo"', '"activeSince"']
 
@@ -19,9 +23,11 @@ export function TimeZoneSync() {
 
   useEffect(() => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-    if (!isValidTimeZone(timeZone) || storedTimeZone() === timeZone) return
+    const serverTimeZone = storedTimeZone()
+    if (!isValidTimeZone(timeZone) || serverTimeZone === timeZone) return
     const secure = window.location.protocol === "https:" ? "; Secure" : ""
     document.cookie = `${timeZoneCookie}=${encodeURIComponent(timeZone)}; Path=/hub; Max-Age=31536000; SameSite=Lax${secure}`
+    if ((serverTimeZone ?? serverFallbackTimeZone) === timeZone) return
     void queryClient.invalidateQueries({
       predicate: (query) => {
         const key = JSON.stringify(query.queryKey)

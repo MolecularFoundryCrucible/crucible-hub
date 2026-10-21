@@ -4,6 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 ## Unreleased
 
+- Fixed a page error when opening a project or data link with Created date filters on a first visit, which made the page re-render its data, and served the browser icon as a file again.
 - Showed access-denied and other load errors right away instead of requesting the data a second time when the page opens, and removed the filter note and the Try again button from the project data access-denied message.
 - Added scientific metadata editing to project and instrument overviews, using the same Fields and JSON editor, JSON upload, and merge or replace rules as samples and datasets.
 - Fixed datasets on an instrument page opening their full page instead of the preview panel, matching project and Data pages.

@@ -1,9 +1,11 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { renderToString } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   CollectionTablePending,
   CollectionUpdateError,
+  CollectionUpdateStatus,
 } from "./collection-state"
 
 afterEach(cleanup)
@@ -117,5 +119,19 @@ describe("CollectionUpdateError", () => {
     expect(screen.getByRole("alert").textContent).toContain(
       "Other data remains available."
     )
+  })
+})
+
+describe("CollectionUpdateStatus", () => {
+  it("renders nothing until hydration so server and client markup match", () => {
+    expect(
+      renderToString(<CollectionUpdateStatus label="datasets" updating />)
+    ).toBe("")
+  })
+
+  it("announces updates after hydration", () => {
+    render(<CollectionUpdateStatus label="datasets" updating />)
+
+    expect(screen.getByRole("status").textContent).toBe("Updating datasets…")
   })
 })

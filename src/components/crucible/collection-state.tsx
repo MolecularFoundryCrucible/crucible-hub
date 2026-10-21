@@ -1,3 +1,4 @@
+import { useHydrated } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -481,7 +482,8 @@ export function CollectionUpdateStatus({
   label: string
   updating: boolean
 }) {
-  if (!updating) return null
+  const hydrated = useHydrated()
+  if (!updating || !hydrated) return null
 
   return (
     <p className="sr-only" role="status">
