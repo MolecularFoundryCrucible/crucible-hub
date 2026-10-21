@@ -1,3 +1,13 @@
+import { RemovablePill } from "@/components/crucible/removable-pill"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import {
+  publicDataFilterState,
+  publicDataSearchSchema,
+  publicDataSearchValue,
+  resolveCollectionAffiliation,
+} from "@/data/crucible/public-data"
+import { useIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
@@ -37,10 +47,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -70,6 +80,7 @@ const searchSchema = z.object({
   kind: z.enum(kinds).optional().catch(undefined),
   mode: z.enum(["metadata"]).optional().catch(undefined),
   projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
+  publicData: publicDataSearchSchema.optional().catch(undefined),
   q: z.string().trim().max(200).optional().catch(undefined),
 })
 
@@ -103,6 +114,24 @@ function SearchPage() {
       ? [search.kind]
       : kinds
   const metadataMode = !search.projectMfid && search.mode === "metadata"
+  const includePublicByDefault = useIncludePublicByDefault()
+  const publicAccess = {
+    elevated: privilegeModeFromScope(scope) === "elevated",
+    includePublicByDefault,
+  }
+  const publicState = publicDataFilterState({
+    ...publicAccess,
+    publicData: search.publicData,
+  })
+
+  function setPublicData(include: boolean) {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        publicData: publicDataSearchValue(include, includePublicByDefault),
+      }),
+    })
+  }
   const validQuery =
     search.q && search.q.length >= searchMinQueryLength ? search.q : null
 
@@ -251,9 +280,19 @@ function SearchPage() {
       </div>
       {validQuery ? (
         <SearchResults
+          affiliation={
+            resolveCollectionAffiliation({
+              ...publicAccess,
+              publicData: search.publicData,
+            }) === "member"
+              ? "member"
+              : undefined
+          }
           kinds={selectedKinds}
           metadataMode={metadataMode}
+          onPublicDataChange={setPublicData}
           projectMfid={search.projectMfid}
+          publicState={publicState}
           query={validQuery}
         />
       ) : (
@@ -348,21 +387,34 @@ function SearchResultsPending() {
 }
 
 function SearchResults({
+  affiliation,
   kinds: selectedKinds,
   metadataMode,
+  onPublicDataChange,
   projectMfid,
+  publicState,
   query,
 }: {
+  affiliation?: "member"
   kinds: readonly WorkspaceSearchKind[]
   metadataMode: boolean
+  onPublicDataChange: (include: boolean) => void
   projectMfid?: string
+  publicState: ReturnType<typeof publicDataFilterState>
   query: string
 }) {
   const scope = useWorkspaceScope()
   const result = useQuery(
     metadataMode
-      ? metadataSearchQueryOptions(scope, query)
-      : searchQueryOptions(scope, query, selectedKinds, projectMfid)
+      ? metadataSearchQueryOptions(scope, query, affiliation)
+      : searchQueryOptions(
+          scope,
+          query,
+          selectedKinds,
+          projectMfid,
+          false,
+          affiliation
+        )
   )
 
   if (result.isPending) return <SearchResultsPending />
@@ -380,6 +432,23 @@ function SearchResults({
     (total, current) => total + current.items.length,
     0
   )
+  const dataGroups = data.groups.filter(
+    (group) => group.kind === "sample" || group.kind === "dataset"
+  )
+  const offerPublicData =
+    publicState.enabled &&
+    !publicState.included &&
+    dataGroups.length > 0 &&
+    dataGroups.every((group) => !group.error && group.items.length === 0)
+  const includePublicData = offerPublicData ? (
+    <Button
+      onClick={() => onPublicDataChange(true)}
+      type="button"
+      variant="outline"
+    >
+      Include public data
+    </Button>
+  ) : null
 
   const content =
     resultCount === 0 && data.groups.every((group) => !group.error) ? (
@@ -393,13 +462,19 @@ function SearchResults({
             Try another name, identifier, or complete MFID.
           </EmptyDescription>
         </EmptyHeader>
+        {includePublicData ? (
+          <EmptyContent>{includePublicData}</EmptyContent>
+        ) : null}
       </Empty>
     ) : (
       <div className="flex flex-col gap-6">
-        <p className="text-supporting text-muted-foreground" role="status">
-          {resultCount} {resultCount === 1 ? "result" : "results"} for “
-          {data.query}”
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-supporting text-muted-foreground" role="status">
+            {resultCount} {resultCount === 1 ? "result" : "results"} for “
+            {data.query}”
+          </p>
+          {includePublicData}
+        </div>
         {data.groups
           .filter((group) => group.error || group.items.length > 0)
           .map((group) => (
@@ -442,6 +517,15 @@ function SearchResults({
 
   return (
     <>
+      {publicState.included ? (
+        <div className="flex flex-wrap gap-2">
+          <RemovablePill
+            label="Public"
+            onRemove={() => onPublicDataChange(false)}
+            removeAriaLabel="Remove filter: Public"
+          />
+        </div>
+      ) : null}
       <CollectionUpdateStatus
         label="search results"
         updating={result.isFetching}

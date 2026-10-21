@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { demoWorkspace } from "@/data/crucible/fixtures/demo-workspace"
 
-import { selectRecentResources } from "./home-data"
+import { homeRecentResourceFilters, selectRecentResources } from "./home-data"
 
 describe("Home recent resources", () => {
   it("selects the newest resources across samples and datasets", () => {
@@ -48,5 +48,41 @@ describe("Home recent resources", () => {
 
     expect(samples.map((resource) => resource.unique_id)).toEqual(sampleOrder)
     expect(datasets.map((resource) => resource.unique_id)).toEqual(datasetOrder)
+  })
+})
+
+describe("homeRecentResourceFilters", () => {
+  it("shows only the viewer's own data for Mine", () => {
+    expect(
+      homeRecentResourceFilters({
+        elevated: false,
+        includePublicByDefault: true,
+        recentScope: "mine",
+      }).affiliation
+    ).toBe("owner")
+  })
+
+  it("follows the public data default for everyone", () => {
+    expect(
+      homeRecentResourceFilters({
+        elevated: false,
+        includePublicByDefault: false,
+        recentScope: "all",
+      }).affiliation
+    ).toBe("member")
+    expect(
+      homeRecentResourceFilters({
+        elevated: false,
+        includePublicByDefault: true,
+        recentScope: "all",
+      }).affiliation
+    ).toBeUndefined()
+    expect(
+      homeRecentResourceFilters({
+        elevated: true,
+        includePublicByDefault: false,
+        recentScope: "all",
+      }).affiliation
+    ).toBeUndefined()
   })
 })

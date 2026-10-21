@@ -1,3 +1,4 @@
+import { resolveCollectionAffiliation } from "@/data/crucible/public-data"
 import { useEffect, useMemo, useState } from "react"
 
 import type {
@@ -102,3 +103,23 @@ export const recentScopeOptions = [
   { label: "All", value: "all" },
   { label: "Mine", value: "mine" },
 ] as const
+
+export function homeRecentResourceFilters({
+  elevated,
+  includePublicByDefault,
+  recentScope,
+}: {
+  elevated: boolean
+  includePublicByDefault: boolean
+  recentScope: "all" | "mine"
+}) {
+  const affiliation = resolveCollectionAffiliation({
+    elevated,
+    includePublicByDefault,
+    ownership: recentScope === "mine" ? "owner" : undefined,
+  })
+  return {
+    ...homeRecentResourceQuery,
+    ...(affiliation ? { affiliation } : {}),
+  }
+}

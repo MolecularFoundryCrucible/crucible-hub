@@ -1,3 +1,7 @@
+import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.queries"
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import { buttonVariants, Button } from "@/components/ui/button"
 import { useQueries } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import type { ReactNode } from "react"
@@ -21,7 +25,6 @@ import {
 } from "@/components/crucible/resource-list"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -41,7 +44,7 @@ import {
   homeInstrumentQuery,
   homeProjectLimit,
   homeRecentResourceLimit,
-  homeRecentResourceQuery,
+  homeRecentResourceFilters,
   recentScopeOptions,
   useRecentResourcesSnapshot,
 } from "@/features/home/home-data"
@@ -56,6 +59,18 @@ export const Route = createFileRoute("/_app/")({
   loader: async ({ context, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
+    const preferences = source.accountPreferencesEnabled
+      ? (
+          await context.queryClient
+            .ensureQueryData(accountPreferencesQueryOptions(source.scope))
+            .catch(() => undefined)
+        )?.preferences
+      : undefined
+    const recentFilters = homeRecentResourceFilters({
+      elevated: privilegeModeFromScope(source.scope) === "elevated",
+      includePublicByDefault: preferences?.hub?.include_public_data === true,
+      recentScope: preferences?.hub?.home_recent_scope ?? "all",
+    })
 
     await Promise.allSettled([
       context.queryClient.prefetchQuery(
@@ -71,10 +86,10 @@ export const Route = createFileRoute("/_app/")({
         instrumentsQueryOptions(source.scope, homeInstrumentQuery)
       ),
       context.queryClient.prefetchQuery(
-        samplesQueryOptions(source.scope, homeRecentResourceQuery)
+        samplesQueryOptions(source.scope, recentFilters)
       ),
       context.queryClient.prefetchQuery(
-        datasetsQueryOptions(source.scope, homeRecentResourceQuery)
+        datasetsQueryOptions(source.scope, recentFilters)
       ),
     ])
   },
@@ -97,13 +112,18 @@ function HomePage() {
     }),
     [scope]
   )
+  const includePublicByDefault = useIncludePublicByDefault()
+  const elevated = privilegeModeFromScope(scope) === "elevated"
   const recentResourceFilters = useMemo(
-    () => ({
-      ...homeRecentResourceQuery,
-      ...(recentScope === "mine" ? { affiliation: "owner" as const } : {}),
-    }),
-    [recentScope]
+    () =>
+      homeRecentResourceFilters({
+        elevated,
+        includePublicByDefault,
+        recentScope,
+      }),
+    [elevated, includePublicByDefault, recentScope]
   )
+  const offerPublicData = recentResourceFilters.affiliation === "member"
   const [
     accountResult,
     projectResult,
@@ -202,6 +222,17 @@ function HomePage() {
                   !recentDataUnavailable &&
                   recentResources.length === 0 && (
                     <PanelState
+                      action={
+                        offerPublicData ? (
+                          <Link
+                            className={buttonVariants({ variant: "outline" })}
+                            search={{ kind: undefined, publicData: "include" }}
+                            to="/data"
+                          >
+                            Include public data
+                          </Link>
+                        ) : undefined
+                      }
                       description={
                         recentScope === "mine"
                           ? "Samples and datasets you create will appear here."

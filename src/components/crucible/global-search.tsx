@@ -1,3 +1,6 @@
+import { privilegeModeFromScope } from "@/data/crucible/query-keys"
+import { resolveCollectionAffiliation } from "@/data/crucible/public-data"
+import { useIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useLocation, useNavigate } from "@tanstack/react-router"
@@ -77,7 +80,7 @@ export function GlobalSearch({
     if (!projectMfid && searchScope === "project") setSearchScope("global")
   }, [projectMfid, searchScope])
 
-  function showAllResults() {
+  function showAllResults(includePublic = false) {
     const normalizedQuery = query.trim()
     if (normalizedQuery.length < 3) return
     setQuery("")
@@ -86,6 +89,7 @@ export function GlobalSearch({
       search: {
         kind: undefined,
         projectMfid: searchScope === "project" ? projectMfid : undefined,
+        publicData: includePublic ? "include" : undefined,
         q: normalizedQuery,
       },
     })
@@ -111,7 +115,7 @@ export function GlobalSearch({
 type SearchControlProps = {
   onQueryChange: (query: string) => void
   onScopeChange: (scope: SearchScope) => void
-  onShowAll: () => void
+  onShowAll: (includePublic?: boolean) => void
   projectLabel?: string
   projectMfid?: string
   query: string
@@ -142,8 +146,22 @@ function QuickSearchControl({
   const debouncedQuery = useDebouncedValue(normalizedQuery, searchDebounceMs)
   const activeProjectMfid = searchScope === "project" ? projectMfid : undefined
   const kinds = activeProjectMfid ? projectSearchKinds : globalSearchKinds
+  const includePublicByDefault = useIncludePublicByDefault()
+  const affiliation =
+    resolveCollectionAffiliation({
+      elevated: privilegeModeFromScope(scope) === "elevated",
+      includePublicByDefault,
+    }) === "member"
+      ? "member"
+      : undefined
   const result = useQuery({
-    ...quickSearchQueryOptions(scope, debouncedQuery, kinds, activeProjectMfid),
+    ...quickSearchQueryOptions(
+      scope,
+      debouncedQuery,
+      kinds,
+      activeProjectMfid,
+      affiliation
+    ),
     enabled: open && debouncedQuery.length >= searchMinQueryLength,
   })
   const response =
@@ -236,6 +254,11 @@ function QuickSearchControl({
     if (normalizedQuery.length < 3) return
     finishSearch()
     onShowAll()
+  }
+
+  function includePublicData() {
+    finishSearch()
+    onShowAll(true)
   }
 
   return (
@@ -391,6 +414,26 @@ function QuickSearchControl({
               ))}
             </ComboboxList>
           )}
+          {affiliation &&
+          response?.groups.some(
+            (group) => group.kind === "sample" || group.kind === "dataset"
+          ) &&
+          response.groups.every(
+            (group) =>
+              (group.kind !== "sample" && group.kind !== "dataset") ||
+              (!group.error && group.items.length === 0)
+          ) ? (
+            <div className="px-1 pt-1">
+              <Button
+                className="w-full justify-start"
+                onClick={includePublicData}
+                type="button"
+                variant="ghost"
+              >
+                Include public data
+              </Button>
+            </div>
+          ) : null}
           {partialFailure && items.length > 0 ? (
             <QuickSearchStatus role="status">
               Some resource types could not be searched.
