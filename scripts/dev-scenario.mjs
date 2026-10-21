@@ -76,6 +76,7 @@ if (scenario.startsWith("api-")) {
 }
 
 let callbackOverride
+let publicApiOverride
 
 if (scenario.startsWith("orcid-")) {
   const specificCredentialFile = resolve(root, `.env.${scenario}.local`)
@@ -88,8 +89,9 @@ if (scenario.startsWith("orcid-")) {
     )
   }
   const credentials = parseEnv(readFileSync(credentialFile, "utf8"))
-  if (credentialFile === specificCredentialFile) {
+  if (credentialFile === specificCredentialFile || scenario === "orcid-local") {
     callbackOverride = credentials.HUB_AUTH_CALLBACK_URI
+    publicApiOverride = credentials.HUB_AUTH_PUBLIC_API_URL
   }
   environment.HUB_AUTH_CLIENT_SECRET = credentials.HUB_AUTH_CLIENT_SECRET || ""
   if (!environment.HUB_AUTH_CLIENT_SECRET) {
@@ -109,6 +111,18 @@ if (scenario.endsWith("local") && !environment.NODE_EXTRA_CA_CERTS) {
 
 Object.assign(environment, scenarioValues)
 if (callbackOverride) environment.HUB_AUTH_CALLBACK_URI = callbackOverride
+if (publicApiOverride) environment.HUB_AUTH_PUBLIC_API_URL = publicApiOverride
+if (scenario.startsWith("orcid-")) {
+  for (const name of ["HUB_AUTH_CALLBACK_URI", "HUB_AUTH_PUBLIC_API_URL"]) {
+    if (!environment[name]) {
+      throw new Error(`Set ${name} in .env.${scenario}.local.`)
+    }
+  }
+  const callbackHost = new URL(environment.HUB_AUTH_CALLBACK_URI).hostname
+  if (callbackHost !== "localhost" && callbackHost !== "127.0.0.1") {
+    environment.HUB_DEV_ALLOWED_HOSTS ||= callbackHost
+  }
+}
 
 const child = spawn(
   process.execPath,

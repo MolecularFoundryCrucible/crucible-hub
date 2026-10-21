@@ -1,7 +1,7 @@
 import { execSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { resolve, sep } from "node:path"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import viteReact from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
@@ -48,6 +48,15 @@ if (!process.env.VITE_GIT_COMMIT && gitCommit) {
   process.env.VITE_GIT_COMMIT = gitCommit
 }
 
+const allowedHosts = (
+  process.env.HUB_DEV_ALLOWED_HOSTS ||
+  loadEnv("development", process.cwd(), "HUB_DEV_").HUB_DEV_ALLOWED_HOSTS ||
+  ""
+)
+  .split(",")
+  .map((host) => host.trim())
+  .filter(Boolean)
+
 const config = defineConfig({
   base: "/hub/",
   define: {
@@ -56,7 +65,7 @@ const config = defineConfig({
   },
   resolve: { tsconfigPaths: true },
   server: {
-    allowedHosts: ["leviathan.rooster-chimaera.ts.net"],
+    allowedHosts,
     host: "127.0.0.1",
     port: 3000,
     strictPort: true,
