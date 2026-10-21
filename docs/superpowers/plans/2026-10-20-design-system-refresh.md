@@ -36,9 +36,11 @@
 ### Task 1: Palette and component preview (approval gate, no app code)
 
 **Files:**
+
 - Create: `<scratchpad>/design-preview/preview.html` (published as an Artifact)
 
 **Interfaces:**
+
 - Produces: an approved set of palette ramp values (neutral, brand blue, orange) and role mappings for light and dark, written as a CSS block at the top of the preview file that Task 2 copies verbatim.
 
 - [ ] **Step 1:** Generate ramps in OKLCH: neutral (12 steps, hue 240, chroma 0.003 to 0.02), brand blue (anchored on `#031e2d` and `#a8c4cd`), orange (anchored on `#ff6600`, including a step with at least 3:1 on white). Map every role named in the spec's "Proposed token architecture" for both themes.
@@ -49,11 +51,13 @@
 ### Task 2: Tokens
 
 **Files:**
+
 - Modify: `src/styles.css` (`:root`, `.dark`, `@theme inline`)
 - Modify: `scripts/check-color-contrast.mjs`
 - Modify: `src/components/ui/dialog.tsx:32`, `src/components/ui/alert-dialog.tsx:30`, `src/components/ui/sheet.tsx:29` (`bg-black/10` to an overlay role)
 
 **Interfaces:**
+
 - Consumes: approved CSS block from Task 1.
 - Produces: palette tokens `--palette-neutral-{1..12}`, `--palette-blue-{n}`, `--palette-orange-{n}`; new roles `--border-strong`, `--action-hover`, `--action-pressed`, `--primary-hover`, `--overlay`, each with a `--color-*` mapping in `@theme inline`. All existing role names keep working.
 
@@ -66,12 +70,14 @@
 ### Task 3: Components
 
 **Files:**
+
 - Modify: `src/components/ui/button.tsx`, `src/components/ui/badge.tsx`, `src/components/ui/toggle.tsx`
 - Modify call sites: `src/features/resource-graph/resource-graph-canvas.tsx:1440` (`graph`), `src/routes/auth.sign-in.tsx:60` (`link`), `src/components/crucible/collection-browser.tsx:297` and `src/features/project-data/project-data-collection.tsx:774` (`secondary`), the 8 `<Badge>` uses without a variant
 - Modify: `scripts/check-design-tokens.mjs`
 - Test: `src/components/ui/button.test.tsx` (create if absent)
 
 **Interfaces:**
+
 - Consumes: roles from Task 2.
 - Produces: `Button` variants exactly `default | outline | ghost | destructive | destructive-solid | warning`; `Badge` variants without `link`, with `default` neutral.
 
@@ -85,10 +91,12 @@
 ### Task 4: Sweep and decoration removal
 
 **Files:**
+
 - Modify: `src/styles.css` (`.auth-page-card`, `.auth-page-sign-in` glow if not approved, `[data-inspector-kind]` top border and `--inspector-accent`, `.resource-graph-flow-node[data-kind]` left stripe)
 - Modify: call sites across `src/components/crucible`, `src/features`, `src/routes` whose tier violates the spec's classification rule
 
 **Interfaces:**
+
 - Consumes: approved alternatives from Task 1; variants from Task 3.
 
 - [ ] **Step 1:** Remove the three accent bars and apply the approved replacements.
@@ -100,6 +108,7 @@
 ### Task 5: Documentation and fixture page
 
 **Files:**
+
 - Modify: `docs/design-system.md` (quick reference)
 - Create: `docs/design-system-reference.md` (detailed reference, reorganized from today's `design-system.md`)
 - Modify: `src/routes/fixtures.design-system.tsx`, `tests/browser/design-system.spec.ts`

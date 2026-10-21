@@ -58,11 +58,11 @@ The current system works and is enforced, but grew organically. The user found t
 
 ### Brand colors, one job each
 
-| Color | Value | Contrast | Job |
-| --- | --- | --- | --- |
-| Crucible dark blue | `#031e2d` | 17.1:1 on white | Ink and primary action in light mode; sidebar surface in dark mode |
+| Color               | Value     | Contrast                           | Job                                                                                                 |
+| ------------------- | --------- | ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Crucible dark blue  | `#031e2d` | 17.1:1 on white                    | Ink and primary action in light mode; sidebar surface in dark mode                                  |
 | Crucible light blue | `#a8c4cd` | 1.8:1 on white; 9.3:1 on dark blue | Quiet surfaces in light mode (sidebar, selected and hover backgrounds); primary action in dark mode |
-| Crucible orange | `#ff6600` | 2.9:1 on white; 5.8:1 on dark blue | "You are here / this is selected" signal only |
+| Crucible orange     | `#ff6600` | 2.9:1 on white; 5.8:1 on dark blue | "You are here / this is selected" signal only                                                       |
 
 Orange keeps its current role as the selection and current-location marker (active tab underline, current nav item, current graph node). On light surfaces it uses a darkened step that reaches at least 3:1 (today `#cc5200`, 4.4:1). On dark surfaces it may use full-strength `#ff6600`. The sign-in page keeps orange as its one brand moment (user decision), but not as a thick card border (see below).
 
@@ -94,13 +94,13 @@ Unchanged in meaning and appearance. Status colors (success, warning, info, dest
 
 ### Action hierarchy
 
-| Tier | Variant | Look | Use |
-| --- | --- | --- | --- |
-| Primary | `default` | Solid brand (dark blue in light, light blue in dark) | The one main action of a view: page-header Create, Save, Submit, dialog confirm |
-| Secondary | `outline` | Card surface, soft border | Actions that change data: Add files, Choose project, Cancel |
-| Tertiary | `ghost` | Text and icon, no resting container | Low-stakes and frequent: card Edit, Edit/Done toggle, Refresh, Browse nearby, copy, print, row open arrows, view-all links |
-| Semantic | `destructive`, `destructive-solid` | Tinted red trigger; solid red final confirm | Delete, remove, revoke, leave |
-| Semantic | `warning` | Tinted amber | Administrator view controls only |
+| Tier      | Variant                            | Look                                                 | Use                                                                                                                        |
+| --------- | ---------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Primary   | `default`                          | Solid brand (dark blue in light, light blue in dark) | The one main action of a view: page-header Create, Save, Submit, dialog confirm                                            |
+| Secondary | `outline`                          | Card surface, soft border                            | Actions that change data: Add files, Choose project, Cancel                                                                |
+| Tertiary  | `ghost`                            | Text and icon, no resting container                  | Low-stakes and frequent: card Edit, Edit/Done toggle, Refresh, Browse nearby, copy, print, row open arrows, view-all links |
+| Semantic  | `destructive`, `destructive-solid` | Tinted red trigger; solid red final confirm          | Delete, remove, revoke, leave                                                                                              |
+| Semantic  | `warning`                          | Tinted amber                                         | Administrator view controls only                                                                                           |
 
 Rules agreed so far:
 
