@@ -272,6 +272,19 @@ function PreferencesPage() {
                   />
                 </PreferenceField>
                 <PreferenceField
+                  description="Sample and dataset lists and search start with public data from others included."
+                  id="include-public-data"
+                  title="Include public data from others"
+                >
+                  <Switch
+                    checked={preferences.hub?.include_public_data === true}
+                    id="include-public-data"
+                    onCheckedChange={(checked) =>
+                      update({ hub: { include_public_data: checked } })
+                    }
+                  />
+                </PreferenceField>
+                <PreferenceField
                   description="Sample and dataset lists on the Data page, in projects, and on instruments open in this order."
                   id="preferred-data-sort-sort"
                   title="Default data sort"

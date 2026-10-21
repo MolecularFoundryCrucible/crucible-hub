@@ -60,6 +60,7 @@ export const accountPreferencesSchema = z.object({
       home_recent_scope: homeRecentScopePreferenceSchema
         .optional()
         .catch(undefined),
+      include_public_data: z.boolean().optional().catch(undefined),
       label_printer: labelPrinterPreferenceSchema.optional().catch(undefined),
     })
     .optional()
@@ -78,6 +79,7 @@ export const accountPreferencesPatchSchema = z
         home_recent_scope: homeRecentScopePreferenceSchema
           .nullable()
           .optional(),
+        include_public_data: z.boolean().nullable().optional(),
         label_printer: labelPrinterPreferenceSchema.nullable().optional(),
       })
       .strict()

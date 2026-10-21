@@ -50,6 +50,20 @@ describe("account preferences", () => {
     })
   })
 
+  it("keeps the include public data default only when it is a boolean", () => {
+    expect(
+      accountPreferencesSchema.parse({ hub: { include_public_data: true } })
+    ).toEqual({ hub: { include_public_data: true } })
+    expect(
+      accountPreferencesSchema.parse({ hub: { include_public_data: "yes" } })
+    ).toEqual({ hub: {} })
+    expect(
+      accountPreferencesPatchSchema.parse({
+        hub: { include_public_data: false },
+      })
+    ).toEqual({ hub: { include_public_data: false } })
+  })
+
   it("accepts only known, non-empty patches", () => {
     expect(accountPreferencesPatchSchema.safeParse({}).success).toBe(false)
     expect(
