@@ -170,6 +170,7 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/")({
   },
   pendingComponent: ProjectDataPending,
   component: ProjectDataPage,
+  remountDeps: ({ params }) => ({ projectMfid: params.projectMfid }),
 })
 
 function projectDataFilterValues(

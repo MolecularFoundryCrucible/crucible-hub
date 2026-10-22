@@ -161,6 +161,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
   },
   pendingComponent: InstrumentDatasetsPending,
   component: InstrumentDatasetsPage,
+  remountDeps: ({ params }) => ({ instrumentMfid: params.instrumentMfid }),
 })
 
 function InstrumentDatasetsPending() {
