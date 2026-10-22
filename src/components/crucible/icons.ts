@@ -80,6 +80,7 @@ export {
   X as CancelChangesIcon,
   X as RemoveFilterIcon,
   Check as CopySuccessIcon,
+  CircleAlert as CopyFailureIcon,
   CircleCheck as CapabilityAvailableIcon,
   CircleX as CapabilityUnavailableIcon,
   CircleCheck as AvailabilityAvailableIcon,

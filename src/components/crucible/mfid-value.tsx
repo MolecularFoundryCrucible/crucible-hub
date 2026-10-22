@@ -1,4 +1,8 @@
-import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
+import {
+  CopyFailureIcon,
+  CopyIcon,
+  CopySuccessIcon,
+} from "@/components/crucible/icons"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { Button } from "@/components/ui/button"
@@ -42,6 +46,8 @@ export function CopyMfidButton({
         >
           {copyState === "success" ? (
             <CopySuccessIcon aria-hidden="true" />
+          ) : copyState === "error" ? (
+            <CopyFailureIcon aria-hidden="true" className="text-destructive" />
           ) : (
             <CopyIcon aria-hidden="true" />
           )}
