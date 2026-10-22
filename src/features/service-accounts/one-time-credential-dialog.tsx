@@ -17,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useCopyFeedback } from "@/hooks/use-copy-feedback"
 import { formatUsername } from "@/lib/username"
 
 export function OneTimeCredentialDialog({
@@ -34,26 +35,14 @@ export function OneTimeCredentialDialog({
   onClose: () => void
   title: string
 }) {
-  const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
-    "idle"
-  )
+  const { copy, reset, state: copyState } = useCopyFeedback()
   // Keep the credential on screen while the dialog closes, then forget it.
   const [shown, setShown] = useState(credential)
   if (credential && credential !== shown) setShown(credential)
 
   function close() {
-    setCopyState("idle")
+    reset()
     onClose()
-  }
-
-  async function copyCredential() {
-    if (!credential) return
-    try {
-      await navigator.clipboard.writeText(credential.api_key)
-      setCopyState("success")
-    } catch {
-      setCopyState("error")
-    }
   }
 
   const copyLabel = copyState === "success" ? "API key copied" : "Copy API key"
@@ -103,7 +92,7 @@ export function OneTimeCredentialDialog({
                   render={
                     <Button
                       aria-label={copyLabel}
-                      onClick={() => void copyCredential()}
+                      onClick={() => void copy(shown.api_key)}
                       size="icon"
                       type="button"
                       variant="ghost"
@@ -119,6 +108,9 @@ export function OneTimeCredentialDialog({
                 <TooltipContent>{copyLabel}</TooltipContent>
               </Tooltip>
             </div>
+            <span className="sr-only" role="status">
+              {copyState === "success" ? "API key copied" : null}
+            </span>
             {copyState === "error" ? (
               <p className="text-body text-destructive" role="alert">
                 The API key could not be copied. Select and copy it manually.

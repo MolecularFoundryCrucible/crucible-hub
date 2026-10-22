@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { MfidText } from "@/components/crucible/mfid-text"
@@ -9,6 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useCopyFeedback } from "@/hooks/use-copy-feedback"
 import { cn } from "@/lib/utils"
 
 export function CopyMfidButton({
@@ -18,18 +17,7 @@ export function CopyMfidButton({
   size?: "icon-xs" | "icon-sm"
   value: string
 }) {
-  const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
-    "idle"
-  )
-
-  async function copyMfid() {
-    try {
-      await navigator.clipboard.writeText(value)
-      setCopyState("success")
-    } catch {
-      setCopyState("error")
-    }
-  }
+  const { copy, state: copyState } = useCopyFeedback()
 
   const copyLabel =
     copyState === "success"
@@ -46,7 +34,7 @@ export function CopyMfidButton({
             <Button
               aria-label={copyLabel}
               className="shrink-0"
-              onClick={() => void copyMfid()}
+              onClick={() => void copy(value)}
               size={size}
               variant="ghost"
             />
@@ -60,6 +48,9 @@ export function CopyMfidButton({
         </TooltipTrigger>
         <TooltipContent>{copyLabel}</TooltipContent>
       </Tooltip>
+      <span className="sr-only" role="status">
+        {copyState === "success" ? "MFID copied" : null}
+      </span>
       {copyState === "error" ? (
         <span className="sr-only" role="alert">
           Could not copy MFID. Try again.

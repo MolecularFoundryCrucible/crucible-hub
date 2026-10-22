@@ -216,6 +216,15 @@ function datasetFormValues(resource: DatasetDetail): DatasetSummaryFormValues {
   }
 }
 
+/** Invalid input counts as a change so validation errors stay reachable. */
+export function hasSummaryChanges(changes: () => object) {
+  try {
+    return Object.keys(changes()).length > 0
+  } catch {
+    return true
+  }
+}
+
 export function sampleSummaryChanges(
   resource: SampleDetail,
   values: SampleSummaryFormValues
@@ -369,7 +378,12 @@ export function SampleSummaryForm({
       }
     },
   })
-  const isDirty = useStore(form.store, (state) => state.isDirty)
+  const isDirty = useStore(
+    form.store,
+    (state) =>
+      state.isDirty &&
+      hasSummaryChanges(() => sampleSummaryChanges(resource, state.values))
+  )
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(isDirty, onCancel)
   const formId = `sample-summary-${resource.unique_id}`
@@ -515,16 +529,12 @@ export function SampleSummaryForm({
           <SummaryFields fields={contextFields(resource)} />
         </CardContent>
         <form.Subscribe
-          selector={(state) => [
-            state.canSubmit,
-            state.isDirty,
-            state.isSubmitting,
-          ]}
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
         >
-          {([canSubmit, formIsDirty, submitting]) => (
+          {([canSubmit, submitting]) => (
             <EditableCardActions
               canSubmit={canSubmit}
-              dirty={formIsDirty}
+              dirty={isDirty}
               formId={formId}
               onCancel={discard.requestCancel}
               pending={submitting}
@@ -610,7 +620,12 @@ export function DatasetSummaryForm({
       }
     },
   })
-  const isDirty = useStore(form.store, (state) => state.isDirty)
+  const isDirty = useStore(
+    form.store,
+    (state) =>
+      state.isDirty &&
+      hasSummaryChanges(() => datasetSummaryChanges(resource, state.values))
+  )
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   const discard = useDiscardProtection(isDirty, onCancel)
   const formId = `dataset-summary-${resource.unique_id}`
@@ -723,16 +738,12 @@ export function DatasetSummaryForm({
           <SummaryFields fields={contextFields(resource)} />
         </CardContent>
         <form.Subscribe
-          selector={(state) => [
-            state.canSubmit,
-            state.isDirty,
-            state.isSubmitting,
-          ]}
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
         >
-          {([canSubmit, formIsDirty, submitting]) => (
+          {([canSubmit, submitting]) => (
             <EditableCardActions
               canSubmit={canSubmit}
-              dirty={formIsDirty}
+              dirty={isDirty}
               formId={formId}
               onCancel={discard.requestCancel}
               pending={submitting}

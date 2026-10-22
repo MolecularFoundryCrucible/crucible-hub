@@ -5,6 +5,7 @@ import { timestampToLocalInput } from "@/lib/format"
 
 import {
   datasetSummaryChanges,
+  hasSummaryChanges,
   mergeDatasetSummaryUpdate,
   mergeSampleSummaryUpdate,
   sampleSummaryChanges,
@@ -207,5 +208,39 @@ describe("resource summary editing", () => {
         timestamp: "",
       })
     ).toEqual({ sample_name: "Updated sample" })
+  })
+})
+
+describe("hasSummaryChanges", () => {
+  const unchanged = {
+    description: sample.description ?? "",
+    sample_name: sample.name,
+    sample_type: sample.sample_type ?? "",
+    timestamp: timestampToLocalInput(sample.timestamp),
+  }
+
+  it("ignores whitespace-only edits so Save stays disabled", () => {
+    expect(
+      hasSummaryChanges(() =>
+        sampleSummaryChanges(sample, {
+          ...unchanged,
+          description: `${unchanged.description}   `,
+          sample_type: `  ${unchanged.sample_type}`,
+        })
+      )
+    ).toBe(false)
+  })
+
+  it("counts real and invalid edits as changes", () => {
+    expect(
+      hasSummaryChanges(() =>
+        sampleSummaryChanges(sample, { ...unchanged, sample_name: "Renamed" })
+      )
+    ).toBe(true)
+    expect(
+      hasSummaryChanges(() =>
+        sampleSummaryChanges(sample, { ...unchanged, sample_name: "  " })
+      )
+    ).toBe(true)
   })
 })

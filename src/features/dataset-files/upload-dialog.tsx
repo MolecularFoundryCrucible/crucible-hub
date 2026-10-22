@@ -72,13 +72,11 @@ export function UploadFilesDialog({
             <DialogTitle>Add files</DialogTitle>
           </DialogHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            {batch.uploading ? null : (
-              <UploadDropZone
-                compact={batch.items.length > 0}
-                disabled={batch.uploading}
-                onAdd={batch.add}
-              />
-            )}
+            <UploadDropZone
+              compact={batch.items.length > 0}
+              disabled={batch.uploading}
+              onAdd={batch.add}
+            />
             <UploadFileList batch={batch} datasetMfid={datasetMfid} />
           </div>
           <DialogFooter>
