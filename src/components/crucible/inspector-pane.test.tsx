@@ -60,6 +60,26 @@ describe("InspectorPaneProvider", () => {
     expect(result.current.navigation?.previous).toBeUndefined()
   })
 
+  it("keeps the Back trail of the page it came from", () => {
+    const { result } = renderHook(usePane, { wrapper })
+    act(() =>
+      result.current.pane.remember({
+        mfid: "dataset-c",
+        previous: ["sample-a", "dataset-b"],
+      })
+    )
+    expect(result.current.navigation?.previous).toBe("dataset-b")
+
+    act(() => result.current.pane.remember({ mfid: "dataset-c" }))
+    expect(result.current.navigation?.previous).toBe("dataset-b")
+
+    act(() =>
+      result.current.navigation?.open("dataset-b", undefined, undefined, true)
+    )
+    expect(result.current.navigation?.preview).toBe("dataset-b")
+    expect(result.current.navigation?.previous).toBe("sample-a")
+  })
+
   it("remembers whether the pane is shown", () => {
     const { result } = renderHook(usePane, { wrapper })
     expect(result.current.pane.open).toBe(true)

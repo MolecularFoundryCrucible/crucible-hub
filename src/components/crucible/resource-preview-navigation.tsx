@@ -177,6 +177,8 @@ export type ResourcePreviewNavigation = {
   replace: boolean
   state: (target: string, back?: boolean) => { resourcePreview?: PreviewTrail }
   targetPreview: (target: string) => string
+  /** Earlier previews, oldest first, that Back returns through. */
+  trail: readonly string[]
   trigger: React.RefObject<HTMLElement | null>
 }
 
@@ -453,6 +455,7 @@ export function useResourcePreviewNavigation(
     state,
     targetPreview,
     close,
+    trail: trail?.previous ?? [],
     trigger,
     replace: hasPreview,
   }

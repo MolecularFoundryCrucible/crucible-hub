@@ -165,8 +165,16 @@ export function ResourceInspector({
           ? { kind: previewKind, mfid: navigation.preview, name: previewName }
           : undefined,
       mfid: navigation.preview,
+      previous: navigation.trail,
     })
-  }, [handsOver, navigation.preview, previewKind, previewName, remember])
+  }, [
+    handsOver,
+    navigation.preview,
+    navigation.trail,
+    previewKind,
+    previewName,
+    remember,
+  ])
 
   const suppressFocusRestore: MouseEventHandler<HTMLAnchorElement> = (
     event

@@ -63,3 +63,29 @@ test("hides and shows the preview pane", async ({ page }) => {
   await page.getByRole("button", { name: "Show preview panel" }).click()
   await expect.poll(() => contentWidth(page)).toBe(shown)
 })
+
+test("keeps the Back trail when leaving the page", async ({ page }) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page
+    .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await pane(page)
+    .getByRole("link", { name: "NiFe K-edge operando series" })
+    .first()
+    .click()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe K-edge operando series" })
+  ).toBeVisible()
+
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Projects", exact: true })
+    .first()
+    .click()
+  await expect(page).toHaveURL(/\/hub\/projects/)
+  await pane(page).getByRole("link", { name: "Back" }).click()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
+})

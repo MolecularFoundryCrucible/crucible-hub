@@ -23,6 +23,7 @@ import {
 type RememberedPreview = {
   identity?: ResourcePreviewIdentity
   mfid: string
+  previous?: readonly string[]
 }
 
 type PaneMemory = {
@@ -93,13 +94,18 @@ export function InspectorPaneProvider({
         setHostPreviews((count) => count + 1)
         return () => setHostPreviews((count) => count - 1)
       },
-      remember: (preview: RememberedPreview) =>
-        setMemory((current) =>
-          current?.current.mfid === preview.mfid &&
-          current.current.identity?.name === preview.identity?.name
+      remember: ({ previous = [], ...preview }: RememberedPreview) =>
+        setMemory((current) => {
+          const same = current?.current.mfid === preview.mfid
+          // While the router changes page, the old page reports its preview
+          // once more without its trail; keep the trail already recorded.
+          const trail = same && !previous.length ? current.previous : previous
+          return same &&
+            current.current.identity?.name === preview.identity?.name &&
+            current.previous.join() === trail.join()
             ? current
-            : { current: preview, previous: [] }
-        ),
+            : { current: preview, previous: trail }
+        }),
       setOpen: (next: boolean) => {
         setOpenState(next)
         writePresentationCookie(inspectorCookie, next ? "open" : "collapsed")
@@ -153,6 +159,7 @@ export function useRememberedPreviewNavigation(): ResourcePreviewNavigation | nu
     previewIdentity: current.identity,
     previous: previous.at(-1),
     replace: true,
+    trail: previous,
     state: () => ({}),
     targetPreview: (target) => target,
     trigger: pane.trigger,
