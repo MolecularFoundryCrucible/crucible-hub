@@ -144,7 +144,7 @@ for (const [name, value] of shared) {
 }
 
 const tailwindProvided = /^--(?:spacing|shadow-[\w-]+)$/
-const baseUiProvided = /^--collapsible-panel-(?:height|width)$/
+const baseUiProvided = /^--(?:collapsible-panel-(?:height|width)|toast-index)$/
 const declaredProperties = new Set(
   [...source.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1])
 )

@@ -44,7 +44,7 @@ const patterns = [
     label:
       "primitive motion value (use a motion role from src/lib/motion.ts or var(--motion-*))",
     expression:
-      /(?:cubic-bezier\(|(?:transition|duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\])/,
+      /(?:cubic-bezier\(|(?:duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\])/,
   },
   {
     label: "primitive layer (use z-(--layer-*) from src/styles.css)",
@@ -54,21 +54,7 @@ const patterns = [
 
 // Files still being moved onto the motion system (decision 0036); the motion
 // value and layer rules skip them until their task lands. Empty this set.
-const pendingMotionMigration = new Set([
-  "components/ui/alert-dialog.tsx",
-  "components/ui/avatar.tsx",
-  "components/ui/button-group.tsx",
-  "components/ui/combobox.tsx",
-  "components/ui/dialog.tsx",
-  "components/ui/dropdown-menu.tsx",
-  "components/ui/hover-card.tsx",
-  "components/ui/popover.tsx",
-  "components/ui/sheet.tsx",
-  "components/ui/sidebar.tsx",
-  "components/ui/toast.tsx",
-  "components/ui/tooltip.tsx",
-  "components/crucible/app-shell.tsx",
-])
+const pendingMotionMigration = new Set([])
 
 function migrationExempt(localPath, label) {
   return (

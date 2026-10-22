@@ -432,7 +432,7 @@ export function AppShell({
           <SidebarRail />
         </Sidebar>
         <SidebarInset>
-          <header className="sticky top-0 z-20 flex h-app-header items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+          <header className="sticky top-0 z-(--layer-navigation) flex h-app-header items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
             <SidebarTrigger className="md:hidden" />
             <AppSearch
               preferFullProject={pathname.startsWith("/projects/")}

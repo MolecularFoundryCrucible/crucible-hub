@@ -536,6 +536,7 @@
   --focus-width: 0.1875rem;
   --focus-offset: 0.125rem;
   --layer-toast: 70;
+  --layer-toast-stack: 1000;
   --layer-tooltip: 60;
   --layer-popover: 50;
   --layer-modal: 40;
@@ -761,6 +762,40 @@ body {
 .reveal-panel[data-ending-style] {
   height: 0;
   opacity: 0;
+}
+
+/* Motion roles that animate through Base UI starting and ending styles. */
+.motion-sheet {
+  transition-property: transform, opacity;
+  transition-duration: var(--motion-deliberate);
+  transition-timing-function: var(--motion-ease-enter);
+}
+
+.motion-sheet[data-ending-style] {
+  transition-duration: var(--motion-standard);
+  transition-timing-function: var(--motion-ease-exit);
+}
+
+.motion-sheet-backdrop {
+  transition: opacity var(--motion-standard) var(--motion-ease-enter);
+}
+
+.motion-sheet-backdrop[data-ending-style] {
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease-exit);
+}
+
+.motion-toast {
+  z-index: calc(var(--layer-toast-stack) - var(--toast-index));
+  transition:
+    transform var(--motion-standard) var(--motion-ease-enter),
+    opacity var(--motion-standard) var(--motion-ease-enter),
+    height var(--motion-fast) var(--motion-ease-standard);
+}
+
+.motion-toast[data-ending-style] {
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease-exit);
 }
 
 .pending-region {
