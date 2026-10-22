@@ -10,6 +10,7 @@ import {
   PreviousSiblingIcon,
 } from "@/components/crucible/icons"
 import {
+  CollectionUpdateStatus,
   PanelState,
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
@@ -24,6 +25,7 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { personIsServiceAccount } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import {
@@ -423,12 +425,14 @@ function InspectorBody({
     resource.kind === "dataset" || resource.kind === "sample"
 
   return (
-    <div aria-busy={query.isFetching} className="flex min-w-0 flex-col gap-4">
-      {query.isFetching && !query.isError && (
-        <p className="text-supporting text-muted-foreground" role="status">
-          Refreshing resource details…
-        </p>
-      )}
+    <PendingRegion
+      className="flex min-w-0 flex-col gap-4"
+      pending={query.isFetching}
+    >
+      <CollectionUpdateStatus
+        label="resource details"
+        updating={query.isFetching && !query.isError}
+      />
       {query.isError && (
         <PanelUpdateError
           description="Resource details could not be refreshed. Showing the last available data."
@@ -463,7 +467,7 @@ function InspectorBody({
           <MetadataDisclosure metadata={resource.scientific_metadata} />
         </>
       )}
-    </div>
+    </PendingRegion>
   )
 }
 

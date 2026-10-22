@@ -1,4 +1,5 @@
-import type { ComponentProps } from "react"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
 
 import { cn } from "@/lib/utils"
 
@@ -7,20 +8,24 @@ import { cn } from "@/lib/utils"
  * the indicator delay (decision 0036).
  */
 export function PendingRegion({
-  as: Element = "div",
   className,
   pending,
+  render,
   ...props
-}: ComponentProps<"div"> & {
-  as?: "div" | "main" | "section"
-  pending: boolean
-}) {
-  return (
-    <Element
-      aria-busy={pending || undefined}
-      className={cn("pending-region", className)}
-      data-pending={pending || undefined}
-      {...props}
-    />
-  )
+}: useRender.ComponentProps<"div"> & { pending: boolean }) {
+  return useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(
+      {
+        "aria-busy": pending || undefined,
+        className: cn("pending-region", className),
+      },
+      props
+    ),
+    render,
+    state: { pending },
+    stateAttributesMapping: {
+      pending: (value) => (value ? { "data-pending": "" } : null),
+    },
+  })
 }

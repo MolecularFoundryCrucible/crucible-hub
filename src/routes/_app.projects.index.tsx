@@ -23,6 +23,7 @@ import {
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ProjectRoleBadge } from "@/components/crucible/project-members"
 import { RefreshButton } from "@/components/crucible/refresh-button"
@@ -604,7 +605,7 @@ function ProjectCollection({
     <>
       <CollectionUpdateStatus label="projects" updating={updating} />
       {projects.length > 0 ? (
-        <Card aria-busy={updating}>
+        <PendingRegion pending={updating} render={<Card />}>
           <CardContent className="px-0">
             <Table
               aria-label="Project collection"
@@ -720,7 +721,7 @@ function ProjectCollection({
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+        </PendingRegion>
       ) : (
         <Empty className="min-h-state border">
           <EmptyHeader>

@@ -23,6 +23,7 @@ import {
 } from "@/components/crucible/collection-state"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { PersonLink } from "@/components/crucible/person-link"
 import { RefreshButton } from "@/components/crucible/refresh-button"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
@@ -744,7 +745,7 @@ function InstrumentCollection({
     <>
       <CollectionUpdateStatus label="instruments" updating={updating} />
       {instruments.length > 0 ? (
-        <Card aria-busy={updating}>
+        <PendingRegion pending={updating} render={<Card />}>
           <CardContent className="px-0">
             <Table
               aria-label="Instrument directory"
@@ -852,7 +853,7 @@ function InstrumentCollection({
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+        </PendingRegion>
       ) : (
         <section aria-label="Instrument directory">
           <Empty className="min-h-state border">

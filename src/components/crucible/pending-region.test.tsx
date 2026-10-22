@@ -1,6 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
+import { Card } from "@/components/ui/card"
+
 import { PendingRegion } from "./pending-region"
 
 afterEach(cleanup)
@@ -24,5 +26,16 @@ describe("PendingRegion", () => {
     )
     expect(region.hasAttribute("data-pending")).toBe(false)
     expect(region.hasAttribute("aria-busy")).toBe(false)
+  })
+  it("renders as another element such as a card", () => {
+    render(
+      <PendingRegion pending render={<Card />}>
+        <p>Rows</p>
+      </PendingRegion>
+    )
+    const region = screen.getByText("Rows").parentElement!
+    expect(region.dataset.slot).toBe("card")
+    expect(region.className).toContain("pending-region")
+    expect(region.getAttribute("aria-busy")).toBe("true")
   })
 })

@@ -33,6 +33,7 @@ import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { PersonLink } from "@/components/crucible/person-link"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
 import {
@@ -550,7 +551,7 @@ function SearchResults({
           retry={() => void result.refetch()}
         />
       ) : null}
-      <div aria-busy={result.isFetching}>{content}</div>
+      <PendingRegion pending={result.isFetching}>{content}</PendingRegion>
     </>
   )
 }

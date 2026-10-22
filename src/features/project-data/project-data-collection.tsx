@@ -33,6 +33,7 @@ import type {
   CollectionBrowseSearch,
   CollectionGroupOrder,
 } from "@/data/crucible/collection-browse"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceCollectionTable } from "@/components/crucible/resource-collection-table"
 import {
   resourceSiblingSequenceLabel,
@@ -667,7 +668,7 @@ function ProjectDataResult({
         <CollectionUpdateError label={label} preserved retry={retry} />
       ) : null}
       {items.length ? (
-        <Card aria-busy={updating}>
+        <PendingRegion pending={updating} render={<Card />}>
           <CardContent className="px-0">
             {kind === "samples" ? (
               <ResourceCollectionTable
@@ -695,7 +696,7 @@ function ProjectDataResult({
               />
             )}
           </CardContent>
-        </Card>
+        </PendingRegion>
       ) : (
         <Empty className="min-h-state border">
           <EmptyHeader>

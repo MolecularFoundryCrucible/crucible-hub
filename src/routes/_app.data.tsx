@@ -37,6 +37,7 @@ import {
 } from "@/components/crucible/cursor-resource-collection"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceCollectionTable } from "@/components/crucible/resource-collection-table"
 import {
   ResourcePreviewContext,
@@ -671,7 +672,7 @@ function DataResults({
             ) : null}
 
             {hasRows ? (
-              <Card aria-busy={updating}>
+              <PendingRegion pending={updating} render={<Card />}>
                 <CardContent className="px-0">
                   {showSamples && samplePage ? (
                     <ResourceCollectionTable
@@ -698,7 +699,7 @@ function DataResults({
                     />
                   ) : null}
                 </CardContent>
-              </Card>
+              </PendingRegion>
             ) : (
               <Empty className="min-h-state border">
                 <EmptyHeader>

@@ -17,6 +17,7 @@ import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
@@ -390,7 +391,7 @@ function UserCollection({
     <>
       <CollectionUpdateStatus label="users" updating={updating} />
       {users.length > 0 ? (
-        <Card aria-busy={updating}>
+        <PendingRegion pending={updating} render={<Card />}>
           <CardContent className="px-0">
             <Table
               aria-label="Users directory"
@@ -554,7 +555,7 @@ function UserCollection({
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+        </PendingRegion>
       ) : (
         <Empty className="min-h-state border">
           <EmptyHeader>

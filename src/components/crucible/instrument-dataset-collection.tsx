@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router"
 
 import { CollectionPageNavigation } from "@/components/crucible/collection-page-navigation"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceCollectionTable } from "@/components/crucible/resource-collection-table"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -48,7 +49,7 @@ export function InstrumentDatasetCollection({
 }) {
   return (
     <>
-      <Card aria-busy={updating}>
+      <PendingRegion pending={updating} render={<Card />}>
         <CardContent className="px-0">
           {items.length ? (
             <ResourceCollectionTable
@@ -72,7 +73,7 @@ export function InstrumentDatasetCollection({
             </Empty>
           )}
         </CardContent>
-      </Card>
+      </PendingRegion>
 
       <CollectionPageNavigation
         label="Instrument dataset pages"

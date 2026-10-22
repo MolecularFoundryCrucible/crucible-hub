@@ -20,6 +20,7 @@ import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
@@ -451,7 +452,7 @@ function ServiceAccountCollection({
     <>
       <CollectionUpdateStatus label="service accounts" updating={updating} />
       {serviceAccounts.length > 0 ? (
-        <Card aria-busy={updating}>
+        <PendingRegion pending={updating} render={<Card />}>
           <CardContent className="px-0">
             <Table
               aria-label="Service accounts"
@@ -587,7 +588,7 @@ function ServiceAccountCollection({
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+        </PendingRegion>
       ) : (
         <Empty className="min-h-state border">
           <EmptyHeader>
