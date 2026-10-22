@@ -32,7 +32,9 @@
   }
 
   .docked-preview-pane[data-open] {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   [data-slot="sheet-content"].resource-inspector[data-docked] {

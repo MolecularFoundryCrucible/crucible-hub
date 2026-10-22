@@ -41,7 +41,7 @@ type InspectorPane = {
     identity: ResourcePreviewIdentity | undefined,
     back: boolean
   ) => void
-  registerHostPreview: () => () => void
+  registerHostPreview: (close: () => void) => () => void
   remember: (preview: RememberedPreview) => void
   setOpen: (open: boolean) => void
   trigger: React.RefObject<HTMLElement | null>
@@ -71,6 +71,7 @@ export function InspectorPaneProvider({
     setMemory(null)
   }
   const [hostPreviews, setHostPreviews] = useState(0)
+  const hostCloses = useRef(new Set<() => void>())
   const trigger = useRef<HTMLElement | null>(null)
 
   const actions = useMemo(
@@ -90,9 +91,13 @@ export function InspectorPaneProvider({
               : [...current.previous, current.current.mfid].slice(-20),
           }
         }),
-      registerHostPreview: () => {
+      registerHostPreview: (close: () => void) => {
+        hostCloses.current.add(close)
         setHostPreviews((count) => count + 1)
-        return () => setHostPreviews((count) => count - 1)
+        return () => {
+          hostCloses.current.delete(close)
+          setHostPreviews((count) => count - 1)
+        }
       },
       remember: ({ previous = [], ...preview }: RememberedPreview) =>
         setMemory((current) => {
@@ -107,6 +112,10 @@ export function InspectorPaneProvider({
             : { current: preview, previous: trail }
         }),
       setOpen: (next: boolean) => {
+        if (!next) {
+          setMemory(null)
+          for (const close of hostCloses.current) close()
+        }
         setOpenState(next)
         writePresentationCookie(inspectorCookie, next ? "open" : "collapsed")
       },

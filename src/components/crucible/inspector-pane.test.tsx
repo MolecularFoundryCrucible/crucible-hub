@@ -91,4 +91,18 @@ describe("InspectorPaneProvider", () => {
       "collapsed"
     )
   })
+
+  it("closes every preview when the pane is hidden", () => {
+    const { result } = renderHook(usePane, { wrapper })
+    const close = vi.fn()
+    act(() => {
+      result.current.pane.registerHostPreview(close)
+      result.current.pane.remember({ mfid: "sample-a" })
+    })
+    expect(result.current.pane.hostShowsPreview).toBe(true)
+
+    act(() => result.current.pane.setOpen(false))
+    expect(close).toHaveBeenCalledOnce()
+    expect(result.current.navigation).toBeNull()
+  })
 })

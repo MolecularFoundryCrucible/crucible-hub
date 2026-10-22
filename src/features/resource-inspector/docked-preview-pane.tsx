@@ -9,7 +9,8 @@ import { ResourceInspector } from "./resource-inspector"
 
 /**
  * The wide-screen preview pane: a fixed column beside the content that keeps
- * the last previewed resource while the current page shows none.
+ * the last previewed resource while the current page shows none, with a hint
+ * while it is empty.
  */
 export function DockedPreviewPane() {
   const pane = useInspectorPane()
@@ -19,10 +20,15 @@ export function DockedPreviewPane() {
   return (
     <>
       <div
-        aria-hidden="true"
         className="docked-preview-pane"
         data-open={pane.open ? "" : undefined}
-      />
+      >
+        {docked && !pane.hostShowsPreview && !navigation ? (
+          <p className="text-supporting text-muted-foreground">
+            Preview items show here
+          </p>
+        ) : null}
+      </div>
       {docked && pane.open && !pane.hostShowsPreview && navigation ? (
         <ResourcePreviewContext.Provider value={navigation}>
           <ResourceInspector navigation={navigation} />

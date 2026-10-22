@@ -121,3 +121,79 @@ test("floats previews over the page while the pane is hidden", async ({
   await expect(page).toHaveURL(/\/hub\/projects/)
   await expect(pane(page)).toHaveCount(0)
 })
+
+test("shows a hint while the pane is empty", async ({ page }) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const hint = page.getByText("Preview items show here")
+  await expect(hint).toBeVisible()
+
+  await page
+    .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
+  await expect(hint).toHaveCount(0)
+})
+
+test("closes the preview when the pane is hidden", async ({ page }) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page
+    .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
+  await page.evaluate(() => {
+    const frames: boolean[] = []
+    Object.assign(window, { floatingFrames: frames })
+    const watch = () => {
+      const sheet = document.querySelector('[data-slot="sheet-content"]')
+      if (!sheet) return
+      frames.push(!sheet.hasAttribute("data-docked"))
+      requestAnimationFrame(watch)
+    }
+    requestAnimationFrame(watch)
+  })
+
+  await page.getByRole("button", { name: "Hide preview panel" }).click()
+  await expect(pane(page)).toHaveCount(0)
+  await expect(page).not.toHaveURL(/preview=/)
+  expect(
+    await page.evaluate(() =>
+      (window as unknown as { floatingFrames: boolean[] }).floatingFrames.some(
+        Boolean
+      )
+    )
+  ).toBe(false)
+
+  await page.getByRole("button", { name: "Show preview panel" }).click()
+  await expect(page.getByText("Preview items show here")).toBeVisible()
+})
+
+test("forgets the remembered preview when the pane is hidden", async ({
+  page,
+}) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page
+    .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Projects", exact: true })
+    .first()
+    .click()
+  await expect(page).toHaveURL(/\/hub\/projects/)
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
+
+  await page.getByRole("button", { name: "Hide preview panel" }).click()
+  await expect(pane(page)).toHaveCount(0)
+  await page.getByRole("button", { name: "Show preview panel" }).click()
+  await expect(page.getByText("Preview items show here")).toBeVisible()
+  await expect(pane(page)).toHaveCount(0)
+})

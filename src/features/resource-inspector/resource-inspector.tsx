@@ -126,10 +126,13 @@ export function ResourceInspector({
       ? resource.deletion_request
       : null
   const pane = useInspectorPane()
-  // With the pane hidden, wide screens float previews like medium screens.
-  const paneDocked = docked && (pane === null || pane.open)
+  const [hidingPane, setHidingPane] = useState(false)
+  if (hidingPane && !preview) setHidingPane(false)
+  // With the pane hidden, wide screens float previews like medium screens; a
+  // preview closed by hiding the pane leaves with it instead of floating.
+  const paneDocked = docked && (pane === null || pane.open || hidingPane)
   const handsOver =
-    paneDocked && pane !== null && navigation.host.kind !== "pane"
+    docked && pane !== null && pane.open && navigation.host.kind !== "pane"
   const remember = pane?.remember
   const registerHostPreview = pane?.registerHostPreview
   const forget = pane?.forget
@@ -149,9 +152,18 @@ export function ResourceInspector({
     body.current?.scrollTo({ top: 0 })
   }, [navigation.preview, open])
 
+  const closePreview = useRef(navigation.close)
+  useEffect(() => {
+    closePreview.current = navigation.close
+  })
+
   useEffect(() => {
     if (!handsOver || !navigation.preview) return
-    return registerHostPreview?.()
+    return registerHostPreview?.(() => {
+      restoreFocus.current = false
+      setHidingPane(true)
+      closePreview.current()
+    })
   }, [handsOver, navigation.preview, registerHostPreview])
 
   useEffect(() => {
