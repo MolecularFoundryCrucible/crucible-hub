@@ -5,6 +5,7 @@ import {
   ContentGrid,
   ContentGridItem,
 } from "@/components/crucible/content-layout"
+import { EntityOverviewLayout } from "@/components/crucible/entity-overview-layout"
 import {
   CollectionTablePending,
   PanelState,
@@ -143,23 +144,21 @@ function pendingSectionContent(
   return <ResourceOverviewPending resourceKind={kind} />
 }
 
+function EntityOverviewPending() {
+  return (
+    <EntityOverviewLayout
+      identity={<ResourceCardPending title="Identity" />}
+      metadata={<ResourceCardPending title="Scientific metadata" />}
+      people={<ResourceCardPending title="People" />}
+      summary={<ResourceCardPending title="Summary" />}
+    />
+  )
+}
+
 export function ProjectOverviewPending() {
   return (
     <div aria-label="Loading project overview" role="status">
-      <ContentGrid variant="detail">
-        <ContentGridItem span="wide">
-          <ResourceCardPending title="Summary" />
-        </ContentGridItem>
-        <ContentGridItem span="narrow">
-          <ResourceCardPending title="Identity" />
-        </ContentGridItem>
-        <ContentGridItem span="wide">
-          <ResourceCardPending title="People" />
-        </ContentGridItem>
-        <ContentGridItem span="narrow">
-          <ResourceCardPending title="Scientific metadata" />
-        </ContentGridItem>
-      </ContentGrid>
+      <EntityOverviewPending />
     </div>
   )
 }
@@ -200,17 +199,7 @@ export function ResourceOverviewPending({
   return (
     <div aria-label="Loading resource overview" role="status">
       {instrument ? (
-        <ContentGrid variant="detail">
-          <ContentGridItem span="wide">
-            <ResourceCardPending title="Summary" />
-          </ContentGridItem>
-          <ContentGridItem span="narrow">
-            <ResourceCardPending title="Identity" />
-          </ContentGridItem>
-          <ContentGridItem span="full">
-            <ResourceCardPending title="Scientific metadata" />
-          </ContentGridItem>
-        </ContentGrid>
+        <EntityOverviewPending />
       ) : (
         <ContentGrid variant="detailAside">
           <ContentGridItem span="wide">

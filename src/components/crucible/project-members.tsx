@@ -4,16 +4,9 @@ import {
   AccessRoleBadge,
   accessRoleRank,
 } from "@/components/crucible/access-role-badge"
-import { MembersIcon } from "@/components/crucible/icons"
+import { PeopleCard } from "@/components/crucible/people-card"
 import { PersonLink } from "@/components/crucible/person-link"
 import { buttonVariants } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import type { components } from "@/generated/crucible-api"
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
@@ -50,49 +43,33 @@ export function ProjectMembers({
   projectMfid?: string
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>People</CardTitle>
-        {manageMembers && projectMfid ? (
-          <CardAction>
-            <Link
-              className={buttonVariants({ size: "sm", variant: "ghost" })}
-              params={{ projectMfid }}
-              to="/projects/$projectMfid/settings"
-            >
-              Manage members
-            </Link>
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        {members ? (
-          members.length ? (
-            sortProjectMembers(members).map((member) => (
-              <div
-                className="flex min-w-0 items-center gap-3"
-                key={member.unique_id}
-              >
+    <PeopleCard
+      action={
+        manageMembers && projectMfid ? (
+          <Link
+            className={buttonVariants({ size: "sm", variant: "ghost" })}
+            params={{ projectMfid }}
+            to="/projects/$projectMfid/settings"
+          >
+            Manage members
+          </Link>
+        ) : undefined
+      }
+      entries={
+        members
+          ? sortProjectMembers(members).map((member) => ({
+              key: member.unique_id,
+              person: (
                 <PersonLink
                   className="flex-1"
                   person={member}
                   presentation="avatar"
                 />
-                <ProjectRoleBadge role={member.role} />
-              </div>
-            ))
-          ) : (
-            <p className="text-body text-muted-foreground">
-              No members are currently listed.
-            </p>
-          )
-        ) : (
-          <div className="flex items-center gap-2 text-body text-muted-foreground">
-            <MembersIcon aria-hidden="true" />
-            Detailed membership is not available.
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              ),
+              role: <ProjectRoleBadge role={member.role} />,
+            }))
+          : members
+      }
+    />
   )
 }

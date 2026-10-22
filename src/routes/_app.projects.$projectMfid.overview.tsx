@@ -18,10 +18,8 @@ import {
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
-import {
-  ContentGrid,
-  ContentGridItem,
-} from "@/components/crucible/content-layout"
+import { ContentGrid } from "@/components/crucible/content-layout"
+import { EntityOverviewLayout } from "@/components/crucible/entity-overview-layout"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -71,9 +69,29 @@ function ProjectOverviewPage() {
       : (project.members?.find((m) => m.unique_id === scope[2])?.role ?? null))
 
   return (
-    <ContentGrid variant="detail">
-      <ContentGridItem span="wide">
-        {editing ? (
+    <EntityOverviewLayout
+      identity={<ProjectIdentity project={project} userRole={userRole} />}
+      metadata={
+        <ScientificMetadataEditor
+          mode={mode}
+          resource={{
+            capabilities: project.capabilities,
+            kind: "project",
+            scientific_metadata: project.scientific_metadata,
+            unique_id: project.unique_id,
+          }}
+          scope={scope}
+        />
+      }
+      people={
+        <ProjectMembers
+          manageMembers={canUseMembership}
+          members={project.members}
+          projectMfid={project.unique_id}
+        />
+      }
+      summary={
+        editing ? (
           <ProjectSettingsForm
             mode={mode}
             onCancel={() => setEditing(false)}
@@ -90,34 +108,9 @@ function ProjectOverviewPage() {
             }
             project={project}
           />
-        )}
-      </ContentGridItem>
-
-      <ContentGridItem span="narrow">
-        <ProjectIdentity project={project} userRole={userRole} />
-      </ContentGridItem>
-
-      <ContentGridItem span="wide">
-        <ProjectMembers
-          manageMembers={canUseMembership}
-          members={project.members}
-          projectMfid={project.unique_id}
-        />
-      </ContentGridItem>
-
-      <ContentGridItem span="narrow">
-        <ScientificMetadataEditor
-          mode={mode}
-          resource={{
-            capabilities: project.capabilities,
-            kind: "project",
-            scientific_metadata: project.scientific_metadata,
-            unique_id: project.unique_id,
-          }}
-          scope={scope}
-        />
-      </ContentGridItem>
-    </ContentGrid>
+        )
+      }
+    />
   )
 }
 

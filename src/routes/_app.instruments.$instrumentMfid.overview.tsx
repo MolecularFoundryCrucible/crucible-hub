@@ -24,10 +24,8 @@ import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
-import {
-  ContentGrid,
-  ContentGridItem,
-} from "@/components/crucible/content-layout"
+import { ContentGrid } from "@/components/crucible/content-layout"
+import { EntityOverviewLayout } from "@/components/crucible/entity-overview-layout"
 import {
   Card,
   CardAction,
@@ -40,6 +38,7 @@ import {
   resourceQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { InstrumentSettingsForm } from "@/features/management-settings/settings-forms"
+import { InstrumentPeopleCard } from "@/features/instrument-people/instrument-people-card"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
@@ -73,9 +72,24 @@ function InstrumentOverviewPage() {
   if (!resource || resource.kind !== "instrument") return null
 
   return (
-    <ContentGrid variant="detail">
-      <ContentGridItem span="wide">
-        {editing ? (
+    <EntityOverviewLayout
+      identity={<InstrumentIdentity instrument={resource} />}
+      metadata={
+        <ScientificMetadataEditor
+          mode={mode}
+          resource={resource}
+          scope={scope}
+        />
+      }
+      people={
+        <InstrumentPeopleCard
+          canManageAccess={resource.capabilities?.can_manage_access === true}
+          instrumentMfid={resource.unique_id}
+          scope={scope}
+        />
+      }
+      summary={
+        editing ? (
           <InstrumentSettingsForm
             instrument={resource}
             mode={mode}
@@ -92,19 +106,9 @@ function InstrumentOverviewPage() {
                 : undefined
             }
           />
-        )}
-      </ContentGridItem>
-      <ContentGridItem span="narrow">
-        <InstrumentIdentity instrument={resource} />
-      </ContentGridItem>
-      <ContentGridItem span="full">
-        <ScientificMetadataEditor
-          mode={mode}
-          resource={resource}
-          scope={scope}
-        />
-      </ContentGridItem>
-    </ContentGrid>
+        )
+      }
+    />
   )
 }
 
