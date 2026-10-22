@@ -763,7 +763,81 @@ body {
   opacity: 0;
 }
 
-/* Motion roles that animate through Base UI starting and ending styles. */
+/* Motion roles that animate through Base UI starting and ending styles.
+   Transitions rather than keyframes, so an interrupted open or close reverses
+   smoothly. */
+.motion-anchored-overlay {
+  transition-property: opacity, scale, translate;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease-enter);
+}
+
+.motion-anchored-overlay[data-starting-style] {
+  opacity: 0;
+  scale: 0.95;
+}
+
+.motion-anchored-overlay[data-starting-style][data-side="bottom"] {
+  translate: 0 -0.5rem;
+}
+
+.motion-anchored-overlay[data-starting-style][data-side="top"] {
+  translate: 0 0.5rem;
+}
+
+.motion-anchored-overlay[data-starting-style]:is(
+    [data-side="left"],
+    [data-side="inline-start"]
+  ) {
+  translate: 0.5rem 0;
+}
+
+.motion-anchored-overlay[data-starting-style]:is(
+    [data-side="right"],
+    [data-side="inline-end"]
+  ) {
+  translate: -0.5rem 0;
+}
+
+.motion-anchored-overlay[data-ending-style] {
+  opacity: 0;
+  transition-timing-function: var(--motion-ease-exit);
+}
+
+.motion-anchored-overlay[data-instant] {
+  transition-duration: 0s;
+}
+
+.motion-modal {
+  transition-property: opacity, scale;
+  transition-duration: var(--motion-standard);
+  transition-timing-function: var(--motion-ease-enter);
+}
+
+.motion-modal[data-starting-style] {
+  opacity: 0;
+  scale: 0.95;
+}
+
+.motion-modal[data-ending-style] {
+  opacity: 0;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease-exit);
+}
+
+.motion-backdrop {
+  transition: opacity var(--motion-standard) var(--motion-ease-enter);
+}
+
+.motion-backdrop:is([data-starting-style], [data-ending-style]) {
+  opacity: 0;
+}
+
+.motion-backdrop[data-ending-style] {
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease-exit);
+}
+
 .motion-sheet {
   transition-property: translate, transform, opacity;
   transition-duration: var(--motion-deliberate);
@@ -780,7 +854,7 @@ body {
 }
 
 .motion-sheet-backdrop[data-ending-style] {
-  transition-duration: var(--motion-fast);
+  transition-duration: var(--motion-standard);
   transition-timing-function: var(--motion-ease-exit);
 }
 

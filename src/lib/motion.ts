@@ -8,16 +8,13 @@ export const enterMotionClassName =
   "animate-in fade-in-0 duration-standard ease-enter"
 
 /** Menus, popovers, comboboxes, hover cards and tooltips. */
-export const anchoredOverlayMotionClassName =
-  "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:duration-fast data-open:ease-enter data-closed:animate-out data-closed:fade-out-0 data-closed:duration-fast data-closed:ease-exit"
+export const anchoredOverlayMotionClassName = "motion-anchored-overlay"
 
 /** Dialogs and alert dialogs. */
-export const modalMotionClassName =
-  "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:duration-standard data-open:ease-enter data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:duration-fast data-closed:ease-exit"
+export const modalMotionClassName = "motion-modal"
 
-/** Backdrops behind dialogs and sheets. */
-export const backdropMotionClassName =
-  "data-open:animate-in data-open:fade-in-0 data-open:duration-standard data-open:ease-enter data-closed:animate-out data-closed:fade-out-0 data-closed:duration-fast data-closed:ease-exit"
+/** Backdrops behind dialogs and alert dialogs. */
+export const backdropMotionClassName = "motion-backdrop"
 
 export type MotionToken =
   | "--motion-deliberate"

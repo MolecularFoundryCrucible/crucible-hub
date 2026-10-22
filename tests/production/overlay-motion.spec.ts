@@ -25,7 +25,7 @@ test("opens a picker above the dialog it belongs to", async ({ page }) => {
   expect(topmostIsOption).toBe(true)
 })
 
-test("animates dialogs in and out with the modal motion role", async ({
+test("transitions dialogs in and out with the modal motion role", async ({
   page,
 }) => {
   await page.goto(managePath)
@@ -38,23 +38,25 @@ test("animates dialogs in and out with the modal motion role", async ({
   const opening = await dialog.evaluate((element) => {
     const style = getComputedStyle(element)
     return {
-      duration: style.animationDuration,
-      easing: style.animationTimingFunction,
+      duration: style.transitionDuration,
+      easing: style.transitionTimingFunction,
       layer: style.zIndex,
+      properties: style.transitionProperty,
     }
   })
   expect(opening).toEqual({
     duration: "0.18s",
     easing: "cubic-bezier(0, 0, 0.2, 1)",
     layer: "40",
+    properties: "opacity, scale",
   })
 
   await page.keyboard.press("Escape")
   const closing = await dialog.evaluate((element) => {
     const style = getComputedStyle(element)
     return {
-      duration: style.animationDuration,
-      easing: style.animationTimingFunction,
+      duration: style.transitionDuration,
+      easing: style.transitionTimingFunction,
     }
   })
   expect(closing).toEqual({
@@ -107,4 +109,25 @@ test("shows the QR scanner tooltip to keyboard users", async ({ page }) => {
   await expect(page.locator("[data-slot=tooltip-content]")).toHaveText(
     "Scan QR code"
   )
+})
+
+test("transitions menus so a quick close reverses smoothly", async ({
+  page,
+}) => {
+  await page.goto("/hub/")
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: "Create" }).click()
+  const menu = page.getByRole("menu")
+  await expect(menu).toBeVisible()
+  const style = await menu.evaluate((element) => {
+    const computed = getComputedStyle(element)
+    return {
+      duration: computed.transitionDuration,
+      properties: computed.transitionProperty,
+    }
+  })
+  expect(style).toEqual({
+    duration: "0.12s",
+    properties: "opacity, scale, translate",
+  })
 })
