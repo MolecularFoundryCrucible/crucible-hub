@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-28
 
+Updated: 2026-10-22
+
 Supersedes [decision 0032](0032-use-shared-redis-sessions.md) for the shared session store. The process-local pilot in that decision remains unchanged.
 
 ## Context
@@ -26,7 +28,7 @@ Implement and verify the PostgreSQL store before changing `HUB_AUTH_SESSION_MODE
 
 - This reuses the existing managed database instance and avoids a dedicated Redis service. It still incurs storage, connection, and query load, so it is not free and must fit alongside the API workload.
 - Hub session availability now depends on Cloud SQL as well as the API. Separate objects and least-privilege database access prevent Hub from owning or querying API token records.
-- The existing Redis implementation remains available for local evaluation, but it is no longer the selected production scaling path. Do not treat `HUB_AUTH_SESSION_MODE=redis` as equivalent to the unimplemented PostgreSQL mode.
+- The PostgreSQL store is implemented and is the production scaling path. The earlier Redis implementation remains an optional alternative selected with `HUB_SESSION_REDIS_URL`, mainly for local evaluation; configuring both stores is an error.
 - Firestore is a viable serverless store, but would add a new persistence service and a new transactional adapter. An API-owned browser-session endpoint would reuse API persistence but expand the API contract and introduce an additional session lookup boundary. Neither is selected for this rollout.
 
 See [Cloud Run's Cloud SQL connection guidance](https://docs.cloud.google.com/sql/docs/postgres/connect-run) and [database connection guidance](https://docs.cloud.google.com/sql/docs/postgres/manage-connections).
