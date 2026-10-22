@@ -25,7 +25,7 @@ function Harness({
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded)
   return (
-    <div data-testid="scroller" style={{ overflowY: "auto" }}>
+    <div data-testid="scroller">
       <ul id="rows" />
       <ListExpansionToggle
         controls="rows"
@@ -82,6 +82,7 @@ describe("ListExpansionToggle", () => {
     const button = screen.getByRole("button")
     button.getBoundingClientRect = () => rect({ top })
     const scroller = screen.getByTestId("scroller")
+    scroller.style.overflowY = "auto"
     scroller.scrollBy = vi.fn()
     const windowScroll = vi
       .spyOn(window, "scrollBy")
