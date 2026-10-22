@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Made the resource preview a steady pane on wide screens: it stays beside the content on every page, keeps the last previewed resource while you navigate, no longer shifts the layout, and can be hidden from the top bar.
 - Showed who has access to a sample, dataset, or instrument, and which service accounts operate an instrument, to everyone with a role on it; only people who can manage access see the change controls.
 - Added People to instrument Overview and gave project and instrument Overview the same layout, with Identity and People beside Summary and metadata.
 - Updated to the Crucible API contract at `8f6d7be`, which lets people with a role on a resource read its access list and an instrument's operators.
