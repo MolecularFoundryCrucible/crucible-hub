@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { motionDuration, parseCssTime } from "./motion"
+import { cubicBezier, motionDuration, parseCssTime } from "./motion"
 
 describe("parseCssTime", () => {
   it("reads milliseconds and seconds, as minified CSS may write them", () => {
@@ -44,5 +44,20 @@ describe("motionDuration", () => {
   it("keeps the indicator delay under reduced motion", () => {
     stubMotion("200ms", true)
     expect(motionDuration("--motion-indicator-delay")).toBe(200)
+  })
+})
+
+describe("cubicBezier", () => {
+  it("evaluates CSS cubic-bezier curves", () => {
+    const linear = cubicBezier("cubic-bezier(0, 0, 1, 1)")
+    expect(linear(0.5)).toBeCloseTo(0.5, 3)
+    const ease = cubicBezier("cubic-bezier(0.25, 0.1, 0.25, 1)")
+    expect(ease(0)).toBe(0)
+    expect(ease(1)).toBe(1)
+    expect(ease(0.5)).toBeCloseTo(0.8024, 3)
+  })
+
+  it("falls back to linear for anything else", () => {
+    expect(cubicBezier("steps(4)")(0.3)).toBe(0.3)
   })
 })

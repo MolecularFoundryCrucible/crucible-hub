@@ -62,7 +62,7 @@ function ToastContent({ className, ...props }: ToastPrimitive.Content.Props) {
   return (
     <ToastPrimitive.Content
       className={cn(
-        "flex h-full items-center gap-3 overflow-hidden p-4 transition-opacity duration-fast data-behind:opacity-0 data-expanded:opacity-100 motion-reduce:transition-none",
+        "flex h-full items-center gap-3 overflow-hidden p-4 transition-opacity duration-fast data-behind:opacity-0 data-expanded:opacity-100",
         className
       )}
       data-slot="toast-content"
@@ -144,7 +144,7 @@ function ToastIcon({ type }: { type?: string }) {
     ) : type === "loading" ? (
       <Loader2Icon
         aria-hidden="true"
-        className="animate-spin text-muted-foreground motion-reduce:animate-none"
+        className="text-muted-foreground motion-safe:animate-spin"
       />
     ) : null
 

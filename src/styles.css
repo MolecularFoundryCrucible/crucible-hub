@@ -852,7 +852,7 @@ body {
 }
 
 .motion-sheet-backdrop {
-  transition: opacity var(--motion-standard) var(--motion-ease-enter);
+  transition: opacity var(--motion-deliberate) var(--motion-ease-enter);
 }
 
 .motion-sheet-backdrop[data-ending-style] {
@@ -865,7 +865,7 @@ body {
   transition:
     transform var(--motion-standard) var(--motion-ease-enter),
     opacity var(--motion-standard) var(--motion-ease-enter),
-    height var(--motion-fast) var(--motion-ease-standard);
+    height var(--motion-standard) var(--motion-ease-standard);
 }
 
 .motion-toast[data-ending-style] {
@@ -1273,7 +1273,7 @@ body {
 }
 
 .resource-graph-surface .react-flow__edge {
-  transition: opacity var(--motion-deliberate) var(--motion-ease-standard);
+  transition: opacity var(--motion-fast) var(--motion-ease-standard);
 }
 
 .resource-graph-surface .resource-graph-edge-entering {

@@ -49,3 +49,37 @@ export function motionDuration(token: MotionToken): number {
     window.getComputedStyle(document.documentElement).getPropertyValue(token)
   )
 }
+
+/** The easing function a CSS `cubic-bezier(...)` value describes; linear otherwise. */
+export function cubicBezier(value: string): (progress: number) => number {
+  const match = /cubic-bezier\(([^)]+)\)/.exec(value)
+  const points = match?.[1].split(",").map(Number)
+  if (points?.length !== 4 || points.some(Number.isNaN))
+    return (progress) => progress
+  const [x1, y1, x2, y2] = points
+  const curve = (a: number, b: number, t: number) =>
+    3 * a * t * (1 - t) ** 2 + 3 * b * t ** 2 * (1 - t) + t ** 3
+  return (progress) => {
+    if (progress <= 0) return 0
+    if (progress >= 1) return 1
+    let low = 0
+    let high = 1
+    let t = progress
+    for (let step = 0; step < 24; step++) {
+      t = (low + high) / 2
+      if (curve(x1, x2, t) < progress) low = t
+      else high = t
+    }
+    return curve(y1, y2, t)
+  }
+}
+
+/** A motion easing token as a function, for motion timed in script. */
+export function motionEasing(
+  token: "--motion-ease-enter" | "--motion-ease-exit" | "--motion-ease-standard"
+): (progress: number) => number {
+  if (typeof window === "undefined") return (progress) => progress
+  return cubicBezier(
+    window.getComputedStyle(document.documentElement).getPropertyValue(token)
+  )
+}

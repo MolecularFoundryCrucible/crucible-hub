@@ -75,7 +75,7 @@ import type {
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { motionDuration } from "@/lib/motion"
+import { motionDuration, motionEasing } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import {
   graphExpansionModeLabel,
@@ -776,13 +776,14 @@ function ResourceGraphFlow({
         }
       )
       const startedAt = performance.now()
+      const ease = motionEasing("--motion-ease-standard")
       const animate = (now: number) => {
         if (layoutGeneration.current !== generation) return
         const progress = Math.min((now - startedAt) / duration, 1)
         const positions = interpolateLayoutPositions(
           startPositions,
           nextPositions,
-          easeOutCubic(progress)
+          ease(progress)
         )
         displayedPositions.current = positions
         setFlowNodes((current) =>
@@ -2218,10 +2219,6 @@ function interpolateLayoutPositions(
       ]
     })
   )
-}
-
-function easeOutCubic(progress: number) {
-  return 1 - Math.pow(1 - progress, 3)
 }
 
 function cancelAnimationFrameRef(frame: { current: number | null }) {
