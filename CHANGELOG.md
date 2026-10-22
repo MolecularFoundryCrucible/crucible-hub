@@ -7,6 +7,10 @@ The public surface that versions protect is shareable URLs and their search para
 ## Unreleased
 
 - Made switching Administrator view feel immediate: the switch and header badge change at once, the page stays in place instead of reloading and dims only if the switch takes longer than 200 ms, the Administration links slide in and out with the switch, the deletion requests badge changes once instead of flickering, and the sidebar's Recent list stays on screen and fades in new entries.
+- Gave the Hub one consistent motion system: menus, popovers, tooltips, dialogs, sheets, and notifications now open and close with the same short timings, close slightly faster than they open, and finish their closing animation instead of being cut off. Pickers and menus opened inside a dialog or the inspector always appear above it.
+- Loading feedback no longer flashes on fast responses: the route progress bar and the dimming of Data, project data, search, the directories, and the inspector appear only after 200 ms, and the progress bar finishes forward instead of shrinking back. Loading placeholders on Home, search, and sample and dataset pages now match the layout that loads, including the Manage tab, and rows added by Load more fade in.
+- Fixed Show all lists not animating in production, collapsing a long list inside the inspector scrolling the page behind it, Save becoming available after whitespace-only summary edits, the upload area jumping away while files upload, and copy buttons staying on Copied indefinitely.
+- With reduced motion turned on, overlays no longer scale or slide and buttons no longer shift when pressed.
 
 ## 1.6.2 - 2026-10-21
 

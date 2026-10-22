@@ -65,6 +65,14 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 - Icons beside text use `size-icon-label` (16 px) with 14 px text and `size-icon-supporting` (14 px) with 12 px supporting text; never a raw `size-*` for identity icons.
 - No other variants exist. TypeScript rejects anything else.
 
+## Motion
+
+- Motion explains change; it never decorates. Use a role from [the motion roles](design-system-reference.md), never a raw duration, curve, or `z-*` value.
+- Overlays get their motion and layer from `src/components/ui`; do not add timing classes to them in feature code.
+- Wrap reloading content in `PendingRegion` and time other indicators with `useDelayedFlag`, so nothing flashes on fast responses.
+- New list items fade in through `useEnteringKeys` with `enterMotionClassName`; conditional sections open through `Reveal`.
+- Keep dialog content until its close animation ends; reset state in `onOpenChangeComplete`, not when `open` becomes false.
+
 ## Decoration
 
 - No accent stripes, colored top or left bars, gradient glows, or colored card borders to make something look designed.
@@ -84,5 +92,5 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 
 ## Checks
 
-- `npm run design:check`: rejects raw colors, inline styles, arbitrary values, primitive typography, raw buttons, and visual `Button` overrides outside `src/components/ui`, then checks every role pair for WCAG 2.2 AA contrast in both themes.
+- `npm run design:check`: rejects raw colors, inline styles, arbitrary values, primitive typography, raw buttons, and visual `Button` overrides outside `src/components/ui`, rejects raw motion values and numeric layers everywhere, then checks every role pair for WCAG 2.2 AA contrast in both themes.
 - `tests/production/design-system.spec.ts`: the fixture page shows the palette, roles, actions, and badges in light and dark.

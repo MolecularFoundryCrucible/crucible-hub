@@ -49,3 +49,4 @@ A decision record does not override a contract owned by another Crucible reposit
 | [0032](0032-use-shared-redis-sessions.md)                      | Superseded | Process-local pilot and former Redis scaling choice                               |
 | [0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md) | Accepted   | Hub-owned shared sessions on the existing Cloud SQL instance                      |
 | [0034](0034-open-stored-files-inline.md)                       | Accepted   | Open stored files inline through a Hub redirect route; extends 0011               |
+| [0036](0036-centralize-motion.md)                              | Accepted   | One motion system of tokens, roles, and shared pieces                             |
