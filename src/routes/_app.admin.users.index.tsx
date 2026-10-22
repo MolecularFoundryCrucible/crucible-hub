@@ -79,6 +79,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import { UserCreateDialog } from "@/features/admin/user-create-dialog"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { formatUsername } from "@/lib/username"
 import { ActivityTime } from "@/components/crucible/activity-time"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -387,6 +388,9 @@ function UserCollection({
   updating: boolean
   users: readonly WorkspaceAdminUser[]
 }) {
+  const enterClassName = useEnteringClassName(
+    users.map((item) => item.unique_id)
+  )
   return (
     <>
       <CollectionUpdateStatus label="users" updating={updating} />
@@ -464,7 +468,10 @@ function UserCollection({
               <TableBody>
                 {users.map((user) => {
                   return (
-                    <TableRow key={user.unique_id}>
+                    <TableRow
+                      className={enterClassName(user.unique_id)}
+                      key={user.unique_id}
+                    >
                       <TableCell className="identity-directory-account">
                         <PersonIdentity
                           className="min-w-0"

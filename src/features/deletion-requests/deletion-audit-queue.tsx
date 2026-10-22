@@ -35,6 +35,7 @@ import type {
   WorkspacePerson,
 } from "@/data/crucible/workspace-source"
 import type { WorkspaceDeletionAuditFilters } from "@/data/crucible/deletion-requests.server"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
 
 const pendingRows = ["first", "second", "third"] as const
 
@@ -211,6 +212,9 @@ function DeletionAuditTable({
   items: readonly WorkspaceDeletionAudit[]
   onOpen: (audit: WorkspaceDeletionAudit) => void
 }) {
+  const enterClassName = useEnteringClassName(
+    items.map((item) => String(item.id))
+  )
   return (
     <Table
       aria-label="Approved deletion requests"
@@ -220,7 +224,7 @@ function DeletionAuditTable({
       <DeletionAuditHeader />
       <TableBody>
         {items.map((audit) => (
-          <TableRow key={audit.id}>
+          <TableRow className={enterClassName(String(audit.id))} key={audit.id}>
             <TableCell className="deletion-request-resource">
               <ResourceIdentity
                 kind={resourceKind(audit.resource_type)}

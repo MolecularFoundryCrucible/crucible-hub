@@ -27,8 +27,7 @@ import type {
   WorkspaceDataset,
   WorkspaceSample,
 } from "@/data/crucible/workspace-source"
-import { useEnteringKeys } from "@/hooks/use-entering-keys"
-import { enterMotionClassName } from "@/lib/motion"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
@@ -63,9 +62,9 @@ export function ResourceCollectionTable({
   subtypeLabel = kind === "dataset" ? "Measurement" : "Sample type",
   subtypeVisibility = "always",
 }: ResourceCollectionTableProps) {
-  const entering = useEnteringKeys(items.map((item) => item.unique_id))
-  const enterClassName = (mfid: string) =>
-    entering.has(mfid) ? enterMotionClassName : undefined
+  const enterClassName = useEnteringClassName(
+    items.map((item) => item.unique_id)
+  )
   return (
     <Table
       aria-label={ariaLabel ?? (kind === "dataset" ? "Datasets" : "Samples")}

@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { resourceDisplayName } from "@/lib/resource-name"
 
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
@@ -601,6 +602,9 @@ function ProjectCollection({
   total: number | null
   updating: boolean
 }) {
+  const enterClassName = useEnteringClassName(
+    projects.map((item) => item.unique_id)
+  )
   return (
     <>
       <CollectionUpdateStatus label="projects" updating={updating} />
@@ -672,7 +676,10 @@ function ProjectCollection({
                     accountUserMfid
                   )
                   return (
-                    <TableRow key={project.unique_id}>
+                    <TableRow
+                      className={enterClassName(project.unique_id)}
+                      key={project.unique_id}
+                    >
                       <ResourceDirectoryNameCell
                         identifier={title ? project.project_id : null}
                         kind="project"

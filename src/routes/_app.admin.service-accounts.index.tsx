@@ -89,6 +89,7 @@ import type {
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-credential-dialog"
 import { ServiceAccountCreateDialog } from "@/features/service-accounts/service-account-create-dialog"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { formatUsername } from "@/lib/username"
 
 const serviceAccountSortFieldSchema = z.enum([
@@ -448,6 +449,9 @@ function ServiceAccountCollection({
   total: number | null
   updating: boolean
 }) {
+  const enterClassName = useEnteringClassName(
+    serviceAccounts.map((item) => item.unique_id)
+  )
   return (
     <>
       <CollectionUpdateStatus label="service accounts" updating={updating} />
@@ -514,7 +518,10 @@ function ServiceAccountCollection({
               </TableHeader>
               <TableBody>
                 {serviceAccounts.map((serviceAccount) => (
-                  <TableRow key={serviceAccount.unique_id}>
+                  <TableRow
+                    className={enterClassName(serviceAccount.unique_id)}
+                    key={serviceAccount.unique_id}
+                  >
                     <TableCell className="identity-directory-account">
                       <PersonIdentity
                         className="min-w-0"

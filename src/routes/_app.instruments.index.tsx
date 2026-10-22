@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { resourceDisplayName } from "@/lib/resource-name"
 
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
@@ -741,6 +742,9 @@ function InstrumentCollection({
   total: number | null
   updating: boolean
 }) {
+  const enterClassName = useEnteringClassName(
+    instruments.map((item) => item.unique_id)
+  )
   return (
     <>
       <CollectionUpdateStatus label="instruments" updating={updating} />
@@ -808,7 +812,10 @@ function InstrumentCollection({
                     { identifier: instrumentId, mfid: instrument.unique_id }
                   )
                   return (
-                    <TableRow key={instrument.unique_id}>
+                    <TableRow
+                      className={enterClassName(instrument.unique_id)}
+                      key={instrument.unique_id}
+                    >
                       <ResourceDirectoryNameCell
                         identifier={instrumentId}
                         kind="instrument"

@@ -67,6 +67,7 @@ import type {
   WorkspaceDeletionRequest,
   WorkspaceDeletionRequestSort,
 } from "@/data/crucible/workspace-source"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { cn } from "@/lib/utils"
 
 const pendingRows = ["first", "second", "third"] as const
@@ -831,6 +832,9 @@ function DeletionRequestTable({
     })
   }
 
+  const enterClassName = useEnteringClassName(
+    items.map((item) => String(item.id))
+  )
   return (
     <>
       <Table
@@ -904,6 +908,7 @@ function DeletionRequestTable({
                 : request.requester
             return (
               <TableRow
+                className={enterClassName(String(request.id))}
                 data-state={
                   selectedRequestIds.has(request.id) ? "selected" : undefined
                 }

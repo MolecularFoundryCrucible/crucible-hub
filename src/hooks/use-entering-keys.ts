@@ -1,15 +1,29 @@
-import { useEffect, useRef } from "react"
+import { useState } from "react"
 
-/** Keys that appeared since the previous commit; empty on the first render. */
+import { enterMotionClassName } from "@/lib/motion"
+
+const NONE: ReadonlySet<string> = new Set()
+
+/**
+ * Keys that arrived with the latest change to the key list; empty on the first
+ * render. They stay entering through unrelated re-renders so an entrance
+ * animation is not cut short.
+ */
 export function useEnteringKeys(keys: readonly string[]): ReadonlySet<string> {
-  const seen = useRef<ReadonlySet<string> | null>(null)
-  const previous = seen.current
-  const entering = new Set(
-    previous ? keys.filter((key) => !previous.has(key)) : []
-  )
   const signature = keys.join("\u0000")
-  useEffect(() => {
-    seen.current = new Set(signature ? signature.split("\u0000") : [])
-  }, [signature])
+  const [tracked, setTracked] = useState({ entering: NONE, signature })
+  if (tracked.signature === signature) return tracked.entering
+
+  const previous = new Set(
+    tracked.signature ? tracked.signature.split("\u0000") : []
+  )
+  const entering = new Set(keys.filter((key) => !previous.has(key)))
+  setTracked({ entering, signature })
   return entering
+}
+
+/** The content-enter class for items that arrived with the latest change. */
+export function useEnteringClassName(keys: readonly string[]) {
+  const entering = useEnteringKeys(keys)
+  return (key: string) => (entering.has(key) ? enterMotionClassName : undefined)
 }
