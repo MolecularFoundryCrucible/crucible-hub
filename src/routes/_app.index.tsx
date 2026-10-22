@@ -235,7 +235,11 @@ function HomePage() {
               </CardHeader>
               <CardContent>
                 {recentDataPending && (
-                  <ResourceListPending label="recent research data" />
+                  <ResourceListPending
+                    label="recent research data"
+                    lines={2}
+                    rows={homeRecentResourceLimit}
+                  />
                 )}
                 {recentDataUnavailable && (
                   <PanelState
@@ -563,7 +567,15 @@ function HomeOwnershipCard({
           <CardAction>{viewAll}</CardAction>
         </CardHeader>
         <CardContent>
-          {pending ? <ResourceListPending label={label} /> : null}
+          {pending ? (
+            <ResourceListPending
+              density="compact"
+              label={label}
+              lines={2}
+              rows={homeProjectLimit}
+              trailing={false}
+            />
+          ) : null}
           {!pending && error ? (
             <PanelState
               retry={retry}

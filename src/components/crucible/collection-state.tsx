@@ -413,12 +413,18 @@ export function CollectionTablePending({
   )
 }
 
+const pendingLineWidths = ["w-1/2", "w-3/4"]
+
 export function ResourceListPending({
+  density,
   label,
+  lines = 3,
   rows = 3,
   trailing = true,
 }: {
+  density?: "compact" | "default"
   label: string
+  lines?: number
   rows?: number
   trailing?: boolean
 }) {
@@ -430,13 +436,20 @@ export function ResourceListPending({
       <ResourceList aria-busy="true" aria-label={`Loading ${label}`}>
         {Array.from({ length: rows }, (_, index) => (
           <ResourceListItem key={index}>
-            <ResourceListItemContent layout="responsive">
+            <ResourceListItemContent density={density} layout="responsive">
               <div className="flex min-w-0 flex-1 items-start gap-2">
                 <Skeleton className="mt-0.5 size-4 shrink-0" />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-3 w-1/2" />
-                  <Skeleton className="h-3 w-3/4" />
+                  {Array.from({ length: lines - 1 }, (_slot, line) => (
+                    <Skeleton
+                      className={cn(
+                        "h-3",
+                        pendingLineWidths[line % pendingLineWidths.length]
+                      )}
+                      key={line}
+                    />
+                  ))}
                 </div>
               </div>
               {trailing ? (

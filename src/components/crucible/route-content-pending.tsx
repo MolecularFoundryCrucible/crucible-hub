@@ -163,7 +163,7 @@ export function SearchRoutePending() {
           <CardTitle>Search results</CardTitle>
         </CardHeader>
         <CardContent className="px-0">
-          <ResourceListPending label="search results" />
+          <ResourceListPending label="search results" lines={2} />
         </CardContent>
       </Card>
     </PageLayout>

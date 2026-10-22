@@ -6,6 +6,7 @@ import {
   CollectionTablePending,
   CollectionUpdateError,
   CollectionUpdateStatus,
+  ResourceListPending,
 } from "./collection-state"
 
 afterEach(cleanup)
@@ -133,5 +134,22 @@ describe("CollectionUpdateStatus", () => {
     render(<CollectionUpdateStatus label="datasets" updating />)
 
     expect(screen.getByRole("status").textContent).toBe("Updating datasets…")
+  })
+})
+
+describe("ResourceListPending", () => {
+  it("renders the requested rows and text lines", () => {
+    render(
+      <ResourceListPending
+        label="recent data"
+        lines={2}
+        rows={5}
+        trailing={false}
+      />
+    )
+    const rows = screen.getAllByRole("listitem")
+    expect(rows).toHaveLength(5)
+    for (const row of rows)
+      expect(row.querySelectorAll("[data-slot=skeleton]")).toHaveLength(3)
   })
 })

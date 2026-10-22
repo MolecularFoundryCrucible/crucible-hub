@@ -106,14 +106,17 @@ function pendingSection(kind: EntityWorkspacePendingKind, pathname: string) {
   return "overview"
 }
 
-function pendingSections(kind: EntityWorkspacePendingKind, active: string) {
+export function pendingSections(
+  kind: EntityWorkspacePendingKind,
+  active: string
+) {
   const labels =
     kind === "dataset"
-      ? ["Overview", "Processing", "Graph"]
+      ? ["Overview", "Processing", "Graph", "Manage"]
       : kind === "sample"
-        ? ["Overview", "Graph"]
+        ? ["Overview", "Graph", "Manage"]
         : ["Data", "Overview"]
-  if (active === "manage") labels.push("Manage")
+  if (active === "manage" && !labels.includes("Manage")) labels.push("Manage")
   return labels.map((label) => ({
     active: label.toLowerCase() === active,
     label,

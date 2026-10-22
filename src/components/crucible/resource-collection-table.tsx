@@ -27,6 +27,8 @@ import type {
   WorkspaceDataset,
   WorkspaceSample,
 } from "@/data/crucible/workspace-source"
+import { useEnteringKeys } from "@/hooks/use-entering-keys"
+import { enterMotionClassName } from "@/lib/motion"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
@@ -61,6 +63,9 @@ export function ResourceCollectionTable({
   subtypeLabel = kind === "dataset" ? "Measurement" : "Sample type",
   subtypeVisibility = "always",
 }: ResourceCollectionTableProps) {
+  const entering = useEnteringKeys(items.map((item) => item.unique_id))
+  const enterClassName = (mfid: string) =>
+    entering.has(mfid) ? enterMotionClassName : undefined
   return (
     <Table
       aria-label={ariaLabel ?? (kind === "dataset" ? "Datasets" : "Samples")}
@@ -137,6 +142,7 @@ export function ResourceCollectionTable({
         {kind === "sample"
           ? items.map((sample) => (
               <SampleCollectionRow
+                className={enterClassName(sample.unique_id)}
                 fromProject={fromProject}
                 key={sample.unique_id}
                 sample={sample}
@@ -147,6 +153,7 @@ export function ResourceCollectionTable({
             ))
           : items.map((dataset) => (
               <DatasetCollectionRow
+                className={enterClassName(dataset.unique_id)}
                 dataset={dataset}
                 fromProject={fromProject}
                 key={dataset.unique_id}
@@ -167,6 +174,7 @@ const resourceSortFields = [
 ] as const satisfies readonly TableSortField<ResourceSort>[]
 
 type CollectionRowProps = {
+  className?: string
   fromProject?: string
   showProjectColumn: boolean
   showSubtypeColumn: boolean
@@ -174,6 +182,7 @@ type CollectionRowProps = {
 }
 
 const SampleCollectionRow = memo(function SampleRow({
+  className,
   fromProject,
   sample,
   showProjectColumn,
@@ -182,7 +191,7 @@ const SampleCollectionRow = memo(function SampleRow({
 }: CollectionRowProps & { sample: WorkspaceSample }) {
   const name = resourceDisplayName("sample", sample.sample_name)
   return (
-    <TableRow>
+    <TableRow className={className}>
       <ResourceCollectionNameCell
         className="resource-collection-name"
         kind="sample"
@@ -216,6 +225,7 @@ const SampleCollectionRow = memo(function SampleRow({
 })
 
 const DatasetCollectionRow = memo(function DatasetRow({
+  className,
   dataset,
   fromProject,
   showProjectColumn,
@@ -224,7 +234,7 @@ const DatasetCollectionRow = memo(function DatasetRow({
 }: CollectionRowProps & { dataset: WorkspaceDataset }) {
   const name = resourceDisplayName("dataset", dataset.dataset_name)
   return (
-    <TableRow>
+    <TableRow className={className}>
       <ResourceCollectionNameCell
         className="resource-collection-name"
         kind="dataset"

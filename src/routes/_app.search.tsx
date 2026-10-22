@@ -404,7 +404,7 @@ function SearchResultsPending() {
         <Skeleton className="h-6 w-32" />
         <Card>
           <CardContent className="px-0">
-            <ResourceListPending label="search results" />
+            <ResourceListPending label="search results" lines={2} />
           </CardContent>
         </Card>
       </div>
