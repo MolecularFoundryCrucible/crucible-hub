@@ -7,7 +7,7 @@ export function ThemeSelect() {
     <label className="grid gap-1.5 text-label-compact text-muted-foreground">
       <span>Theme</span>
       <select
-        className="h-8 rounded-md border bg-background px-2 text-foreground"
+        className="h-8 cursor-pointer rounded-md border bg-background px-2 text-foreground"
         value={theme}
         onChange={(event) => {
           const nextTheme = event.target.value
