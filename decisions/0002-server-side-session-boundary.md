@@ -4,15 +4,17 @@ Status: Accepted
 
 Date: 2026-09-02
 
+Updated: 2026-10-22
+
 ## Context
 
 The current Crucible API browser authentication flow exchanges a short-lived ORCID cookie for a long-lived API key returned to the caller. The current Explorer authenticates with ORCID, uses an administrative API credential to obtain a user's key, and stores that key in a Flask session.
 
 Hub needs an authenticated browser experience without exposing a general Crucible API key to browser JavaScript, browser storage, logs, or telemetry. Normal Hub operation must not depend on a platform-administrator credential.
 
-The final login exchange requires an API-owned contract that does not yet exist. [`docs/authentication-transition.md`](../docs/authentication-transition.md) defines how read-only Hub development proceeds without treating the local API-key bridge as authentication and records the eventual cutover requirements.
+When this decision was made, the login exchange still needed an API-owned contract. That contract, a one-time authorization-code exchange, is now pinned in OpenAPI and implemented; [`docs/authentication-transition.md`](../docs/authentication-transition.md) records the transition from the local API-key bridge and the remaining production activation requirements.
 
-## Proposed decision
+## Decision
 
 Use the Hub server as the exclusive credential boundary:
 

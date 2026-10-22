@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-06
 
+Updated: 2026-10-22
+
 ## Context
 
 Project browsing is a primary Hub workflow. The initial workspace separated a small read-only member list from a sparse Overview, creating an extra navigation destination without giving either page enough independent purpose. Project administration includes descriptive editing, direct member addition, role changes, removal or self-leave, join-request review, and ownership transfer, but these operations have different authority and confirmation requirements. The API's direct membership contract seats an existing user immediately; it does not define an invitation workflow.
@@ -12,9 +14,9 @@ The API returns an expanded public-safe `lead` in `ProjectWithLead` and can retu
 
 ## Decision
 
-Project Overview combines identity, summary, expanded lead, and the readable member list. Members are ordered by role hierarchy from owner through admin, editor, contributor, and viewer, then alphabetically by last name and first name with stable identity as the final tie-breaker. Every role retains a text label and uses a distinct semantic light and dark badge treatment, so hierarchy is not communicated by color alone. Service accounts remain explicitly identified.
+Project Overview combines identity, summary, expanded lead, and the readable member list. Members are ordered by role hierarchy from owner through admin, editor, contributor, and viewer, then alphabetically by last name and first name with stable identity as the final tie-breaker. Every role keeps its text label on one of three neutral badge levels, so roles never read as statuses and hierarchy is not communicated by color: a filled badge for owner and admin, an outline for editor and contributor, and a muted outline for viewer, with a crown on the owner. Service accounts remain explicitly identified.
 
-The visible project navigation becomes Data, Overview, and capability-gated Settings. The previous Members URL redirects with replacement semantics to Overview for compatibility.
+The visible project navigation becomes Data, Overview, and capability-gated Manage ([decision 0027](0027-edit-projects-and-instruments-from-overview.md)). The previous Members URL redirects with replacement semantics to Overview for compatibility.
 
 Settings remains the project management destination. Descriptive fields continue to use their existing independent form. Direct member addition, role changes, removal, and self-leave compose as separate row or dialog operations in Settings rather than becoming fields in the descriptive form. Join requests and ownership transfer remain separate consequential workflows. No invitation workflow is planned.
 
@@ -37,7 +39,7 @@ The combined Overview uses only the public-safe lead and member representations 
 ## Validation
 
 - Verify expanded lead presentation and identifier fallback.
-- Verify role ordering, alphabetical tie-breaking, unknown-role fallback, service-account labeling, semantic badge variants, theme parity, and non-color role text.
+- Verify role ordering, alphabetical tie-breaking, unknown-role fallback, service-account labeling, neutral badge levels, theme parity, and non-color role text.
 - Verify unavailable versus empty membership states and compact horizontal containment.
 - Verify direct add, role change, removal, and self-leave controls against `can_manage_access`, `max_grant_role`, `can_transfer`, current membership, and the API's returned full member list. See [decision 0021](0021-adopt-direct-project-membership-contract.md).
 - Verify visible navigation removal and replacement redirect from the legacy Members URL.

@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-06
 
+Updated: 2026-10-22
+
 ## Context
 
 Ownership transfer can remove the current owner from a resource, and moving a sample or dataset replaces its primary project grant. Both API operations default to a non-mutating preview and require `confirm=true` to execute. Hub must preserve stable MFID navigation, avoid optimistic authority changes, and keep ownership, project assignment, descriptive editing, membership, and ACL management distinct.
@@ -14,7 +16,7 @@ Hub uses the API preview before presenting final confirmation for ownership tran
 
 Exact `can_transfer` guides ownership presentation. Exact `can_manage_access` guides project-move presentation because the API has no operation-specific move capability. The API independently authorizes the source and target on every request.
 
-Ownership is available as a separate Settings subsection for projects and instruments and as a separate card in sample and dataset Manage. Project assignment is a separate card in sample and dataset Manage, while project and instrument values in Overview Summary remain descriptive. Instruments are never assigned to projects. Dataset instrument reassignment remains absent until the API publishes a dedicated atomic operation. [Decision 0028](0028-consolidate-resource-management.md) supersedes the original Access route name and placement.
+Ownership is a separate card on project and instrument Manage pages and in sample and dataset Manage. Project assignment is a separate card in sample and dataset Manage, while project and instrument values in Overview Summary remain descriptive. Instruments are never assigned to projects. Dataset instrument reassignment uses the API's dedicated operation and is a separate card in dataset Manage. [Decision 0028](0028-consolidate-resource-management.md) supersedes the original Access route name and placement.
 
 Confirmed responses update only fields they authoritatively contain. Dependent exact detail, collection, project, and search Queries are then invalidated as needed. Neither operation is optimistic.
 

@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-05
 
+Updated: 2026-10-22
+
 Amends: [decision 0010](0010-inspect-project-data-in-place.md) and [decision 0012](0012-inspect-global-data-in-place.md)
 
 ## Context
@@ -14,7 +16,7 @@ Projects and instruments also appear as contextual entities around samples and d
 
 ## Decision
 
-In project and global Data tables, the complete resource identity area opens the existing preview inspector. It includes the semantic type icon, name, and supporting sample type or dataset measurement. Do not attach navigation to the table row because other cells may contain independent links or selectable content.
+In project and global Data tables, the resource name opens the existing preview inspector. The semantic type icon and the supporting sample type or dataset measurement stay plain, selectable text, so identifiers can be selected and copied; this replaced the original whole-identity link on 2026-09-23. Do not attach navigation to the table row because other cells may contain independent links or selectable content.
 
 Add one fixed, narrow trailing action column. Its header is visually hidden but named Open for assistive technology. Each row contains a centered forward-navigation icon with a tooltip and resource-specific accessible name. It is a native canonical link, supports ordinary browser modifier behavior, and does not carry preview or collection search state into the resource page. The column reserves stable geometry and must not introduce horizontal page scrolling.
 

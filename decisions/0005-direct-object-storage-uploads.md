@@ -4,7 +4,7 @@ Status: Accepted
 
 Date: 2026-09-02
 
-Updated: 2026-10-12
+Updated: 2026-10-22
 
 ## Context
 
@@ -12,7 +12,7 @@ Scientific datasets may contain large files. Proxying those bytes through the Hu
 
 Crucible API now exposes a signed multipart upload family (`POST /datasets/{dataset_mfid}/upload/multipart/initiate`, per-part signing, session status, completion, and abort), implemented in API PR #288 (commit `9549802`, merged to staging on 2026-10-09) and redesigned in PR #305 (merged to staging as `a831c2e`) to run initiation, completion, and abort inline without a background worker: initiation returns an uploading session immediately, completion joins and CRC32C-verifies parts within the request and returns the file record, and abort returns 204. The legacy resumable family remains in the contract and stays unused.
 
-The multipart contract fixes the client rules: 64 MiB parts except the final part, a 500 GiB maximum, 1-64 parts per signing request, a canonical base64 CRC32C per part frozen at signing, lowercase SHA-256 and canonical base64 CRC32C of the whole object at completion, publication only after server-side CRC32C verification, at most 8 concurrent part transfers (raised from 4 on the API owner's recommendation), `Retry-After` and 15-minute URL expirations, `Cache-Control: no-store` responses, and relative filenames without empty or dot segments, backslashes, or control characters.
+The multipart contract fixes the client rules: the API chooses the part size for each session (`part_size`, with 64 MiB parts except the final part as the fallback when it does not), a 500 GiB maximum, 1-64 parts per signing request, a canonical base64 CRC32C per part frozen at signing, lowercase SHA-256 and canonical base64 CRC32C of the whole object at completion, publication only after server-side CRC32C verification, at most 8 concurrent part transfers (raised from 4 on the API owner's recommendation), `Retry-After` and 15-minute URL expirations, `Cache-Control: no-store` responses, and relative filenames without empty or dot segments, backslashes, or control characters.
 
 ## Decision
 

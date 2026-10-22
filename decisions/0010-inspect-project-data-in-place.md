@@ -4,7 +4,9 @@ Status: Accepted
 
 Date: 2026-09-04
 
-Extends: [decision 0008](0008-inspect-linked-resources-in-place.md) to project Data collections. [Decision 0009](0009-overlay-resource-inspection.md) continues to own overlay modality and dismissal.
+Updated: 2026-10-22
+
+Extends: [decision 0008](0008-inspect-linked-resources-in-place.md) to project Data collections. [Decision 0037](0037-adapt-resource-inspector-to-viewport.md) owns inspector modality and dismissal.
 
 ## Context
 
@@ -18,7 +20,7 @@ The project Data index owns the validated `preview` search parameter alongside k
 
 One shared preview controller accepts an explicit resource or project-Data host. Trusted history must match the host kind, host MFID, and current Query-client identity ownership. Opening pushes one entry, following replaces it with a bounded exploration trail, and closing returns to the existing collection entry when that entry is trusted. Direct entry and reload close by replacing only preview state. Changing the collection filters, page, or project section ends the preview session. Canonical full-page navigation must not carry project filters, cursors, or the exploration trail into the destination.
 
-The inspector observes the existing authoritative detail Query. Rows never seed detail cache entries. Neither displaying the table nor hovering a preview action requests detail, files, neighbours, thumbnails, or download links. The shared detail request opts out of unused embedded datasets and keeps `include_links` as the association source; its browser representation and cache key remain unchanged.
+The inspector observes the existing authoritative detail Query. Rows never seed detail cache entries. Neither displaying the table nor hovering a preview action requests detail, files, neighbours, thumbnails, or download links. Opening a dataset preview reads its file list and thumbnails for the inspector's quick actions; download links are generated only on request. The shared detail request opts out of unused embedded datasets and keeps `include_links` as the association source; its browser representation and cache key remain unchanged.
 
 ## Privacy review
 
@@ -31,7 +33,7 @@ No new storage mechanism, retention period, telemetry field, third-party host, o
 - Preserve existing resource-page inspector behavior and origin isolation.
 - Verify explicit keyboard-operable preview actions, canonical links, full-page promotion, relationship exploration, browser Back/Forward, direct entry, reload, and close safety.
 - Verify project heading, table geometry, scroll, filters, and cursors survive preview navigation, including local failure and retry.
-- Assert bounded detail reads, no preview-driven collection/file reads, and cache reuse without row-to-detail seeding.
+- Assert bounded detail reads, no preview-driven collection reads, file and thumbnail reads only for an opened dataset preview, and cache reuse without row-to-detail seeding.
 - Review wide-light and compact-dark presentation, accessibility, focus restoration, and horizontal overflow.
 
 The [roadmap](../docs/roadmap.md#project-collection-inspection) owns implementation status and completion evidence.

@@ -1,10 +1,12 @@
 # 0009: Overlay Resource Inspection
 
-Status: Accepted
+Status: Superseded
 
 Date: 2026-09-04
 
 Updated: 2026-09-23
+
+[Decision 0037](0037-adapt-resource-inspector-to-viewport.md) replaces this decision: the inspector is modal on compact screens, a non-modal overlay on medium screens, and docked on wide screens.
 
 Supersedes: The responsive modality and reserved desktop space choice in [decision 0008](0008-inspect-linked-resources-in-place.md). Its navigation, Query ownership, and privacy decisions remain unchanged.
 

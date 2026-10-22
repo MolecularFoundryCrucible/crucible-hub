@@ -4,13 +4,15 @@ Status: Accepted
 
 Date: 2026-09-06
 
+Updated: 2026-10-22
+
 ## Context
 
 Instrument status affects whether an instrument is available for future acquisition work. The API exposes a dedicated `POST /instruments/{instrument_mfid}/status` operation and a `can_change_status` capability, while descriptive fields use the ordinary instrument PATCH operation. Decommissioning retires an instrument without deleting its existing identity or datasets.
 
 ## Decision
 
-Hub exposes Lifecycle as a route-backed subsection of instrument Settings. General remains limited to descriptive fields. Lifecycle is visible only when exact instrument detail reports `can_change_status: true`, while the API independently authorizes every mutation.
+Hub exposes Lifecycle as its own card on the instrument Manage page ([decision 0027](0027-edit-projects-and-instruments-from-overview.md)), separate from descriptive fields, which are edited on Overview. Lifecycle is visible only when exact instrument detail reports `can_change_status: true`, while the API independently authorizes every mutation.
 
 Hub offers the API-defined `active`, `maintenance`, and `decommissioned` states. Changing to maintenance or active is applied directly. Changing to decommissioned requires explicit confirmation that the instrument will be retired from future use while its existing datasets and details remain available.
 

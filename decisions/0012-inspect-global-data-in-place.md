@@ -4,7 +4,9 @@ Status: Accepted
 
 Date: 2026-09-05
 
-Extends: [decision 0008](0008-inspect-linked-resources-in-place.md) and [decision 0010](0010-inspect-project-data-in-place.md) to the global Data collection. [Decision 0009](0009-overlay-resource-inspection.md) continues to own overlay modality and dismissal.
+Updated: 2026-10-22
+
+Extends: [decision 0008](0008-inspect-linked-resources-in-place.md) and [decision 0010](0010-inspect-project-data-in-place.md) to the global Data collection. [Decision 0037](0037-adapt-resource-inspector-to-viewport.md) owns inspector modality and dismissal.
 
 ## Context
 
@@ -18,7 +20,7 @@ Extend the shared preview controller with a distinct global Data host. Its trust
 
 Preview navigation preserves applied filters, independent cursors, hash, and scroll. Applying or clearing filters, changing resource kind, paginating, or navigating elsewhere clears preview history. Canonical full-page links and the inspector footer do not carry Data filters, cursors, preview selection, or trail into the resource route. Browser Back may restore the exact global collection and preview entry.
 
-Reuse the authoritative resource-detail Query and existing inspector. Collection rows remain lightweight and never seed detail. Opening, hovering, following, or closing a preview must not trigger sample, dataset, file, project-directory, or instrument-directory reads beyond the one selected detail Query and any user-requested relationship detail.
+Reuse the authoritative resource-detail Query and existing inspector. Collection rows remain lightweight and never seed detail. Hovering, following, or closing a preview must not trigger sample, dataset, file, project-directory, or instrument-directory reads. Opening a preview reads the one selected detail Query and any user-requested relationship detail; opening a dataset preview also reads its file list and thumbnails for the inspector's quick actions. Download links are still generated only on request.
 
 The repeated resource identity cell is promoted into one shared domain component for global and project Data. It owns the semantic resource icon, canonical resource link, explicit Preview link, and supporting type text. Each collection retains its own table columns, supporting-text visibility, filters, pagination, and error behavior.
 
@@ -31,7 +33,7 @@ No new persistence, telemetry, third-party host, browser storage, cookie, creden
 ## Validation
 
 - Verify collection geometry, scroll, filters, kind, cursors, and readable rows remain unchanged through preview navigation.
-- Verify one selected detail read, Query reuse, and no preview-driven collection or file reads.
+- Verify one selected detail read (plus the file list and thumbnails for a dataset), Query reuse, and no preview-driven collection reads.
 - Verify relationship follow, Back in preview, browser Back and Forward, safe close, outside dismissal, focus restoration, malformed preview handling, and canonical full-page promotion.
 - Verify global, project, and resource hosts reject each other's trusted trails.
 - Verify compact and laptop layouts with automated accessibility and overflow checks without requiring a new visual baseline for implementation acceptance.

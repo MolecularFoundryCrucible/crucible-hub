@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-07
 
+Updated: 2026-10-22
+
 Supersedes [decision 0017](0017-use-dedicated-descriptive-settings.md) and supersedes [decision 0020](0020-consolidate-project-overview-and-people.md) only for the placement of project descriptive editing and visible Settings navigation.
 
 ## Context
@@ -16,19 +18,19 @@ Membership, ownership, lifecycle, and operator changes have separate capabilitie
 
 Project details and instrument Summary expose an explicit edit action only when exact detail reports `can_edit: true`. Activating it replaces that read-only card with the existing validated form without changing route identity. Save returns to the updated read view. Cancel uses shared discard protection and returns to the read view only after a clean cancel or confirmed discard. Failed saves retain the inline draft.
 
-The visible Settings destination becomes Manage and appears only when at least one independent management workflow is available. Project Manage contains Members and Ownership. Instrument Manage contains Lifecycle, Operators, and Ownership. Existing `/settings` index URLs redirect to the first available management workflow or back to Overview when only descriptive editing is available. Nested management URLs remain stable.
+The visible Settings destination becomes Manage and appears only when at least one independent management workflow is available. Manage is one page at `/settings` with a separate card per available workflow, each with its own capability, mutation, and confirmation: project Manage contains Members, Ownership, Leave, and Delete; instrument Manage contains Operators, Lifecycle, Ownership, and Delete. The earlier nested URLs (`/settings/members`, `/settings/ownership`, `/settings/lifecycle`, `/settings/operators`) redirect to it. The first version used one route per workflow; they were combined into one page on 2026-09-07 so related management is visible together.
 
 ## Consequences
 
 - People review descriptive values before choosing to edit them.
 - Descriptive editing keeps the project or instrument route and surrounding context stable.
 - Manage communicates that its child routes perform distinct administrative operations rather than ordinary field editing.
-- Existing nested management links and external bookmarks remain valid.
+- Existing nested management links and external bookmarks redirect to the combined Manage page.
 - Descriptive forms retain their existing API, Query, validation, failure, and discard behavior.
 
 ## Validation
 
 - Verify exact `can_edit` guidance controls the Overview edit action and the API still authorizes every mutation.
 - Verify save, failed save, clean cancel, confirmed discard, and blocked navigation from both project and instrument Overview.
-- Verify Manage visibility and direct `/settings` redirects for each capability combination.
-- Verify Members, Ownership, Lifecycle, and Operators remain independent route-backed workflows.
+- Verify Manage visibility and the card shown for each capability combination.
+- Verify the nested `/settings/*` URLs redirect to Manage and that Members, Ownership, Lifecycle, and Operators keep independent mutations.

@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-06
 
+Updated: 2026-10-22
+
 ## Context
 
 The project Overview and Settings boundary in [decision 0020](0020-consolidate-project-overview-and-people.md) was accepted while the project membership mutation contract was still treated as conditional. The API contract is now confirmed through its generated OpenAPI operation shapes and permission-system authority. Project membership is managed directly by adding an existing user, changing a role, or removing a member. The API does not define an invitation workflow.
@@ -16,7 +18,7 @@ Hub provides direct project membership controls in project Settings, separate fr
 - `PATCH /projects/{project_ref}/users/{orcid}?role=...` changes an existing member's role.
 - `DELETE /projects/{project_ref}/users/{orcid}` removes a member or lets the current member leave.
 
-`can_manage_access` gates add and role-change presentation. `max_grant_role` limits assignable roles: editors can assign contributor or below, admins can assign editor or below, and owners can assign admin or below. Ownership is exclusive and is changed through the ownership-transfer operation, not a membership role edit. `can_transfer` guides presentation for removing another member and for ownership transfer. A current non-owner member may leave through the direct delete operation; this state comes from the current membership and is not inferred from an unconfirmed capability field. The API independently authorizes every operation and remains authoritative when capability guidance is absent or stale.
+`can_manage_access` gates adding members. Each member entry carries its own API capabilities (`can_change_role`, `can_remove`, and `assignable_roles`), which control that entry's role-change and removal actions and the roles offered; Hub no longer derives them from `max_grant_role` ceilings. Ownership is exclusive and is changed through the ownership-transfer operation, not a membership role edit. `can_transfer` guides presentation for ownership transfer. A current non-owner member may leave through the direct delete operation; this state comes from the current membership and is not inferred from an unconfirmed capability field. The API independently authorizes every operation and remains authoritative when capability guidance is absent or stale.
 
 The role hierarchy is owner, admin, editor, contributor, and viewer. The management ceiling follows owner to admin, admin to editor, and editor to contributor, with lower roles such as viewer remaining available when permitted by the API. A caller cannot modify a member at the caller's own role, and no membership operation grants owner standing.
 

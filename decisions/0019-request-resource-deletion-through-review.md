@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-06
 
+Updated: 2026-10-22
+
 ## Context
 
 The Crucible API supports reviewed sample and dataset deletion through `POST /resources/{resource_id}/delete` with an optional reason. Contributor access is required, an active request causes a conflict, and the successful response is a deletion-request record. A separate force-delete operation permanently removes a resource without review and is not appropriate for ordinary Hub workflows.
@@ -14,19 +16,18 @@ The current resource capability model does not identify whether the caller may r
 
 Canonical sample and dataset Manage pages expose a destructive Danger zone action that opens a confirmation dialog with an optional bounded reason. The dialog states that submission starts review and does not immediately delete the resource or its files. Submission uses a strict POST TanStack Start server function and the API's reviewed deletion-request operation. Hub never invokes direct permanent deletion from this workflow. [Decision 0028](0028-consolidate-resource-management.md) supersedes the original header-action placement.
 
-Until the API publishes explicit `can_request_deletion` guidance, Hub presents the action to authenticated users when detail contains no active request. The API remains authoritative and a denied request produces local feedback without changing the page. Hub does not substitute `can_edit` or `can_manage_access` for the missing capability.
+The API now publishes `capabilities.can_request_deletion`, and Hub presents the action only when it is true and detail contains no active request. The API remains authoritative and a denied request produces local feedback without changing the page. Hub does not substitute `can_edit` or `can_manage_access` for the capability.
 
 Hub safely reads the known deletion-request fields from the open detail value and ignores unknown additions. A confirmed response must identify the requested resource. Success updates the exact detail record with server-confirmed request state and API mode refreshes exact detail, the corresponding resource-family lists, and search. Conflict refreshes exact detail because another active request may already exist. Failed submission retains the reason. No optimistic deletion state is shown.
 
-An active request replaces the request action with a fixed-geometry status action. The shared `/deletion-requests` workspace exposes Submitted by you and Needs review as separate API scopes. Required per-request `can_review` guidance controls review actions. Approval permanently deletes the database resource while stored GCS objects remain retained; rejection restores normal discovery. Project Manage may show a bounded project-filtered review preview. Review, audit, cancellation, and force deletion remain separate workflows.
+An active request replaces the request action with a fixed-geometry status action. The shared `/deletion-requests` workspace exposes Submitted by you and Needs review as separate API scopes, plus an Approved history read from the permanent deletion audit, and supports reviewing several requests at once. Required per-request `can_review` guidance controls review actions. Approval permanently deletes the database resource while stored GCS objects remain retained; rejection restores normal discovery. Project Manage may show a bounded project-filtered review preview. Review, audit, cancellation, and force deletion remain separate workflows.
 
 Submission, approval, and rejection invalidate the affected resource families, facets, search, graphs, project and instrument summaries, deletion-request collections, and exact resource detail. Request collections preserve their URL-backed scope and project filter while TanStack Query owns opaque cursor continuation. Submitted history uses descending request time and pending review uses ascending request time. Hub preserves server order and does not sort individual pages locally.
 
 ## Consequences
 
 - Scientists can request reviewed deletion without direct destructive authority.
-- Contributor eligibility remains available even though current capabilities cannot predict it.
-- Viewers may encounter a local permission error until operation-specific capability guidance exists.
+- Eligibility follows the API's `can_request_deletion`, so people only see the action when they may use it.
 - Unknown deletion-request response additions do not erase otherwise valid known state.
 - Force deletion remains unavailable in Hub.
 - Requesters can find pending and completed submissions after the resource leaves ordinary discovery.
