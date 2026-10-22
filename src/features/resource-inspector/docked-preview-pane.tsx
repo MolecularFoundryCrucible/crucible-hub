@@ -23,13 +23,19 @@ export function DockedPreviewPane() {
         className="docked-preview-pane"
         data-open={pane.open ? "" : undefined}
       >
-        {docked && !pane.hostShowsPreview && !navigation ? (
+        {docked &&
+        (pane.open || pane.motion === "hiding") &&
+        !pane.hostShowsPreview &&
+        !navigation ? (
           <p className="text-supporting text-muted-foreground">
             Preview items show here
           </p>
         ) : null}
       </div>
-      {docked && pane.open && !pane.hostShowsPreview && navigation ? (
+      {docked &&
+      (pane.open || pane.motion === "hiding") &&
+      !pane.hostShowsPreview &&
+      navigation ? (
         <ResourcePreviewContext.Provider value={navigation}>
           <ResourceInspector navigation={navigation} />
         </ResourcePreviewContext.Provider>

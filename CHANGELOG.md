@@ -6,7 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
-- Made the resource preview a steady pane on wide screens: it stays beside the content on every page, keeps the last previewed resource while you navigate, no longer shifts the layout, and can be hidden from the top bar, which also closes the preview.
+- Made the resource preview a steady pane on wide screens: it stays beside the content on every page, keeps the last previewed resource while you navigate, no longer shifts the layout, and slides away with the content when hidden from the top bar, keeping its preview for when it is shown again.
 - Showed who has access to a sample, dataset, or instrument, and which service accounts operate an instrument, to everyone with a role on it; only people who can manage access see the change controls.
 - Added People to instrument Overview and gave project and instrument Overview the same layout, with Identity and People beside Summary and metadata.
 - Used the pointer cursor on every clickable control, including search results and selects.

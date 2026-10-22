@@ -13,6 +13,8 @@ vi.mock("@/lib/viewer-presentation", async (importOriginal) => ({
   writePresentationCookie: vi.fn(),
 }))
 
+vi.mock("@/lib/motion", () => ({ motionDuration: () => 180 }))
+
 const { writePresentationCookie } = await import("@/lib/viewer-presentation")
 
 afterEach(() => vi.mocked(writePresentationCookie).mockReset())
@@ -92,17 +94,39 @@ describe("InspectorPaneProvider", () => {
     )
   })
 
-  it("closes every preview when the pane is hidden", () => {
+  it("slides previews out when hidden and keeps the pane's preview", () => {
+    vi.useFakeTimers()
     const { result } = renderHook(usePane, { wrapper })
     const close = vi.fn()
     act(() => {
       result.current.pane.registerHostPreview(close)
-      result.current.pane.remember({ mfid: "sample-a" })
+      result.current.pane.remember({ mfid: "sample-a", previous: ["sample-b"] })
     })
-    expect(result.current.pane.hostShowsPreview).toBe(true)
 
     act(() => result.current.pane.setOpen(false))
+    expect(result.current.pane.motion).toBe("hiding")
+    expect(close).not.toHaveBeenCalled()
+    act(() => vi.runAllTimers())
+    expect(result.current.pane.motion).toBeNull()
     expect(close).toHaveBeenCalledOnce()
-    expect(result.current.navigation).toBeNull()
+
+    act(() => result.current.pane.setOpen(true))
+    expect(result.current.pane.motion).toBe("showing")
+    expect(result.current.navigation?.preview).toBe("sample-a")
+    expect(result.current.navigation?.previous).toBe("sample-b")
+    vi.useRealTimers()
+  })
+
+  it("keeps a page preview when shown again before it slides out", () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(usePane, { wrapper })
+    const close = vi.fn()
+    act(() => void result.current.pane.registerHostPreview(close))
+
+    act(() => result.current.pane.setOpen(false))
+    act(() => result.current.pane.setOpen(true))
+    act(() => vi.runAllTimers())
+    expect(close).not.toHaveBeenCalled()
+    vi.useRealTimers()
   })
 })

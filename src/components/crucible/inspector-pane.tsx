@@ -1,4 +1,11 @@
-import { createContext, useContext, useMemo, useRef, useState } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import type { ReactNode } from "react"
 
 import {
@@ -15,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { motionDuration } from "@/lib/motion"
 import {
   inspectorCookie,
   writePresentationCookie,
@@ -35,6 +43,8 @@ type InspectorPane = {
   forget: () => void
   hostShowsPreview: boolean
   memory: PaneMemory | null
+  /** Set while the pane slides in or out, for `--motion-standard`. */
+  motion: "hiding" | "showing" | null
   open: boolean
   openRemembered: (
     target: string,
@@ -72,7 +82,11 @@ export function InspectorPaneProvider({
   }
   const [hostPreviews, setHostPreviews] = useState(0)
   const hostCloses = useRef(new Set<() => void>())
+  const [motion, setMotion] = useState<InspectorPane["motion"]>(null)
+  const motionTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const trigger = useRef<HTMLElement | null>(null)
+
+  useEffect(() => () => clearTimeout(motionTimer.current), [])
 
   const actions = useMemo(
     () => ({
@@ -112,10 +126,14 @@ export function InspectorPaneProvider({
             : { current: preview, previous: trail }
         }),
       setOpen: (next: boolean) => {
-        if (!next) {
-          setMemory(null)
-          for (const close of hostCloses.current) close()
-        }
+        clearTimeout(motionTimer.current)
+        setMotion(next ? "showing" : "hiding")
+        // A page's own preview slides out with the pane, then leaves the URL
+        // so it does not float; the pane keeps it to show again.
+        motionTimer.current = setTimeout(() => {
+          setMotion(null)
+          if (!next) for (const close of hostCloses.current) close()
+        }, motionDuration("--motion-standard"))
         setOpenState(next)
         writePresentationCookie(inspectorCookie, next ? "open" : "collapsed")
       },
@@ -127,10 +145,11 @@ export function InspectorPaneProvider({
       ...actions,
       hostShowsPreview: hostPreviews > 0,
       memory,
+      motion,
       open,
       trigger,
     }),
-    [actions, hostPreviews, memory, open]
+    [actions, hostPreviews, memory, motion, open]
   )
 
   return (

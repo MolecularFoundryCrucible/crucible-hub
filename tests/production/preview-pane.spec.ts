@@ -137,7 +137,9 @@ test("shows a hint while the pane is empty", async ({ page }) => {
   await expect(hint).toHaveCount(0)
 })
 
-test("closes the preview when the pane is hidden", async ({ page }) => {
+test("slides the preview out with the pane and brings it back", async ({
+  page,
+}) => {
   await page.goto("/hub/data?scenario=populated")
   await page.waitForLoadState("networkidle")
   await page
@@ -147,12 +149,21 @@ test("closes the preview when the pane is hidden", async ({ page }) => {
     pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
   ).toBeVisible()
   await page.evaluate(() => {
-    const frames: boolean[] = []
-    Object.assign(window, { floatingFrames: frames })
+    const frames: { content: number; float: boolean; sheet: number }[] = []
+    Object.assign(window, { paneFrames: frames })
+    const inset = document.querySelector('[data-slot="sidebar-inset"]')!
     const watch = () => {
       const sheet = document.querySelector('[data-slot="sheet-content"]')
-      if (!sheet) return
-      frames.push(!sheet.hasAttribute("data-docked"))
+      if (!sheet?.hasAttribute("data-pane-motion")) {
+        if (!sheet) return
+        requestAnimationFrame(watch)
+        return
+      }
+      frames.push({
+        content: innerWidth - parseFloat(getComputedStyle(inset).paddingRight),
+        float: !sheet.hasAttribute("data-docked"),
+        sheet: sheet.getBoundingClientRect().left,
+      })
       requestAnimationFrame(watch)
     }
     requestAnimationFrame(watch)
@@ -161,25 +172,41 @@ test("closes the preview when the pane is hidden", async ({ page }) => {
   await page.getByRole("button", { name: "Hide preview panel" }).click()
   await expect(pane(page)).toHaveCount(0)
   await expect(page).not.toHaveURL(/preview=/)
-  expect(
-    await page.evaluate(() =>
-      (window as unknown as { floatingFrames: boolean[] }).floatingFrames.some(
-        Boolean
-      )
-    )
-  ).toBe(false)
+  const frames = await page.evaluate(
+    () =>
+      (
+        window as unknown as {
+          paneFrames: { content: number; float: boolean; sheet: number }[]
+        }
+      ).paneFrames
+  )
+  expect(frames.some((frame) => frame.float)).toBe(false)
+  const edges = frames.map((frame) => frame.content)
+  const moving = frames.filter(
+    (frame) =>
+      frame.content > Math.min(...edges) && frame.content < Math.max(...edges)
+  )
+  expect(moving.length).toBeGreaterThan(0)
+  for (const frame of moving)
+    expect(Math.abs(frame.sheet - frame.content)).toBeLessThan(2)
 
   await page.getByRole("button", { name: "Show preview panel" }).click()
-  await expect(page.getByText("Preview items show here")).toBeVisible()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
 })
 
-test("forgets the remembered preview when the pane is hidden", async ({
+test("keeps the remembered preview and its trail when hidden", async ({
   page,
 }) => {
   await page.goto("/hub/data?scenario=populated")
   await page.waitForLoadState("networkidle")
   await page
     .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await pane(page)
+    .getByRole("link", { name: "NiFe K-edge operando series" })
+    .first()
     .click()
   await page
     .getByRole("navigation")
@@ -188,12 +215,15 @@ test("forgets the remembered preview when the pane is hidden", async ({
     .click()
   await expect(page).toHaveURL(/\/hub\/projects/)
   await expect(
-    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+    pane(page).getByRole("heading", { name: "NiFe K-edge operando series" })
   ).toBeVisible()
 
   await page.getByRole("button", { name: "Hide preview panel" }).click()
   await expect(pane(page)).toHaveCount(0)
+  await expect(page.getByText("Preview items show here")).toHaveCount(0)
   await page.getByRole("button", { name: "Show preview panel" }).click()
-  await expect(page.getByText("Preview items show here")).toBeVisible()
-  await expect(pane(page)).toHaveCount(0)
+  await pane(page).getByRole("link", { name: "Back" }).click()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
 })

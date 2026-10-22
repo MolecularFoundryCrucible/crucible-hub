@@ -129,10 +129,15 @@ export function ResourceInspector({
   const [hidingPane, setHidingPane] = useState(false)
   if (hidingPane && !preview) setHidingPane(false)
   // With the pane hidden, wide screens float previews like medium screens; a
-  // preview closed by hiding the pane leaves with it instead of floating.
-  const paneDocked = docked && (pane === null || pane.open || hidingPane)
+  // preview shown when the pane is hidden slides out with it instead.
+  const paneDocked =
+    docked &&
+    (pane === null || pane.open || pane.motion === "hiding" || hidingPane)
   const handsOver =
-    docked && pane !== null && pane.open && navigation.host.kind !== "pane"
+    docked &&
+    pane !== null &&
+    (pane.open || pane.motion === "hiding") &&
+    navigation.host.kind !== "pane"
   const remember = pane?.remember
   const registerHostPreview = pane?.registerHostPreview
   const forget = pane?.forget
@@ -228,6 +233,13 @@ export function ResourceInspector({
       <SheetContent
         className="resource-inspector gap-0 shadow-2xl data-docked:shadow-none"
         data-docked={paneDocked || undefined}
+        data-pane-motion={
+          paneDocked && pane
+            ? pane.open
+              ? (pane.motion ?? undefined)
+              : "hiding"
+            : undefined
+        }
         data-inspector-kind={previewKind}
         initialFocus={navigation.host.kind === "pane" ? false : title}
         finalFocus={() => {
