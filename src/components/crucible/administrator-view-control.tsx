@@ -149,7 +149,7 @@ export function AdministratorViewStatus() {
   return (
     <Button
       aria-label="Turn off administrator view"
-      disabled={pending}
+      aria-busy={pending || undefined}
       onClick={() => setActive(false)}
       variant="warning"
     >

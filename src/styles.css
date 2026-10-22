@@ -531,6 +531,8 @@
   --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --motion-ease-enter: cubic-bezier(0, 0, 0.2, 1);
   --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-indicator-delay: 200ms;
+  --motion-pending-opacity: 0.6;
   --focus-width: 0.1875rem;
   --focus-offset: 0.125rem;
   --layer-route-progress: 50;
@@ -760,13 +762,17 @@ body {
 }
 
 .pending-region[data-pending] {
-  opacity: 0.6;
+  opacity: var(--motion-pending-opacity);
+  transition-delay: var(--motion-indicator-delay);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal-panel,
-  .pending-region {
+  .reveal-panel {
     transition: none;
+  }
+
+  .pending-region {
+    transition-duration: 0s;
   }
 }
 
