@@ -496,11 +496,10 @@ export function CollectionUpdateStatus({
   updating: boolean
 }) {
   const hydrated = useHydrated()
-  if (!updating || !hydrated) return null
 
   return (
     <p className="sr-only" role="status">
-      Updating {label}…
+      {updating && hydrated ? `Updating ${label}…` : null}
     </p>
   )
 }

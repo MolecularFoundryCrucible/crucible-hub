@@ -124,10 +124,18 @@ describe("CollectionUpdateError", () => {
 })
 
 describe("CollectionUpdateStatus", () => {
-  it("renders nothing until hydration so server and client markup match", () => {
-    expect(
-      renderToString(<CollectionUpdateStatus label="datasets" updating />)
-    ).toBe("")
+  it("renders an empty live region until hydration so markup matches", () => {
+    const html = renderToString(
+      <CollectionUpdateStatus label="datasets" updating />
+    )
+    expect(html).toContain('role="status"')
+    expect(html).not.toContain("Updating")
+  })
+
+  it("keeps the live region mounted while idle so updates are announced", () => {
+    render(<CollectionUpdateStatus label="datasets" updating={false} />)
+
+    expect(screen.getByRole("status").textContent).toBe("")
   })
 
   it("announces updates after hydration", () => {
