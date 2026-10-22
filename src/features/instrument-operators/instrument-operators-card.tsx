@@ -102,6 +102,7 @@ export function InstrumentAccessCard({
 }) {
   const queryClient = useQueryClient()
   const canManage = instrument.capabilities?.can_manage_access === true
+  const canView = canManage || instrument.capabilities?.can_view_access === true
   const roles = permittedAccessGrantRoles(
     instrument.capabilities?.max_grant_role
   )
@@ -129,12 +130,12 @@ export function InstrumentAccessCard({
 
   const grantsQuery = useQuery({
     ...resourceAccessQueryOptions(scope, instrument.unique_id),
-    enabled: canManage,
+    enabled: canView,
   })
 
   const operatorsQuery = useQuery({
     ...instrumentOperatorsQueryOptions(scope, instrument.unique_id),
-    enabled: canManage,
+    enabled: canView,
   })
 
   const addOperatorMutation = useMutation({
@@ -170,7 +171,7 @@ export function InstrumentAccessCard({
     removeOperatorMutation.isPending
 
   const directGrants = useMemo(() => {
-    if (canManage && grantsQuery.isLoading) return []
+    if (canView && grantsQuery.isLoading) return []
     const loaded = (grantsQuery.data ?? []).filter(
       (grant) => grant.principal_type !== "public"
     )
@@ -193,7 +194,7 @@ export function InstrumentAccessCard({
       ])
     }
     return sortAccessGrants(loaded)
-  }, [canManage, grantsQuery.data, grantsQuery.isLoading, instrument.owner])
+  }, [canView, grantsQuery.data, grantsQuery.isLoading, instrument.owner])
 
   const selectedGrants = directGrants.filter((grant) =>
     selectedForRevoke.has(grantKey(grant))

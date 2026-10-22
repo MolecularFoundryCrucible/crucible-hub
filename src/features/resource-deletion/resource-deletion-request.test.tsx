@@ -29,6 +29,7 @@ function sample(
       can_delete: false,
       can_edit: false,
       can_manage_access: false,
+      can_view_access: true,
       can_request_deletion: canRequestDeletion,
       can_transfer: false,
       max_grant_role: null,

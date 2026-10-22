@@ -73,6 +73,7 @@ const instrument = {
     can_request_deletion: true,
     can_edit: true,
     can_manage_access: true,
+    can_view_access: true,
     can_transfer: true,
     max_grant_role: "admin" as const,
   },
@@ -238,6 +239,7 @@ describe("InstrumentAccessCard", () => {
             capabilities: {
               ...instrument.capabilities,
               can_manage_access: false,
+              can_view_access: true,
               max_grant_role: null,
             },
           }}

@@ -9,7 +9,9 @@ import type {
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
 
-import { ResourceAccessCard } from "./resource-manage-page"
+import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+
+import { ResourceAccessCard, ResourceManagePage } from "./resource-manage-page"
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => (
@@ -23,6 +25,12 @@ vi.mock("@/data/crucible/access.functions", () => ({
   setWorkspaceResourcePublicAccess: vi.fn(),
 }))
 
+vi.mock("@/components/crucible/workspace-provider", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useWorkspaceMode: () => "fixture",
+  useWorkspaceScope: () => scope,
+}))
+
 afterEach(cleanup)
 
 const scope = identityScope("crucible-fixture:populated", "account")
@@ -33,6 +41,7 @@ const sample: Extract<WorkspaceResourceDetail, { kind: "sample" }> = {
     can_delete: false,
     can_edit: true,
     can_manage_access: false,
+    can_view_access: true,
     can_request_deletion: true,
     can_transfer: false,
     max_grant_role: null,
@@ -78,6 +87,7 @@ function renderCard(canManageAccess: boolean) {
       can_delete: false,
       can_edit: true,
       can_manage_access: canManageAccess,
+      can_view_access: true,
       can_request_deletion: true,
       can_transfer: false,
       max_grant_role: canManageAccess ? ("admin" as const) : null,
@@ -102,5 +112,55 @@ describe("ResourceAccessCard", () => {
     expect(screen.getByText("Access management")).toBeTruthy()
     expect(screen.getByText("Jordan Reyes")).toBeTruthy()
     expect(screen.queryByRole("button", { name: "Manage access" })).toBeNull()
+  })
+})
+
+describe("ResourceManagePage", () => {
+  function renderPage(canViewAccess: boolean) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const resource: WorkspaceResourceDetail = {
+      ...sample,
+      capabilities: {
+        can_change_status: false,
+        can_delete: false,
+        can_edit: false,
+        can_manage_access: false,
+        can_request_deletion: false,
+        can_transfer: false,
+        can_view_access: canViewAccess,
+        max_grant_role: null,
+      },
+    }
+    queryClient.setQueryData(
+      resourceQueryOptions(scope, sample.unique_id).queryKey,
+      resource
+    )
+    queryClient.setQueryData(
+      resourceAccessQueryOptions(scope, sample.unique_id).queryKey,
+      grants
+    )
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <ResourceManagePage
+          resourceKind="sample"
+          resourceMfid={sample.unique_id}
+        />
+      </QueryClientProvider>
+    )
+  }
+
+  it("shows who has access to people with granted access", () => {
+    renderPage(true)
+    expect(screen.getByText("Access management")).toBeTruthy()
+    expect(screen.getByText("Jordan Reyes")).toBeTruthy()
+    expect(screen.queryByText("Access management is unavailable")).toBeNull()
+  })
+
+  it("keeps access hidden from people who can only read a public resource", () => {
+    renderPage(false)
+    expect(screen.getByText("Access management is unavailable")).toBeTruthy()
+    expect(screen.queryByText("Jordan Reyes")).toBeNull()
   })
 })

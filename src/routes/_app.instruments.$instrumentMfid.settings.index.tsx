@@ -52,17 +52,19 @@ function InstrumentManagePage() {
 
   const canChangeStatus = resource.capabilities?.can_change_status === true
   const canManageAccess = resource.capabilities?.can_manage_access === true
+  const canViewAccess =
+    canManageAccess || resource.capabilities?.can_view_access === true
   const canTransfer = resource.capabilities?.can_transfer === true
   const canDelete = resource.capabilities?.can_delete === true
   const hasResourceManagement = canChangeStatus || canTransfer || canDelete
 
-  if (!canManageAccess && !hasResourceManagement) {
+  if (!canViewAccess && !hasResourceManagement) {
     return <ManagementUnavailable />
   }
 
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      {canManageAccess ? (
+      {canViewAccess ? (
         <ContentBoundary width="reading">
           <InstrumentOperatorsCard instrument={resource} scope={scope} />
         </ContentBoundary>

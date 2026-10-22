@@ -105,10 +105,13 @@ export function ResourceManagePage({
 
   if (!resource || resource.kind !== resourceKind) return null
   const canManageAccess = resource.capabilities?.can_manage_access === true
+  // An API without can_view_access still lets managers see their access list.
+  const canViewAccess =
+    canManageAccess || resource.capabilities?.can_view_access === true
   const canTransfer = resource.capabilities?.can_transfer === true
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      {canManageAccess ? (
+      {canViewAccess ? (
         <ContentBoundary width="reading">
           <ResourceAccessCard resource={resource} scope={scope} />
         </ContentBoundary>

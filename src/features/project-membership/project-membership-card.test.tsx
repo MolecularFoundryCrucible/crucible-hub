@@ -69,6 +69,7 @@ const project = {
     can_request_deletion: false,
     can_edit: true,
     can_manage_access: true,
+    can_view_access: true,
     can_transfer: true,
     max_grant_role: "editor",
   },

@@ -195,6 +195,7 @@ function InstrumentPage() {
         </Link>
         {resource.capabilities?.can_change_status === true ||
         resource.capabilities?.can_manage_access === true ||
+        resource.capabilities?.can_view_access === true ||
         resource.capabilities?.can_transfer === true ? (
           <Link
             activeOptions={{ includeSearch: false }}
