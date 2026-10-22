@@ -1,3 +1,4 @@
+import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { useId, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
@@ -42,11 +43,13 @@ export function PrintLabelButton({
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState(false)
 
+  const exit = useExitSafeMount(open)
   return (
     <Dialog
       onOpenChange={(next) => {
         if (!pending) setOpen(next)
       }}
+      onOpenChangeComplete={exit.onOpenChangeComplete}
       open={open}
     >
       {variant === "icon" ? (
@@ -78,7 +81,7 @@ export function PrintLabelButton({
           Print
         </DialogTrigger>
       )}
-      {open ? (
+      {exit.mounted ? (
         <PrintLabelDialogContent
           mfid={mfid}
           name={name}

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react"
+import { useId, useState } from "react"
 
 import type { accessRoles } from "@/components/crucible/access-role-badge"
 import {
@@ -129,19 +129,17 @@ export function AddMembersDialog({
     return allowed.at(-1) ?? "viewer"
   }
 
-  useEffect(() => {
-    if (!open) {
-      setPrincipalIndex(0)
-      setQuery("")
-      setStaged([])
-      reset()
-    }
-  }, [open, reset])
-
   return (
     <Dialog
       onOpenChange={(nextOpen) => {
         if (!committing) onOpenChange(nextOpen)
+      }}
+      onOpenChangeComplete={(isOpen) => {
+        if (isOpen) return
+        setPrincipalIndex(0)
+        setQuery("")
+        setStaged([])
+        reset()
       }}
       open={open}
     >

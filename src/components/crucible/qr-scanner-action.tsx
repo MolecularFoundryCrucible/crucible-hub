@@ -65,14 +65,20 @@ export function QrScannerAction() {
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <Tooltip>
-        <TooltipTrigger render={<span className="inline-flex" />} tabIndex={-1}>
-          <DialogTrigger
-            render={
-              <Button aria-label="Scan QR code" size="icon" variant="outline" />
-            }
-          >
-            <ScanQrCodeIcon aria-hidden="true" />
-          </DialogTrigger>
+        <TooltipTrigger
+          render={
+            <DialogTrigger
+              render={
+                <Button
+                  aria-label="Scan QR code"
+                  size="icon"
+                  variant="outline"
+                />
+              }
+            />
+          }
+        >
+          <ScanQrCodeIcon aria-hidden="true" />
         </TooltipTrigger>
         <TooltipContent side="bottom">Scan QR code</TooltipContent>
       </Tooltip>

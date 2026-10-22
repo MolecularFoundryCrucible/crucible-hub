@@ -53,9 +53,6 @@ export function PlatformRoleDialog({
       setSelectedRole(
         currentRole && isPlatformRole(currentRole) ? currentRole : undefined
       )
-    } else {
-      setSelectedRole(undefined)
-      setError(undefined)
     }
   }, [open, currentRole])
 
@@ -82,6 +79,11 @@ export function PlatformRoleDialog({
       onOpenChange={(nextOpen) => {
         if (pending) return
         onOpenChange(nextOpen)
+      }}
+      onOpenChangeComplete={(isOpen) => {
+        if (isOpen) return
+        setSelectedRole(undefined)
+        setError(undefined)
       }}
       open={open}
     >

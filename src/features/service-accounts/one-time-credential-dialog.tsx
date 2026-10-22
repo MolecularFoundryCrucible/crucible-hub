@@ -37,6 +37,9 @@ export function OneTimeCredentialDialog({
   const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
     "idle"
   )
+  // Keep the credential on screen while the dialog closes, then forget it.
+  const [shown, setShown] = useState(credential)
+  if (credential && credential !== shown) setShown(credential)
 
   function close() {
     setCopyState("idle")
@@ -60,6 +63,9 @@ export function OneTimeCredentialDialog({
       onOpenChange={(open) => {
         if (!open) close()
       }}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) setShown(undefined)
+      }}
       open={Boolean(credential)}
     >
       <DialogContent>
@@ -69,19 +75,19 @@ export function OneTimeCredentialDialog({
             Copy this API key now. It will not be shown again.
           </DialogDescription>
         </DialogHeader>
-        {credential ? (
+        {shown ? (
           <div className="flex min-w-0 flex-col gap-4">
             <dl className="grid gap-3">
               <div>
                 <dt className="text-label text-muted-foreground">Account</dt>
                 <dd className="mt-1 text-body">
-                  {formatUsername(credential.username, "raw")}
+                  {formatUsername(shown.username, "raw")}
                 </dd>
               </div>
               <div>
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1 overflow-x-auto">
-                  <MfidText value={credential.unique_id} />
+                  <MfidText value={shown.unique_id} />
                 </dd>
               </div>
             </dl>
@@ -90,7 +96,7 @@ export function OneTimeCredentialDialog({
                 aria-label={keyLabel}
                 className="min-w-0 font-mono text-body"
                 readOnly
-                value={credential.api_key}
+                value={shown.api_key}
               />
               <Tooltip>
                 <TooltipTrigger
