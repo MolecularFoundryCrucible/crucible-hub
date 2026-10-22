@@ -535,9 +535,15 @@
   --motion-pending-opacity: 0.6;
   --focus-width: 0.1875rem;
   --focus-offset: 0.125rem;
-  --layer-route-progress: 50;
+  --layer-toast: 70;
+  --layer-tooltip: 60;
+  --layer-popover: 50;
+  --layer-modal: 40;
+  --layer-route-progress: 30;
+  --layer-navigation: 20;
   --layer-floating-utility: 10;
   --layer-sticky: 5;
+  --layer-raised: 1;
   --layer-graph-overlay: 1;
   --route-progress-height: 0.1875rem;
   --graph-node-width: 272;
@@ -764,16 +770,6 @@ body {
 .pending-region[data-pending] {
   opacity: var(--motion-pending-opacity);
   transition-delay: var(--motion-indicator-delay);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reveal-panel {
-    transition: none;
-  }
-
-  .pending-region {
-    transition-duration: 0s;
-  }
 }
 
 .metadata-disclosure::details-content {
@@ -1192,13 +1188,6 @@ body {
 
 .resource-graph-surface .react-flow__attribution {
   display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .react-flow__node-resource,
-  .resource-graph-expansion-action {
-    transition: none;
-  }
 }
 
 .resource-graph-controls button,
@@ -1786,5 +1775,28 @@ body {
   }
   ::details-content {
     transition: none !important;
+  }
+
+  /* No movement: tw-animate-css enter and exit offsets become neutral. */
+  * {
+    --tw-enter-scale: 1;
+    --tw-exit-scale: 1;
+    --tw-enter-translate-x: 0;
+    --tw-enter-translate-y: 0;
+    --tw-exit-translate-x: 0;
+    --tw-exit-translate-y: 0;
+  }
+
+  .reveal-panel,
+  .resource-graph-flow-node,
+  .react-flow__node-resource,
+  .react-flow__edge,
+  .resource-graph-expansion-action {
+    transition: none !important;
+  }
+
+  /* Indicators keep their delay so fast responses still never flash. */
+  .pending-region {
+    transition-duration: 0s !important;
   }
 }

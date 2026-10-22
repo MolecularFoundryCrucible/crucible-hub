@@ -40,7 +40,43 @@ const patterns = [
     expression:
       /(?:^|[\s"'`])(?:\S*:)?(?:duration-\d+|ease-(?:linear|in|out|in-out))(?=[\s"'`]|$)/m,
   },
+  {
+    label:
+      "primitive motion value (use a motion role from src/lib/motion.ts or var(--motion-*))",
+    expression:
+      /(?:cubic-bezier\(|(?:transition|duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\])/,
+  },
+  {
+    label: "primitive layer (use z-(--layer-*) from src/styles.css)",
+    expression: /(?:^|[\s"'`:])-?z-(?:\d+|\[)/m,
+  },
 ]
+
+// Files still being moved onto the motion system (decision 0036); the motion
+// value and layer rules skip them until their task lands. Empty this set.
+const pendingMotionMigration = new Set([
+  "components/ui/alert-dialog.tsx",
+  "components/ui/avatar.tsx",
+  "components/ui/button-group.tsx",
+  "components/ui/combobox.tsx",
+  "components/ui/dialog.tsx",
+  "components/ui/dropdown-menu.tsx",
+  "components/ui/hover-card.tsx",
+  "components/ui/popover.tsx",
+  "components/ui/sheet.tsx",
+  "components/ui/sidebar.tsx",
+  "components/ui/toast.tsx",
+  "components/ui/tooltip.tsx",
+  "components/crucible/app-shell.tsx",
+])
+
+function migrationExempt(localPath, label) {
+  return (
+    pendingMotionMigration.has(localPath) &&
+    (label.startsWith("primitive motion value") ||
+      label.startsWith("primitive layer"))
+  )
+}
 
 const themeSource = readFileSync(join(sourceRoot, "styles.css"), "utf8")
 const knownTextUtilities = new Set([
@@ -450,7 +486,10 @@ function scan(directory) {
       if (localPath.startsWith("components/ui/")) {
         const primitive = readFileSync(path, "utf8")
         for (const pattern of primitivePatterns) {
-          if (pattern.expression.test(primitive))
+          if (
+            pattern.expression.test(primitive) &&
+            !migrationExempt(localPath, pattern.label)
+          )
             violations.push(`${localPath}: ${pattern.label}`)
         }
       }
@@ -505,7 +544,10 @@ function scan(directory) {
     }
     if (extname(path) === ".tsx") scanButtonUsage(path, localPath, content)
     for (const pattern of patterns) {
-      if (pattern.expression.test(content))
+      if (
+        pattern.expression.test(content) &&
+        !migrationExempt(localPath, pattern.label)
+      )
         violations.push(`${localPath}: ${pattern.label}`)
     }
   }
