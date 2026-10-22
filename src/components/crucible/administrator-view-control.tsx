@@ -58,14 +58,6 @@ function useAdministratorView({
       )
     },
     onSuccess: async ({ privilegeMode: nextMode }) => {
-      if (nextMode === "normal") {
-        await queryClient.cancelQueries({
-          predicate: (query) => elevatedQueryForAccount(query.queryKey, scope),
-        })
-        queryClient.removeQueries({
-          predicate: (query) => elevatedQueryForAccount(query.queryKey, scope),
-        })
-      }
       // Load what the shell shows for the new mode alongside the route data,
       // so the sidebar and page switch together.
       const nextScope = identityScopeWithPrivilegeMode(scope, nextMode)
@@ -79,6 +71,17 @@ function useAdministratorView({
           : undefined,
         router.invalidate({ sync: true }),
       ])
+      // Drop elevated data only once the shell has switched to ordinary
+      // authority; normal-mode keys never read it, and removing it earlier
+      // empties what is still on screen.
+      if (nextMode === "normal") {
+        await queryClient.cancelQueries({
+          predicate: (query) => elevatedQueryForAccount(query.queryKey, scope),
+        })
+        queryClient.removeQueries({
+          predicate: (query) => elevatedQueryForAccount(query.queryKey, scope),
+        })
+      }
       notifySuccess(
         nextMode === "elevated"
           ? "Administrator view is on"

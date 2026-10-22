@@ -142,9 +142,11 @@ export function useRecentlyViewed() {
   const query = useQuery({
     ...history.options,
     enabled: history.enabled,
-    // Keep the list on screen while Administrator view switches modes.
+    // Keep the normal-mode list on screen while Administrator view turns on;
+    // everything in it stays readable. Never carry elevated items back.
     placeholderData: (previous, previousQuery) =>
       previousQuery &&
+      previousQuery.queryKey[3] === "normal" &&
       sameAccountKey(previousQuery.queryKey, history.options.queryKey)
         ? previous
         : undefined,

@@ -6,7 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
-- Made switching Administrator view feel immediate: the switch and header badge change at once, the page dims and stays in place instead of reloading, the Administration links slide in and out, and the sidebar's Recent list stays on screen and fades in new entries.
+- Made switching Administrator view feel immediate: the switch and header badge change at once, the page dims and stays in place instead of reloading, the Administration links slide in and out with the switch, the deletion requests badge changes once instead of flickering, and the sidebar's Recent list stays on screen and fades in new entries.
 
 ## 1.6.2 - 2026-10-21
 

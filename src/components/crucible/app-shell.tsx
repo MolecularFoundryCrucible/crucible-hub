@@ -387,73 +387,11 @@ export function AppShell({
                         <SidebarAdministratorViewControl />
                       </SidebarMenuItem>
                     ) : null}
-                    <Reveal
-                      open={
-                        canOpenPlatformAdministration(account, privilegeMode) ||
-                        canOpenServiceAccountAdministration(
-                          account,
-                          privilegeMode
-                        )
-                      }
-                      render={<li className="list-none" />}
-                    >
-                      <SidebarMenu>
-                        {canOpenPlatformAdministration(
-                          account,
-                          privilegeMode
-                        ) ? (
-                          <SidebarMenuItem>
-                            <SidebarMenuButton
-                              isActive={pathname.startsWith("/admin/users")}
-                              tooltip="Users"
-                              render={
-                                <Link
-                                  aria-current={
-                                    pathname.startsWith("/admin/users")
-                                      ? "page"
-                                      : undefined
-                                  }
-                                  preload={false}
-                                  to="/admin/users"
-                                />
-                              }
-                            >
-                              <PrincipalTypeIcon type="user" />
-                              <span>Users</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ) : null}
-                        {canOpenServiceAccountAdministration(
-                          account,
-                          privilegeMode
-                        ) ? (
-                          <SidebarMenuItem>
-                            <SidebarMenuButton
-                              isActive={pathname.startsWith(
-                                "/admin/service-accounts"
-                              )}
-                              tooltip="Service accounts"
-                              render={
-                                <Link
-                                  aria-current={
-                                    pathname.startsWith(
-                                      "/admin/service-accounts"
-                                    )
-                                      ? "page"
-                                      : undefined
-                                  }
-                                  preload={false}
-                                  to="/admin/service-accounts"
-                                />
-                              }
-                            >
-                              <PrincipalTypeIcon type="service_account" />
-                              <span>Service accounts</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ) : null}
-                      </SidebarMenu>
-                    </Reveal>
+                    <SidebarAdministrationLinks
+                      account={account}
+                      pathname={pathname}
+                      privilegeMode={privilegeMode}
+                    />
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         isActive={deletionRequestsActive}
@@ -998,5 +936,81 @@ function AppMain({ children }: { children: React.ReactNode }) {
     >
       {children}
     </main>
+  )
+}
+
+/**
+ * Administration links follow the requested mode, so they slide in or out with
+ * the switch; they stay inert until the switch completes.
+ */
+function SidebarAdministrationLinks({
+  account,
+  pathname,
+  privilegeMode,
+}: {
+  account: Workspace["account"]
+  pathname: string
+  privilegeMode: WorkspacePrivilegeMode
+}) {
+  const control = useOptionalAdministratorViewControl()
+  const mode: WorkspacePrivilegeMode = control
+    ? control.active
+      ? "elevated"
+      : "normal"
+    : privilegeMode
+  const pending = control?.pending
+  return (
+    <Reveal
+      open={
+        canOpenPlatformAdministration(account, mode) ||
+        canOpenServiceAccountAdministration(account, mode)
+      }
+      render={<li className="list-none" />}
+    >
+      <SidebarMenu inert={pending || undefined}>
+        {canOpenPlatformAdministration(account, mode) ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname.startsWith("/admin/users")}
+              tooltip="Users"
+              render={
+                <Link
+                  aria-current={
+                    pathname.startsWith("/admin/users") ? "page" : undefined
+                  }
+                  preload={false}
+                  to="/admin/users"
+                />
+              }
+            >
+              <PrincipalTypeIcon type="user" />
+              <span>Users</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
+        {canOpenServiceAccountAdministration(account, mode) ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname.startsWith("/admin/service-accounts")}
+              tooltip="Service accounts"
+              render={
+                <Link
+                  aria-current={
+                    pathname.startsWith("/admin/service-accounts")
+                      ? "page"
+                      : undefined
+                  }
+                  preload={false}
+                  to="/admin/service-accounts"
+                />
+              }
+            >
+              <PrincipalTypeIcon type="service_account" />
+              <span>Service accounts</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
+      </SidebarMenu>
+    </Reveal>
   )
 }
