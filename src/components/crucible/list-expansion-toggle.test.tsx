@@ -83,6 +83,8 @@ describe("ListExpansionToggle", () => {
     button.getBoundingClientRect = () => rect({ top })
     const scroller = screen.getByTestId("scroller")
     scroller.style.overflowY = "auto"
+    Object.defineProperty(scroller, "scrollHeight", { value: 900 })
+    Object.defineProperty(scroller, "clientHeight", { value: 300 })
     scroller.scrollBy = vi.fn()
     const windowScroll = vi
       .spyOn(window, "scrollBy")

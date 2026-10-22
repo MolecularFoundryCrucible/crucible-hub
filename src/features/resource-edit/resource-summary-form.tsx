@@ -220,8 +220,9 @@ function datasetFormValues(resource: DatasetDetail): DatasetSummaryFormValues {
 export function hasSummaryChanges(changes: () => object) {
   try {
     return Object.keys(changes()).length > 0
-  } catch {
-    return true
+  } catch (error) {
+    if (error instanceof z.ZodError) return true
+    throw error
   }
 }
 

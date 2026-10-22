@@ -243,4 +243,12 @@ describe("hasSummaryChanges", () => {
       )
     ).toBe(true)
   })
+
+  it("does not hide programming errors as changes", () => {
+    expect(() =>
+      hasSummaryChanges(() => {
+        throw new TypeError("bug")
+      })
+    ).toThrow("bug")
+  })
 })

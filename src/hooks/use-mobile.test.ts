@@ -11,7 +11,7 @@ vi.mock("@/hooks/use-media-query", () => ({
 describe("useIsMobile", () => {
   it("follows the compact breakpoint in rem", () => {
     const { result } = renderHook(() => useIsMobile())
-    expect(useMediaQuery).toHaveBeenCalledWith("(max-width: 47.999rem)")
+    expect(useMediaQuery).toHaveBeenCalledWith("(width < 48rem)")
     expect(result.current).toBe(true)
   })
 })

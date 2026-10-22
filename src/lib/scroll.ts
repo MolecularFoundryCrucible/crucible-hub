@@ -6,7 +6,11 @@ export function scrollContainer(element: Element): Element | Window {
     parent = parent.parentElement
   ) {
     const { overflowY } = getComputedStyle(parent)
-    if (overflowY === "auto" || overflowY === "scroll") return parent
+    if (
+      (overflowY === "auto" || overflowY === "scroll") &&
+      parent.scrollHeight > parent.clientHeight
+    )
+      return parent
   }
   return window
 }

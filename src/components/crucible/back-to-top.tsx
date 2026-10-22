@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import { BackToTopIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
+import { prefersReducedMotion } from "@/lib/motion"
 
 const pageTopSelector = "[data-page-top]"
 
@@ -31,10 +32,7 @@ export function BackToTop() {
         if (!target) return
         target.focus({ preventScroll: true })
         target.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
-            .matches
-            ? "auto"
-            : "smooth",
+          behavior: prefersReducedMotion() ? "auto" : "smooth",
           block: "start",
         })
       }}
