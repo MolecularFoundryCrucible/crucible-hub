@@ -171,8 +171,14 @@ export function ResourceInspector({
     })
   }, [handsOver, navigation.preview, registerHostPreview])
 
+  const dismissedPreview = useRef<string>(undefined)
+
   useEffect(() => {
-    if (!handsOver || !navigation.preview) return
+    // The router renders the closed preview once more, without its trail,
+    // before the URL loses it; do not remember it again.
+    if (navigation.preview !== dismissedPreview.current)
+      dismissedPreview.current = undefined
+    if (!handsOver || !navigation.preview || dismissedPreview.current) return
     remember?.({
       identity:
         previewKind && previewName
@@ -226,7 +232,10 @@ export function ResourceInspector({
             }
           }
           navigation.close()
-          if (handsOver) forget?.()
+          if (handsOver) {
+            dismissedPreview.current = navigation.preview
+            forget?.()
+          }
         }
       }}
     >

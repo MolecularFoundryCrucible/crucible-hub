@@ -227,3 +227,23 @@ test("keeps the remembered preview and its trail when hidden", async ({
     pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
   ).toBeVisible()
 })
+
+test("empties the pane when the preview is closed", async ({ page }) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page
+    .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await pane(page)
+    .getByRole("link", { name: "NiFe K-edge operando series" })
+    .first()
+    .click()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe K-edge operando series" })
+  ).toBeVisible()
+
+  await pane(page).getByRole("button", { name: "Close" }).click()
+  await expect(pane(page)).toHaveCount(0)
+  await expect(page).not.toHaveURL(/preview=/)
+  await expect(page.getByText("Preview items show here")).toBeVisible()
+})
