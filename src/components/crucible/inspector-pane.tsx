@@ -178,11 +178,10 @@ export function InspectorPaneToggle() {
         render={
           <Button
             aria-label={label}
-            aria-pressed={pane.open}
             className="hidden inspector:inline-flex"
             onClick={() => pane.setOpen(!pane.open)}
             size="icon"
-            variant="ghost"
+            variant="outline"
           />
         }
       >

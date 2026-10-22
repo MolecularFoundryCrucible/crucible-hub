@@ -89,3 +89,35 @@ test("keeps the Back trail when leaving the page", async ({ page }) => {
     pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
   ).toBeVisible()
 })
+
+test("floats previews over the page while the pane is hidden", async ({
+  page,
+}) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: "Hide preview panel" }).click()
+  await expect(page.locator('[data-slot="sidebar-inset"]')).toHaveCSS(
+    "padding-right",
+    "0px"
+  )
+  const width = await contentWidth(page)
+
+  await page
+    .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await expect(
+    pane(page).getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
+  expect(await contentWidth(page)).toBe(width)
+  await expect(
+    page.getByRole("button", { name: "Show preview panel" })
+  ).toBeVisible()
+
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Projects", exact: true })
+    .first()
+    .click()
+  await expect(page).toHaveURL(/\/hub\/projects/)
+  await expect(pane(page)).toHaveCount(0)
+})

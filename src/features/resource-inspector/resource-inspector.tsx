@@ -126,11 +126,12 @@ export function ResourceInspector({
       ? resource.deletion_request
       : null
   const pane = useInspectorPane()
-  const handsOver = docked && pane !== null && navigation.host.kind !== "pane"
-  const shown = open && (!handsOver || pane.open)
+  // With the pane hidden, wide screens float previews like medium screens.
+  const paneDocked = docked && (pane === null || pane.open)
+  const handsOver =
+    paneDocked && pane !== null && navigation.host.kind !== "pane"
   const remember = pane?.remember
   const registerHostPreview = pane?.registerHostPreview
-  const setPaneOpen = pane?.setOpen
   const forget = pane?.forget
   const focusedPreview = useRef(
     navigation.host.kind === "pane" ? navigation.preview : undefined
@@ -147,10 +148,6 @@ export function ResourceInspector({
     title.current?.focus({ preventScroll: true })
     body.current?.scrollTo({ top: 0 })
   }, [navigation.preview, open])
-
-  useEffect(() => {
-    if (handsOver && navigation.preview) setPaneOpen?.(true)
-  }, [handsOver, navigation.preview, setPaneOpen])
 
   useEffect(() => {
     if (!handsOver || !navigation.preview) return
@@ -194,7 +191,7 @@ export function ResourceInspector({
     <Sheet
       modal={isMobile}
       onOpenChangeComplete={exit.onOpenChangeComplete}
-      open={shown}
+      open={open}
       onOpenChange={(nextOpen, eventDetails) => {
         if (!nextOpen) {
           if (eventDetails.reason === "focus-out") {
@@ -204,7 +201,7 @@ export function ResourceInspector({
           if (eventDetails.reason === "outside-press") {
             restoreFocus.current = false
             if (
-              docked ||
+              paneDocked ||
               isInteractiveOutsideTarget(eventDetails.event.target)
             ) {
               eventDetails.cancel()
@@ -217,7 +214,8 @@ export function ResourceInspector({
       }}
     >
       <SheetContent
-        className="resource-inspector gap-0 shadow-2xl inspector:shadow-none"
+        className="resource-inspector gap-0 shadow-2xl data-docked:shadow-none"
+        data-docked={paneDocked || undefined}
         data-inspector-kind={previewKind}
         initialFocus={navigation.host.kind === "pane" ? false : title}
         finalFocus={() => {
