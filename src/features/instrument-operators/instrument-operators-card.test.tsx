@@ -20,7 +20,10 @@ import {
   addWorkspaceInstrumentOperator,
   removeWorkspaceInstrumentOperator,
 } from "@/data/crucible/instruments.functions"
-import { instrumentOperatorsQueryOptions } from "@/data/crucible/instruments.queries"
+import {
+  instrumentMembersQueryOptions,
+  instrumentOperatorsQueryOptions,
+} from "@/data/crucible/instruments.queries"
 import { getWorkspaceSearch } from "@/data/crucible/search.functions"
 import type { HubResult } from "@/data/crucible/result"
 import type {
@@ -292,6 +295,13 @@ describe("InstrumentAccessCard", () => {
           }),
         })
       )
+    })
+    await waitFor(() => {
+      expect(
+        queryClient.getQueryData(
+          instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey
+        )
+      ).toEqual(updatedGrants)
     })
   })
 

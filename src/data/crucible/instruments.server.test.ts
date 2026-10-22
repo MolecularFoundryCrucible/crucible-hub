@@ -7,6 +7,7 @@ import {
   checkWorkspaceInstrumentIdExactMatch,
   createWorkspaceInstrumentResource,
   patchWorkspaceInstrument,
+  readWorkspaceInstrumentMembers,
   readWorkspaceInstrumentOperators,
   readWorkspaceInstruments,
   removeWorkspaceInstrumentOperator,
@@ -97,6 +98,54 @@ describe("workspace instrument source", () => {
       other_id_source: "facility registry",
     })
     expect(page.items[1]).toMatchObject({ capabilities: null })
+  })
+
+  it("reads instrument members from the instrument record", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const member = {
+      display_name: "Jordan Reyes",
+      permission: "editor",
+      principal_id: "0000-0000-0000-0034",
+      principal_type: "user",
+      slug: "jreyes",
+    }
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({ members: [member] })
+      })
+    )
+
+    await expect(
+      readWorkspaceInstrumentMembers("01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
+    ).resolves.toEqual([member])
+    const url = new URL(requests[0].url)
+    expect(url.pathname).toBe("/instruments/01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      include_members: "true",
+      include_metadata: "false",
+      include_owner: "false",
+    })
+  })
+
+  it("reports hidden instrument members as unavailable", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => crucibleApiResponse({ members: null }))
+    )
+
+    await expect(
+      readWorkspaceInstrumentMembers("01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
+    ).resolves.toBeNull()
   })
 
   it("sends the selected lifecycle status and directory filters to the instrument collection", async () => {

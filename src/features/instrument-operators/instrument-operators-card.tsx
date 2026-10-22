@@ -57,7 +57,10 @@ import {
   addWorkspaceInstrumentOperator,
   removeWorkspaceInstrumentOperator,
 } from "@/data/crucible/instruments.functions"
-import { instrumentOperatorsQueryOptions } from "@/data/crucible/instruments.queries"
+import {
+  instrumentMembersQueryOptions,
+  instrumentOperatorsQueryOptions,
+} from "@/data/crucible/instruments.queries"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
   grantKey,
@@ -203,6 +206,10 @@ export function InstrumentAccessCard({
     queryClient.setQueryData(
       resourceAccessQueryOptions(scope, instrument.unique_id).queryKey,
       nextGrants
+    )
+    queryClient.setQueryData(
+      instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey,
+      nextGrants.filter((grant) => grant.principal_type !== "public")
     )
   }
 

@@ -14,6 +14,7 @@ import {
 import { isWorkspaceInstrumentStatus } from "./instrument-status"
 import type { InstrumentAffiliation } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
+import { readWorkspaceResourceAccess } from "./access.server"
 import { toWorkspaceResourceDetail } from "./resources.server"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type {
@@ -26,6 +27,7 @@ import type {
   WorkspaceInstrumentSort,
   WorkspaceInstrumentStatus,
   WorkspacePerson,
+  WorkspaceResourceAccessGrant,
   WorkspaceResourceDetail,
   WorkspaceSortDirection,
 } from "./workspace-source"
@@ -105,6 +107,41 @@ function fixtureInstrumentOperators(
   return [
     ...new Map(operators.map((member) => [member.unique_id, member])).values(),
   ]
+}
+
+/** People and projects with a role on the instrument, or null when hidden. */
+export async function readWorkspaceInstrumentMembers(
+  instrumentMfid: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<readonly WorkspaceResourceAccessGrant[] | null> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const grants = await readWorkspaceResourceAccess(
+      instrumentMfid,
+      scenario,
+      requestSignal
+    )
+    return grants.filter((grant) => grant.principal_type !== "public")
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.GET("/instruments/{instrument_ref}", {
+    params: {
+      path: { instrument_ref: instrumentMfid },
+      query: {
+        include_members: true,
+        include_metadata: false,
+        include_owner: false,
+      },
+    },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) throw new CrucibleResponseError(result.response)
+  return result.data.members ?? null
 }
 
 export async function readWorkspaceInstrumentOperators(

@@ -181,6 +181,8 @@ export const crucibleKeys = {
     ] as const,
   instrumentLists: (scope: IdentityScope) =>
     [...scope, "instruments", "list"] as const,
+  instrumentMembers: (scope: IdentityScope, instrumentMfid: string) =>
+    [...scope, "instruments", "members", instrumentMfid] as const,
   instrumentOperators: (scope: IdentityScope, instrumentMfid: string) =>
     [...scope, "instruments", "operators", instrumentMfid] as const,
   resourceQueries: (scope: IdentityScope) => [...scope, "resources"] as const,

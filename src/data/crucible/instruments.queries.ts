@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import {
+  getWorkspaceInstrumentMembers,
   getWorkspaceInstrumentOperators,
   getWorkspaceInstruments,
 } from "./instruments.functions"
@@ -113,6 +114,24 @@ export function instrumentsCursorQueryOptions(
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
+    retry: scenario ? false : undefined,
+  })
+}
+
+export function instrumentMembersQueryOptions(
+  scope: IdentityScope,
+  instrumentMfid: string
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  return queryOptions({
+    queryKey: crucibleKeys.instrumentMembers(scope, instrumentMfid),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceInstrumentMembers({
+          data: { instrumentMfid, scenario },
+          signal,
+        })
+      ),
     retry: scenario ? false : undefined,
   })
 }

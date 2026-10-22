@@ -14,6 +14,7 @@ import {
   checkWorkspaceInstrumentIdExactMatch,
   createWorkspaceInstrumentResource,
   patchWorkspaceInstrument,
+  readWorkspaceInstrumentMembers,
   readWorkspaceInstrumentOperators,
   readWorkspaceInstruments,
   removeWorkspaceInstrumentOperator as removeWorkspaceInstrumentOperatorServer,
@@ -192,6 +193,20 @@ export const getWorkspaceInstruments = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceInstruments(data, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceInstrumentMembers = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(instrumentOperatorsInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceInstrumentMembers(
+        data.instrumentMfid,
+        data.scenario,
+        context.requestSignal
+      )
     )
   })
 
