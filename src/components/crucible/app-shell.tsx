@@ -10,6 +10,11 @@ import {
   useAdministratorViewControl,
   useOptionalAdministratorViewControl,
 } from "@/components/crucible/administrator-view-control"
+import {
+  InspectorPaneProvider,
+  InspectorPaneToggle,
+  useInspectorPane,
+} from "@/components/crucible/inspector-pane"
 import { PendingRegion } from "@/components/crucible/pending-region"
 import { Reveal } from "@/components/crucible/reveal"
 import { useEnteringKeys } from "@/hooks/use-entering-keys"
@@ -95,6 +100,7 @@ import {
   projectQueryOptions,
   projectSummaryQueryOptions,
 } from "@/data/crucible/projects.queries"
+import { DockedPreviewPane } from "@/features/resource-inspector/docked-preview-pane"
 import { switchDataKind } from "@/features/data/data-filter-state"
 import {
   RecentlyViewedScope,
@@ -171,297 +177,306 @@ export function AppShell({
           privilegeMode={privilegeMode}
         />
       ) : null}
-      <SidebarProvider defaultOpen={presentation.sidebarOpen}>
-        <Sidebar
-          aria-label="Primary navigation"
-          role="navigation"
-          collapsible="icon"
-        >
-          <SidebarBrand />
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={pathname === "/"}
-                      tooltip="Home"
-                      render={
-                        <Link
-                          aria-current={pathname === "/" ? "page" : undefined}
-                          to="/"
-                        />
-                      }
-                    >
-                      <WorkspaceIcon aria-hidden="true" />
-                      <span>Home</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarSeparator className="my-1" />
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isDataActive}
-                      tooltip="Data"
-                      render={
-                        <Link
-                          aria-current={
-                            pathname === "/data" ? "page" : undefined
-                          }
-                          search={defaultDataSearch}
-                          to="/data"
-                        />
-                      }
-                    >
-                      <DataCollectionIcon />
-                      <span>Data</span>
-                    </SidebarMenuButton>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          isActive={dataKind === "samples"}
-                          render={
-                            <Link
-                              aria-current={
-                                dataKind === "samples" ? "page" : undefined
-                              }
-                              aria-label="Browse samples"
-                              search={
-                                pathname === "/data"
-                                  ? (prev: Record<string, unknown>) =>
-                                      switchDataKind(prev, "samples")
-                                  : {}
-                              }
-                              to="/data"
-                            />
-                          }
-                        >
-                          <ResourceTypeIcon type="sample" />
-                          <span>Samples</span>
-                        </SidebarMenuSubButton>
-                        {account?.capabilities.can_create_sample ? (
-                          <SidebarMenuSubAction
-                            aria-label="Create sample"
-                            render={
-                              <Link
-                                aria-label="Create sample"
-                                search={{ projectMfid: undefined }}
-                                to="/samples/new"
-                              />
-                            }
-                            showOnHover
-                            title="Create sample"
-                          >
-                            <CreateResourceIcon aria-hidden="true" />
-                            <span className="sr-only">Create sample</span>
-                          </SidebarMenuSubAction>
-                        ) : null}
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          isActive={dataKind === "datasets"}
-                          render={
-                            <Link
-                              aria-current={
-                                dataKind === "datasets" ? "page" : undefined
-                              }
-                              aria-label="Browse datasets"
-                              search={
-                                pathname === "/data"
-                                  ? (prev: Record<string, unknown>) =>
-                                      switchDataKind(prev, "datasets")
-                                  : { kind: "datasets" }
-                              }
-                              to="/data"
-                            />
-                          }
-                        >
-                          <ResourceTypeIcon type="dataset" />
-                          <span>Datasets</span>
-                        </SidebarMenuSubButton>
-                        {account?.capabilities.can_create_dataset ? (
-                          <SidebarMenuSubAction
-                            aria-label="Create dataset"
-                            render={
-                              <Link
-                                aria-label="Create dataset"
-                                search={{
-                                  instrumentMfid: undefined,
-                                  projectMfid: undefined,
-                                }}
-                                to="/datasets/new"
-                              />
-                            }
-                            showOnHover
-                            title="Create dataset"
-                          >
-                            <CreateResourceIcon aria-hidden="true" />
-                            <span className="sr-only">Create dataset</span>
-                          </SidebarMenuSubAction>
-                        ) : null}
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isProjectsActive}
-                      tooltip="Projects"
-                      render={
-                        <Link
-                          aria-current={
-                            pathname === "/projects" ? "page" : undefined
-                          }
-                          search={{}}
-                          to="/projects"
-                        />
-                      }
-                    >
-                      <ResourceTypeIcon type="project" />
-                      <span>Projects</span>
-                    </SidebarMenuButton>
-                    {account?.capabilities.can_create_project ? (
-                      <SidebarMenuAction
-                        aria-label="Create project"
-                        render={
-                          <Link
-                            aria-label="Create project"
-                            to="/projects/new"
-                          />
-                        }
-                        showOnHover
-                        title="Create project"
-                      >
-                        <CreateResourceIcon aria-hidden="true" />
-                        <span className="sr-only">Create project</span>
-                      </SidebarMenuAction>
-                    ) : null}
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isInstrumentsActive}
-                      tooltip="Instruments"
-                      render={
-                        <Link
-                          aria-current={
-                            pathname === "/instruments" ? "page" : undefined
-                          }
-                          search={{}}
-                          to="/instruments"
-                        />
-                      }
-                    >
-                      <ResourceTypeIcon type="instrument" />
-                      <span>Instruments</span>
-                    </SidebarMenuButton>
-                    {account?.capabilities.can_register_instrument ? (
-                      <SidebarMenuAction
-                        aria-label="Register instrument"
-                        render={
-                          <Link
-                            aria-label="Register instrument"
-                            to="/instruments/new"
-                          />
-                        }
-                        showOnHover
-                        title="Register instrument"
-                      >
-                        <CreateResourceIcon aria-hidden="true" />
-                        <span className="sr-only">Register instrument</span>
-                      </SidebarMenuAction>
-                    ) : null}
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            {account ? (
+      <InspectorPaneProvider
+        initialOpen={presentation.inspectorOpen}
+        resetKey={`${recentlyViewedIdentity}:${privilegeMode}`}
+      >
+        <SidebarProvider defaultOpen={presentation.sidebarOpen}>
+          <Sidebar
+            aria-label="Primary navigation"
+            role="navigation"
+            collapsible="icon"
+          >
+            <SidebarBrand />
+            <SidebarContent>
               <SidebarGroup>
-                <SidebarGroupLabel>Administration</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {canUseAdministratorView(account) ? (
-                      <SidebarMenuItem>
-                        <SidebarAdministratorViewControl />
-                      </SidebarMenuItem>
-                    ) : null}
-                    <SidebarAdministrationLinks
-                      account={account}
-                      pathname={pathname}
-                      privilegeMode={privilegeMode}
-                    />
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        isActive={deletionRequestsActive}
-                        tooltip="Deletion requests"
+                        isActive={pathname === "/"}
+                        tooltip="Home"
+                        render={
+                          <Link
+                            aria-current={pathname === "/" ? "page" : undefined}
+                            to="/"
+                          />
+                        }
+                      >
+                        <WorkspaceIcon aria-hidden="true" />
+                        <span>Home</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+              <SidebarSeparator className="my-1" />
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={isDataActive}
+                        tooltip="Data"
                         render={
                           <Link
                             aria-current={
-                              deletionRequestsActive ? "page" : undefined
+                              pathname === "/data" ? "page" : undefined
                             }
-                            search={{ view: "submitted" }}
-                            to="/deletion-requests"
+                            search={defaultDataSearch}
+                            to="/data"
                           />
                         }
                       >
-                        <DeletionRequestsIcon aria-hidden="true" />
-                        <span>Deletion requests</span>
+                        <DataCollectionIcon />
+                        <span>Data</span>
                       </SidebarMenuButton>
-                      {pendingReviewCount > 0 ? (
-                        <SidebarMenuBadge
-                          aria-label={`${pendingReviewCount} pending deletion requests`}
-                          className="rounded-full border border-sidebar-border/60 bg-sidebar-accent px-1.5 text-label-compact text-sidebar-foreground"
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={dataKind === "samples"}
+                            render={
+                              <Link
+                                aria-current={
+                                  dataKind === "samples" ? "page" : undefined
+                                }
+                                aria-label="Browse samples"
+                                search={
+                                  pathname === "/data"
+                                    ? (prev: Record<string, unknown>) =>
+                                        switchDataKind(prev, "samples")
+                                    : {}
+                                }
+                                to="/data"
+                              />
+                            }
+                          >
+                            <ResourceTypeIcon type="sample" />
+                            <span>Samples</span>
+                          </SidebarMenuSubButton>
+                          {account?.capabilities.can_create_sample ? (
+                            <SidebarMenuSubAction
+                              aria-label="Create sample"
+                              render={
+                                <Link
+                                  aria-label="Create sample"
+                                  search={{ projectMfid: undefined }}
+                                  to="/samples/new"
+                                />
+                              }
+                              showOnHover
+                              title="Create sample"
+                            >
+                              <CreateResourceIcon aria-hidden="true" />
+                              <span className="sr-only">Create sample</span>
+                            </SidebarMenuSubAction>
+                          ) : null}
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={dataKind === "datasets"}
+                            render={
+                              <Link
+                                aria-current={
+                                  dataKind === "datasets" ? "page" : undefined
+                                }
+                                aria-label="Browse datasets"
+                                search={
+                                  pathname === "/data"
+                                    ? (prev: Record<string, unknown>) =>
+                                        switchDataKind(prev, "datasets")
+                                    : { kind: "datasets" }
+                                }
+                                to="/data"
+                              />
+                            }
+                          >
+                            <ResourceTypeIcon type="dataset" />
+                            <span>Datasets</span>
+                          </SidebarMenuSubButton>
+                          {account?.capabilities.can_create_dataset ? (
+                            <SidebarMenuSubAction
+                              aria-label="Create dataset"
+                              render={
+                                <Link
+                                  aria-label="Create dataset"
+                                  search={{
+                                    instrumentMfid: undefined,
+                                    projectMfid: undefined,
+                                  }}
+                                  to="/datasets/new"
+                                />
+                              }
+                              showOnHover
+                              title="Create dataset"
+                            >
+                              <CreateResourceIcon aria-hidden="true" />
+                              <span className="sr-only">Create dataset</span>
+                            </SidebarMenuSubAction>
+                          ) : null}
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={isProjectsActive}
+                        tooltip="Projects"
+                        render={
+                          <Link
+                            aria-current={
+                              pathname === "/projects" ? "page" : undefined
+                            }
+                            search={{}}
+                            to="/projects"
+                          />
+                        }
+                      >
+                        <ResourceTypeIcon type="project" />
+                        <span>Projects</span>
+                      </SidebarMenuButton>
+                      {account?.capabilities.can_create_project ? (
+                        <SidebarMenuAction
+                          aria-label="Create project"
+                          render={
+                            <Link
+                              aria-label="Create project"
+                              to="/projects/new"
+                            />
+                          }
+                          showOnHover
+                          title="Create project"
                         >
-                          {pendingReviewCount}
-                        </SidebarMenuBadge>
+                          <CreateResourceIcon aria-hidden="true" />
+                          <span className="sr-only">Create project</span>
+                        </SidebarMenuAction>
+                      ) : null}
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={isInstrumentsActive}
+                        tooltip="Instruments"
+                        render={
+                          <Link
+                            aria-current={
+                              pathname === "/instruments" ? "page" : undefined
+                            }
+                            search={{}}
+                            to="/instruments"
+                          />
+                        }
+                      >
+                        <ResourceTypeIcon type="instrument" />
+                        <span>Instruments</span>
+                      </SidebarMenuButton>
+                      {account?.capabilities.can_register_instrument ? (
+                        <SidebarMenuAction
+                          aria-label="Register instrument"
+                          render={
+                            <Link
+                              aria-label="Register instrument"
+                              to="/instruments/new"
+                            />
+                          }
+                          showOnHover
+                          title="Register instrument"
+                        >
+                          <CreateResourceIcon aria-hidden="true" />
+                          <span className="sr-only">Register instrument</span>
+                        </SidebarMenuAction>
                       ) : null}
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
-            ) : null}
-            <SidebarRecentResources />
-          </SidebarContent>
-          <SidebarUtilities
-            pathname={pathname}
-            projectActive={Boolean(projectMfid)}
-          />
-          <SidebarRail />
-        </Sidebar>
-        <SidebarInset>
-          <header className="sticky top-0 z-(--layer-navigation) flex h-app-header items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
-            <SidebarTrigger className="md:hidden" />
-            <AppSearch
-              preferFullProject={pathname.startsWith("/projects/")}
-              projectMfid={projectMfid}
-              scope={scope}
+              {account ? (
+                <SidebarGroup>
+                  <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {canUseAdministratorView(account) ? (
+                        <SidebarMenuItem>
+                          <SidebarAdministratorViewControl />
+                        </SidebarMenuItem>
+                      ) : null}
+                      <SidebarAdministrationLinks
+                        account={account}
+                        pathname={pathname}
+                        privilegeMode={privilegeMode}
+                      />
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={deletionRequestsActive}
+                          tooltip="Deletion requests"
+                          render={
+                            <Link
+                              aria-current={
+                                deletionRequestsActive ? "page" : undefined
+                              }
+                              search={{ view: "submitted" }}
+                              to="/deletion-requests"
+                            />
+                          }
+                        >
+                          <DeletionRequestsIcon aria-hidden="true" />
+                          <span>Deletion requests</span>
+                        </SidebarMenuButton>
+                        {pendingReviewCount > 0 ? (
+                          <SidebarMenuBadge
+                            aria-label={`${pendingReviewCount} pending deletion requests`}
+                            className="rounded-full border border-sidebar-border/60 bg-sidebar-accent px-1.5 text-label-compact text-sidebar-foreground"
+                          >
+                            {pendingReviewCount}
+                          </SidebarMenuBadge>
+                        ) : null}
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              ) : null}
+              <SidebarRecentResources />
+            </SidebarContent>
+            <SidebarUtilities
+              pathname={pathname}
+              projectActive={Boolean(projectMfid)}
             />
-            <QrScannerAction />
-            {account ? <CreateMenu account={account} /> : null}
-            {account && scope ? (
-              <AccountControls account={account} sessionAuth={sessionAuth} />
-            ) : (
-              <div className="ml-auto border-l pl-3">
-                <Avatar size="sm">
-                  <AvatarFallback className="text-foreground">?</AvatarFallback>
-                </Avatar>
-              </div>
-            )}
-          </header>
-          <AppMain>
-            <ResourceSiblingNavigationProvider
-              key={recentlyViewedIdentity}
-              resetKey={privilegeMode}
-            >
-              {children}
-            </ResourceSiblingNavigationProvider>
-          </AppMain>
-          <AppFooter />
-        </SidebarInset>
-      </SidebarProvider>
+            <SidebarRail />
+          </Sidebar>
+          <PreviewPaneInset>
+            <header className="sticky top-0 z-(--layer-navigation) flex h-app-header items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+              <SidebarTrigger className="md:hidden" />
+              <AppSearch
+                preferFullProject={pathname.startsWith("/projects/")}
+                projectMfid={projectMfid}
+                scope={scope}
+              />
+              <QrScannerAction />
+              {account ? <CreateMenu account={account} /> : null}
+              {account && scope ? (
+                <AccountControls account={account} sessionAuth={sessionAuth} />
+              ) : (
+                <div className="ml-auto border-l pl-3">
+                  <Avatar size="sm">
+                    <AvatarFallback className="text-foreground">
+                      ?
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
+              <InspectorPaneToggle />
+            </header>
+            <AppMain>
+              <ResourceSiblingNavigationProvider
+                key={recentlyViewedIdentity}
+                resetKey={privilegeMode}
+              >
+                {children}
+              </ResourceSiblingNavigationProvider>
+            </AppMain>
+            <AppFooter />
+          </PreviewPaneInset>
+          <DockedPreviewPane />
+        </SidebarProvider>
+      </InspectorPaneProvider>
     </RecentlyViewedScope>
   )
 
@@ -924,6 +939,15 @@ function SidebarAdministratorViewControl() {
         variant="warning"
       />
     </label>
+  )
+}
+
+function PreviewPaneInset({ children }: { children: React.ReactNode }) {
+  const pane = useInspectorPane()
+  return (
+    <SidebarInset data-inspector-pane={pane?.open ? "open" : "closed"}>
+      {children}
+    </SidebarInset>
   )
 }
 

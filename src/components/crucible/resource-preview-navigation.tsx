@@ -56,6 +56,8 @@ export type ResourcePreviewHost =
       resourceMfid: string
       section?: "graph"
     }
+  | { kind: "pane"; preview: unknown }
+type PageResourcePreviewHost = Exclude<ResourcePreviewHost, { kind: "pane" }>
 
 export type ResourcePreviewIdentity = {
   kind?: "dataset" | "instrument" | "project" | "sample"
@@ -158,7 +160,29 @@ type ResourceSearch = ReturnType<typeof sampleRoute.useSearch>
 type ProjectDataSearch = ReturnType<typeof projectDataRoute.useSearch>
 type InstrumentDataSearch = ReturnType<typeof instrumentDataRoute.useSearch>
 
-export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
+export type ResourcePreviewNavigation = {
+  close: () => void
+  host: ResourcePreviewHost
+  invalidPreview: boolean
+  open: (
+    target: string,
+    source?: HTMLElement | null,
+    previewIdentity?: ResourcePreviewIdentity,
+    back?: boolean
+  ) => void
+  preparePreview: (identity: ResourcePreviewIdentity) => void
+  preview: string | undefined
+  previewIdentity: ResourcePreviewIdentity | undefined
+  previous: string | undefined
+  replace: boolean
+  state: (target: string, back?: boolean) => { resourcePreview?: PreviewTrail }
+  targetPreview: (target: string) => string
+  trigger: React.RefObject<HTMLElement | null>
+}
+
+export function useResourcePreviewNavigation(
+  host: PageResourcePreviewHost
+): ResourcePreviewNavigation {
   const origin =
     host.kind === "resource"
       ? host.resourceMfid
@@ -235,7 +259,8 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
   const open = (
     target: string,
     source?: HTMLElement | null,
-    previewIdentity?: ResourcePreviewIdentity
+    previewIdentity?: ResourcePreviewIdentity,
+    back = false
   ) => {
     if (preview === target) return
     if (previewIdentity) preparePreview(previewIdentity)
@@ -244,7 +269,7 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
       hash: true as const,
       replace: hasPreview,
       resetScroll: false,
-      state: state(target),
+      state: state(target, back),
     }
     if (host.kind === "resource") {
       const search = (currentSearch: ResourceSearch) => ({
@@ -432,10 +457,6 @@ export function useResourcePreviewNavigation(host: ResourcePreviewHost) {
     replace: hasPreview,
   }
 }
-
-export type ResourcePreviewNavigation = ReturnType<
-  typeof useResourcePreviewNavigation
->
 
 export const ResourcePreviewContext =
   createContext<ResourcePreviewNavigation | null>(null)
@@ -635,6 +656,10 @@ export function ResourcePreviewLink({
       state: navigation.state(mfid, back),
     }
     const preview = navigation.targetPreview(mfid)
+    if (host?.kind === "pane") {
+      navigation.open(mfid, undefined, undefined, back)
+      return
+    }
     if (host?.kind === "resource") {
       const search = (currentSearch: ResourceSearch) => ({
         ...currentSearch,

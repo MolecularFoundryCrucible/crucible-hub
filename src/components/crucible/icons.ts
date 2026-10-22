@@ -68,6 +68,8 @@ export {
   SunMoon as ThemeIcon,
   PanelLeftClose as CollapseSidebarIcon,
   PanelLeftOpen as ExpandSidebarIcon,
+  PanelRightClose as HidePreviewPaneIcon,
+  PanelRightOpen as ShowPreviewPaneIcon,
   LoaderCircle as PreparingDownloadIcon,
   Pencil as EditResourceIcon,
   Pencil as RenameUploadIcon,

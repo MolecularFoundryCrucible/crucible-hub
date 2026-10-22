@@ -3,6 +3,7 @@ import { createContext, useContext } from "react"
 import type { ViewerPresentation } from "@/lib/viewer-presentation"
 
 const defaultPresentation: ViewerPresentation = {
+  inspectorOpen: true,
   sidebarOpen: true,
   theme: "system",
   timeZone: undefined,

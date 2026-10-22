@@ -16,6 +16,7 @@ import {
 } from "@/components/crucible/collection-state"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
+import { useInspectorPane } from "@/components/crucible/inspector-pane"
 import {
   COLLAPSED_LIST_LIMIT,
   ListExpansionToggle,
@@ -124,14 +125,48 @@ export function ResourceInspector({
     resource?.kind === "dataset" || resource?.kind === "sample"
       ? resource.deletion_request
       : null
+  const pane = useInspectorPane()
+  const handsOver = docked && pane !== null && navigation.host.kind !== "pane"
+  const shown = open && (!handsOver || pane.open)
+  const remember = pane?.remember
+  const registerHostPreview = pane?.registerHostPreview
+  const setPaneOpen = pane?.setOpen
+  const forget = pane?.forget
+  const focusedPreview = useRef(
+    navigation.host.kind === "pane" ? navigation.preview : undefined
+  )
 
   useEffect(() => {
-    if (open) {
-      restoreFocus.current = true
-      title.current?.focus({ preventScroll: true })
-      body.current?.scrollTo({ top: 0 })
+    if (!open) {
+      focusedPreview.current = undefined
+      return
     }
+    if (focusedPreview.current === navigation.preview) return
+    focusedPreview.current = navigation.preview
+    restoreFocus.current = true
+    title.current?.focus({ preventScroll: true })
+    body.current?.scrollTo({ top: 0 })
   }, [navigation.preview, open])
+
+  useEffect(() => {
+    if (handsOver && navigation.preview) setPaneOpen?.(true)
+  }, [handsOver, navigation.preview, setPaneOpen])
+
+  useEffect(() => {
+    if (!handsOver || !navigation.preview) return
+    return registerHostPreview?.()
+  }, [handsOver, navigation.preview, registerHostPreview])
+
+  useEffect(() => {
+    if (!handsOver || !navigation.preview) return
+    remember?.({
+      identity:
+        previewKind && previewName
+          ? { kind: previewKind, mfid: navigation.preview, name: previewName }
+          : undefined,
+      mfid: navigation.preview,
+    })
+  }, [handsOver, navigation.preview, previewKind, previewName, remember])
 
   const suppressFocusRestore: MouseEventHandler<HTMLAnchorElement> = (
     event
@@ -151,7 +186,7 @@ export function ResourceInspector({
     <Sheet
       modal={isMobile}
       onOpenChangeComplete={exit.onOpenChangeComplete}
-      open={open}
+      open={shown}
       onOpenChange={(nextOpen, eventDetails) => {
         if (!nextOpen) {
           if (eventDetails.reason === "focus-out") {
@@ -169,13 +204,14 @@ export function ResourceInspector({
             }
           }
           navigation.close()
+          if (handsOver) forget?.()
         }
       }}
     >
       <SheetContent
         className="resource-inspector gap-0 shadow-2xl inspector:shadow-none"
         data-inspector-kind={previewKind}
-        initialFocus={title}
+        initialFocus={navigation.host.kind === "pane" ? false : title}
         finalFocus={() => {
           if (!restoreFocus.current) return false
           const target = navigation.trigger.current?.isConnected
@@ -199,7 +235,7 @@ export function ResourceInspector({
               <BackPreviewIcon aria-hidden="true" data-icon="inline-start" />
               Back
             </ResourcePreviewLink>
-          ) : (
+          ) : navigation.host.kind === "pane" ? null : (
             <SheetClose
               render={
                 <Button
