@@ -173,21 +173,22 @@ export function InspectorPaneToggle() {
   const label = pane.open ? "Hide preview panel" : "Show preview panel"
   const Icon = pane.open ? HidePreviewPaneIcon : ShowPreviewPaneIcon
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            className="hidden inspector:inline-flex"
-            onClick={() => pane.setOpen(!pane.open)}
-            size="icon"
-            variant="outline"
-          />
-        }
-      >
-        <Icon aria-hidden="true" />
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
+    <div className="hidden border-l pl-3 inspector:flex">
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              aria-label={label}
+              onClick={() => pane.setOpen(!pane.open)}
+              size="icon"
+              variant="ghost"
+            />
+          }
+        >
+          <Icon aria-hidden="true" />
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </div>
   )
 }
