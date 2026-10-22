@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-10-22
 
+Updated: 2026-10-22
+
 ## Context
 
 The Hub has motion tokens (`--motion-fast`, `--motion-standard`, `--motion-deliberate` at 120, 180 and 240 ms, and standard, enter and exit easing in `src/styles.css`) and a few shared pieces (`Reveal`, `enterMotionClassName`, `useEnteringKeys`, `.pending-region`). A review of the whole Hub found that many places bypass them:
@@ -38,6 +40,7 @@ The design follows the shared ground of published industry guidance rather than 
 - **Easing:** the existing `--motion-ease-standard`, `--motion-ease-enter` and `--motion-ease-exit`.
 - **New: `--motion-indicator-delay` (200 ms).** The wait before any spinner, progress bar or dimming appears.
 - **New: `--motion-pending-opacity` (0.6).** The opacity of dimmed stale content.
+- **New: `--motion-progress-delay` (500 ms).** The longer wait before the route progress bar appears. Dimming stale content follows React's own 200 ms example, while progress bars and looping indicators follow the longer waits in NN/g guidance and TanStack Router's pending defaults.
 - **New: named layers,** alongside the existing `--layer-*` tokens. From lowest to highest: the existing sticky and floating layers, then `--layer-navigation` (sidebar and app header), `--layer-modal` (dialogs, alert dialogs, sheets and their backdrops), `--layer-popover` (menus, popovers, comboboxes, hover cards), `--layer-tooltip` and `--layer-toast`. Popovers sit above modals because the Hub opens pickers and menus inside dialogs and the inspector; a modal blocks everything outside it, so no popover from behind a modal can be open at the same time. Toasts use `--layer-toast` plus their stack index. This replaces the popover-below-modal order currently documented in `docs/design-system-reference.md`.
 
 No component, route or feature may use a raw duration, easing curve, cubic-bezier, `z-50` or numeric z-index.
@@ -46,19 +49,19 @@ No component, route or feature may use a raw duration, easing curve, cubic-bezie
 
 Every animated element uses exactly one role. Each role is defined once, as CSS in `src/styles.css` and as class constants in `src/lib/motion.ts`.
 
-| Role               | Used for                                            | Enter                                                        | Exit                                       |
-| ------------------ | --------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
-| `press`            | hover, press, focus, selection colour changes       | fast, standard easing                                        | same                                       |
-| `anchored-overlay` | menus, popovers, comboboxes, hover cards, tooltips  | fast, `ease-enter`, fade plus 95% scale from the anchor side | fast, `ease-exit`, fade                    |
-| `modal`            | dialogs, alert dialogs and their backdrops          | standard, `ease-enter`, fade plus 95% scale                  | fast, `ease-exit`, fade                    |
-| `sheet`            | side sheets and the resource inspector              | deliberate, `ease-enter`, slide from its edge plus fade      | standard, `ease-exit`                      |
-| `toast`            | notifications                                       | standard, `ease-enter`                                       | fast, `ease-exit`; stack reflow standard   |
-| `reveal`           | conditional sections that open and close in place   | standard, height plus fade (`Reveal`)                        | standard                                   |
-| `content-enter`    | newly arrived rows, appended pages, swapped panels  | standard, `ease-enter`, fade                                 | none: content leaves instantly             |
-| `section-change`   | route-backed section tabs                           | standard crossfade through the existing view transition      | same                                       |
-| `layout`           | sidebar collapse, inspector docking, graph relayout | standard; graph relayout deliberate                          | same                                       |
-| `pending`          | dimming a region whose data is reloading            | after the indicator delay: fast fade to the pending opacity  | fast                                       |
-| `progress`         | the route progress bar and inline spinners          | after the indicator delay                                    | finishes forward to full width, then fades |
+| Role               | Used for                                            | Enter                                                                                             | Exit                                       |
+| ------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `press`            | hover, press, focus, selection colour changes       | fast, standard easing                                                                             | same                                       |
+| `anchored-overlay` | menus, popovers, comboboxes, hover cards, tooltips  | fast, `ease-enter`, fade plus 95% scale from the anchor side                                      | fast, `ease-exit`, fade                    |
+| `modal`            | dialogs, alert dialogs and their backdrops          | standard, `ease-enter`, fade plus 95% scale                                                       | fast, `ease-exit`, fade                    |
+| `sheet`            | side sheets and the resource inspector              | deliberate, `ease-enter`, slide from its edge plus fade                                           | standard, `ease-exit`                      |
+| `toast`            | notifications                                       | standard, `ease-enter`                                                                            | fast, `ease-exit`; stack reflow standard   |
+| `reveal`           | conditional sections that open and close in place   | standard, height plus fade (`Reveal`)                                                             | standard                                   |
+| `content-enter`    | newly arrived rows, appended pages, swapped panels  | standard, `ease-enter`, fade                                                                      | none: content leaves instantly             |
+| `section-change`   | route-backed section tabs                           | standard crossfade through the existing view transition                                           | same                                       |
+| `layout`           | sidebar collapse, inspector docking, graph relayout | standard; graph relayout deliberate                                                               | same                                       |
+| `pending`          | dimming a region whose data is reloading            | after the indicator delay: fast fade to the pending opacity                                       | fast                                       |
+| `progress`         | the route progress bar and inline spinners          | bar after the progress delay, spinners after the indicator delay; the bar grows slowly toward 80% | finishes forward to full width, then fades |
 
 ### 3. Shared pieces
 
@@ -69,8 +72,8 @@ Features compose these and never re-implement them:
 - **`useEnteringKeys` with `enterMotionClassName`.** They already exist: fade in only items that arrive after the first render.
 - **`PendingRegion`.** A component that applies `pending-region`, `data-pending` and `aria-busy` together, with the dim delayed by the indicator delay. It replaces hand-wired `aria-busy` on collections, search, the inspector and the admin-view switch.
 - **`useDelayedFlag(active, delay = indicator delay)`.** Becomes true only after `active` has held for the delay. It drives `RouteProgress`, inline pending icons that should not flash, and `PendingRegion`.
-- **Overlay presets in `src/components/ui`.** Each Base UI overlay primitive applies its role once, so every dialog, menu, popover, combobox, hover card, tooltip, sheet and toast inherits the same timing, easing and layer.
-- **Exit-safe dialog content: Base UI `onOpenChangeComplete`, `useExitSafeMount` and `useLastPresent`.** Dialog content keeps its last state until the close animation ends. Callers stop unmounting content or resetting state the moment `open` becomes false.
+- **Overlay presets in `src/components/ui`.** Each Base UI overlay primitive applies its role once, so every dialog, menu, popover, combobox, hover card, tooltip, sheet and toast inherits the same timing, easing and layer. Overlay roles are CSS transitions on Base UI's `data-starting-style` and `data-ending-style`, which Base UI recommends over keyframe animations because a transition reverses smoothly when interrupted.
+- **Exit-safe dialog content: Base UI `onOpenChangeComplete` and `useExitSafeMount`.** Dialog content keeps its last state until the close animation ends. Callers stop unmounting content or resetting state the moment `open` becomes false.
 
 ### 4. Reduced motion
 
@@ -86,7 +89,7 @@ Features compose these and never re-implement them:
 `scripts/check-design-tokens.mjs` is extended to reject, in `src/components/ui` as well as feature code:
 
 - raw `ms`, `s` or `cubic-bezier` values in class names and inline styles
-- arbitrary `transition-[...]` and `duration-[...]` utilities
+- arbitrary `duration-[...]`, `delay-[...]`, `ease-[...]` and `animate-[...]` utilities, and numeric `delay-*` utilities; `transition-[...]` stays allowed when it only lists properties, since a property list carries no timing
 - `z-50` and numeric `z-*` utilities
 - `ease-in`, `ease-out` and `ease-in-out`
 
@@ -132,7 +135,7 @@ Section 6 is the complete scope of this work. The principles guide future work a
 
 ## Non-goals
 
-- No animation library (such as Framer Motion). CSS, `tw-animate-css`, Base UI data attributes and the Web Animations API are enough.
+- No animation library (such as Framer Motion). CSS transitions, `tw-animate-css` for content entering, Base UI data attributes and the Web Animations API are enough.
 - No decorative motion, page-level route animations beyond the existing section crossfade, parallax or spring physics.
 - No list virtualization or graph rendering rewrite in this work.
 

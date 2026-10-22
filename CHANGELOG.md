@@ -12,6 +12,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Changing a filter or sort order on Data, project data, and the projects, instruments, users, and service accounts lists now keeps the current results on screen until the new ones arrive, dimming them only if the wait passes 200 ms, instead of replacing them with a loading placeholder.
 - Fixed Show all lists not animating in production, collapsing a long list inside the inspector scrolling the page behind it, Save becoming available after whitespace-only summary edits, the upload area jumping away while files upload, and copy buttons staying on Copied indefinitely.
 - With reduced motion turned on, overlays no longer scale or slide and buttons no longer shift when pressed.
+- Menus, popovers, tooltips, and dialogs now reverse smoothly when closed while still opening. The route progress bar waits 500 ms before appearing, Load more spinners wait 200 ms, and screen readers now reliably hear when a list is updating.
 
 ## 1.6.2 - 2026-10-21
 
