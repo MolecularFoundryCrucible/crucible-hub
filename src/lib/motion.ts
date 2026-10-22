@@ -40,9 +40,13 @@ export function prefersReducedMotion(): boolean {
   )
 }
 
-/** A motion token in milliseconds, or 0 under reduced motion. */
+/**
+ * A motion token in milliseconds. Movement durations are 0 under reduced
+ * motion; the indicator delay is kept so fast responses still never flash.
+ */
 export function motionDuration(token: MotionToken): number {
-  if (typeof window === "undefined" || prefersReducedMotion()) return 0
+  if (typeof window === "undefined") return 0
+  if (token !== "--motion-indicator-delay" && prefersReducedMotion()) return 0
   return parseCssTime(
     window.getComputedStyle(document.documentElement).getPropertyValue(token)
   )

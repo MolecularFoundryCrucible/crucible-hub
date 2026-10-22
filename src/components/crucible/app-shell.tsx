@@ -10,6 +10,7 @@ import {
   useAdministratorViewControl,
   useOptionalAdministratorViewControl,
 } from "@/components/crucible/administrator-view-control"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { Reveal } from "@/components/crucible/reveal"
 import { useEnteringKeys } from "@/hooks/use-entering-keys"
 import { enterMotionClassName } from "@/lib/motion"
@@ -927,15 +928,15 @@ function SidebarAdministratorViewControl() {
 }
 
 function AppMain({ children }: { children: React.ReactNode }) {
-  const pending = useOptionalAdministratorViewControl()?.pending
+  const pending = useOptionalAdministratorViewControl()?.pending ?? false
   return (
-    <main
-      aria-busy={pending || undefined}
-      className="pending-region mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide"
-      data-pending={pending || undefined}
+    <PendingRegion
+      as="main"
+      className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide"
+      pending={pending}
     >
       {children}
-    </main>
+    </PendingRegion>
   )
 }
 

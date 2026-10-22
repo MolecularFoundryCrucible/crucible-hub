@@ -21,7 +21,9 @@ describe("motionDuration", () => {
   function stubMotion(value: string, reduced: boolean) {
     vi.spyOn(window, "getComputedStyle").mockReturnValue({
       getPropertyValue: (name: string) =>
-        name === "--motion-standard" ? value : "",
+        name === "--motion-standard" || name === "--motion-indicator-delay"
+          ? value
+          : "",
     } as CSSStyleDeclaration)
     vi.stubGlobal(
       "matchMedia",
@@ -37,5 +39,10 @@ describe("motionDuration", () => {
   it("returns zero under reduced motion", () => {
     stubMotion("180ms", true)
     expect(motionDuration("--motion-standard")).toBe(0)
+  })
+
+  it("keeps the indicator delay under reduced motion", () => {
+    stubMotion("200ms", true)
+    expect(motionDuration("--motion-indicator-delay")).toBe(200)
   })
 })

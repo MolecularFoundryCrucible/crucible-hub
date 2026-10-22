@@ -1735,19 +1735,29 @@ body {
   position: fixed;
   z-index: var(--layer-route-progress);
   top: 0;
-  right: 100%;
+  right: 0;
   left: 0;
   height: var(--route-progress-height);
   background: var(--primary);
   opacity: 0;
-  transition:
-    right var(--motion-fast) var(--motion-ease-standard),
-    opacity var(--motion-fast) var(--motion-ease-standard);
+  transform: scaleX(0);
+  transform-origin: left;
 }
 
-.route-progress[data-active] {
-  right: 20%;
+/* Grows forward while a slow navigation loads, then completes and fades. */
+.route-progress[data-phase="active"] {
   opacity: 1;
+  transform: scaleX(0.8);
+  transition: transform calc(var(--motion-deliberate) * 4)
+    var(--motion-ease-enter);
+}
+
+.route-progress[data-phase="done"] {
+  opacity: 0;
+  transform: scaleX(1);
+  transition:
+    transform var(--motion-fast) var(--motion-ease-exit),
+    opacity var(--motion-fast) var(--motion-ease-exit) var(--motion-fast);
 }
 
 @layer base {
