@@ -8,6 +8,7 @@ import type {
 
 import {
   fallbackResourceGraphLayout,
+  graphViewportOptions,
   layoutResourceGraph,
   resetResourceGraphLayoutEngine,
   resolveAssociationHandleIds,
@@ -17,6 +18,12 @@ import {
   graphRelationshipOrder,
   graphRelationshipPresentations,
 } from "./resource-graph-page"
+
+vi.mock("@/lib/motion", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  motionDuration: (token: string) =>
+    token === "--motion-deliberate" ? 240 : 0,
+}))
 
 function createMockNode(
   uniqueId: string,
@@ -77,7 +84,6 @@ function createMockGraph(
 
 function createMockElement(tokenValues: Record<string, string> = {}) {
   const defaultTokens: Record<string, string> = {
-    "--graph-layout-duration": "300",
     "--graph-layout-layer-gap": "80",
     "--graph-layout-node-gap": "40",
     "--graph-node-height": "100",
@@ -96,6 +102,15 @@ function createMockElement(tokenValues: Record<string, string> = {}) {
   )
   return element
 }
+
+describe("graphViewportOptions", () => {
+  it("times graph motion with the deliberate motion token", () => {
+    expect(graphViewportOptions(document.createElement("div"))).toEqual({
+      duration: 240,
+    })
+    expect(graphViewportOptions(null)).toEqual({ duration: 0 })
+  })
+})
 
 describe("resource graph fallback layout", () => {
   it("computes horizontal fallback positions with offset from root", () => {

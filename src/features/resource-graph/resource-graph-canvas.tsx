@@ -75,6 +75,7 @@ import type {
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { motionDuration } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import {
   graphExpansionModeLabel,
@@ -2244,16 +2245,8 @@ function scheduleEntryReveal(
   })
 }
 
-function graphViewportOptions(element: HTMLElement | null) {
-  if (
-    !element ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  ) {
-    return { duration: 0 }
-  }
-  return {
-    duration: graphNumberToken(element, "--graph-layout-duration"),
-  }
+export function graphViewportOptions(element: HTMLElement | null) {
+  return { duration: element ? motionDuration("--motion-deliberate") : 0 }
 }
 
 function graphNumberToken(

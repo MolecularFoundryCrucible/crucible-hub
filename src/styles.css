@@ -569,7 +569,6 @@
   --graph-icon-position-y: 22;
   --graph-label-width: 164;
   --graph-label-offset-x: 42;
-  --graph-layout-duration: 440;
   --graph-node-enter-scale: 0.96;
   --graph-layout-layer-gap: 96;
   --graph-layout-node-gap: 40;
@@ -1198,7 +1197,7 @@ body {
 }
 
 .resource-graph-surface .react-flow__edge {
-  transition: opacity calc(var(--graph-layout-duration) * 1ms) ease-out;
+  transition: opacity var(--motion-deliberate) var(--motion-ease-standard);
 }
 
 .resource-graph-surface .resource-graph-edge-entering {
