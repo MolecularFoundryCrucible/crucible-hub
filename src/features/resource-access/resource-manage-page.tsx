@@ -110,7 +110,7 @@ export function ResourceManagePage({
     <div className="flex min-w-0 flex-col gap-6">
       {canManageAccess ? (
         <ContentBoundary width="reading">
-          <ManagedResourceAccess resource={resource} scope={scope} />
+          <ResourceAccessCard resource={resource} scope={scope} />
         </ContentBoundary>
       ) : (
         <ContentBoundary width="reading">
@@ -179,7 +179,7 @@ export function ResourceManagePage({
   )
 }
 
-function ManagedResourceAccess({
+export function ResourceAccessCard({
   resource,
   scope,
 }: {
@@ -212,6 +212,7 @@ function ManagedResourceAccess({
     stopSaving,
     toggleSelection,
   } = useAccessListManagement()
+  const canManage = resource.capabilities?.can_manage_access === true
   const roles = permittedAccessGrantRoles(resource.capabilities?.max_grant_role)
   const mutationPending = savingAnything || changingPublic
   const canGrant = roles.length > 0
@@ -383,14 +384,16 @@ function ManagedResourceAccess({
       <Card>
         <CardHeader actionLayout="inline">
           <CardTitle>Access management</CardTitle>
-          <CardAction>
-            <ManagementToggle
-              active={managing}
-              disabled={mutationPending}
-              onChange={setManaging}
-              subject="access"
-            />
-          </CardAction>
+          {canManage ? (
+            <CardAction>
+              <ManagementToggle
+                active={managing}
+                disabled={mutationPending}
+                onChange={setManaging}
+                subject="access"
+              />
+            </CardAction>
+          ) : null}
         </CardHeader>
         <CardContent>
           <h3

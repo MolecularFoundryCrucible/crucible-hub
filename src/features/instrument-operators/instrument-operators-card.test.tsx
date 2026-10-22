@@ -226,6 +226,29 @@ describe("InstrumentAccessCard", () => {
     expect(screen.getByText("Operator")).toBeTruthy()
   })
 
+  it("shows members and operators read-only to people who cannot manage access", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <InstrumentAccessCard
+          instrument={{
+            ...instrument,
+            capabilities: {
+              ...instrument.capabilities,
+              can_manage_access: false,
+              max_grant_role: null,
+            },
+          }}
+          scope={scope}
+        />
+      </QueryClientProvider>
+    )
+
+    expect(screen.getByText("Access management")).toBeTruthy()
+    expect(screen.getByText("Jordan Reyes")).toBeTruthy()
+    expect(screen.getByText("Beamline Collector")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Manage access" })).toBeNull()
+  })
+
   it("toggles managing mode and updates a member's role", async () => {
     const updatedGrants: WorkspaceResourceAccessGrant[] = [
       initialGrants[0],
