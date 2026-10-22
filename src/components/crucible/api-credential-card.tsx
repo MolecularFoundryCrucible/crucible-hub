@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useDelayedFlag } from "@/hooks/use-delayed-flag"
 import type { WorkspaceApiCredentialStatus } from "@/data/crucible/workspace-source"
 
 export function RotateCredentialAction({
@@ -28,6 +29,7 @@ export function RotateCredentialAction({
   onClick: () => void
   pending?: boolean
 }) {
+  const showPending = useDelayedFlag(pending)
   return (
     <Button
       disabled={disabled || pending}
@@ -36,7 +38,7 @@ export function RotateCredentialAction({
       type="button"
       variant="outline"
     >
-      {pending ? (
+      {showPending ? (
         <PendingIcon data-icon="inline-start" />
       ) : (
         <RotateCredentialIcon aria-hidden="true" data-icon="inline-start" />

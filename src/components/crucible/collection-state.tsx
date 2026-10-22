@@ -23,6 +23,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useDelayedFlag } from "@/hooks/use-delayed-flag"
 import { cn } from "@/lib/utils"
 import {
   Table,
@@ -496,10 +497,11 @@ export function CollectionUpdateStatus({
   updating: boolean
 }) {
   const hydrated = useHydrated()
+  const announced = useDelayedFlag(updating && hydrated)
 
   return (
     <p className="sr-only" role="status">
-      {updating && hydrated ? `Updating ${label}…` : null}
+      {announced ? `Updating ${label}…` : null}
     </p>
   )
 }

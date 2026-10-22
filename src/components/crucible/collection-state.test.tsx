@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { renderToString } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -8,6 +8,11 @@ import {
   CollectionUpdateStatus,
   ResourceListPending,
 } from "./collection-state"
+
+vi.mock("@/lib/motion", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  motionDuration: () => 200,
+}))
 
 afterEach(cleanup)
 
@@ -138,10 +143,22 @@ describe("CollectionUpdateStatus", () => {
     expect(screen.getByRole("status").textContent).toBe("")
   })
 
-  it("announces updates after hydration", () => {
-    render(<CollectionUpdateStatus label="datasets" updating />)
+  it("announces only updates that outlast the indicator delay", () => {
+    vi.useFakeTimers()
+    try {
+      const { rerender } = render(
+        <CollectionUpdateStatus label="datasets" updating />
+      )
+      expect(screen.getByRole("status").textContent).toBe("")
 
-    expect(screen.getByRole("status").textContent).toBe("Updating datasets…")
+      act(() => vi.advanceTimersByTime(200))
+      expect(screen.getByRole("status").textContent).toBe("Updating datasets…")
+
+      rerender(<CollectionUpdateStatus label="datasets" updating={false} />)
+      expect(screen.getByRole("status").textContent).toBe("")
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
 
