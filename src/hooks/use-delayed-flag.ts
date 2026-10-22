@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react"
 
 import { motionDuration } from "@/lib/motion"
+import type { MotionToken } from "@/lib/motion"
 
 /**
- * True once `active` has held for the indicator delay; false as soon as it
- * ends, so fast operations never flash an indicator.
+ * True once `active` has held for the delay (the indicator delay unless a
+ * token or milliseconds are given); false as soon as it ends, so fast
+ * operations never flash an indicator.
  */
-export function useDelayedFlag(active: boolean, delayMs?: number): boolean {
+export function useDelayedFlag(
+  active: boolean,
+  delay: MotionToken | number = "--motion-indicator-delay"
+): boolean {
   const [shown, setShown] = useState(false)
   useEffect(() => {
     if (!active) {
@@ -15,9 +20,9 @@ export function useDelayedFlag(active: boolean, delayMs?: number): boolean {
     }
     const timer = window.setTimeout(
       () => setShown(true),
-      delayMs ?? motionDuration("--motion-indicator-delay")
+      typeof delay === "number" ? delay : motionDuration(delay)
     )
     return () => window.clearTimeout(timer)
-  }, [active, delayMs])
+  }, [active, delay])
   return active && shown
 }

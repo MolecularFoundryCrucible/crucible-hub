@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useId, useRef } from "react"
 
 import { BackToTop } from "@/components/crucible/back-to-top"
 import { Button } from "@/components/ui/button"
-import { PendingIcon } from "@/components/crucible/pending-icon"
+import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
 
 const collectionLoadAheadMargin = "480px 0px"
 
@@ -80,7 +80,7 @@ export function CollectionPagination({
             type="button"
             variant="outline"
           >
-            {isLoading ? <PendingIcon data-icon="inline-start" /> : null}
+            <DelayedPendingIcon data-icon="inline-start" pending={isLoading} />
             {isError ? `Retry loading ${label}` : `Load more ${label}`}
           </Button>
         ) : null}

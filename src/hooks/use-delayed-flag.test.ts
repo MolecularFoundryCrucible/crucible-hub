@@ -3,6 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useDelayedFlag } from "./use-delayed-flag"
 
+vi.mock("@/lib/motion", () => ({
+  motionDuration: (token: string) =>
+    token === "--motion-progress-delay" ? 500 : 200,
+}))
+
 describe("useDelayedFlag", () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
@@ -30,5 +35,15 @@ describe("useDelayedFlag", () => {
     rerender({ active: false })
     act(() => vi.advanceTimersByTime(500))
     expect(result.current).toBe(false)
+  })
+
+  it("waits for a named motion token", () => {
+    const { result } = renderHook(() =>
+      useDelayedFlag(true, "--motion-progress-delay")
+    )
+    act(() => vi.advanceTimersByTime(499))
+    expect(result.current).toBe(false)
+    act(() => vi.advanceTimersByTime(1))
+    expect(result.current).toBe(true)
   })
 })

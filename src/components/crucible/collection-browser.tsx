@@ -4,7 +4,7 @@ import {
   PersonIdentity,
   personIsServiceAccount,
 } from "@/components/crucible/person-identity"
-import { PendingIcon } from "@/components/crucible/pending-icon"
+import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -359,9 +359,10 @@ function CollectionBrowser({
                   type="button"
                   variant="ghost"
                 >
-                  {query.isFetchingNextPage ? (
-                    <PendingIcon data-icon="inline-start" />
-                  ) : null}
+                  <DelayedPendingIcon
+                    data-icon="inline-start"
+                    pending={query.isFetchingNextPage}
+                  />
                   Load more groups
                 </Button>
               ) : null}

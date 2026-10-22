@@ -38,17 +38,17 @@ const patterns = [
   {
     label: "primitive motion",
     expression:
-      /(?:^|[\s"'`])(?:\S*:)?(?:duration-\d+|ease-(?:linear|in|out|in-out))(?=[\s"'`]|$)/m,
+      /(?:^|[\s"'`])(?:\S*:)?(?:(?:duration|delay)-\d+|ease-(?:linear|in|out|in-out))(?=[\s"'`]|$)/m,
   },
   {
     label:
       "primitive motion value (use a motion role from src/lib/motion.ts or var(--motion-*))",
     expression:
-      /(?:cubic-bezier\(|(?:duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\]|(?:^|[\s"'`:])ease-(?:in|out|linear)\b)/m,
+      /(?:cubic-bezier\(|(?:duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\]|(?:^|[\s"'`:])ease-(?:in|out|linear)\b|(?:transition|animation)[A-Za-z]*:\s*["'`][^"'`]*\d(?:ms|s)\b)/m,
   },
   {
     label: "primitive layer (use z-(--layer-*) from src/styles.css)",
-    expression: /(?:^|[\s"'`:])-?z-(?:\d+|\[)/m,
+    expression: /(?:^|[\s"'`:])-?z-(?:\d+|\[)|\[z-index:|zIndex:\s*\d/m,
   },
 ]
 
@@ -124,6 +124,7 @@ function unmodifiedUtility(className) {
 }
 
 const selfHidingIcons = new Set([
+  "DelayedPendingIcon",
   "FacetFieldIcon",
   "PendingIcon",
   "PrincipalTypeIcon",

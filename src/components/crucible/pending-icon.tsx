@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react"
 
 import { SavingChangesIcon } from "@/components/crucible/icons"
+import { useDelayedFlag } from "@/hooks/use-delayed-flag"
 import { cn } from "@/lib/utils"
 
 export function PendingIcon({
@@ -21,4 +22,12 @@ export function PendingIcon({
       {...props}
     />
   )
+}
+
+/** A pending spinner that appears only after the indicator delay. */
+export function DelayedPendingIcon({
+  pending,
+  ...props
+}: ComponentProps<typeof PendingIcon> & { pending: boolean }) {
+  return useDelayedFlag(pending) ? <PendingIcon {...props} /> : null
 }

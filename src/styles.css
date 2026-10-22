@@ -532,6 +532,7 @@
   --motion-ease-enter: cubic-bezier(0, 0, 0.2, 1);
   --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --motion-indicator-delay: 200ms;
+  --motion-progress-delay: 500ms;
   --motion-pending-opacity: 0.6;
   --focus-width: 0.1875rem;
   --focus-offset: 0.125rem;
@@ -546,6 +547,7 @@
   --layer-sticky: 5;
   --layer-raised: 1;
   --layer-graph-overlay: 1;
+  --layer-graph-action: 2;
   --route-progress-height: 0.1875rem;
   --graph-node-width: 272;
   --graph-node-height: 88;
@@ -1175,7 +1177,7 @@ body {
 
 .resource-graph-expansion-action {
   position: absolute;
-  z-index: 2;
+  z-index: var(--layer-graph-action);
   opacity: 0;
   pointer-events: none;
   scale: 0.8;

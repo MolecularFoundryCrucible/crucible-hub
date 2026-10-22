@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 
-import { PendingIcon } from "@/components/crucible/pending-icon"
+import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import { formatUsername } from "@/lib/username"
@@ -182,9 +182,10 @@ function FacetFilter({
           type="button"
           variant="ghost"
         >
-          {query.isFetchingNextPage ? (
-            <PendingIcon data-icon="inline-start" />
-          ) : null}
+          <DelayedPendingIcon
+            data-icon="inline-start"
+            pending={query.isFetchingNextPage}
+          />
           Load more values
         </Button>
       ) : null}

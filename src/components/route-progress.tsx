@@ -10,7 +10,7 @@ export function RouteProgress() {
   const loading = useRouterState({
     select: (state) => state.status === "pending",
   })
-  const shown = useDelayedFlag(loading)
+  const shown = useDelayedFlag(loading, "--motion-progress-delay")
   const [phase, setPhase] = useState<Phase>("idle")
   const wasShown = useRef(false)
 

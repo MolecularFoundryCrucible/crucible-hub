@@ -132,7 +132,7 @@ test("shows route progress only for a slow navigation", async ({ page }) => {
     await route.continue()
   })
   const progress = page.locator(".route-progress")
-  const early = watchIndicators(page, "main", 150)
+  const early = watchIndicators(page, "main", 400)
   await page
     .getByRole("navigation")
     .getByRole("link", { name: "Projects", exact: true })
