@@ -765,7 +765,7 @@ body {
 
 /* Motion roles that animate through Base UI starting and ending styles. */
 .motion-sheet {
-  transition-property: transform, opacity;
+  transition-property: translate, transform, opacity;
   transition-duration: var(--motion-deliberate);
   transition-timing-function: var(--motion-ease-enter);
 }
