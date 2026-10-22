@@ -295,6 +295,7 @@ test("opens canonical instrument detail from directory and search", async ({
   await expect(page.locator('main [data-slot="card-title"]')).toHaveText([
     "Summary",
     "Identity",
+    "People",
     "Scientific metadata",
   ])
 
