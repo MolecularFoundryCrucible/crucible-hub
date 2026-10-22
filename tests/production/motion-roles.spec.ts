@@ -105,6 +105,25 @@ test("dims stale data after the indicator delay when data is slow", async ({
     .toBe("0.6")
 })
 
+test("keeps the previous rows dimmed while a slow sort loads", async ({
+  page,
+}) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page.route("**/_serverFn/**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800))
+    await route.continue()
+  })
+  const region = page.locator("[data-slot=card].pending-region")
+  await page.getByRole("button", { name: /^Sort by name/ }).click()
+  await expect(region).toHaveAttribute("aria-busy", "true")
+  await expect
+    .poll(() => region.evaluate((element) => getComputedStyle(element).opacity))
+    .toBe("0.6")
+  await expect(region).not.toHaveAttribute("aria-busy")
+  await expect(region).toHaveCSS("opacity", "1")
+})
+
 test("shows route progress only for a slow navigation", async ({ page }) => {
   await page.goto("/hub/data?scenario=populated")
   await page.waitForLoadState("networkidle")

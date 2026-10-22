@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
+import { identityScopedPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
@@ -44,6 +45,8 @@ export function serviceAccountsCursorQueryOptions(
           signal,
         })
       ),
+    placeholderData: (previousData, previousQuery) =>
+      identityScopedPreviousData(scope, previousData, previousQuery),
     queryKey: crucibleKeys.serviceAccountCursorChain(scope, {
       activity: filters.activity,
       direction: filters.direction,

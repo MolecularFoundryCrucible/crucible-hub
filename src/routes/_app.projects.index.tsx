@@ -730,7 +730,10 @@ function ProjectCollection({
           </CardContent>
         </PendingRegion>
       ) : (
-        <Empty className="min-h-state border">
+        <PendingRegion
+          pending={updating}
+          render={<Empty className="min-h-state border" />}
+        >
           <EmptyHeader>
             <EmptyTitle>No projects found</EmptyTitle>
             <EmptyDescription>
@@ -741,7 +744,7 @@ function ProjectCollection({
                   : "No projects are available to this account."}
             </EmptyDescription>
           </EmptyHeader>
-        </Empty>
+        </PendingRegion>
       )}
       {projects.length ? (
         <CollectionPagination

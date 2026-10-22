@@ -3,7 +3,6 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
 import type {
-  CollectionAffiliation,
   CollectionQueryOptions,
   ResourceSort,
   SortDirection,
@@ -16,6 +15,7 @@ import {
 } from "./facets"
 import type { DatasetFacetFilters, SampleFacetFilters } from "./facets"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
+import { identityScopedPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
@@ -76,82 +76,6 @@ export type AnchoredDatasetFilters = DatasetCollectionFilters & {
   anchorMfid: string
   direction: SortDirection
   sort: ResourceSort
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-}
-
-function collectionScopedPreviousData<TData>(
-  scope: IdentityScope,
-  family: "datasets" | "samples",
-  filters: {
-    createdFrom?: string
-    createdTo?: string
-    instrumentMfid?: string
-    instrumentMfidIsNull?: true
-    ownerId?: string
-    ownerIdIsNull?: true
-    projectMfid?: string
-    projectMfidIsNull?: true
-    projectScope?: ProjectScope
-    sampleType?: string
-    sampleTypeIsNull?: true
-    dataFormat?: string
-    dataFormatIsNull?: true
-    measurement?: string
-    measurementIsNull?: true
-    sessionName?: string
-    sessionNameIsNull?: true
-    visibility?: "all" | "public" | "private"
-    affiliation?: CollectionAffiliation
-    direction?: "asc" | "desc"
-    sort?: "created" | "name" | "updated"
-  },
-  previousData: TData | undefined,
-  previousQuery: { queryKey: readonly unknown[] } | undefined,
-  cursorChain = false
-) {
-  const queryKey = previousQuery?.queryKey
-  const previousFilters = cursorChain ? queryKey?.[7] : queryKey?.[6]
-  const contextKeys = [
-    "affiliation",
-    "createdFrom",
-    "createdTo",
-    "direction",
-    "dataFormat",
-    "dataFormatIsNull",
-    "instrumentMfid",
-    "instrumentMfidIsNull",
-    "projectMfid",
-    "projectMfidIsNull",
-    "projectScope",
-    "measurement",
-    "measurementIsNull",
-    "ownerId",
-    "ownerIdIsNull",
-    "sampleType",
-    "sampleTypeIsNull",
-    "sessionName",
-    "sessionNameIsNull",
-    "sort",
-    "visibility",
-  ] as const
-
-  return queryKey !== undefined &&
-    scope.every((part, index) => queryKey[index] === part) &&
-    queryKey[4] === family &&
-    queryKey[5] === "list" &&
-    (cursorChain
-      ? queryKey[6] === "cursor-chain"
-      : queryKey[6] !== "cursor-chain") &&
-    contextKeys.every(
-      (key) =>
-        (isRecord(previousFilters) ? previousFilters[key] : undefined) ===
-        filters[key]
-    )
-    ? previousData
-    : undefined
 }
 
 function normalizeInstrumentMfid(instrumentMfid: string | undefined) {
@@ -238,13 +162,7 @@ export function samplesQueryOptions(
         })
       ),
     placeholderData: (previousData, previousQuery) =>
-      collectionScopedPreviousData(
-        scope,
-        "samples",
-        context,
-        previousData,
-        previousQuery
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }
@@ -276,14 +194,7 @@ export function samplesCursorQueryOptions(
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
-      collectionScopedPreviousData(
-        scope,
-        "samples",
-        context,
-        previousData,
-        previousQuery,
-        true
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }
@@ -346,13 +257,7 @@ export function datasetsQueryOptions(
         })
       ),
     placeholderData: (previousData, previousQuery) =>
-      collectionScopedPreviousData(
-        scope,
-        "datasets",
-        context,
-        previousData,
-        previousQuery
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }
@@ -384,14 +289,7 @@ export function datasetsCursorQueryOptions(
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
-      collectionScopedPreviousData(
-        scope,
-        "datasets",
-        context,
-        previousData,
-        previousQuery,
-        true
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }

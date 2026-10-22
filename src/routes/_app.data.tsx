@@ -701,7 +701,10 @@ function DataResults({
                 </CardContent>
               </PendingRegion>
             ) : (
-              <Empty className="min-h-state border">
+              <PendingRegion
+                pending={updating}
+                render={<Empty className="min-h-state border" />}
+              >
                 <EmptyHeader>
                   <EmptyTitle>
                     {hasActiveFilters
@@ -721,7 +724,7 @@ function DataResults({
                     </Button>
                   </EmptyContent>
                 ) : null}
-              </Empty>
+              </PendingRegion>
             )}
           </>
         )}

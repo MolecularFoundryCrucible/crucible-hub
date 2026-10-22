@@ -6,7 +6,7 @@ import {
 } from "./instruments.functions"
 import type { InstrumentAffiliation } from "./collection-query"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
-import { collectionScopedPreviousData } from "./pagination"
+import { identityScopedPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
@@ -17,36 +17,6 @@ import type {
 } from "./workspace-source"
 
 export const instrumentPageLimit = 100
-
-function instrumentStatusScopedPreviousData<TData>(
-  scope: IdentityScope,
-  filters: {
-    affiliation?: InstrumentAffiliation
-    direction?: WorkspaceSortDirection
-    includeOwner: boolean
-    includeTotal: boolean
-    instrumentType?: string
-    location?: string
-    manufacturer?: string
-    ownerId?: string
-    sort?: WorkspaceInstrumentSort
-    status?: WorkspaceInstrumentStatus
-  },
-  previousData: TData | undefined,
-  previousQuery: { queryKey: readonly unknown[] } | undefined
-) {
-  if (
-    collectionScopedPreviousData(
-      scope,
-      filters,
-      previousData,
-      previousQuery
-    ) === undefined
-  ) {
-    return undefined
-  }
-  return previousData
-}
 
 export function instrumentsQueryOptions(
   scope: IdentityScope,
@@ -80,23 +50,7 @@ export function instrumentsQueryOptions(
         })
       ),
     placeholderData: (previousData, previousQuery) =>
-      instrumentStatusScopedPreviousData(
-        scope,
-        {
-          affiliation: filters.affiliation,
-          direction: filters.direction,
-          includeOwner: filters.includeOwner ?? true,
-          includeTotal: filters.includeTotal ?? true,
-          instrumentType: filters.instrumentType,
-          location: filters.location,
-          manufacturer: filters.manufacturer,
-          ownerId: filters.ownerId,
-          sort: filters.sort,
-          status: filters.status,
-        },
-        previousData,
-        previousQuery
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }
@@ -158,23 +112,7 @@ export function instrumentsCursorQueryOptions(
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
-      instrumentStatusScopedPreviousData(
-        scope,
-        {
-          affiliation: filters.affiliation,
-          direction: filters.direction,
-          includeOwner: filters.includeOwner ?? true,
-          includeTotal: filters.includeTotal ?? true,
-          instrumentType: filters.instrumentType,
-          location: filters.location,
-          manufacturer: filters.manufacturer,
-          ownerId: filters.ownerId,
-          sort: filters.sort,
-          status: filters.status,
-        },
-        previousData,
-        previousQuery
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }

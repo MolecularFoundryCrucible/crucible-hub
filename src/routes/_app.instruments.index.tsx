@@ -863,7 +863,10 @@ function InstrumentCollection({
         </PendingRegion>
       ) : (
         <section aria-label="Instrument directory">
-          <Empty className="min-h-state border">
+          <PendingRegion
+            pending={updating}
+            render={<Empty className="min-h-state border" />}
+          >
             <EmptyHeader>
               <EmptyTitle>No instruments found</EmptyTitle>
               <EmptyDescription>
@@ -882,7 +885,7 @@ function InstrumentCollection({
                         : `No ${instrumentStatusLabel(status).toLowerCase()} instruments are available to this account.`}
               </EmptyDescription>
             </EmptyHeader>
-          </Empty>
+          </PendingRegion>
         </section>
       )}
       {instruments.length ? (

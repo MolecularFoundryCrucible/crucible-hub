@@ -564,14 +564,17 @@ function UserCollection({
           </CardContent>
         </PendingRegion>
       ) : (
-        <Empty className="min-h-state border">
+        <PendingRegion
+          pending={updating}
+          render={<Empty className="min-h-state border" />}
+        >
           <EmptyHeader>
             <EmptyTitle>No users found</EmptyTitle>
             {query ? (
               <EmptyDescription>No users match this search.</EmptyDescription>
             ) : null}
           </EmptyHeader>
-        </Empty>
+        </PendingRegion>
       )}
       {users.length ? (
         <CollectionPagination

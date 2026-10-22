@@ -9,10 +9,7 @@ import {
   getWorkspaceUserProjects,
 } from "./projects.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
-import {
-  collectionScopedPreviousData,
-  identityScopedPreviousData,
-} from "./pagination"
+import { identityScopedPreviousData } from "./pagination"
 import { unwrapHubResult } from "./result"
 import type {
   WorkspaceProject,
@@ -98,20 +95,7 @@ export function projectsQueryOptions(
         })
       ),
     placeholderData: (previousData, previousQuery) =>
-      collectionScopedPreviousData(
-        scope,
-        {
-          activeSince: filters.activeSince,
-          affiliation: filters.affiliation,
-          direction: filters.direction,
-          includeTotal: filters.includeTotal ?? true,
-          memberRef: filters.memberRef,
-          memberRole: filters.memberRole,
-          sort: filters.sort,
-        },
-        previousData,
-        previousQuery
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
   })
 }
 
@@ -175,20 +159,7 @@ export function projectsCursorQueryOptions(
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
-      collectionScopedPreviousData(
-        scope,
-        {
-          activeSince: filters.activeSince,
-          affiliation: filters.affiliation,
-          direction: filters.direction,
-          includeTotal: filters.includeTotal ?? true,
-          memberRef: filters.memberRef,
-          memberRole: filters.memberRole,
-          sort: filters.sort,
-        },
-        previousData,
-        previousQuery
-      ),
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }

@@ -18,32 +18,6 @@ export function identityScopedPreviousData<TData>(
     : undefined
 }
 
-export function collectionScopedPreviousData<TData>(
-  scope: IdentityScope,
-  context: Record<string, unknown>,
-  previousData: TData | undefined,
-  previousQuery: PreviousQuery | undefined
-) {
-  if (
-    identityScopedPreviousData(scope, previousData, previousQuery) === undefined
-  ) {
-    return undefined
-  }
-  const previousContext =
-    previousQuery?.queryKey[6] === "cursor-chain"
-      ? previousQuery.queryKey[7]
-      : previousQuery?.queryKey[6]
-  if (typeof previousContext !== "object" || previousContext === null) {
-    return undefined
-  }
-  return Object.entries(context).every(
-    ([key, value]) =>
-      (previousContext as Record<string, unknown>)[key] === value
-  )
-    ? previousData
-    : undefined
-}
-
 export function fixtureCursorPage<TItem>(
   items: readonly TItem[],
   { cursor, limit }: { cursor?: string; limit: number }

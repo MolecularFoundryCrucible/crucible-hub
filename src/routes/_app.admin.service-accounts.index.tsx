@@ -597,7 +597,10 @@ function ServiceAccountCollection({
           </CardContent>
         </PendingRegion>
       ) : (
-        <Empty className="min-h-state border">
+        <PendingRegion
+          pending={updating}
+          render={<Empty className="min-h-state border" />}
+        >
           <EmptyHeader>
             <EmptyTitle>No service accounts found</EmptyTitle>
             {query ? (
@@ -606,7 +609,7 @@ function ServiceAccountCollection({
               </EmptyDescription>
             ) : null}
           </EmptyHeader>
-        </Empty>
+        </PendingRegion>
       )}
       {serviceAccounts.length ? (
         <CollectionPagination
