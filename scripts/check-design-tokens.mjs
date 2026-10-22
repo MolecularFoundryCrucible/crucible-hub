@@ -3,6 +3,10 @@ import { extname, join, relative } from "node:path"
 import ts from "typescript"
 
 const sourceRoot = "src"
+function motionModuleOrTest(localPath) {
+  return localPath === "lib/motion.ts" || /\.test\.tsx?$/.test(localPath)
+}
+
 const allowedPrefixes = ["components/ui/", "generated/"]
 const violations = []
 const patterns = [
@@ -45,6 +49,14 @@ const patterns = [
       "primitive motion value (use a motion role from src/lib/motion.ts or var(--motion-*))",
     expression:
       /(?:cubic-bezier\(|(?:duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\]|(?:^|[\s"'`:])ease-(?:in|out|linear)\b|(?:transition|animation)[A-Za-z]*:\s*["'`][^"'`]*\d(?:ms|s)\b)/m,
+    exempt: motionModuleOrTest,
+  },
+  {
+    label:
+      "primitive keyframe motion (use a motion role or enterMotionClassName from src/lib/motion.ts)",
+    expression:
+      /(?:^|[\s"'`:])(?:animate-(?:in|out)|(?:fade|zoom)-(?:in|out)(?:-\d+)?|slide-(?:in|out)-from-[a-z]+(?:-\d+)?)(?=[\s"'`]|$)/m,
+    exempt: motionModuleOrTest,
   },
   {
     label: "primitive layer (use z-(--layer-*) from src/styles.css)",
@@ -461,6 +473,7 @@ function scan(directory) {
       if (localPath.startsWith("components/ui/")) {
         const primitive = readFileSync(path, "utf8")
         for (const pattern of primitivePatterns) {
+          if (pattern.exempt?.(localPath)) continue
           if (pattern.expression.test(primitive))
             violations.push(`${localPath}: ${pattern.label}`)
         }
@@ -516,6 +529,7 @@ function scan(directory) {
     }
     if (extname(path) === ".tsx") scanButtonUsage(path, localPath, content)
     for (const pattern of patterns) {
+      if (pattern.exempt?.(localPath)) continue
       if (pattern.expression.test(content))
         violations.push(`${localPath}: ${pattern.label}`)
     }

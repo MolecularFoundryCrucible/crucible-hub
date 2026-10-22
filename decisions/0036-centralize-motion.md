@@ -90,6 +90,7 @@ Features compose these and never re-implement them:
 
 - raw `ms`, `s` or `cubic-bezier` values in class names and inline styles
 - arbitrary `duration-[...]`, `delay-[...]`, `ease-[...]` and `animate-[...]` utilities, and numeric `delay-*` utilities; `transition-[...]` stays allowed when it only lists properties, since a property list carries no timing
+- keyframe animation classes (`animate-in`, `fade-in`, `zoom-in`, `slide-in-from-*` and their exit forms) outside `src/lib/motion.ts`, which owns the content-enter class
 - `z-50` and numeric `z-*` utilities
 - `ease-in`, `ease-out` and `ease-in-out`
 
