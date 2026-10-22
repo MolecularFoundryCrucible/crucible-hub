@@ -44,25 +44,13 @@ const patterns = [
     label:
       "primitive motion value (use a motion role from src/lib/motion.ts or var(--motion-*))",
     expression:
-      /(?:cubic-bezier\(|(?:duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\])/,
+      /(?:cubic-bezier\(|(?:duration|delay|ease|animate)-\[|\[[^\]\s]*\d(?:ms|s)\b[^\]\s]*\]|(?:^|[\s"'`:])ease-(?:in|out|linear)\b)/m,
   },
   {
     label: "primitive layer (use z-(--layer-*) from src/styles.css)",
     expression: /(?:^|[\s"'`:])-?z-(?:\d+|\[)/m,
   },
 ]
-
-// Files still being moved onto the motion system (decision 0036); the motion
-// value and layer rules skip them until their task lands. Empty this set.
-const pendingMotionMigration = new Set([])
-
-function migrationExempt(localPath, label) {
-  return (
-    pendingMotionMigration.has(localPath) &&
-    (label.startsWith("primitive motion value") ||
-      label.startsWith("primitive layer"))
-  )
-}
 
 const themeSource = readFileSync(join(sourceRoot, "styles.css"), "utf8")
 const knownTextUtilities = new Set([
@@ -472,10 +460,7 @@ function scan(directory) {
       if (localPath.startsWith("components/ui/")) {
         const primitive = readFileSync(path, "utf8")
         for (const pattern of primitivePatterns) {
-          if (
-            pattern.expression.test(primitive) &&
-            !migrationExempt(localPath, pattern.label)
-          )
+          if (pattern.expression.test(primitive))
             violations.push(`${localPath}: ${pattern.label}`)
         }
       }
@@ -530,10 +515,7 @@ function scan(directory) {
     }
     if (extname(path) === ".tsx") scanButtonUsage(path, localPath, content)
     for (const pattern of patterns) {
-      if (
-        pattern.expression.test(content) &&
-        !migrationExempt(localPath, pattern.label)
-      )
+      if (pattern.expression.test(content))
         violations.push(`${localPath}: ${pattern.label}`)
     }
   }
