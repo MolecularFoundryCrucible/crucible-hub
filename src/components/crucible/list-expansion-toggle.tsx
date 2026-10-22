@@ -3,7 +3,8 @@ import { flushSync } from "react-dom"
 
 import { ListExpansionIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
-import { enterMotionClassName } from "@/lib/motion"
+import { enterMotionClassName, motionDuration } from "@/lib/motion"
+import { scrollContainer } from "@/lib/scroll"
 
 export const COLLAPSED_LIST_LIMIT = 10
 
@@ -20,13 +21,12 @@ function animateGrowth(region: Element, from: number, to: number) {
   if (
     !(region instanceof HTMLElement) ||
     to <= from ||
-    typeof region.animate !== "function" ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    typeof region.animate !== "function"
   )
     return
-  const root = getComputedStyle(document.documentElement)
-  const duration = parseFloat(root.getPropertyValue("--motion-standard"))
+  const duration = motionDuration("--motion-standard")
   if (!duration) return
+  const root = getComputedStyle(document.documentElement)
   const overflow = region.style.overflow
   region.style.overflow = "clip"
   const animation = region.animate(
@@ -65,8 +65,16 @@ export function ListExpansionToggle({
     flushSync(() => onExpandedChange(!expanded))
     if (expanded) {
       const after = button.current?.getBoundingClientRect().top
-      if (top !== undefined && after !== undefined && after !== top)
-        window.scrollBy({ behavior: "instant", top: after - top })
+      if (
+        button.current &&
+        top !== undefined &&
+        after !== undefined &&
+        after !== top
+      )
+        scrollContainer(button.current).scrollBy({
+          behavior: "instant",
+          top: after - top,
+        })
       return
     }
     if (region)
