@@ -741,6 +741,35 @@ body {
   animation-timing-function: var(--motion-ease-standard);
 }
 
+.reveal-panel {
+  height: var(--collapsible-panel-height);
+  overflow: hidden;
+  transition:
+    height var(--motion-standard) var(--motion-ease-standard),
+    opacity var(--motion-standard) var(--motion-ease-standard);
+}
+
+.reveal-panel[data-starting-style],
+.reveal-panel[data-ending-style] {
+  height: 0;
+  opacity: 0;
+}
+
+.pending-region {
+  transition: opacity var(--motion-fast) var(--motion-ease-standard);
+}
+
+.pending-region[data-pending] {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-panel,
+  .pending-region {
+    transition: none;
+  }
+}
+
 .metadata-disclosure::details-content {
   block-size: 0;
   overflow-x: visible;

@@ -144,11 +144,16 @@ for (const [name, value] of shared) {
 }
 
 const tailwindProvided = /^--(?:spacing|shadow-[\w-]+)$/
+const baseUiProvided = /^--collapsible-panel-(?:height|width)$/
 const declaredProperties = new Set(
   [...source.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1])
 )
 for (const [, name] of source.matchAll(/var\(\s*(--[\w-]+)/g)) {
-  if (!declaredProperties.has(name) && !tailwindProvided.test(name)) {
+  if (
+    !declaredProperties.has(name) &&
+    !tailwindProvided.test(name) &&
+    !baseUiProvided.test(name)
+  ) {
     failures.push(`src/styles.css references undefined ${name}`)
   }
 }

@@ -10,6 +10,11 @@ import { updateGlobalPrivilegeMode } from "@/data/crucible/privilege-mode.functi
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
+import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
+import { pendingDeletionRequestsCountQueryOptions } from "@/data/crucible/deletion-requests.queries"
+import { identityScopeWithPrivilegeMode } from "@/data/crucible/query-keys"
+import { recentResourcesQueryOptions } from "@/data/crucible/recent-resources.queries"
 
 function elevatedQueryForAccount(
   queryKey: readonly unknown[],
@@ -32,6 +37,7 @@ function useAdministratorView({
 }) {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const preferencesEnabled = useAccountPreferencesEnabled()
   const mutation = useMutation({
     mutationFn: async (mode: WorkspacePrivilegeMode) =>
       unwrapHubResult(
@@ -60,7 +66,19 @@ function useAdministratorView({
           predicate: (query) => elevatedQueryForAccount(query.queryKey, scope),
         })
       }
-      await router.invalidate({ sync: true })
+      // Load what the shell shows for the new mode alongside the route data,
+      // so the sidebar and page switch together.
+      const nextScope = identityScopeWithPrivilegeMode(scope, nextMode)
+      await Promise.all([
+        queryClient.prefetchQuery(accountQueryOptions(nextScope)),
+        queryClient.prefetchQuery(
+          pendingDeletionRequestsCountQueryOptions(nextScope)
+        ),
+        preferencesEnabled
+          ? queryClient.prefetchQuery(recentResourcesQueryOptions(nextScope))
+          : undefined,
+        router.invalidate({ sync: true }),
+      ])
       notifySuccess(
         nextMode === "elevated"
           ? "Administrator view is on"
@@ -72,10 +90,12 @@ function useAdministratorView({
     },
   })
 
+  const requested = mutation.isPending ? mutation.variables : undefined
   return {
-    active: privilegeMode === "elevated",
+    active: (requested ?? privilegeMode) === "elevated",
     pending: mutation.isPending,
     setActive(active: boolean) {
+      if (mutation.isPending) return
       mutation.mutate(active ? "elevated" : "normal")
     },
   }
@@ -115,8 +135,13 @@ export function useAdministratorViewControl() {
   return control
 }
 
+export function useOptionalAdministratorViewControl() {
+  return useContext(AdministratorViewContext)
+}
+
 export function AdministratorViewStatus() {
-  const { pending, setActive } = useAdministratorViewControl()
+  const { active, pending, setActive } = useAdministratorViewControl()
+  if (!active) return null
 
   return (
     <Button

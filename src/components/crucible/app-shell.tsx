@@ -8,7 +8,11 @@ import {
   AdministratorViewProvider,
   AdministratorViewStatus,
   useAdministratorViewControl,
+  useOptionalAdministratorViewControl,
 } from "@/components/crucible/administrator-view-control"
+import { Reveal } from "@/components/crucible/reveal"
+import { useEnteringKeys } from "@/hooks/use-entering-keys"
+import { enterMotionClassName } from "@/lib/motion"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
 import { KeyboardShortcuts } from "@/components/crucible/keyboard-shortcuts"
@@ -101,8 +105,6 @@ import { useAccountPreferences } from "@/features/preferences/use-account-prefer
 import { resourceDisplayName } from "@/lib/resource-name"
 
 const sidebarRecentLimit = 4
-const administrationRevealClassName =
-  "animate-in fade-in-0 slide-in-from-top-1 duration-standard ease-enter"
 
 export function AppShell({
   account,
@@ -385,59 +387,73 @@ export function AppShell({
                         <SidebarAdministratorViewControl />
                       </SidebarMenuItem>
                     ) : null}
-                    {canOpenPlatformAdministration(account, privilegeMode) ? (
-                      <SidebarMenuItem
-                        className={administrationRevealClassName}
-                      >
-                        <SidebarMenuButton
-                          isActive={pathname.startsWith("/admin/users")}
-                          tooltip="Users"
-                          render={
-                            <Link
-                              aria-current={
-                                pathname.startsWith("/admin/users")
-                                  ? "page"
-                                  : undefined
+                    <Reveal
+                      open={
+                        canOpenPlatformAdministration(account, privilegeMode) ||
+                        canOpenServiceAccountAdministration(
+                          account,
+                          privilegeMode
+                        )
+                      }
+                      render={<li className="list-none" />}
+                    >
+                      <SidebarMenu>
+                        {canOpenPlatformAdministration(
+                          account,
+                          privilegeMode
+                        ) ? (
+                          <SidebarMenuItem>
+                            <SidebarMenuButton
+                              isActive={pathname.startsWith("/admin/users")}
+                              tooltip="Users"
+                              render={
+                                <Link
+                                  aria-current={
+                                    pathname.startsWith("/admin/users")
+                                      ? "page"
+                                      : undefined
+                                  }
+                                  preload={false}
+                                  to="/admin/users"
+                                />
                               }
-                              preload={false}
-                              to="/admin/users"
-                            />
-                          }
-                        >
-                          <PrincipalTypeIcon type="user" />
-                          <span>Users</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ) : null}
-                    {canOpenServiceAccountAdministration(
-                      account,
-                      privilegeMode
-                    ) ? (
-                      <SidebarMenuItem
-                        className={administrationRevealClassName}
-                      >
-                        <SidebarMenuButton
-                          isActive={pathname.startsWith(
-                            "/admin/service-accounts"
-                          )}
-                          tooltip="Service accounts"
-                          render={
-                            <Link
-                              aria-current={
-                                pathname.startsWith("/admin/service-accounts")
-                                  ? "page"
-                                  : undefined
+                            >
+                              <PrincipalTypeIcon type="user" />
+                              <span>Users</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ) : null}
+                        {canOpenServiceAccountAdministration(
+                          account,
+                          privilegeMode
+                        ) ? (
+                          <SidebarMenuItem>
+                            <SidebarMenuButton
+                              isActive={pathname.startsWith(
+                                "/admin/service-accounts"
+                              )}
+                              tooltip="Service accounts"
+                              render={
+                                <Link
+                                  aria-current={
+                                    pathname.startsWith(
+                                      "/admin/service-accounts"
+                                    )
+                                      ? "page"
+                                      : undefined
+                                  }
+                                  preload={false}
+                                  to="/admin/service-accounts"
+                                />
                               }
-                              preload={false}
-                              to="/admin/service-accounts"
-                            />
-                          }
-                        >
-                          <PrincipalTypeIcon type="service_account" />
-                          <span>Service accounts</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ) : null}
+                            >
+                              <PrincipalTypeIcon type="service_account" />
+                              <span>Service accounts</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ) : null}
+                      </SidebarMenu>
+                    </Reveal>
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         isActive={deletionRequestsActive}
@@ -487,11 +503,7 @@ export function AppShell({
             <QrScannerAction />
             {account ? <CreateMenu account={account} /> : null}
             {account && scope ? (
-              <AccountControls
-                account={account}
-                privilegeMode={privilegeMode}
-                sessionAuth={sessionAuth}
-              />
+              <AccountControls account={account} sessionAuth={sessionAuth} />
             ) : (
               <div className="ml-auto border-l pl-3">
                 <Avatar size="sm">
@@ -500,13 +512,14 @@ export function AppShell({
               </div>
             )}
           </header>
-          <main className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide">
+          <AppMain>
             <ResourceSiblingNavigationProvider
-              key={scope?.join(":") ?? account?.unique_id ?? "anonymous"}
+              key={recentlyViewedIdentity}
+              resetKey={privilegeMode}
             >
               {children}
             </ResourceSiblingNavigationProvider>
-          </main>
+          </AppMain>
           <AppFooter />
         </SidebarInset>
       </SidebarProvider>
@@ -524,17 +537,15 @@ export function AppShell({
 
 function AccountControls({
   account,
-  privilegeMode,
   sessionAuth,
 }: {
   account: Workspace["account"]
-  privilegeMode: WorkspacePrivilegeMode
   sessionAuth: boolean
 }) {
   const preferencesEnabled = useAccountPreferencesEnabled()
   return (
     <div className="ml-auto flex items-center gap-2">
-      {privilegeMode === "elevated" ? <AdministratorViewStatus /> : null}
+      <AdministratorViewStatus />
       <div className="border-l pl-3">
         {sessionAuth ? (
           <form action="/hub/auth/logout" id="hub-sign-out" method="post" />
@@ -591,6 +602,9 @@ function AccountControls({
 
 function SidebarRecentResources() {
   const items = useRecentlyViewed().slice(0, sidebarRecentLimit)
+  const entering = useEnteringKeys(
+    items.map((item) => `${item.kind}:${item.uniqueId}`)
+  )
   const { isMobile, state } = useSidebar()
 
   if (items.length === 0) return null
@@ -650,7 +664,14 @@ function SidebarRecentResources() {
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
-            <SidebarMenuItem key={`${item.kind}:${item.uniqueId}`}>
+            <SidebarMenuItem
+              className={
+                entering.has(`${item.kind}:${item.uniqueId}`)
+                  ? enterMotionClassName
+                  : undefined
+              }
+              key={`${item.kind}:${item.uniqueId}`}
+            >
               <SidebarMenuButton
                 render={recentResourceLink(item)}
                 tooltip={resourceDisplayName(item.kind, item.name, {
@@ -939,8 +960,8 @@ function SidebarAdministratorViewControl() {
     return (
       <SidebarMenuButton
         aria-label="Administrator view"
+        aria-busy={pending || undefined}
         aria-pressed={active}
-        disabled={pending}
         onClick={() => setActive(!active)}
         tooltip={active ? "Administrator view on" : "Administrator view off"}
         variant={active ? "warning" : "default"}
@@ -957,12 +978,25 @@ function SidebarAdministratorViewControl() {
       <span className="min-w-0 flex-1 truncate">Administrator view</span>
       <Switch
         aria-label="Administrator view"
+        aria-busy={pending || undefined}
         checked={active}
-        disabled={pending}
         onCheckedChange={setActive}
         size="sm"
         variant="warning"
       />
     </label>
+  )
+}
+
+function AppMain({ children }: { children: React.ReactNode }) {
+  const pending = useOptionalAdministratorViewControl()?.pending
+  return (
+    <main
+      aria-busy={pending || undefined}
+      className="pending-region mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide"
+      data-pending={pending || undefined}
+    >
+      {children}
+    </main>
   )
 }

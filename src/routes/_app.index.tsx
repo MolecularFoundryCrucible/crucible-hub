@@ -150,7 +150,9 @@ function HomePage() {
   })
   const account = accountResult.data
   const { timeZone } = useViewerPresentation()
-  const greetingAt = Route.useLoaderData()?.greetingAt
+  const loadedGreetingAt = Route.useLoaderData()?.greetingAt
+  // Keep the first greeting while loaders rerun, e.g. on an access mode switch.
+  const [greetingAt] = useState(loadedGreetingAt)
   const greeting = homeGreeting({
     accountMfid: account?.unique_id,
     at: greetingAt ?? 0,

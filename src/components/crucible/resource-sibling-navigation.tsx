@@ -107,8 +107,11 @@ const ResourceSiblingNavigationContext =
 
 export function ResourceSiblingNavigationProvider({
   children,
+  resetKey,
 }: {
   children: React.ReactNode
+  /** Clears the active sequence when it changes, e.g. on an access mode switch. */
+  resetKey?: string
 }) {
   const [registered, setRegistered] = useState<
     readonly ResourceSiblingCollection[]
@@ -116,6 +119,11 @@ export function ResourceSiblingNavigationProvider({
   const [active, setActive] = useState<ActiveResourceSiblingSession | null>(
     null
   )
+  const [previousResetKey, setPreviousResetKey] = useState(resetKey)
+  if (resetKey !== previousResetKey) {
+    setPreviousResetKey(resetKey)
+    setActive(null)
+  }
   const [candidateId, setCandidateId] = useState(createSiblingSessionId)
   const loadingSession = useRef<string | null>(null)
 
