@@ -84,7 +84,7 @@ test("keeps staged members while the dialog closes", async ({ page }) => {
   await dialog.getByRole("button", { name: "Cancel" }).click()
   const duringExit = await dialog.evaluate((element) => ({
     closing: element.hasAttribute("data-ending-style"),
-    staged: element.textContent?.includes("Jamie Patel") ?? false,
+    staged: element.textContent.includes("Jamie Patel"),
   }))
   expect(duringExit).toEqual({ closing: true, staged: true })
   await expect(dialog).toBeHidden()
