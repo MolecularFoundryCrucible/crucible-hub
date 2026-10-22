@@ -6,12 +6,14 @@ import {
 } from "@tanstack/react-query"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import { CollectionUpdateStatus } from "@/components/crucible/collection-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { notifySuccess } from "@/components/crucible/notifications"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceNameLink } from "@/components/crucible/resource-name-link"
@@ -120,9 +122,11 @@ export function DeletionRequestQueue({
     scope[3],
   ])
 
+  const updating = result.isFetching && !result.isFetchingNextPage
   return (
     <>
-      <Card aria-busy={result.isFetching}>
+      <CollectionUpdateStatus label="deletion requests" updating={updating} />
+      <Card>
         {title || action ? (
           <CardHeader actionLayout="inline">
             {title ? <CardTitle>{title}</CardTitle> : null}
@@ -154,15 +158,18 @@ export function DeletionRequestQueue({
             </Empty>
           </CardContent>
         ) : items.length === 0 ? (
-          <CardContent>
+          <PendingRegion pending={updating} render={<CardContent />}>
             <Empty className="min-h-32">
               <EmptyHeader>
                 <EmptyTitle>{emptyTitle}</EmptyTitle>
               </EmptyHeader>
             </Empty>
-          </CardContent>
+          </PendingRegion>
         ) : (
-          <CardContent className="px-0">
+          <PendingRegion
+            pending={updating}
+            render={<CardContent className="px-0" />}
+          >
             {result.isRefetchError ? (
               <p className="px-4 pb-3 text-body text-destructive" role="alert">
                 The list could not be refreshed. Showing the last loaded
@@ -192,12 +199,12 @@ export function DeletionRequestQueue({
                 />
               )}
             </BulkReviewController>
-          </CardContent>
+          </PendingRegion>
         )}
       </Card>
       {paginate ? (
         <CollectionPagination
-          disabled={result.isFetchingNextPage}
+          disabled={result.isFetching}
           hasNextPage={result.hasNextPage}
           isError={result.isFetchNextPageError}
           isLoading={result.isFetchingNextPage}

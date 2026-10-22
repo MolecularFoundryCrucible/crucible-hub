@@ -4,7 +4,9 @@ import {
   PersonIdentity,
   personIsServiceAccount,
 } from "@/components/crucible/person-identity"
+import { CollectionUpdateStatus } from "@/components/crucible/collection-state"
 import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
@@ -205,6 +207,7 @@ type FacetQuery = {
   hasNextPage: boolean
   isError: boolean
   isFetchNextPageError: boolean
+  isFetching: boolean
   isFetchingNextPage: boolean
   isPending: boolean
   refetch: () => Promise<unknown>
@@ -230,6 +233,7 @@ function CollectionBrowser({
   selection: FacetSelection
 }) {
   const items = query.data?.pages.flatMap((page) => page.items) ?? []
+  const updating = query.isFetching && !query.isFetchingNextPage
   const title = facetFieldLabel(field)
   const selectionLabel = facetFieldSelectionLabel(field)
   const selectedAvailable = items.some((bucket) =>
@@ -252,6 +256,10 @@ function CollectionBrowser({
           </CardTitle>
         </CardHeader>
         <CardContent className="px-2">
+          <CollectionUpdateStatus
+            label={`${title} groups`}
+            updating={updating}
+          />
           <CollectionGroupHeaders
             direction={direction}
             field={field}
@@ -288,7 +296,12 @@ function CollectionBrowser({
               </EmptyHeader>
             </Empty>
           ) : (
-            <nav aria-label={`${title} groups`} className="grid gap-1">
+            <PendingRegion
+              pending={updating}
+              render={
+                <nav aria-label={`${title} groups`} className="grid gap-1" />
+              }
+            >
               {selection.kind !== "all" && !selectedAvailable ? (
                 <Button
                   aria-current="page"
@@ -338,7 +351,7 @@ function CollectionBrowser({
                   </Button>
                 )
               })}
-            </nav>
+            </PendingRegion>
           )}
           {items.length ? (
             <div className="pt-2">

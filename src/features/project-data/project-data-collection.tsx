@@ -698,7 +698,10 @@ function ProjectDataResult({
           </CardContent>
         </PendingRegion>
       ) : (
-        <Empty className="min-h-state border">
+        <PendingRegion
+          pending={updating}
+          render={<Empty className="min-h-state border" />}
+        >
           <EmptyHeader>
             <EmptyTitle>
               No {label.toLowerCase()} match these filters
@@ -707,7 +710,7 @@ function ProjectDataResult({
               Try changing the filters or data type.
             </EmptyDescription>
           </EmptyHeader>
-        </Empty>
+        </PendingRegion>
       )}
       <CollectionPagination
         disabled={isPaginationDisabled}

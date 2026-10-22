@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { identityScopedPreviousData } from "./pagination"
+import { identityScopedPreviousData, sameKindPreviousData } from "./pagination"
 import { identityScope } from "./query-keys"
 
 describe("identityScopedPreviousData", () => {
@@ -43,6 +43,56 @@ describe("identityScopedPreviousData", () => {
     expect(
       identityScopedPreviousData(scope, page, {
         queryKey: ["crucible", "hosted", "account-a", "elevated", "projects"],
+      })
+    ).toBeUndefined()
+  })
+})
+
+describe("sameKindPreviousData", () => {
+  const scope = identityScope("hosted", "account-a")
+  const page = { items: ["group-a"] }
+  const key = (params: Record<string, unknown>) => ({
+    queryKey: [...scope, "facets", params],
+  })
+
+  it("keeps results when only other parameters change", () => {
+    expect(
+      sameKindPreviousData(
+        scope,
+        { field: "measurement" },
+        page,
+        key({ field: "measurement", sort: "count" })
+      )
+    ).toBe(page)
+  })
+
+  it("drops results of another kind", () => {
+    expect(
+      sameKindPreviousData(
+        scope,
+        { field: "measurement" },
+        page,
+        key({ field: "instrument" })
+      )
+    ).toBeUndefined()
+    expect(
+      sameKindPreviousData(
+        scope,
+        { mode: undefined },
+        page,
+        key({ mode: "metadata" })
+      )
+    ).toBeUndefined()
+  })
+
+  it("still drops results from another account", () => {
+    expect(
+      sameKindPreviousData(scope, { field: "measurement" }, page, {
+        queryKey: [
+          ...identityScope("hosted", "account-b"),
+          "facets",
+          { field: "measurement" },
+        ],
       })
     ).toBeUndefined()
   })

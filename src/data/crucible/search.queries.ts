@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query"
 
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
+import { sameKindPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import {
@@ -85,6 +86,13 @@ function workspaceSearchQueryOptions(
           signal,
         })
       ),
+    placeholderData: (previousData, previousQuery) =>
+      sameKindPreviousData(
+        scope,
+        { mode: undefined },
+        previousData,
+        previousQuery
+      ),
     retry: scenario ? false : undefined,
   })
 }
@@ -108,6 +116,13 @@ export function metadataSearchQueryOptions(
           data: { affiliation, limit: 40, query, scenario },
           signal,
         })
+      ),
+    placeholderData: (previousData, previousQuery) =>
+      sameKindPreviousData(
+        scope,
+        { mode: "metadata" },
+        previousData,
+        previousQuery
       ),
     retry: scenario ? false : undefined,
   })

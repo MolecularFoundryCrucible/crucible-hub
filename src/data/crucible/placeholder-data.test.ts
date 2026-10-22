@@ -4,9 +4,15 @@ import {
   datasetsCursorQueryOptions,
   samplesCursorQueryOptions,
 } from "./data.queries"
+import { deletionAuditInfiniteQueryOptions } from "./deletion-requests.queries"
+import { datasetFacetQueryOptions } from "./facets.queries"
 import { instrumentsQueryOptions } from "./instruments.queries"
 import { projectsQueryOptions } from "./projects.queries"
 import { identityScope } from "./query-keys"
+import {
+  metadataSearchQueryOptions,
+  searchQueryOptions,
+} from "./search.queries"
 import { serviceAccountsCursorQueryOptions } from "./service-accounts.queries"
 import { usersCursorQueryOptions } from "./users.queries"
 
@@ -73,6 +79,81 @@ describe.each(collections)("$label placeholder data", ({ options }) => {
   it("never keeps results from another account", () => {
     expect(
       placeholder(page, { queryKey: options(otherAccount, "name").queryKey })
+    ).toBeUndefined()
+  })
+})
+
+describe("search placeholder data", () => {
+  const records = (query: string) =>
+    searchQueryOptions(scope, query, ["sample", "dataset"])
+  const metadata = (query: string) => metadataSearchQueryOptions(scope, query)
+
+  it("keeps the previous results of the same search mode", () => {
+    const placeholder = records("nickel").placeholderData as Placeholder
+    expect(placeholder(page, { queryKey: records("nick").queryKey })).toBe(page)
+    const metadataPlaceholder = metadata("nickel")
+      .placeholderData as Placeholder
+    expect(
+      metadataPlaceholder(page, { queryKey: metadata("nick").queryKey })
+    ).toBe(page)
+  })
+
+  it("never shows record results as metadata results or the reverse", () => {
+    const placeholder = records("nickel").placeholderData as Placeholder
+    expect(
+      placeholder(page, { queryKey: metadata("nickel").queryKey })
+    ).toBeUndefined()
+    const metadataPlaceholder = metadata("nickel")
+      .placeholderData as Placeholder
+    expect(
+      metadataPlaceholder(page, { queryKey: records("nickel").queryKey })
+    ).toBeUndefined()
+  })
+})
+
+describe("facet placeholder data", () => {
+  const facets = (field: "measurement" | "owner", sort: "count" | "label") =>
+    datasetFacetQueryOptions(
+      scope,
+      field,
+      {},
+      {
+        ordering: { direction: "asc", sort },
+      }
+    )
+
+  it("keeps groups of the same field while the order changes", () => {
+    const placeholder = facets("measurement", "count")
+      .placeholderData as Placeholder
+    expect(
+      placeholder(page, { queryKey: facets("measurement", "label").queryKey })
+    ).toBe(page)
+  })
+
+  it("never shows another field's groups", () => {
+    const placeholder = facets("measurement", "count")
+      .placeholderData as Placeholder
+    expect(
+      placeholder(page, { queryKey: facets("owner", "count").queryKey })
+    ).toBeUndefined()
+  })
+})
+
+describe("deletion audit placeholder data", () => {
+  it("keeps the previous results within the account", () => {
+    const placeholder = deletionAuditInfiniteQueryOptions(scope, "all")
+      .placeholderData as Placeholder
+    expect(
+      placeholder(page, {
+        queryKey: deletionAuditInfiniteQueryOptions(scope, "submitted")
+          .queryKey,
+      })
+    ).toBe(page)
+    expect(
+      placeholder(page, {
+        queryKey: deletionAuditInfiniteQueryOptions(otherAccount, "submitted")
+          .queryKey,
+      })
     ).toBeUndefined()
   })
 })

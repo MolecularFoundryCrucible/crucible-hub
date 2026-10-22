@@ -20,6 +20,7 @@ import type {
   SampleFacetFilters,
 } from "./facets"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
+import { sameKindPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
@@ -76,6 +77,8 @@ export function sampleFacetQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      sameKindPreviousData(scope, { field }, previousData, previousQuery),
   })
 }
 
@@ -122,6 +125,8 @@ export function datasetFacetQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      sameKindPreviousData(scope, { field }, previousData, previousQuery),
   })
 }
 

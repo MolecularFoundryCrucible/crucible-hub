@@ -18,6 +18,32 @@ export function identityScopedPreviousData<TData>(
     : undefined
 }
 
+/**
+ * Previous results of the same kind only: the key parameters named in `kind`
+ * (a facet field, a search mode) must match, so a list never shows another
+ * kind of item while it loads.
+ */
+export function sameKindPreviousData<TData>(
+  scope: IdentityScope,
+  kind: Record<string, unknown>,
+  previousData: TData | undefined,
+  previousQuery: PreviousQuery | undefined
+) {
+  if (
+    identityScopedPreviousData(scope, previousData, previousQuery) === undefined
+  )
+    return undefined
+  const params = [...(previousQuery?.queryKey ?? [])]
+    .reverse()
+    .find(
+      (part): part is Record<string, unknown> =>
+        typeof part === "object" && part !== null && !Array.isArray(part)
+    )
+  return Object.entries(kind).every(([key, value]) => params?.[key] === value)
+    ? previousData
+    : undefined
+}
+
 export function fixtureCursorPage<TItem>(
   items: readonly TItem[],
   { cursor, limit }: { cursor?: string; limit: number }

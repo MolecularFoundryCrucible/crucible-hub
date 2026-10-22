@@ -2,8 +2,10 @@ import { useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import { CollectionUpdateStatus } from "@/components/crucible/collection-state"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
+import { PendingRegion } from "@/components/crucible/pending-region"
 import { PersonLink } from "@/components/crucible/person-link"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
@@ -57,9 +59,14 @@ export function DeletionAuditQueue({
   const items = pages.flatMap((page) => page.items)
   const total = pages.at(0)?.total ?? null
 
+  const updating = result.isFetching && !result.isFetchingNextPage
   return (
     <>
-      <Card aria-busy={result.isFetching}>
+      <CollectionUpdateStatus
+        label="approved deletion requests"
+        updating={updating}
+      />
+      <Card>
         {result.isPending ? (
           <DeletionAuditPending />
         ) : result.isError && !result.data ? (
@@ -78,15 +85,18 @@ export function DeletionAuditQueue({
             </Empty>
           </CardContent>
         ) : items.length === 0 ? (
-          <CardContent>
+          <PendingRegion pending={updating} render={<CardContent />}>
             <Empty className="min-h-32">
               <EmptyHeader>
                 <EmptyTitle>No approved requests</EmptyTitle>
               </EmptyHeader>
             </Empty>
-          </CardContent>
+          </PendingRegion>
         ) : (
-          <CardContent className="px-0">
+          <PendingRegion
+            pending={updating}
+            render={<CardContent className="px-0" />}
+          >
             {result.isRefetchError ? (
               <p className="px-4 pb-3 text-body text-destructive" role="alert">
                 The history could not be refreshed. Showing the last loaded
@@ -98,11 +108,11 @@ export function DeletionAuditQueue({
               items={items}
               onOpen={setSelected}
             />
-          </CardContent>
+          </PendingRegion>
         )}
       </Card>
       <CollectionPagination
-        disabled={result.isFetchingNextPage}
+        disabled={result.isFetching}
         hasNextPage={result.hasNextPage}
         isError={result.isFetchNextPageError}
         isLoading={result.isFetchingNextPage}

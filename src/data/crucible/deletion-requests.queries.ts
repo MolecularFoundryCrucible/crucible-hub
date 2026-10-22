@@ -9,6 +9,7 @@ import {
   getWorkspaceDeletionRequests,
 } from "./deletion-requests.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
+import { identityScopedPreviousData } from "./pagination"
 import type { IdentityScope } from "./query-keys"
 import { crucibleKeys, privilegeModeFromScope } from "./query-keys"
 import { unwrapHubResult } from "./result"
@@ -40,6 +41,8 @@ export function deletionAuditInfiniteQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }
@@ -65,6 +68,8 @@ export function deletionRequestsInfiniteQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: (previousData, previousQuery) =>
+      identityScopedPreviousData(scope, previousData, previousQuery),
     retry: scenario ? false : undefined,
   })
 }
