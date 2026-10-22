@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Removed the Redis session store (`HUB_AUTH_SESSION_MODE=redis` and `HUB_SESSION_REDIS_URL`). It was never deployed; the Postgres store in Cloud SQL is the only shared session store. Because no deployment used it, this is not treated as a breaking release.
 - Made switching Administrator view feel immediate: the switch and header badge change at once, the page stays in place instead of reloading and dims only if the switch takes longer than 200 ms, the Administration links slide in and out with the switch, the deletion requests badge changes once instead of flickering, and the sidebar's Recent list stays on screen and fades in new entries.
 - Gave the Hub one consistent motion system: menus, popovers, tooltips, dialogs, sheets, and notifications now open and close with the same short timings, close slightly faster than they open, and finish their closing animation instead of being cut off. Pickers and menus opened inside a dialog or the inspector always appear above it.
 - Loading feedback no longer flashes on fast responses: the route progress bar and the dimming of Data, project data, search, the directories, and the inspector appear only after 200 ms, and the progress bar finishes forward instead of shrinking back. Loading placeholders on Home, search, and sample and dataset pages now match the layout that loads, including the Manage tab, and rows added by Load more fade in.

@@ -4,7 +4,7 @@ Status: Superseded
 
 Date: 2026-09-28
 
-[Decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md) replaces the shared-store choice. The process-local pilot below is unchanged.
+[Decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md) replaces the shared-store choice. The Redis store described below was implemented and checked against a temporary container, but never deployed, and was removed on 2026-10-22. The process-local pilot below is unchanged.
 
 ## Context
 

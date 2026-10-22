@@ -195,7 +195,7 @@ export function productionHubAuthReady() {
   if (process.env.NODE_ENV !== "production") return true
   if (process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true") return false
   const mode = process.env.HUB_AUTH_SESSION_MODE
-  if (mode === "postgres" || mode === "redis")
+  if (mode === "postgres")
     return sharedSessionsConfigured() && sharedSessionStoreKind() === mode
   if (process.env.HUB_AUTH_SESSION_MODE === "single-instance")
     return !sharedSessionsRequested()

@@ -15,7 +15,6 @@ import {
   postgresSessionsConfigured,
   postgresSessionsRequested,
 } from "./hub-session-postgres.server"
-import { redisSessionBackend } from "./hub-session-redis.server"
 
 const tokenSchema = z.object({
   access_token: z.string().min(1),
@@ -47,7 +46,7 @@ const transactionSchema = z.object({
 export type SharedSession = z.infer<typeof sessionSchema>
 export type SharedTransaction = z.infer<typeof transactionSchema>
 export type StoredSession = { raw: string; session: SharedSession }
-export type SharedSessionStoreKind = "postgres" | "redis"
+export type SharedSessionStoreKind = "postgres"
 
 const prefix = "crucible:hub:v1:"
 const absoluteLifetime = 30 * 24 * 60 * 60 * 1000
@@ -79,19 +78,13 @@ function configuration() {
 }
 
 export function sharedSessionStoreKind(): SharedSessionStoreKind | null {
-  const redisRequested = Boolean(process.env.HUB_SESSION_REDIS_URL)
-  const postgresRequested = postgresSessionsRequested()
-  if (redisRequested && postgresRequested) {
-    throw new Error("Configure only one shared Hub session store.")
-  }
-  if (postgresRequested) return "postgres"
-  return redisRequested ? "redis" : null
+  return postgresSessionsRequested() ? "postgres" : null
 }
 
 export function sharedSessionsConfigured() {
   const kind = sharedSessionStoreKind()
   if (!kind || !process.env.HUB_SESSION_KEYS) return false
-  return kind === "redis" || postgresSessionsConfigured()
+  return postgresSessionsConfigured()
 }
 
 export function sharedSessionsRequested() {
@@ -99,9 +92,7 @@ export function sharedSessionsRequested() {
 }
 
 function backend(): HubSessionBackend {
-  return sharedSessionStoreKind() === "postgres"
-    ? postgresSessionBackend
-    : redisSessionBackend
+  return postgresSessionBackend
 }
 
 function key(kind: string, id: string) {
