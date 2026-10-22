@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { crucibleKeys, identityScope } from "./query-keys"
+import { crucibleKeys, identityScope, sameAccountKey } from "./query-keys"
 
 describe("Crucible query keys", () => {
   it("scopes data by server and stable account identity", () => {
@@ -115,5 +115,20 @@ describe("Crucible query keys", () => {
 
   it("provides a global query key for system status", () => {
     expect(crucibleKeys.systemStatus()).toEqual(["crucible", "system-status"])
+  })
+
+  it("treats keys as the same account only when the server and account match", () => {
+    const normal = crucibleKeys.recentResources(
+      identityScope("staging", "user-a")
+    )
+    const elevated = crucibleKeys.recentResources(
+      identityScope("staging", "user-a", "elevated")
+    )
+    const otherAccount = crucibleKeys.recentResources(
+      identityScope("staging", "user-b", "elevated")
+    )
+
+    expect(sameAccountKey(normal, elevated)).toBe(true)
+    expect(sameAccountKey(normal, otherAccount)).toBe(false)
   })
 })

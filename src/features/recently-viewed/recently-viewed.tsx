@@ -13,7 +13,7 @@ import {
   useOptionalWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import { identityScope } from "@/data/crucible/query-keys"
+import { identityScope, sameAccountKey } from "@/data/crucible/query-keys"
 import type { RecentResource } from "@/data/crucible/recent-resources"
 import { recentResourceLimit } from "@/data/crucible/recent-resources"
 import {
@@ -139,7 +139,16 @@ function useAccountHistory() {
 export function useRecentlyViewed() {
   const { context, identityKey } = useRecentlyViewedContext()
   const history = useAccountHistory()
-  const query = useQuery({ ...history.options, enabled: history.enabled })
+  const query = useQuery({
+    ...history.options,
+    enabled: history.enabled,
+    // Keep the list on screen while Administrator view switches modes.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery &&
+      sameAccountKey(previousQuery.queryKey, history.options.queryKey)
+        ? previous
+        : undefined,
+  })
   const local = context.identityKey === identityKey ? context.items : []
   if (!history.enabled || !query.data) return local
   return query.data

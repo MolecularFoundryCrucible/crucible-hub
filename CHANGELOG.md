@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Kept the sidebar's Recent list on screen while switching Administrator view instead of briefly removing it.
+
 ## 1.6.2 - 2026-10-21
 
 - Restored the `no-referrer` policy on the sign-in callback and other routes that set their own, which the site-wide `same-origin` header had been overriding.

@@ -34,6 +34,13 @@ export function identityScope(
   return ["crucible", serverId, accountMfid, privilegeMode]
 }
 
+export function sameAccountKey(
+  left: readonly unknown[],
+  right: readonly unknown[]
+) {
+  return left[0] === right[0] && left[1] === right[1] && left[2] === right[2]
+}
+
 export function identityScopeWithPrivilegeMode(
   scope: IdentityScope,
   privilegeMode: WorkspacePrivilegeMode
