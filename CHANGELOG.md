@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+## 1.6.3 - 2026-10-22
+
 - Made the Hub's motion consistent: menus, dialogs, sheets, tooltips, and notifications share short timings, finish closing with their content in place, appear above the dialog they open from, and drop movement under reduced motion. Switching Administrator view now responds at once without reloading or flickering.
 - Kept current results on screen while filters, sorting, and searches load, and delayed loading indicators so fast responses no longer flash.
 - Fixed Show all lists not animating, collapsing a list in the inspector scrolling the page, Save enabling after whitespace-only edits, the upload area jumping during uploads, and copy buttons staying on Copied.
