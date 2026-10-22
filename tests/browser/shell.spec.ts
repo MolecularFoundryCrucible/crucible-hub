@@ -233,7 +233,18 @@ test("fits prioritized data columns within a laptop viewport", async ({
   ).toBe(true)
 })
 
-test("uses scientific subtypes in the wide data table", async ({ page }) => {
+test("uses scientific subtypes in the wide data table", async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([
+    {
+      domain: "127.0.0.1",
+      name: "crucible_hub_inspector",
+      path: "/hub",
+      value: "collapsed",
+    },
+  ])
   await page.setViewportSize({ width: 1600, height: 900 })
   await page.goto("/hub/data")
   await page.waitForLoadState("networkidle")
