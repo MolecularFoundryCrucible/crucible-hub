@@ -6,6 +6,10 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Showed who has access to a sample, dataset, or instrument, and which service accounts operate an instrument, to everyone with a role on it; only people who can manage access see the change controls.
+- Added People to instrument Overview and gave project and instrument Overview the same layout, with Identity and People beside Summary and metadata.
+- Updated to the Crucible API contract at `4e9fe5c`, which lets people with a role on a resource read its access list and an instrument's operators.
+
 ## 1.6.3 - 2026-10-22
 
 - Made the Hub's motion consistent: menus, dialogs, sheets, tooltips, and notifications share short timings, finish closing with their content in place, appear above the dialog they open from, and drop movement under reduced motion. Switching Administrator view now responds at once without reloading or flickering.
