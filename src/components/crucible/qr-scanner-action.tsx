@@ -30,9 +30,6 @@ export function QrScannerAction() {
   const openResource = useCallback(
     (resourceMfid: string) => {
       setOpen(false)
-      setMode("scanner")
-      setManualValue("")
-      setManualError(undefined)
       void navigate({
         params: { resourceMfid },
         search: {},
@@ -43,13 +40,11 @@ export function QrScannerAction() {
     [navigate]
   )
 
-  function changeOpen(nextOpen: boolean) {
-    setOpen(nextOpen)
-    if (!nextOpen) {
-      setMode("scanner")
-      setManualValue("")
-      setManualError(undefined)
-    }
+  function resetAfterClose(isOpen: boolean) {
+    if (isOpen) return
+    setMode("scanner")
+    setManualValue("")
+    setManualError(undefined)
   }
 
   function submitManualValue(event: React.FormEvent<HTMLFormElement>) {
@@ -63,7 +58,11 @@ export function QrScannerAction() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={changeOpen}>
+    <Dialog
+      onOpenChange={setOpen}
+      onOpenChangeComplete={resetAfterClose}
+      open={open}
+    >
       <Tooltip>
         <TooltipTrigger
           render={

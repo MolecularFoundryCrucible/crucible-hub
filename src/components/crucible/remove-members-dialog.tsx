@@ -1,5 +1,3 @@
-import { useEffect } from "react"
-
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
@@ -46,14 +44,13 @@ export function RemoveMembersDialog({
     onDone: () => onOpenChange(false),
   })
 
-  useEffect(() => {
-    if (!open) reset()
-  }, [open, reset])
-
   return (
     <Dialog
       onOpenChange={(nextOpen) => {
         if (!committing) onOpenChange(nextOpen)
+      }}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) reset()
       }}
       open={open}
     >

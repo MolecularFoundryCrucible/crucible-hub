@@ -36,6 +36,7 @@ import type {
 } from "@/data/crucible/workspace-source"
 import type { WorkspaceDeletionAuditFilters } from "@/data/crucible/deletion-requests.server"
 import { useEnteringClassName } from "@/hooks/use-entering-keys"
+import { useExitSafeValue } from "@/hooks/use-exit-safe"
 
 const pendingRows = ["first", "second", "third"] as const
 
@@ -313,15 +314,20 @@ function AuditProject({ audit }: { audit: WorkspaceDeletionAudit }) {
 
 function DeletionAuditDialog({
   account,
-  audit,
+  audit: selectedAudit,
   onOpenChange,
 }: {
   account: WorkspaceAccount
   audit?: WorkspaceDeletionAudit
   onOpenChange: (open: boolean) => void
 }) {
+  const { onOpenChangeComplete, value: audit } = useExitSafeValue(selectedAudit)
   return (
-    <Dialog onOpenChange={onOpenChange} open={Boolean(audit)}>
+    <Dialog
+      onOpenChange={onOpenChange}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={Boolean(selectedAudit)}
+    >
       <DialogContent>
         {audit ? (
           <>

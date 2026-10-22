@@ -313,7 +313,6 @@ function AddRelationshipDialog({
   function changeOpen(nextOpen: boolean) {
     if (mutation.isPending) return
     onOpenChange(nextOpen)
-    if (!nextOpen) reset()
   }
 
   async function add() {
@@ -325,14 +324,19 @@ function AddRelationshipDialog({
     try {
       onApplied(await mutation.mutateAsync(selected))
       onOpenChange(false)
-      reset()
     } catch (error) {
       setMutationError(relationshipError(error, "link"))
     }
   }
 
   return (
-    <Dialog onOpenChange={changeOpen} open={open}>
+    <Dialog
+      onOpenChange={changeOpen}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) reset()
+      }}
+      open={open}
+    >
       <DialogContent showCloseButton={!mutation.isPending}>
         <DialogHeader>
           <DialogTitle>Add relationship</DialogTitle>

@@ -68,6 +68,7 @@ import type {
   WorkspaceDeletionRequestSort,
 } from "@/data/crucible/workspace-source"
 import { useEnteringClassName } from "@/hooks/use-entering-keys"
+import { useExitSafeValue } from "@/hooks/use-exit-safe"
 import { cn } from "@/lib/utils"
 
 const pendingRows = ["first", "second", "third"] as const
@@ -1055,7 +1056,7 @@ function DeletionRequestProject({
 function DeletionRequestDialog({
   account,
   onOpenChange,
-  request,
+  request: selectedRequest,
   scope,
 }: {
   account: WorkspaceAccount
@@ -1063,6 +1064,8 @@ function DeletionRequestDialog({
   request?: WorkspaceDeletionRequest
   scope: IdentityScope
 }) {
+  const exit = useExitSafeValue(selectedRequest)
+  const request = exit.value
   const queryClient = useQueryClient()
   const [reviewerNotes, setReviewerNotes] = useState("")
   const mutation = useMutation({
@@ -1096,7 +1099,6 @@ function DeletionRequestDialog({
           ? "Deletion request approved"
           : "Deletion request rejected"
       )
-      setReviewerNotes("")
       onOpenChange(false)
     } catch {
       void queryClient.invalidateQueries({
@@ -1115,13 +1117,16 @@ function DeletionRequestDialog({
     <Dialog
       onOpenChange={(open) => {
         if (mutation.isPending) return
+        onOpenChange(open)
+      }}
+      onOpenChangeComplete={(open) => {
+        exit.onOpenChangeComplete(open)
         if (!open) {
           setReviewerNotes("")
           mutation.reset()
         }
-        onOpenChange(open)
       }}
-      open={Boolean(request)}
+      open={Boolean(selectedRequest)}
     >
       <DialogContent showCloseButton={!mutation.isPending}>
         {request ? (

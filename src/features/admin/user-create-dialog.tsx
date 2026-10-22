@@ -93,7 +93,6 @@ export function UserCreateDialog({
         void queryClient.invalidateQueries({
           queryKey: crucibleKeys.userAdminLists(scope),
         })
-        form.reset()
         onOpenChange(false)
         onCreated(user)
       } catch (cause) {
@@ -110,16 +109,22 @@ export function UserCreateDialog({
   function setOpen(nextOpen: boolean) {
     if (!nextOpen && pending) return
     onOpenChange(nextOpen)
-    if (!nextOpen) {
-      form.reset()
-      setError(undefined)
-      usernameConflict.reset()
-      emailConflict.reset()
-    }
+  }
+
+  function resetAfterClose(isOpen: boolean) {
+    if (isOpen) return
+    form.reset()
+    setError(undefined)
+    usernameConflict.reset()
+    emailConflict.reset()
   }
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
+    <Dialog
+      onOpenChange={setOpen}
+      onOpenChangeComplete={resetAfterClose}
+      open={open}
+    >
       <DialogContent showCloseButton={!pending}>
         <DialogHeader>
           <DialogTitle>Create user</DialogTitle>

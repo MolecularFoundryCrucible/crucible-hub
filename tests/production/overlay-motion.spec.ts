@@ -131,3 +131,40 @@ test("transitions menus so a quick close reverses smoothly", async ({
     properties: "opacity, scale, translate",
   })
 })
+
+test("keeps the inspector content while it slides out", async ({ page }) => {
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page
+    .getByRole("link", { name: "Preview NiFe oxide catalyst A" })
+    .click()
+  await expect(
+    page
+      .locator("[data-slot=sheet-content]")
+      .getByRole("heading", { name: "NiFe oxide catalyst A" })
+  ).toBeVisible()
+
+  const exitFrames = page.evaluate(
+    () =>
+      new Promise<string[]>((resolve) => {
+        const frames: string[] = []
+        const start = performance.now()
+        const tick = () => {
+          const sheet = document.querySelector("[data-slot=sheet-content]")
+          if (sheet?.hasAttribute("data-ending-style"))
+            frames.push(
+              sheet.textContent.includes("NiFe oxide catalyst A")
+                ? "named"
+                : "empty"
+            )
+          if (performance.now() - start < 500) requestAnimationFrame(tick)
+          else resolve(frames)
+        }
+        requestAnimationFrame(tick)
+      })
+  )
+  await page.keyboard.press("Escape")
+  const frames = await exitFrames
+  expect(frames.length).toBeGreaterThan(0)
+  expect(new Set(frames)).toEqual(new Set(["named"]))
+})

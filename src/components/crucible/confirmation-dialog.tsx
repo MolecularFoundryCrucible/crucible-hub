@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { PendingIcon } from "@/components/crucible/pending-icon"
+import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
 
 type ConfirmationProps = {
   cancelLabel?: string
@@ -30,6 +30,7 @@ type ConfirmationProps = {
   onCancelPending?: () => void
   onConfirm: () => void
   onOpenChange: (open: boolean) => void
+  onOpenChangeComplete?: (open: boolean) => void
   open: boolean
   pendingCancelDisabled?: boolean
   pendingCancelLabel?: string
@@ -52,6 +53,7 @@ export function ConfirmationDialog({
   onCancelPending,
   onConfirm,
   onOpenChange,
+  onOpenChangeComplete,
   open,
   pending = false,
   pendingCancelDisabled = false,
@@ -82,6 +84,7 @@ export function ConfirmationDialog({
         onOpenChange={(nextOpen) => {
           if (!pending) onOpenChange(nextOpen)
         }}
+        onOpenChangeComplete={onOpenChangeComplete}
         open={open}
       >
         <AlertDialogContent>
@@ -111,7 +114,10 @@ export function ConfirmationDialog({
               }}
               variant={confirmVariant}
             >
-              {pending ? <PendingIcon data-icon="inline-start" /> : null}
+              <DelayedPendingIcon
+                data-icon="inline-start"
+                pending={Boolean(pending)}
+              />
               {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -124,6 +130,7 @@ export function ConfirmationDialog({
       onOpenChange={(nextOpen) => {
         if (!pending) onOpenChange(nextOpen)
       }}
+      onOpenChangeComplete={onOpenChangeComplete}
       open={open}
     >
       <DialogContent showCloseButton={!pending}>
@@ -152,7 +159,10 @@ export function ConfirmationDialog({
             type="button"
             variant={confirmVariant}
           >
-            {pending ? <PendingIcon data-icon="inline-start" /> : null}
+            <DelayedPendingIcon
+              data-icon="inline-start"
+              pending={Boolean(pending)}
+            />
             {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
           </Button>
         </DialogFooter>

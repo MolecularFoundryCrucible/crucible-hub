@@ -165,8 +165,8 @@ export function InstrumentLifecycleCard({
     setDialogOpen(nextOpen)
     if (nextOpen) {
       setSelectedStatus(initialStatus(instrument))
+      setError(undefined)
     }
-    setError(undefined)
   }
 
   const submit = () => {
@@ -216,7 +216,13 @@ export function InstrumentLifecycleCard({
         ) : null}
       </ManagementAction>
 
-      <Dialog onOpenChange={openDialog} open={dialogOpen}>
+      <Dialog
+        onOpenChange={openDialog}
+        onOpenChangeComplete={(isOpen) => {
+          if (!isOpen) setError(undefined)
+        }}
+        open={dialogOpen}
+      >
         <DialogContent showCloseButton={!pending}>
           <form
             className="contents"

@@ -1,5 +1,5 @@
 import { entryActions } from "@/data/crucible/entry-capabilities"
-import { useEffect, useId, useMemo, useState } from "react"
+import { useId, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
@@ -73,6 +73,7 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
+import { useExitSafeValue } from "@/hooks/use-exit-safe"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 type GrantRole = "viewer" | "contributor" | "editor" | "admin"
@@ -109,6 +110,7 @@ export function InstrumentAccessCard({
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
   const [removingOperator, setRemovingOperator] =
     useState<WorkspaceInstrumentOperator>()
+  const removalExit = useExitSafeValue(removingOperator)
   const [error, setError] = useState<string>()
   const {
     managing,
@@ -670,16 +672,17 @@ export function InstrumentAccessCard({
         kind="alert"
         confirmLabel="Unassign operator"
         description={
-          removingOperator
-            ? `${operatorName(removingOperator)} will lose operator access to this instrument.`
+          removalExit.value
+            ? `${operatorName(removalExit.value)} will lose operator access to this instrument.`
             : null
         }
-        error={removingOperator ? error : undefined}
+        error={removalExit.value ? error : undefined}
         onOpenChange={(open) => {
           if (!open && !removeOperatorMutation.isPending) {
             setRemovingOperator(undefined)
           }
         }}
+        onOpenChangeComplete={removalExit.onOpenChangeComplete}
         onConfirm={() => void handleRemoveOperator()}
         open={Boolean(removingOperator)}
         pending={removeOperatorMutation.isPending}
@@ -714,14 +717,13 @@ function AddOperatorDialog({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string>()
 
-  useEffect(() => {
-    if (!open) {
-      setQuery("")
-      setCandidate(undefined)
-      setSubmitError(undefined)
-      setSubmitting(false)
-    }
-  }, [open])
+  function resetAfterClose(isOpen: boolean) {
+    if (isOpen) return
+    setQuery("")
+    setCandidate(undefined)
+    setSubmitError(undefined)
+    setSubmitting(false)
+  }
 
   async function handleAdd() {
     if (!candidate) return
@@ -748,6 +750,7 @@ function AddOperatorDialog({
       onOpenChange={(nextOpen) => {
         if (!submitting) onOpenChange(nextOpen)
       }}
+      onOpenChangeComplete={resetAfterClose}
       open={open}
     >
       <DialogContent showCloseButton={!submitting}>

@@ -100,11 +100,6 @@ export function CreationRelationshipsField({
     setSelected(undefined)
   }
 
-  function changeOpen(nextOpen: boolean) {
-    setOpen(nextOpen)
-    if (!nextOpen) reset()
-  }
-
   function addRelationship() {
     if (!selected) return
     const target = relationshipTargetSchema.safeParse(selected)
@@ -118,7 +113,7 @@ export function CreationRelationshipsField({
         target: target.data,
       },
     ])
-    changeOpen(false)
+    setOpen(false)
   }
 
   return (
@@ -178,7 +173,13 @@ export function CreationRelationshipsField({
         <AddRelationshipIcon aria-hidden="true" data-icon="inline-start" />
         Add relationship
       </Button>
-      <Dialog onOpenChange={changeOpen} open={open}>
+      <Dialog
+        onOpenChange={setOpen}
+        onOpenChangeComplete={(isOpen) => {
+          if (!isOpen) reset()
+        }}
+        open={open}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add relationship</DialogTitle>
@@ -251,7 +252,7 @@ export function CreationRelationshipsField({
           </FieldGroup>
           <DialogFooter>
             <Button
-              onClick={() => changeOpen(false)}
+              onClick={() => setOpen(false)}
               type="button"
               variant="outline"
             >

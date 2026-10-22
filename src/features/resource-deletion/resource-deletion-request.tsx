@@ -165,12 +165,11 @@ export function ResourceDeletionRequestCard({
         }
         error={error}
         onConfirm={() => void submit()}
-        onOpenChange={(nextOpen) => {
-          setOpen(nextOpen)
-          if (!nextOpen) {
-            setError(undefined)
-            setReason("")
-          }
+        onOpenChange={setOpen}
+        onOpenChangeComplete={(isOpen) => {
+          if (isOpen) return
+          setError(undefined)
+          setReason("")
         }}
         open={open}
         pending={mutation.isPending}

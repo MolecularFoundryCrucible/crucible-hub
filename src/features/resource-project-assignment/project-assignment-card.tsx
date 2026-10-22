@@ -1,5 +1,6 @@
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useExitSafeValue } from "@/hooks/use-exit-safe"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
 
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
@@ -54,6 +55,7 @@ export function ProjectAssignmentCard({
   const [chooserOpen, setChooserOpen] = useState(false)
   const [projectQuery, setProjectQuery] = useState("")
   const [preview, setPreview] = useState<WorkspaceProjectReassignment>()
+  const previewExit = useExitSafeValue(preview)
   const [selectedProject, setSelectedProject] =
     useState<WorkspaceSearchResult>()
   const [error, setError] = useState<string>()
@@ -241,22 +243,26 @@ export function ProjectAssignmentCard({
         kind="alert"
         confirmLabel="Assign project"
         description={
-          preview ? (
+          previewExit.value ? (
             <>
               <strong>{resourceDetailDisplayName(resource)}</strong> will move
               from {resource.project?.title ?? "no project"} to{" "}
-              <strong>{selectedProject?.name ?? preview.new_project_id}</strong>
+              <strong>
+                {selectedProject?.name ?? previewExit.value.new_project_id}
+              </strong>
               .
             </>
           ) : null
         }
         error={error}
         onOpenChange={(open) => {
-          if (!open && !confirmMutation.isPending) {
-            setPreview(undefined)
-            setSelectedProject(undefined)
-            setError(undefined)
-          }
+          if (!open && !confirmMutation.isPending) setPreview(undefined)
+        }}
+        onOpenChangeComplete={(open) => {
+          previewExit.onOpenChangeComplete(open)
+          if (open) return
+          setSelectedProject(undefined)
+          setError(undefined)
         }}
         onConfirm={() => void confirm()}
         open={Boolean(preview)}

@@ -71,6 +71,7 @@ import type {
   WorkspaceScientificMetadata,
 } from "@/data/crucible/workspace-source"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useExitSafeValue } from "@/hooks/use-exit-safe"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
@@ -94,13 +95,15 @@ export function ResourceInspector({
   const body = useRef<HTMLDivElement>(null)
   const restoreFocus = useRef(true)
   const open = Boolean(navigation.preview) || navigation.invalidPreview
+  const exit = useExitSafeValue(navigation.preview)
+  const preview = exit.value
   const isMobile = useIsMobile()
   const docked = useMediaQuery("(min-width: 90rem)")
   const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
   const query = useQuery({
-    ...resourceQueryOptions(scope, navigation.preview ?? ""),
-    enabled: Boolean(navigation.preview),
+    ...resourceQueryOptions(scope, preview ?? ""),
+    enabled: Boolean(preview),
   })
   const resource = query.data
   const previewIdentity = navigation.previewIdentity
@@ -147,6 +150,7 @@ export function ResourceInspector({
   return (
     <Sheet
       modal={isMobile}
+      onOpenChangeComplete={exit.onOpenChangeComplete}
       open={open}
       onOpenChange={(nextOpen, eventDetails) => {
         if (!nextOpen) {
@@ -256,15 +260,12 @@ export function ResourceInspector({
                 <Skeleton aria-hidden="true" className="h-6 w-48" />
               )}
             </SheetTitle>
-            {navigation.preview ? (
+            {preview ? (
               <div className="flex min-w-0">
                 <SheetDescription className="sr-only">
-                  MFID {navigation.preview}
+                  MFID {preview}
                 </SheetDescription>
-                <MfidValue
-                  presentation="supporting"
-                  value={navigation.preview}
-                />
+                <MfidValue presentation="supporting" value={preview} />
               </div>
             ) : (
               <SheetDescription>
@@ -284,7 +285,7 @@ export function ResourceInspector({
         >
           {navigation.invalidPreview ? (
             <p role="alert">The preview identifier is not valid.</p>
-          ) : navigation.preview ? (
+          ) : preview ? (
             <InspectorBody
               previewKind={previewKind}
               query={query}
@@ -292,7 +293,7 @@ export function ResourceInspector({
             />
           ) : null}
         </div>
-        {navigation.preview ? (
+        {preview ? (
           <SheetFooter
             className={cn(
               "grid gap-2 border-t bg-card",
@@ -302,9 +303,9 @@ export function ResourceInspector({
             )}
           >
             <InspectorActions
-              mfid={resource?.unique_id ?? navigation.preview}
+              mfid={resource?.unique_id ?? preview}
               mode={mode}
-              name={previewName ?? navigation.preview}
+              name={previewName ?? preview}
               navigation={navigation}
               onClick={suppressFocusRestore}
               resource={resource}

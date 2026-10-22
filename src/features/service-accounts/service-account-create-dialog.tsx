@@ -76,7 +76,6 @@ export function ServiceAccountCreateDialog({
       setError(undefined)
       try {
         const credential = await mutation.mutateAsync(value)
-        form.reset()
         onOpenChange(false)
         onCreated(credential)
       } catch (cause) {
@@ -94,15 +93,21 @@ export function ServiceAccountCreateDialog({
   function setOpen(nextOpen: boolean) {
     if (!nextOpen && pending) return
     onOpenChange(nextOpen)
-    if (!nextOpen) {
-      form.reset()
-      setError(undefined)
-      usernameConflict.reset()
-    }
+  }
+
+  function resetAfterClose(isOpen: boolean) {
+    if (isOpen) return
+    form.reset()
+    setError(undefined)
+    usernameConflict.reset()
   }
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
+    <Dialog
+      onOpenChange={setOpen}
+      onOpenChangeComplete={resetAfterClose}
+      open={open}
+    >
       <DialogContent showCloseButton={!pending}>
         <DialogHeader>
           <DialogTitle>Create service account</DialogTitle>

@@ -83,6 +83,7 @@ import {
   FileDownloadAction,
   FileOpenLink,
 } from "@/features/dataset-files/dataset-files-card"
+import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -139,6 +140,7 @@ function FilesAndIngestionCard({
   const requests = requestPage?.items
   const [dialogOpen, setDialogOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
+  const uploadExit = useExitSafeMount(uploadOpen)
   const uploadsEnabled = useUploadsEnabled()
   const uploadAvailable = canEdit && uploadsEnabled
   const eligibleFiles = files?.filter((file) => file.storage_backend === "gcs")
@@ -306,10 +308,11 @@ function FilesAndIngestionCard({
           )}
         </section>
       </CardContent>
-      {uploadAvailable && uploadOpen ? (
+      {uploadAvailable && uploadExit.mounted ? (
         <UploadFilesDialog
           datasetMfid={datasetMfid}
           onClose={() => setUploadOpen(false)}
+          onClosed={() => uploadExit.onOpenChangeComplete(false)}
           open={uploadOpen}
         />
       ) : null}

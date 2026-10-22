@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { Button } from "@/components/ui/button"
@@ -18,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useCopyFeedback } from "@/hooks/use-copy-feedback"
+import { useExitSafeValue } from "@/hooks/use-exit-safe"
 import { formatUsername } from "@/lib/username"
 
 export function OneTimeCredentialDialog({
@@ -36,9 +35,7 @@ export function OneTimeCredentialDialog({
   title: string
 }) {
   const { copy, reset, state: copyState } = useCopyFeedback()
-  // Keep the credential on screen while the dialog closes, then forget it.
-  const [shown, setShown] = useState(credential)
-  if (credential && credential !== shown) setShown(credential)
+  const { onOpenChangeComplete, value: shown } = useExitSafeValue(credential)
 
   function close() {
     reset()
@@ -52,9 +49,7 @@ export function OneTimeCredentialDialog({
       onOpenChange={(open) => {
         if (!open) close()
       }}
-      onOpenChangeComplete={(isOpen) => {
-        if (!isOpen) setShown(undefined)
-      }}
+      onOpenChangeComplete={onOpenChangeComplete}
       open={Boolean(credential)}
     >
       <DialogContent>

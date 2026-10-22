@@ -53,6 +53,7 @@ import { requestWorkspaceFileDownload } from "@/data/crucible/resources.function
 import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
+import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 
@@ -70,6 +71,7 @@ export function DatasetFiles({
 }) {
   const uploadsEnabled = useUploadsEnabled()
   const [uploadOpen, setUploadOpen] = useState(false)
+  const uploadExit = useExitSafeMount(uploadOpen)
   const scope = useWorkspaceScope()
   const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
   const files = filesResult.data
@@ -124,10 +126,11 @@ export function DatasetFiles({
           />
         )}
       </CardContent>
-      {uploadAvailable && uploadOpen ? (
+      {uploadAvailable && uploadExit.mounted ? (
         <UploadFilesDialog
           datasetMfid={datasetMfid}
           onClose={() => setUploadOpen(false)}
+          onClosed={() => uploadExit.onOpenChangeComplete(false)}
           open={uploadOpen}
         />
       ) : null}

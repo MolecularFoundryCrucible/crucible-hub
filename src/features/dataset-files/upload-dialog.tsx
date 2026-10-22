@@ -20,10 +20,12 @@ import { UploadLeaveDialog } from "./upload-leave-guard"
 export function UploadFilesDialog({
   datasetMfid,
   onClose,
+  onClosed,
   open,
 }: {
   datasetMfid: string
   onClose: () => void
+  onClosed?: () => void
   open: boolean
 }) {
   const scope = useWorkspaceScope()
@@ -37,7 +39,6 @@ export function UploadFilesDialog({
   const closeAfterUpload = useRef(false)
 
   function close() {
-    batch.reset()
     onClose()
   }
 
@@ -64,6 +65,11 @@ export function UploadFilesDialog({
       <Dialog
         onOpenChange={(nextOpen) => {
           if (!nextOpen) requestClose()
+        }}
+        onOpenChangeComplete={(isOpen) => {
+          if (isOpen) return
+          batch.reset()
+          onClosed?.()
         }}
         open={open}
       >
