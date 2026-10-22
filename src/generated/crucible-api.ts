@@ -1659,7 +1659,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Instrument Service Accounts */
+        /**
+         * List Instrument Service Accounts
+         * @description List the service accounts bound to the instrument's operator group.
+         *     Readable by anyone holding a role on the instrument other than through public
+         *     access, and by platform administrators; each entry's can_remove is true only
+         *     for callers who may unbind it (admin on the instrument).
+         */
         get: operations["list_instrument_service_accounts_instruments__instrument_ref__service_accounts_get"];
         put?: never;
         post?: never;
@@ -2286,7 +2292,11 @@ export interface paths {
         };
         /**
          * List Resource Access
-         * @description List the grants on a resource. Requires permission to manage its ACL.
+         * @description List the grants on a resource.
+         *
+         *     Readable by anyone holding a role on the resource other than through public
+         *     access, and by platform administrators. Each entry's capabilities say what
+         *     the caller may change; they are all false for callers who cannot manage access.
          */
         get: operations["list_resource_access_resources__mfid__access_get"];
         put?: never;
@@ -5230,6 +5240,12 @@ export interface components {
             can_request_deletion: boolean;
             /** Can Transfer */
             can_transfer: boolean;
+            /**
+             * Can View Access
+             * @description GET /resources/{mfid}/access would be accepted: a role on the record other than through public access, or platform administrator authority.
+             * @default false
+             */
+            can_view_access: boolean;
             /** Max Grant Role */
             max_grant_role?: ("viewer" | "contributor" | "editor" | "admin") | null;
         };

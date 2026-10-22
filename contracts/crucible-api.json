@@ -6517,6 +6517,12 @@
             "title": "Can Transfer",
             "type": "boolean"
           },
+          "can_view_access": {
+            "default": false,
+            "description": "GET /resources/{mfid}/access would be accepted: a role on the record other than through public access, or platform administrator authority.",
+            "title": "Can View Access",
+            "type": "boolean"
+          },
           "max_grant_role": {
             "anyOf": [
               {
@@ -19252,6 +19258,7 @@
     },
     "/instruments/{instrument_ref}/service_accounts": {
       "get": {
+        "description": "List the service accounts bound to the instrument's operator group.\nReadable by anyone holding a role on the instrument other than through public\naccess, and by platform administrators; each entry's can_remove is true only\nfor callers who may unbind it (admin on the instrument).",
         "operationId": "list_instrument_service_accounts_instruments__instrument_ref__service_accounts_get",
         "parameters": [
           {
@@ -22998,7 +23005,7 @@
     },
     "/resources/{mfid}/access": {
       "get": {
-        "description": "List the grants on a resource. Requires permission to manage its ACL.",
+        "description": "List the grants on a resource.\n\nReadable by anyone holding a role on the resource other than through public\naccess, and by platform administrators. Each entry's capabilities say what\nthe caller may change; they are all false for callers who cannot manage access.",
         "operationId": "list_resource_access_resources__mfid__access_get",
         "parameters": [
           {

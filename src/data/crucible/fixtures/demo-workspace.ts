@@ -60,6 +60,7 @@ const publicOnlyCapabilities = {
   can_request_deletion: false,
   can_edit: false,
   can_manage_access: false,
+  can_view_access: false,
   can_transfer: false,
   max_grant_role: null,
 } satisfies Schema<"ResourceCapabilities">
@@ -98,6 +99,7 @@ const capabilities = {
   can_request_deletion: true,
   can_edit: true,
   can_manage_access: true,
+  can_view_access: true,
   can_transfer: true,
   max_grant_role: "admin",
 } satisfies Schema<"ResourceCapabilities">
@@ -329,6 +331,7 @@ export const demoWorkspace = {
         can_request_deletion: false,
         can_edit: false,
         can_manage_access: false,
+        can_view_access: true,
         can_transfer: false,
         max_grant_role: null,
       },
