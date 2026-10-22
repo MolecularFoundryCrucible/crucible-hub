@@ -8,7 +8,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 - Showed who has access to a sample, dataset, or instrument, and which service accounts operate an instrument, to everyone with a role on it; only people who can manage access see the change controls.
 - Added People to instrument Overview and gave project and instrument Overview the same layout, with Identity and People beside Summary and metadata.
-- Updated to the Crucible API contract at `4e9fe5c`, which lets people with a role on a resource read its access list and an instrument's operators.
+- Updated to the Crucible API contract at `8f6d7be`, which lets people with a role on a resource read its access list and an instrument's operators.
 
 ## 1.6.3 - 2026-10-22
 
