@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-09-04
 
+Updated: 2026-10-22
+
 ## Context
 
 Crucible Hub has a persistent authenticated shell and data-heavy pages whose URL search parameters select server data. Treating every search-parameter change as blocking route navigation replaces established page context with a pending route and produces disruptive full-content flashes. Treating every request as component-local fetching gives up router-coordinated SSR, intent preloading, and destination readiness.
@@ -16,9 +18,9 @@ Use the Router for destination readiness and Query for updates within an establi
 
 - Initial entry and cross-route navigation load critical data through a route loader using `ensureQueryData`.
 - A search-parameter change within the active collection route starts the corresponding Query without blocking the route.
-- Paginated collections retain their previous successful page as placeholder data only when the previous and next Query keys share the same server and account identity.
+- Collections retain their previous successful results as placeholder data across pagination, filter, and sort changes, following TanStack Query's `keepPreviousData` pattern, only when the previous and next Query keys share the same server and account identity. Retained results, including an empty result, stay readable, are marked busy, and dim only after the indicator delay of [decision 0036](0036-centralize-motion.md), so fast responses show no change until the new results arrive.
 - The authenticated shell and unchanged page context remain mounted. Pending feedback belongs to the smallest asynchronous content region.
-- Use a shape-preserving skeleton only when no readable representation exists. Background refresh and pagination retain readable content, mark its region busy, and expose concise local status.
+- Use a shape-preserving skeleton only when no readable representation exists. Background refresh, pagination, filtering, and sorting retain readable content, mark its region busy, and expose concise local status.
 - Loading, empty, unavailable, and failed states are mutually exclusive.
 
 ## Consequences
@@ -27,7 +29,8 @@ Use the Router for destination readiness and Query for updates within an establi
 - Pagination and filtering no longer replace stable headings, explanations, and controls.
 - Collection components must distinguish initial pending state from background fetching and successful empty results.
 - Placeholder data needs an identity guard. Query's unrestricted `keepPreviousData` helper is insufficient for account and server transitions.
-- Pagination controls may be temporarily withheld while a request is in flight when repeating the action would target stale page state.
+- Pagination controls may be temporarily withheld while a request is in flight when repeating the action would target stale page state. Load more is disabled while placeholder results are shown, as TanStack Query recommends.
+- Until the new results arrive, retained rows and counts reflect the previous filters; the busy state and dimming mark them as out of date. An earlier version also required the previous filters to match, which replaced the collection with a skeleton on every filter or sort change and flashed on fast responses.
 
 ## Alternatives considered
 
@@ -50,7 +53,7 @@ Suspense provides a clear initial boundary, but placeholder data is not availabl
 ## Validation
 
 - Verify initial and cross-route entry resolve critical data through route loaders.
-- Verify pagination preserves headings and the last readable collection while the next page loads.
+- Verify pagination, filtering, and sorting preserve headings and the last readable collection while the new results load.
 - Verify a server or account change never renders placeholder data from the previous identity.
 - Verify pending, empty, unavailable, error, and retry behavior independently.
 - Run unit, browser, and production-shaped navigation checks.
