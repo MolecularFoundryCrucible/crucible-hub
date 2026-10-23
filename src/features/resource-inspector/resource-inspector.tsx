@@ -222,6 +222,15 @@ export function ResourceInspector({
             return
           }
           if (eventDetails.reason === "outside-press") {
+            // Base UI dismisses non-modal dialogs on a touch drag outside;
+            // scrolling the page with a finger keeps it open, like the wheel.
+            if (
+              eventDetails.event.type === "touchmove" ||
+              eventDetails.event.type === "touchend"
+            ) {
+              eventDetails.cancel()
+              return
+            }
             restoreFocus.current = false
             if (
               paneDocked ||
@@ -240,7 +249,7 @@ export function ResourceInspector({
       }}
     >
       <SheetContent
-        className="resource-inspector gap-0 shadow-2xl data-docked:shadow-none"
+        className="resource-inspector gap-0 overflow-hidden overscroll-contain shadow-2xl data-docked:shadow-none"
         data-docked={paneDocked || undefined}
         data-pane-motion={
           paneDocked && pane
@@ -356,7 +365,7 @@ export function ResourceInspector({
         </SheetHeader>
         <div
           ref={body}
-          className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-4"
+          className="resource-inspector-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-4"
         >
           {navigation.invalidPreview ? (
             <p role="alert">The preview identifier is not valid.</p>

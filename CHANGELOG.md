@@ -6,6 +6,9 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Stopped the navigation sidebar from scrolling sideways.
+- Kept the resource preview open while scrolling the page behind it with a finger, and stopped scrolling inside the preview from moving the page behind.
+
 ## 1.6.4 - 2026-10-22
 
 - Made the resource preview a steady pane on wide screens that keeps the last preview across pages without shifting the layout, and slides away with the content when hidden from the top bar.
