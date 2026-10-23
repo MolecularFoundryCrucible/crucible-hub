@@ -6,18 +6,11 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
-- Stopped the navigation sidebar from scrolling sideways.
-- Gave the navigation and preview panel toggles the same style, and made the pending deletion count stand out from the sidebar.
-- Hid the sidebar create actions on touch devices, where they could be tapped while invisible; the top bar Create menu offers the same actions.
-- Kept the Theme menu on screen on phones, closed the navigation drawer when opening Shortcuts, and dimmed the page only once for dialogs opened over the preview.
-- Let toasts be swiped sideways to dismiss them.
-- Moved the QR scanner into the search field and gave it a larger square viewfinder with an orange frame on the area it reads, and kept it scanning after an unrecognized code.
-- Set Noto Sans Mono as the Hub's monospace font, so MFIDs, metadata, and code look the same on every system.
-- Used the standard segmented control for Samples and Datasets on project pages, and shortened Create sample, Create dataset, Create project, Register instrument, Create user, Create service account, Refresh, Filters, and Browse nearby to icons when the content area is narrow.
-- Laid out pages by the width left beside the sidebar and preview pane, so actions no longer wrap and cards no longer squeeze at mid sizes.
-- Truncated long breadcrumb segments evenly with full names on hover, and gave Browse nearby its own icon.
-- Stopped identifier and API key fields from zooming the page on phones, and gave keyboard keys, disclosures, and processing statuses one consistent style.
-- Kept the resource preview open while scrolling the page behind it with a finger, and stopped scrolling inside the preview from moving the page behind.
+- Improved touch and phone use: no sideways sidebar scroll, the preview stays open and keeps its own scrolling under a finger, menus and dialogs stay on screen and close when pressing outside, toasts can be swiped away, and sidebar create actions give way to the Create menu.
+- Laid out pages by the width left beside the sidebar and preview pane, shortening page actions to icons when space is tight and truncating long breadcrumbs evenly.
+- Moved the QR scanner into the search field with a larger square viewfinder framed in Crucible orange.
+- Aligned controls with the design system: matching panel toggles, the segmented control for Samples and Datasets on project pages, and shared styles for keyboard keys, disclosures, statuses, identifier fields, and the sidebar count.
+- Set Noto Sans Mono as the Hub's monospace font.
 
 ## 1.6.4 - 2026-10-22
 

@@ -80,3 +80,20 @@ test("truncates each breadcrumb segment and keeps room for the page", async ({
     "NiFe K-edge operando series"
   )
 })
+
+test("keeps the search shortcut hint on one line", async ({ page }) => {
+  await page.setViewportSize({ height: 700, width: 820 })
+  await page.goto(project)
+  await page.waitForLoadState("networkidle")
+  const lines = await page
+    .locator('header [data-slot="kbd"]')
+    .evaluate((hint) => {
+      const field = hint.closest('[data-slot="input-group"]') as HTMLElement
+      field.style.flex = "none"
+      field.style.width = "160px"
+      const range = document.createRange()
+      range.selectNodeContents(hint)
+      return new Set([...range.getClientRects()].map((box) => box.top)).size
+    })
+  expect(lines).toBe(1)
+})
