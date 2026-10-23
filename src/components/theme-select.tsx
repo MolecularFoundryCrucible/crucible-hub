@@ -1,4 +1,5 @@
 import { useTheme } from "@/components/theme-provider"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 export function ThemeSelect() {
   const { theme, setTheme } = useTheme()
@@ -6,8 +7,7 @@ export function ThemeSelect() {
   return (
     <label className="grid gap-1.5 text-label-compact text-muted-foreground">
       <span>Theme</span>
-      <select
-        className="h-8 cursor-pointer rounded-md border bg-background px-2 text-foreground"
+      <NativeSelect
         value={theme}
         onChange={(event) => {
           const nextTheme = event.target.value
@@ -20,10 +20,10 @@ export function ThemeSelect() {
           }
         }}
       >
-        <option value="system">System</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
+        <NativeSelectOption value="system">System</NativeSelectOption>
+        <NativeSelectOption value="light">Light</NativeSelectOption>
+        <NativeSelectOption value="dark">Dark</NativeSelectOption>
+      </NativeSelect>
     </label>
   )
 }

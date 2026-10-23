@@ -272,28 +272,35 @@ function SidebarTrigger({
 }: React.ComponentProps<typeof Button>) {
   const { isMobile, openMobile, state, toggleSidebar } = useSidebar()
   const expanded = isMobile ? openMobile : state === "expanded"
+  const label = expanded ? "Collapse navigation" : "Expand navigation"
 
   return (
-    <Button
-      data-sidebar="trigger"
-      data-slot="sidebar-trigger"
-      variant="ghost"
-      size="icon-sm"
-      className={cn(
-        "bg-sidebar text-sidebar-foreground shadow-xs ring-1 ring-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        className
-      )}
-      onClick={(event) => {
-        onClick?.(event)
-        toggleSidebar()
-      }}
-      {...props}
-    >
-      {expanded ? <PanelLeftCloseIcon /> : <PanelLeftOpenIcon />}
-      <span className="sr-only">
-        {expanded ? "Collapse navigation" : "Expand navigation"}
-      </span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={label}
+            data-sidebar="trigger"
+            data-slot="sidebar-trigger"
+            variant="ghost"
+            size="icon"
+            className={className}
+            onClick={(event) => {
+              onClick?.(event)
+              toggleSidebar()
+            }}
+            {...props}
+          />
+        }
+      >
+        {expanded ? (
+          <PanelLeftCloseIcon aria-hidden="true" />
+        ) : (
+          <PanelLeftOpenIcon aria-hidden="true" />
+        )}
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   )
 }
 

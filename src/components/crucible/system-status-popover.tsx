@@ -268,7 +268,7 @@ export function SystemStatusPopover({
               </div>
 
               <details className="group border-t border-border pt-1">
-                <summary className="cursor-pointer text-supporting text-muted-foreground underline underline-offset-4 transition-colors outline-none select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+                <summary className="cursor-pointer text-supporting text-muted-foreground underline underline-offset-4 transition-colors outline-none select-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
                   Diagnostic payload
                 </summary>
                 <pre className="mt-1.5 max-h-36 overflow-auto rounded-md bg-muted/50 p-2 font-mono text-supporting text-foreground">

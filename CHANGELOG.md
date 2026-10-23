@@ -7,6 +7,7 @@ The public surface that versions protect is shareable URLs and their search para
 ## Unreleased
 
 - Stopped the navigation sidebar from scrolling sideways.
+- Gave the navigation and preview panel toggles the same style, and the pending deletion count the standard badge.
 - Kept the resource preview open while scrolling the page behind it with a finger, and stopped scrolling inside the preview from moving the page behind.
 
 ## 1.6.4 - 2026-10-22

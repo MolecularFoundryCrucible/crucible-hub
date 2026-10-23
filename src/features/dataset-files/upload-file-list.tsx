@@ -455,7 +455,7 @@ const UploadFileRow = memo(function UploadFileRowItem({
                 aria-invalid={issues.length > 0 || undefined}
                 aria-label={`File name for ${item.file.name}`}
                 autoFocus={renaming}
-                className="h-8 min-w-0 flex-1"
+                className="min-w-0 flex-1"
                 maxLength={1024}
                 onBlur={() => onRenameChange(item.id, false)}
                 onFocus={() => onRenameChange(item.id, true)}

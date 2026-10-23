@@ -247,3 +247,29 @@ test("empties the pane when the preview is closed", async ({ page }) => {
   await expect(page).not.toHaveURL(/preview=/)
   await expect(page.getByText("Preview items show here")).toBeVisible()
 })
+
+test("styles both panel toggles the same", async ({ page }) => {
+  const look = (name: string) =>
+    page.getByRole("button", { name }).evaluate((element) => {
+      const style = getComputedStyle(element)
+      return [
+        style.width,
+        style.height,
+        style.backgroundColor,
+        style.borderWidth,
+        style.borderRadius,
+        style.boxShadow,
+        style.color,
+      ]
+    })
+
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const paneToggle = await look("Hide preview panel")
+
+  await page.setViewportSize({ height: 800, width: 390 })
+  await expect(
+    page.getByRole("button", { name: "Expand navigation" })
+  ).toBeVisible()
+  expect(await look("Expand navigation")).toEqual(paneToggle)
+})
