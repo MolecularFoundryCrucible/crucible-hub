@@ -3,6 +3,7 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation } from "@tanstack/react-query"
 import { z } from "zod"
 
+import { IdentifierInput } from "@/components/crucible/identifier-input"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +22,6 @@ import {
 import { UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { Input } from "@/components/ui/input"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { createWorkspaceServiceAccount } from "@/data/crucible/service-accounts.functions"
@@ -144,9 +144,8 @@ export function ServiceAccountCreateDialog({
                       <FieldLabel htmlFor={field.name} optional>
                         MFID
                       </FieldLabel>
-                      <Input
+                      <IdentifierInput
                         aria-invalid={invalid || undefined}
-                        className="font-mono text-body"
                         id={field.name}
                         maxLength={26}
                         onBlur={field.handleBlur}

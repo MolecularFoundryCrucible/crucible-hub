@@ -23,6 +23,7 @@ import {
   ComboboxList,
   ComboboxSeparator,
 } from "@/components/ui/combobox"
+import { Kbd } from "@/components/ui/kbd"
 import { Input } from "@/components/ui/input"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { quickSearchQueryOptions } from "@/data/crucible/search.queries"
@@ -361,12 +362,9 @@ function QuickSearchControl({
           startAdornment={<SearchIcon aria-hidden="true" />}
         >
           {query.length === 0 ? (
-            <kbd
-              aria-hidden="true"
-              className="mr-2 hidden rounded border bg-muted px-1.5 py-0.5 text-label-compact sm:inline"
-            >
+            <Kbd aria-hidden="true" className="mr-2 hidden sm:inline-flex">
               {activeProjectMfid ? "Ctrl Shift K" : "Ctrl K"}
-            </kbd>
+            </Kbd>
           ) : null}
         </ComboboxInput>
         <ComboboxContent
@@ -465,12 +463,9 @@ function QuickSearchControl({
                 </span>
               </span>
               {normalizedQuery.length >= searchMinQueryLength ? (
-                <kbd
-                  aria-hidden="true"
-                  className="ml-2 rounded border bg-muted px-1.5 py-0.5 text-label-compact max-sm:hidden"
-                >
+                <Kbd aria-hidden="true" className="ml-2 max-sm:hidden">
                   Enter
-                </kbd>
+                </Kbd>
               ) : null}
             </Button>
           </div>

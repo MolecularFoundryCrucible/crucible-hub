@@ -1,3 +1,4 @@
+import { IdentifierInput } from "@/components/crucible/identifier-input"
 import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import {
   Tooltip,
   TooltipContent,
@@ -76,9 +76,9 @@ export function OneTimeCredentialDialog({
               </div>
             </dl>
             <div className="flex min-w-0 items-center gap-2">
-              <Input
+              <IdentifierInput
                 aria-label={keyLabel}
-                className="min-w-0 font-mono text-body"
+                className="min-w-0"
                 readOnly
                 value={shown.api_key}
               />

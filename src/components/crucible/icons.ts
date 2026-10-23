@@ -90,7 +90,7 @@ export {
   CircleHelp as AvailabilityUnavailableIcon,
   LoaderCircle as AvailabilityCheckingIcon,
   Copy as CopyIcon,
-  ChevronRight as MetadataDisclosureIcon,
+  ChevronRight as DisclosureIcon,
   ChevronDown as ListExpansionIcon,
   Clock3 as DeletionRequestedIcon,
   Trash2 as DeletionRequestsIcon,

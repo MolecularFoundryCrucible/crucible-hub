@@ -2,10 +2,11 @@ import { useEffect, useId, useMemo, useRef, useState } from "react"
 import type { MouseEventHandler, ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 
+import { Disclosure, DisclosureSummary } from "@/components/crucible/disclosure"
 import {
   BackPreviewIcon,
   CloseInspectorIcon,
-  MetadataDisclosureIcon,
+  DisclosureIcon,
   NextSiblingIcon,
   PreviousSiblingIcon,
 } from "@/components/crucible/icons"
@@ -599,7 +600,7 @@ function InspectorBodyPending({
             </div>
           </section>
           <div className="flex items-center gap-1.5 border-t pt-4">
-            <MetadataDisclosureIcon
+            <DisclosureIcon
               aria-hidden="true"
               className="size-4 shrink-0 text-muted-foreground"
             />
@@ -1160,18 +1161,14 @@ function MetadataDisclosure({
 }) {
   const fieldCount = Object.keys(metadata ?? {}).length
   return (
-    <details className="metadata-disclosure border-t pt-4">
-      <summary className="metadata-disclosure-summary flex cursor-pointer list-none items-center gap-1.5 text-title-section [&::-webkit-details-marker]:hidden">
-        <MetadataDisclosureIcon
-          aria-hidden="true"
-          className="metadata-disclosure-icon size-4 shrink-0 text-muted-foreground transition-transform"
-        />
+    <Disclosure className="border-t pt-4">
+      <DisclosureSummary className="text-title-section">
         <span>Scientific metadata ({fieldCount})</span>
-      </summary>
+      </DisclosureSummary>
       <div className="mt-4">
         <ScientificMetadata metadata={metadata} />
       </div>
-    </details>
+    </Disclosure>
   )
 }
 

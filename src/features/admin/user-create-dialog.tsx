@@ -3,6 +3,7 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
+import { IdentifierInput } from "@/components/crucible/identifier-input"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
@@ -220,9 +221,8 @@ export function UserCreateDialog({
                       <FieldLabel htmlFor={field.name} optional>
                         Crucible ID or ORCID
                       </FieldLabel>
-                      <Input
+                      <IdentifierInput
                         aria-invalid={invalid || undefined}
-                        className="font-mono text-body"
                         id={field.name}
                         maxLength={255}
                         onBlur={field.handleBlur}

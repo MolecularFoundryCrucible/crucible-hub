@@ -86,6 +86,7 @@ import {
 import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { ingestionStatusLabel } from "./ingestion-status"
 
 const UploadFilesDialog = lazyRouteComponent(
   () => import("@/features/dataset-files/upload-dialog"),
@@ -816,7 +817,7 @@ function IngestionStatusBadge({
   status?: string | null
 }) {
   const normalized = status?.trim().toLowerCase()
-  const label = normalized ? normalized.replaceAll("_", " ") : emptyLabel
+  const label = normalized ? ingestionStatusLabel(normalized) : emptyLabel
   const variant =
     normalized === "failed" || normalized === "error"
       ? "destructive"
@@ -834,9 +835,5 @@ function IngestionStatusBadge({
               normalized === "in_progress"
             ? "info"
             : "outline"
-  return (
-    <Badge className="capitalize" variant={variant}>
-      {label}
-    </Badge>
-  )
+  return <Badge variant={variant}>{label}</Badge>
 }

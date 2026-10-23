@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Kbd } from "@/components/ui/kbd"
 import { SidebarMenuButton } from "@/components/ui/sidebar"
 import {
   isDialogKeyboardTarget,
@@ -161,9 +162,7 @@ export function KeyboardShortcuts({
             return (
               <div className="grid grid-cols-3 items-center gap-4" key={keys}>
                 <dt>
-                  <kbd className="rounded border bg-muted px-2 py-1 text-label-compact">
-                    {keys}
-                  </kbd>
+                  <Kbd>{keys}</Kbd>
                 </dt>
                 <dd
                   className={
@@ -181,9 +180,7 @@ export function KeyboardShortcuts({
           {contextualShortcuts.map(([keys, description]) => (
             <div className="grid grid-cols-3 items-center gap-4" key={keys}>
               <dt>
-                <kbd className="rounded border bg-muted px-2 py-1 text-label-compact">
-                  {keys}
-                </kbd>
+                <Kbd>{keys}</Kbd>
               </dt>
               <dd className="col-span-2">{description}</dd>
             </div>

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 
-import { MetadataDisclosureIcon, SearchIcon } from "@/components/crucible/icons"
+import { Disclosure, DisclosureSummary } from "@/components/crucible/disclosure"
+import { SearchIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
 import {
   InputGroup,
@@ -383,26 +384,21 @@ function MetadataCollection({
       ? `${filteredEntries.length} of ${totalCount}`
       : totalCount
   return (
-    <details
-      className="metadata-disclosure min-w-0"
+    <Disclosure
       onToggle={(event) => onExpandedChange(pathKey, event.currentTarget.open)}
       open={open}
       ref={disclosureRef}
       suppressHydrationWarning
     >
-      <summary
+      <DisclosureSummary
         aria-label={`${label}: ${count}`}
-        className="metadata-disclosure-summary min-h-9 cursor-pointer list-none items-center gap-1.5 py-1 [&::-webkit-details-marker]:hidden"
+        className="min-h-9 py-1"
       >
-        <MetadataDisclosureIcon
-          aria-hidden="true"
-          className="metadata-disclosure-icon size-4 shrink-0 text-muted-foreground transition-transform"
-        />
         <span className="text-label-compact break-words text-muted-foreground">
           {label}
         </span>
         <span className="text-supporting text-muted-foreground">{count}</span>
-      </summary>
+      </DisclosureSummary>
       <div className="mb-1 ml-0.5 min-w-0 border-l pl-2 sm:ml-1 sm:pl-3">
         <MetadataEntries
           entries={displayedEntries}
@@ -425,7 +421,7 @@ function MetadataCollection({
           </Button>
         ) : null}
       </div>
-    </details>
+    </Disclosure>
   )
 }
 
