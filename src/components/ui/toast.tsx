@@ -52,7 +52,7 @@ function Toast({ className, ...props }: ToastPrimitive.Root.Props) {
         className
       )}
       data-slot="toast"
-      swipeDirection="up"
+      swipeDirection={["up", "left", "right"]}
       {...props}
     />
   )

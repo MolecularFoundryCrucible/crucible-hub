@@ -48,7 +48,6 @@ import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { TimeZoneSync } from "@/components/crucible/time-zone-sync"
 import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -424,9 +423,8 @@ export function AppShell({
                         {pendingReviewCount > 0 ? (
                           <SidebarMenuBadge
                             aria-label={`${pendingReviewCount} pending deletion requests`}
-                            className="px-0"
                           >
-                            <Badge>{pendingReviewCount}</Badge>
+                            {pendingReviewCount}
                           </SidebarMenuBadge>
                         ) : null}
                       </SidebarMenuItem>
@@ -854,7 +852,10 @@ function SidebarUtilities({
               <ThemeIcon aria-hidden="true" />
               <span>Theme</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="right">
+            <DropdownMenuContent
+              align="start"
+              side={isMobile ? "top" : "right"}
+            >
               <DropdownMenuGroup>
                 <DropdownMenuLabel>Theme</DropdownMenuLabel>
                 <DropdownMenuRadioGroup

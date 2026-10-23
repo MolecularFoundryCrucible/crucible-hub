@@ -7,7 +7,10 @@ The public surface that versions protect is shareable URLs and their search para
 ## Unreleased
 
 - Stopped the navigation sidebar from scrolling sideways.
-- Gave the navigation and preview panel toggles the same style, and the pending deletion count the standard badge.
+- Gave the navigation and preview panel toggles the same style, and made the pending deletion count stand out from the sidebar.
+- Hid the sidebar create actions on touch devices, where they could be tapped while invisible; the top bar Create menu offers the same actions.
+- Kept the Theme menu on screen on phones and closed the Shortcuts dialog when pressing outside it on narrow screens.
+- Let toasts be swiped sideways to dismiss them.
 - Kept the resource preview open while scrolling the page behind it with a finger, and stopped scrolling inside the preview from moving the page behind.
 
 ## 1.6.4 - 2026-10-22
