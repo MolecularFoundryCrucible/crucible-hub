@@ -68,7 +68,7 @@ test("uses server functions during production project navigation", async ({
   const samplesHandler = new URL(projectDataResponses[0]).pathname
   await page
     .getByLabel("Project data type")
-    .getByRole("link", { name: "Datasets" })
+    .getByRole("button", { name: "Datasets" })
     .click()
   await expect(
     page.getByRole("link", { name: /Preview NiFe K-edge/ })

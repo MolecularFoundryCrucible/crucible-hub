@@ -35,6 +35,7 @@ import type {
 } from "@/data/crucible/collection-browse"
 import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceCollectionTable } from "@/components/crucible/resource-collection-table"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import {
   resourceSiblingSequenceLabel,
   useRegisterResourceSiblings,
@@ -738,87 +739,69 @@ function ProjectDataTypeFilters({
   projectMfid: string
   projectScope: ProjectScope
 }) {
+  const navigate = useNavigate({ from: "/projects/$projectMfid/" })
   return (
-    <div className="flex flex-wrap gap-2" aria-label="Project data type">
-      <ProjectDataFilterLink
-        active={kind === "samples"}
-        kind="samples"
-        label="Samples"
-        projectMfid={projectMfid}
-        projectScope={projectScope}
-      />
-      <ProjectDataFilterLink
-        active={kind === "datasets"}
-        kind="datasets"
-        label="Datasets"
-        projectMfid={projectMfid}
-        projectScope={projectScope}
-      />
-    </div>
+    <SegmentedControl
+      ariaLabel="Project data type"
+      onValueChange={(nextKind) => {
+        void navigate({
+          params: { projectMfid },
+          search: (previous) => ({
+            ...previous,
+            dataFormat:
+              nextKind === "samples" ? undefined : previous.dataFormat,
+            dataFormatIsNull:
+              nextKind === "samples" ? undefined : previous.dataFormatIsNull,
+            dataFormatSet:
+              nextKind === "samples" ? undefined : previous.dataFormatSet,
+            datasetCursor: undefined,
+            instrumentMfid:
+              nextKind === "samples" ? undefined : previous.instrumentMfid,
+            instrumentMfidIsNull:
+              nextKind === "samples"
+                ? undefined
+                : previous.instrumentMfidIsNull,
+            groupBy: undefined,
+            groupValue: undefined,
+            groupValueIsNull: undefined,
+            groupValueSet: undefined,
+            kind: nextKind === "samples" ? undefined : nextKind,
+            measurement:
+              nextKind === "samples" ? undefined : previous.measurement,
+            measurementIsNull:
+              nextKind === "samples" ? undefined : previous.measurementIsNull,
+            measurementSet:
+              nextKind === "samples" ? undefined : previous.measurementSet,
+            preview: undefined,
+            sampleCursor: undefined,
+            sampleType:
+              nextKind === "datasets" ? undefined : previous.sampleType,
+            sampleTypeIsNull:
+              nextKind === "datasets" ? undefined : previous.sampleTypeIsNull,
+            sampleTypeSet:
+              nextKind === "datasets" ? undefined : previous.sampleTypeSet,
+            scope: projectScope === "all" ? undefined : projectScope,
+            sessionName:
+              nextKind === "samples" ? undefined : previous.sessionName,
+            sessionNameIsNull:
+              nextKind === "samples" ? undefined : previous.sessionNameIsNull,
+            sessionNameSet:
+              nextKind === "samples" ? undefined : previous.sessionNameSet,
+          }),
+          state: {},
+          to: "/projects/$projectMfid",
+        })
+      }}
+      options={projectDataKindOptions}
+      value={kind}
+    />
   )
 }
 
-function ProjectDataFilterLink({
-  active,
-  kind,
-  label,
-  projectMfid,
-  projectScope,
-}: {
-  active: boolean
-  kind: ProjectDataKind
-  label: string
-  projectMfid: string
-  projectScope: ProjectScope
-}) {
-  return (
-    <Link
-      activeOptions={{ exact: true, explicitUndefined: true }}
-      aria-current={active ? "page" : undefined}
-      className={buttonVariants({ variant: "ghost" })}
-      from="/projects/$projectMfid/"
-      params={{ projectMfid }}
-      search={(previous) => ({
-        ...previous,
-        dataFormat: kind === "samples" ? undefined : previous.dataFormat,
-        dataFormatIsNull:
-          kind === "samples" ? undefined : previous.dataFormatIsNull,
-        dataFormatSet: kind === "samples" ? undefined : previous.dataFormatSet,
-        datasetCursor: undefined,
-        instrumentMfid:
-          kind === "samples" ? undefined : previous.instrumentMfid,
-        instrumentMfidIsNull:
-          kind === "samples" ? undefined : previous.instrumentMfidIsNull,
-        groupBy: undefined,
-        groupValue: undefined,
-        groupValueIsNull: undefined,
-        groupValueSet: undefined,
-        kind: kind === "samples" ? undefined : kind,
-        measurement: kind === "samples" ? undefined : previous.measurement,
-        measurementIsNull:
-          kind === "samples" ? undefined : previous.measurementIsNull,
-        measurementSet:
-          kind === "samples" ? undefined : previous.measurementSet,
-        preview: undefined,
-        sampleCursor: undefined,
-        sampleType: kind === "datasets" ? undefined : previous.sampleType,
-        sampleTypeIsNull:
-          kind === "datasets" ? undefined : previous.sampleTypeIsNull,
-        sampleTypeSet: kind === "datasets" ? undefined : previous.sampleTypeSet,
-        scope: projectScope === "all" ? undefined : projectScope,
-        sessionName: kind === "samples" ? undefined : previous.sessionName,
-        sessionNameIsNull:
-          kind === "samples" ? undefined : previous.sessionNameIsNull,
-        sessionNameSet:
-          kind === "samples" ? undefined : previous.sessionNameSet,
-      })}
-      state={{}}
-      to="/projects/$projectMfid"
-    >
-      {label}
-    </Link>
-  )
-}
+const projectDataKindOptions = [
+  { label: "Samples", value: "samples" },
+  { label: "Datasets", value: "datasets" },
+] as const
 
 function ProjectDataLoadError({
   cursor,

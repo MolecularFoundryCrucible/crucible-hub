@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource/noto-sans/400.css";
 @import "@fontsource/noto-sans/600.css";
+@import "@fontsource/noto-sans-mono/400.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -247,6 +248,8 @@
   --font-sans:
     "Noto Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji";
+  --font-mono:
+    "Noto Sans Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --container-content: 90rem;
   --container-reading: 48rem;
   --container-action: 32rem;

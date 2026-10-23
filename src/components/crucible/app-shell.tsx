@@ -27,7 +27,6 @@ import {
   KeyboardShortcutsTrigger,
 } from "@/components/crucible/keyboard-shortcuts"
 import { PersonIdentity } from "@/components/crucible/person-identity"
-import { QrScannerAction } from "@/components/crucible/qr-scanner-action"
 import {
   AccountIcon,
   AdministratorViewDisabledIcon,
@@ -452,7 +451,6 @@ export function AppShell({
                 projectMfid={projectMfid}
                 scope={scope}
               />
-              <QrScannerAction />
               {account ? <CreateMenu account={account} /> : null}
               {account && scope ? (
                 <AccountControls account={account} sessionAuth={sessionAuth} />

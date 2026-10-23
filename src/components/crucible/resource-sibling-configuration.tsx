@@ -96,7 +96,7 @@ export function ResourceSiblingConfigurationAction({
         }
       >
         <FilterIcon aria-hidden="true" data-icon="inline-start" />
-        <span className="truncate">{title}</span>
+        <span className="hidden truncate sm:inline">{title}</span>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

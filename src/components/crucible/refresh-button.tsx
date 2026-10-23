@@ -19,7 +19,7 @@ export function RefreshButton({
   return (
     <Button
       aria-busy={refreshing || undefined}
-      aria-label={label}
+      aria-label={label ?? "Refresh"}
       data-refreshing={refreshing || undefined}
       onClick={refreshing ? undefined : onClick}
       size={size}
@@ -31,7 +31,9 @@ export function RefreshButton({
         className={refreshing ? "motion-safe:animate-spin" : undefined}
         data-icon="inline-start"
       />
-      Refresh
+      <span className={size === undefined ? "hidden sm:inline" : undefined}>
+        Refresh
+      </span>
     </Button>
   )
 }

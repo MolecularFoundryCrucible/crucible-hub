@@ -7,6 +7,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 
 import { SearchIcon } from "@/components/crucible/icons"
 import { PersonIdentity } from "@/components/crucible/person-identity"
+import { QrScannerAction } from "@/components/crucible/qr-scanner-action"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
@@ -359,14 +360,18 @@ function QuickSearchControl({
           ref={inputRef}
           showClear={query.length > 0}
           showTrigger={false}
+          endAdornment={
+            <>
+              {query.length === 0 ? (
+                <Kbd aria-hidden="true" className="hidden sm:inline-flex">
+                  {activeProjectMfid ? "Ctrl Shift K" : "Ctrl K"}
+                </Kbd>
+              ) : null}
+              <QrScannerAction />
+            </>
+          }
           startAdornment={<SearchIcon aria-hidden="true" />}
-        >
-          {query.length === 0 ? (
-            <Kbd aria-hidden="true" className="mr-2 hidden sm:inline-flex">
-              {activeProjectMfid ? "Ctrl Shift K" : "Ctrl K"}
-            </Kbd>
-          ) : null}
-        </ComboboxInput>
+        />
         <ComboboxContent
           anchor={formRef}
           className="w-(--available-width) sm:w-[max(var(--anchor-width),var(--container-md))] sm:max-w-(--available-width) lg:w-[max(var(--anchor-width),var(--container-2xl))]"

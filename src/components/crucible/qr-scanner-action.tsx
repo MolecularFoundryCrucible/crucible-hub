@@ -5,6 +5,7 @@ import { ScanQrCodeIcon } from "@/components/crucible/icons"
 import { IdentifierInput } from "@/components/crucible/identifier-input"
 import { QrCodeScanner } from "@/components/crucible/qr-code-scanner"
 import { Button } from "@/components/ui/button"
+import { InputGroupButton } from "@/components/ui/input-group"
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/tooltip"
 import { extractMfidFromQrCode } from "@/lib/crucible-qr-code"
 
+/** Scans an MFID from the camera; shown inside the search field. */
 export function QrScannerAction() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -68,16 +70,12 @@ export function QrScannerAction() {
           render={
             <DialogTrigger
               render={
-                <Button
-                  aria-label="Scan QR code"
-                  size="icon"
-                  variant="outline"
-                />
+                <InputGroupButton aria-label="Scan QR code" size="icon-sm" />
               }
             />
           }
         >
-          <ScanQrCodeIcon aria-hidden="true" />
+          <ScanQrCodeIcon aria-hidden="true" className="size-4" />
         </TooltipTrigger>
         <TooltipContent side="bottom">Scan QR code</TooltipContent>
       </Tooltip>

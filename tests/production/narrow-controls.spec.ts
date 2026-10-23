@@ -63,6 +63,43 @@ test.describe("phone", () => {
     ).toBe(390)
   })
 
+  test("shortens project actions to icons", async ({ page }) => {
+    await page.goto("/hub/projects/01J6Y8N4Q2R7M9K3T5V0W1X2Z3")
+    await page.waitForLoadState("networkidle")
+    const sections = page.getByRole("navigation", { name: "Project sections" })
+    for (const name of ["Create sample", "Create dataset"]) {
+      const link = page.getByRole("link", { name, exact: true })
+      await expect(link).toBeVisible()
+      expect(
+        await link
+          .getByText(name)
+          .evaluate((label) => label.getBoundingClientRect().width)
+      ).toBeLessThanOrEqual(1)
+    }
+    const refresh = page.getByRole("button", { name: /^Refresh details/ })
+    await expect(refresh).toBeVisible()
+    await expect(refresh.getByText("Refresh")).toBeHidden()
+    await expect(sections).toBeVisible()
+    await expect(
+      page.getByLabel("Project data type").getByRole("button", {
+        name: "Datasets",
+      })
+    ).toBeVisible()
+    const filters = page.getByRole("button", { name: /^Filters/ })
+    expect(
+      await filters
+        .getByText("Filters")
+        .evaluate((label) => label.getBoundingClientRect().width)
+    ).toBeLessThanOrEqual(1)
+
+    await page.goto("/hub/datasets/01J6Y8N4Q2R7M9K3T5V0W1X2Z7")
+    const browse = page.getByRole("button", {
+      name: /^Change resource sequence/,
+    })
+    await expect(browse).toBeVisible()
+    expect((await browse.boundingBox())!.width).toBeLessThanOrEqual(32)
+  })
+
   test("leaves creation to the Create menu", async ({ page }) => {
     await page.goto("/hub/?scenario=populated")
     await page.waitForLoadState("networkidle")
