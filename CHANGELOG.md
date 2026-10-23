@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+## 1.6.5 - 2026-10-23
+
 - Improved touch and phone use: no sideways sidebar scroll, the preview stays open and keeps its own scrolling under a finger, menus and dialogs stay on screen and close when pressing outside, toasts can be swiped away, and sidebar create actions give way to the Create menu.
 - Laid out pages by the width left beside the sidebar and preview pane, shortening page actions to icons when space is tight and truncating long breadcrumbs evenly.
 - Moved the QR scanner into the search field with a larger square viewfinder framed in Crucible orange.
