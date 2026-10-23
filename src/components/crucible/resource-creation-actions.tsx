@@ -3,7 +3,10 @@ import type { ReactElement } from "react"
 import { Link } from "@tanstack/react-router"
 
 import { CreateResourceIcon } from "@/components/crucible/icons"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  PrincipalTypeIcon,
+  ResourceTypeIcon,
+} from "@/components/crucible/resource-type-icon"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -15,25 +18,33 @@ export function ResourceCreationLink({
   variant = "default",
 }: {
   /** Below 40 rem, shows this resource type's icon instead of the label. */
-  kind?: "dataset" | "instrument" | "project" | "sample"
+  kind?:
+    | "dataset"
+    | "instrument"
+    | "person"
+    | "project"
+    | "sample"
+    | "service_account"
   label: string
   render: ReactElement
   size?: "default" | "sm"
   variant?: "default" | "outline"
 }) {
+  const typeIconClassName = cn(
+    "@2xl/content:hidden",
+    variant === "default" && "text-current"
+  )
   return useRender({
     defaultTagName: "a",
     props: {
       children: kind ? (
         <>
           <CreateResourceIcon aria-hidden="true" data-icon="inline-start" />
-          <ResourceTypeIcon
-            className={cn(
-              "@2xl/content:hidden",
-              variant === "default" && "text-current"
-            )}
-            type={kind}
-          />
+          {kind === "service_account" ? (
+            <PrincipalTypeIcon className={typeIconClassName} type={kind} />
+          ) : (
+            <ResourceTypeIcon className={typeIconClassName} type={kind} />
+          )}
           <span className="@max-2xl/content:sr-only">{label}</span>
         </>
       ) : (

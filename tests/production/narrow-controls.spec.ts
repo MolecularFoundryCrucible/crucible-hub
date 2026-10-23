@@ -110,15 +110,32 @@ test.describe("phone", () => {
   })
 
   test("shortens page header creation links to icons", async ({ page }) => {
-    for (const [path, name, type] of [
-      ["/hub/projects", "Create project", "project"],
-      ["/hub/instruments", "Register instrument", "instrument"],
+    for (const [path, name, icon] of [
+      ["/hub/projects", "Create project", '[data-resource-type="project"]'],
+      [
+        "/hub/instruments",
+        "Register instrument",
+        '[data-resource-type="instrument"]',
+      ],
+      ["/hub/admin/users", "Create user", '[data-resource-type="person"]'],
+      [
+        "/hub/admin/service-accounts",
+        "Create service account",
+        '[data-principal-type="service_account"]',
+      ],
     ]) {
+      if (path === "/hub/admin/users") {
+        await openNavigation(page)
+        await page.getByRole("switch", { name: "Administrator view" }).click()
+        await expect(
+          page.getByRole("switch", { name: "Administrator view" })
+        ).toBeChecked()
+      }
       await page.goto(path)
       await page.waitForLoadState("networkidle")
       const link = page.getByRole("link", { name, exact: true })
       await expect(link).toBeVisible()
-      await expect(link.locator(`[data-resource-type="${type}"]`)).toBeVisible()
+      await expect(link.locator(icon)).toBeVisible()
       expect(
         await link
           .getByText(name)

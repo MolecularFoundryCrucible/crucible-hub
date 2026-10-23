@@ -315,6 +315,7 @@ function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
       actions={
         canCreate ? (
           <ResourceCreationLink
+            kind="person"
             label="Create user"
             render={
               <Link

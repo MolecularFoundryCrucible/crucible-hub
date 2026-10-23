@@ -372,6 +372,7 @@ function ServiceAccountsPageHeader({ canCreate }: { canCreate: boolean }) {
       actions={
         canCreate ? (
           <ResourceCreationLink
+            kind="service_account"
             label="Create service account"
             render={
               <Link
