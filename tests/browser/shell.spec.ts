@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "../fixtures"
+import { analyzeAccessibility } from "../accessibility"
 
 test("renders the desktop workspace without development chrome", async ({
   page,
@@ -173,7 +173,7 @@ test("fits Home within a compact browser viewport", async ({ page }) => {
       () => document.documentElement.scrollWidth <= window.innerWidth
     )
   ).toBe(true)
-  const accessibilityResults = await new AxeBuilder({ page }).analyze()
+  const accessibilityResults = await analyzeAccessibility(page)
   expect(accessibilityResults.violations).toEqual([])
 })
 
@@ -314,7 +314,7 @@ test("opens canonical instrument detail from directory and search", async ({
   await page.getByRole("link", { name: "Hard X-ray Microprobe" }).click()
   await expect(page).toHaveURL(/\/hub\/instruments\/01J6Y8N4Q2R7M9K3T5V0W1X2Z4/)
 
-  const accessibilityResults = await new AxeBuilder({ page }).analyze()
+  const accessibilityResults = await analyzeAccessibility(page)
   expect(accessibilityResults.violations).toEqual([])
 })
 
@@ -364,7 +364,7 @@ test("opens global search from the keyboard and restores URL-backed results", as
       () => document.documentElement.scrollWidth <= window.innerWidth
     )
   ).toBe(true)
-  const accessibilityResults = await new AxeBuilder({ page }).analyze()
+  const accessibilityResults = await analyzeAccessibility(page)
   expect(accessibilityResults.violations).toEqual([])
 })
 
@@ -521,7 +521,7 @@ test("has no detectable accessibility violations in light and dark themes", asyn
 }) => {
   await page.goto("/hub/")
   await page.waitForLoadState("networkidle")
-  const lightResults = await new AxeBuilder({ page }).analyze()
+  const lightResults = await analyzeAccessibility(page)
   expect(lightResults.violations).toEqual([])
 
   await page.getByRole("button", { name: "Theme" }).click()
@@ -529,7 +529,7 @@ test("has no detectable accessibility violations in light and dark themes", asyn
   await expect(page.locator("html")).toHaveClass(/dark/)
   await page.keyboard.press("Escape")
   await page.waitForTimeout(300)
-  const darkResults = await new AxeBuilder({ page }).analyze()
+  const darkResults = await analyzeAccessibility(page)
   expect(darkResults.violations).toEqual([])
 })
 
@@ -728,7 +728,16 @@ test("renders exact dataset detail and file metadata from a canonical link", asy
 }) => {
   const browserErrors: string[] = []
   page.on("console", (message) => {
-    if (message.type() === "error") browserErrors.push(message.text())
+    // Development-only React warning from TanStack Router's
+    // lazyRouteComponent, which calls use() only until its module loads.
+    if (
+      message.type() === "error" &&
+      !(
+        message.text().includes("conditional-use-of-use") &&
+        message.text().includes("lazyRouteComponent")
+      )
+    )
+      browserErrors.push(message.text())
   })
   page.on("pageerror", (error) => browserErrors.push(error.message))
 
@@ -760,7 +769,7 @@ test("renders exact dataset detail and file metadata from a canonical link", asy
   await expect(page.getByText("operando-cycle-04.h5")).toBeVisible()
   await page.locator('summary[aria-label^="acquisition:"]').click()
   await expect(page.getByText("potential_v_rhe")).toBeVisible()
-  const accessibilityResults = await new AxeBuilder({ page }).analyze()
+  const accessibilityResults = await analyzeAccessibility(page)
   expect(accessibilityResults.violations).toEqual([])
 
   await page

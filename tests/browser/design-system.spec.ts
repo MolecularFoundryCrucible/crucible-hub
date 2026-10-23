@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "../fixtures"
+import { analyzeAccessibility } from "../accessibility"
 
 test("keeps the fixture keyboard operable", async ({ page }) => {
   await page.goto("/hub/fixtures/design-system")
@@ -42,7 +42,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.goto("/hub/fixtures/design-system")
     await page.waitForLoadState("networkidle")
 
-    const results = await new AxeBuilder({ page }).analyze()
+    const results = await analyzeAccessibility(page)
     expect(results.violations).toEqual([])
   })
 }

@@ -1,6 +1,5 @@
-import AxeBuilder from "@axe-core/playwright"
-
 import { expect, test } from "../fixtures"
+import { analyzeAccessibility } from "../accessibility"
 
 const sampleMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z5"
 const datasetMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
@@ -129,7 +128,7 @@ test("keeps the compact dark deletion dialog accessible and contained", async ({
   const dialog = page.getByRole("dialog")
   await expect(dialog).toBeVisible()
   await expect(page.locator('[data-slot="tooltip-content"]')).toHaveCount(0)
-  const violations = await new AxeBuilder({ page }).analyze()
+  const violations = await analyzeAccessibility(page)
   expect(violations.violations).toEqual([])
   expect(
     await page.evaluate(

@@ -1,7 +1,7 @@
-import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
 import { expect, test } from "../fixtures"
+import { analyzeAccessibility } from "../accessibility"
 
 const datasetPath = "/hub/datasets/01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
 const runId = Date.now().toString(36)
@@ -61,7 +61,7 @@ test("keeps the add files action gated and the dialog accessible", async ({
     })
   ).toBeVisible()
 
-  await expect(new AxeBuilder({ page }).analyze()).resolves.toMatchObject({
+  await expect(analyzeAccessibility(page)).resolves.toMatchObject({
     violations: [],
   })
 
@@ -256,7 +256,7 @@ test("keeps a failed part transfer local with per-file recovery", async ({
     })
   ).toBeEnabled()
 
-  await expect(new AxeBuilder({ page }).analyze()).resolves.toMatchObject({
+  await expect(analyzeAccessibility(page)).resolves.toMatchObject({
     violations: [],
   })
 })

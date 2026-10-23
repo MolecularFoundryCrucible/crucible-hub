@@ -1,7 +1,7 @@
-import AxeBuilder from "@axe-core/playwright"
 import type { Page, Request } from "@playwright/test"
 
 import { expect, test } from "../fixtures"
+import { analyzeAccessibility } from "../accessibility"
 
 const datasetPath = "/hub/datasets/01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
 const readyFile = "operando-cycle-04.h5"
@@ -71,7 +71,7 @@ test("keeps download capabilities lazy and accessible on compact screens", async
     page.getByText("Open full page: NiFe oxide catalyst A", { exact: true })
   ).toBeHidden()
 
-  await expect(new AxeBuilder({ page }).analyze()).resolves.toMatchObject({
+  await expect(analyzeAccessibility(page)).resolves.toMatchObject({
     violations: [],
   })
   await expect

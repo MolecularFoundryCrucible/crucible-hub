@@ -1,6 +1,5 @@
-import AxeBuilder from "@axe-core/playwright"
-
 import { expect, test } from "../fixtures"
+import { analyzeAccessibility } from "../accessibility"
 
 test("opens profile management from the account avatar and saves changes", async ({
   page,
@@ -81,7 +80,7 @@ test("validates profile fields and protects unsaved changes", async ({
     page.getByRole("button", { name: "Save", exact: true })
   ).toBeDisabled()
 
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect((await analyzeAccessibility(page)).violations).toEqual([])
 
   await page.getByRole("button", { name: "Expand navigation" }).click()
   await page
