@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useViewerPresentation } from "@/hooks/use-viewer-presentation"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useRouterState } from "@tanstack/react-router"
@@ -21,7 +22,10 @@ import { useEnteringKeys } from "@/hooks/use-entering-keys"
 import { enterMotionClassName } from "@/lib/motion"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
-import { KeyboardShortcuts } from "@/components/crucible/keyboard-shortcuts"
+import {
+  KeyboardShortcuts,
+  KeyboardShortcutsTrigger,
+} from "@/components/crucible/keyboard-shortcuts"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { QrScannerAction } from "@/components/crucible/qr-scanner-action"
 import {
@@ -48,6 +52,8 @@ import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { TimeZoneSync } from "@/components/crucible/time-zone-sync"
 import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { createDialogHandle } from "@/components/ui/dialog"
+import type { DialogHandle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -133,6 +139,7 @@ export function AppShell({
   const pathname = location.pathname
   const deletionRequestsActive = pathname === "/deletion-requests"
   const projectMfid = activeProjectMfid(pathname, location.search)
+  const [shortcuts] = useState(createDialogHandle)
   const recentlyViewedIdentity =
     scope?.slice(0, 3).join(":") ?? account?.unique_id ?? "anonymous"
 
@@ -434,10 +441,7 @@ export function AppShell({
               ) : null}
               <SidebarRecentResources />
             </SidebarContent>
-            <SidebarUtilities
-              pathname={pathname}
-              projectActive={Boolean(projectMfid)}
-            />
+            <SidebarUtilities shortcuts={shortcuts} />
             <SidebarRail />
           </Sidebar>
           <PreviewPaneInset>
@@ -474,6 +478,11 @@ export function AppShell({
             <AppFooter />
           </PreviewPaneInset>
           <DockedPreviewPane />
+          <KeyboardShortcuts
+            handle={shortcuts}
+            pathname={pathname}
+            projectActive={Boolean(projectMfid)}
+          />
         </SidebarProvider>
       </InspectorPaneProvider>
     </RecentlyViewedScope>
@@ -818,13 +827,7 @@ function SidebarBrand() {
   )
 }
 
-function SidebarUtilities({
-  pathname,
-  projectActive,
-}: {
-  pathname: string
-  projectActive: boolean
-}) {
+function SidebarUtilities({ shortcuts }: { shortcuts: DialogHandle }) {
   const { isMobile, state, toggleSidebar } = useSidebar()
   const { setTheme, theme } = useThemePreference()
   const expanded = isMobile || state === "expanded"
@@ -833,10 +836,7 @@ function SidebarUtilities({
     <SidebarFooter>
       <SidebarMenu>
         <SidebarMenuItem>
-          <KeyboardShortcuts
-            pathname={pathname}
-            projectActive={projectActive}
-          />
+          <KeyboardShortcutsTrigger handle={shortcuts} />
         </SidebarMenuItem>
         <SidebarMenuItem>
           <DropdownMenu>

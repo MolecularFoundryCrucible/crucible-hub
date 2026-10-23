@@ -9,7 +9,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Stopped the navigation sidebar from scrolling sideways.
 - Gave the navigation and preview panel toggles the same style, and made the pending deletion count stand out from the sidebar.
 - Hid the sidebar create actions on touch devices, where they could be tapped while invisible; the top bar Create menu offers the same actions.
-- Kept the Theme menu on screen on phones and closed the Shortcuts dialog when pressing outside it on narrow screens.
+- Kept the Theme menu on screen on phones, closed the navigation drawer when opening Shortcuts, and dimmed the page only once for dialogs opened over the preview.
 - Let toasts be swiped sideways to dismiss them.
 - Stopped identifier and API key fields from zooming the page on phones, and gave keyboard keys, disclosures, and processing statuses one consistent style.
 - Kept the resource preview open while scrolling the page behind it with a finger, and stopped scrolling inside the preview from moving the page behind.

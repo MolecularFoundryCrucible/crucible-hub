@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
 import { KeyboardShortcutsIcon } from "@/components/crucible/icons"
+import type { DialogHandle } from "@/components/ui/dialog"
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Kbd } from "@/components/ui/kbd"
-import { SidebarMenuButton } from "@/components/ui/sidebar"
+import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
 import {
   isDialogKeyboardTarget,
   isEditableKeyboardTarget,
@@ -41,10 +42,35 @@ type ResourceContext = {
   mfid: string
 }
 
+/** Opens the Shortcuts dialog; on phones it closes the navigation drawer first. */
+export function KeyboardShortcutsTrigger({ handle }: { handle: DialogHandle }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+  return (
+    <DialogTrigger
+      handle={handle}
+      onClick={() => {
+        if (isMobile) setOpenMobile(false)
+      }}
+      render={
+        <SidebarMenuButton
+          aria-label="Keyboard shortcuts"
+          tooltip="Keyboard shortcuts"
+          title="Keyboard shortcuts"
+        />
+      }
+    >
+      <KeyboardShortcutsIcon aria-hidden="true" />
+      <span>Shortcuts</span>
+    </DialogTrigger>
+  )
+}
+
 export function KeyboardShortcuts({
+  handle,
   pathname,
   projectActive,
 }: {
+  handle: DialogHandle
   pathname: string
   projectActive: boolean
 }) {
@@ -136,19 +162,7 @@ export function KeyboardShortcuts({
     : []
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <SidebarMenuButton
-            aria-label="Keyboard shortcuts"
-            tooltip="Keyboard shortcuts"
-            title="Keyboard shortcuts"
-          />
-        }
-      >
-        <KeyboardShortcutsIcon aria-hidden="true" />
-        <span>Shortcuts</span>
-      </DialogTrigger>
+    <Dialog handle={handle} open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>

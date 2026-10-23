@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
+const createDialogHandle = DialogPrimitive.createHandle
+type DialogHandle = DialogPrimitive.Handle<unknown>
+
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
@@ -143,7 +146,9 @@ function DialogDescription({
   )
 }
 
+export type { DialogHandle }
 export {
+  createDialogHandle,
   Dialog,
   DialogClose,
   DialogContent,

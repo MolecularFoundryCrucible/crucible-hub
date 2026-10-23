@@ -21,9 +21,32 @@ test.describe("phone", () => {
     await page.getByRole("button", { name: "Keyboard shortcuts" }).click()
     const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" })
     await expect(dialog).toBeVisible()
+    await expect(page.locator('[data-mobile="true"]')).toHaveCount(0)
 
     await page.touchscreen.tap(370, 120)
     await expect(dialog).toHaveCount(0)
+  })
+
+  test("dims the page once for a dialog over the inspector", async ({
+    page,
+  }) => {
+    await page.goto(
+      "/hub/data?scenario=populated&preview=01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
+    )
+    await page.waitForLoadState("networkidle")
+    const inspector = page.locator('[data-slot="sheet-content"]')
+    await inspector.getByRole("button", { name: /^Request deletion/ }).click()
+    const overlay = page.locator('[data-slot="dialog-overlay"]')
+    await expect(overlay).toHaveCount(1)
+    await expect(overlay).toHaveCSS("background-color", "rgba(0, 0, 0, 0)")
+    await expect(page.locator('[data-slot="sheet-overlay"]')).not.toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)"
+    )
+
+    await page.touchscreen.tap(195, 40)
+    await expect(page.locator('[data-slot="dialog-content"]')).toHaveCount(0)
+    await expect(inspector).toBeVisible()
   })
 
   test("keeps the theme menu on screen", async ({ page }) => {
@@ -95,6 +118,24 @@ test.describe("mouse", () => {
     await expect(dialog).toHaveCount(0)
   })
 
+  test("dims the page for a dialog over the docked inspector", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 900, width: 1600 })
+    await page.goto(
+      "/hub/data?scenario=populated&preview=01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
+    )
+    await page.waitForLoadState("networkidle")
+    await page
+      .locator('[data-slot="sheet-content"]')
+      .getByRole("button", { name: /^Request deletion/ })
+      .click()
+    await expect(page.locator('[data-slot="dialog-overlay"]')).not.toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)"
+    )
+  })
+
   test("shows the deletion count darker than the light sidebar", async ({
     page,
   }) => {
@@ -130,11 +171,16 @@ test.describe("mouse", () => {
     await page.getByRole("switch", { name: /administrator view/i }).click()
     const toast = page.locator('[data-slot="toast"]').first()
     await expect(toast).toBeVisible()
+    await toast.evaluate((element) =>
+      Promise.all(
+        element.getAnimations().map((animation) => animation.finished)
+      )
+    )
     const box = (await toast.boundingBox())!
-    await page.mouse.move(box.x + 40, box.y + box.height / 2)
+    const y = box.y + box.height / 2
+    await page.mouse.move(box.x + 40, y)
     await page.mouse.down()
-    for (let step = 1; step <= 10; step++)
-      await page.mouse.move(box.x + 40 + step * 25, box.y + box.height / 2)
+    await page.mouse.move(box.x + 300, y, { steps: 15 })
     await page.mouse.up()
     await expect(toast).toHaveCount(0)
   })

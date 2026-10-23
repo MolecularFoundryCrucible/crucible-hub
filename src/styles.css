@@ -889,6 +889,19 @@ body {
   transition-timing-function: var(--motion-ease-exit);
 }
 
+/* A dialog over another dimmed overlay keeps a backdrop to catch outside
+   presses, but leaves the dimming to the overlay below. */
+:root:has(
+    [data-slot="sheet-overlay"],
+    [data-slot="dialog-content"]:not([data-nested])
+  )
+  [data-slot="dialog-overlay"]:has(
+    ~ [data-slot="dialog-content"][data-nested]
+  ) {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
 .motion-sheet-backdrop {
   transition: opacity var(--motion-deliberate) var(--motion-ease-enter);
 }
