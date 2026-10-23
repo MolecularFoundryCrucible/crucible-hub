@@ -15,7 +15,7 @@ export function ResourceCreationLink({
   variant = "default",
 }: {
   /** Below 40 rem, shows this resource type's icon instead of the label. */
-  kind?: "dataset" | "sample"
+  kind?: "dataset" | "instrument" | "project" | "sample"
   label: string
   render: ReactElement
   size?: "default" | "sm"

@@ -13,7 +13,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Let toasts be swiped sideways to dismiss them.
 - Moved the QR scanner into the search field and gave it a larger square viewfinder with an orange frame on the area it reads, and kept it scanning after an unrecognized code.
 - Set Noto Sans Mono as the Hub's monospace font, so MFIDs, metadata, and code look the same on every system.
-- Used the standard segmented control for Samples and Datasets on project pages, and shortened Create sample, Create dataset, Refresh, Filters, and Browse nearby to icons when the content area is narrow.
+- Used the standard segmented control for Samples and Datasets on project pages, and shortened Create sample, Create dataset, Create project, Register instrument, Refresh, Filters, and Browse nearby to icons when the content area is narrow.
 - Laid out pages by the width left beside the sidebar and preview pane, so actions no longer wrap and cards no longer squeeze at mid sizes.
 - Truncated long breadcrumb segments evenly with full names on hover, and gave Browse nearby its own icon.
 - Stopped identifier and API key fields from zooming the page on phones, and gave keyboard keys, disclosures, and processing statuses one consistent style.

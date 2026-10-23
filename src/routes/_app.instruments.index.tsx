@@ -703,6 +703,7 @@ function InstrumentsPageHeader({ canRegister }: { canRegister: boolean }) {
       actions={
         canRegister ? (
           <ResourceCreationLink
+            kind="instrument"
             label="Register instrument"
             render={<Link to="/instruments/new" />}
           />

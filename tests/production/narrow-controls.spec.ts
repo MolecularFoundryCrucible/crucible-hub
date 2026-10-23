@@ -109,6 +109,24 @@ test.describe("phone", () => {
     ).toBeLessThanOrEqual(1)
   })
 
+  test("shortens page header creation links to icons", async ({ page }) => {
+    for (const [path, name, type] of [
+      ["/hub/projects", "Create project", "project"],
+      ["/hub/instruments", "Register instrument", "instrument"],
+    ]) {
+      await page.goto(path)
+      await page.waitForLoadState("networkidle")
+      const link = page.getByRole("link", { name, exact: true })
+      await expect(link).toBeVisible()
+      await expect(link.locator(`[data-resource-type="${type}"]`)).toBeVisible()
+      expect(
+        await link
+          .getByText(name)
+          .evaluate((label) => label.getBoundingClientRect().width)
+      ).toBeLessThanOrEqual(1)
+    }
+  })
+
   test("leaves creation to the Create menu", async ({ page }) => {
     await page.goto("/hub/?scenario=populated")
     await page.waitForLoadState("networkidle")

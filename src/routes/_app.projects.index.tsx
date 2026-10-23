@@ -314,6 +314,7 @@ function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
       actions={
         canCreate ? (
           <ResourceCreationLink
+            kind="project"
             label="Create project"
             render={<Link to="/projects/new" />}
           />
