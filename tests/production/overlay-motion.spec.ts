@@ -144,27 +144,27 @@ test("keeps the inspector content while it slides out", async ({ page }) => {
       .getByRole("heading", { name: "NiFe oxide catalyst A" })
   ).toBeVisible()
 
-  const exitFrames = page.evaluate(
-    () =>
-      new Promise<string[]>((resolve) => {
-        const frames: string[] = []
-        const start = performance.now()
-        const tick = () => {
-          const sheet = document.querySelector("[data-slot=sheet-content]")
-          if (sheet?.hasAttribute("data-ending-style"))
-            frames.push(
-              sheet.textContent.includes("NiFe oxide catalyst A")
-                ? "named"
-                : "empty"
-            )
-          if (performance.now() - start < 500) requestAnimationFrame(tick)
-          else resolve(frames)
-        }
-        requestAnimationFrame(tick)
-      })
-  )
+  await page.evaluate(() => {
+    const frames: string[] = []
+    Object.assign(window, { exitFrames: frames })
+    const tick = () => {
+      const sheet = document.querySelector("[data-slot=sheet-content]")
+      if (!sheet) return
+      if (sheet.hasAttribute("data-ending-style"))
+        frames.push(
+          sheet.textContent.includes("NiFe oxide catalyst A")
+            ? "named"
+            : "empty"
+        )
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  })
   await page.keyboard.press("Escape")
-  const frames = await exitFrames
+  await expect(page.locator("[data-slot=sheet-content]")).toHaveCount(0)
+  const frames = await page.evaluate(
+    () => (window as unknown as { exitFrames: string[] }).exitFrames
+  )
   expect(frames.length).toBeGreaterThan(0)
   expect(new Set(frames)).toEqual(new Set(["named"]))
 })

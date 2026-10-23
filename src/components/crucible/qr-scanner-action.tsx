@@ -2,6 +2,7 @@ import { useCallback, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
 import { ScanQrCodeIcon } from "@/components/crucible/icons"
+import { IdentifierInput } from "@/components/crucible/identifier-input"
 import { QrCodeScanner } from "@/components/crucible/qr-code-scanner"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import {
   Tooltip,
   TooltipContent,
@@ -84,7 +84,7 @@ export function QrScannerAction() {
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>
-            {mode === "scanner" ? "Scan a Crucible code" : "Open by MFID"}
+            {mode === "scanner" ? "Scan an MFID" : "Open by MFID"}
           </DialogTitle>
           {mode === "manual" ? (
             <DialogDescription>
@@ -103,8 +103,7 @@ export function QrScannerAction() {
             <label className="sr-only" htmlFor="scanner-manual-mfid">
               MFID or Crucible link
             </label>
-            <Input
-              autoComplete="off"
+            <IdentifierInput
               autoFocus
               id="scanner-manual-mfid"
               maxLength={500}

@@ -7,6 +7,7 @@ import {
   SwitchCameraIcon,
 } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { extractMfidFromQrCode } from "@/lib/crucible-qr-code"
 
 type ScannerState = "starting" | "scanning" | "invalid" | "error" | "opening"
@@ -21,18 +22,18 @@ function supportsCameraAccess() {
 
 function cameraErrorMessage(error?: unknown) {
   if (!window.isSecureContext) {
-    return "Camera access requires HTTPS or localhost. You can enter the MFID in search instead."
+    return "Camera access requires HTTPS or localhost. You can enter the MFID instead."
   }
   if (!supportsCameraAccess()) {
-    return "This browser does not support camera access. You can enter the MFID in search instead."
+    return "This browser does not support camera access. You can enter the MFID instead."
   }
   if (error instanceof DOMException && error.name === "NotAllowedError") {
-    return "Camera permission was denied. Allow camera access and try again, or enter the MFID in search."
+    return "Camera permission was denied. Allow camera access and try again, or enter the MFID instead."
   }
   if (error instanceof DOMException && error.name === "NotFoundError") {
-    return "No camera was found. You can enter the MFID in search instead."
+    return "No camera was found. You can enter the MFID instead."
   }
-  return "The camera could not be started. Try again or enter the MFID in search."
+  return "The camera could not be started. Try again or enter the MFID instead."
 }
 
 export function QrCodeScanner({
@@ -57,7 +58,6 @@ export function QrCodeScanner({
     (value: string) => {
       const mfid = extractMfidFromQrCode(value, window.location.hostname)
       if (!mfid) {
-        scannerRef.current?.stop()
         setState("invalid")
         setMessage(
           "This QR code does not contain a valid MFID or recognized Crucible link."
@@ -96,8 +96,6 @@ export function QrCodeScanner({
           video,
           (result) => handleDecodedValue(result.data),
           {
-            highlightCodeOutline: true,
-            highlightScanRegion: true,
             maxScansPerSecond: 10,
             preferredCamera: "environment",
             returnDetailedScanResult: true,
@@ -112,7 +110,7 @@ export function QrCodeScanner({
             return
           }
           setState("scanning")
-          setMessage("Point the camera at a Crucible QR code.")
+          setMessage("")
           try {
             const availableCameras = await QrScanner.listCameras(true)
             if (!isCurrentSession()) return
@@ -140,7 +138,7 @@ export function QrCodeScanner({
         if (!isCurrentSession()) return
         setState("error")
         setMessage(
-          "The QR scanner could not be loaded. Enter the MFID in search instead."
+          "The QR scanner could not be loaded. Enter the MFID instead."
         )
       })
 
@@ -171,27 +169,40 @@ export function QrCodeScanner({
 
   return (
     <div className="grid gap-4">
-      <div className="relative overflow-hidden rounded-lg border bg-muted">
+      <div className="qr-viewfinder">
         <video
           aria-label="Camera preview"
           autoPlay
-          className="aspect-video w-full object-cover"
           muted
           playsInline
           ref={videoRef}
         />
+        {state === "error" ? null : (
+          <div aria-hidden="true" className="qr-viewfinder-frame">
+            <svg fill="none" preserveAspectRatio="none" viewBox="0 0 100 100">
+              <path
+                d="M2 22V10a8 8 0 0 1 8-8h12M78 2h12a8 8 0 0 1 8 8v12M98 78v12a8 8 0 0 1-8 8H78M22 98H10a8 8 0 0 1-8-8V78"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="4"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+          </div>
+        )}
       </div>
       <p
         aria-live="polite"
-        className={
-          state === "error" ? "text-body text-destructive" : "text-body"
-        }
+        className={cn(
+          "text-body empty:sr-only",
+          state === "error" && "text-destructive"
+        )}
         role={state === "error" ? "alert" : "status"}
       >
         {message}
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        {(state === "error" || state === "invalid") && (
+        {state === "error" && (
           <Button onClick={retry} type="button">
             <RetryQrScanIcon aria-hidden="true" data-icon="inline-start" />
             Scan again

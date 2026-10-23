@@ -60,6 +60,41 @@
   }
 }
 
+/* Square, so the centred scan region (two thirds of the camera's short side)
+   is exactly the middle two thirds of the box whatever the camera aspect. */
+.qr-viewfinder {
+  position: relative;
+  width: min(100%, 60dvh);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background-color: var(--muted);
+}
+
+.qr-viewfinder > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qr-viewfinder-frame {
+  position: absolute;
+  inset: calc(100% / 6);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 100vmax var(--scan-mask);
+  color: var(--scan-frame);
+  pointer-events: none;
+}
+
+.qr-viewfinder-frame > svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .entity-icon-well {
   display: inline-flex;
   flex-shrink: 0;
@@ -509,6 +544,8 @@
   --overlay: oklch(0.165 0.012 240 / 10%);
   --ring: var(--palette-blue-9);
   --selection: var(--palette-orange-6);
+  --scan-frame: var(--brand-crucible-orange);
+  --scan-mask: oklch(0 0 0 / 45%);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -666,6 +703,8 @@
   --overlay: oklch(0 0 0 / 40%);
   --ring: var(--palette-blue-4);
   --selection: var(--palette-orange-5);
+  --scan-frame: var(--brand-crucible-orange);
+  --scan-mask: oklch(0 0 0 / 45%);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

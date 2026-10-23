@@ -11,6 +11,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Hid the sidebar create actions on touch devices, where they could be tapped while invisible; the top bar Create menu offers the same actions.
 - Kept the Theme menu on screen on phones, closed the navigation drawer when opening Shortcuts, and dimmed the page only once for dialogs opened over the preview.
 - Let toasts be swiped sideways to dismiss them.
+- Gave the QR scanner a larger square viewfinder with an orange frame on the area it reads, and kept it scanning after an unrecognized code.
 - Stopped identifier and API key fields from zooming the page on phones, and gave keyboard keys, disclosures, and processing statuses one consistent style.
 - Kept the resource preview open while scrolling the page behind it with a finger, and stopped scrolling inside the preview from moving the page behind.
 
