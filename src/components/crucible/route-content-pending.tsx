@@ -47,7 +47,7 @@ export function IdentityDetailPending({
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem className="min-w-0 flex-1 shrink">
+          <BreadcrumbItem>
             <BreadcrumbPage>
               <Skeleton className="h-5 w-40 max-w-full" />
               <span className="sr-only">Loading account name</span>
@@ -85,7 +85,7 @@ export function IdentityDetailContentPending({
       ]
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-4 @3xl/content:grid-cols-2 @3xl/content:items-start">
         <Card aria-busy="true">
           <CardHeader>
             <CardTitle>Identity</CardTitle>

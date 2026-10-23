@@ -204,8 +204,8 @@ function HomePage() {
     <PageLayout>
       <PageHeader title={greeting} />
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-5">
-        <div className="flex min-w-0 flex-col gap-6 xl:col-span-3">
+      <div className="grid min-w-0 gap-6 @3xl/content:grid-cols-5">
+        <div className="flex min-w-0 flex-col gap-6 @3xl/content:col-span-3">
           <section aria-labelledby="recent-research-title" className="min-w-0">
             <Card>
               <CardHeader actionLayout="responsive">
@@ -364,7 +364,7 @@ function HomePage() {
           </section>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
+        <div className="flex min-w-0 flex-col gap-6 @3xl/content:col-span-2">
           <HomeOwnershipCard
             emptyAction={
               account?.capabilities.can_create_project ? (

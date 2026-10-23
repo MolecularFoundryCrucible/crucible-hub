@@ -955,7 +955,7 @@ function AppMain({ children }: { children: React.ReactNode }) {
   const pending = useOptionalAdministratorViewControl()?.pending ?? false
   return (
     <PendingRegion
-      className="mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide"
+      className="@container/content mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide"
       pending={pending}
       render={<main />}
     >

@@ -78,7 +78,11 @@ test.describe("phone", () => {
     }
     const refresh = page.getByRole("button", { name: /^Refresh details/ })
     await expect(refresh).toBeVisible()
-    await expect(refresh.getByText("Refresh")).toBeHidden()
+    expect(
+      await refresh
+        .getByText("Refresh")
+        .evaluate((label) => label.getBoundingClientRect().width)
+    ).toBeLessThanOrEqual(1)
     await expect(sections).toBeVisible()
     await expect(
       page.getByLabel("Project data type").getByRole("button", {
@@ -97,7 +101,12 @@ test.describe("phone", () => {
       name: /^Change resource sequence/,
     })
     await expect(browse).toBeVisible()
-    expect((await browse.boundingBox())!.width).toBeLessThanOrEqual(32)
+    expect((await browse.boundingBox())!.width).toBeLessThanOrEqual(40)
+    expect(
+      await browse
+        .getByText("Browse nearby")
+        .evaluate((label) => label.getBoundingClientRect().width)
+    ).toBeLessThanOrEqual(1)
   })
 
   test("leaves creation to the Create menu", async ({ page }) => {

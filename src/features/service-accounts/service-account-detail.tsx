@@ -149,7 +149,7 @@ export function ServiceAccountDetail({
   scope: IdentityScope
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+    <div className="grid gap-4 @3xl/content:grid-cols-2 @3xl/content:items-start">
       <ServiceAccountIdentityCard
         account={account}
         canChangePlatformRole={canChangePlatformRole}

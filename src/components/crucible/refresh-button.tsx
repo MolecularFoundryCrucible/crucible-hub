@@ -31,7 +31,9 @@ export function RefreshButton({
         className={refreshing ? "motion-safe:animate-spin" : undefined}
         data-icon="inline-start"
       />
-      <span className={size === undefined ? "hidden sm:inline" : undefined}>
+      <span
+        className={size === undefined ? "@max-2xl/content:sr-only" : undefined}
+      >
         Refresh
       </span>
     </Button>

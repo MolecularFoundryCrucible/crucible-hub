@@ -178,7 +178,7 @@ export function ResourceWorkspace({
             <BreadcrumbSeparator />
             {resource.project ? (
               <>
-                <BreadcrumbItem className="max-w-breadcrumb-ancestor min-w-0 shrink">
+                <BreadcrumbItem>
                   <BreadcrumbLink
                     render={
                       <Link
@@ -194,7 +194,7 @@ export function ResourceWorkspace({
                 <BreadcrumbSeparator />
               </>
             ) : null}
-            <BreadcrumbItem className="min-w-0 flex-1 shrink">
+            <BreadcrumbItem>
               <BreadcrumbPage>{displayName}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>

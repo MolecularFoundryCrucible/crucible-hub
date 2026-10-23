@@ -189,7 +189,7 @@ function UserPage() {
             )}
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem className="min-w-0 flex-1 shrink">
+          <BreadcrumbItem>
             <BreadcrumbPage>{name}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

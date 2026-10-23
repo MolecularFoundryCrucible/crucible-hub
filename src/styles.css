@@ -96,6 +96,23 @@
   overflow: visible;
 }
 
+/* Breadcrumbs stay on one line: the section root keeps its short label,
+   ancestors truncate first and stop at a readable width, and the current
+   page keeps the most room. */
+[data-slot="breadcrumb-item"] {
+  flex: 0 3 auto;
+  max-width: var(--spacing-breadcrumb-ancestor);
+}
+
+[data-slot="breadcrumb-item"]:first-child {
+  flex-shrink: 0;
+}
+
+[data-slot="breadcrumb-item"]:has(> [data-slot="breadcrumb-page"]) {
+  flex-shrink: 1;
+  max-width: none;
+}
+
 .entity-icon-well {
   display: inline-flex;
   flex-shrink: 0;

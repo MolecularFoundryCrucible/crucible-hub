@@ -176,9 +176,9 @@ export function UserDetailView({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-4 @3xl/content:grid-cols-2 @3xl/content:items-start">
         <UserProfileCard
-          className={!canManageApiKey ? "lg:col-span-2" : undefined}
+          className={!canManageApiKey ? "@3xl/content:col-span-2" : undefined}
           scope={scope}
           user={user}
         />

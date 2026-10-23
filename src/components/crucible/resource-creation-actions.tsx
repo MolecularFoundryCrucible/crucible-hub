@@ -28,10 +28,13 @@ export function ResourceCreationLink({
         <>
           <CreateResourceIcon aria-hidden="true" data-icon="inline-start" />
           <ResourceTypeIcon
-            className={cn("sm:hidden", variant === "default" && "text-current")}
+            className={cn(
+              "@2xl/content:hidden",
+              variant === "default" && "text-current"
+            )}
             type={kind}
           />
-          <span className="max-sm:sr-only">{label}</span>
+          <span className="@max-2xl/content:sr-only">{label}</span>
         </>
       ) : (
         <>

@@ -63,7 +63,7 @@ export function EntityWorkspacePending({
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem className="min-w-0 flex-1 shrink">
+          <BreadcrumbItem>
             <BreadcrumbPage>
               <Skeleton className="h-5 w-48 max-w-full" />
               <span className="sr-only">Loading resource name</span>

@@ -361,7 +361,7 @@ function SearchBreadcrumb({
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbItem className="max-w-breadcrumb-ancestor min-w-0 shrink">
+            <BreadcrumbItem>
               <BreadcrumbLink
                 render={
                   <Link
@@ -388,7 +388,7 @@ function SearchBreadcrumb({
           </BreadcrumbItem>
         )}
         <BreadcrumbSeparator />
-        <BreadcrumbItem className="min-w-0 shrink-0">
+        <BreadcrumbItem>
           <BreadcrumbPage>Search</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>

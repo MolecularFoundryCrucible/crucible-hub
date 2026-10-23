@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import { createAnchoredResourceSiblingCollection } from "@/components/crucible/anchored-resource-siblings"
 import { CollectionOrderFields } from "@/components/crucible/collection-query-fields"
-import { FilterIcon } from "@/components/crucible/icons"
+import { ResourceSequenceIcon } from "@/components/crucible/icons"
 import type {
   ActiveResourceSiblingNavigation,
   ResourceSiblingConfiguration,
@@ -95,8 +95,8 @@ export function ResourceSiblingConfigurationAction({
           />
         }
       >
-        <FilterIcon aria-hidden="true" data-icon="inline-start" />
-        <span className="hidden truncate sm:inline">{title}</span>
+        <ResourceSequenceIcon aria-hidden="true" data-icon="inline-start" />
+        <span className="truncate @max-2xl/content:sr-only">{title}</span>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

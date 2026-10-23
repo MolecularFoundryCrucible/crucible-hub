@@ -33,10 +33,7 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="breadcrumb-item"
-      className={cn(
-        "inline-flex max-w-full min-w-0 shrink-0 items-center gap-1",
-        className
-      )}
+      className={cn("inline-flex min-w-0 items-center gap-1", className)}
       {...props}
     />
   )
@@ -55,6 +52,7 @@ function BreadcrumbLink({
           "block max-w-full min-w-0 truncate transition-colors hover:text-foreground",
           className
         ),
+        title: typeof props.children === "string" ? props.children : undefined,
       },
       props
     ),
@@ -69,6 +67,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="breadcrumb-page"
+      title={typeof props.children === "string" ? props.children : undefined}
       role="link"
       aria-disabled="true"
       aria-current="page"

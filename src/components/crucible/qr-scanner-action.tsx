@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
 import { ScanQrCodeIcon } from "@/components/crucible/icons"
@@ -28,6 +28,7 @@ export function QrScannerAction() {
   const [mode, setMode] = useState<"scanner" | "manual">("scanner")
   const [manualValue, setManualValue] = useState("")
   const [manualError, setManualError] = useState<string>()
+  const trigger = useRef<HTMLButtonElement>(null)
 
   const openResource = useCallback(
     (resourceMfid: string) => {
@@ -70,7 +71,11 @@ export function QrScannerAction() {
           render={
             <DialogTrigger
               render={
-                <InputGroupButton aria-label="Scan QR code" size="icon-sm" />
+                <InputGroupButton
+                  aria-label="Scan QR code"
+                  ref={trigger}
+                  size="icon-sm"
+                />
               }
             />
           }
@@ -79,7 +84,7 @@ export function QrScannerAction() {
         </TooltipTrigger>
         <TooltipContent side="bottom">Scan QR code</TooltipContent>
       </Tooltip>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl" finalFocus={trigger}>
         <DialogHeader>
           <DialogTitle>
             {mode === "scanner" ? "Scan an MFID" : "Open by MFID"}

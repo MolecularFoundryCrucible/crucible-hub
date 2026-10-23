@@ -150,6 +150,7 @@ export {
   Fingerprint as MfidFieldIcon,
   CalendarClock as UpdatedFieldIcon,
   ListFilter as FilterIcon,
+  ArrowLeftRight as ResourceSequenceIcon,
   ArrowUp as SortAscendingIcon,
   ArrowUp as BackToTopIcon,
   ArrowDown as SortDescendingIcon,
