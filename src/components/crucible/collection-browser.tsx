@@ -245,7 +245,7 @@ function CollectionBrowser({
     )
   )
   return (
-    <div className="grid min-w-0 items-start gap-4 @4xl/content:grid-cols-[var(--container-group-directory)_minmax(0,1fr)]">
+    <div className="grid min-w-0 items-start gap-4 @directory-split/content:grid-cols-[var(--container-group-directory)_minmax(0,1fr)]">
       <Card className="group-directory-card" data-facet-field={field} size="sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

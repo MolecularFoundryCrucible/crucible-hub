@@ -96,7 +96,7 @@ export function ResourceSiblingConfigurationAction({
         }
       >
         <ResourceSequenceIcon aria-hidden="true" data-icon="inline-start" />
-        <span className="truncate @max-2xl/content:sr-only">{title}</span>
+        <span className="truncate @max-labels/content:sr-only">{title}</span>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

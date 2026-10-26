@@ -316,7 +316,7 @@ export function InstrumentAccessCard({
   return (
     <>
       <Card>
-        <CardHeader actionLayout="inline">
+        <CardHeader>
           <CardTitle>Access management</CardTitle>
           {canManage ? (
             <CardAction>

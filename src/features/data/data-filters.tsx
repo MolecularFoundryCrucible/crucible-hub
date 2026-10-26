@@ -359,9 +359,9 @@ export function DataFilters({
       <form className="flex flex-col gap-4" id="data-filters" onSubmit={apply}>
         <FieldSet>
           <FieldLegend className="sr-only">Data filters</FieldLegend>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
+          <FieldGroup className="grid gap-4 @fields:grid-cols-2">
             {draftPublicState.available ? (
-              <Field className="sm:col-span-2" orientation="horizontal">
+              <Field className="@fields:col-span-2" orientation="horizontal">
                 <Checkbox
                   checked={draftPublicState.included}
                   disabled={!draftPublicState.enabled}

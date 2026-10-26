@@ -72,13 +72,13 @@ import type {
   WorkspaceResourceDetail,
   WorkspaceScientificMetadata,
 } from "@/data/crucible/workspace-source"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { useExitSafeValue } from "@/hooks/use-exit-safe"
-import { useMediaQuery } from "@/hooks/use-media-query"
+import { useWindowClass } from "@/hooks/use-window-class"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
 import { ResourceGraphLink } from "@/features/resource-graph/resource-graph-link"
 import { formatBytes } from "@/lib/format"
+import { windowClassAtLeast } from "@/lib/window-class"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
@@ -99,8 +99,9 @@ export function ResourceInspector({
   const open = Boolean(navigation.preview) || navigation.invalidPreview
   const exit = useExitSafeValue(navigation.preview)
   const preview = exit.value
-  const isMobile = useIsMobile()
-  const docked = useMediaQuery("(min-width: 90rem)")
+  const windowClass = useWindowClass()
+  const modal = !windowClassAtLeast(windowClass, "expanded")
+  const docked = windowClass === "wide"
   const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
   const query = useQuery({
@@ -213,7 +214,7 @@ export function ResourceInspector({
 
   return (
     <Sheet
-      modal={isMobile}
+      modal={modal}
       onOpenChangeComplete={exit.onOpenChangeComplete}
       open={open}
       onOpenChange={(nextOpen, eventDetails) => {
@@ -271,7 +272,7 @@ export function ResourceInspector({
           return target
         }}
         showCloseButton={false}
-        showOverlay={isMobile}
+        showOverlay={modal}
       >
         <div className="flex min-h-8 items-center gap-2 px-4 pt-4">
           {navigation.previous ? (
@@ -712,7 +713,7 @@ export function InspectorDatasetThumbnails({
             />
           ) : null}
           {thumbnails.length ? (
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className="grid gap-3 @fields:grid-cols-2">
               {visibleThumbnails.map((thumbnail) => (
                 <li className="min-w-0" key={thumbnail.id}>
                   <div className="overflow-hidden rounded-lg border bg-muted/20">
@@ -753,7 +754,7 @@ function InspectorThumbnailsPending() {
 
 function InspectorThumbnailRowsPending() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-3 @fields:grid-cols-2">
       {Array.from({ length: INSPECTOR_THUMBNAIL_PAGE_SIZE }, (_, index) => (
         <Skeleton className="aspect-video w-full rounded-lg" key={index} />
       ))}

@@ -3,7 +3,7 @@ import {
   useRememberedPreviewNavigation,
 } from "@/components/crucible/inspector-pane"
 import { ResourcePreviewContext } from "@/components/crucible/resource-preview-navigation"
-import { useMediaQuery } from "@/hooks/use-media-query"
+import { useWindowClass } from "@/hooks/use-window-class"
 
 import { ResourceInspector } from "./resource-inspector"
 
@@ -14,7 +14,7 @@ import { ResourceInspector } from "./resource-inspector"
  */
 export function DockedPreviewPane() {
   const pane = useInspectorPane()
-  const docked = useMediaQuery("(min-width: 90rem)")
+  const docked = useWindowClass() === "wide"
   const navigation = useRememberedPreviewNavigation()
   if (!pane) return null
   return (

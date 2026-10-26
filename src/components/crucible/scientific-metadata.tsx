@@ -313,11 +313,11 @@ function MetadataValueRow({
   label: string
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-1 border-t py-1.5 first:border-t-0 sm:grid-cols-3 sm:gap-2">
+    <div className="grid min-w-0 grid-cols-1 gap-1 border-t py-1.5 first:border-t-0 @fields:grid-cols-3 @fields:gap-2">
       <dt className="text-label-compact break-words text-muted-foreground">
         {label}
       </dt>
-      <dd className="min-w-0 sm:col-span-2">{children}</dd>
+      <dd className="min-w-0 @fields:col-span-2">{children}</dd>
     </div>
   )
 }
@@ -361,11 +361,11 @@ function MetadataCollection({
 
   if (entries.length === 0) {
     return (
-      <div className="grid min-w-0 grid-cols-1 gap-1 py-1.5 sm:grid-cols-3 sm:gap-2">
+      <div className="grid min-w-0 grid-cols-1 gap-1 py-1.5 @fields:grid-cols-3 @fields:gap-2">
         <span className="text-label-compact break-words text-muted-foreground">
           {label}
         </span>
-        <span className="font-mono text-body text-muted-foreground sm:col-span-2">
+        <span className="font-mono text-body text-muted-foreground @fields:col-span-2">
           {array ? "[]" : "{}"}
         </span>
       </div>

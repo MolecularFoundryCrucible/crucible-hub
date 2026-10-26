@@ -46,7 +46,7 @@ export function AccountCapabilitiesCard({
         <CardTitle>Account access</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-4 @fields-wide:grid-cols-3">
           <div>
             <dt className="text-label text-muted-foreground">Platform role</dt>
             <dd className="mt-1">
@@ -87,7 +87,7 @@ export function AccountCapabilitiesCard({
           </div>
         </dl>
         <Separator className="my-5" />
-        <ul className="grid gap-4 md:grid-cols-2">
+        <ul className="grid gap-4 @fields-wide:grid-cols-2">
           {capabilityDefinitions.map(([capability, label, kind, type]) => {
             const available = account.capabilities[capability]
             return (

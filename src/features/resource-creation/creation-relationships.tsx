@@ -122,7 +122,7 @@ export function CreationRelationshipsField({
         <ul aria-label="Relationships to add" className="flex flex-col gap-2">
           {value.map((draft) => (
             <li
-              className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border p-3 sm:flex-nowrap sm:gap-3"
+              className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border p-3 @fields:flex-nowrap @fields:gap-3"
               key={draft.target.unique_id}
             >
               <ResourceIdentity

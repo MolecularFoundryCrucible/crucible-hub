@@ -149,7 +149,7 @@ export function ServiceAccountDetail({
   scope: IdentityScope
 }) {
   return (
-    <div className="grid gap-4 @3xl/content:grid-cols-2 @3xl/content:items-start">
+    <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
       <ServiceAccountIdentityCard
         account={account}
         canChangePlatformRole={canChangePlatformRole}
@@ -269,7 +269,7 @@ function ServiceAccountIdentityCard({
     return (
       <>
         <Card>
-          <CardHeader actionLayout="inline">
+          <CardHeader>
             <CardTitle>Identity</CardTitle>
             <CardAction>
               <div className="flex flex-wrap justify-end gap-2">

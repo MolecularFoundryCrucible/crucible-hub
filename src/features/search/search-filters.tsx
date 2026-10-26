@@ -181,9 +181,9 @@ export function SearchFilters({
       >
         <FieldSet>
           <FieldLegend className="sr-only">Search filters</FieldLegend>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
+          <FieldGroup className="grid gap-4 @fields:grid-cols-2">
             {availability.publicData && draftPublicState.available ? (
-              <Field className="sm:col-span-2" orientation="horizontal">
+              <Field className="@fields:col-span-2" orientation="horizontal">
                 <Checkbox
                   checked={draftPublicState.included}
                   disabled={!draftPublicState.enabled}

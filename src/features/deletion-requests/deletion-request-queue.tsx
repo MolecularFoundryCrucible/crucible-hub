@@ -128,7 +128,7 @@ export function DeletionRequestQueue({
       <CollectionUpdateStatus label="deletion requests" updating={updating} />
       <Card>
         {title || action ? (
-          <CardHeader actionLayout="inline">
+          <CardHeader>
             {title ? <CardTitle>{title}</CardTitle> : null}
             {action ? <CardAction>{action}</CardAction> : null}
           </CardHeader>

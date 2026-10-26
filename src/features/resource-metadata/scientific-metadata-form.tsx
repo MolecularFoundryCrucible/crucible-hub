@@ -237,7 +237,7 @@ export function ScientificMetadataForm({
   return (
     <>
       <Card aria-busy={isSubmitting}>
-        <CardHeader actionLayout="inline">
+        <CardHeader>
           <CardTitle>Scientific metadata</CardTitle>
           <CardAction>
             <Badge variant="secondary">Editing</Badge>

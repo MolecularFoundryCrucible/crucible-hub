@@ -281,7 +281,7 @@ function ReadOnlyPersonProfileCard({
                 )}
               </dd>
             </div>
-            <div className="col-span-2 flex min-w-0 flex-col gap-1 sm:col-span-1">
+            <div className="col-span-2 flex min-w-0 flex-col gap-1 @fields:col-span-1">
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd>
                 <MfidValue value={person.unique_id} />

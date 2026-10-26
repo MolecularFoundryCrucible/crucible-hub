@@ -3,15 +3,17 @@ import { describe, expect, it, vi } from "vitest"
 
 import { useIsMobile } from "./use-mobile"
 
-const useMediaQuery = vi.fn((_query: string) => true)
-vi.mock("@/hooks/use-media-query", () => ({
-  useMediaQuery: (query: string) => useMediaQuery(query),
+const useWindowClass = vi.fn(() => "compact")
+vi.mock("@/hooks/use-window-class", () => ({
+  useWindowClass: () => useWindowClass(),
 }))
 
 describe("useIsMobile", () => {
-  it("follows the compact breakpoint in rem", () => {
-    const { result } = renderHook(() => useIsMobile())
-    expect(useMediaQuery).toHaveBeenCalledWith("(width < 48rem)")
+  it("is true only in the compact window class", () => {
+    const { rerender, result } = renderHook(() => useIsMobile())
     expect(result.current).toBe(true)
+    useWindowClass.mockReturnValue("medium")
+    rerender()
+    expect(result.current).toBe(false)
   })
 })

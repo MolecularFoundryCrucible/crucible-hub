@@ -8,6 +8,15 @@ function motionModuleOrTest(localPath) {
 }
 
 const allowedPrefixes = ["components/ui/", "generated/"]
+const windowLayoutFiles = new Set([
+  "components/crucible/administrator-view-control.tsx",
+  "components/crucible/app-footer.tsx",
+  "components/crucible/app-shell.tsx",
+  "components/crucible/back-to-top.tsx",
+  "components/crucible/create-menu.tsx",
+  "components/crucible/global-search.tsx",
+  "components/crucible/inspector-pane.tsx",
+])
 const violations = []
 const patterns = [
   {
@@ -57,6 +66,21 @@ const patterns = [
     expression:
       /(?:^|[\s"'`:])(?:animate-(?:in|out)|(?:fade|zoom)-(?:in|out)(?:-\d+)?|slide-(?:in|out)-from-[a-z]+(?:-\d+)?)(?=[\s"'`]|$)/m,
     exempt: motionModuleOrTest,
+  },
+  {
+    label:
+      "window breakpoint changes content layout (use a container threshold such as @fields: or @split/content: from src/styles.css)",
+    expression:
+      /(?:^|[\s"'`])(?:max-)?(?:sm|md|lg|xl|2xl|wide):(?:grid-cols-|col-span-|row-span-|flex-row|flex-col|(?:hidden|block|inline|inline-flex|inline-block|flex|grid|table-cell|table-column|contents)(?=[\s"'`]|$))/m,
+    exempt: (localPath) =>
+      windowLayoutFiles.has(localPath) ||
+      localPath.startsWith("routes/fixtures.") ||
+      /\.test\.tsx?$/.test(localPath),
+  },
+  {
+    label:
+      "generic container size on the content container (use a named threshold such as @split/content:)",
+    expression: /@(?:max-)?(?:3xs|2xs|xs|sm|md|lg|xl|[2-7]xl)\/content:/,
   },
   {
     label: "primitive layer (use z-(--layer-*) from src/styles.css)",

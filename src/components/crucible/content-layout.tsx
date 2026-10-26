@@ -22,11 +22,11 @@ const contentGridVariants = cva(
     variants: {
       variant: {
         actions: "content-grid-actions",
-        detail: "grid grid-cols-1 @3xl/content:grid-cols-7",
+        detail: "grid grid-cols-1 @split/content:grid-cols-7",
         detailAside:
-          "grid grid-cols-1 @3xl/content:grid-cols-7 @3xl/content:grid-rows-[auto_1fr]",
+          "grid grid-cols-1 @split/content:grid-cols-7 @split/content:grid-rows-[auto_1fr]",
         identity: "content-grid-identity grid gap-4",
-        split: "grid grid-cols-1 @3xl/content:grid-cols-2",
+        split: "grid grid-cols-1 @split/content:grid-cols-2",
       },
     },
     defaultVariants: {
@@ -38,10 +38,10 @@ const contentGridVariants = cva(
 const contentGridItemVariants = cva("min-w-0", {
   variants: {
     span: {
-      wide: "@3xl/content:col-span-4",
-      narrow: "@3xl/content:col-span-3",
-      full: "@3xl/content:col-span-7",
-      aside: "@3xl/content:col-span-3 @3xl/content:row-span-2",
+      wide: "@split/content:col-span-4",
+      narrow: "@split/content:col-span-3",
+      full: "@split/content:col-span-7",
+      aside: "@split/content:col-span-3 @split/content:row-span-2",
     },
   },
   defaultVariants: {

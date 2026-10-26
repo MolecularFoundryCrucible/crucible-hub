@@ -18,15 +18,23 @@ export function LabeledTimestamp({
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-wrap items-baseline gap-x-1.5 text-supporting sm:block sm:text-right",
+        "flex shrink-0 flex-wrap items-baseline gap-x-1.5 text-supporting @fields:block @fields:text-right",
         className
       )}
     >
-      <span className="text-muted-foreground sm:block">{label}</span>
+      <span className="text-muted-foreground @fields:block">{label}</span>
       {presentation === "activity" ? (
-        <ActivityTime className="sm:block" fallback={fallback} value={value} />
+        <ActivityTime
+          className="@fields:block"
+          fallback={fallback}
+          value={value}
+        />
       ) : (
-        <LocalDateTime className="sm:block" fallback={fallback} value={value} />
+        <LocalDateTime
+          className="@fields:block"
+          fallback={fallback}
+          value={value}
+        />
       )}
     </div>
   )

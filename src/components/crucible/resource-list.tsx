@@ -39,7 +39,7 @@ const resourceListItemContentVariants = cva(
         default: "px-4 py-3",
       },
       layout: {
-        responsive: "flex-col sm:flex-row sm:items-start",
+        responsive: "flex-col @fields:flex-row @fields:items-start",
         row: "items-center",
         start: "items-start",
       },

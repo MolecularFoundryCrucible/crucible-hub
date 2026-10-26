@@ -71,7 +71,7 @@ export function CollectionFilterPanel({
           }
         >
           <FilterIcon aria-hidden="true" data-icon="inline-start" />
-          <span className="@max-2xl/content:sr-only">Filters</span>
+          <span className="@max-labels/content:sr-only">Filters</span>
           {activeFilters.length ? (
             <Badge variant="secondary">{activeFilters.length}</Badge>
           ) : null}

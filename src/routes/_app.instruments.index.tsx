@@ -511,7 +511,7 @@ function InstrumentDirectoryFilters({
       >
         <FieldSet>
           <FieldLegend className="sr-only">Instrument filters</FieldLegend>
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
+          <FieldGroup className="grid gap-4 @fields:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="instrument-filter-status">
                 Lifecycle status

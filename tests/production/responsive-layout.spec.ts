@@ -4,6 +4,7 @@ import { expect, test } from "../fixtures"
 
 const dataset = "/hub/datasets/01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
 const project = "/hub/projects/01J6Y8N4Q2R7M9K3T5V0W1X2Z3"
+const sample = "01J6Y8N4Q2R7M9K3T5V0W1X2Z5"
 
 /** Whether any child of the element starts below another child's bottom. */
 function wraps(page: Page, selector: string) {
@@ -96,4 +97,65 @@ test("keeps the search shortcut hint on one line", async ({ page }) => {
       return new Set([...range.getClientRects()].map((box) => box.top)).size
     })
   expect(lines).toBe(1)
+})
+
+test.describe("window classes", () => {
+  const sidebarState = (page: Page) =>
+    page
+      .locator('[data-slot="sidebar"][data-state]')
+      .first()
+      .getAttribute("data-state")
+
+  test("shows the icon rail and a modal inspector at medium widths", async ({
+    context,
+    page,
+  }) => {
+    await page.setViewportSize({ height: 800, width: 900 })
+    await page.goto(`/hub/data?scenario=populated&preview=${sample}`)
+    await page.waitForLoadState("networkidle")
+    expect(await sidebarState(page)).toBe("collapsed")
+    await expect(page.locator('[data-slot="sheet-overlay"]')).toBeVisible()
+    const cookies = await context.cookies()
+    expect(
+      cookies.find((cookie) => cookie.name === "crucible_hub_window")?.value
+    ).toBe("medium")
+
+    await page.keyboard.press("Escape")
+    await page.getByRole("button", { name: "Expand navigation" }).click()
+    expect(await sidebarState(page)).toBe("expanded")
+    expect(
+      (await context.cookies()).find(
+        (cookie) => cookie.name === "crucible_hub_sidebar"
+      )
+    ).toBeUndefined()
+  })
+
+  test("renders the rail on the server once the window class is known", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        domain: "127.0.0.1",
+        name: "crucible_hub_window",
+        path: "/hub",
+        value: "medium",
+      },
+    ])
+    const html = await (
+      await page.request.get("/hub/?scenario=populated")
+    ).text()
+    const sidebar = /<div(?=[^>]*data-slot="sidebar")[^>]*>/.exec(html)?.[0]
+    expect(sidebar).toContain('data-state="collapsed"')
+  })
+
+  test("keeps the saved sidebar and a non-modal inspector at expanded widths", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 800, width: 1180 })
+    await page.goto(`/hub/data?scenario=populated&preview=${sample}`)
+    await page.waitForLoadState("networkidle")
+    expect(await sidebarState(page)).toBe("expanded")
+    await expect(page.locator('[data-slot="sheet-content"]')).toBeVisible()
+    await expect(page.locator('[data-slot="sheet-overlay"]')).toHaveCount(0)
+  })
 })

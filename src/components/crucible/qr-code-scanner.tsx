@@ -201,7 +201,7 @@ export function QrCodeScanner({
       >
         {message}
       </p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <div className="flex flex-col gap-2 @fields:flex-row @fields:flex-wrap">
         {state === "error" && (
           <Button onClick={retry} type="button">
             <RetryQrScanIcon aria-hidden="true" data-icon="inline-start" />

@@ -32,7 +32,9 @@ export function RefreshButton({
         data-icon="inline-start"
       />
       <span
-        className={size === undefined ? "@max-2xl/content:sr-only" : undefined}
+        className={
+          size === undefined ? "@max-labels/content:sr-only" : undefined
+        }
       >
         Refresh
       </span>

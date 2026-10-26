@@ -141,7 +141,7 @@ function SummaryCard({
 }) {
   return (
     <Card>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle>Summary</CardTitle>
         {action ? <CardAction>{action}</CardAction> : null}
       </CardHeader>

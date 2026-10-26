@@ -49,6 +49,28 @@ function inspectorBox(page: Page) {
   })
 }
 
+/** A point on the page behind the inspector that is not a control. */
+function blankPoint(page: Page) {
+  return page.evaluate(() => {
+    const main = document.querySelector("main")!.getBoundingClientRect()
+    const sheet = document
+      .querySelector('[data-slot="sheet-content"]')!
+      .getBoundingClientRect()
+    for (let y = main.top + 64; y < innerHeight - 40; y += 16)
+      for (let x = main.left + 64; x < sheet.left - 16; x += 16) {
+        const target = document.elementFromPoint(x, y)
+        if (
+          target?.closest("main") &&
+          !target.closest(
+            "a[href], button, input, select, textarea, [role='button'], [role='link'], [data-resource-preview-trigger]"
+          )
+        )
+          return { x, y }
+      }
+    throw new Error("No blank point behind the inspector")
+  })
+}
+
 const pageScroll = (page: Page) =>
   page.evaluate(() => document.scrollingElement!.scrollTop)
 
@@ -56,7 +78,7 @@ test.describe("touch on the inspector overlay", () => {
   test.use({
     hasTouch: true,
     isMobile: true,
-    viewport: { height: 390, width: 844 },
+    viewport: { height: 500, width: 1180 },
   })
 
   test.beforeEach(async ({ page }) => {
@@ -70,19 +92,16 @@ test.describe("touch on the inspector overlay", () => {
   test("keeps the inspector open while the page behind scrolls", async ({
     page,
   }) => {
-    expect(
-      await page.evaluate(
-        () => document.elementFromPoint(300, 330)?.closest("a, button") ?? null
-      )
-    ).toBeNull()
-    await drag(page, { x: 300, y: 330 }, { x: 300, y: 60 })
+    const start = await blankPoint(page)
+    await drag(page, start, { x: start.x, y: start.y - 300 })
     expect(await pageScroll(page)).toBeGreaterThan(0)
     await expect(page.locator('[data-slot="sheet-content"]')).toBeVisible()
     await expect(page).toHaveURL(/preview=/)
   })
 
   test("closes the inspector on a tap outside it", async ({ page }) => {
-    await page.touchscreen.tap(200, 200)
+    const point = await blankPoint(page)
+    await page.touchscreen.tap(point.x, point.y)
     await expect(page.locator('[data-slot="sheet-content"]')).toHaveCount(0)
   })
 

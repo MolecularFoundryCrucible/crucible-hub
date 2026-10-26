@@ -129,7 +129,7 @@ function InstrumentSummary({
 
   return (
     <Card>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle>Summary</CardTitle>
         {onEdit ? (
           <CardAction>

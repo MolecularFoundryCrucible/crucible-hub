@@ -589,7 +589,7 @@ function SearchResult({
       <ResourceListItemContent className="sm:px-5" layout="start">
         <div className="min-w-0 flex-1">{link}</div>
         <MfidValue
-          className="hidden shrink-0 lg:flex"
+          className="hidden shrink-0 @labels:flex"
           presentation="supporting"
           value={item.unique_id}
         />

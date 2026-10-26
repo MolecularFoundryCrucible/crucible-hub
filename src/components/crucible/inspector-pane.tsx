@@ -201,7 +201,7 @@ export function InspectorPaneToggle() {
   const label = pane.open ? "Hide preview panel" : "Show preview panel"
   const Icon = pane.open ? HidePreviewPaneIcon : ShowPreviewPaneIcon
   return (
-    <div className="hidden border-l pl-3 inspector:flex">
+    <div className="hidden border-l pl-3 wide:flex">
       <Tooltip>
         <TooltipTrigger
           render={

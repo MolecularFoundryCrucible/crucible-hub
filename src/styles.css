@@ -29,7 +29,7 @@
   transition: transform var(--motion-standard) var(--motion-ease-standard);
 }
 
-@media (min-width: 90rem) {
+@media (width >= --theme(--breakpoint-wide)) {
   [data-slot="sidebar-inset"][data-inspector-pane="open"] {
     padding-right: var(--spacing-inspector-width);
   }
@@ -251,7 +251,21 @@
 
 @theme inline {
   --color-*: initial;
-  --breakpoint-inspector: 90rem;
+  /* Window classes: compact below md, medium from md, expanded from lg, wide
+     from wide. src/lib/window-class.ts mirrors these values. */
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-wide: 90rem;
+  /* Content thresholds, queried on the nearest surface container: content,
+     card, sheet, dialog, field group, or table. */
+  --container-fields: 22rem;
+  --container-fields-wide: 34rem;
+  --container-identifier-icon: 26rem;
+  --container-table-columns: 30rem;
+  --container-labels: 42rem;
+  --container-split: 48rem;
+  --container-directory-split: 56rem;
+  --container-table-detail: 56rem;
   --container-identity-wide: 66rem;
   --transition-duration-fast: var(--motion-fast);
   --transition-duration-standard: var(--motion-standard);
@@ -1496,7 +1510,7 @@ body {
   min-width: 38rem;
 }
 
-@media (max-width: 47.999rem) {
+@media (width < --theme(--breakpoint-md)) {
   .resource-graph-canvas {
     --graph-center-offset-y: -48;
     --graph-layout-layer-gap: 72;
@@ -1929,7 +1943,7 @@ body {
   }
 }
 
-@media (max-width: 29.999rem) {
+@container (width < --theme(--container-identifier-icon)) {
   .mfid-value-icon {
     display: none;
   }

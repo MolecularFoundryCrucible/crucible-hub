@@ -1,4 +1,6 @@
 import { isValidTimeZone, timeZoneCookie } from "./time-zone"
+import { isWindowClass, windowClassCookie } from "./window-class"
+import type { WindowClass } from "./window-class"
 
 export const themeCookie = "crucible_hub_theme"
 export const sidebarCookie = "crucible_hub_sidebar"
@@ -11,6 +13,7 @@ export type ViewerPresentation = {
   sidebarOpen: boolean
   theme: ThemeChoice
   timeZone: string | undefined
+  windowClass: WindowClass
 }
 
 export function parseViewerPresentation(
@@ -18,11 +21,13 @@ export function parseViewerPresentation(
 ): ViewerPresentation {
   const theme = cookies[themeCookie]
   const timeZone = cookies[timeZoneCookie]
+  const windowClass = cookies[windowClassCookie]
   return {
     inspectorOpen: cookies[inspectorCookie] !== "collapsed",
     sidebarOpen: cookies[sidebarCookie] !== "collapsed",
     theme: theme === "dark" || theme === "light" ? theme : "system",
     timeZone: isValidTimeZone(timeZone) ? timeZone : undefined,
+    windowClass: isWindowClass(windowClass) ? windowClass : "expanded",
   }
 }
 

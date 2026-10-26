@@ -599,9 +599,9 @@ function InstrumentDatasetFilters({
       title="Dataset filters"
     >
       <form id="instrument-dataset-filters" onSubmit={apply}>
-        <FieldGroup className="grid gap-4 sm:grid-cols-2">
+        <FieldGroup className="grid gap-4 @fields:grid-cols-2">
           {draftPublicState.available ? (
-            <Field className="sm:col-span-2" orientation="horizontal">
+            <Field className="@fields:col-span-2" orientation="horizontal">
               <Checkbox
                 checked={draftPublicState.included}
                 id="instrument-dataset-public"

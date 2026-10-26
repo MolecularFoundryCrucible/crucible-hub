@@ -31,7 +31,7 @@ export function ResourceCreationLink({
   variant?: "default" | "outline"
 }) {
   const typeIconClassName = cn(
-    "@2xl/content:hidden",
+    "@labels/content:hidden",
     variant === "default" && "text-current"
   )
   return useRender({
@@ -45,7 +45,7 @@ export function ResourceCreationLink({
           ) : (
             <ResourceTypeIcon className={typeIconClassName} type={kind} />
           )}
-          <span className="@max-2xl/content:sr-only">{label}</span>
+          <span className="@max-labels/content:sr-only">{label}</span>
         </>
       ) : (
         <>

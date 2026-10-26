@@ -392,7 +392,7 @@ export function SampleSummaryForm({
   return (
     <>
       <Card aria-busy={isSubmitting}>
-        <CardHeader actionLayout="inline">
+        <CardHeader>
           <CardTitle>Summary</CardTitle>
           <CardAction>
             <Badge variant="secondary">Editing</Badge>
@@ -634,7 +634,7 @@ export function DatasetSummaryForm({
   return (
     <>
       <Card aria-busy={isSubmitting}>
-        <CardHeader actionLayout="inline">
+        <CardHeader>
           <CardTitle>Summary</CardTitle>
           <CardAction>
             <Badge variant="secondary">Editing</Badge>

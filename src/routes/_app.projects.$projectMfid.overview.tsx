@@ -123,7 +123,7 @@ function ProjectSummary({
 }) {
   return (
     <Card>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle>Summary</CardTitle>
         {onEdit ? (
           <CardAction>
@@ -132,8 +132,8 @@ function ProjectSummary({
         ) : null}
       </CardHeader>
       <CardContent>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="min-w-0 sm:col-span-2">
+        <dl className="grid gap-4 @fields:grid-cols-2">
+          <div className="min-w-0 @fields:col-span-2">
             <dt className="text-label text-muted-foreground">Organization</dt>
             <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
               <SummaryFieldIcon type="organization" />

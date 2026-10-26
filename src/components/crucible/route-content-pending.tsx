@@ -85,7 +85,7 @@ export function IdentityDetailContentPending({
       ]
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 @3xl/content:grid-cols-2 @3xl/content:items-start">
+      <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
         <Card aria-busy="true">
           <CardHeader>
             <CardTitle>Identity</CardTitle>
@@ -97,7 +97,7 @@ export function IdentityDetailContentPending({
                 <div
                   className={
                     label === "Email" || label.startsWith("Crucible ID")
-                      ? "col-span-2 grid gap-1 sm:col-span-1"
+                      ? "col-span-2 grid gap-1 @fields:col-span-1"
                       : "grid gap-1"
                   }
                   key={label}

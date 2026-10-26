@@ -60,6 +60,7 @@ function useSidebar() {
 }
 
 function SidebarProvider({
+  autoCollapsed = false,
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
@@ -68,6 +69,8 @@ function SidebarProvider({
   children,
   ...props
 }: React.ComponentProps<"div"> & {
+  /** Show the icon rail whatever the saved preference; expanding is not saved. */
+  autoCollapsed?: boolean
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -76,7 +79,9 @@ function SidebarProvider({
   const [openMobile, setOpenMobile] = React.useState(false)
 
   const [_open, _setOpen] = React.useState(defaultOpen)
-  const open = openProp ?? _open
+  const [openWhileCollapsed, setOpenWhileCollapsed] = React.useState(false)
+  if (!autoCollapsed && openWhileCollapsed) setOpenWhileCollapsed(false)
+  const open = autoCollapsed ? openWhileCollapsed : (openProp ?? _open)
 
   React.useEffect(() => {
     if (openProp !== undefined || readDocumentCookies()[sidebarCookie]) return
@@ -94,6 +99,10 @@ function SidebarProvider({
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
+      if (autoCollapsed) {
+        setOpenWhileCollapsed(openState)
+        return
+      }
       if (setOpenProp) {
         setOpenProp(openState)
       } else {
@@ -105,7 +114,7 @@ function SidebarProvider({
         openState ? "expanded" : "collapsed"
       )
     },
-    [setOpenProp, open]
+    [autoCollapsed, setOpenProp, open]
   )
 
   const toggleSidebar = React.useCallback(() => {

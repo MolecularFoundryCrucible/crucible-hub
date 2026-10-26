@@ -2,10 +2,6 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const CardHeaderActionLayoutContext = React.createContext<
-  "inline" | "responsive"
->("responsive")
-
 function Card({
   className,
   size = "default",
@@ -20,7 +16,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-body text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card @container/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-body text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         variant === "destructive" && "bg-destructive/5 ring-destructive/40",
         className
       )}
@@ -29,24 +25,16 @@ function Card({
   )
 }
 
-function CardHeader({
-  actionLayout = "responsive",
-  className,
-  ...props
-}: React.ComponentProps<"div"> & {
-  actionLayout?: "inline" | "responsive"
-}) {
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <CardHeaderActionLayoutContext value={actionLayout}>
-      <div
-        data-slot="card-header"
-        className={cn(
-          "group/card-header @container/card-header flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-t-xl px-(--card-spacing) has-data-[slot=card-description]:grid has-data-[slot=card-description]:auto-rows-min has-data-[slot=card-description]:grid-cols-1 has-data-[slot=card-description]:items-start has-data-[slot=card-description]:gap-y-1 has-data-[slot=card-description]:has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto] [.border-b]:pb-(--card-spacing)",
-          className
-        )}
-        {...props}
-      />
-    </CardHeaderActionLayoutContext>
+    <div
+      data-slot="card-header"
+      className={cn(
+        "group/card-header flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-t-xl px-(--card-spacing) has-data-[slot=card-description]:grid has-data-[slot=card-description]:auto-rows-min has-data-[slot=card-description]:grid-cols-1 has-data-[slot=card-description]:items-start has-data-[slot=card-description]:gap-y-1 has-data-[slot=card-description]:has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto] [.border-b]:pb-(--card-spacing)",
+        className
+      )}
+      {...props}
+    />
   )
 }
 
@@ -68,7 +56,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-description"
       className={cn(
-        "col-span-full min-w-0 text-body break-words text-muted-foreground sm:col-span-1",
+        "col-span-full min-w-0 text-body break-words text-muted-foreground @fields:col-span-1",
         className
       )}
       {...props}
@@ -81,7 +69,7 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-action"
       className={cn(
-        "col-start-2 row-start-1 ml-auto flex w-auto shrink-0 flex-wrap items-center justify-end gap-2 self-start justify-self-end sm:row-span-2",
+        "col-start-2 row-start-1 ml-auto flex w-auto shrink-0 flex-wrap items-center justify-end gap-2 self-start justify-self-end @fields:row-span-2",
         className
       )}
       {...props}

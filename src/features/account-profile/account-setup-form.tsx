@@ -119,7 +119,7 @@ export function AccountSetupForm({
               />
             )}
           </form.Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 @fields:grid-cols-2">
             <form.Field name="first_name">
               {(field) => <ProfileField field={field} label="First name" />}
             </form.Field>

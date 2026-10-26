@@ -7,6 +7,7 @@ const defaultPresentation: ViewerPresentation = {
   sidebarOpen: true,
   theme: "system",
   timeZone: undefined,
+  windowClass: "expanded",
 }
 
 const ViewerPresentationContext =

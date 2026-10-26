@@ -199,7 +199,7 @@ export function ProjectMembershipCard({
 
   return (
     <Card>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle>Access management</CardTitle>
         {canManageMembers ? (
           <CardAction>

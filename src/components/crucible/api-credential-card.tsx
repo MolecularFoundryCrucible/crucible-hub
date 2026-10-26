@@ -65,7 +65,7 @@ export function ApiCredentialCard({
 }) {
   return (
     <Card aria-busy={loading}>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CredentialIcon aria-hidden="true" />
           Security
@@ -126,7 +126,7 @@ function CredentialStatus({
 }) {
   const empty = <span className="text-muted-foreground">-</span>
   return (
-    <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+    <dl className="grid grid-cols-2 gap-4 @fields-wide:grid-cols-3">
       <LastActiveField value={lastActiveAt} />
       <div className="min-w-0">
         <dt className="text-label text-muted-foreground">Key last used</dt>
@@ -175,7 +175,7 @@ function CredentialStatusSkeleton() {
   return (
     <dl
       aria-label="Loading security details"
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3"
+      className="grid grid-cols-2 gap-4 @fields-wide:grid-cols-3"
       role="status"
     >
       {fields.map((field) => (

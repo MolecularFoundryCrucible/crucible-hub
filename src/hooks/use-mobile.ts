@@ -1,5 +1,5 @@
-import { useMediaQuery } from "@/hooks/use-media-query"
+import { useWindowClass } from "@/hooks/use-window-class"
 
 export function useIsMobile() {
-  return useMediaQuery("(width < 48rem)")
+  return useWindowClass() === "compact"
 }

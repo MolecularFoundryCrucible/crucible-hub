@@ -65,7 +65,7 @@ export function DatasetThumbnailsCard({
 
   return (
     <Card aria-busy={query.isFetching}>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle>Thumbnails</CardTitle>
         {canEdit && query.data ? (
           <CardAction>
@@ -77,7 +77,7 @@ export function DatasetThumbnailsCard({
           </CardAction>
         ) : null}
       </CardHeader>
-      <CardContent className="@container/thumbnails">
+      <CardContent>
         {!hydrated || query.isPending ? (
           <ThumbnailSkeleton />
         ) : !query.data ? (
@@ -109,7 +109,7 @@ export function ThumbnailGallery({
   thumbnails: readonly WorkspaceDatasetThumbnail[]
 }) {
   return (
-    <ul className="grid gap-4 @3xs/thumbnails:grid-cols-2 @md/thumbnails:grid-cols-3">
+    <ul className="grid gap-4 @fields:grid-cols-2 @fields-wide:grid-cols-3">
       {thumbnails.map((thumbnail) => (
         <li key={thumbnail.id}>
           <figure className="overflow-hidden rounded-lg border bg-muted/20">
@@ -252,10 +252,7 @@ function ThumbnailEditor({
 
   return (
     <div className="flex flex-col gap-6">
-      <form
-        className="grid gap-4 @md/thumbnails:grid-cols-2"
-        onSubmit={addThumbnail}
-      >
+      <form className="grid gap-4 @fields:grid-cols-2" onSubmit={addThumbnail}>
         <Field>
           <FieldLabel htmlFor={`thumbnail-file-${datasetMfid}`}>
             Image
@@ -290,7 +287,7 @@ function ThumbnailEditor({
             value={name}
           />
         </Field>
-        <div className="@md/thumbnails:col-span-2">
+        <div className="@fields:col-span-2">
           <Button disabled={mutation.isPending} type="submit">
             <AddThumbnailIcon aria-hidden="true" data-icon="inline-start" />
             Add thumbnail
@@ -303,7 +300,7 @@ function ThumbnailEditor({
           No thumbnail images have been added.
         </p>
       ) : (
-        <ul className="grid gap-4 @3xs/thumbnails:grid-cols-2 @md/thumbnails:grid-cols-3">
+        <ul className="grid gap-4 @fields:grid-cols-2 @fields-wide:grid-cols-3">
           {thumbnails.map((thumbnail) => {
             const draftName =
               draftNames[thumbnail.id] ?? thumbnail.thumbnail_name
@@ -401,7 +398,7 @@ function ThumbnailSkeleton() {
   return (
     <div
       aria-label="Loading thumbnails"
-      className="grid gap-4 @3xs/thumbnails:grid-cols-2 @md/thumbnails:grid-cols-3"
+      className="grid gap-4 @fields:grid-cols-2 @fields-wide:grid-cols-3"
       role="status"
     >
       <Skeleton className="aspect-video w-full" />

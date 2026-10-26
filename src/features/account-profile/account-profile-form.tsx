@@ -132,7 +132,7 @@ export function AccountProfileForm({
   if (!editing) {
     return (
       <Card>
-        <CardHeader actionLayout="inline">
+        <CardHeader>
           <PersonIdentity person={account} presentation="avatar" size="lg" />
           <CardAction>
             <EditableCardTrigger
@@ -143,13 +143,13 @@ export function AccountProfileForm({
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 min-w-0 sm:col-span-1">
+            <div className="col-span-2 min-w-0 @fields:col-span-1">
               <dt className="text-label text-muted-foreground">Email</dt>
               <dd className="mt-1 text-body break-words">
                 {account.email ?? "Not provided"}
               </dd>
             </div>
-            <div className="col-span-2 min-w-0 sm:col-span-1">
+            <div className="col-span-2 min-w-0 @fields:col-span-1">
               <dt className="text-label text-muted-foreground">Username</dt>
               <dd className="mt-1 text-body break-words">
                 {account.username ? (
@@ -191,7 +191,7 @@ export function AccountProfileForm({
           >
             <fieldset disabled={isSubmitting}>
               <FieldGroup>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 @fields:grid-cols-2">
                   <form.Field name="first_name">
                     {(field) => (
                       <ProfileField field={field} label="First name" />

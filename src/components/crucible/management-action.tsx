@@ -24,7 +24,7 @@ export function ManagementAction({
 }) {
   const content = (
     <>
-      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3 @fields:flex-nowrap">
         <div className="min-w-0 flex-1 basis-40 space-y-1">
           <h3 className="min-w-0 font-heading text-title-section break-words">
             {title}

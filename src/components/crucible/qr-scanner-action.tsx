@@ -123,7 +123,7 @@ export function QrScannerAction() {
                 {manualError}
               </p>
             ) : null}
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-col gap-2 @fields:flex-row">
               <Button type="submit">Open resource</Button>
               <Button
                 onClick={() => setMode("scanner")}

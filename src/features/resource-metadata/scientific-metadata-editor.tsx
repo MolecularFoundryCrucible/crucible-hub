@@ -41,7 +41,7 @@ export function ScientificMetadataEditor({
   const expansion = useScientificMetadataExpansion(resource.scientific_metadata)
   const readView = (
     <Card>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle>Scientific metadata</CardTitle>
         {expansion.canExpand || resource.capabilities?.can_edit === true ? (
           <CardAction>

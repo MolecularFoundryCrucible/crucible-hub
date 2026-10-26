@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useViewerPresentation } from "@/hooks/use-viewer-presentation"
+import { useWindowClass } from "@/hooks/use-window-class"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useRouterState } from "@tanstack/react-router"
 
@@ -20,6 +21,11 @@ import { PendingRegion } from "@/components/crucible/pending-region"
 import { Reveal } from "@/components/crucible/reveal"
 import { useEnteringKeys } from "@/hooks/use-entering-keys"
 import { enterMotionClassName } from "@/lib/motion"
+import {
+  readDocumentCookies,
+  writePresentationCookie,
+} from "@/lib/viewer-presentation"
+import { windowClassCookie } from "@/lib/window-class"
 import { CreateMenu } from "@/components/crucible/create-menu"
 import { GlobalSearch } from "@/components/crucible/global-search"
 import {
@@ -139,6 +145,11 @@ export function AppShell({
   const deletionRequestsActive = pathname === "/deletion-requests"
   const projectMfid = activeProjectMfid(pathname, location.search)
   const [shortcuts] = useState(createDialogHandle)
+  const windowClass = useWindowClass()
+  useEffect(() => {
+    if (readDocumentCookies()[windowClassCookie] !== windowClass)
+      writePresentationCookie(windowClassCookie, windowClass)
+  }, [windowClass])
   const recentlyViewedIdentity =
     scope?.slice(0, 3).join(":") ?? account?.unique_id ?? "anonymous"
 
@@ -187,7 +198,10 @@ export function AppShell({
         initialOpen={presentation.inspectorOpen}
         resetKey={`${recentlyViewedIdentity}:${privilegeMode}`}
       >
-        <SidebarProvider defaultOpen={presentation.sidebarOpen}>
+        <SidebarProvider
+          autoCollapsed={windowClass === "medium"}
+          defaultOpen={presentation.sidebarOpen}
+        >
           <Sidebar
             aria-label="Primary navigation"
             role="navigation"

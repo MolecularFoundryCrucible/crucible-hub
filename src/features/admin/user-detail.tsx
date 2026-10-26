@@ -176,9 +176,9 @@ export function UserDetailView({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 @3xl/content:grid-cols-2 @3xl/content:items-start">
+      <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
         <UserProfileCard
-          className={!canManageApiKey ? "@3xl/content:col-span-2" : undefined}
+          className={!canManageApiKey ? "@split/content:col-span-2" : undefined}
           scope={scope}
           user={user}
         />
@@ -344,7 +344,7 @@ function UserProfileCard({
     return (
       <>
         <Card className={className}>
-          <CardHeader actionLayout="inline">
+          <CardHeader>
             <CardTitle>Identity</CardTitle>
             <CardAction>
               <div className="flex flex-wrap justify-end gap-2">
@@ -396,7 +396,7 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0 sm:col-span-1">
+              <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">Email</dt>
                 <dd className="mt-1 text-body break-words">
                   {user.email || (
@@ -526,7 +526,7 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0 sm:col-span-1">
+              <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID / ORCID
                 </dt>
@@ -751,7 +751,7 @@ function UserProjectsSection({
 
   return (
     <Card aria-busy={projectsQuery.isFetching}>
-      <CardHeader actionLayout="inline">
+      <CardHeader>
         <CardTitle>Projects</CardTitle>
         {projectsQuery.data !== undefined ? (
           <CardAction>
