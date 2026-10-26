@@ -50,7 +50,6 @@ export function collectionActiveFilters(
 
 function applyLabel(count: number | undefined, noun: FilterResultNoun) {
   if (count === undefined) return "Apply filters"
-  if (count === 0) return `No matching ${noun[1]}`
   return `Show ${count.toLocaleString()} ${count === 1 ? noun[0] : noun[1]}`
 }
 
@@ -136,11 +135,7 @@ export function CollectionFilterPanel({
             >
               Reset
             </Button>
-            <Button
-              disabled={applyDisabled || resultCount === 0}
-              form={formId}
-              type="submit"
-            >
+            <Button disabled={applyDisabled} form={formId} type="submit">
               {applyLabel(resultCount, resultNoun)}
             </Button>
           </SheetFooter>

@@ -38,9 +38,8 @@ test("counts the draft's results on the apply button", async ({ page }) => {
   await sheet(page).getByLabel("From").fill("2026-08-29")
   await expect(apply).toHaveText("Show 2 datasets")
   await sheet(page).getByLabel("From").fill("2026-12-31")
-  await expect(
-    sheet(page).getByRole("button", { name: "No matching datasets" })
-  ).toBeDisabled()
+  await expect(apply).toHaveText("Show 0 datasets")
+  await expect(apply).toBeEnabled()
 })
 
 test("searches facet values by typing and applies one", async ({ page }) => {
