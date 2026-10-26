@@ -11,9 +11,11 @@ import { resourceDisplayName } from "@/lib/resource-name"
 
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import {
-  CollectionFilterPanel,
   collectionActiveFilter,
   collectionActiveFilters,
+  CollectionFilterPanel,
+  FilterForm,
+  FilterSection,
 } from "@/components/crucible/collection-filter-panel"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
@@ -37,7 +39,6 @@ import { ResourceCreationLink } from "@/components/crucible/resource-creation-ac
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -45,14 +46,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Table,
@@ -70,6 +64,7 @@ import { capitalize } from "@/data/crucible/filter-draft"
 import {
   projectPageLimit,
   projectsCursorQueryOptions,
+  projectsQueryOptions,
 } from "@/data/crucible/projects.queries"
 import type { SortDirection } from "@/data/crucible/collection-query"
 import {
@@ -87,6 +82,12 @@ import {
   loadDefaultSort,
   useDefaultSort,
 } from "@/features/preferences/data-group-by"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { searchDebounceMs } from "@/lib/search"
+import {
+  DateRangeFilter,
+  dateRangeLabel,
+} from "@/components/crucible/date-range-filter"
 
 const projectSortFieldSchema = z.enum([
   "name",
@@ -330,6 +331,7 @@ type ProjectFilterValues = Omit<ProjectSearch, "cursor">
 
 function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
   const navigate = Route.useNavigate()
+  const scope = useWorkspaceScope()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<ProjectFilterValues>(values)
   const valuesKey = JSON.stringify({
@@ -344,6 +346,27 @@ function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
     setDraft(JSON.parse(valuesKey) as ProjectFilterValues)
   }, [valuesKey])
 
+  const countKey = useDebouncedValue(
+    JSON.stringify({
+      activeSince: draft.activeSince,
+      affiliation: draft.role ? undefined : draft.affiliation,
+      memberRef: draft.role ? scope[2] : undefined,
+      memberRole: draft.role,
+    }),
+    searchDebounceMs
+  )
+  const count = useQuery({
+    ...projectsQueryOptions(scope, {
+      ...(JSON.parse(countKey) as Pick<
+        Parameters<typeof projectsQueryOptions>[1],
+        "activeSince" | "affiliation" | "memberRef" | "memberRole"
+      >),
+      includeTotal: true,
+      limit: 1,
+    }),
+    enabled: open,
+  })
+
   const active = collectionActiveFilters(
     collectionActiveFilter(
       "role",
@@ -355,9 +378,13 @@ function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
     ),
     collectionActiveFilter(
       "active-since",
-      values.activeSince ? `Active since: ${values.activeSince}` : undefined
+      dateRangeLabel("Active", { from: values.activeSince })
     )
   )
+  const defaults: ProjectFilterValues = {
+    direction: values.direction,
+    sort: values.sort,
+  }
 
   function updateSearch(next: ProjectFilterValues) {
     void navigate({
@@ -381,13 +408,8 @@ function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
   }
 
   function clear() {
-    const empty: ProjectFilterValues = {
-      direction: values.direction,
-      sort: values.sort,
-    }
-    setDraft(empty)
-    setOpen(false)
-    updateSearch(empty)
+    setDraft(defaults)
+    updateSearch(defaults)
   }
 
   function changeOpen(nextOpen: boolean) {
@@ -405,80 +427,63 @@ function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
 
   const draftRoleValue =
     draft.role ?? (draft.affiliation === "owner" ? "owner" : "")
+  const formId = "project-filters"
 
   return (
     <CollectionFilterPanel
       activeFilters={active}
-      footer={
-        <>
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-          <Button form="project-filters" type="submit">
-            Apply filters
-          </Button>
-        </>
-      }
+      formId={formId}
       onClearFilters={clear}
       onOpenChange={changeOpen}
       onRemoveFilter={removeFilter}
+      onReset={() => setDraft(defaults)}
       open={open}
+      resetDisabled={JSON.stringify(draft) === JSON.stringify(defaults)}
+      resultCount={count.data?.total ?? undefined}
+      resultNoun={["project", "projects"]}
       title="Project filters"
     >
-      <form
-        className="flex flex-col gap-4"
-        id="project-filters"
-        onSubmit={apply}
-      >
-        <FieldSet>
-          <FieldLegend className="sr-only">Project filters</FieldLegend>
-          <FieldGroup className="grid gap-4 @fields:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="project-filter-role">Your role</FieldLabel>
-              <NativeSelect
-                className="w-full"
-                id="project-filter-role"
-                onChange={(event) => {
-                  const nextValue = event.target.value
-                  setDraft((current) => ({
-                    ...current,
-                    affiliation: nextValue === "owner" ? "owner" : undefined,
-                    role: projectRoleFilterSchema.safeParse(nextValue).success
-                      ? (nextValue as ProjectRoleFilter)
-                      : undefined,
-                  }))
-                }}
-                value={draftRoleValue}
-              >
-                <NativeSelectOption value="">All projects</NativeSelectOption>
-                <NativeSelectOption value="owner">Led by me</NativeSelectOption>
-                <NativeSelectOption value="admin">Admin</NativeSelectOption>
-                <NativeSelectOption value="editor">Editor</NativeSelectOption>
-                <NativeSelectOption value="contributor">
-                  Contributor
-                </NativeSelectOption>
-                <NativeSelectOption value="viewer">Viewer</NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="project-filter-active-since">
-                Active since
-              </FieldLabel>
-              <Input
-                id="project-filter-active-since"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    activeSince: event.target.value || undefined,
-                  }))
-                }
-                type="date"
-                value={draft.activeSince ?? ""}
-              />
-            </Field>
-          </FieldGroup>
-        </FieldSet>
-      </form>
+      <FilterForm id={formId} onSubmit={apply}>
+        <FilterSection title="Membership">
+          <Field>
+            <FieldLabel htmlFor="project-filter-role">Your role</FieldLabel>
+            <NativeSelect
+              className="w-full"
+              id="project-filter-role"
+              onChange={(event) => {
+                const nextValue = event.target.value
+                setDraft((current) => ({
+                  ...current,
+                  affiliation: nextValue === "owner" ? "owner" : undefined,
+                  role: projectRoleFilterSchema.safeParse(nextValue).success
+                    ? (nextValue as ProjectRoleFilter)
+                    : undefined,
+                }))
+              }}
+              value={draftRoleValue}
+            >
+              <NativeSelectOption value="">Any role</NativeSelectOption>
+              <NativeSelectOption value="owner">Led by me</NativeSelectOption>
+              <NativeSelectOption value="admin">Admin</NativeSelectOption>
+              <NativeSelectOption value="editor">Editor</NativeSelectOption>
+              <NativeSelectOption value="contributor">
+                Contributor
+              </NativeSelectOption>
+              <NativeSelectOption value="viewer">Viewer</NativeSelectOption>
+            </NativeSelect>
+          </Field>
+        </FilterSection>
+        <FilterSection title="Last activity">
+          <DateRangeFilter
+            idPrefix="project-filter-active"
+            mode="since"
+            onChange={({ from }) =>
+              setDraft((current) => ({ ...current, activeSince: from }))
+            }
+            value={{ from: draft.activeSince }}
+          />
+        </FilterSection>
+      </FilterForm>
     </CollectionFilterPanel>
   )
 }

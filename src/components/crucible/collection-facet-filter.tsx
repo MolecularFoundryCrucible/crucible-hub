@@ -1,13 +1,21 @@
+import { useEffect, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 
-import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
+import { ComboboxStatus } from "@/components/crucible/resource-search-combobox"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import { formatUsername } from "@/lib/username"
+import { cn } from "@/lib/utils"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
 import {
   datasetFacetQueryOptions,
   sampleFacetQueryOptions,
@@ -24,56 +32,40 @@ import type {
 
 export type { FacetSelection } from "@/data/crucible/facets"
 
+const facetFilterOrdering = { direction: "desc", sort: "count" } as const
+/** Typing keeps loading values until this many match or none remain. */
+const searchMatchTarget = 20
+
 export function SampleFacetFilter({
   enabled,
   field,
   filters,
-  id,
-  label,
-  onChange,
-  selection,
+  ...props
 }: FacetFilterProps & { field: SampleFacetField }) {
   const scope = useWorkspaceScope()
   const query = useInfiniteQuery({
-    ...sampleFacetQueryOptions(scope, field, filters),
+    ...sampleFacetQueryOptions(scope, field, filters, {
+      ordering: facetFilterOrdering,
+    }),
     enabled,
   })
-  return (
-    <FacetFilter
-      field={field}
-      id={id}
-      label={label}
-      onChange={onChange}
-      query={query}
-      selection={selection}
-    />
-  )
+  return <FacetFilter field={field} query={query} {...props} />
 }
 
 export function DatasetFacetFilter({
   enabled,
   field,
   filters,
-  id,
-  label,
-  onChange,
-  selection,
+  ...props
 }: FacetFilterProps & { field: DatasetFacetField }) {
   const scope = useWorkspaceScope()
   const query = useInfiniteQuery({
-    ...datasetFacetQueryOptions(scope, field, filters),
+    ...datasetFacetQueryOptions(scope, field, filters, {
+      ordering: facetFilterOrdering,
+    }),
     enabled,
   })
-  return (
-    <FacetFilter
-      field={field}
-      id={id}
-      label={label}
-      onChange={onChange}
-      query={query}
-      selection={selection}
-    />
-  )
+  return <FacetFilter field={field} query={query} {...props} />
 }
 
 type FacetFilterProps = {
@@ -82,6 +74,8 @@ type FacetFilterProps = {
   id: string
   label: string
   onChange: (selection: FacetSelection) => void
+  /** Name to show for a selected value that has not loaded yet. */
+  selectedLabel?: string
   selection: FacetSelection
 }
 
@@ -98,97 +92,216 @@ type FacetQuery = {
 
 function FacetFilter({
   field,
-  id,
-  label,
-  onChange,
   query,
+  selectedLabel,
   selection,
+  ...props
 }: Omit<FacetFilterProps, "enabled" | "filters"> & {
   field: DatasetFacetField | SampleFacetField
   query: FacetQuery
 }) {
-  const items = query.data?.pages.flatMap((page) => page.items) ?? []
-  const selectedAvailable = items.some((item) =>
-    selection.kind === "null"
-      ? item.value === null
-      : selection.kind === "value" && item.value === selection.value
+  const options = (query.data?.pages.flatMap((page) => page.items) ?? []).map(
+    (bucket): FilterValueOption => ({
+      count: bucket.count,
+      label: facetBucketLabel(bucket, field),
+      selection:
+        bucket.value === null
+          ? { kind: "null" }
+          : { kind: "value", value: bucket.value },
+    })
   )
+  return (
+    <FilterValuePicker
+      {...props}
+      hasMore={query.hasNextPage}
+      loadMore={() => void query.fetchNextPage()}
+      loadingMore={query.isFetchingNextPage}
+      loadMoreFailed={query.isFetchNextPageError}
+      nullLabel={facetNullLabel(field)}
+      options={options}
+      pending={query.isPending}
+      retry={() => void query.refetch()}
+      failed={query.isError}
+      selectedLabel={selectedLabel}
+      selection={selection}
+    />
+  )
+}
+
+export type FilterValueOption = {
+  count?: number
+  label: string
+  selection: FacetSelection
+}
+
+type PickerItem = FilterValueOption & { key: string }
+
+/**
+ * A searchable single-value filter: typing narrows the loaded values, more
+ * values load inside the popup as it scrolls or while a search finds too few,
+ * and the unspecified value stays first.
+ */
+export function FilterValuePicker({
+  failed = false,
+  hasMore = false,
+  id,
+  label,
+  loadMore,
+  loadMoreFailed = false,
+  loadingMore = false,
+  nullLabel = "Unspecified",
+  onChange,
+  options,
+  pending = false,
+  retry,
+  selectedLabel,
+  selection,
+}: {
+  failed?: boolean
+  hasMore?: boolean
+  id: string
+  label: string
+  loadMore?: () => void
+  loadMoreFailed?: boolean
+  loadingMore?: boolean
+  nullLabel?: string
+  onChange: (selection: FacetSelection) => void
+  options: readonly FilterValueOption[]
+  pending?: boolean
+  retry?: () => void
+  selectedLabel?: string
+  selection: FacetSelection
+}) {
+  const [open, setOpen] = useState(false)
+  const [typed, setTyped] = useState("")
+  const loaded = options.map((option): PickerItem => ({
+    ...option,
+    key: encodeSelection(option.selection),
+  }))
+  const all = [
+    ...loaded.filter((item) => item.selection.kind === "null"),
+    ...loaded.filter((item) => item.selection.kind === "value"),
+  ]
+  const selectedKey =
+    selection.kind === "all" ? undefined : encodeSelection(selection)
+  const selected =
+    selection.kind === "all"
+      ? null
+      : (all.find((item) => item.key === selectedKey) ?? {
+          key: encodeSelection(selection),
+          label:
+            selection.kind === "null"
+              ? nullLabel
+              : (selectedLabel ?? facetValueLabel(selection.value)),
+          selection,
+        })
+  if (selected && !all.some((item) => item.key === selected.key)) {
+    all.unshift(selected)
+  }
+  const search = typed.trim().toLowerCase()
+  const items = search
+    ? all.filter((item) => item.label.toLowerCase().includes(search))
+    : all
+  const canLoadMore = hasMore && !loadingMore && !failed && loadMore
+
+  useEffect(() => {
+    if (open && search && items.length < searchMatchTarget && canLoadMore) {
+      loadMore()
+    }
+  }, [canLoadMore, items.length, loadMore, open, search])
+
+  function loadMoreNearEnd(element: HTMLElement) {
+    const nearEnd =
+      element.scrollHeight - element.scrollTop - element.clientHeight < 48
+    if (nearEnd && canLoadMore) loadMore()
+  }
+
+  const noun = label.toLowerCase()
   return (
     <Field>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <NativeSelect
-        className="w-full"
-        id={id}
-        onChange={(event) => onChange(decodeSelection(event.target.value))}
-        value={encodeSelection(selection)}
+      <Combobox<PickerItem>
+        autoHighlight
+        filter={null}
+        isItemEqualToValue={(item, value) => item.key === value.key}
+        itemToStringLabel={(item) => item.label}
+        items={items}
+        loopFocus
+        onInputValueChange={(next, details) => {
+          if (details.reason === "input-change") setTyped(next)
+        }}
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen)
+          if (!nextOpen) setTyped("")
+        }}
+        onValueChange={(item) => {
+          onChange(item ? item.selection : { kind: "all" })
+          setTyped("")
+        }}
+        open={open}
+        value={selected}
       >
-        <NativeSelectOption value="all">All</NativeSelectOption>
-        {selection.kind !== "all" && !selectedAvailable ? (
-          <NativeSelectOption value={encodeSelection(selection)}>
-            {facetValueLabel(
-              selection.kind === "null" ? null : selection.value
-            )}
-          </NativeSelectOption>
-        ) : null}
-        {items.map((item) => (
-          <NativeSelectOption
-            key={item.value === null ? "null" : `value:${item.value}`}
-            value={encodeSelection(
-              item.value === null
-                ? { kind: "null" }
-                : { kind: "value", value: item.value }
-            )}
-          >
-            {facetBucketLabel(item, field)} ({item.count})
-          </NativeSelectOption>
-        ))}
-        {query.isPending ? (
-          <NativeSelectOption disabled value="loading">
-            Loading values...
-          </NativeSelectOption>
-        ) : null}
-        {query.isError && items.length === 0 ? (
-          <NativeSelectOption disabled value="unavailable">
-            Values unavailable
-          </NativeSelectOption>
-        ) : null}
-      </NativeSelect>
-      {query.isFetchNextPageError ? (
-        <Button
-          className="self-start"
-          onClick={() => void query.fetchNextPage()}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          Retry more values
-        </Button>
-      ) : query.isError ? (
-        <Button
-          className="self-start"
-          onClick={() => void query.refetch()}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          Retry values
-        </Button>
-      ) : query.hasNextPage ? (
-        <Button
-          className="self-start"
-          disabled={query.isFetchingNextPage}
-          onClick={() => void query.fetchNextPage()}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          <DelayedPendingIcon
-            data-icon="inline-start"
-            pending={query.isFetchingNextPage}
-          />
-          Load more values
-        </Button>
-      ) : null}
+        <ComboboxInput
+          autoComplete="off"
+          className="w-full"
+          clearLabel={`Clear ${noun}`}
+          id={id}
+          onClick={() => setOpen(true)}
+          placeholder={`Any ${noun}`}
+          showClear={selected !== null}
+        />
+        <ComboboxContent className="sm:w-max sm:max-w-md">
+          {items.length > 0 ? (
+            <ComboboxList
+              aria-label={`${label} values`}
+              onScroll={(event) => loadMoreNearEnd(event.currentTarget)}
+            >
+              {(item: PickerItem) => (
+                <ComboboxItem key={item.key} value={item}>
+                  <span
+                    className={cn(
+                      "line-clamp-2 min-w-0 flex-1 break-words",
+                      item.selection.kind === "null" && "text-muted-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                  {item.count === undefined ? null : (
+                    <span className="shrink-0 text-supporting text-muted-foreground tabular-nums">
+                      {item.count.toLocaleString()}
+                    </span>
+                  )}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          ) : null}
+          {pending || loadingMore ? (
+            <ComboboxStatus role="status">
+              Loading {noun} values…
+            </ComboboxStatus>
+          ) : failed ? (
+            <ComboboxStatus role="alert">
+              {loadMoreFailed
+                ? `More ${noun} values could not be loaded.`
+                : `${label} values could not be loaded.`}{" "}
+              {retry ? (
+                <Button
+                  onClick={() => (loadMoreFailed ? loadMore?.() : retry())}
+                  size="xs"
+                  type="button"
+                  variant="ghost"
+                >
+                  Retry
+                </Button>
+              ) : null}
+            </ComboboxStatus>
+          ) : items.length === 0 ? (
+            <ComboboxStatus>
+              {search ? `No ${noun} values match.` : `No ${noun} values.`}
+            </ComboboxStatus>
+          ) : null}
+        </ComboboxContent>
+      </Combobox>
     </Field>
   )
 }
@@ -198,16 +311,18 @@ export function facetValueLabel(value: string | null) {
   return value === "" ? "Empty value" : value
 }
 
+export function facetNullLabel(field: DatasetFacetField | SampleFacetField) {
+  if (field === "owner") return "Unknown owner"
+  if (field === "instrument") return "No registered instrument"
+  if (field === "project") return "No primary project"
+  return "Unspecified"
+}
+
 export function facetBucketLabel(
   bucket: WorkspaceFacetBucket,
   field: DatasetFacetField | SampleFacetField
 ) {
-  if (bucket.value === null) {
-    if (field === "owner") return "Unknown owner"
-    if (field === "instrument") return "No registered instrument"
-    if (field === "project") return "No primary project"
-    return "Unspecified"
-  }
+  if (bucket.value === null) return facetNullLabel(field)
   if (bucket.label !== null && bucket.label !== undefined) {
     return bucket.label === "" ? facetValueLabel(bucket.value) : bucket.label
   }
@@ -239,23 +354,4 @@ function encodeSelection(selection: FacetSelection) {
   if (selection.kind === "all") return "all"
   if (selection.kind === "null") return "null"
   return JSON.stringify(["value", selection.value])
-}
-
-function decodeSelection(value: string): FacetSelection {
-  if (value === "all") return { kind: "all" }
-  if (value === "null") return { kind: "null" }
-  try {
-    const decoded: unknown = JSON.parse(value)
-    if (
-      Array.isArray(decoded) &&
-      decoded.length === 2 &&
-      decoded[0] === "value" &&
-      typeof decoded[1] === "string"
-    ) {
-      return { kind: "value", value: decoded[1] }
-    }
-  } catch {
-    return { kind: "all" }
-  }
-  return { kind: "all" }
 }

@@ -11,14 +11,17 @@ import { useNavigate } from "@tanstack/react-router"
 
 import {
   DatasetFacetFilter,
+  facetNullLabel,
   SampleFacetFilter,
 } from "@/components/crucible/collection-facet-filter"
 import {
-  CollectionFilterPanel,
   collectionActiveFilter,
   collectionActiveFilters,
+  CollectionFilterPanel,
+  FilterChoice,
+  FilterForm,
+  FilterSection,
 } from "@/components/crucible/collection-filter-panel"
-import { CollectionCreatedRangeFields } from "@/components/crucible/collection-query-fields"
 import {
   capitalize,
   facetSelection,
@@ -26,16 +29,7 @@ import {
   setFacetDraft,
 } from "@/data/crucible/filter-draft"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import type { ProjectScope } from "@/data/crucible/data.queries"
 import {
   collectionOrderingSearchState,
@@ -46,11 +40,27 @@ import { personQueryOptions } from "@/data/crucible/people.queries"
 import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 
 import type { ProjectDataKind } from "./project-data-collection"
-import { resolveProjectDataFilters } from "./project-data-filter-state"
+import {
+  resolveProjectDataFilters,
+  resolveUsableProjectDataFilters,
+} from "./project-data-filter-state"
 import type {
   ProjectDataFilterError,
   ProjectDataFilterSearch,
+  ProjectDataCollectionFilters,
 } from "./project-data-filter-state"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { searchDebounceMs } from "@/lib/search"
+import type { FacetSelection } from "@/components/crucible/collection-facet-filter"
+import type { FacetValueKey } from "@/data/crucible/filter-draft"
+import {
+  datasetsQueryOptions,
+  samplesQueryOptions,
+} from "@/data/crucible/data.queries"
+import {
+  DateRangeFilter,
+  dateRangeLabel,
+} from "@/components/crucible/date-range-filter"
 
 type ProjectDataFilterDraft = ProjectDataFilterSearch & {
   projectScope: ProjectScope
@@ -63,8 +73,7 @@ type ProjectDataFilterRemoval = Partial<ProjectDataFilterSearch> & {
 const projectDataFilterRemoval: Readonly<
   Partial<Record<string, ProjectDataFilterRemoval>>
 > = {
-  "created-from": { createdFrom: undefined },
-  "created-to": { createdTo: undefined },
+  created: { createdFrom: undefined, createdTo: undefined },
   "data-format": {
     dataFormat: undefined,
     dataFormatIsNull: undefined,
@@ -114,8 +123,26 @@ export function ProjectDataFilters({
   values: ProjectDataFilterSearch
 }) {
   const navigate = useNavigate({ from: "/projects/$projectMfid" })
+  const controlFields: readonly string[] =
+    kind === "samples"
+      ? ["createdFrom", "createdTo", "ownerId", "sampleType", "visibility"]
+      : [
+          "createdFrom",
+          "createdTo",
+          "dataFormat",
+          "instrumentMfid",
+          "measurement",
+          "ownerId",
+          "sessionName",
+          "visibility",
+        ]
+  const editableValues: ProjectDataFilterSearch = { ...values }
+  for (const error of errors) {
+    if (!controlFields.includes(error.field))
+      editableValues[error.field] = undefined
+  }
   const [draft, setDraft] = useState<ProjectDataFilterDraft>({
-    ...values,
+    ...editableValues,
     projectScope,
   })
   const [draftErrors, setDraftErrors] =
@@ -124,17 +151,27 @@ export function ProjectDataFilters({
   const scope = useWorkspaceScope()
   const includePublicByDefault = useIncludePublicByDefault()
   const elevated = privilegeModeFromScope(scope) === "elevated"
-  const resolution = resolveProjectDataFilters(values, kind, defaultOrdering, {
-    elevated,
-    includePublicByDefault,
-  })
+  const access = { elevated, includePublicByDefault }
+  const applied = resolveUsableProjectDataFilters(
+    values,
+    kind,
+    defaultOrdering,
+    access
+  )
+  const draftResolution = resolveProjectDataFilters(
+    draft,
+    kind,
+    defaultOrdering,
+    access
+  )
+  const facetContext = {
+    ...(draftResolution.valid ? draftResolution.filters : applied),
+    projectMfid,
+    projectScope: draft.projectScope,
+  }
   const activeInstrumentMfid =
-    resolution.valid && kind === "datasets"
-      ? resolution.filters.instrumentMfid
-      : undefined
-  const activeOwnerId = resolution.valid
-    ? resolution.filters.ownerId
-    : undefined
+    kind === "datasets" ? applied.instrumentMfid : undefined
+  const activeOwnerId = applied.ownerId
   const publicState = publicDataFilterState({
     elevated,
     includePublicByDefault,
@@ -162,7 +199,7 @@ export function ProjectDataFilters({
     : undefined
   const errorKey = JSON.stringify(errors)
   const hasErrors = errors.length > 0
-  const valuesKey = JSON.stringify(values)
+  const valuesKey = JSON.stringify(editableValues)
 
   useEffect(() => {
     setDraft({
@@ -172,6 +209,35 @@ export function ProjectDataFilters({
     setDraftErrors(errorKey ? JSON.parse(errorKey) : [])
     if (hasErrors) setFiltersOpen(true)
   }, [errorKey, hasErrors, projectScope, valuesKey])
+
+  const countKey = useDebouncedValue(
+    JSON.stringify({
+      ...(draftResolution.valid ? draftResolution.filters : applied),
+      includeTotal: true,
+      limit: 1,
+      projectMfid,
+      projectScope: draft.projectScope,
+    }),
+    searchDebounceMs
+  )
+  const countFilters = JSON.parse(countKey) as ProjectDataCollectionFilters & {
+    includeTotal: true
+    limit: number
+    projectMfid: string
+    projectScope: ProjectScope
+  }
+  const sampleCount = useQuery({
+    ...samplesQueryOptions(scope, countFilters),
+    enabled: filtersOpen && kind === "samples" && draftResolution.valid,
+  })
+  const datasetCount = useQuery({
+    ...datasetsQueryOptions(scope, countFilters),
+    enabled: filtersOpen && kind === "datasets" && draftResolution.valid,
+  })
+  const resultCount = draftResolution.valid
+    ? ((kind === "samples" ? sampleCount.data : datasetCount.data)?.total ??
+      undefined)
+    : undefined
 
   const active = collectionActiveFilters(
     collectionActiveFilter(
@@ -186,80 +252,64 @@ export function ProjectDataFilters({
     ),
     collectionActiveFilter(
       "visibility",
-      values.visibility && values.visibility !== "all"
-        ? `Visibility: ${capitalize(values.visibility)}`
+      applied.visibility
+        ? `Visibility: ${capitalize(applied.visibility)}`
         : undefined
     ),
     collectionActiveFilter(
-      "created-from",
-      values.createdFrom ? `Created from: ${values.createdFrom}` : undefined
-    ),
-    collectionActiveFilter(
-      "created-to",
-      values.createdTo ? `Created to: ${values.createdTo}` : undefined
+      "created",
+      dateRangeLabel("Created", {
+        from: applied.createdFrom,
+        to: applied.createdTo,
+      })
     ),
     collectionActiveFilter(
       "instrument",
-      resolution.valid && resolution.filters.instrumentMfidIsNull
-        ? "Instrument: Unspecified"
+      applied.instrumentMfidIsNull
+        ? `Instrument: ${facetNullLabel("instrument")}`
         : activeInstrumentMfid
           ? `Instrument: ${resolvedInstrument ?? activeInstrumentMfid}`
           : undefined
     ),
     collectionActiveFilter(
       "owner",
-      resolution.valid && resolution.filters.ownerIdIsNull
-        ? "Owner: Unspecified"
+      applied.ownerIdIsNull
+        ? `Owner: ${facetNullLabel("owner")}`
         : activeOwnerId
           ? `Owner: ${resolvedOwner ?? activeOwnerId}`
           : undefined
     ),
     collectionActiveFilter(
       "sample-type",
-      resolution.valid
-        ? facetSummary(
-            "Sample type",
-            resolution.filters.sampleType,
-            resolution.filters.sampleTypeIsNull
-          )
-        : undefined
+      facetSummary("Sample type", applied.sampleType, applied.sampleTypeIsNull)
     ),
     collectionActiveFilter(
       "measurement",
-      resolution.valid
-        ? facetSummary(
-            "Measurement",
-            resolution.filters.measurement,
-            resolution.filters.measurementIsNull
-          )
-        : undefined
+      facetSummary(
+        "Measurement",
+        applied.measurement,
+        applied.measurementIsNull
+      )
     ),
     collectionActiveFilter(
       "session",
-      resolution.valid
-        ? facetSummary(
-            "Session",
-            resolution.filters.sessionName,
-            resolution.filters.sessionNameIsNull
-          )
-        : undefined
+      facetSummary("Session", applied.sessionName, applied.sessionNameIsNull)
     ),
     collectionActiveFilter(
       "data-format",
-      resolution.valid
-        ? facetSummary(
-            "Data format",
-            resolution.filters.dataFormat,
-            resolution.filters.dataFormatIsNull
-          )
-        : undefined
+      facetSummary("Data format", applied.dataFormat, applied.dataFormatIsNull)
     )
   )
-  const invalid = (field: keyof ProjectDataFilterSearch) =>
-    draftErrors.some((error) => error.field === field)
-  const errorDescription = draftErrors.length
-    ? "project-data-filter-errors"
-    : undefined
+  const fieldError = (field: keyof ProjectDataFilterSearch) =>
+    draftErrors.find((error) => error.field === field)?.message
+  const otherErrors = draftErrors.filter(
+    (error) => !controlFields.includes(error.field)
+  )
+  const defaults: ProjectDataFilterDraft = {
+    direction: values.direction,
+    projectScope: "all",
+    sort: values.sort,
+  }
 
   function apply(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -317,13 +367,13 @@ export function ProjectDataFilters({
     })
   }
 
-  function clear() {
-    setDraft({
-      direction: values.direction,
-      projectScope: "all",
-      sort: values.sort,
-    })
+  function reset() {
+    setDraft(defaults)
     setDraftErrors([])
+  }
+
+  function clear() {
+    reset()
     void navigate({
       params: { projectMfid },
       search: (previous) => ({
@@ -359,6 +409,14 @@ export function ProjectDataFilters({
     })
   }
 
+  function changeOpen(nextOpen: boolean) {
+    setFiltersOpen(nextOpen)
+    if (nextOpen && !hasErrors) {
+      setDraft({ ...editableValues, projectScope })
+      setDraftErrors([])
+    }
+  }
+
   function removeFilter(id: string) {
     const changes =
       id === "public"
@@ -379,180 +437,121 @@ export function ProjectDataFilters({
     })
   }
 
+  function setFacet(
+    value: FacetValueKey,
+    set: `${FacetValueKey}Set`,
+    isNull: `${FacetValueKey}IsNull`,
+    selection: FacetSelection
+  ) {
+    setDraft((current) => setFacetDraft(current, value, set, isNull, selection))
+  }
+
+  const facetProps = { enabled: filtersOpen, filters: facetContext }
+  const ownerSelection = facetSelection(
+    draft.ownerId,
+    draft.ownerIdSet,
+    draft.ownerIdIsNull
+  )
+  const ownerLabel = draft.ownerId === activeOwnerId ? resolvedOwner : undefined
+  const formId = "project-data-filters"
+
   return (
     <CollectionFilterPanel
       activeFilters={active}
-      footer={
-        <>
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-          <Button form="project-data-filters" type="submit">
-            Apply filters
-          </Button>
-        </>
-      }
+      formId={formId}
       onClearFilters={clear}
-      onOpenChange={setFiltersOpen}
+      onOpenChange={changeOpen}
       onRemoveFilter={removeFilter}
+      onReset={reset}
       open={filtersOpen}
+      resetDisabled={JSON.stringify(draft) === JSON.stringify(defaults)}
+      resultCount={resultCount}
+      resultNoun={
+        kind === "samples" ? ["sample", "samples"] : ["dataset", "datasets"]
+      }
       title="Project data filters"
     >
-      <form
-        className="flex flex-col gap-4"
-        id="project-data-filters"
-        onSubmit={apply}
-      >
-        <FieldSet>
-          <FieldLegend className="sr-only">Project data filters</FieldLegend>
-          <FieldGroup className="grid gap-4 @fields:grid-cols-2">
-            {draftPublicState.available ? (
-              <Field className="@fields:col-span-2" orientation="horizontal">
-                <Checkbox
-                  checked={draftPublicState.included}
-                  id="project-data-public"
-                  onCheckedChange={(checked) =>
-                    setDraft((current) => ({
-                      ...current,
-                      publicData: publicDataSearchValue(
-                        checked,
-                        includePublicByDefault
-                      ),
-                    }))
-                  }
-                />
-                <FieldLabel htmlFor="project-data-public">
-                  Include public data
-                </FieldLabel>
-              </Field>
-            ) : null}
-            <Field>
-              <FieldLabel htmlFor="project-data-relationship">
-                Relationship to this project
-              </FieldLabel>
-              <NativeSelect
-                className="w-full"
-                id="project-data-relationship"
-                onChange={(event) =>
+      <FilterForm id={formId} onSubmit={apply}>
+        {otherErrors.length ? <FieldError errors={[...otherErrors]} /> : null}
+        <FilterSection title="Scope">
+          {draftPublicState.available ? (
+            <Field orientation="horizontal">
+              <Checkbox
+                checked={draftPublicState.included}
+                id="project-data-public"
+                onCheckedChange={(checked) =>
                   setDraft((current) => ({
                     ...current,
-                    projectScope:
-                      event.target.value === "assigned" ||
-                      event.target.value === "shared"
-                        ? event.target.value
-                        : "all",
+                    publicData: publicDataSearchValue(
+                      checked,
+                      includePublicByDefault
+                    ),
                   }))
                 }
-                value={draft.projectScope}
-              >
-                <NativeSelectOption value="all">All</NativeSelectOption>
-                <NativeSelectOption value="assigned">
-                  Assigned
-                </NativeSelectOption>
-                <NativeSelectOption value="shared">Shared</NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            <Field data-invalid={invalid("visibility")}>
-              <FieldLabel htmlFor="project-data-visibility">
-                Visibility
+              />
+              <FieldLabel htmlFor="project-data-public">
+                Include public data
               </FieldLabel>
-              <NativeSelect
-                aria-describedby={
-                  invalid("visibility") ? errorDescription : undefined
-                }
-                aria-invalid={invalid("visibility") || undefined}
-                className="w-full"
-                id="project-data-visibility"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    visibility: event.target.value,
-                  }))
-                }
-                value={draft.visibility ?? "all"}
-              >
-                <NativeSelectOption value="all">All</NativeSelectOption>
-                <NativeSelectOption value="public">Public</NativeSelectOption>
-                <NativeSelectOption value="private">Private</NativeSelectOption>
-              </NativeSelect>
             </Field>
-            {kind === "samples" && resolution.valid ? (
+          ) : null}
+          <FilterChoice
+            label="Relationship to this project"
+            onChange={(next) =>
+              setDraft((current) => ({ ...current, projectScope: next }))
+            }
+            options={[
+              { label: "All", value: "all" },
+              { label: "Assigned", value: "assigned" },
+              { label: "Shared", value: "shared" },
+            ]}
+            value={draft.projectScope}
+          />
+          <FilterChoice
+            error={fieldError("visibility")}
+            label="Visibility"
+            onChange={(visibility) =>
+              setDraft((current) => ({
+                ...current,
+                visibility: visibility === "all" ? undefined : visibility,
+              }))
+            }
+            options={[
+              { label: "All", value: "all" },
+              { label: "Public", value: "public" },
+              { label: "Private", value: "private" },
+            ]}
+            value={
+              draft.visibility === "public" || draft.visibility === "private"
+                ? draft.visibility
+                : "all"
+            }
+          />
+        </FilterSection>
+        <FilterSection title="Details">
+          {kind === "samples" ? (
+            <>
               <SampleFacetFilter
-                enabled={filtersOpen}
+                {...facetProps}
                 field="owner"
-                filters={{
-                  ...resolution.filters,
-                  projectMfid,
-                  projectScope,
-                }}
                 id="project-data-owner"
                 label="Owner"
                 onChange={(selection) =>
-                  setDraft((current) =>
-                    setFacetDraft(
-                      current,
-                      "ownerId",
-                      "ownerIdSet",
-                      "ownerIdIsNull",
-                      selection
-                    )
-                  )
+                  setFacet("ownerId", "ownerIdSet", "ownerIdIsNull", selection)
                 }
-                selection={facetSelection(
-                  draft.ownerId,
-                  draft.ownerIdSet,
-                  draft.ownerIdIsNull
-                )}
+                selectedLabel={ownerLabel}
+                selection={ownerSelection}
               />
-            ) : kind === "datasets" && resolution.valid ? (
-              <DatasetFacetFilter
-                enabled={filtersOpen}
-                field="owner"
-                filters={{
-                  ...resolution.filters,
-                  projectMfid,
-                  projectScope,
-                }}
-                id="project-data-owner"
-                label="Owner"
-                onChange={(selection) =>
-                  setDraft((current) =>
-                    setFacetDraft(
-                      current,
-                      "ownerId",
-                      "ownerIdSet",
-                      "ownerIdIsNull",
-                      selection
-                    )
-                  )
-                }
-                selection={facetSelection(
-                  draft.ownerId,
-                  draft.ownerIdSet,
-                  draft.ownerIdIsNull
-                )}
-              />
-            ) : null}
-            {kind === "samples" && resolution.valid ? (
               <SampleFacetFilter
-                enabled={filtersOpen}
+                {...facetProps}
                 field="sample_type"
-                filters={{
-                  ...resolution.filters,
-                  projectMfid,
-                  projectScope,
-                }}
                 id="project-data-sample-type"
                 label="Sample type"
                 onChange={(selection) =>
-                  setDraft((current) =>
-                    setFacetDraft(
-                      current,
-                      "sampleType",
-                      "sampleTypeSet",
-                      "sampleTypeIsNull",
-                      selection
-                    )
+                  setFacet(
+                    "sampleType",
+                    "sampleTypeSet",
+                    "sampleTypeIsNull",
+                    selection
                   )
                 }
                 selection={facetSelection(
@@ -561,110 +560,80 @@ export function ProjectDataFilters({
                   draft.sampleTypeIsNull
                 )}
               />
-            ) : null}
-            {kind === "datasets" && resolution.valid ? (
-              <>
-                <DatasetFacetFilter
-                  enabled={filtersOpen}
-                  field="measurement"
-                  filters={{
-                    ...resolution.filters,
-                    projectMfid,
-                    projectScope,
-                  }}
-                  id="project-data-measurement"
-                  label="Measurement"
-                  onChange={(selection) =>
-                    setDraft((current) =>
-                      setFacetDraft(
-                        current,
-                        "measurement",
-                        "measurementSet",
-                        "measurementIsNull",
-                        selection
-                      )
-                    )
-                  }
-                  selection={facetSelection(
-                    draft.measurement,
-                    draft.measurementSet,
-                    draft.measurementIsNull
-                  )}
-                />
-                <DatasetFacetFilter
-                  enabled={filtersOpen}
-                  field="session"
-                  filters={{
-                    ...resolution.filters,
-                    projectMfid,
-                    projectScope,
-                  }}
-                  id="project-data-session"
-                  label="Session"
-                  onChange={(selection) =>
-                    setDraft((current) =>
-                      setFacetDraft(
-                        current,
-                        "sessionName",
-                        "sessionNameSet",
-                        "sessionNameIsNull",
-                        selection
-                      )
-                    )
-                  }
-                  selection={facetSelection(
-                    draft.sessionName,
-                    draft.sessionNameSet,
-                    draft.sessionNameIsNull
-                  )}
-                />
-                <DatasetFacetFilter
-                  enabled={filtersOpen}
-                  field="data_format"
-                  filters={{
-                    ...resolution.filters,
-                    projectMfid,
-                    projectScope,
-                  }}
-                  id="project-data-format"
-                  label="Data format"
-                  onChange={(selection) =>
-                    setDraft((current) =>
-                      setFacetDraft(
-                        current,
-                        "dataFormat",
-                        "dataFormatSet",
-                        "dataFormatIsNull",
-                        selection
-                      )
-                    )
-                  }
-                  selection={facetSelection(
-                    draft.dataFormat,
-                    draft.dataFormatSet,
-                    draft.dataFormatIsNull
-                  )}
-                />
-              </>
-            ) : null}
-            <CollectionCreatedRangeFields
-              describedBy={errorDescription}
-              idPrefix="project-data"
-              invalid={invalid}
-              onChange={(field, value) =>
-                setDraft((current) => ({ ...current, [field]: value }))
-              }
-              value={draft}
-            />
-            {kind === "datasets" && resolution.valid ? (
+            </>
+          ) : (
+            <>
               <DatasetFacetFilter
-                enabled={filtersOpen}
+                {...facetProps}
+                field="owner"
+                id="project-data-owner"
+                label="Owner"
+                onChange={(selection) =>
+                  setFacet("ownerId", "ownerIdSet", "ownerIdIsNull", selection)
+                }
+                selectedLabel={ownerLabel}
+                selection={ownerSelection}
+              />
+              <DatasetFacetFilter
+                {...facetProps}
+                field="measurement"
+                id="project-data-measurement"
+                label="Measurement"
+                onChange={(selection) =>
+                  setFacet(
+                    "measurement",
+                    "measurementSet",
+                    "measurementIsNull",
+                    selection
+                  )
+                }
+                selection={facetSelection(
+                  draft.measurement,
+                  draft.measurementSet,
+                  draft.measurementIsNull
+                )}
+              />
+              <DatasetFacetFilter
+                {...facetProps}
+                field="session"
+                id="project-data-session"
+                label="Session"
+                onChange={(selection) =>
+                  setFacet(
+                    "sessionName",
+                    "sessionNameSet",
+                    "sessionNameIsNull",
+                    selection
+                  )
+                }
+                selection={facetSelection(
+                  draft.sessionName,
+                  draft.sessionNameSet,
+                  draft.sessionNameIsNull
+                )}
+              />
+              <DatasetFacetFilter
+                {...facetProps}
+                field="data_format"
+                id="project-data-format"
+                label="Data format"
+                onChange={(selection) =>
+                  setFacet(
+                    "dataFormat",
+                    "dataFormatSet",
+                    "dataFormatIsNull",
+                    selection
+                  )
+                }
+                selection={facetSelection(
+                  draft.dataFormat,
+                  draft.dataFormatSet,
+                  draft.dataFormatIsNull
+                )}
+              />
+              <DatasetFacetFilter
+                {...facetProps}
                 field="instrument"
-                filters={{
-                  ...resolution.filters,
-                  projectMfid,
-                  projectScope,
-                }}
                 id="project-data-instrument"
                 label="Acquisition instrument"
                 onChange={(selection) =>
@@ -676,6 +645,11 @@ export function ProjectDataFilters({
                       selection.kind === "null" || undefined,
                   }))
                 }
+                selectedLabel={
+                  draft.instrumentMfid === activeInstrumentMfid
+                    ? resolvedInstrument
+                    : undefined
+                }
                 selection={
                   draft.instrumentMfidIsNull
                     ? { kind: "null" }
@@ -684,16 +658,27 @@ export function ProjectDataFilters({
                       : { kind: "all" }
                 }
               />
-            ) : null}
-          </FieldGroup>
-        </FieldSet>
-        {draftErrors.length ? (
-          <FieldError
-            id="project-data-filter-errors"
-            errors={[...draftErrors]}
+            </>
+          )}
+        </FilterSection>
+        <FilterSection title="Created">
+          <DateRangeFilter
+            errors={{
+              from: fieldError("createdFrom"),
+              to: fieldError("createdTo"),
+            }}
+            idPrefix="project-data-created"
+            onChange={({ from, to }) =>
+              setDraft((current) => ({
+                ...current,
+                createdFrom: from,
+                createdTo: to,
+              }))
+            }
+            value={{ from: draft.createdFrom, to: draft.createdTo }}
           />
-        ) : null}
-      </form>
+        </FilterSection>
+      </FilterForm>
     </CollectionFilterPanel>
   )
 }

@@ -2,21 +2,16 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
 import {
-  CollectionFilterPanel,
   collectionActiveFilter,
   collectionActiveFilters,
+  CollectionFilterPanel,
+  FilterChoice,
+  FilterForm,
+  FilterSection,
 } from "@/components/crucible/collection-filter-panel"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Field, FieldLabel } from "@/components/ui/field"
 import {
   publicDataFilterState,
   publicDataSearchValue,
@@ -135,12 +130,20 @@ export function SearchFilters({
   }
 
   function clear() {
-    setOpen(false)
+    setDraft({})
     update({
       affiliation: undefined,
       projectMfid: undefined,
       publicData: undefined,
     })
+  }
+
+  function changeOpen(nextOpen: boolean) {
+    setOpen(nextOpen)
+    if (nextOpen) {
+      setDraft(values)
+      setDraftProjectName(undefined)
+    }
   }
 
   function removeFilter(id: string) {
@@ -158,93 +161,76 @@ export function SearchFilters({
   return (
     <CollectionFilterPanel
       activeFilters={active}
-      footer={
-        <>
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-          <Button form="search-filters" type="submit">
-            Apply filters
-          </Button>
-        </>
-      }
+      formId="search-filters"
       onClearFilters={clear}
-      onOpenChange={setOpen}
+      onOpenChange={changeOpen}
       onRemoveFilter={removeFilter}
+      onReset={() => {
+        setDraft({})
+        setDraftProjectName(undefined)
+      }}
       open={open}
+      resetDisabled={JSON.stringify(draft) === "{}"}
+      resultNoun={["result", "results"]}
       title="Search filters"
     >
-      <form
-        className="flex flex-col gap-4"
-        id="search-filters"
-        onSubmit={apply}
-      >
-        <FieldSet>
-          <FieldLegend className="sr-only">Search filters</FieldLegend>
-          <FieldGroup className="grid gap-4 @fields:grid-cols-2">
-            {availability.publicData && draftPublicState.available ? (
-              <Field className="@fields:col-span-2" orientation="horizontal">
-                <Checkbox
-                  checked={draftPublicState.included}
-                  disabled={!draftPublicState.enabled}
-                  id="search-public"
-                  onCheckedChange={(checked) =>
-                    setDraft((current) => ({
-                      ...current,
-                      publicData: publicDataSearchValue(
-                        checked,
-                        access.includePublicByDefault
-                      ),
-                    }))
-                  }
-                />
-                <FieldLabel htmlFor="search-public">
-                  Include public data
-                </FieldLabel>
-              </Field>
-            ) : null}
-            {availability.project ? (
-              <Field>
-                <FieldLabel htmlFor="search-project-trigger">
-                  Project
-                </FieldLabel>
-                <ResourceChooser
-                  kind="project"
-                  onChange={(project) => {
-                    setDraft((current) => ({
-                      ...current,
-                      projectMfid: project?.unique_id,
-                    }))
-                    setDraftProjectName(project?.name)
-                  }}
-                  triggerId="search-project-trigger"
-                  value={selectedProject}
-                />
-              </Field>
-            ) : null}
-            <Field>
-              <FieldLabel htmlFor="search-affiliation">Ownership</FieldLabel>
-              <NativeSelect
-                className="w-full"
-                id="search-affiliation"
-                onChange={(event) =>
+      <FilterForm id="search-filters" onSubmit={apply}>
+        <FilterSection title="Scope">
+          {availability.publicData && draftPublicState.available ? (
+            <Field orientation="horizontal">
+              <Checkbox
+                checked={draftPublicState.included}
+                disabled={!draftPublicState.enabled}
+                id="search-public"
+                onCheckedChange={(checked) =>
                   setDraft((current) => ({
                     ...current,
-                    affiliation:
-                      event.target.value === "owner" ? "owner" : undefined,
+                    publicData: publicDataSearchValue(
+                      checked,
+                      access.includePublicByDefault
+                    ),
                   }))
                 }
-                value={draft.affiliation ?? ""}
-              >
-                <NativeSelectOption value="">All accessible</NativeSelectOption>
-                <NativeSelectOption value="owner">
-                  Owned by me
-                </NativeSelectOption>
-              </NativeSelect>
+              />
+              <FieldLabel htmlFor="search-public">
+                Include public data
+              </FieldLabel>
             </Field>
-          </FieldGroup>
-        </FieldSet>
-      </form>
+          ) : null}
+          <FilterChoice
+            label="Ownership"
+            onChange={(affiliation) =>
+              setDraft((current) => ({
+                ...current,
+                affiliation: affiliation === "owner" ? "owner" : undefined,
+              }))
+            }
+            options={[
+              { label: "All accessible", value: "all" },
+              { label: "Owned by me", value: "owner" },
+            ]}
+            value={draft.affiliation ?? "all"}
+          />
+          {availability.project ? (
+            <Field>
+              <FieldLabel htmlFor="search-project-trigger">Project</FieldLabel>
+              <ResourceChooser
+                emptyLabel="Any project"
+                kind="project"
+                onChange={(project) => {
+                  setDraft((current) => ({
+                    ...current,
+                    projectMfid: project?.unique_id,
+                  }))
+                  setDraftProjectName(project?.name)
+                }}
+                triggerId="search-project-trigger"
+                value={selectedProject}
+              />
+            </Field>
+          ) : null}
+        </FilterSection>
+      </FilterForm>
     </CollectionFilterPanel>
   )
 }

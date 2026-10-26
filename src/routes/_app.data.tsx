@@ -2,7 +2,6 @@ import { privilegeModeFromScope } from "@/data/crucible/query-keys"
 import {
   publicDataFilterState,
   publicDataSearchValue,
-  resolveCollectionAffiliation,
 } from "@/data/crucible/public-data"
 import type { PublicDataAccess } from "@/data/crucible/public-data"
 import {
@@ -62,11 +61,13 @@ import {
 } from "@/components/ui/empty"
 import { DataFilters } from "@/features/data/data-filters"
 import {
+  collectionQueryFilters,
   dataSearchSchema,
   resolveDataFilters,
   switchDataKind,
 } from "@/features/data/data-filter-state"
 import type {
+  DataCollectionQueryFilters,
   DataFilterValues,
   DataKindFilter,
   DataSearch,
@@ -76,7 +77,6 @@ import {
   datasetsCursorQueryOptions,
   samplesCursorQueryOptions,
 } from "@/data/crucible/data.queries"
-import type { CollectionFilters } from "@/data/crucible/collection-filters"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import {
   collectionBrowseSearchState,
@@ -92,7 +92,6 @@ import {
 import type { CollectionGroupOrder } from "@/data/crucible/collection-browse"
 import type {
   CollectionOrdering,
-  CollectionQueryOptions,
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
@@ -100,13 +99,10 @@ import {
   collectionOrderingSearchState,
   defaultCollectionOrdering,
 } from "@/data/crucible/collection-query"
-import type { ProjectScope } from "@/data/crucible/data.queries"
 import type {
-  DatasetFacetFilters,
   FacetSelection,
   DatasetFacetField,
   SampleFacetField,
-  SampleFacetFilters,
 } from "@/data/crucible/facets"
 import {
   datasetFacetQueryOptions,
@@ -973,27 +969,6 @@ function dataKind(kind: string | undefined): DataKindFilter {
   return kind === "datasets" ? "datasets" : "samples"
 }
 
-type DataCollectionQueryFilters = CollectionFilters &
-  CollectionQueryOptions &
-  DatasetFacetFilters &
-  SampleFacetFilters & { instrumentMfid?: string } & (
-    | {
-        projectMfid?: undefined
-        projectMfidIsNull?: undefined
-        projectScope?: undefined
-      }
-    | {
-        projectMfid: string
-        projectMfidIsNull?: undefined
-        projectScope: ProjectScope
-      }
-    | {
-        projectMfid?: undefined
-        projectMfidIsNull: true
-        projectScope?: undefined
-      }
-  )
-
 function usePublicDataAccess(): PublicDataAccess {
   const scope = useWorkspaceScope()
   const includePublicByDefault = useIncludePublicByDefault(
@@ -1003,55 +978,4 @@ function usePublicDataAccess(): PublicDataAccess {
     elevated: privilegeModeFromScope(scope) === "elevated",
     includePublicByDefault,
   }
-}
-
-function collectionQueryFilters(
-  filters: DataFilterValues,
-  access: PublicDataAccess
-): DataCollectionQueryFilters {
-  const collectionFilters: CollectionFilters = {
-    createdFrom: filters.createdFrom,
-    createdTo: filters.createdTo,
-    visibility: filters.visibility,
-  }
-  const collectionQuery: CollectionQueryOptions = {
-    affiliation: resolveCollectionAffiliation({
-      ...access,
-      ownership: filters.affiliation,
-      publicData: filters.publicData,
-    }),
-    direction: filters.direction,
-    sort: filters.sort,
-  }
-  const facetFilters: DatasetFacetFilters & SampleFacetFilters = {
-    dataFormat: filters.dataFormat,
-    dataFormatIsNull: filters.dataFormatIsNull,
-    instrumentMfidIsNull: filters.instrumentMfidIsNull,
-    measurement: filters.measurement,
-    measurementIsNull: filters.measurementIsNull,
-    ownerId: filters.ownerId,
-    ownerIdIsNull: filters.ownerIdIsNull,
-    sampleType: filters.sampleType,
-    sampleTypeIsNull: filters.sampleTypeIsNull,
-    sessionName: filters.sessionName,
-    sessionNameIsNull: filters.sessionNameIsNull,
-  }
-  const instrumentFilter = filters.instrumentMfid
-    ? { instrumentMfid: filters.instrumentMfid }
-    : {}
-  return filters.projectMfid
-    ? {
-        ...collectionFilters,
-        ...collectionQuery,
-        ...facetFilters,
-        ...instrumentFilter,
-        projectMfid: filters.projectMfid,
-        projectScope: filters.projectScope,
-      }
-    : {
-        ...collectionFilters,
-        ...collectionQuery,
-        ...facetFilters,
-        ...instrumentFilter,
-      }
 }

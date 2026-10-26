@@ -112,8 +112,13 @@ describe("global data filter state", () => {
     })
   })
 
+  it("ignores a project relationship without a project", () => {
+    const resolution = resolveDataFilters({ projectScope: "shared" })
+    expect(resolution.valid).toBe(true)
+    expect(resolution).toEqual(resolveDataFilters({}))
+  })
+
   it.each([
-    [{ projectScope: "shared" }, "projectScope"],
     [{ instrumentMfid: "instrument-1", kind: "samples" }, "instrumentMfid"],
     [{ instrumentMfid: "instrument-1" }, "instrumentMfid"],
     [{ projectMfid: "" }, "projectMfid"],

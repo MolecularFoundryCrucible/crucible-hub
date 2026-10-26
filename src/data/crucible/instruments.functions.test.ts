@@ -198,6 +198,15 @@ describe("instrument list server function input", () => {
     })
   })
 
+  it("accepts up to the API's 1,000 instruments for filter suggestions", () => {
+    expect(instrumentListInputSchema.safeParse({ limit: 1000 }).success).toBe(
+      true
+    )
+    expect(instrumentListInputSchema.safeParse({ limit: 1001 }).success).toBe(
+      false
+    )
+  })
+
   it("rejects invalid instrument sort or empty filter strings", () => {
     expect(
       instrumentListInputSchema.safeParse({ limit: 20, sort: "invalid" })

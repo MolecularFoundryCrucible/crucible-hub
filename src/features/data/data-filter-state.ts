@@ -25,6 +25,7 @@ import {
 import type {
   OwnershipAffiliation,
   CollectionOrdering,
+  CollectionQueryOptions,
   NormalizedCollectionQueryOptions,
 } from "@/data/crucible/collection-query"
 import {
@@ -156,13 +157,6 @@ const domainFiltersSchema = z
         context,
         "ownerId",
         "Choose either an owner or the unspecified bucket."
-      )
-    }
-    if (filters.projectScope && !filters.projectMfid) {
-      addIssue(
-        context,
-        "projectScope",
-        "Choose a project before selecting its relationship."
       )
     }
     if (
@@ -505,4 +499,98 @@ export function dataFacetContext(
       publicData: filters.publicData,
     }),
   }
+}
+
+export type DataCollectionQueryFilters = CollectionFilters &
+  CollectionQueryOptions &
+  DatasetFacetFilters &
+  SampleFacetFilters & { instrumentMfid?: string } & (
+    | {
+        projectMfid?: undefined
+        projectMfidIsNull?: undefined
+        projectScope?: undefined
+      }
+    | {
+        projectMfid: string
+        projectMfidIsNull?: undefined
+        projectScope: ProjectScope
+      }
+    | {
+        projectMfid?: undefined
+        projectMfidIsNull: true
+        projectScope?: undefined
+      }
+  )
+
+/** The list and count query filters for resolved Data filters. */
+export function collectionQueryFilters(
+  filters: DataFilterValues,
+  access: PublicDataAccess
+): DataCollectionQueryFilters {
+  const collectionFilters: CollectionFilters = {
+    createdFrom: filters.createdFrom,
+    createdTo: filters.createdTo,
+    visibility: filters.visibility,
+  }
+  const collectionQuery: CollectionQueryOptions = {
+    affiliation: resolveCollectionAffiliation({
+      ...access,
+      ownership: filters.affiliation,
+      publicData: filters.publicData,
+    }),
+    direction: filters.direction,
+    sort: filters.sort,
+  }
+  const facetFilters: DatasetFacetFilters & SampleFacetFilters = {
+    dataFormat: filters.dataFormat,
+    dataFormatIsNull: filters.dataFormatIsNull,
+    instrumentMfidIsNull: filters.instrumentMfidIsNull,
+    measurement: filters.measurement,
+    measurementIsNull: filters.measurementIsNull,
+    ownerId: filters.ownerId,
+    ownerIdIsNull: filters.ownerIdIsNull,
+    sampleType: filters.sampleType,
+    sampleTypeIsNull: filters.sampleTypeIsNull,
+    sessionName: filters.sessionName,
+    sessionNameIsNull: filters.sessionNameIsNull,
+  }
+  const instrumentFilter = filters.instrumentMfid
+    ? { instrumentMfid: filters.instrumentMfid }
+    : {}
+  return filters.projectMfid
+    ? {
+        ...collectionFilters,
+        ...collectionQuery,
+        ...facetFilters,
+        ...instrumentFilter,
+        projectMfid: filters.projectMfid,
+        projectScope: filters.projectScope,
+      }
+    : {
+        ...collectionFilters,
+        ...collectionQuery,
+        ...facetFilters,
+        ...instrumentFilter,
+      }
+}
+
+/**
+ * Filters to show for a link that may be invalid: the valid filters as they
+ * are, or the link without its invalid fields, with the errors that removed
+ * them.
+ */
+export function resolveUsableDataFilters(
+  search: DataSearch,
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering
+): { errors: readonly DataFilterError[]; filters: DataFilterValues } {
+  const resolution = resolveDataFilters(search, defaultOrdering)
+  if (resolution.valid) return { errors: [], filters: resolution.filters }
+  const cleaned: DataSearch = { ...search }
+  for (const error of resolution.errors) cleaned[error.field] = undefined
+  for (const candidate of [cleaned, { kind: search.kind }, {}]) {
+    const retry = resolveDataFilters(candidate, defaultOrdering)
+    if (retry.valid)
+      return { errors: resolution.errors, filters: retry.filters }
+  }
+  throw new Error("The default data filters are not valid.")
 }

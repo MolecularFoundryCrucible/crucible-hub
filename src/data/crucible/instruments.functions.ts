@@ -56,7 +56,7 @@ export const instrumentListInputSchema = z.object({
     .min(1)
     .max(INSTRUMENT_TYPE_MAX_LENGTH)
     .optional(),
-  limit: z.number().int().min(1).max(100),
+  limit: z.number().int().min(1).max(1000),
   location: z
     .string()
     .trim()

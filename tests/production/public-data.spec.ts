@@ -15,7 +15,9 @@ test("hides public data from others until it is included", async ({ page }) => {
 
   await page.getByRole("button", { name: /^Filters/ }).click()
   await page.getByRole("checkbox", { name: "Include public data" }).click()
-  await page.getByRole("button", { name: "Apply filters" }).click()
+  await page
+    .getByRole("button", { name: /^(Apply filters|Show \d+ \w+)$/ })
+    .click()
 
   await expect(
     page.getByRole("main").getByText(publicOnlyDataset)
@@ -48,7 +50,9 @@ test("includes public data from the search filters without a stray prompt", asyn
 
   await page.getByRole("button", { name: /^Filters/ }).click()
   await page.getByRole("checkbox", { name: "Include public data" }).click()
-  await page.getByRole("button", { name: "Apply filters" }).click()
+  await page
+    .getByRole("button", { name: /^(Apply filters|Show \d+ \w+)$/ })
+    .click()
 
   await expect(page).toHaveURL(/publicData=include/)
   await expect(
@@ -74,11 +78,16 @@ test("limits search to resources the viewer owns", async ({ page }) => {
   const main = page.getByRole("main")
 
   await page.getByRole("button", { name: /^Filters/ }).click()
-  await page.locator("#search-affiliation").selectOption("owner")
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Owned by me" })
+    .click()
   await expect(
     page.getByRole("checkbox", { name: "Include public data" })
   ).toBeDisabled()
-  await page.getByRole("button", { name: "Apply filters" }).click()
+  await page
+    .getByRole("button", { name: /^(Apply filters|Show \d+ \w+)$/ })
+    .click()
 
   await expect(page).toHaveURL(/affiliation=owner/)
   await expect(

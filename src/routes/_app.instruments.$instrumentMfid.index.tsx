@@ -9,7 +9,7 @@ import {
 import type { PublicDataChoice } from "@/data/crucible/public-data"
 import { useIncludePublicByDefault } from "@/features/preferences/public-data"
 import { useMemo, useState } from "react"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, getRouteApi } from "@tanstack/react-router"
 import { z } from "zod"
 
@@ -19,11 +19,12 @@ import {
   DatasetCollectionBrowser,
 } from "@/components/crucible/collection-browser"
 import {
-  CollectionFilterPanel,
   collectionActiveFilter,
   collectionActiveFilters,
+  CollectionFilterPanel,
+  FilterForm,
+  FilterSection,
 } from "@/components/crucible/collection-filter-panel"
-import { CollectionCreatedRangeFields } from "@/components/crucible/collection-query-fields"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -47,13 +48,8 @@ import {
   useRegisterResourceSiblings,
 } from "@/components/crucible/resource-sibling-navigation"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
-import { Button, buttonVariants } from "@/components/ui/button"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { buttonVariants } from "@/components/ui/button"
+import { Field, FieldLabel } from "@/components/ui/field"
 import {
   collectionBrowseSearchFields,
   collectionBrowseSearchState,
@@ -79,12 +75,19 @@ import type {
 import {
   dataPageLimit,
   datasetsCursorQueryOptions,
+  datasetsQueryOptions,
 } from "@/data/crucible/data.queries"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import {
   useDataGroupBy,
   useDefaultSort,
 } from "@/features/preferences/data-group-by"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { searchDebounceMs } from "@/lib/search"
+import {
+  DateRangeFilter,
+  dateRangeLabel,
+} from "@/components/crucible/date-range-filter"
 
 const instrumentDatasetSearchSchema = resourcePreviewSearchSchema.extend({
   ...collectionBrowseSearchFields,
@@ -485,9 +488,10 @@ function InstrumentDatasetFilters({
   onApply: (values: InstrumentDatasetFilterValues) => void
   values: InstrumentDatasetFilterValues
 }) {
+  const { instrumentMfid } = Route.useParams()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(values)
-  const [rangeInvalid, setRangeInvalid] = useState(false)
+  const [rangeError, setRangeError] = useState<string>()
   const scope = useWorkspaceScope()
   const includePublicByDefault = useIncludePublicByDefault()
   const elevated = privilegeModeFromScope(scope) === "elevated"
@@ -501,6 +505,34 @@ function InstrumentDatasetFilters({
     includePublicByDefault,
     publicData: draft.publicData,
   })
+  const rangeValid =
+    !draft.createdFrom ||
+    !draft.createdTo ||
+    draft.createdFrom <= draft.createdTo
+  const countKey = useDebouncedValue(
+    JSON.stringify({
+      affiliation: resolveCollectionAffiliation({
+        elevated,
+        includePublicByDefault,
+        publicData: draft.publicData,
+      }),
+      createdFrom: draft.createdFrom,
+      createdTo: draft.createdTo,
+    }),
+    searchDebounceMs
+  )
+  const count = useQuery({
+    ...datasetsQueryOptions(scope, {
+      ...(JSON.parse(countKey) as Pick<
+        Parameters<typeof datasetsQueryOptions>[1],
+        "affiliation" | "createdFrom" | "createdTo"
+      >),
+      includeTotal: true,
+      instrumentMfid,
+      limit: 1,
+    }),
+    enabled: open && rangeValid,
+  })
 
   const active = collectionActiveFilters(
     collectionActiveFilter(
@@ -508,34 +540,36 @@ function InstrumentDatasetFilters({
       publicState.included ? "Public" : undefined
     ),
     collectionActiveFilter(
-      "created-from",
-      values.createdFrom ? `Created from: ${values.createdFrom}` : undefined
-    ),
-    collectionActiveFilter(
-      "created-to",
-      values.createdTo ? `Created to: ${values.createdTo}` : undefined
+      "created",
+      dateRangeLabel("Created", {
+        from: values.createdFrom,
+        to: values.createdTo,
+      })
     )
   )
+  const defaults: InstrumentDatasetFilterValues = {
+    direction: values.direction,
+    sort: values.sort,
+  }
 
   function apply(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (
-      draft.createdFrom &&
-      draft.createdTo &&
-      draft.createdFrom > draft.createdTo
-    ) {
-      setRangeInvalid(true)
+    if (!rangeValid) {
+      setRangeError("The end date must not be before the start date.")
       return
     }
-    setRangeInvalid(false)
+    setRangeError(undefined)
     setOpen(false)
     onApply(draft)
   }
 
+  function reset() {
+    setDraft(defaults)
+    setRangeError(undefined)
+  }
+
   function clear() {
-    setDraft({ direction: values.direction, sort: values.sort })
-    setRangeInvalid(false)
-    setOpen(false)
+    reset()
     onApply({
       createdFrom: undefined,
       createdTo: undefined,
@@ -548,7 +582,7 @@ function InstrumentDatasetFilters({
   function changeOpen(nextOpen: boolean) {
     setOpen(nextOpen)
     if (nextOpen) setDraft(values)
-    setRangeInvalid(false)
+    setRangeError(undefined)
   }
 
   function removeFilter(id: string) {
@@ -557,36 +591,31 @@ function InstrumentDatasetFilters({
         ...values,
         publicData: publicDataSearchValue(false, includePublicByDefault),
       })
-    } else if (id === "created-from") {
-      onApply({ ...values, createdFrom: undefined })
-    } else if (id === "created-to") {
-      onApply({ ...values, createdTo: undefined })
+    } else if (id === "created") {
+      onApply({ ...values, createdFrom: undefined, createdTo: undefined })
     }
   }
+
+  const formId = "instrument-dataset-filters"
 
   return (
     <CollectionFilterPanel
       activeFilters={active}
-      footer={
-        <>
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-          <Button form="instrument-dataset-filters" type="submit">
-            Apply filters
-          </Button>
-        </>
-      }
+      formId={formId}
       onClearFilters={clear}
       onOpenChange={changeOpen}
       onRemoveFilter={removeFilter}
+      onReset={reset}
       open={open}
+      resetDisabled={JSON.stringify(draft) === JSON.stringify(defaults)}
+      resultCount={rangeValid ? (count.data?.total ?? undefined) : undefined}
+      resultNoun={["dataset", "datasets"]}
       title="Dataset filters"
     >
-      <form id="instrument-dataset-filters" onSubmit={apply}>
-        <FieldGroup className="grid gap-4 @fields:grid-cols-2">
-          {draftPublicState.available ? (
-            <Field className="@fields:col-span-2" orientation="horizontal">
+      <FilterForm id={formId} onSubmit={apply}>
+        {draftPublicState.available ? (
+          <FilterSection title="Scope">
+            <Field orientation="horizontal">
               <Checkbox
                 checked={draftPublicState.included}
                 id="instrument-dataset-public"
@@ -604,28 +633,24 @@ function InstrumentDatasetFilters({
                 Include public data
               </FieldLabel>
             </Field>
-          ) : null}
-          <CollectionCreatedRangeFields
-            describedBy={
-              rangeInvalid ? "instrument-dataset-filter-error" : undefined
-            }
-            idPrefix="instrument-dataset"
-            invalid={(field) => rangeInvalid && field === "createdTo"}
-            onChange={(field, value) =>
-              setDraft((current) => ({ ...current, [field]: value }))
-            }
-            value={draft}
-          />
-        </FieldGroup>
-        {rangeInvalid ? (
-          <FieldError
-            errors={[
-              { message: "The start date must not be after the end date." },
-            ]}
-            id="instrument-dataset-filter-error"
-          />
+          </FilterSection>
         ) : null}
-      </form>
+        <FilterSection title="Created">
+          <DateRangeFilter
+            errors={{ to: rangeError }}
+            idPrefix="instrument-dataset-created"
+            onChange={({ from, to }) => {
+              setRangeError(undefined)
+              setDraft((current) => ({
+                ...current,
+                createdFrom: from,
+                createdTo: to,
+              }))
+            }}
+            value={{ from: draft.createdFrom, to: draft.createdTo }}
+          />
+        </FilterSection>
+      </FilterForm>
     </CollectionFilterPanel>
   )
 }

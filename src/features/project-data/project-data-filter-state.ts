@@ -248,3 +248,34 @@ export function resolveProjectDataFilters(
     valid: true,
   }
 }
+
+/**
+ * Filters to show for a link that may be invalid: the valid filters as they
+ * are, or the link without its invalid fields.
+ */
+export function resolveUsableProjectDataFilters(
+  search: ProjectDataFilterSearch,
+  kind: "datasets" | "samples",
+  defaultOrdering: CollectionOrdering = defaultCollectionOrdering,
+  access?: PublicDataAccess
+): ProjectDataCollectionFilters {
+  const resolution = resolveProjectDataFilters(
+    search,
+    kind,
+    defaultOrdering,
+    access
+  )
+  if (resolution.valid) return resolution.filters
+  const cleaned: ProjectDataFilterSearch = { ...search }
+  for (const error of resolution.errors) cleaned[error.field] = undefined
+  for (const candidate of [cleaned, {}]) {
+    const retry = resolveProjectDataFilters(
+      candidate,
+      kind,
+      defaultOrdering,
+      access
+    )
+    if (retry.valid) return retry.filters
+  }
+  throw new Error("The default project data filters are not valid.")
+}

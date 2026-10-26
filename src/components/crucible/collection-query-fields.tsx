@@ -1,5 +1,4 @@
 import { Field, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { defaultCollectionOrdering } from "@/data/crucible/collection-query"
 import type {
@@ -8,58 +7,6 @@ import type {
   SortDirection,
 } from "@/data/crucible/collection-query"
 import { defaultOrderLabel } from "@/data/crucible/filter-draft"
-
-type CreatedRange = {
-  createdFrom?: string
-  createdTo?: string
-}
-
-export function CollectionCreatedRangeFields({
-  describedBy,
-  idPrefix,
-  invalid = () => false,
-  onChange,
-  value,
-}: {
-  describedBy?: string
-  idPrefix: string
-  invalid?: (field: keyof CreatedRange) => boolean
-  onChange: (field: keyof CreatedRange, value: string | undefined) => void
-  value: CreatedRange
-}) {
-  return (
-    <>
-      <Field data-invalid={invalid("createdFrom")}>
-        <FieldLabel htmlFor={`${idPrefix}-created-from`}>
-          Created from
-        </FieldLabel>
-        <Input
-          aria-describedby={invalid("createdFrom") ? describedBy : undefined}
-          aria-invalid={invalid("createdFrom") || undefined}
-          id={`${idPrefix}-created-from`}
-          onChange={(event) =>
-            onChange("createdFrom", event.target.value || undefined)
-          }
-          type="date"
-          value={value.createdFrom ?? ""}
-        />
-      </Field>
-      <Field data-invalid={invalid("createdTo")}>
-        <FieldLabel htmlFor={`${idPrefix}-created-to`}>Created to</FieldLabel>
-        <Input
-          aria-describedby={invalid("createdTo") ? describedBy : undefined}
-          aria-invalid={invalid("createdTo") || undefined}
-          id={`${idPrefix}-created-to`}
-          onChange={(event) =>
-            onChange("createdTo", event.target.value || undefined)
-          }
-          type="date"
-          value={value.createdTo ?? ""}
-        />
-      </Field>
-    </>
-  )
-}
 
 type CollectionOrder = {
   direction?: SortDirection

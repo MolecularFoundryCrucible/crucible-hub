@@ -12,9 +12,12 @@ import { statusLabel } from "@/lib/status"
 
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import {
-  CollectionFilterPanel,
   collectionActiveFilter,
   collectionActiveFilters,
+  CollectionFilterPanel,
+  FilterChoice,
+  FilterForm,
+  FilterSection,
 } from "@/components/crucible/collection-filter-panel"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import {
@@ -38,7 +41,6 @@ import { ResourceCreationLink } from "@/components/crucible/resource-creation-ac
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -46,14 +48,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Table,
@@ -69,6 +64,7 @@ import type { TableSortField } from "@/components/crucible/table-sort-control"
 import {
   instrumentPageLimit,
   instrumentsCursorQueryOptions,
+  instrumentsQueryOptions,
 } from "@/data/crucible/instruments.queries"
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import type {
@@ -94,6 +90,10 @@ import {
   loadDefaultSort,
   useDefaultSort,
 } from "@/features/preferences/data-group-by"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { searchDebounceMs } from "@/lib/search"
+import { FilterValuePicker } from "@/components/crucible/collection-facet-filter"
+import type { FilterValueOption } from "@/components/crucible/collection-facet-filter"
 
 const instrumentSortFieldSchema = z.enum([
   "name",
@@ -328,6 +328,60 @@ function InstrumentsRoutePending() {
 
 type InstrumentFilterValues = Omit<InstrumentSearch, "cursor">
 
+type InstrumentTextField = "instrumentType" | "location" | "manufacturer"
+
+const instrumentTextFields = {
+  instrumentType: "instrument_type",
+  location: "location",
+  manufacturer: "manufacturer",
+} as const satisfies Record<InstrumentTextField, keyof WorkspaceInstrument>
+
+/** Instruments one suggestion request can return, the API maximum. */
+const instrumentSuggestionLimit = 1000
+
+function sameText(left: string | null | undefined, right: string | undefined) {
+  return (
+    (left ?? "").trim().toLowerCase() === (right ?? "").trim().toLowerCase()
+  )
+}
+
+/** Distinct values of one text field among instruments matching the others. */
+function instrumentValueOptions(
+  instruments: readonly WorkspaceInstrument[],
+  field: InstrumentTextField,
+  draft: InstrumentFilterValues
+): FilterValueOption[] {
+  const counts = new Map<string, { count: number; label: string }>()
+  for (const instrument of instruments) {
+    const matchesOthers = (
+      Object.keys(instrumentTextFields) as InstrumentTextField[]
+    ).every(
+      (other) =>
+        other === field ||
+        !draft[other] ||
+        sameText(instrument[instrumentTextFields[other]], draft[other])
+    )
+    const value = instrument[instrumentTextFields[field]]?.trim()
+    if (!matchesOthers || !value) continue
+    const key = value.toLowerCase()
+    const entry = counts.get(key)
+    counts.set(key, {
+      count: (entry?.count ?? 0) + 1,
+      label: entry?.label ?? value,
+    })
+  }
+  return [...counts.values()]
+    .sort(
+      (left, right) =>
+        right.count - left.count || left.label.localeCompare(right.label)
+    )
+    .map((entry) => ({
+      count: entry.count,
+      label: entry.label,
+      selection: { kind: "value", value: entry.label },
+    }))
+}
+
 function InstrumentDirectoryFilters({
   values,
 }: {
@@ -361,6 +415,40 @@ function InstrumentDirectoryFilters({
   const resolvedOwnerName = ownerResult.data
     ? `${ownerResult.data.first_name} ${ownerResult.data.last_name}`.trim()
     : undefined
+  const draftStatus = draft.status ?? "active"
+  const baseFilters = {
+    affiliation: draft.affiliation,
+    ownerId: draft.ownerId,
+    status: draftStatus === "all" ? undefined : draftStatus,
+  }
+  const suggestions = useQuery({
+    ...instrumentsQueryOptions(scope, {
+      ...baseFilters,
+      includeOwner: false,
+      includeTotal: false,
+      limit: instrumentSuggestionLimit,
+    }),
+    enabled: open,
+  })
+  const countKey = useDebouncedValue(
+    JSON.stringify({
+      ...baseFilters,
+      instrumentType: draft.instrumentType?.trim() || undefined,
+      location: draft.location?.trim() || undefined,
+      manufacturer: draft.manufacturer?.trim() || undefined,
+    }),
+    searchDebounceMs
+  )
+  const count = useQuery({
+    ...instrumentsQueryOptions(scope, {
+      ...(JSON.parse(countKey) as typeof baseFilters &
+        Partial<Record<InstrumentTextField, string>>),
+      includeOwner: false,
+      includeTotal: true,
+      limit: 1,
+    }),
+    enabled: open,
+  })
 
   const effectiveStatus = values.status ?? "active"
 
@@ -402,6 +490,10 @@ function InstrumentDirectoryFilters({
       values.manufacturer ? `Manufacturer: ${values.manufacturer}` : undefined
     )
   )
+  const defaults: InstrumentFilterValues = {
+    direction: values.direction,
+    sort: values.sort,
+  }
 
   function updateSearch(next: InstrumentFilterValues) {
     void navigate({
@@ -428,15 +520,14 @@ function InstrumentDirectoryFilters({
     updateSearch(draft)
   }
 
-  function clear() {
-    const empty: InstrumentFilterValues = {
-      direction: values.direction,
-      sort: values.sort,
-    }
-    setDraft(empty)
+  function reset() {
+    setDraft(defaults)
     setOwnerName(undefined)
-    setOpen(false)
-    updateSearch(empty)
+  }
+
+  function clear() {
+    reset()
+    updateSearch(defaults)
   }
 
   function changeOpen(nextOpen: boolean) {
@@ -463,7 +554,6 @@ function InstrumentDirectoryFilters({
     }
   }
 
-  const draftStatus = draft.status ?? "active"
   const selectedOwner: WorkspaceSearchResult | undefined = draft.ownerId
     ? {
         context: null,
@@ -475,159 +565,117 @@ function InstrumentDirectoryFilters({
         unique_id: draft.ownerId,
       }
     : undefined
+  const instruments = suggestions.data?.items ?? []
+  const formId = "instrument-filters"
+
+  function textPicker(field: InstrumentTextField, id: string, label: string) {
+    const value = draft[field]
+    return (
+      <FilterValuePicker
+        failed={suggestions.isError}
+        id={id}
+        label={label}
+        onChange={(selection) =>
+          setDraft((current) => ({
+            ...current,
+            [field]: selection.kind === "value" ? selection.value : undefined,
+          }))
+        }
+        options={instrumentValueOptions(instruments, field, draft)}
+        pending={suggestions.isPending}
+        retry={() => void suggestions.refetch()}
+        selection={value ? { kind: "value", value } : { kind: "all" }}
+      />
+    )
+  }
 
   return (
     <CollectionFilterPanel
       activeFilters={active}
-      footer={
-        <>
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-          <Button form="instrument-filters" type="submit">
-            Apply filters
-          </Button>
-        </>
-      }
+      formId={formId}
       onClearFilters={clear}
       onOpenChange={changeOpen}
       onRemoveFilter={removeFilter}
+      onReset={reset}
       open={open}
+      resetDisabled={JSON.stringify(draft) === JSON.stringify(defaults)}
+      resultCount={count.data?.total ?? undefined}
+      resultNoun={["instrument", "instruments"]}
       title="Instrument filters"
     >
-      <form
-        className="flex flex-col gap-4"
-        id="instrument-filters"
-        onSubmit={apply}
-      >
-        <FieldSet>
-          <FieldLegend className="sr-only">Instrument filters</FieldLegend>
-          <FieldGroup className="grid gap-4 @fields:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="instrument-filter-status">
-                Lifecycle status
-              </FieldLabel>
-              <NativeSelect
-                className="w-full"
-                id="instrument-filter-status"
-                onChange={(event) => {
-                  const nextStatus = event.target
-                    .value as InstrumentStatusFilter
-                  setDraft((current) => ({
-                    ...current,
-                    status: nextStatus === "active" ? undefined : nextStatus,
-                  }))
-                }}
-                value={draftStatus}
-              >
-                {instrumentStatuses.map((candidate) => (
-                  <NativeSelectOption key={candidate} value={candidate}>
-                    {statusLabel("resource", candidate)}
-                  </NativeSelectOption>
-                ))}
-                <NativeSelectOption value="all">
-                  All statuses
+      <FilterForm id={formId} onSubmit={apply}>
+        <FilterSection title="Scope">
+          <Field>
+            <FieldLabel htmlFor="instrument-filter-status">
+              Lifecycle status
+            </FieldLabel>
+            <NativeSelect
+              className="w-full"
+              id="instrument-filter-status"
+              onChange={(event) => {
+                const nextStatus = event.target.value as InstrumentStatusFilter
+                setDraft((current) => ({
+                  ...current,
+                  status: nextStatus === "active" ? undefined : nextStatus,
+                }))
+              }}
+              value={draftStatus}
+            >
+              {instrumentStatuses.map((candidate) => (
+                <NativeSelectOption key={candidate} value={candidate}>
+                  {statusLabel("resource", candidate)}
                 </NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="instrument-filter-affiliation">
-                Management
-              </FieldLabel>
-              <NativeSelect
-                className="w-full"
-                id="instrument-filter-affiliation"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    affiliation:
-                      event.target.value === "owner" ||
-                      event.target.value === "managed"
-                        ? event.target.value
-                        : undefined,
-                  }))
-                }
-                value={draft.affiliation ?? ""}
-              >
-                <NativeSelectOption value="">
-                  All instruments
-                </NativeSelectOption>
-                <NativeSelectOption value="owner">
-                  Owned by me
-                </NativeSelectOption>
-                <NativeSelectOption value="managed">
-                  Managed by me
-                </NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="instrument-filter-owner">Manager</FieldLabel>
-              <ResourceChooser
-                emptyLabel="All managers"
-                excludeServiceAccounts
-                kind="person"
-                onChange={(person) => {
-                  setDraft((current) => ({
-                    ...current,
-                    ownerId: person?.unique_id,
-                  }))
-                  setOwnerName(person?.name)
-                }}
-                triggerId="instrument-filter-owner"
-                value={selectedOwner}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="instrument-filter-type">
-                Instrument type
-              </FieldLabel>
-              <Input
-                id="instrument-filter-type"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    instrumentType: event.target.value || undefined,
-                  }))
-                }
-                placeholder="All types"
-                value={draft.instrumentType ?? ""}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="instrument-filter-location">
-                Location
-              </FieldLabel>
-              <Input
-                id="instrument-filter-location"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    location: event.target.value || undefined,
-                  }))
-                }
-                placeholder="All locations"
-                value={draft.location ?? ""}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="instrument-filter-manufacturer">
-                Manufacturer
-              </FieldLabel>
-              <Input
-                id="instrument-filter-manufacturer"
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    manufacturer: event.target.value || undefined,
-                  }))
-                }
-                placeholder="All manufacturers"
-                value={draft.manufacturer ?? ""}
-              />
-            </Field>
-          </FieldGroup>
-        </FieldSet>
-      </form>
+              ))}
+              <NativeSelectOption value="all">All statuses</NativeSelectOption>
+            </NativeSelect>
+          </Field>
+          <FilterChoice
+            label="Management"
+            onChange={(affiliation) =>
+              setDraft((current) => ({
+                ...current,
+                affiliation: affiliation === "all" ? undefined : affiliation,
+              }))
+            }
+            options={[
+              { label: "All", value: "all" },
+              { label: "Owned by me", value: "owner" },
+              { label: "Managed by me", value: "managed" },
+            ]}
+            value={draft.affiliation ?? "all"}
+          />
+          <Field>
+            <FieldLabel htmlFor="instrument-filter-owner">Manager</FieldLabel>
+            <ResourceChooser
+              emptyLabel="Any manager"
+              excludeServiceAccounts
+              kind="person"
+              onChange={(person) => {
+                setDraft((current) => ({
+                  ...current,
+                  ownerId: person?.unique_id,
+                }))
+                setOwnerName(person?.name)
+              }}
+              triggerId="instrument-filter-owner"
+              value={selectedOwner}
+            />
+          </Field>
+        </FilterSection>
+        <FilterSection title="Details">
+          {textPicker(
+            "instrumentType",
+            "instrument-filter-type",
+            "Instrument type"
+          )}
+          {textPicker("location", "instrument-filter-location", "Location")}
+          {textPicker(
+            "manufacturer",
+            "instrument-filter-manufacturer",
+            "Manufacturer"
+          )}
+        </FilterSection>
+      </FilterForm>
     </CollectionFilterPanel>
   )
 }
