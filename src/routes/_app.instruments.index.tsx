@@ -657,6 +657,7 @@ function InstrumentDirectoryFilters({
                 }))
                 setOwnerName(person?.name)
               }}
+              presentation="filter"
               triggerId="instrument-filter-owner"
               value={selectedOwner}
             />

@@ -126,11 +126,13 @@ export function ResourceComboboxContent({
   allowBrowse,
   labels,
   normalizedQuery,
+  presentation = "form",
   state,
 }: {
   allowBrowse: boolean
   labels: { plural: string; pluralTitle: string; singular: string }
   normalizedQuery: string
+  presentation?: ResourceChooserPresentation
   state: ReturnType<typeof useResourceComboboxState>
 }) {
   const {
@@ -142,9 +144,13 @@ export function ResourceComboboxContent({
     searchGroup,
     searching,
   } = state
+  const filter = presentation === "filter"
+  const renderItem = filter ? renderFilterComboboxItem : renderComboboxItem
 
   return (
-    <ComboboxContent className="sm:min-w-md">
+    <ComboboxContent
+      className={filter ? "sm:w-max sm:max-w-md" : "sm:min-w-md"}
+    >
       {!allowBrowse && normalizedQuery.length < searchMinQueryLength ? (
         <ComboboxStatus>Enter at least 3 characters.</ComboboxStatus>
       ) : isBrowseMode && normalizedQuery.length === 0 ? (
@@ -160,17 +166,24 @@ export function ResourceComboboxContent({
           <ComboboxStatus>No available {labels.plural} found.</ComboboxStatus>
         ) : (
           <>
-            <ComboboxStatus className="border-b text-supporting">
-              Available {labels.plural} (enter at least 3 characters to search
-              all)
-            </ComboboxStatus>
+            {filter ? null : (
+              <ComboboxStatus className="border-b text-supporting">
+                Available {labels.plural} (enter at least 3 characters to search
+                all)
+              </ComboboxStatus>
+            )}
             <ComboboxList aria-label={`${labels.singular} search results`}>
               {(item: WorkspaceSearchResult) => (
                 <ComboboxItem key={item.unique_id} value={item}>
-                  {renderComboboxItem(item)}
+                  {renderItem(item)}
                 </ComboboxItem>
               )}
             </ComboboxList>
+            {filter ? (
+              <ComboboxStatus className="border-t text-supporting">
+                Type 3 or more characters to search all {labels.plural}.
+              </ComboboxStatus>
+            ) : null}
           </>
         )
       ) : isBrowseMode && normalizedQuery.length > 0 ? (
@@ -184,7 +197,7 @@ export function ResourceComboboxContent({
             <ComboboxList aria-label={`${labels.singular} search results`}>
               {(item: WorkspaceSearchResult) => (
                 <ComboboxItem key={item.unique_id} value={item}>
-                  {renderComboboxItem(item)}
+                  {renderItem(item)}
                 </ComboboxItem>
               )}
             </ComboboxList>
@@ -347,6 +360,15 @@ export function ResourceSearchCombobox({
         />
       </Combobox>
     </Field>
+  )
+}
+
+export type ResourceChooserPresentation = "filter" | "form"
+
+/** A plain name row, matching the Filters panel's value pickers. */
+function renderFilterComboboxItem(item: WorkspaceSearchResult) {
+  return (
+    <span className="line-clamp-2 min-w-0 flex-1 break-words">{item.name}</span>
   )
 }
 

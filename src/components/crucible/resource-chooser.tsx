@@ -4,7 +4,10 @@ import {
   ResourceComboboxContent,
   useResourceComboboxState,
 } from "@/components/crucible/resource-search-combobox"
-import type { SearchableResourceKind } from "@/components/crucible/resource-search-combobox"
+import type {
+  ResourceChooserPresentation,
+  SearchableResourceKind,
+} from "@/components/crucible/resource-search-combobox"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Combobox, ComboboxInput } from "@/components/ui/combobox"
@@ -37,6 +40,7 @@ export function ResourceChooser({
   invalid = false,
   kind,
   onChange,
+  presentation = "form",
   triggerId,
   value,
 }: {
@@ -50,6 +54,8 @@ export function ResourceChooser({
   invalid?: boolean
   kind: ResourceChooserKind
   onChange: (value: WorkspaceSearchResult | undefined) => void
+  /** `filter` matches the Filters panel's value pickers: plain names only. */
+  presentation?: ResourceChooserPresentation
   triggerId?: string
   value: WorkspaceSearchResult | undefined
 }) {
@@ -123,7 +129,7 @@ export function ResourceChooser({
         clearLabel={`Clear ${labels.singular.toLowerCase()}`}
         disabled={disabled}
         endAdornment={
-          value ? (
+          value && presentation === "form" ? (
             <span className="hidden text-label-compact text-muted-foreground select-none @fields:inline">
               ({value.unique_id})
             </span>
@@ -139,17 +145,20 @@ export function ResourceChooser({
         showClear={Boolean(value || query.length > 0)}
         showTrigger
         startAdornment={
-          <ResourceTypeIcon
-            aria-hidden="true"
-            className="size-4 shrink-0 text-muted-foreground"
-            type={value?.kind ?? kind}
-          />
+          presentation === "form" ? (
+            <ResourceTypeIcon
+              aria-hidden="true"
+              className="size-4 shrink-0 text-muted-foreground"
+              type={value?.kind ?? kind}
+            />
+          ) : undefined
         }
       />
       <ResourceComboboxContent
         allowBrowse={allowBrowse}
         labels={labels}
         normalizedQuery={normalizedQuery}
+        presentation={presentation}
         state={state}
       />
     </Combobox>

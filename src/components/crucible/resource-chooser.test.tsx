@@ -240,6 +240,22 @@ describe("ResourceChooser", () => {
     ).not.toContain("hidden")
   })
 
+  it("shows plain names in the filter presentation", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      response("instrument", [instrument])
+    )
+    renderChooser({ presentation: "filter", value: instrument })
+
+    expect(screen.queryByText(`(${instrument.unique_id})`)).toBeNull()
+    const input = screen.getByDisplayValue("Beamline 5.3.2")
+    fireEvent.click(input)
+    const option = await screen.findByRole("option", { name: "Beamline 5.3.2" })
+    expect(option.textContent).toBe("Beamline 5.3.2")
+    expect(
+      screen.getByText("Type 3 or more characters to search all instruments.")
+    ).toBeTruthy()
+  })
+
   it("clears a confirmed selection", () => {
     const { onChange } = renderChooser({ value: instrument })
 

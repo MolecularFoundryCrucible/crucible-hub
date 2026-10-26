@@ -504,6 +504,7 @@ export function DataFilters({
                 )
                 setProjectName(project?.name)
               }}
+              presentation="filter"
               triggerId="data-project-trigger"
               value={selectedProject}
             />

@@ -224,6 +224,7 @@ export function SearchFilters({
                   }))
                   setDraftProjectName(project?.name)
                 }}
+                presentation="filter"
                 triggerId="search-project-trigger"
                 value={selectedProject}
               />
