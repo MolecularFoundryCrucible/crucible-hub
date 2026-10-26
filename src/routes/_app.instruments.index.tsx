@@ -8,6 +8,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { resourceDisplayName } from "@/lib/resource-name"
+import { statusLabel } from "@/lib/status"
 
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import {
@@ -80,10 +81,7 @@ import {
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import { defaultOrderLabel, sortLabel } from "@/data/crucible/filter-draft"
-import {
-  instrumentStatusLabel,
-  instrumentStatuses,
-} from "@/data/crucible/instrument-status"
+import { instrumentStatuses } from "@/data/crucible/instrument-status"
 import type {
   WorkspaceInstrument,
   WorkspaceSearchResult,
@@ -381,7 +379,7 @@ function InstrumentDirectoryFilters({
         ? `Status: ${
             effectiveStatus === "all"
               ? "All statuses"
-              : instrumentStatusLabel(effectiveStatus)
+              : statusLabel("resource", effectiveStatus)
           }`
         : undefined
     ),
@@ -539,7 +537,7 @@ function InstrumentDirectoryFilters({
               >
                 {instrumentStatuses.map((candidate) => (
                   <NativeSelectOption key={candidate} value={candidate}>
-                    {instrumentStatusLabel(candidate)}
+                    {statusLabel("resource", candidate)}
                   </NativeSelectOption>
                 ))}
                 <NativeSelectOption value="all">
@@ -896,10 +894,10 @@ function InstrumentCollection({
                         ? "You do not manage any instruments."
                         : "No instruments are available to this account."
                     : affiliation === "owner"
-                      ? `You do not own any ${instrumentStatusLabel(status).toLowerCase()} instruments.`
+                      ? `You do not own any ${statusLabel("resource", status).toLowerCase()} instruments.`
                       : affiliation
-                        ? `You do not manage any ${instrumentStatusLabel(status).toLowerCase()} instruments.`
-                        : `No ${instrumentStatusLabel(status).toLowerCase()} instruments are available to this account.`}
+                        ? `You do not manage any ${statusLabel("resource", status).toLowerCase()} instruments.`
+                        : `No ${statusLabel("resource", status).toLowerCase()} instruments are available to this account.`}
               </EmptyDescription>
             </EmptyHeader>
           </PendingRegion>

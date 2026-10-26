@@ -25,6 +25,7 @@ import {
   useUploadsEnabled,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
+import { StatusBadge } from "@/components/crucible/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -86,7 +87,6 @@ import {
 import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import { ingestionStatusLabel } from "./ingestion-status"
 
 const UploadFilesDialog = lazyRouteComponent(
   () => import("@/features/dataset-files/upload-dialog"),
@@ -816,24 +816,9 @@ function IngestionStatusBadge({
   emptyLabel?: string
   status?: string | null
 }) {
-  const normalized = status?.trim().toLowerCase()
-  const label = normalized ? ingestionStatusLabel(normalized) : emptyLabel
-  const variant =
-    normalized === "failed" || normalized === "error"
-      ? "destructive"
-      : normalized === "complete" ||
-          normalized === "completed" ||
-          normalized === "success"
-        ? "success"
-        : normalized === "retrying"
-          ? "warning"
-          : normalized === "pending" ||
-              normalized === "queued" ||
-              normalized === "requested" ||
-              normalized === "running" ||
-              normalized === "processing" ||
-              normalized === "in_progress"
-            ? "info"
-            : "outline"
-  return <Badge variant={variant}>{label}</Badge>
+  return status?.trim() ? (
+    <StatusBadge domain="ingestion" status={status} />
+  ) : (
+    <Badge variant="outline">{emptyLabel}</Badge>
+  )
 }

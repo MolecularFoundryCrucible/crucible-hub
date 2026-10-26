@@ -15,7 +15,7 @@ import {
   ProjectOverviewPending,
   ResourceTabLoadError,
 } from "@/components/crucible/resource-tab-state"
-import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
+import { StatusBadge } from "@/components/crucible/status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   SummaryFieldIcon,
@@ -148,7 +148,7 @@ function ProjectSummary({
               icon={<SummaryFieldIcon type="status" />}
               label="Status"
             >
-              <ResourceStatusBadge status={project.status} />
+              <StatusBadge status={project.status} />
             </SummaryFieldItem>
           ) : null}
         </dl>

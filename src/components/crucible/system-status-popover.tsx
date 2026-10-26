@@ -23,31 +23,20 @@ import {
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import { getSystemStatus } from "@/data/crucible/system-status.functions"
 import { systemStatusQueryOptions } from "@/data/crucible/system-status.queries"
-import type { ServiceStatus } from "@/data/crucible/system-status"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { hubBuild } from "@/lib/build-info"
+import { statusLabel, statusTone } from "@/lib/status"
+import type { StatusTone } from "@/lib/status"
 import type { HubBuild } from "@/lib/build-info"
 import { cn } from "@/lib/utils"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { RefreshButton } from "@/components/crucible/refresh-button"
 
-function statusBadgeLabel(status: ServiceStatus) {
-  if (status === "ok") return "Operational"
-  if (status === "degraded") return "Degraded"
-  return "Unreachable"
-}
-
-function StatusMark({
-  label,
-  tone,
-}: {
-  label: string
-  tone: "success" | "warning" | "destructive"
-}) {
+function StatusMark({ label, tone }: { label: string; tone: StatusTone }) {
   const Icon =
     tone === "success" ? AvailabilityAvailableIcon : AvailabilityTakenIcon
   return (
@@ -67,24 +56,6 @@ function StatusMark({
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   )
-}
-
-function serviceTone(status: ServiceStatus) {
-  if (status === "ok") return "success" as const
-  if (status === "degraded") return "warning" as const
-  return "destructive" as const
-}
-
-function databaseTone(status: "ok" | "error" | "unknown") {
-  if (status === "ok") return "success" as const
-  if (status === "error") return "destructive" as const
-  return "warning" as const
-}
-
-function databaseBadgeLabel(status: "ok" | "error" | "unknown") {
-  if (status === "ok") return "Connected"
-  if (status === "error") return "Error"
-  return "Unknown"
 }
 
 interface SystemStatusPopoverProps {
@@ -120,7 +91,7 @@ export function SystemStatusPopover({
       <PopoverTrigger
         aria-label={
           statusQuery.data
-            ? `API status: ${statusBadgeLabel(statusQuery.data.status)}`
+            ? `API status: ${statusLabel("service", statusQuery.data.status)}`
             : "API status"
         }
         className={cn(
@@ -158,8 +129,8 @@ export function SystemStatusPopover({
           <div className="flex items-center gap-1.5">
             {statusQuery.data ? (
               <StatusMark
-                label={statusBadgeLabel(statusQuery.data.status)}
-                tone={serviceTone(statusQuery.data.status)}
+                label={statusLabel("service", statusQuery.data.status)}
+                tone={statusTone("service", statusQuery.data.status)}
               />
             ) : null}
             <PopoverClose
@@ -198,8 +169,9 @@ export function SystemStatusPopover({
         {statusQuery.data ? (
           <>
             <div aria-live="polite" className="sr-only">
-              System status: {statusBadgeLabel(statusQuery.data.status)}.
-              Database {databaseBadgeLabel(statusQuery.data.database.status)}.
+              System status: {statusLabel("service", statusQuery.data.status)}.
+              Database{" "}
+              {statusLabel("database", statusQuery.data.database.status)}.
             </div>
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between gap-2 rounded-md border border-border p-2.5">
@@ -228,8 +200,8 @@ export function SystemStatusPopover({
                   </div>
                 </div>
                 <StatusMark
-                  label={statusBadgeLabel(statusQuery.data.api.status)}
-                  tone={serviceTone(statusQuery.data.api.status)}
+                  label={statusLabel("service", statusQuery.data.api.status)}
+                  tone={statusTone("service", statusQuery.data.api.status)}
                 />
               </div>
 
@@ -259,8 +231,14 @@ export function SystemStatusPopover({
                   </div>
                 </div>
                 <StatusMark
-                  label={databaseBadgeLabel(statusQuery.data.database.status)}
-                  tone={databaseTone(statusQuery.data.database.status)}
+                  label={statusLabel(
+                    "database",
+                    statusQuery.data.database.status
+                  )}
+                  tone={statusTone(
+                    "database",
+                    statusQuery.data.database.status
+                  )}
                 />
               </div>
 

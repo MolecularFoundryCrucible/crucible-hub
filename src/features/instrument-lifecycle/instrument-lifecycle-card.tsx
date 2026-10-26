@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { UpdateInstrumentStatusIcon } from "@/components/crucible/icons"
-import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
+import { StatusBadge } from "@/components/crucible/status-badge"
 import { ManagementAction } from "@/components/crucible/management-action"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,7 +23,6 @@ import {
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
-  instrumentStatusLabel,
   instrumentStatuses,
   isWorkspaceInstrumentStatus,
 } from "@/data/crucible/instrument-status"
@@ -40,6 +39,7 @@ import type {
   WorkspaceResourceDetail,
 } from "@/data/crucible/workspace-source"
 import { PendingIcon } from "@/components/crucible/pending-icon"
+import { statusLabel } from "@/lib/status"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 
@@ -181,7 +181,7 @@ export function InstrumentLifecycleCard({
 
   const pending = mutation.isPending
   const currentLabel = instrument.status
-    ? instrumentStatusLabel(instrument.status)
+    ? statusLabel("resource", instrument.status)
     : "Not recorded"
 
   return (
@@ -204,7 +204,7 @@ export function InstrumentLifecycleCard({
         <div className="flex items-center gap-2 text-body">
           <span className="text-muted-foreground">Current status:</span>
           {instrument.status ? (
-            <ResourceStatusBadge status={instrument.status} />
+            <StatusBadge status={instrument.status} />
           ) : (
             currentLabel
           )}
@@ -242,7 +242,7 @@ export function InstrumentLifecycleCard({
               <div className="flex items-center gap-2 text-body">
                 <span className="text-muted-foreground">Current status:</span>
                 {instrument.status ? (
-                  <ResourceStatusBadge status={instrument.status} />
+                  <StatusBadge status={instrument.status} />
                 ) : (
                   currentLabel
                 )}
@@ -269,7 +269,7 @@ export function InstrumentLifecycleCard({
                   ) : null}
                   {instrumentStatuses.map((status) => (
                     <NativeSelectOption key={status} value={status}>
-                      {instrumentStatusLabel(status)}
+                      {statusLabel("resource", status)}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>

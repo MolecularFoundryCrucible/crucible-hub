@@ -17,7 +17,7 @@ import { resourceDetailDisplayName } from "@/lib/resource-name"
 import { CopyMfidButton, MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personIsServiceAccount } from "@/components/crucible/person-identity"
-import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
+import { StatusBadge } from "@/components/crucible/status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
   SummaryFieldIcon,
@@ -156,7 +156,7 @@ function InstrumentSummary({
               label={label}
             >
               {type === "status" && value ? (
-                <ResourceStatusBadge status={value} />
+                <StatusBadge status={value} />
               ) : (
                 (value ?? "-")
               )}

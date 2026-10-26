@@ -4,7 +4,7 @@ import { lazyRouteComponent } from "@tanstack/react-router"
 import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
-import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
+import { StatusBadge } from "@/components/crucible/status-badge"
 import {
   SummaryFieldIcon,
   SummaryFieldItem,
@@ -166,7 +166,7 @@ export function SummaryFields({ fields }: { fields: readonly SummaryField[] }) {
           label={label}
         >
           {type === "status" && typeof value === "string" && value ? (
-            <ResourceStatusBadge status={value} />
+            <StatusBadge status={value} />
           ) : (
             (value ?? "-")
           )}

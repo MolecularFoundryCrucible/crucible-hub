@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
+import { statusLabel } from "@/lib/status"
 
 import {
   DeletionRequestedIcon,
@@ -197,9 +198,10 @@ export function ResourceDeletionRequestCard({
 }
 
 function deletionRequestStatusLabel(status: string | null) {
-  if (!status) return "Deletion request submitted"
-  const label = status.replaceAll(/[_-]+/g, " ").trim()
-  return `Deletion request ${label || "submitted"}`
+  const label = status?.trim()
+    ? statusLabel("deletion-request", status).toLowerCase()
+    : "submitted"
+  return `Deletion request ${label}`
 }
 
 function deletionRequestError(error: unknown) {

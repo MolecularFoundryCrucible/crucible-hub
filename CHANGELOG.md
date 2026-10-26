@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Wrote multi-word statuses in sentence case everywhere, such as In review.
 - Gave the Users, Service accounts, and Deletion requests pages the shared directory toolbar with a Refresh button, and let Projects and Instruments be sorted from the list on phones.
 - Fixed the Deletion requests page redrawing itself right after loading.
 - Showed the full text of cut-off names, projects, owners, and file names in the Hub tooltip, only while they are cut off, and named sidebar create actions and status icons in the same tooltip instead of the browser's.

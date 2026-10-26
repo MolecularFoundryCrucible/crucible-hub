@@ -40,7 +40,7 @@ import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-l
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import type { ResourcePreviewNavigation } from "@/components/crucible/resource-preview-navigation"
 import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-deletion-request-badge"
-import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
+import { StatusBadge } from "@/components/crucible/status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
 import {
@@ -1106,7 +1106,7 @@ function inspectorContextFields(
           icon: <SummaryFieldIcon type="status" />,
           label: "Status",
           value: resource.status ? (
-            <ResourceStatusBadge status={resource.status} />
+            <StatusBadge status={resource.status} />
           ) : null,
         },
         { icon: ownerIcon, label: "Lead", value: owner },
@@ -1129,7 +1129,7 @@ function inspectorContextFields(
           icon: <SummaryFieldIcon type="status" />,
           label: "Status",
           value: resource.status ? (
-            <ResourceStatusBadge status={resource.status} />
+            <StatusBadge status={resource.status} />
           ) : null,
         },
         {

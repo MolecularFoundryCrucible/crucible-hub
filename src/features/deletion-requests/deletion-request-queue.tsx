@@ -8,7 +8,7 @@ import {
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { CollectionUpdateStatus } from "@/components/crucible/collection-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
-import { DeletionRequestStatusBadge } from "@/components/crucible/deletion-request-status-badge"
+import { StatusBadge } from "@/components/crucible/status-badge"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { MfidText } from "@/components/crucible/mfid-text"
@@ -985,7 +985,10 @@ function DeletionRequestTable({
                     className="deletion-request-status"
                     data-label="Status"
                   >
-                    <DeletionRequestStatusBadge status={request.status} />
+                    <StatusBadge
+                      domain="deletion-request"
+                      status={request.status}
+                    />
                   </TableCell>
                 ) : null}
                 <TableCell kind="action" className="deletion-request-action">
@@ -1170,7 +1173,10 @@ function DeletionRequestDialog({
               <div>
                 <dt className="text-label text-muted-foreground">Status</dt>
                 <dd className="mt-1">
-                  <DeletionRequestStatusBadge status={request.status} />
+                  <StatusBadge
+                    domain="deletion-request"
+                    status={request.status}
+                  />
                 </dd>
               </div>
               {request.review_time ? (
