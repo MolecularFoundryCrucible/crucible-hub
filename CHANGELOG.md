@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Fixed Deletion history and deletion requests failing to load when they include a deleted project or instrument.
 - Wrote multi-word statuses in sentence case everywhere, such as In review.
 - Gave the Users, Service accounts, and Deletion requests pages the shared directory toolbar with a Refresh button, and let Projects and Instruments be sorted from the list on phones.
 - Fixed the Deletion requests page redrawing itself right after loading.

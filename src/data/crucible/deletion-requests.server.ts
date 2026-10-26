@@ -57,7 +57,10 @@ const deletionRequestSchema = z
     requester_id: z.string().min(1),
     resource_mfid: z.string().min(1),
     resource_name: z.string().nullable().optional(),
-    resource_type: z.enum(["dataset", "sample"]).nullable().optional(),
+    resource_type: z
+      .enum(["dataset", "sample", "project", "instrument"])
+      .nullable()
+      .optional(),
     review_time: z.string().nullable().optional(),
     reviewer: workspacePersonSchema.nullable(),
     reviewer_id: z.string().nullable().optional(),
@@ -88,7 +91,10 @@ const deletionAuditSchema = z
     requester_id: z.string().min(1),
     resource_id: z.string().min(1),
     resource_name: z.string().nullable().optional(),
-    resource_type: z.enum(["dataset", "sample"]).nullable().optional(),
+    resource_type: z
+      .enum(["dataset", "sample", "project", "instrument"])
+      .nullable()
+      .optional(),
     review_time: z.string().nullable().optional(),
     reviewer: workspacePersonSchema.nullable(),
     reviewer_id: z.string().min(1),
