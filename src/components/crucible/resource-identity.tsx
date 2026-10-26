@@ -6,6 +6,7 @@ import { MfidText } from "@/components/crucible/mfid-text"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { cn } from "@/lib/utils"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 
 type ResourceIdentityPresentation = "collection" | "stacked"
 
@@ -42,16 +43,16 @@ export function ResourceIdentity({
         <ResourceTypeIcon className="mt-0.5 shrink-0" type={kind} />
       ) : null}
       <span className="min-w-0 flex-1 text-left">
-        <span
+        <TruncatedText
           className={cn(
             "block text-label",
             truncate ? "truncate [&>*]:block [&>*]:truncate" : "wrap-break-word"
           )}
-          title={truncate && showTruncationTitle ? name : undefined}
           data-directory-name
+          label={truncate && showTruncationTitle ? name : null}
         >
           {nameContent ?? (truncate ? name : <BreakableText value={name} />)}
-        </span>
+        </TruncatedText>
         {context || projectId || instrumentId ? (
           <span
             className="flex min-w-0 items-center gap-2 text-supporting text-muted-foreground"
@@ -80,12 +81,12 @@ export function ResourceIdentity({
               </span>
             ) : null}
             {context ? (
-              <span
-                className={cn("min-w-0", truncate && "truncate")}
-                title={truncate && showTruncationTitle ? context : undefined}
+              <TruncatedText
+                className={cn(truncate && "truncate")}
+                label={truncate && showTruncationTitle ? context : null}
               >
                 {truncate ? context : <BreakableText value={context} />}
-              </span>
+              </TruncatedText>
             ) : null}
           </span>
         ) : null}
@@ -127,12 +128,12 @@ function ResourceIdentifier({
     <>
       <ResourceTypeIcon className="size-icon-supporting" type={type} />
       <span className="sr-only">{label}</span>
-      <span
-        className={cn("min-w-0", truncate && "truncate")}
-        title={showTitle ? value : undefined}
+      <TruncatedText
+        className={cn(truncate && "truncate")}
+        label={showTitle ? value : null}
       >
         {truncate ? value : <BreakableText value={value} />}
-      </span>
+      </TruncatedText>
     </>
   )
 }

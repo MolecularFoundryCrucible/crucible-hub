@@ -53,11 +53,12 @@ describe("PersonIdentity", () => {
     expect(element.className).toContain("truncate")
     expect(element.className).toContain("[&>*]:block")
     expect(element.className).toContain("[&>*]:truncate")
-    expect(element.getAttribute("title")).toBe("Jane Doe")
+    expect(element.getAttribute("title")).toBeNull()
+    expect(element.dataset.slot).toBe("truncated-text")
     expect(element.textContent).toBe("Jane Doe")
   })
 
-  it("suppresses title tooltip in collection presentation when nameContent is supplied", () => {
+  it("leaves the tooltip to the caller in collection presentation when nameContent is supplied", () => {
     const { container } = render(
       <PersonIdentity
         nameContent={<span>Custom Content</span>}

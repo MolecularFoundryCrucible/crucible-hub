@@ -23,6 +23,7 @@ import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { TableSortControl } from "@/components/crucible/table-sort-control"
 import type { TableSortField } from "@/components/crucible/table-sort-control"
 import { Button } from "@/components/ui/button"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import {
   Card,
   CardAction,
@@ -1040,11 +1041,7 @@ function DeletionRequestProject({
   if (!projectId)
     return <span className="text-muted-foreground">Not assigned</span>
   if (!request.project_mfid)
-    return (
-      <span className="block truncate" title={projectId}>
-        {projectId}
-      </span>
-    )
+    return <TruncatedText className="block truncate">{projectId}</TruncatedText>
   return (
     <ResourceIdentityLink
       className="block min-w-0"
@@ -1053,9 +1050,9 @@ function DeletionRequestProject({
       name={projectId}
       showTypeIcon={false}
     >
-      <span className="block truncate hover:underline" title={projectId}>
+      <TruncatedText className="block truncate hover:underline">
         {projectId}
-      </span>
+      </TruncatedText>
     </ResourceIdentityLink>
   )
 }

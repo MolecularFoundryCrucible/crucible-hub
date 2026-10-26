@@ -24,6 +24,11 @@ import { crucibleKeys } from "@/data/crucible/query-keys"
 import { getSystemStatus } from "@/data/crucible/system-status.functions"
 import { systemStatusQueryOptions } from "@/data/crucible/system-status.queries"
 import type { ServiceStatus } from "@/data/crucible/system-status"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { hubBuild } from "@/lib/build-info"
 import type { HubBuild } from "@/lib/build-info"
 import { cn } from "@/lib/utils"
@@ -46,18 +51,21 @@ function StatusMark({
   const Icon =
     tone === "success" ? AvailabilityAvailableIcon : AvailabilityTakenIcon
   return (
-    <span className="inline-flex shrink-0" title={label}>
-      <Icon
-        aria-hidden="true"
-        className={cn(
-          "size-4",
-          tone === "success" && "text-success",
-          tone === "warning" && "text-warning",
-          tone === "destructive" && "text-destructive"
-        )}
-      />
-      <span className="sr-only">{label}</span>
-    </span>
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            "size-4",
+            tone === "success" && "text-success",
+            tone === "warning" && "text-warning",
+            tone === "destructive" && "text-destructive"
+          )}
+        />
+        <span className="sr-only">{label}</span>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   )
 }
 

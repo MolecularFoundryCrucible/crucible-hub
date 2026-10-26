@@ -55,7 +55,6 @@ export function KeyboardShortcutsTrigger({ handle }: { handle: DialogHandle }) {
         <SidebarMenuButton
           aria-label="Keyboard shortcuts"
           tooltip="Keyboard shortcuts"
-          title="Keyboard shortcuts"
         />
       }
     >

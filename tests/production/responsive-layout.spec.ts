@@ -289,3 +289,40 @@ test("keeps Last activity on two lines in Home rows", async ({ page }) => {
   ])
   expect(timeBox.top).toBeGreaterThanOrEqual(labelBox.bottom - 1)
 })
+
+test("shows the full text of a cut-off cell only while it is cut off", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 800, width: 1280 })
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const cell = page.locator('td [data-slot="truncated-text"]').first()
+  const text = (await cell.textContent())!
+  const tooltip = page.locator('[data-slot="tooltip-content"]', {
+    hasText: text,
+  })
+
+  await cell.hover()
+  await page.waitForTimeout(800)
+  await expect(tooltip).toHaveCount(0)
+
+  await page.mouse.move(0, 0)
+  await cell.evaluate((element) => {
+    ;(element as HTMLElement).style.maxWidth = "2rem"
+  })
+  await cell.hover()
+  await expect(tooltip).toBeVisible()
+})
+
+test("names the sidebar create actions in a Hub tooltip", async ({ page }) => {
+  await page.setViewportSize({ height: 800, width: 1280 })
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const action = page.getByRole("link", { name: "Create project" }).first()
+  await page.getByRole("link", { name: "Projects", exact: true }).hover()
+  await action.hover()
+  await expect(
+    page.locator('[data-slot="tooltip-content"]', { hasText: "Create project" })
+  ).toBeVisible()
+  await expect(action).not.toHaveAttribute("title")
+})

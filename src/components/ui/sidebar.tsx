@@ -592,12 +592,14 @@ function SidebarMenuAction({
   className,
   render,
   showOnHover = false,
+  tooltip,
   ...props
 }: useRender.ComponentProps<"button"> &
   React.ComponentProps<"button"> & {
     showOnHover?: boolean
+    tooltip?: string
   }) {
-  return useRender({
+  const comp = useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
       {
@@ -610,12 +612,20 @@ function SidebarMenuAction({
       },
       props
     ),
-    render,
+    render: tooltip ? <TooltipTrigger render={render} /> : render,
     state: {
       slot: "sidebar-menu-action",
       sidebar: "menu-action",
     },
   })
+  return tooltip ? (
+    <Tooltip>
+      {comp}
+      <TooltipContent side="right">{tooltip}</TooltipContent>
+    </Tooltip>
+  ) : (
+    comp
+  )
 }
 
 function SidebarMenuBadge({
@@ -735,13 +745,15 @@ function SidebarMenuSubButton({
 function SidebarMenuSubAction({
   className,
   showOnHover = false,
+  tooltip,
   render,
   ...props
 }: useRender.ComponentProps<"button"> &
   React.ComponentProps<"button"> & {
     showOnHover?: boolean
+    tooltip?: string
   }) {
-  return useRender({
+  const comp = useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
       {
@@ -754,13 +766,21 @@ function SidebarMenuSubAction({
       },
       props
     ),
-    render,
+    render: tooltip ? <TooltipTrigger render={render} /> : render,
     state: {
       slot: "sidebar-menu-sub-action",
       sidebar: "menu-sub-action",
       showOnHover,
     },
   })
+  return tooltip ? (
+    <Tooltip>
+      {comp}
+      <TooltipContent side="right">{tooltip}</TooltipContent>
+    </Tooltip>
+  ) : (
+    comp
+  )
 }
 
 export {

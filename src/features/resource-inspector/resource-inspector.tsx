@@ -50,6 +50,7 @@ import {
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -333,15 +334,15 @@ export function ResourceInspector({
                   Invalid resource preview
                 </span>
               ) : previewName ? (
-                <span
+                <TruncatedText
                   className={cn(
-                    "min-w-0 wrap-break-word",
+                    "wrap-break-word",
                     previewKind === "project" && "line-clamp-2"
                   )}
-                  title={previewKind === "project" ? previewName : undefined}
+                  label={previewKind === "project" ? previewName : null}
                 >
                   {previewName}
-                </span>
+                </TruncatedText>
               ) : (
                 <Skeleton aria-hidden="true" className="h-6 w-48" />
               )}
@@ -989,12 +990,12 @@ function inspectorContextFields(
               name={projectName ?? ""}
               navigation="preview"
             >
-              <span
+              <TruncatedText
                 className="line-clamp-2 text-label group-hover/resource:underline"
-                title={projectName ?? undefined}
+                label={projectName}
               >
                 {projectName}
-              </span>
+              </TruncatedText>
             </ResourceIdentityLink>
           ) : (
             resource.project_id
@@ -1011,12 +1012,12 @@ function inspectorContextFields(
               name={instrumentName ?? ""}
               navigation="preview"
             >
-              <span
+              <TruncatedText
                 className="line-clamp-2 text-label group-hover/resource:underline"
-                title={instrumentName ?? undefined}
+                label={instrumentName}
               >
                 {instrumentName}
-              </span>
+              </TruncatedText>
             </ResourceIdentityLink>
           ) : (
             resource.instrument_id
@@ -1066,12 +1067,12 @@ function inspectorContextFields(
               name={projectName ?? ""}
               navigation="preview"
             >
-              <span
+              <TruncatedText
                 className="line-clamp-2 text-label group-hover/resource:underline"
-                title={projectName ?? undefined}
+                label={projectName}
               >
                 {projectName}
-              </span>
+              </TruncatedText>
             </ResourceIdentityLink>
           ) : (
             resource.project_id

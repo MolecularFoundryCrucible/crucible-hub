@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import { cn } from "@/lib/utils"
 import { formatUsername } from "@/lib/username"
 
@@ -66,15 +67,15 @@ export function PersonIdentity({
 
   if (presentation === "collection") {
     return (
-      <span
+      <TruncatedText
         className={cn(
-          "block min-w-0 truncate text-label [&>*]:block [&>*]:truncate",
+          "block truncate text-label [&>*]:block [&>*]:truncate",
           className
         )}
-        title={nameContent ? undefined : name}
+        label={nameContent ? null : name}
       >
         {nameContent ?? name}
-      </span>
+      </TruncatedText>
     )
   }
 

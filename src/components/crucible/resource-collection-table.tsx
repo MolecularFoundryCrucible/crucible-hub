@@ -30,6 +30,7 @@ import type {
 import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 
 type SharedProps = {
   ariaLabel?: string
@@ -269,9 +270,9 @@ const DatasetCollectionRow = memo(function DatasetRow({
 function SubtypeCell({ value }: { value?: string | null }) {
   return (
     <TableCell className="resource-collection-type">
-      <span className="block truncate" title={value ?? undefined}>
+      <TruncatedText className="block truncate" label={value}>
         {value ?? "Unspecified"}
-      </span>
+      </TruncatedText>
     </TableCell>
   )
 }

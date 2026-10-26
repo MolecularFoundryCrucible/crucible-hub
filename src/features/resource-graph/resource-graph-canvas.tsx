@@ -51,6 +51,7 @@ import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import { ButtonGroup } from "@/components/ui/button-group"
 import {
   DropdownMenu,
@@ -1310,35 +1311,36 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
         type="target"
       />
       <div className="resource-graph-flow-node-content">
-        <div
-          className="resource-graph-flow-node-icon-badge"
-          aria-label={
-            data.isRoot ? `Current ${data.node.kind}` : data.node.kind
-          }
-          title={data.isRoot ? `Current ${data.node.kind}` : data.node.kind}
-        >
-          <ResourceTypeIcon
-            className="resource-graph-flow-node-icon"
-            type={data.node.kind}
-          />
-        </div>
+        <Tooltip>
+          <TooltipTrigger
+            aria-label={
+              data.isRoot ? `Current ${data.node.kind}` : data.node.kind
+            }
+            render={<div className="resource-graph-flow-node-icon-badge" />}
+          >
+            <ResourceTypeIcon
+              className="resource-graph-flow-node-icon"
+              type={data.node.kind}
+            />
+          </TooltipTrigger>
+          <TooltipContent>
+            {data.isRoot ? `Current ${data.node.kind}` : data.node.kind}
+          </TooltipContent>
+        </Tooltip>
         <div className="resource-graph-flow-node-body">
           {data.isRoot ? (
             <span className="resource-graph-flow-node-eyebrow">Current</span>
           ) : null}
-          <span
+          <TruncatedText
             className="resource-graph-flow-node-name"
-            title={data.node.name}
+            label={data.node.name}
           >
             <BreakableText value={data.node.name} />
-          </span>
+          </TruncatedText>
           {data.context ? (
-            <span
-              className="resource-graph-flow-node-context"
-              title={data.context}
-            >
+            <TruncatedText className="resource-graph-flow-node-context">
               {data.context}
-            </span>
+            </TruncatedText>
           ) : null}
         </div>
         {data.thumbnail ? (

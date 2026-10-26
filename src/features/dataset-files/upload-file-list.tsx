@@ -17,6 +17,7 @@ import { MfidText } from "@/components/crucible/mfid-text"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Button } from "@/components/ui/button"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import { Input } from "@/components/ui/input"
 import {
   IngestorSelect,
@@ -468,12 +469,9 @@ const UploadFileRow = memo(function UploadFileRowItem({
                 value={item.filename}
               />
             ) : (
-              <span
-                className="min-w-0 truncate font-heading text-label"
-                title={item.filename}
-              >
+              <TruncatedText className="truncate font-heading text-label">
                 {item.filename}
-              </span>
+              </TruncatedText>
             )}
             {!locked && !editing ? (
               <Button

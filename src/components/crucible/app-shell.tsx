@@ -285,7 +285,7 @@ export function AppShell({
                                 />
                               }
                               showOnHover
-                              title="Create sample"
+                              tooltip="Create sample"
                             >
                               <CreateResourceIcon aria-hidden="true" />
                               <span className="sr-only">Create sample</span>
@@ -328,7 +328,7 @@ export function AppShell({
                                 />
                               }
                               showOnHover
-                              title="Create dataset"
+                              tooltip="Create dataset"
                             >
                               <CreateResourceIcon aria-hidden="true" />
                               <span className="sr-only">Create dataset</span>
@@ -364,7 +364,7 @@ export function AppShell({
                             />
                           }
                           showOnHover
-                          title="Create project"
+                          tooltip="Create project"
                         >
                           <CreateResourceIcon aria-hidden="true" />
                           <span className="sr-only">Create project</span>
@@ -398,7 +398,7 @@ export function AppShell({
                             />
                           }
                           showOnHover
-                          title="Register instrument"
+                          tooltip="Register instrument"
                         >
                           <CreateResourceIcon aria-hidden="true" />
                           <span className="sr-only">Register instrument</span>
@@ -853,13 +853,7 @@ function SidebarUtilities({ shortcuts }: { shortcuts: DialogHandle }) {
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger
-              render={
-                <SidebarMenuButton
-                  aria-label="Theme"
-                  tooltip="Theme"
-                  title="Theme"
-                />
-              }
+              render={<SidebarMenuButton aria-label="Theme" tooltip="Theme" />}
             >
               <ThemeIcon aria-hidden="true" />
               <span>Theme</span>

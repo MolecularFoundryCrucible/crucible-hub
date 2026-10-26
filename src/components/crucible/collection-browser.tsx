@@ -12,6 +12,7 @@ import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { SortableHeaderButton } from "@/components/crucible/sortable-header-button"
 import { Button } from "@/components/ui/button"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Empty,
@@ -446,21 +447,17 @@ function FacetBucketName({
   const label = facetBucketLabel(bucket, field)
   if (field === "owner" && bucket.owner) {
     return (
-      <span className="min-w-0 truncate" title={label}>
+      <TruncatedText className="truncate" label={label}>
         <PersonIdentity
           className="block min-w-0 truncate"
           nameStyle="abbreviated"
           person={bucket.owner}
           presentation="inline"
         />
-      </span>
+      </TruncatedText>
     )
   }
-  return (
-    <span className="truncate" title={label}>
-      {label}
-    </span>
-  )
+  return <TruncatedText className="truncate">{label}</TruncatedText>
 }
 
 function FacetFieldIcon({

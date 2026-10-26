@@ -6,6 +6,7 @@ import { ResourceIdentityLink } from "@/components/crucible/resource-identity-li
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import type { ResourceType } from "@/components/crucible/resource-type-icon"
 import { TableCell } from "@/components/ui/table"
+import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import { cn } from "@/lib/utils"
 import { resourceDisplayName } from "@/lib/resource-name"
 
@@ -152,11 +153,11 @@ export function ResourceProjectCell({
           triggerContext={null}
         />
       ) : (
-        <span className="block truncate" title={projectId ?? undefined}>
+        <TruncatedText className="block truncate" label={projectId}>
           {relation === "shared"
             ? "Project unavailable"
             : (projectId ?? "Not assigned")}
-        </span>
+        </TruncatedText>
       )}
     </TableCell>
   )
@@ -178,9 +179,9 @@ export function ResourceOwnerCell({
           presentation="collection"
         />
       ) : (
-        <span className="block truncate" title={username ?? undefined}>
+        <TruncatedText className="block truncate" label={username}>
           {username ?? "Unknown owner"}
-        </span>
+        </TruncatedText>
       )}
     </TableCell>
   )
