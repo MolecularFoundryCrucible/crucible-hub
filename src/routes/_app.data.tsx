@@ -18,6 +18,7 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import {
   CollectionGroupControl,
+  CollectionSection,
   CollectionToolbar,
   DatasetCollectionBrowser,
   SampleCollectionBrowser,
@@ -286,7 +287,7 @@ function DataRoutePending() {
   return (
     <PageLayout>
       <DataPageHeader />
-      <div className="flex min-w-0 flex-col gap-4">
+      <CollectionSection>
         <CollectionToolbar
           actions={
             <>
@@ -319,7 +320,7 @@ function DataRoutePending() {
           primary={<DataTypeFilters kind={kind} />}
         />
         <CollectionTablePending label="data" presentation="resources" />
-      </div>
+      </CollectionSection>
     </PageLayout>
   )
 }
@@ -340,7 +341,7 @@ function DataCollection() {
   const resolution = resolveDataFilters(search, defaultOrdering)
   if (!resolution.valid) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
+      <CollectionSection>
         <CollectionToolbar
           actions={
             <DataFilters
@@ -359,7 +360,7 @@ function DataCollection() {
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      </div>
+      </CollectionSection>
     )
   }
 
@@ -786,7 +787,7 @@ function DataBrowseFrame({
   const browse = sampleBrowse ?? datasetBrowse
   if (!browse) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
+      <CollectionSection>
         <CollectionToolbar
           actions={
             <>
@@ -797,7 +798,7 @@ function DataBrowseFrame({
           primary={toolbarPrimary}
         />
         {children}
-      </div>
+      </CollectionSection>
     )
   }
   const browseField = browse.field
@@ -852,7 +853,7 @@ function DataBrowseFrame({
 
   if (sampleBrowse) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
+      <CollectionSection>
         <CollectionToolbar
           actions={
             <>
@@ -884,14 +885,14 @@ function DataBrowseFrame({
         ) : (
           children
         )}
-      </div>
+      </CollectionSection>
     )
   }
 
   if (!datasetBrowse) return children
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <CollectionSection>
       <CollectionToolbar
         actions={
           <>
@@ -923,7 +924,7 @@ function DataBrowseFrame({
       ) : (
         children
       )}
-    </div>
+    </CollectionSection>
   )
 }
 

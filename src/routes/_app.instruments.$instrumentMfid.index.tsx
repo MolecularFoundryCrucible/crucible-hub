@@ -15,6 +15,7 @@ import { z } from "zod"
 
 import {
   CollectionGroupControl,
+  CollectionSection,
   CollectionToolbar,
   DatasetCollectionBrowser,
 } from "@/components/crucible/collection-browser"
@@ -182,7 +183,7 @@ function InstrumentDatasetsPending() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <CollectionSection>
       <CollectionToolbar
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -228,7 +229,7 @@ function InstrumentDatasetsPending() {
         presentation="resources"
         subtypeLabel="Measurement"
       />
-    </div>
+    </CollectionSection>
   )
 }
 
@@ -416,7 +417,7 @@ function InstrumentDatasetsPage() {
 
   return (
     <ResourcePreviewContext.Provider value={navigation}>
-      <div className="flex min-w-0 flex-col gap-4">
+      <CollectionSection>
         <CollectionToolbar
           actions={
             <div className="flex flex-wrap items-center justify-end gap-2">
@@ -467,7 +468,7 @@ function InstrumentDatasetsPage() {
         ) : (
           content
         )}
-      </div>
+      </CollectionSection>
       <ResourceInspector navigation={navigation} />
     </ResourcePreviewContext.Provider>
   )

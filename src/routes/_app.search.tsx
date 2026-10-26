@@ -25,7 +25,10 @@ import {
   CollectionUpdateStatus,
   ResourceListPending,
 } from "@/components/crucible/collection-state"
-import { CollectionToolbar } from "@/components/crucible/collection-browser"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { BackToProjectIcon, SearchIcon } from "@/components/crucible/icons"
 import { MfidValue } from "@/components/crucible/mfid-value"
@@ -290,73 +293,75 @@ function SearchPage() {
           </Button>
         </form>
       </ContentBoundary>
-      <CollectionToolbar
-        actions={
-          <SearchFilters
-            access={publicAccess}
-            projectName={projectName}
-            tab={tab}
-            values={{
-              affiliation: search.affiliation,
-              projectMfid: search.projectMfid,
-              publicData: search.publicData,
-            }}
-          />
-        }
-        primary={
-          <>
-            <div className="max-w-full overflow-x-auto pb-1 @max-labels/content:hidden">
-              <SegmentedControl
-                ariaLabel="Resource type filter"
-                className="w-max"
-                onValueChange={changeType}
-                options={typeOptions}
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <SearchFilters
+              access={publicAccess}
+              projectName={projectName}
+              tab={tab}
+              values={{
+                affiliation: search.affiliation,
+                projectMfid: search.projectMfid,
+                publicData: search.publicData,
+              }}
+            />
+          }
+          primary={
+            <>
+              <div className="max-w-full overflow-x-auto pb-1 @max-labels/content:hidden">
+                <SegmentedControl
+                  ariaLabel="Resource type filter"
+                  className="w-max"
+                  onValueChange={changeType}
+                  options={typeOptions}
+                  value={typeValue}
+                />
+              </div>
+              <NativeSelect
+                aria-label="Resource type filter"
+                className="@labels/content:hidden"
+                onChange={(event) => changeType(event.target.value)}
                 value={typeValue}
-              />
-            </div>
-            <NativeSelect
-              aria-label="Resource type filter"
-              className="@labels/content:hidden"
-              onChange={(event) => changeType(event.target.value)}
-              value={typeValue}
-            >
-              {typeOptions.map((option) => (
-                <NativeSelectOption key={option.value} value={option.value}>
-                  {option.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </>
-        }
-        sticky={false}
-      />
-      {validQuery ? (
-        <SearchResults
-          affiliation={searchAffiliation(tab, search, publicAccess)}
-          kinds={selectedKinds}
-          metadataMode={metadataMode}
-          onPublicDataChange={setPublicData}
-          projectMfid={search.projectMfid}
-          publicState={publicState}
-          query={validQuery}
+              >
+                {typeOptions.map((option) => (
+                  <NativeSelectOption key={option.value} value={option.value}>
+                    {option.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </>
+          }
+          sticky={false}
         />
-      ) : (
-        <Empty className="min-h-state border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <SearchIcon />
-            </EmptyMedia>
-            <EmptyTitle>
-              {search.projectMfid
-                ? "Start with a resource name"
-                : "Start with a name or MFID"}
-            </EmptyTitle>
-            <EmptyDescription>
-              Enter at least three characters.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      )}
+        {validQuery ? (
+          <SearchResults
+            affiliation={searchAffiliation(tab, search, publicAccess)}
+            kinds={selectedKinds}
+            metadataMode={metadataMode}
+            onPublicDataChange={setPublicData}
+            projectMfid={search.projectMfid}
+            publicState={publicState}
+            query={validQuery}
+          />
+        ) : (
+          <Empty className="min-h-state border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <SearchIcon />
+              </EmptyMedia>
+              <EmptyTitle>
+                {search.projectMfid
+                  ? "Start with a resource name"
+                  : "Start with a name or MFID"}
+              </EmptyTitle>
+              <EmptyDescription>
+                Enter at least three characters.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
+      </CollectionSection>
     </PageLayout>
   )
 }

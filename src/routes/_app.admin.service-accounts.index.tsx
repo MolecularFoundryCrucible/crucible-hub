@@ -14,7 +14,10 @@ import { ActivityTime } from "@/components/crucible/activity-time"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { DirectorySearchField } from "@/components/crucible/directory-search-field"
 import { RefreshButton } from "@/components/crucible/refresh-button"
-import { CollectionToolbar } from "@/components/crucible/collection-browser"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -289,64 +292,66 @@ function ServiceAccountsPage() {
   return (
     <PageLayout>
       <ServiceAccountsPageHeader canCreate />
-      <CollectionToolbar
-        actions={
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <ServiceAccountActivityFilterField />
+              <RefreshButton
+                label="Refresh service accounts"
+                onClick={() => void result.refetch()}
+                refreshing={updating}
+              />
+            </>
+          }
+          primary={<ServiceAccountSearchField />}
+        />
+        {result.isPending ? (
+          <CollectionTablePending
+            label="service accounts"
+            presentation="service-accounts"
+          />
+        ) : result.isError && !result.data ? (
+          <CollectionLoadError
+            label="Service accounts"
+            retry={() => void result.refetch()}
+          />
+        ) : (
           <>
-            <ServiceAccountActivityFilterField />
-            <RefreshButton
-              label="Refresh service accounts"
-              onClick={() => void result.refetch()}
-              refreshing={updating}
+            {result.isError && !result.isFetchNextPageError ? (
+              <CollectionUpdateError
+                label="Service accounts"
+                preserved
+                retry={() => void result.refetch()}
+              />
+            ) : null}
+            <ServiceAccountCollection
+              direction={direction}
+              hasNextPage={Boolean(result.hasNextPage)}
+              isLoadingMore={result.isFetchingNextPage}
+              loadMoreError={result.isFetchNextPageError}
+              onLoadMore={() => void result.fetchNextPage()}
+              onSortChange={handleSortChange}
+              query={search.q}
+              serviceAccounts={serviceAccounts}
+              sort={sort}
+              total={total}
+              updating={updating}
             />
           </>
-        }
-        primary={<ServiceAccountSearchField />}
-      />
-      {result.isPending ? (
-        <CollectionTablePending
-          label="service accounts"
-          presentation="service-accounts"
+        )}
+        <ServiceAccountCreateDialog
+          onCreated={handleCreated}
+          onOpenChange={setCreateOpen}
+          open={createOpen}
+          scope={administrationScope}
         />
-      ) : result.isError && !result.data ? (
-        <CollectionLoadError
-          label="Service accounts"
-          retry={() => void result.refetch()}
+        <OneTimeCredentialDialog
+          credential={credential}
+          onClose={() => setCredential(undefined)}
+          title="Service account created"
         />
-      ) : (
-        <>
-          {result.isError && !result.isFetchNextPageError ? (
-            <CollectionUpdateError
-              label="Service accounts"
-              preserved
-              retry={() => void result.refetch()}
-            />
-          ) : null}
-          <ServiceAccountCollection
-            direction={direction}
-            hasNextPage={Boolean(result.hasNextPage)}
-            isLoadingMore={result.isFetchingNextPage}
-            loadMoreError={result.isFetchNextPageError}
-            onLoadMore={() => void result.fetchNextPage()}
-            onSortChange={handleSortChange}
-            query={search.q}
-            serviceAccounts={serviceAccounts}
-            sort={sort}
-            total={total}
-            updating={updating}
-          />
-        </>
-      )}
-      <ServiceAccountCreateDialog
-        onCreated={handleCreated}
-        onOpenChange={setCreateOpen}
-        open={createOpen}
-        scope={administrationScope}
-      />
-      <OneTimeCredentialDialog
-        credential={credential}
-        onClose={() => setCredential(undefined)}
-        title="Service account created"
-      />
+      </CollectionSection>
     </PageLayout>
   )
 }
@@ -364,23 +369,25 @@ function ServiceAccountsPending() {
             : false
         }
       />
-      <CollectionToolbar
-        actions={
-          <>
-            <ServiceAccountActivityFilterField />
-            <RefreshButton
-              label="Refresh service accounts"
-              onClick={() => undefined}
-              refreshing={false}
-            />
-          </>
-        }
-        primary={<ServiceAccountSearchField />}
-      />
-      <CollectionTablePending
-        label="service accounts"
-        presentation="service-accounts"
-      />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <ServiceAccountActivityFilterField />
+              <RefreshButton
+                label="Refresh service accounts"
+                onClick={() => undefined}
+                refreshing={false}
+              />
+            </>
+          }
+          primary={<ServiceAccountSearchField />}
+        />
+        <CollectionTablePending
+          label="service accounts"
+          presentation="service-accounts"
+        />
+      </CollectionSection>
     </PageLayout>
   )
 }

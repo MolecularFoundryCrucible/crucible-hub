@@ -7,6 +7,7 @@ The public surface that versions protect is shareable URLs and their search para
 ## Unreleased
 
 - Trimmed descriptions that repeated their titles or buttons, dropped "still available" reassurances from error messages, replaced jargon with plain wording, and merged the Danger zone into Resource management.
+- Spaced the toolbar and list the same way on every directory page.
 
 ## 1.6.6 - 2026-10-26
 

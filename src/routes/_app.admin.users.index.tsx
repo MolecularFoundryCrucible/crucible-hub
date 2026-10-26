@@ -11,7 +11,10 @@ import { z } from "zod"
 
 import { DirectorySearchField } from "@/components/crucible/directory-search-field"
 import { RefreshButton } from "@/components/crucible/refresh-button"
-import { CollectionToolbar } from "@/components/crucible/collection-browser"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -245,56 +248,58 @@ function UsersAdminPage() {
   return (
     <PageLayout>
       <UsersPageHeader canCreate />
-      <CollectionToolbar
-        actions={
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <UserActivityFilterField />
+              <RefreshButton
+                label="Refresh users"
+                onClick={() => void result.refetch()}
+                refreshing={updating}
+              />
+            </>
+          }
+          primary={<UserSearchField />}
+        />
+        {result.isPending ? (
+          <CollectionTablePending label="users" presentation="users" />
+        ) : result.isError && !result.data ? (
+          <CollectionLoadError
+            label="Users"
+            retry={() => void result.refetch()}
+          />
+        ) : (
           <>
-            <UserActivityFilterField />
-            <RefreshButton
-              label="Refresh users"
-              onClick={() => void result.refetch()}
-              refreshing={updating}
+            {result.isError && !result.isFetchNextPageError ? (
+              <CollectionUpdateError
+                label="Users"
+                preserved
+                retry={() => void result.refetch()}
+              />
+            ) : null}
+            <UserCollection
+              direction={direction}
+              hasNextPage={Boolean(result.hasNextPage)}
+              isLoadingMore={result.isFetchingNextPage}
+              loadMoreError={result.isFetchNextPageError}
+              onSortChange={handleSortChange}
+              onLoadMore={() => void result.fetchNextPage()}
+              query={search.q}
+              sort={sort}
+              total={total}
+              updating={updating}
+              users={users}
             />
           </>
-        }
-        primary={<UserSearchField />}
-      />
-      {result.isPending ? (
-        <CollectionTablePending label="users" presentation="users" />
-      ) : result.isError && !result.data ? (
-        <CollectionLoadError
-          label="Users"
-          retry={() => void result.refetch()}
+        )}
+        <UserCreateDialog
+          onCreated={handleCreated}
+          onOpenChange={setCreateOpen}
+          open={createOpen}
+          scope={administrationScope}
         />
-      ) : (
-        <>
-          {result.isError && !result.isFetchNextPageError ? (
-            <CollectionUpdateError
-              label="Users"
-              preserved
-              retry={() => void result.refetch()}
-            />
-          ) : null}
-          <UserCollection
-            direction={direction}
-            hasNextPage={Boolean(result.hasNextPage)}
-            isLoadingMore={result.isFetchingNextPage}
-            loadMoreError={result.isFetchNextPageError}
-            onSortChange={handleSortChange}
-            onLoadMore={() => void result.fetchNextPage()}
-            query={search.q}
-            sort={sort}
-            total={total}
-            updating={updating}
-            users={users}
-          />
-        </>
-      )}
-      <UserCreateDialog
-        onCreated={handleCreated}
-        onOpenChange={setCreateOpen}
-        open={createOpen}
-        scope={administrationScope}
-      />
+      </CollectionSection>
     </PageLayout>
   )
 }
@@ -310,20 +315,22 @@ function UsersPending() {
           account ? canOpenUserAdministration(account, privilegeMode) : false
         }
       />
-      <CollectionToolbar
-        actions={
-          <>
-            <UserActivityFilterField />
-            <RefreshButton
-              label="Refresh users"
-              onClick={() => undefined}
-              refreshing={false}
-            />
-          </>
-        }
-        primary={<UserSearchField />}
-      />
-      <CollectionTablePending label="users" presentation="users" />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <UserActivityFilterField />
+              <RefreshButton
+                label="Refresh users"
+                onClick={() => undefined}
+                refreshing={false}
+              />
+            </>
+          }
+          primary={<UserSearchField />}
+        />
+        <CollectionTablePending label="users" presentation="users" />
+      </CollectionSection>
     </PageLayout>
   )
 }

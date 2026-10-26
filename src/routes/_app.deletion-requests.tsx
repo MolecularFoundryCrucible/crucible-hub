@@ -7,7 +7,10 @@ import {
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { CollectionToolbar } from "@/components/crucible/collection-browser"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
 import { PageHeader } from "@/components/crucible/page-header"
 import { RefreshButton } from "@/components/crucible/refresh-button"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -161,114 +164,121 @@ function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
     <ResourcePreviewContext.Provider value={navigation}>
       <PageLayout>
         <PageHeader title="Deletion requests" />
-        <CollectionToolbar
-          actions={
-            <>
-              {view !== "approved" && search.projectMfid && projectName ? (
-                <>
-                  <ResourceIdentityLink
-                    context={
-                      project?.title?.trim() ? project.project_id : undefined
+        <CollectionSection>
+          <CollectionToolbar
+            actions={
+              <>
+                {view !== "approved" && search.projectMfid && projectName ? (
+                  <>
+                    <ResourceIdentityLink
+                      context={
+                        project?.title?.trim() ? project.project_id : undefined
+                      }
+                      kind="project"
+                      mfid={search.projectMfid}
+                      name={projectName}
+                    >
+                      <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
+                        <ResourceTypeIcon className="shrink-0" type="project" />
+                        <span className="truncate">{projectName}</span>
+                      </span>
+                    </ResourceIdentityLink>
+                    <Link
+                      aria-label="Clear project filter"
+                      className={buttonVariants({
+                        size: "sm",
+                        variant: "ghost",
+                      })}
+                      from="/deletion-requests"
+                      search={(current) => ({
+                        ...current,
+                        projectMfid: undefined,
+                      })}
+                      to="/deletion-requests"
+                    >
+                      Clear
+                    </Link>
+                  </>
+                ) : null}
+                <RefreshButton
+                  label="Refresh deletion requests"
+                  onClick={() => {
+                    for (const queryKey of refreshKeys) {
+                      void queryClient.refetchQueries({
+                        queryKey,
+                        type: "active",
+                      })
                     }
-                    kind="project"
-                    mfid={search.projectMfid}
-                    name={projectName}
-                  >
-                    <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
-                      <ResourceTypeIcon className="shrink-0" type="project" />
-                      <span className="truncate">{projectName}</span>
-                    </span>
-                  </ResourceIdentityLink>
-                  <Link
-                    aria-label="Clear project filter"
-                    className={buttonVariants({ size: "sm", variant: "ghost" })}
-                    from="/deletion-requests"
-                    search={(current) => ({
+                  }}
+                  refreshing={refreshing}
+                />
+              </>
+            }
+            primary={
+              <SegmentedControl
+                ariaLabel="Deletion request view"
+                onValueChange={(nextView) => {
+                  void navigate({
+                    replace: true,
+                    search: (current) => ({
                       ...current,
-                      projectMfid: undefined,
-                    })}
-                    to="/deletion-requests"
-                  >
-                    Clear
-                  </Link>
-                </>
-              ) : null}
-              <RefreshButton
-                label="Refresh deletion requests"
-                onClick={() => {
-                  for (const queryKey of refreshKeys) {
-                    void queryClient.refetchQueries({
-                      queryKey,
-                      type: "active",
-                    })
-                  }
+                      direction: undefined,
+                      projectMfid:
+                        nextView === "approved"
+                          ? undefined
+                          : current.projectMfid,
+                      preview: undefined,
+                      sort: undefined,
+                      view: nextView,
+                    }),
+                    to: "/deletion-requests",
+                  })
                 }}
-                refreshing={refreshing}
+                options={views}
+                value={view}
               />
-            </>
-          }
-          primary={
-            <SegmentedControl
-              ariaLabel="Deletion request view"
-              onValueChange={(nextView) => {
+            }
+          />
+          {view === "approved" && canViewDeletionAudit ? (
+            <DeletionAuditQueue
+              account={account}
+              auditScope={auditScope}
+              scope={scope}
+            />
+          ) : (
+            <DeletionRequestQueue
+              account={account}
+              bulkReview={view === "reviewable"}
+              emptyTitle={
+                view === "reviewable"
+                  ? "No requests need review"
+                  : "No submitted requests"
+              }
+              filters={{
+                direction,
+                limit: deletionRequestPageLimit,
+                projectMfid: search.projectMfid,
+                scope: deletionRequestScope(view),
+                sort,
+                status: deletionRequestStatus(view),
+              }}
+              onSortChange={(nextSort, nextDirection) => {
                 void navigate({
                   replace: true,
                   search: (current) => ({
                     ...current,
-                    direction: undefined,
-                    projectMfid:
-                      nextView === "approved" ? undefined : current.projectMfid,
+                    direction: nextDirection,
                     preview: undefined,
-                    sort: undefined,
-                    view: nextView,
+                    sort: nextSort === "request_time" ? undefined : nextSort,
                   }),
                   to: "/deletion-requests",
                 })
               }}
-              options={views}
-              value={view}
+              paginate
+              scope={scope}
             />
-          }
-        />
-        {view === "approved" && canViewDeletionAudit ? (
-          <DeletionAuditQueue
-            account={account}
-            auditScope={auditScope}
-            scope={scope}
-          />
-        ) : (
-          <DeletionRequestQueue
-            account={account}
-            bulkReview={view === "reviewable"}
-            emptyTitle={
-              view === "reviewable"
-                ? "No requests need review"
-                : "No submitted requests"
-            }
-            filters={{
-              direction,
-              limit: deletionRequestPageLimit,
-              projectMfid: search.projectMfid,
-              scope: deletionRequestScope(view),
-              sort,
-              status: deletionRequestStatus(view),
-            }}
-            onSortChange={(nextSort, nextDirection) => {
-              void navigate({
-                replace: true,
-                search: (current) => ({
-                  ...current,
-                  direction: nextDirection,
-                  preview: undefined,
-                  sort: nextSort === "request_time" ? undefined : nextSort,
-                }),
-                to: "/deletion-requests",
-              })
-            }}
-            paginate
-            scope={scope}
-          />
-        )}
+          )}
+        </CollectionSection>
       </PageLayout>
       <ResourceInspector navigation={navigation} />
     </ResourcePreviewContext.Provider>

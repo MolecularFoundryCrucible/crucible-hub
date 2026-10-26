@@ -9,7 +9,10 @@ import { z } from "zod"
 import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { resourceDisplayName } from "@/lib/resource-name"
 
-import { CollectionToolbar } from "@/components/crucible/collection-browser"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
 import {
   collectionActiveFilter,
   collectionActiveFilters,
@@ -234,53 +237,55 @@ function ProjectsPage() {
   return (
     <PageLayout>
       <ProjectsPageHeader canCreate={account.capabilities.can_create_project} />
-      <CollectionToolbar
-        actions={
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <ProjectDirectoryFilters values={search} />
+              <RefreshButton
+                label="Refresh projects"
+                onClick={() => void projectResult.refetch()}
+                refreshing={updating}
+              />
+            </>
+          }
+        />
+        {projectResult.isPending ? (
+          <CollectionTablePending label="projects" presentation="projects" />
+        ) : projectResult.isError && !projectResult.data ? (
           <>
-            <ProjectDirectoryFilters values={search} />
-            <RefreshButton
-              label="Refresh projects"
-              onClick={() => void projectResult.refetch()}
-              refreshing={updating}
-            />
-          </>
-        }
-      />
-      {projectResult.isPending ? (
-        <CollectionTablePending label="projects" presentation="projects" />
-      ) : projectResult.isError && !projectResult.data ? (
-        <>
-          <CollectionLoadError
-            label="Projects"
-            retry={() => void projectResult.refetch()}
-          />
-        </>
-      ) : (
-        <>
-          {projectResult.isError && !projectResult.isFetchNextPageError ? (
-            <CollectionUpdateError
+            <CollectionLoadError
               label="Projects"
-              preserved
               retry={() => void projectResult.refetch()}
             />
-          ) : null}
-          <ProjectCollection
-            accountUserMfid={account.unique_id}
-            affiliation={search.affiliation}
-            direction={direction}
-            hasActiveFilters={hasActiveFilters}
-            hasNextPage={Boolean(projectResult.hasNextPage)}
-            isLoadingMore={projectResult.isFetchingNextPage}
-            loadMoreError={projectResult.isFetchNextPageError}
-            onLoadMore={() => void projectResult.fetchNextPage()}
-            onSortChange={handleSortChange}
-            projects={projects}
-            sort={sort}
-            total={total}
-            updating={updating}
-          />
-        </>
-      )}
+          </>
+        ) : (
+          <>
+            {projectResult.isError && !projectResult.isFetchNextPageError ? (
+              <CollectionUpdateError
+                label="Projects"
+                preserved
+                retry={() => void projectResult.refetch()}
+              />
+            ) : null}
+            <ProjectCollection
+              accountUserMfid={account.unique_id}
+              affiliation={search.affiliation}
+              direction={direction}
+              hasActiveFilters={hasActiveFilters}
+              hasNextPage={Boolean(projectResult.hasNextPage)}
+              isLoadingMore={projectResult.isFetchingNextPage}
+              loadMoreError={projectResult.isFetchNextPageError}
+              onLoadMore={() => void projectResult.fetchNextPage()}
+              onSortChange={handleSortChange}
+              projects={projects}
+              sort={sort}
+              total={total}
+              updating={updating}
+            />
+          </>
+        )}
+      </CollectionSection>
     </PageLayout>
   )
 }
@@ -293,19 +298,21 @@ function ProjectsRoutePending() {
       <ProjectsPageHeader
         canCreate={account?.capabilities.can_create_project === true}
       />
-      <CollectionToolbar
-        actions={
-          <>
-            <ProjectDirectoryFilters values={Route.useSearch()} />
-            <RefreshButton
-              label="Refresh projects"
-              onClick={() => undefined}
-              refreshing={false}
-            />
-          </>
-        }
-      />
-      <CollectionTablePending label="projects" presentation="projects" />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <ProjectDirectoryFilters values={Route.useSearch()} />
+              <RefreshButton
+                label="Refresh projects"
+                onClick={() => undefined}
+                refreshing={false}
+              />
+            </>
+          }
+        />
+        <CollectionTablePending label="projects" presentation="projects" />
+      </CollectionSection>
     </PageLayout>
   )
 }

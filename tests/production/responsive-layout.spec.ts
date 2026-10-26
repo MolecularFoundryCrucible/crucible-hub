@@ -398,3 +398,44 @@ test("keeps ordering out of the Filters sheet and keeps it when filters clear", 
     await expect(page, path).toHaveURL(/direction=desc/)
   }
 })
+
+test("spaces every directory's toolbar and list the same way", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1280 })
+  const measured: Record<string, { gap: number; height: number }> = {}
+  for (const path of [
+    "/hub/projects",
+    "/hub/instruments",
+    "/hub/data",
+    "/hub/data?kind=datasets",
+    "/hub/deletion-requests",
+    "/hub/projects/01J6Y8N4Q2R7M9K3T5V0W1X2Z3",
+  ]) {
+    await page.goto(path)
+    await page.waitForLoadState("networkidle")
+    measured[path] = await page
+      .locator('[data-slot="collection-toolbar"]')
+      .first()
+      .evaluate((toolbar) => {
+        const box = toolbar.getBoundingClientRect()
+        let next = toolbar.nextElementSibling
+        while (next && next.getBoundingClientRect().height <= 1) {
+          next = next.nextElementSibling
+        }
+        return {
+          gap: Math.round(next!.getBoundingClientRect().top - box.bottom),
+          height: Math.round(box.height),
+        }
+      })
+  }
+  const values = Object.values(measured)
+  expect(
+    new Set(values.map((value) => value.gap)),
+    JSON.stringify(measured)
+  ).toEqual(new Set([16]))
+  expect(
+    new Set(values.map((value) => value.height)),
+    JSON.stringify(measured)
+  ).toHaveProperty("size", 1)
+})

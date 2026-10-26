@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router"
 
 import {
   CollectionGroupControl,
+  CollectionSection,
   CollectionToolbar,
   DatasetCollectionBrowser,
   SampleCollectionBrowser,
@@ -383,17 +384,17 @@ function ProjectBrowseFrame({
 
   if (!filters) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
+      <CollectionSection>
         {toolbar}
         {children}
-      </div>
+      </CollectionSection>
     )
   }
 
   const facetFilters = { ...filters, projectMfid, projectScope }
   if (sampleBrowse) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
+      <CollectionSection>
         {toolbar}
         {sampleBrowse.view === "grouped" ? (
           <SampleCollectionBrowser
@@ -410,13 +411,13 @@ function ProjectBrowseFrame({
         ) : (
           children
         )}
-      </div>
+      </CollectionSection>
     )
   }
 
   if (!datasetBrowse) return children
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <CollectionSection>
       {toolbar}
       {datasetBrowse.view === "grouped" ? (
         <DatasetCollectionBrowser
@@ -433,7 +434,7 @@ function ProjectBrowseFrame({
       ) : (
         children
       )}
-    </div>
+    </CollectionSection>
   )
 }
 

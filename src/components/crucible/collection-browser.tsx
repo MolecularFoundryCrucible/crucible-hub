@@ -45,6 +45,18 @@ import type {
 } from "@/data/crucible/facets"
 import { facetBucketLabel } from "./collection-facet-filter"
 
+/**
+ * A collection's toolbar and results, kept closer to each other than to the
+ * page header, so every directory spaces its list the same way.
+ */
+export function CollectionSection({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-4" data-slot="collection-section">
+      {children}
+    </div>
+  )
+}
+
 export function CollectionToolbar({
   actions,
   primary,
@@ -64,14 +76,14 @@ export function CollectionToolbar({
       data-slot="collection-toolbar"
     >
       {primary ? (
-        <div className="flex min-w-0 grow flex-wrap items-center gap-2">
+        <div className="flex min-h-9 min-w-0 grow flex-wrap items-center gap-2">
           {primary}
         </div>
       ) : null}
       {actions ? (
         <div
           className={cn(
-            "flex min-w-0 flex-wrap items-center gap-2",
+            "flex min-h-9 min-w-0 flex-wrap items-center gap-2",
             primary ? "sm:ml-auto" : "ml-auto"
           )}
         >

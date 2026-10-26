@@ -10,7 +10,10 @@ import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { statusLabel } from "@/lib/status"
 
-import { CollectionToolbar } from "@/components/crucible/collection-browser"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
 import {
   collectionActiveFilter,
   collectionActiveFilters,
@@ -245,57 +248,59 @@ function InstrumentsPage() {
       <InstrumentsPageHeader
         canRegister={account.capabilities.can_register_instrument}
       />
-      <CollectionToolbar
-        actions={
-          <>
-            <InstrumentDirectoryFilters values={search} />
-            <RefreshButton
-              label="Refresh instruments"
-              onClick={() => void instrumentResult.refetch()}
-              refreshing={updating}
-            />
-          </>
-        }
-      />
-      {instrumentResult.isPending ? (
-        <CollectionTablePending
-          label="instruments"
-          presentation="instruments"
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <InstrumentDirectoryFilters values={search} />
+              <RefreshButton
+                label="Refresh instruments"
+                onClick={() => void instrumentResult.refetch()}
+                refreshing={updating}
+              />
+            </>
+          }
         />
-      ) : instrumentResult.isError && !instrumentResult.data ? (
-        <>
-          <CollectionLoadError
-            label="Instruments"
-            retry={() => void instrumentResult.refetch()}
+        {instrumentResult.isPending ? (
+          <CollectionTablePending
+            label="instruments"
+            presentation="instruments"
           />
-        </>
-      ) : (
-        <>
-          {instrumentResult.isError &&
-          !instrumentResult.isFetchNextPageError ? (
-            <CollectionUpdateError
+        ) : instrumentResult.isError && !instrumentResult.data ? (
+          <>
+            <CollectionLoadError
               label="Instruments"
-              preserved
               retry={() => void instrumentResult.refetch()}
             />
-          ) : null}
-          <InstrumentCollection
-            affiliation={search.affiliation}
-            direction={direction}
-            hasNextPage={Boolean(instrumentResult.hasNextPage)}
-            hasSecondaryFilters={hasSecondaryFilters}
-            instruments={instruments}
-            isLoadingMore={instrumentResult.isFetchingNextPage}
-            loadMoreError={instrumentResult.isFetchNextPageError}
-            onLoadMore={() => void instrumentResult.fetchNextPage()}
-            onSortChange={handleSortChange}
-            sort={sort}
-            status={status}
-            total={total}
-            updating={updating}
-          />
-        </>
-      )}
+          </>
+        ) : (
+          <>
+            {instrumentResult.isError &&
+            !instrumentResult.isFetchNextPageError ? (
+              <CollectionUpdateError
+                label="Instruments"
+                preserved
+                retry={() => void instrumentResult.refetch()}
+              />
+            ) : null}
+            <InstrumentCollection
+              affiliation={search.affiliation}
+              direction={direction}
+              hasNextPage={Boolean(instrumentResult.hasNextPage)}
+              hasSecondaryFilters={hasSecondaryFilters}
+              instruments={instruments}
+              isLoadingMore={instrumentResult.isFetchingNextPage}
+              loadMoreError={instrumentResult.isFetchNextPageError}
+              onLoadMore={() => void instrumentResult.fetchNextPage()}
+              onSortChange={handleSortChange}
+              sort={sort}
+              status={status}
+              total={total}
+              updating={updating}
+            />
+          </>
+        )}
+      </CollectionSection>
     </PageLayout>
   )
 }
@@ -309,19 +314,24 @@ function InstrumentsRoutePending() {
       <InstrumentsPageHeader
         canRegister={account?.capabilities.can_register_instrument === true}
       />
-      <CollectionToolbar
-        actions={
-          <>
-            <InstrumentDirectoryFilters values={search} />
-            <RefreshButton
-              label="Refresh instruments"
-              onClick={() => undefined}
-              refreshing={false}
-            />
-          </>
-        }
-      />
-      <CollectionTablePending label="instruments" presentation="instruments" />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <>
+              <InstrumentDirectoryFilters values={search} />
+              <RefreshButton
+                label="Refresh instruments"
+                onClick={() => undefined}
+                refreshing={false}
+              />
+            </>
+          }
+        />
+        <CollectionTablePending
+          label="instruments"
+          presentation="instruments"
+        />
+      </CollectionSection>
     </PageLayout>
   )
 }
