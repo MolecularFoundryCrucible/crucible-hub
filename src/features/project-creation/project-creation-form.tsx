@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { AnyFormApi } from "@tanstack/react-form"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import {
   useMutation,
   useQueryClient,
@@ -21,13 +21,12 @@ import {
 } from "@/features/forms/discard-changes"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { Input } from "@/components/ui/input"
+import { useAppForm } from "@/features/forms/app-form"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { createWorkspaceProject } from "@/data/crucible/creation.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -65,7 +64,6 @@ const projectCreationSchema = z.object({
 })
 
 type ProjectCreationValues = z.infer<typeof projectCreationSchema>
-type ProjectCreationForm = ReturnType<typeof useProjectCreationForm>
 
 function accountAsSearchResult(
   account: WorkspaceAccount
@@ -168,19 +166,25 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
             >
               <fieldset disabled={isSubmitting}>
                 <FieldGroup>
-                  <ProjectTextField
-                    autoFocus
-                    fieldName="title"
-                    form={form}
-                    label="Title"
-                    required
-                  />
-                  <ProjectTextField
-                    fieldName="organization"
-                    form={form}
-                    label="Organization"
-                    required
-                  />
+                  <form.AppField name="title">
+                    {(field) => (
+                      <field.TextField
+                        maxLength={255}
+                        autoFocus
+                        label="Title"
+                        required
+                      />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="organization">
+                    {(field) => (
+                      <field.TextField
+                        maxLength={255}
+                        label="Organization"
+                        required
+                      />
+                    )}
+                  </form.AppField>
                   <form.Field name="project_id">
                     {(field) => (
                       <ProjectIdField
@@ -256,7 +260,7 @@ function useProjectCreationForm(
   accountId: string,
   onSubmit: (value: ProjectCreationValues, form: AnyFormApi) => Promise<void>
 ) {
-  return useForm({
+  return useAppForm({
     defaultValues: {
       organization: "",
       project_id: "",
@@ -266,65 +270,4 @@ function useProjectCreationForm(
     validators: { onChange: projectCreationSchema },
     onSubmit: ({ formApi, value }) => onSubmit(value, formApi),
   })
-}
-
-function ProjectTextField({
-  autoFocus = false,
-  description,
-  fieldName,
-  form,
-  label,
-  required = false,
-}: {
-  autoFocus?: boolean
-  description?: string
-  fieldName: "organization" | "title"
-  form: ProjectCreationForm
-  label: string
-  required?: boolean
-}) {
-  return (
-    <form.Field name={fieldName}>
-      {(field) => {
-        const invalid = shouldShowFieldError(field)
-        const descriptionId = `project-creation-${field.name}-description`
-        const errorId = `project-creation-${field.name}-error`
-        const hasDescription = Boolean(description)
-        const describedBy =
-          [hasDescription ? descriptionId : null, invalid ? errorId : null]
-            .filter(Boolean)
-            .join(" ") || undefined
-        return (
-          <Field data-invalid={invalid}>
-            <FieldLabel
-              htmlFor={field.name}
-              optional={!required}
-              required={required}
-            >
-              {label}
-            </FieldLabel>
-            <Input
-              aria-describedby={describedBy}
-              aria-errormessage={invalid ? errorId : undefined}
-              aria-invalid={invalid || undefined}
-              autoFocus={autoFocus}
-              id={field.name}
-              maxLength={255}
-              name={field.name}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value)}
-              required={required}
-              value={field.state.value}
-            />
-            {description ? (
-              <FieldDescription id={descriptionId}>
-                {description}
-              </FieldDescription>
-            ) : null}
-            <FieldError errors={fieldErrors(field)} id={errorId} />
-          </Field>
-        )
-      }}
-    </form.Field>
-  )
 }

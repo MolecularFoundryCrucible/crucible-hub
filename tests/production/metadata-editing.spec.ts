@@ -40,3 +40,27 @@ test("links a required field's error to the field in the instrument editor", asy
   await expect(name).toHaveAttribute("aria-describedby", errorId!)
   await page.getByRole("button", { name: "Cancel" }).click()
 })
+
+for (const [path, label] of [
+  ["/hub/samples/new", /^Name/],
+  ["/hub/datasets/new", /^Name/],
+  ["/hub/projects/new", /^Title/],
+  ["/hub/instruments/new", /^Name/],
+] as const) {
+  test(`links required field errors on ${path}`, async ({ page }) => {
+    await page.goto(path)
+    await page.waitForLoadState("networkidle")
+    const field = page.getByRole("textbox", { name: label })
+    await field.fill("x")
+    await field.fill("")
+    await field.blur()
+    await expect(field).toHaveAttribute("aria-invalid", "true")
+    const errorId = await field.getAttribute("aria-errormessage")
+    expect(errorId).toBeTruthy()
+    await expect(page.locator(`[id="${errorId}"]`)).not.toBeEmpty()
+    await expect(field).toHaveAttribute(
+      "aria-describedby",
+      new RegExp(`(^| )${errorId}$`)
+    )
+  })
+}

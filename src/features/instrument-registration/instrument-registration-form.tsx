@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { AnyFormApi } from "@tanstack/react-form"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
@@ -13,16 +13,8 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { FieldGroup } from "@/components/ui/field"
+import { useAppForm } from "@/features/forms/app-form"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { createWorkspaceInstrument } from "@/data/crucible/instruments.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
@@ -174,13 +166,16 @@ export function InstrumentRegistrationForm({
             >
               <fieldset disabled={isSubmitting}>
                 <FieldGroup>
-                  <RegistrationTextField
-                    autoFocus
-                    fieldName="instrument_name"
-                    form={form}
-                    label="Name"
-                    required
-                  />
+                  <form.AppField name="instrument_name">
+                    {(field) => (
+                      <field.TextField
+                        maxLength={255}
+                        autoFocus
+                        label="Name"
+                        required
+                      />
+                    )}
+                  </form.AppField>
                   <form.Field name="instrument_id">
                     {(field) => (
                       <InstrumentIdField
@@ -191,42 +186,54 @@ export function InstrumentRegistrationForm({
                       />
                     )}
                   </form.Field>
-                  <RegistrationTextField
-                    fieldName="location"
-                    form={form}
-                    label="Location"
-                    required
-                  />
-                  <RegistrationTextField
-                    fieldName="instrument_type"
-                    form={form}
-                    label="Instrument type"
-                  />
-                  <RegistrationTextField
-                    fieldName="manufacturer"
-                    form={form}
-                    label="Manufacturer"
-                  />
-                  <RegistrationTextField
-                    fieldName="model"
-                    form={form}
-                    label="Model"
-                  />
-                  <RegistrationTextAreaField
-                    fieldName="description"
-                    form={form}
-                    label="Description"
-                  />
-                  <RegistrationTextField
-                    fieldName="other_id"
-                    form={form}
-                    label="Other ID"
-                  />
-                  <RegistrationTextField
-                    fieldName="other_id_source"
-                    form={form}
-                    label="Other ID source"
-                  />
+                  <form.AppField name="location">
+                    {(field) => (
+                      <field.TextField
+                        maxLength={255}
+                        label="Location"
+                        required
+                      />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="instrument_type">
+                    {(field) => (
+                      <field.TextField
+                        maxLength={255}
+                        label="Instrument type"
+                      />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="manufacturer">
+                    {(field) => (
+                      <field.TextField maxLength={255} label="Manufacturer" />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="model">
+                    {(field) => (
+                      <field.TextField maxLength={255} label="Model" />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="description">
+                    {(field) => (
+                      <field.TextAreaField
+                        maxLength={10_000}
+                        label="Description"
+                      />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="other_id">
+                    {(field) => (
+                      <field.TextField maxLength={255} label="Other ID" />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="other_id_source">
+                    {(field) => (
+                      <field.TextField
+                        maxLength={255}
+                        label="Other ID source"
+                      />
+                    )}
+                  </form.AppField>
                 </FieldGroup>
               </fieldset>
               <FormErrorRegion padded>
@@ -261,110 +268,9 @@ export function InstrumentRegistrationForm({
 function useRegistrationForm(
   onSubmit: (value: RegistrationValues, form: AnyFormApi) => Promise<void>
 ) {
-  return useForm({
+  return useAppForm({
     defaultValues,
     validators: { onChange: registrationSchema },
     onSubmit: ({ formApi, value }) => onSubmit(value, formApi),
   })
-}
-
-type RegistrationForm = ReturnType<typeof useRegistrationForm>
-
-function RegistrationTextField({
-  autoFocus = false,
-  description,
-  fieldName,
-  form,
-  label,
-  required = false,
-}: {
-  autoFocus?: boolean
-  description?: string
-  fieldName: keyof RegistrationValues
-  form: RegistrationForm
-  label: string
-  required?: boolean
-}) {
-  return (
-    <form.Field name={fieldName}>
-      {(field) => {
-        const invalid = shouldShowFieldError(field)
-        const descriptionId = `instrument-registration-${field.name}-description`
-        const errorId = `instrument-registration-${field.name}-error`
-        const hasDescription = Boolean(description)
-        const describedBy =
-          [hasDescription ? descriptionId : null, invalid ? errorId : null]
-            .filter(Boolean)
-            .join(" ") || undefined
-        return (
-          <Field data-invalid={invalid}>
-            <FieldLabel
-              htmlFor={field.name}
-              optional={!required}
-              required={required}
-            >
-              {label}
-            </FieldLabel>
-            <Input
-              aria-describedby={describedBy}
-              aria-errormessage={invalid ? errorId : undefined}
-              aria-invalid={invalid || undefined}
-              autoFocus={autoFocus}
-              id={field.name}
-              maxLength={255}
-              name={field.name}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value)}
-              required={required}
-              value={field.state.value}
-            />
-            {description ? (
-              <FieldDescription id={descriptionId}>
-                {description}
-              </FieldDescription>
-            ) : null}
-            <FieldError errors={fieldErrors(field)} id={errorId} />
-          </Field>
-        )
-      }}
-    </form.Field>
-  )
-}
-
-function RegistrationTextAreaField({
-  fieldName,
-  form,
-  label,
-}: {
-  fieldName: "description"
-  form: RegistrationForm
-  label: string
-}) {
-  return (
-    <form.Field name={fieldName}>
-      {(field) => {
-        const invalid = shouldShowFieldError(field)
-        const errorId = `instrument-registration-${field.name}-error`
-        return (
-          <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={field.name} optional>
-              {label}
-            </FieldLabel>
-            <Textarea
-              aria-describedby={invalid ? errorId : undefined}
-              aria-errormessage={invalid ? errorId : undefined}
-              aria-invalid={invalid || undefined}
-              id={field.name}
-              maxLength={10_000}
-              name={field.name}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value)}
-              value={field.state.value}
-            />
-            <FieldError errors={fieldErrors(field)} id={errorId} />
-          </Field>
-        )
-      }}
-    </form.Field>
-  )
 }

@@ -1,5 +1,5 @@
 import type { AnyFormApi } from "@tanstack/react-form"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
@@ -19,9 +19,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { Input } from "@/components/ui/input"
+import { useAppForm } from "@/features/forms/app-form"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { Textarea } from "@/components/ui/textarea"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
@@ -214,37 +213,16 @@ export function SampleCreationForm({
               >
                 <fieldset disabled={formDisabled}>
                   <FieldGroup>
-                    <form.Field name="sample_name">
-                      {(field) => {
-                        const invalid = shouldShowFieldError(field)
-                        const errorId = `${field.name}-error`
-                        return (
-                          <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name} required>
-                              Name
-                            </FieldLabel>
-                            <Input
-                              aria-describedby={invalid ? errorId : undefined}
-                              aria-errormessage={invalid ? errorId : undefined}
-                              aria-invalid={invalid || undefined}
-                              autoFocus
-                              id={field.name}
-                              maxLength={SAMPLE_NAME_MAX_LENGTH}
-                              name={field.name}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
-                              }
-                              value={field.state.value}
-                            />
-                            <FieldError
-                              errors={fieldErrors(field)}
-                              id={errorId}
-                            />
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
+                    <form.AppField name="sample_name">
+                      {(field) => (
+                        <field.TextField
+                          label="Name"
+                          required
+                          autoFocus
+                          maxLength={SAMPLE_NAME_MAX_LENGTH}
+                        />
+                      )}
+                    </form.AppField>
                     <form.Field name="project">
                       {(field) => {
                         const invalid = shouldShowFieldError(field)
@@ -347,71 +325,24 @@ export function SampleCreationForm({
                           )
                         }}
                       </form.Field>
-                      <form.Field name="timestamp">
-                        {(field) => {
-                          const invalid = shouldShowFieldError(field)
-                          const errorId = `${field.name}-error`
-                          return (
-                            <Field data-invalid={invalid}>
-                              <FieldLabel htmlFor={field.name} required>
-                                Local date and time
-                              </FieldLabel>
-                              <Input
-                                aria-describedby={invalid ? errorId : undefined}
-                                aria-errormessage={
-                                  invalid ? errorId : undefined
-                                }
-                                aria-invalid={invalid || undefined}
-                                id={field.name}
-                                name={field.name}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                                type="datetime-local"
-                                value={field.state.value}
-                              />
-                              <FieldError
-                                errors={fieldErrors(field)}
-                                id={errorId}
-                              />
-                            </Field>
-                          )
-                        }}
-                      </form.Field>
-                      <form.Field name="description">
-                        {(field) => {
-                          const invalid = shouldShowFieldError(field)
-                          const errorId = `${field.name}-error`
-                          return (
-                            <Field data-invalid={invalid}>
-                              <FieldLabel htmlFor={field.name} optional>
-                                Description
-                              </FieldLabel>
-                              <Textarea
-                                aria-describedby={invalid ? errorId : undefined}
-                                aria-errormessage={
-                                  invalid ? errorId : undefined
-                                }
-                                aria-invalid={invalid || undefined}
-                                id={field.name}
-                                maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
-                                name={field.name}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                                rows={4}
-                                value={field.state.value}
-                              />
-                              <FieldError
-                                errors={fieldErrors(field)}
-                                id={errorId}
-                              />
-                            </Field>
-                          )
-                        }}
-                      </form.Field>
+                      <form.AppField name="timestamp">
+                        {(field) => (
+                          <field.TextField
+                            label="Local date and time"
+                            required
+                            type="datetime-local"
+                          />
+                        )}
+                      </form.AppField>
+                      <form.AppField name="description">
+                        {(field) => (
+                          <field.TextAreaField
+                            label="Description"
+                            maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
+                            rows={4}
+                          />
+                        )}
+                      </form.AppField>
                     </CreationFormSection>
                   </FieldGroup>
                 </fieldset>
@@ -499,7 +430,7 @@ function useSampleForm(
   initialProject: WorkspaceSearchResult | undefined,
   onSubmit: (value: SampleValues, form: AnyFormApi) => Promise<void>
 ) {
-  return useForm({
+  return useAppForm({
     defaultValues: {
       description: "",
       project: initialProject ?? null,

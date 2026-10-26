@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import type { AnyFormApi } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -21,7 +21,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { Input } from "@/components/ui/input"
+import { useAppForm } from "@/features/forms/app-form"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { createWorkspaceDataset } from "@/data/crucible/creation.functions"
@@ -251,38 +251,16 @@ export function DatasetCreationForm({
               >
                 <fieldset disabled={formDisabled}>
                   <FieldGroup>
-                    <form.Field name="dataset_name">
-                      {(field) => {
-                        const invalid = shouldShowFieldError(field)
-                        const errorId = `${field.name}-error`
-                        return (
-                          <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name} required>
-                              Name
-                            </FieldLabel>
-                            <Input
-                              aria-describedby={invalid ? errorId : undefined}
-                              aria-errormessage={invalid ? errorId : undefined}
-                              autoFocus
-                              aria-invalid={invalid || undefined}
-                              id={field.name}
-                              maxLength={DATASET_NAME_MAX_LENGTH}
-                              name={field.name}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
-                              }
-                              required
-                              value={field.state.value}
-                            />
-                            <FieldError
-                              errors={fieldErrors(field)}
-                              id={errorId}
-                            />
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
+                    <form.AppField name="dataset_name">
+                      {(field) => (
+                        <field.TextField
+                          label="Name"
+                          required
+                          autoFocus
+                          maxLength={DATASET_NAME_MAX_LENGTH}
+                        />
+                      )}
+                    </form.AppField>
                     <form.Field name="project">
                       {(field) => {
                         const invalid = shouldShowFieldError(field)
@@ -374,38 +352,15 @@ export function DatasetCreationForm({
                         projectMfid={projectMfid}
                         scope={scope}
                       />
-                      <form.Field name="timestamp">
-                        {(field) => {
-                          const invalid = shouldShowFieldError(field)
-                          const errorId = `${field.name}-error`
-                          return (
-                            <Field data-invalid={invalid}>
-                              <FieldLabel htmlFor={field.name} required>
-                                Local date and time
-                              </FieldLabel>
-                              <Input
-                                aria-describedby={invalid ? errorId : undefined}
-                                aria-errormessage={
-                                  invalid ? errorId : undefined
-                                }
-                                aria-invalid={invalid || undefined}
-                                id={field.name}
-                                name={field.name}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                                type="datetime-local"
-                                value={field.state.value}
-                              />
-                              <FieldError
-                                errors={fieldErrors(field)}
-                                id={errorId}
-                              />
-                            </Field>
-                          )
-                        }}
-                      </form.Field>
+                      <form.AppField name="timestamp">
+                        {(field) => (
+                          <field.TextField
+                            label="Local date and time"
+                            required
+                            type="datetime-local"
+                          />
+                        )}
+                      </form.AppField>
                       <DatasetTextField
                         disabled={formDisabled}
                         facetField="session"
@@ -428,12 +383,14 @@ export function DatasetCreationForm({
                         projectMfid={projectMfid}
                         scope={scope}
                       />
-                      <DatasetTextField
-                        fieldName="data_type"
-                        form={form}
-                        label="Data type"
-                        maxLength={DATASET_DATA_TYPE_MAX_LENGTH}
-                      />
+                      <form.AppField name="data_type">
+                        {(field) => (
+                          <field.TextField
+                            label="Data type"
+                            maxLength={DATASET_DATA_TYPE_MAX_LENGTH}
+                          />
+                        )}
+                      </form.AppField>
                     </CreationFormSection>
                   </FieldGroup>
                 </fieldset>
@@ -550,13 +507,13 @@ function DatasetTextField({
   scope,
 }: {
   disabled?: boolean
-  facetField?: "data_format" | "measurement" | "session"
-  fieldName: "data_format" | "data_type" | "measurement" | "session_name"
+  facetField: "data_format" | "measurement" | "session"
+  fieldName: "data_format" | "measurement" | "session_name"
   form: ReturnType<typeof useDatasetForm>
   label: string
   maxLength: number
   projectMfid?: string | null
-  scope?: IdentityScope
+  scope: IdentityScope
 }) {
   return (
     <form.Field name={fieldName}>
@@ -568,37 +525,23 @@ function DatasetTextField({
             <FieldLabel htmlFor={field.name} optional>
               {label}
             </FieldLabel>
-            {facetField && scope ? (
-              <FacetCombobox
-                describedBy={invalid ? errorId : undefined}
-                disabled={disabled}
-                errorId={invalid ? errorId : undefined}
-                field={facetField}
-                id={field.name}
-                invalid={invalid}
-                kind="dataset"
-                label={label}
-                maxLength={maxLength}
-                name={field.name}
-                onBlur={field.handleBlur}
-                onChange={field.handleChange}
-                projectMfid={projectMfid}
-                scope={scope}
-                value={field.state.value}
-              />
-            ) : (
-              <Input
-                aria-describedby={invalid ? errorId : undefined}
-                aria-errormessage={invalid ? errorId : undefined}
-                aria-invalid={invalid || undefined}
-                id={field.name}
-                maxLength={maxLength}
-                name={field.name}
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-                value={field.state.value}
-              />
-            )}
+            <FacetCombobox
+              describedBy={invalid ? errorId : undefined}
+              disabled={disabled}
+              errorId={invalid ? errorId : undefined}
+              field={facetField}
+              id={field.name}
+              invalid={invalid}
+              kind="dataset"
+              label={label}
+              maxLength={maxLength}
+              name={field.name}
+              onBlur={field.handleBlur}
+              onChange={field.handleChange}
+              projectMfid={projectMfid}
+              scope={scope}
+              value={field.state.value}
+            />
             <FieldError errors={fieldErrors(field)} id={errorId} />
           </Field>
         )
@@ -614,7 +557,7 @@ function useDatasetForm(
     value: DatasetFormValues
   }) => Promise<void>
 ) {
-  return useForm({
+  return useAppForm({
     defaultValues,
     validators: { onChange: datasetFormSchema },
     onSubmit,
