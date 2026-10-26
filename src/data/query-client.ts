@@ -7,6 +7,8 @@ const dehydratedQueryFamilies = new Set([
   "account",
   "admin",
   "datasets",
+  "deletion-audit",
+  "deletion-requests",
   "instruments",
   "people",
   "projects",

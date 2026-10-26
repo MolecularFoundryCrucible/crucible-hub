@@ -10,6 +10,21 @@ import {
 } from "./query-client"
 
 describe("Crucible Query client", () => {
+  it("dehydrates the deletion request lists the server renders", () => {
+    const scope = identityScope("staging", "user-a")
+    const source = createQueryClient()
+    source.setQueryData(crucibleKeys.deletionRequests(scope, {}), {
+      pages: [],
+      pageParams: [],
+    })
+    source.setQueryData(crucibleKeys.deletionAudit(scope, {}), {
+      pages: [],
+      pageParams: [],
+    })
+
+    expect(dehydrate(source).queries).toHaveLength(2)
+  })
+
   it("dehydrates and hydrates only successful identity-scoped queries", async () => {
     const scope = identityScope("staging", "user-a")
     const elevatedScope = identityScope("staging", "user-a", "elevated")
