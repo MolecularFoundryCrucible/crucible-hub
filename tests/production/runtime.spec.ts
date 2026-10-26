@@ -168,3 +168,28 @@ test("serves nested instrument datasets with production navigation", async ({
     .click()
   await expect(page.getByText("Summary", { exact: true })).toBeVisible()
 })
+
+test("hydrates full page loads in the Administrator view", async ({ page }) => {
+  await page.setViewportSize({ height: 800, width: 1280 })
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("switch", { name: "Administrator view" }).click()
+  await expect(
+    page.getByRole("switch", { name: "Administrator view" })
+  ).toBeChecked()
+  const errors: string[] = []
+  page.on("pageerror", (error) => errors.push(error.message))
+  for (const path of [
+    "/hub/",
+    "/hub/projects",
+    "/hub/instruments",
+    "/hub/data",
+    "/hub/deletion-requests",
+    "/hub/deletion-requests?view=approved",
+    "/hub/admin/users",
+  ]) {
+    await page.goto(path)
+    await page.waitForLoadState("networkidle")
+  }
+  expect(errors).toEqual([])
+})

@@ -28,6 +28,7 @@ import { accountQueryOptions } from "@/data/crucible/account.queries"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
 import { crucibleKeys } from "@/data/crucible/query-keys"
+import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import {
   deletionAuditInfiniteQueryOptions,
   deletionRequestPageLimit,
@@ -76,7 +77,7 @@ export const Route = createFileRoute("/_app/deletion-requests")({
     sort: search.sort ?? "request_time",
     view: search.view ?? "submitted",
   }),
-  loader: async ({ context, deps, parentMatchPromise }) => {
+  loader: async ({ cause, context, deps, parentMatchPromise }) => {
     const source = (await parentMatchPromise).loaderData
     if (!source || source.status === "unavailable") return
     const account = context.queryClient.getQueryData(
@@ -84,13 +85,15 @@ export const Route = createFileRoute("/_app/deletion-requests")({
     )
     const scope = source.scope
     if (deps.view === "approved") {
-      if (account && !account.is_service_account)
-        void context.queryClient.prefetchInfiniteQuery(
-          deletionAuditInfiniteQueryOptions(
-            scope,
-            deletionAuditScope(source.privilegeMode)
-          )
+      if (!account || account.is_service_account) return
+      const request = prefetchInfiniteQueryWithReadableCache(
+        context.queryClient,
+        deletionAuditInfiniteQueryOptions(
+          scope,
+          deletionAuditScope(source.privilegeMode)
         )
+      )
+      if (cause !== "stay" && request) await request
       return
     }
     const options = deletionRequestsInfiniteQueryOptions(scope, {
@@ -101,7 +104,11 @@ export const Route = createFileRoute("/_app/deletion-requests")({
       sort: deps.sort,
       status: deletionRequestStatus(deps.view),
     })
-    void context.queryClient.prefetchInfiniteQuery(options)
+    const request = prefetchInfiniteQueryWithReadableCache(
+      context.queryClient,
+      options
+    )
+    if (cause !== "stay" && request) await request
   },
   component: DeletionRequestsPage,
 })

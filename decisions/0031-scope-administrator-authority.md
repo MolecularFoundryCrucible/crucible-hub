@@ -4,7 +4,7 @@ Status: Accepted
 
 Date: 2026-09-22
 
-Updated: 2026-10-22
+Updated: 2026-10-26
 
 The first version also gave the `/admin` routes their own contextual elevation without a toggle. That was removed: the Administrator view is now the only source of elevated authority, and Administration server functions refuse with `403` while it is off.
 
@@ -16,7 +16,7 @@ The Crucible API can apply either ordinary ACL-derived authority or explicit pla
 
 Hub sends normal authority by default. Administrator view is one explicit global mode available to an eligible human administrator (`authorization.can_elevate`), and it is the only source of elevated authority. When active, routine Hub API requests use elevated authority throughout navigation, Administration destinations appear, and elevated actions show on resources. While it is off, Administration server functions refuse with `403` instead of elevating on their own. A labelled switch in the sidebar Administration section owns the toggle, condenses to an identifiable pressed icon with the sidebar, and a persistent warning action in the application bar identifies the active mode and returns to standard access.
 
-The server-only OpenAPI client attaches an explicit privilege-mode header and verifies the applied mode on successful responses. Query identity includes the effective privilege mode, elevated Queries are excluded from dehydration, and deactivation cancels and removes elevated Query data before normal-mode route reload.
+The server-only OpenAPI client attaches an explicit privilege-mode header and verifies the applied mode on successful responses. Query identity includes the effective privilege mode, elevated Queries are dehydrated under their own keys like normal ones, and deactivation cancels and removes elevated Query data before normal-mode route reload.
 
 The privilege intent lives in the authenticated server-side Hub session when the shared session store is in use, with a browser-session HttpOnly same-site cookie containing no credential as the fallback for process-local sessions. The API still authorizes every elevated request.
 
@@ -27,6 +27,8 @@ The privilege intent lives in the authenticated server-side Hub session when the
 - Global Administrator view changes collections, search, details, capabilities, and mutations consistently rather than adding repeated All Crucible controls.
 - Normal and elevated representations cannot collide in TanStack Query or SSR dehydration.
 - The API remains the authorization authority, and a privilege-mode value never grants authority by itself.
+
+Elevated Queries were first excluded from dehydration. The server still rendered their data into the page, so the browser hydrated without it and every full page load in Administrator view failed hydration; since the privilege mode in the key already prevents collisions, they are now dehydrated like normal Queries.
 
 ## Alternatives considered
 

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type { Query, QueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import { createContext, useContext } from "react"
 
@@ -26,6 +27,18 @@ function elevatedQueryForAccount(
     queryKey[2] === scope[2] &&
     queryKey[3] === "elevated"
   )
+}
+
+/** Drops every elevated entry for the account, whether fetched or hydrated. */
+export async function removeElevatedQueries(
+  queryClient: QueryClient,
+  scope: IdentityScope
+) {
+  const filters = {
+    predicate: (query: Query) => elevatedQueryForAccount(query.queryKey, scope),
+  }
+  await queryClient.cancelQueries(filters)
+  queryClient.removeQueries(filters)
 }
 
 function useAdministratorView({
@@ -74,14 +87,7 @@ function useAdministratorView({
       // Drop elevated data only once the shell has switched to ordinary
       // authority; normal-mode keys never read it, and removing it earlier
       // empties what is still on screen.
-      if (nextMode === "normal") {
-        await queryClient.cancelQueries({
-          predicate: (query) => elevatedQueryForAccount(query.queryKey, scope),
-        })
-        queryClient.removeQueries({
-          predicate: (query) => elevatedQueryForAccount(query.queryKey, scope),
-        })
-      }
+      if (nextMode === "normal") await removeElevatedQueries(queryClient, scope)
       notifySuccess(
         nextMode === "elevated"
           ? "Administrator view is on"

@@ -57,7 +57,7 @@ export function shouldDehydrateCrucibleQuery(query: Query) {
     typeof accountMfid === "string" &&
     accountMfid.length > 0 &&
     (accountPreferences ||
-      (privilegeMode === "normal" &&
+      ((privilegeMode === "normal" || privilegeMode === "elevated") &&
         typeof family === "string" &&
         dehydratedQueryFamilies.has(family)))
   )
