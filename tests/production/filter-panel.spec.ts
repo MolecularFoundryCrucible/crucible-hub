@@ -124,3 +124,24 @@ test("resets the draft without changing the applied filters", async ({
     page.getByRole("button", { name: "Remove filter: Visibility: Private" })
   ).toBeVisible()
 })
+
+test("narrows the created range with the slider", async ({ page }) => {
+  await page.setViewportSize({ height: 900, width: 1280 })
+  await page.goto("/hub/data?kind=datasets")
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: /^Filters/ }).click()
+
+  const start = sheet(page).getByRole("slider", { name: "Start date" })
+  await expect(start).toHaveAttribute("aria-valuetext", "Aug 28, 2026")
+  await start.focus()
+  await page.keyboard.press("ArrowRight")
+  await expect(sheet(page).getByLabel("From")).toHaveValue("2026-08-29")
+  await expect(
+    sheet(page).getByRole("button", { name: /^Show \d+ datasets?$/ })
+  ).toHaveText("Show 2 datasets")
+
+  await sheet(page).getByLabel("To").fill("2026-08-29")
+  await expect(
+    sheet(page).getByRole("slider", { name: "End date" })
+  ).toHaveAttribute("aria-valuetext", "Aug 29, 2026")
+})

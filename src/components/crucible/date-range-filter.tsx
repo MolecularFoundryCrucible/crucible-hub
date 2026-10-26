@@ -8,68 +8,56 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Slider } from "@/components/ui/slider"
 
 export type DateRangeValue = { from?: string; to?: string }
 
-type DatePreset = {
-  id: string
-  label: string
-  start: (today: string) => string
+/** Earliest and latest timestamps among the records being filtered. */
+export type DateRangeBounds = {
+  earliest?: string | null
+  latest?: string | null
 }
 
-const datePresets: readonly DatePreset[] = [
-  { id: "7d", label: "Last 7 days", start: (today) => addDays(today, -6) },
-  { id: "30d", label: "Last 30 days", start: (today) => addDays(today, -29) },
-  {
-    id: "12m",
-    label: "Last 12 months",
-    start: (today) => addDays(addMonths(today, -12), 1),
-  },
-  {
-    id: "year",
-    label: "This year",
-    start: (today) => `${today.slice(0, 4)}-01-01`,
-  },
-]
+const dayMs = 86_400_000
 
-function shift(day: string, change: (date: Date) => void) {
-  const date = new Date(`${day}T00:00:00Z`)
-  change(date)
-  return date.toISOString().slice(0, 10)
+function dayNumber(day: string) {
+  return Date.parse(`${day}T00:00:00Z`) / dayMs
 }
 
-function addDays(day: string, days: number) {
-  return shift(day, (date) => date.setUTCDate(date.getUTCDate() + days))
+function dayString(dayIndex: number) {
+  return new Date(dayIndex * dayMs).toISOString().slice(0, 10)
 }
 
-function addMonths(day: string, months: number) {
-  return shift(day, (date) => date.setUTCMonth(date.getUTCMonth() + months))
-}
-
-/** Today's date (YYYY-MM-DD) in the given time zone, or the browser's. */
-export function todayInTimeZone(timeZone?: string, now = new Date()) {
+/** The calendar day (YYYY-MM-DD) of a moment in the given time zone. */
+export function dayInTimeZone(moment: Date | string, timeZone?: string) {
   return new Intl.DateTimeFormat("en-CA", {
     day: "2-digit",
     month: "2-digit",
     timeZone,
     year: "numeric",
-  }).format(now)
+  }).format(typeof moment === "string" ? new Date(moment) : moment)
 }
 
-export function activeDatePreset(value: DateRangeValue, today: string) {
-  if (!value.from && !value.to) return "any"
-  if (value.to) return undefined
-  return datePresets.find((preset) => preset.start(today) === value.from)?.id
-}
-
-/** The start date a preset applies, for the given today. */
-export function datePresetStart(id: string, today: string) {
-  return datePresets.find((preset) => preset.id === id)?.start(today)
+/**
+ * Slider positions for a span of days: one step per day for a few months,
+ * per week for up to two years, and per 30 days beyond. The end is rounded up
+ * to a whole step so both ends stay reachable.
+ */
+export function dateSliderScale(earliest: string, latest: string) {
+  const min = dayNumber(earliest)
+  const span = Math.max(dayNumber(latest) - min, 1)
+  const step = span <= 120 ? 1 : span <= 730 ? 7 : 30
+  return { max: min + Math.ceil(span / step) * step, min, step }
 }
 
 const dayFormat = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+  year: "numeric",
+})
+
+const monthFormat = new Intl.DateTimeFormat("en-US", {
   month: "short",
   timeZone: "UTC",
   year: "numeric",
@@ -90,16 +78,20 @@ export function dateRangeLabel(label: string, value: DateRangeValue) {
 }
 
 /**
- * Preset ranges and typed day bounds. `since` mode edits only the start, for
- * filters such as Active since. Days count in the viewer's time zone.
+ * A slider across the span the records cover, with typed day bounds for
+ * exact dates. A handle at either end leaves that bound open. `since` mode
+ * edits only the start, for filters such as Active since. Days count in the
+ * viewer's time zone.
  */
 export function DateRangeFilter({
+  bounds,
   errors = {},
   idPrefix,
   mode = "range",
   onChange,
   value,
 }: {
+  bounds?: DateRangeBounds
   errors?: { from?: string; to?: string }
   idPrefix: string
   mode?: "range" | "since"
@@ -111,32 +103,66 @@ export function DateRangeFilter({
   const timeZone =
     presentation.timeZone ??
     (hydrated ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC")
-  const today = todayInTimeZone(timeZone)
-  const active = activeDatePreset(value, today)
+  const today = dayInTimeZone(new Date(), timeZone)
   const fromId = `${idPrefix}-from`
   const toId = `${idPrefix}-to`
   const zoneId = `${idPrefix}-time-zone`
+  const earliest = bounds?.earliest
+    ? dayInTimeZone(bounds.earliest, timeZone)
+    : undefined
+  const latest = bounds?.latest
+    ? dayInTimeZone(bounds.latest, timeZone)
+    : undefined
+  const scale = earliest && latest ? dateSliderScale(earliest, latest) : null
+  const clamp = (day: number) =>
+    scale ? Math.min(scale.max, Math.max(scale.min, day)) : day
+  const positions = scale
+    ? mode === "range"
+      ? [
+          clamp(value.from ? dayNumber(value.from) : scale.min),
+          clamp(value.to ? dayNumber(value.to) : scale.max),
+        ]
+      : [clamp(value.from ? dayNumber(value.from) : scale.min)]
+    : []
+  const edgeFormat =
+    scale && scale.max - scale.min > 730 ? monthFormat : dayFormat
 
   return (
     <div className="flex flex-col gap-3">
-      <ToggleGroup
-        aria-label="Date presets"
-        className="flex-wrap gap-1"
-        onValueChange={(values) => {
-          const id = values.at(-1)
-          if (id === "any") onChange({})
-          else if (id) onChange({ from: datePresetStart(id, today) })
-        }}
-        size="sm"
-        value={active ? [active] : []}
-      >
-        <ToggleGroupItem value="any">Any time</ToggleGroupItem>
-        {datePresets.map((preset) => (
-          <ToggleGroupItem key={preset.id} value={preset.id}>
-            {preset.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      {scale ? (
+        <div className="flex flex-col gap-2">
+          <Slider
+            getThumbLabel={(index) =>
+              mode === "since"
+                ? "Since"
+                : index === 0
+                  ? "Start date"
+                  : "End date"
+            }
+            getThumbValueText={(position) => formatDay(dayString(position))}
+            max={scale.max}
+            min={scale.min}
+            onValueChange={(next) => {
+              const [start, end] = Array.isArray(next) ? next : [next]
+              onChange({
+                from: start <= scale.min ? undefined : dayString(start),
+                to:
+                  mode === "range"
+                    ? end >= scale.max
+                      ? undefined
+                      : dayString(end)
+                    : undefined,
+              })
+            }}
+            step={scale.step}
+            value={positions}
+          />
+          <div className="flex justify-between text-supporting text-muted-foreground tabular-nums">
+            <span>{edgeFormat.format(new Date(scale.min * dayMs))}</span>
+            <span>{edgeFormat.format(new Date(scale.max * dayMs))}</span>
+          </div>
+        </div>
+      ) : null}
       <div className={mode === "range" ? "grid grid-cols-2 gap-3" : undefined}>
         <Field data-invalid={Boolean(errors.from)}>
           <FieldLabel htmlFor={fromId}>

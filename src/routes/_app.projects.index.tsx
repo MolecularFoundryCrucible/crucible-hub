@@ -367,6 +367,32 @@ function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
     enabled: open,
   })
 
+  const boundsFilters = {
+    ...(JSON.parse(countKey) as Pick<
+      Parameters<typeof projectsQueryOptions>[1],
+      "affiliation" | "memberRef" | "memberRole"
+    >),
+    activeSince: undefined,
+    includeTotal: false,
+    limit: 1,
+  }
+  const leastActive = useQuery({
+    ...projectsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "asc",
+      sort: "activity",
+    }),
+    enabled: open,
+  })
+  const mostActive = useQuery({
+    ...projectsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "desc",
+      sort: "activity",
+    }),
+    enabled: open,
+  })
+
   const active = collectionActiveFilters(
     collectionActiveFilter(
       "role",
@@ -475,6 +501,10 @@ function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
         </FilterSection>
         <FilterSection title="Last activity">
           <DateRangeFilter
+            bounds={{
+              earliest: leastActive.data?.items[0]?.last_activity_at,
+              latest: mostActive.data?.items[0]?.last_activity_at,
+            }}
             idPrefix="project-filter-active"
             mode="since"
             onChange={({ from }) =>

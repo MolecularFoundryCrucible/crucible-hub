@@ -241,6 +241,55 @@ export function DataFilters({
     }),
     enabled: filtersOpen && kind === "datasets" && draftResolution.valid,
   })
+  const boundsFilters = {
+    ...countFilters,
+    createdFrom: undefined,
+    createdTo: undefined,
+    includeTotal: false,
+    limit: 1,
+  }
+  const firstSample = useQuery({
+    ...samplesQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "asc",
+      sort: "created",
+    }),
+    enabled: filtersOpen && kind === "samples",
+  })
+  const lastSample = useQuery({
+    ...samplesQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "desc",
+      sort: "created",
+    }),
+    enabled: filtersOpen && kind === "samples",
+  })
+  const firstDataset = useQuery({
+    ...datasetsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "asc",
+      sort: "created",
+    }),
+    enabled: filtersOpen && kind === "datasets",
+  })
+  const lastDataset = useQuery({
+    ...datasetsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "desc",
+      sort: "created",
+    }),
+    enabled: filtersOpen && kind === "datasets",
+  })
+  const createdBounds =
+    kind === "samples"
+      ? {
+          earliest: firstSample.data?.items[0]?.creation_time,
+          latest: lastSample.data?.items[0]?.creation_time,
+        }
+      : {
+          earliest: firstDataset.data?.items[0]?.creation_time,
+          latest: lastDataset.data?.items[0]?.creation_time,
+        }
   const resultCount = draftResolution.valid
     ? ((kind === "samples" ? sampleCount.data : datasetCount.data)?.total ??
       undefined)
@@ -673,6 +722,7 @@ export function DataFilters({
         </FilterSection>
         <FilterSection title="Created">
           <DateRangeFilter
+            bounds={createdBounds}
             errors={{
               from: fieldError("createdFrom"),
               to: fieldError("createdTo"),

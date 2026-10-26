@@ -1,34 +1,34 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  activeDatePreset,
-  datePresetStart,
   dateRangeLabel,
-  todayInTimeZone,
+  dateSliderScale,
+  dayInTimeZone,
 } from "./date-range-filter"
 
 describe("date range filter", () => {
-  it("finds today in the viewer's time zone, not UTC", () => {
-    const evening = new Date("2026-10-27T03:00:00Z")
-    expect(todayInTimeZone("America/Los_Angeles", evening)).toBe("2026-10-26")
-    expect(todayInTimeZone("UTC", evening)).toBe("2026-10-27")
+  it("finds the calendar day in the viewer's time zone, not UTC", () => {
+    const evening = "2026-10-27T03:00:00Z"
+    expect(dayInTimeZone(evening, "America/Los_Angeles")).toBe("2026-10-26")
+    expect(dayInTimeZone(evening, "UTC")).toBe("2026-10-27")
   })
 
   it.each([
-    ["7d", "2026-10-20"],
-    ["30d", "2026-09-27"],
-    ["12m", "2025-10-27"],
-    ["year", "2026-01-01"],
-  ])("starts the %s preset on %s", (id, start) => {
-    expect(datePresetStart(id, "2026-10-26")).toBe(start)
+    ["2026-08-01", "2026-09-30", 1],
+    ["2025-01-01", "2026-06-30", 7],
+    ["2019-03-01", "2026-10-26", 30],
+  ])("steps a span from %s to %s by %i days", (earliest, latest, step) => {
+    const scale = dateSliderScale(earliest, latest)
+    expect(scale.step).toBe(step)
+    expect((scale.max - scale.min) % step).toBe(0)
+    expect(scale.max).toBeGreaterThanOrEqual(
+      Date.parse(`${latest}T00:00:00Z`) / 86_400_000
+    )
   })
 
-  it("recognizes the active preset only for an open-ended range", () => {
-    expect(activeDatePreset({}, "2026-10-26")).toBe("any")
-    expect(activeDatePreset({ from: "2026-09-27" }, "2026-10-26")).toBe("30d")
-    expect(
-      activeDatePreset({ from: "2026-09-27", to: "2026-10-26" }, "2026-10-26")
-    ).toBeUndefined()
+  it("keeps a single-day span movable", () => {
+    const scale = dateSliderScale("2026-08-01", "2026-08-01")
+    expect(scale.max).toBeGreaterThan(scale.min)
   })
 
   it("labels a range as one filter", () => {

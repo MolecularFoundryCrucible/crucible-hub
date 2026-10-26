@@ -534,6 +534,34 @@ function InstrumentDatasetFilters({
     enabled: open && rangeValid,
   })
 
+  const boundsFilters = {
+    affiliation: (
+      JSON.parse(countKey) as Pick<
+        Parameters<typeof datasetsQueryOptions>[1],
+        "affiliation"
+      >
+    ).affiliation,
+    includeTotal: false,
+    instrumentMfid,
+    limit: 1,
+  }
+  const firstDataset = useQuery({
+    ...datasetsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "asc",
+      sort: "created",
+    }),
+    enabled: open,
+  })
+  const lastDataset = useQuery({
+    ...datasetsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "desc",
+      sort: "created",
+    }),
+    enabled: open,
+  })
+
   const active = collectionActiveFilters(
     collectionActiveFilter(
       "public",
@@ -637,6 +665,10 @@ function InstrumentDatasetFilters({
         ) : null}
         <FilterSection title="Created">
           <DateRangeFilter
+            bounds={{
+              earliest: firstDataset.data?.items[0]?.creation_time,
+              latest: lastDataset.data?.items[0]?.creation_time,
+            }}
             errors={{ to: rangeError }}
             idPrefix="instrument-dataset-created"
             onChange={({ from, to }) => {

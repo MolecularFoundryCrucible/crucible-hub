@@ -6,7 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
-- Redesigned the Filters panel: one column of sections, searchable value pickers with counts that follow your changes, a Created range with presets, an Apply button that shows how many results you will get, and Reset for unapplied changes.
+- Redesigned the Filters panel: one column of sections, searchable value pickers with counts that follow your changes, a Created range slider across the dates your data covers, with typed dates for exact days, an Apply button that shows how many results you will get, and Reset for unapplied changes.
 - Kept the Project and Manager pickers' selection while typing a new search, and made them look like the other filter pickers.
 - Made every form text field show and announce its errors and descriptions the same way.
 - Fixed pages redrawing themselves right after a full load with Administrator view on.
