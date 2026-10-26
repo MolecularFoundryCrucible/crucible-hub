@@ -12,9 +12,10 @@ export function homeGreeting({
   const name = firstName?.trim() || "researcher"
   if (!timeZone) return `Welcome to Crucible, ${name}`
   const { day, hour } = zonedClock(at, timeZone)
-  const choice = stableHash(`${accountMfid ?? "anonymous"}:${day}:${hour}`) % 12
-  if (choice === 0) return `Welcome to the Crux, ${name}`
-  if (choice < 6) return timeAwareGreeting(name, hour)
+  const choice =
+    stableHash(`${accountMfid ?? "anonymous"}:${day}:${hour}`) % 100
+  if (choice < 2) return `Welcome to the Crux, ${name}`
+  if (choice < 44) return timeAwareGreeting(name, hour)
   return `Welcome to Crucible, ${name}`
 }
 

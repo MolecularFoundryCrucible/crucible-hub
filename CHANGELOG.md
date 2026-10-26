@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Made the Welcome to the Crux greeting rarer.
 - Switched every top bar control to its compact form at one width, aligned the top bar with the page gutters, kept page titles from moving vertically when the window resizes, shortened the top bar label to Admin on, and kept Last activity on two lines in Home rows.
 - Defined responsive behavior once: windows are compact, medium, expanded, or wide, medium windows show the navigation as an icon rail with a modal preview, and page content adapts to the space it actually has.
 - Dimmed the preview under dialogs on narrow screens, offered search types as a select on phones, kept page header actions beside the title, named icon-only actions in tooltips, marked pending deletion requests in the icon rail, and kept toasts clear of the preview.

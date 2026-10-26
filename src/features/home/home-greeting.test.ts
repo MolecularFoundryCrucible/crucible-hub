@@ -38,4 +38,21 @@ describe("homeGreeting", () => {
       morning.every((greeting) => greeting === "Good morning, Avery")
     ).toBe(true)
   })
+
+  it("keeps the Crux greeting rare", () => {
+    const greetings = Array.from({ length: 5000 }, (_, index) =>
+      homeGreeting({
+        accountMfid: `account-${index}`,
+        at: Date.UTC(2026, 9, 21, 16, 0),
+        firstName: "Avery",
+        timeZone: "America/Los_Angeles",
+      })
+    )
+    const share = (prefix: string) =>
+      greetings.filter((greeting) => greeting.startsWith(prefix)).length /
+      greetings.length
+    expect(share("Welcome to the Crux")).toBeGreaterThan(0.01)
+    expect(share("Welcome to the Crux")).toBeLessThan(0.035)
+    expect(share("Good")).toBeGreaterThan(0.35)
+  })
 })
