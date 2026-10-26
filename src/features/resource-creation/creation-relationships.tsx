@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -183,10 +182,6 @@ export function CreationRelationshipsField({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add relationship</DialogTitle>
-            <DialogDescription>
-              Select the relationship and the resource to connect after
-              creation.
-            </DialogDescription>
           </DialogHeader>
           <FieldGroup>
             <Field>

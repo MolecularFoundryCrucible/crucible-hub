@@ -141,7 +141,7 @@ export function ResourceWorkspace({
         <CardHeader>
           <CardTitle>Resource not found</CardTitle>
           <CardDescription>
-            This resource is not available in the current workspace.
+            This resource doesn't exist or you don't have access to it.
           </CardDescription>
         </CardHeader>
       </Card>

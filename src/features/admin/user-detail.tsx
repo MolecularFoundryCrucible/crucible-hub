@@ -742,7 +742,6 @@ function UserProjectsSection({
         ) : projectsQuery.isError && projects.length === 0 ? (
           <div className="px-6 py-4">
             <PanelState
-              description="Try again. User details remain available."
               retry={() => void projectsQuery.refetch()}
               role="alert"
               title="Projects could not be loaded"
@@ -753,7 +752,7 @@ function UserProjectsSection({
             {projectsQuery.isError ? (
               <div className="border-b px-6 py-4">
                 <PanelUpdateError
-                  description="Projects could not be refreshed. Existing rows remain available."
+                  description="Projects could not be refreshed."
                   retry={() => void projectsQuery.refetch()}
                 />
               </div>

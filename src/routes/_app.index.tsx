@@ -247,7 +247,6 @@ function HomePage() {
                 )}
                 {recentDataUnavailable && (
                   <PanelState
-                    description="Projects and navigation remain available."
                     retry={() => {
                       void sampleResult.refetch()
                       void datasetResult.refetch()

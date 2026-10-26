@@ -11,7 +11,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -478,9 +477,6 @@ export function CollectionLoadError({
     <Empty className="min-h-state border">
       <EmptyHeader>
         <EmptyTitle>{label} could not be loaded</EmptyTitle>
-        <EmptyDescription>
-          Try again. Other workspace navigation remains available.
-        </EmptyDescription>
         <Button onClick={retry} variant="outline">
           Try again
         </Button>
@@ -521,11 +517,6 @@ export function CollectionUpdateError({
         <CardTitle>
           {label} could not be {preserved ? "refreshed" : "loaded"}
         </CardTitle>
-        <CardDescription>
-          {preserved
-            ? "Previously loaded data remains available."
-            : "Other data remains available."}
-        </CardDescription>
         <CardAction>
           <Button onClick={retry} size="sm" variant="outline">
             Try again

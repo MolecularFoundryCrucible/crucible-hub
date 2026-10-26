@@ -131,19 +131,23 @@ export function ResourceManagePage({
         className="flex flex-col gap-page-section"
         width="reading"
       >
-        {canManageAccess ? (
+        {canManageAccess ||
+        canTransfer ||
+        canShowResourceDeletionRequest(resource) ? (
           <Card>
             <CardHeader>
               <CardTitle>Resource management</CardTitle>
             </CardHeader>
             <CardContent className="divide-y px-0">
-              <ProjectAssignmentCard
-                mode={mode}
-                presentation="row"
-                resource={resource}
-                scope={scope}
-              />
-              {resource.kind === "dataset" ? (
+              {canManageAccess ? (
+                <ProjectAssignmentCard
+                  mode={mode}
+                  presentation="row"
+                  resource={resource}
+                  scope={scope}
+                />
+              ) : null}
+              {canManageAccess && resource.kind === "dataset" ? (
                 <DatasetInstrumentAssignmentCard
                   mode={mode}
                   presentation="row"
@@ -151,15 +155,6 @@ export function ResourceManagePage({
                   scope={scope}
                 />
               ) : null}
-            </CardContent>
-          </Card>
-        ) : null}
-        {canTransfer || canShowResourceDeletionRequest(resource) ? (
-          <Card variant="destructive">
-            <CardHeader>
-              <CardTitle>Danger zone</CardTitle>
-            </CardHeader>
-            <CardContent className="divide-y px-0">
               {canTransfer ? (
                 <OwnershipTransferCard
                   mode={mode}
@@ -582,8 +577,6 @@ export function ResourceAccessCard({
         onOpenChange={setAddOpen}
         open={addOpen}
         principalKinds={["users", "projects"]}
-        resourceName={resourceDetailDisplayName(resource)}
-        roleLabel="Access role"
         roles={roles}
         scope={scope}
         title="Add direct access"

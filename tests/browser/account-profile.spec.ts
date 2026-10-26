@@ -84,7 +84,7 @@ test("validates profile fields and protects unsaved changes", async ({
 
   await page.getByRole("button", { name: "Expand navigation" }).click()
   await page
-    .getByRole("dialog", { name: "Sidebar" })
+    .getByRole("dialog", { name: "Navigation" })
     .getByRole("link", { name: "Home", exact: true })
     .click()
   const discardDialog = page.getByRole("alertdialog", {

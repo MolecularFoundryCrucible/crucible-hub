@@ -315,7 +315,7 @@ function MetadataReplacementDialog({
     <ConfirmationDialog
       cancelLabel="Keep editing"
       confirmLabel="Replace metadata"
-      description="Removing a top-level field cannot be applied atomically. Saving will replace all scientific metadata with this edited JSON object."
+      description="Saving replaces all scientific metadata with this JSON."
       kind="alert"
       onConfirm={onConfirm}
       onOpenChange={onOpenChange}

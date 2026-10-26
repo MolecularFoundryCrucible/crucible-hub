@@ -150,7 +150,7 @@ function UserPage() {
         <CardHeader>
           <CardTitle>User not found</CardTitle>
           <CardDescription>
-            This profile is not available in the current workspace.
+            This profile doesn't exist or you don't have access to it.
           </CardDescription>
         </CardHeader>
       </Card>

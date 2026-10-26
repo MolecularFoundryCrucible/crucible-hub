@@ -101,19 +101,19 @@ describe("CollectionTablePending", () => {
 })
 
 describe("CollectionUpdateError", () => {
-  it("explains retained data and retries a failed refresh", () => {
+  it("names a failed refresh and retries it", () => {
     const retry = vi.fn()
 
     render(<CollectionUpdateError label="Projects" preserved retry={retry} />)
 
     expect(screen.getByRole("alert").textContent).toContain(
-      "Previously loaded data remains available."
+      "Projects could not be refreshed"
     )
     fireEvent.click(screen.getByRole("button", { name: "Try again" }))
     expect(retry).toHaveBeenCalledOnce()
   })
 
-  it("explains when only sibling data remains", () => {
+  it("names a failed first load", () => {
     render(
       <CollectionUpdateError
         label="Datasets"
@@ -123,7 +123,7 @@ describe("CollectionUpdateError", () => {
     )
 
     expect(screen.getByRole("alert").textContent).toContain(
-      "Other data remains available."
+      "Datasets could not be loaded"
     )
   })
 })

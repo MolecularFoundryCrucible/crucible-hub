@@ -39,7 +39,6 @@ import { crucibleKeys } from "@/data/crucible/query-keys"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { unwrapHubResult, hubOperationError } from "@/data/crucible/result"
 import type { components } from "@/generated/crucible-api"
-import { resourceDisplayName } from "@/lib/resource-name"
 import type { WorkspaceProject } from "@/data/crucible/workspace-source"
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
@@ -322,11 +321,6 @@ export function ProjectMembershipCard({
         onOpenChange={setAddMemberOpen}
         open={addMemberOpen}
         principalKinds={["users"]}
-        resourceName={resourceDisplayName("project", project.title, {
-          identifier: project.project_id,
-          mfid: project.unique_id,
-        })}
-        roleLabel="Project role"
         roles={roles}
         rolesForPrincipal={(member) =>
           permittedTargetRoles(roles, member.is_service_account === true)

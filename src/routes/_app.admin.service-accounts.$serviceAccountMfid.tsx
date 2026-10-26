@@ -132,7 +132,7 @@ function ServiceAccountAdminDetail({
         <CardHeader>
           <CardTitle>Service account not found</CardTitle>
           <CardDescription>
-            This service account is not available in the current workspace.
+            This service account doesn't exist or you don't have access to it.
           </CardDescription>
         </CardHeader>
       </Card>

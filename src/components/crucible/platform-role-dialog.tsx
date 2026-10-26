@@ -91,7 +91,7 @@ export function PlatformRoleDialog({
         <DialogHeader>
           <DialogTitle>Change platform role</DialogTitle>
           <DialogDescription>
-            Access changes may take about a minute to reach every API process.
+            Changes can take about a minute to apply.
           </DialogDescription>
         </DialogHeader>
         <FieldGroup>

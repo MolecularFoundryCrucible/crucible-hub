@@ -707,11 +707,11 @@ function DataResults({
                       ? `No ${kind} match these filters`
                       : `No ${kind} are available`}
                   </EmptyTitle>
-                  <EmptyDescription>
-                    {hasActiveFilters
-                      ? "Try changing the filters or data type."
-                      : "New resources will appear here when they are available."}
-                  </EmptyDescription>
+                  {hasActiveFilters ? (
+                    <EmptyDescription>
+                      Try changing the filters or data type.
+                    </EmptyDescription>
+                  ) : null}
                 </EmptyHeader>
                 {publicState.enabled && !publicState.included ? (
                   <EmptyContent>

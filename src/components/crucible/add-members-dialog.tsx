@@ -9,13 +9,11 @@ import { RemoveMemberIcon } from "@/components/crucible/icons"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
-import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -59,8 +57,6 @@ export function AddMembersDialog({
   onOpenChange,
   open,
   principalKinds,
-  resourceName,
-  roleLabel,
   roles,
   rolesForPrincipal,
   scope,
@@ -77,8 +73,6 @@ export function AddMembersDialog({
   onOpenChange: (open: boolean) => void
   open: boolean
   principalKinds: readonly AddMembersPrincipalKind[]
-  resourceName: string
-  roleLabel: string
   roles: readonly AddMembersRole[]
   rolesForPrincipal?: (
     member: WorkspaceSearchResult
@@ -146,15 +140,6 @@ export function AddMembersDialog({
       <DialogContent showCloseButton={!committing}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            Choose{" "}
-            {principalKinds.length > 1
-              ? "a person or project"
-              : principalChoices[kind].choice}
-            , set the {roleLabel.toLowerCase()} for{" "}
-            <ResourceName>{resourceName}</ResourceName>, then add as many
-            members as you need.
-          </DialogDescription>
         </DialogHeader>
         <FieldGroup>
           {principalKinds.length > 1 ? (

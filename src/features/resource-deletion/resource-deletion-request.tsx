@@ -146,8 +146,8 @@ export function ResourceDeletionRequestCard({
           action={action}
           description={
             <>
-              Submit this {resource.kind} for deletion review. It becomes hidden
-              from discovery while the request is pending.
+              Hides this {resource.kind} from lists and search until the request
+              is reviewed.
             </>
           }
           presentation={presentation}

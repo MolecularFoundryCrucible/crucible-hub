@@ -378,8 +378,7 @@ export function ResourceGraphPage({
           role="alert"
         >
           <p className="text-body text-muted-foreground">
-            Immediate associations could not be loaded. Lineage remains
-            available.
+            Immediate associations could not be loaded.
           </p>
           <Button
             onClick={() => void associationQuery.refetch()}

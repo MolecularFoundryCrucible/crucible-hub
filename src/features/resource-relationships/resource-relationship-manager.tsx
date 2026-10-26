@@ -340,11 +340,7 @@ function AddRelationshipDialog({
       <DialogContent showCloseButton={!mutation.isPending}>
         <DialogHeader>
           <DialogTitle>Add relationship</DialogTitle>
-          <DialogDescription>
-            Choose how another resource relates to{" "}
-            <ResourceName>{resourceDetailDisplayName(resource)}</ResourceName>,
-            then search for it by name or MFID.
-          </DialogDescription>
+          <DialogDescription>Search by name or MFID.</DialogDescription>
         </DialogHeader>
         <FieldGroup>
           <Field>
@@ -396,9 +392,6 @@ function AddRelationshipDialog({
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-              <FieldDescription>
-                Describes the child relative to the parent.
-              </FieldDescription>
             </Field>
           )}
           <ResourceSearchCombobox

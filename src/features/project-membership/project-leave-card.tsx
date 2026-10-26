@@ -99,7 +99,6 @@ export function ProjectLeaveCard({
             Leave project
           </Button>
         }
-        description="Remove your membership and access to this project and its shared resources."
         presentation={presentation}
         title="Leave project"
       />

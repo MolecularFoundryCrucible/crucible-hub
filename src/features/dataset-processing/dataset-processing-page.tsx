@@ -700,7 +700,7 @@ function IngestionRequestDialog({
               />
               {classesResult.isError ? (
                 <p className="text-supporting text-muted-foreground">
-                  Ingestion classes could not be loaded. Auto-detect remains
+                  Ingestion classes could not be loaded; only Auto-detect is
                   available.
                 </p>
               ) : null}

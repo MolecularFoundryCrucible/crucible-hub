@@ -357,11 +357,7 @@ export function ResourceInspector({
                 </SheetDescription>
                 <MfidValue presentation="supporting" value={preview} />
               </div>
-            ) : (
-              <SheetDescription>
-                Explore linked resources without leaving this page.
-              </SheetDescription>
-            )}
+            ) : null}
             {deletionRequest ? (
               <div className="flex min-w-0">
                 <ResourceDeletionRequestBadge status={deletionRequest.status} />
@@ -507,7 +503,7 @@ function InspectorBody({
         title={
           query.isError
             ? resourceErrorMessage(query.error)
-            : "This resource is not available in the current workspace"
+            : "This resource doesn't exist or you don't have access to it"
         }
       />
     )

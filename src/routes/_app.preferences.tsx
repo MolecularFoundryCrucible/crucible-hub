@@ -102,7 +102,7 @@ function PreferenceField({
   title,
 }: {
   children: React.ReactNode
-  description: string
+  description?: string
   id?: string
   title: string
 }) {
@@ -114,7 +114,9 @@ function PreferenceField({
         ) : (
           <FieldTitle>{title}</FieldTitle>
         )}
-        <FieldDescription>{description}</FieldDescription>
+        {description ? (
+          <FieldDescription>{description}</FieldDescription>
+        ) : null}
       </FieldContent>
       <div>{children}</div>
     </Field>
@@ -333,7 +335,6 @@ function PreferencesPage() {
               <FieldSet>
                 <FieldLegend>Directories</FieldLegend>
                 <PreferenceField
-                  description="The Projects directory opens in this order."
                   id="preferred-project-sort-sort"
                   title="Default project sort"
                 >
@@ -349,7 +350,6 @@ function PreferencesPage() {
                   />
                 </PreferenceField>
                 <PreferenceField
-                  description="The Instruments directory opens in this order."
                   id="preferred-instrument-sort-sort"
                   title="Default instrument sort"
                 >
@@ -381,10 +381,7 @@ function PreferencesPage() {
                     }
                   />
                 </PreferenceField>
-                <PreferenceField
-                  description="Remove every resource from your recently viewed list."
-                  title="Clear history"
-                >
+                <PreferenceField title="Clear history">
                   <Button
                     onClick={() => setClearOpen(true)}
                     type="button"

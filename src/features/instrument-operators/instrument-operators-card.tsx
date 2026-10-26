@@ -629,8 +629,6 @@ export function InstrumentAccessCard({
         onOpenChange={setAddMemberOpen}
         open={addMemberOpen}
         principalKinds={["users", "projects"]}
-        resourceName={instrument.name}
-        roleLabel="Access role"
         roles={roles}
         scope={scope}
         title="Add direct access"

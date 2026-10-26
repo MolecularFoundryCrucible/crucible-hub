@@ -18,7 +18,7 @@ export function ManagementAction({
   action: React.ReactNode
   busy?: boolean
   children?: React.ReactNode
-  description: React.ReactNode
+  description?: React.ReactNode
   presentation?: "card" | "row"
   title: React.ReactNode
 }) {
@@ -29,9 +29,11 @@ export function ManagementAction({
           <h3 className="min-w-0 font-heading text-title-section break-words">
             {title}
           </h3>
-          <div className="min-w-0 text-body break-words text-muted-foreground">
-            {description}
-          </div>
+          {description ? (
+            <div className="min-w-0 text-body break-words text-muted-foreground">
+              {description}
+            </div>
+          ) : null}
         </div>
         <div className="shrink-0">{action}</div>
       </div>
@@ -54,7 +56,7 @@ export function ManagementAction({
     <Card aria-busy={busy || undefined}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        {description ? <CardDescription>{description}</CardDescription> : null}
         <CardAction>{action}</CardAction>
       </CardHeader>
       {children ? <CardContent>{children}</CardContent> : null}

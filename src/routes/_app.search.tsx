@@ -352,8 +352,7 @@ function SearchPage() {
                 : "Start with a name or MFID"}
             </EmptyTitle>
             <EmptyDescription>
-              Enter at least three characters. Search results are grouped by
-              resource type.
+              Enter at least three characters.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -530,8 +529,7 @@ function SearchResults({
               </div>
               {group.error ? (
                 <p className="text-body text-muted-foreground" role="status">
-                  {kindLabel(group.kind)} could not be searched. Other results
-                  remain available.
+                  {kindLabel(group.kind)} could not be searched.
                 </p>
               ) : group.items.length > 0 ? (
                 <Card>

@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -197,7 +196,6 @@ export function InstrumentLifecycleCard({
           </Button>
         }
         busy={pending}
-        description="Update whether this instrument is active, under maintenance, or decommissioned."
         presentation={presentation}
         title="Change status"
       >
@@ -233,10 +231,6 @@ export function InstrumentLifecycleCard({
           >
             <DialogHeader>
               <DialogTitle>Change status</DialogTitle>
-              <DialogDescription>
-                Update whether this instrument is active, under maintenance, or
-                decommissioned.
-              </DialogDescription>
             </DialogHeader>
             <FieldGroup>
               <div className="flex items-center gap-2 text-body">

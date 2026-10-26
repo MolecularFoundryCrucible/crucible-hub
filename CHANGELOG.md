@@ -4,6 +4,10 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
 
+## Unreleased
+
+- Trimmed descriptions that repeated their titles or buttons, dropped "still available" reassurances from error messages, replaced jargon with plain wording, and merged the Danger zone into Resource management.
+
 ## 1.6.6 - 2026-10-26
 
 - Redesigned the Filters panel on Data, Projects, Instruments, and Search: one column of sections, searchable value pickers whose counts follow your changes, a Created date slider with typed dates for exact days, an Apply button that shows how many results you will get, Reset for unapplied changes, and sorting only from the table.

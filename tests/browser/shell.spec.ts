@@ -135,7 +135,7 @@ test("keeps Home useful when one recent data source fails", async ({
     page.getByRole("heading", { name: "Your projects" })
   ).toBeVisible()
   await expect(
-    page.getByText("Projects and navigation remain available.")
+    page.getByText(/Recent data could not be (fully )?loaded/)
   ).toHaveCount(0)
 })
 
@@ -419,11 +419,7 @@ test("keeps successful global search groups when one source fails", async ({
   await page.goto("/hub/search?q=operando&scenario=partial")
 
   await expect(page.getByText("Operando Catalyst Mapping")).toBeVisible()
-  await expect(
-    page.getByText(
-      "Datasets could not be searched. Other results remain available."
-    )
-  ).toBeVisible()
+  await expect(page.getByText("Datasets could not be searched.")).toBeVisible()
 })
 
 test("searches public-safe people and opens canonical person detail", async ({
@@ -633,9 +629,9 @@ test("adapts navigation for a compact browser viewport", async ({ page }) => {
     page.getByLabel("Primary navigation", { exact: true })
   ).toBeHidden()
   await page.getByRole("button", { name: "Expand navigation" }).click()
-  await expect(page.getByRole("dialog", { name: "Sidebar" })).toBeVisible()
+  await expect(page.getByRole("dialog", { name: "Navigation" })).toBeVisible()
   await expect(
-    page.getByRole("dialog", { name: "Sidebar" }).getByRole("link", {
+    page.getByRole("dialog", { name: "Navigation" }).getByRole("link", {
       name: "Projects",
     })
   ).toBeVisible()

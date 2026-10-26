@@ -132,7 +132,7 @@ export function DatasetInstrumentAssignmentCard({
           </Button>
         }
         busy={mutation.isPending}
-        description="Set the acquisition instrument and update its derived dataset access."
+        description="Reassign this dataset to another acquisition instrument."
         presentation={presentation}
         title="Change instrument"
       />

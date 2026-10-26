@@ -202,7 +202,7 @@ export function ProjectAssignmentCard({
             Choose project
           </Button>
         }
-        description="Move this resource and its project access grant together."
+        description={`Reassign this ${resource.kind} to another project.`}
         presentation={presentation}
         title="Transfer project"
       >

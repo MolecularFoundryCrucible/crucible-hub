@@ -156,7 +156,7 @@ export function OwnershipTransferCard({
             Choose person
           </Button>
         }
-        description="Select the next owner, then confirm their name and username before transferring ownership."
+        description={`Transfer this ${resource.kind} to a new owner.`}
         presentation={presentation}
         title="Transfer ownership"
       >

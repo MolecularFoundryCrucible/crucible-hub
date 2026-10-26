@@ -117,7 +117,7 @@ function InstrumentPage() {
         <CardHeader>
           <CardTitle>Instrument not found</CardTitle>
           <CardDescription>
-            This instrument is not available in the current workspace.
+            This instrument doesn't exist or you don't have access to it.
           </CardDescription>
         </CardHeader>
       </Card>

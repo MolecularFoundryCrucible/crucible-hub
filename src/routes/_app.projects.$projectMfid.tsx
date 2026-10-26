@@ -115,7 +115,7 @@ function ProjectWorkspace() {
         <CardHeader>
           <CardTitle>Project not found</CardTitle>
           <CardDescription>
-            This project is not present in the current workspace.
+            This project doesn't exist or you don't have access to it.
           </CardDescription>
         </CardHeader>
       </Card>
