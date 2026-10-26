@@ -13,7 +13,7 @@ The Crucible API decides what each person may see and do; the Hub presents those
 
 ## Status
 
-Most planned workflows are implemented and run locally against demo fixtures, a staging API, or ORCID sign-in. A restricted production pilot runs at `https://crucible.lbl.gov/hub/`; [the pilot guide](docs/cloud-run-pilot.md) explains the deployment and release process, and the [roadmap](docs/roadmap.md) tracks what remains before a wider release.
+Most planned workflows are implemented and run locally against demo fixtures, a staging API, or ORCID sign-in. The production pilot at `https://crucible.lbl.gov/hub/` is open to everyone with a Crucible account, who signs in with ORCID; [the pilot guide](docs/cloud-run-pilot.md) explains the deployment and release process, and the [roadmap](docs/roadmap.md) tracks what remains.
 
 ## Try it locally
 

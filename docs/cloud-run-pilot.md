@@ -1,6 +1,6 @@
 # Cloud Run pilot
 
-Status: Pilot active since October 13, 2026 (v1.0.0), with uploads and ingestion enabled and the shared Postgres session store in use since October 14, 2026 (v1.1.0)
+Status: Pilot active since October 13, 2026 (v1.0.0), with uploads and ingestion enabled and the shared Postgres session store in use since October 14, 2026 (v1.1.0), and open to every Crucible account holder since October 26, 2026 (v1.6.6)
 
 The Hub's public address is `https://crucible.lbl.gov/hub/`. A dedicated `crucible-hub` Cloud Run service runs with 2 vCPU, 1 GiB, manual scaling fixed at one instance, request-based billing, session affinity, and `internal` ingress, with `HUB_UPLOADS_ENABLED` and `HUB_UPLOAD_INGESTION_ENABLED` set. It is reached through the existing Crucible Nginx reverse proxy. The Hub uses API-owned ORCID sign-in, server-held API tokens, and an opaque `HttpOnly`, `Secure` browser session cookie. API-key mode is local development only.
 

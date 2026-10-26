@@ -31,7 +31,7 @@ The local workspace has the runtime and server boundary, generated contract cons
 | Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck.                   |
 | Broader administration and account activity | Deletion-request history and review are implemented locally. Join review, people administration, audit, pins, and account activity await API contracts.                                                            |
 | Uploads                                     | Browser upload works against staging behind `HUB_UPLOADS_ENABLED`; ingestion at upload time waits for ingestion consumers that read the multipart bucket.                                                          |
-| Production exposure                         | The restricted pilot is deployed on one instance with the Cloud SQL shared session store. Multi-replica evidence is needed before scaling.                                                                         |
+| Production exposure                         | The pilot, open to every Crucible account holder since October 26, 2026, is deployed on one instance with the Cloud SQL shared session store. Multi-replica evidence is needed before scaling.                     |
 
 ## Ordered work packages
 
