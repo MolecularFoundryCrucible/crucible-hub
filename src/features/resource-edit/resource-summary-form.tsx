@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
@@ -14,13 +14,10 @@ import {
 } from "@/components/ui/card"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
   DiscardChangesDialog,
@@ -60,6 +57,7 @@ import { FacetCombobox } from "@/components/crucible/facet-combobox"
 import { SaveError } from "@/components/crucible/form-error"
 import { SummaryFields, contextFields } from "./resource-summary-card"
 import type { DatasetDetail, SampleDetail } from "./resource-summary-card"
+import { useAppForm } from "@/features/forms/app-form"
 
 const sampleSummaryFormSchema = z.object({
   description: z
@@ -335,7 +333,7 @@ export function SampleSummaryForm({
         })
       ),
   })
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: sampleFormValues(resource),
     validators: { onChange: sampleSummaryFormSchema },
     onSubmit: async ({ value }) => {
@@ -409,33 +407,17 @@ export function SampleSummaryForm({
             }}
           >
             <FieldGroup>
-              <form.Field name="sample_name">
-                {(field) => {
-                  const invalid = shouldShowFieldError(field)
-                  return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={field.name} required>
-                        Name
-                      </FieldLabel>
-                      <Input
-                        aria-invalid={invalid || undefined}
-                        autoFocus
-                        disabled={isSubmitting}
-                        id={field.name}
-                        maxLength={SAMPLE_NAME_MAX_LENGTH}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        required
-                        value={field.state.value}
-                      />
-                      <FieldError errors={fieldErrors(field, { invalid })} />
-                    </Field>
-                  )
-                }}
-              </form.Field>
+              <form.AppField name="sample_name">
+                {(field) => (
+                  <field.TextField
+                    label="Name"
+                    required
+                    autoFocus
+                    disabled={isSubmitting}
+                    maxLength={SAMPLE_NAME_MAX_LENGTH}
+                  />
+                )}
+              </form.AppField>
 
               <form.Field name="sample_type">
                 {(field) => {
@@ -466,63 +448,27 @@ export function SampleSummaryForm({
                 }}
               </form.Field>
 
-              <form.Field name="description">
-                {(field) => {
-                  const invalid = shouldShowFieldError(field)
-                  return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={field.name} optional>
-                        Description
-                      </FieldLabel>
-                      <Textarea
-                        aria-invalid={invalid || undefined}
-                        disabled={isSubmitting}
-                        id={field.name}
-                        maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        value={field.state.value}
-                      />
-                      <FieldError errors={fieldErrors(field, { invalid })} />
-                    </Field>
-                  )
-                }}
-              </form.Field>
+              <form.AppField name="description">
+                {(field) => (
+                  <field.TextAreaField
+                    label="Description"
+                    disabled={isSubmitting}
+                    maxLength={SAMPLE_DESCRIPTION_MAX_LENGTH}
+                  />
+                )}
+              </form.AppField>
 
-              <form.Field name="timestamp">
-                {(field) => {
-                  const invalid = shouldShowFieldError(field)
-                  return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={field.name} optional>
-                        Timestamp
-                      </FieldLabel>
-                      <Input
-                        aria-invalid={invalid || undefined}
-                        disabled={isSubmitting}
-                        id={field.name}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        step={1}
-                        type="datetime-local"
-                        value={field.state.value}
-                      />
-                      {nonstandardTimestampNotice(resource.timestamp) ? (
-                        <FieldDescription>
-                          {nonstandardTimestampNotice(resource.timestamp)}
-                        </FieldDescription>
-                      ) : null}
-                      <FieldError errors={fieldErrors(field, { invalid })} />
-                    </Field>
-                  )
-                }}
-              </form.Field>
+              <form.AppField name="timestamp">
+                {(field) => (
+                  <field.TextField
+                    description={nonstandardTimestampNotice(resource.timestamp)}
+                    disabled={isSubmitting}
+                    label="Timestamp"
+                    step={1}
+                    type="datetime-local"
+                  />
+                )}
+              </form.AppField>
 
               <SaveError message={saveError} />
             </FieldGroup>
@@ -575,7 +521,7 @@ export function DatasetSummaryForm({
         })
       ),
   })
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: datasetFormValues(resource),
     validators: { onChange: datasetSummaryFormSchema },
     onSubmit: async ({ value }) => {
@@ -651,20 +597,20 @@ export function DatasetSummaryForm({
             }}
           >
             <FieldGroup>
-              {datasetFieldDefinitions.map((definition) => (
-                <form.Field key={definition.name} name={definition.name}>
-                  {(field) => {
-                    const invalid = shouldShowFieldError(field)
-                    return (
-                      <Field data-invalid={invalid}>
-                        <FieldLabel
-                          htmlFor={field.name}
-                          optional={!definition.required}
-                          required={definition.required}
-                        >
-                          {definition.label}
-                        </FieldLabel>
-                        {definition.facetField ? (
+              {datasetFieldDefinitions.map((definition) =>
+                definition.facetField ? (
+                  <form.Field key={definition.name} name={definition.name}>
+                    {(field) => {
+                      const invalid = shouldShowFieldError(field)
+                      return (
+                        <Field data-invalid={invalid}>
+                          <FieldLabel
+                            htmlFor={field.name}
+                            optional={!definition.required}
+                            required={definition.required}
+                          >
+                            {definition.label}
+                          </FieldLabel>
                           <FacetCombobox
                             disabled={isSubmitting}
                             field={definition.facetField}
@@ -680,59 +626,38 @@ export function DatasetSummaryForm({
                             scope={scope}
                             value={field.state.value}
                           />
-                        ) : (
-                          <Input
-                            aria-invalid={invalid || undefined}
-                            autoFocus={definition.autoFocus}
-                            disabled={isSubmitting}
-                            id={field.name}
-                            maxLength={definition.maxLength}
-                            name={field.name}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            required={definition.required}
-                            value={field.state.value}
+                          <FieldError
+                            errors={fieldErrors(field, { invalid })}
                           />
-                        )}
-                        <FieldError errors={fieldErrors(field, { invalid })} />
-                      </Field>
-                    )
-                  }}
-                </form.Field>
-              ))}
-              <form.Field name="timestamp">
-                {(field) => {
-                  const invalid = shouldShowFieldError(field)
-                  return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={field.name} optional>
-                        Timestamp
-                      </FieldLabel>
-                      <Input
-                        aria-invalid={invalid || undefined}
+                        </Field>
+                      )
+                    }}
+                  </form.Field>
+                ) : (
+                  <form.AppField key={definition.name} name={definition.name}>
+                    {(field) => (
+                      <field.TextField
+                        autoFocus={definition.autoFocus}
                         disabled={isSubmitting}
-                        id={field.name}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        step={1}
-                        type="datetime-local"
-                        value={field.state.value}
+                        label={definition.label}
+                        maxLength={definition.maxLength}
+                        required={definition.required}
                       />
-                      {nonstandardTimestampNotice(resource.timestamp) ? (
-                        <FieldDescription>
-                          {nonstandardTimestampNotice(resource.timestamp)}
-                        </FieldDescription>
-                      ) : null}
-                      <FieldError errors={fieldErrors(field, { invalid })} />
-                    </Field>
-                  )
-                }}
-              </form.Field>
+                    )}
+                  </form.AppField>
+                )
+              )}
+              <form.AppField name="timestamp">
+                {(field) => (
+                  <field.TextField
+                    description={nonstandardTimestampNotice(resource.timestamp)}
+                    disabled={isSubmitting}
+                    label="Timestamp"
+                    step={1}
+                    type="datetime-local"
+                  />
+                )}
+              </form.AppField>
               <SaveError message={saveError} />
             </FieldGroup>
           </form>

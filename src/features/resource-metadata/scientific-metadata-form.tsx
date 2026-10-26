@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
@@ -40,6 +40,7 @@ import {
   metadataDraftResult,
   metadataDraftSchema,
 } from "./metadata-input"
+import { useAppForm } from "@/features/forms/app-form"
 
 function metadataEqual(
   left: WorkspaceMetadataValue,
@@ -148,7 +149,7 @@ export function ScientificMetadataForm({
         })
       ),
   })
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       metadata: draftFromMetadata(resource.scientific_metadata),
     },

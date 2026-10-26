@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
@@ -25,13 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { FieldGroup } from "@/components/ui/field"
 import { applyPersonProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
@@ -53,11 +47,11 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { formatUsername } from "@/lib/username"
 import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 import { hubActionError } from "@/components/crucible/reauthentication"
+import { useAppForm } from "@/features/forms/app-form"
 
 const serviceAccountProfileSchema = z.object({
   first_name: z.string().trim().max(255),
@@ -189,7 +183,7 @@ function ServiceAccountIdentityCard({
         })
       ),
   })
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: profileValues(account),
     validators: { onChange: serviceAccountProfileFormSchema(account) },
     onSubmit: async ({ value }) => {
@@ -352,56 +346,25 @@ function ServiceAccountIdentityCard({
               <FieldGroup>
                 <div className="grid grid-cols-2 gap-4">
                   {(["first_name", "last_name"] as const).map((name) => (
-                    <form.Field key={name} name={name}>
-                      {(field) => {
-                        const invalid = shouldShowFieldError(field)
-                        return (
-                          <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor={field.name} optional>
-                              {profileFieldLabel(name)}
-                            </FieldLabel>
-                            <Input
-                              aria-invalid={invalid || undefined}
-                              id={field.name}
-                              maxLength={255}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
-                              }
-                              value={field.state.value}
-                            />
-                            <FieldError
-                              errors={fieldErrors(field, { invalid })}
-                            />
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
+                    <form.AppField key={name} name={name}>
+                      {(field) => (
+                        <field.TextField
+                          label={profileFieldLabel(name)}
+                          maxLength={255}
+                        />
+                      )}
+                    </form.AppField>
                   ))}
                 </div>
-                <form.Field name="username">
-                  {(field) => {
-                    const invalid = shouldShowFieldError(field)
-                    return (
-                      <Field data-invalid={invalid}>
-                        <FieldLabel htmlFor={field.name} required>
-                          {profileFieldLabel("username")}
-                        </FieldLabel>
-                        <Input
-                          aria-invalid={invalid || undefined}
-                          id={field.name}
-                          maxLength={USERNAME_MAX_LENGTH}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          value={field.state.value}
-                        />
-                        <FieldError errors={fieldErrors(field, { invalid })} />
-                      </Field>
-                    )
-                  }}
-                </form.Field>
+                <form.AppField name="username">
+                  {(field) => (
+                    <field.TextField
+                      label={profileFieldLabel("username")}
+                      maxLength={USERNAME_MAX_LENGTH}
+                      required
+                    />
+                  )}
+                </form.AppField>
               </FieldGroup>
             </fieldset>
             {error ? (

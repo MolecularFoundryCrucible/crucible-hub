@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,7 @@ import {
 } from "./account-profile-fields"
 import { UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
+import { useAppForm } from "@/features/forms/app-form"
 
 export function AccountSetupForm({
   account,
@@ -41,7 +42,7 @@ export function AccountSetupForm({
     () => accountProfileFormSchema(account),
     [account]
   )
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: accountProfileValues(account),
     validators: {
       onChange: profileSchema,

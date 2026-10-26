@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
@@ -20,7 +20,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { Input } from "@/components/ui/input"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
@@ -34,6 +33,7 @@ import { createWorkspaceUserFn } from "@/data/crucible/users.functions"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
 import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
+import { useAppForm } from "@/features/forms/app-form"
 
 const createUserSchema = z.object({
   email: emailSchema.or(z.literal("")),
@@ -75,7 +75,7 @@ export function UserCreateDialog({
       ),
   })
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       email: "",
       first_name: "",
@@ -154,54 +154,26 @@ export function UserCreateDialog({
                 )}
               </form.Field>
               <div className="grid gap-4 @fields:grid-cols-2">
-                <form.Field name="first_name">
-                  {(field) => {
-                    const invalid = shouldShowFieldError(field)
-                    return (
-                      <Field data-invalid={invalid}>
-                        <FieldLabel htmlFor={field.name} required>
-                          First name
-                        </FieldLabel>
-                        <Input
-                          aria-invalid={invalid || undefined}
-                          id={field.name}
-                          maxLength={255}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          placeholder="e.g. Jane"
-                          value={field.state.value}
-                        />
-                        <FieldError errors={fieldErrors(field)} />
-                      </Field>
-                    )
-                  }}
-                </form.Field>
-                <form.Field name="last_name">
-                  {(field) => {
-                    const invalid = shouldShowFieldError(field)
-                    return (
-                      <Field data-invalid={invalid}>
-                        <FieldLabel htmlFor={field.name} required>
-                          Last name
-                        </FieldLabel>
-                        <Input
-                          aria-invalid={invalid || undefined}
-                          id={field.name}
-                          maxLength={255}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          placeholder="e.g. Doe"
-                          value={field.state.value}
-                        />
-                        <FieldError errors={fieldErrors(field)} />
-                      </Field>
-                    )
-                  }}
-                </form.Field>
+                <form.AppField name="first_name">
+                  {(field) => (
+                    <field.TextField
+                      label="First name"
+                      required
+                      maxLength={255}
+                      placeholder="e.g. Jane"
+                    />
+                  )}
+                </form.AppField>
+                <form.AppField name="last_name">
+                  {(field) => (
+                    <field.TextField
+                      label="Last name"
+                      required
+                      maxLength={255}
+                      placeholder="e.g. Doe"
+                    />
+                  )}
+                </form.AppField>
               </div>
               <form.Field name="email">
                 {(field) => (

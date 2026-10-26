@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
@@ -41,13 +41,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Table,
   TableBody,
@@ -89,6 +83,7 @@ import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-cr
 import { resourceDisplayName } from "@/lib/resource-name"
 import { formatUsername } from "@/lib/username"
 import { hubActionError } from "@/components/crucible/reauthentication"
+import { useAppForm } from "@/features/forms/app-form"
 
 const platformRoleDescriptions = {
   admin: "Full platform administration.",
@@ -245,7 +240,7 @@ function UserProfileCard({
       ),
   })
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: userFormValues(user),
     validators: {
       onChange: editUserSchema,
@@ -458,46 +453,24 @@ function UserProfileCard({
                   )}
                 </form.Field>
                 <div className="grid grid-cols-2 gap-4">
-                  <form.Field name="first_name">
+                  <form.AppField name="first_name">
                     {(field) => (
-                      <Field data-invalid={!field.state.meta.isValid}>
-                        <FieldLabel htmlFor={field.name} required>
-                          First name
-                        </FieldLabel>
-                        <Input
-                          aria-invalid={!field.state.meta.isValid || undefined}
-                          id={field.name}
-                          maxLength={255}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          value={field.state.value}
-                        />
-                        <FieldError errors={field.state.meta.errors} />
-                      </Field>
+                      <field.TextField
+                        label="First name"
+                        maxLength={255}
+                        required
+                      />
                     )}
-                  </form.Field>
-                  <form.Field name="last_name">
+                  </form.AppField>
+                  <form.AppField name="last_name">
                     {(field) => (
-                      <Field data-invalid={!field.state.meta.isValid}>
-                        <FieldLabel htmlFor={field.name} required>
-                          Last name
-                        </FieldLabel>
-                        <Input
-                          aria-invalid={!field.state.meta.isValid || undefined}
-                          id={field.name}
-                          maxLength={255}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          value={field.state.value}
-                        />
-                        <FieldError errors={field.state.meta.errors} />
-                      </Field>
+                      <field.TextField
+                        label="Last name"
+                        maxLength={255}
+                        required
+                      />
                     )}
-                  </form.Field>
+                  </form.AppField>
                 </div>
                 <form.Field name="email">
                   {(field) => (

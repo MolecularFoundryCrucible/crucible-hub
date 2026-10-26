@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation } from "@tanstack/react-query"
 import { z } from "zod"
 
@@ -29,6 +29,7 @@ import { usernameSchema } from "@/data/crucible/slugs"
 import { hubConflictFields, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
 import { hubActionError } from "@/components/crucible/reauthentication"
+import { useAppForm } from "@/features/forms/app-form"
 
 const createServiceAccountSchema = z.object({
   unique_id: z
@@ -66,7 +67,7 @@ export function ServiceAccountCreateDialog({
         })
       ),
   })
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: { unique_id: "", username: "" },
     validators: {
       onChange: createServiceAccountSchema,

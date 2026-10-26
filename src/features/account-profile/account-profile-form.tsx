@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
@@ -47,6 +47,7 @@ import {
 import { UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { formatUsername } from "@/lib/username"
+import { useAppForm } from "@/features/forms/app-form"
 
 export function AccountProfileForm({
   account,
@@ -75,7 +76,7 @@ export function AccountProfileForm({
     () => accountProfileFormSchema(account),
     [account]
   )
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: accountProfileValues(account),
     validators: {
       onChange: profileSchema,
