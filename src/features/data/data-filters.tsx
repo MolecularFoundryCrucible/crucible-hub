@@ -15,10 +15,7 @@ import {
   collectionActiveFilter,
   collectionActiveFilters,
 } from "@/components/crucible/collection-filter-panel"
-import {
-  CollectionCreatedRangeFields,
-  CollectionOrderFields,
-} from "@/components/crucible/collection-query-fields"
+import { CollectionCreatedRangeFields } from "@/components/crucible/collection-query-fields"
 import {
   DatasetFacetFilter,
   SampleFacetFilter,
@@ -28,7 +25,6 @@ import {
   facetSelection,
   facetSummary,
   setFacetDraft,
-  sortLabel,
 } from "@/data/crucible/filter-draft"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
@@ -81,7 +77,6 @@ const dataFilterRemoval: Readonly<
     measurementIsNull: undefined,
     measurementSet: undefined,
   },
-  order: { direction: undefined, sort: undefined },
   owner: {
     ownerId: undefined,
     ownerIdIsNull: undefined,
@@ -268,12 +263,6 @@ export function DataFilters({
             : activeInstrumentMfid
               ? `Instrument: ${resolvedInstrumentName ?? activeInstrumentMfid}`
               : undefined
-        ),
-        collectionActiveFilter(
-          "order",
-          values.sort
-            ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
-            : undefined
         )
       )
     : []
@@ -653,16 +642,6 @@ export function DataFilters({
                 }
               />
             ) : null}
-            <CollectionOrderFields
-              defaultOrdering={defaultOrdering}
-              describedBy={errorDescription}
-              idPrefix="data"
-              invalid={invalid}
-              onChange={(value) =>
-                setDraft((current) => ({ ...current, ...value }))
-              }
-              value={draft}
-            />
           </FieldGroup>
         </FieldSet>
         {draftErrors.length ? (

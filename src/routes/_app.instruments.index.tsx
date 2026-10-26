@@ -80,7 +80,6 @@ import {
   instrumentAffiliationSchema,
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
-import { defaultOrderLabel, sortLabel } from "@/data/crucible/filter-draft"
 import { instrumentStatuses } from "@/data/crucible/instrument-status"
 import type {
   WorkspaceInstrument,
@@ -249,10 +248,7 @@ function InstrumentsPage() {
       <CollectionToolbar
         actions={
           <>
-            <InstrumentDirectoryFilters
-              defaultOrdering={preferredSort}
-              values={search}
-            />
+            <InstrumentDirectoryFilters values={search} />
             <RefreshButton
               label="Refresh instruments"
               onClick={() => void instrumentResult.refetch()}
@@ -333,10 +329,8 @@ function InstrumentsRoutePending() {
 type InstrumentFilterValues = Omit<InstrumentSearch, "cursor">
 
 function InstrumentDirectoryFilters({
-  defaultOrdering,
   values,
 }: {
-  defaultOrdering?: { direction: SortDirection; sort: InstrumentSortField }
   values: InstrumentFilterValues
 }) {
   const navigate = Route.useNavigate()
@@ -369,8 +363,6 @@ function InstrumentDirectoryFilters({
     : undefined
 
   const effectiveStatus = values.status ?? "active"
-  const effectiveDirection =
-    values.direction ?? (values.sort === "name" ? "asc" : "desc")
 
   const active = collectionActiveFilters(
     collectionActiveFilter(
@@ -408,12 +400,6 @@ function InstrumentDirectoryFilters({
     collectionActiveFilter(
       "manufacturer",
       values.manufacturer ? `Manufacturer: ${values.manufacturer}` : undefined
-    ),
-    collectionActiveFilter(
-      "order",
-      values.sort
-        ? `Order: ${sortLabel(values.sort)} (${effectiveDirection === "asc" ? "ascending" : "descending"})`
-        : undefined
     )
   )
 
@@ -443,7 +429,10 @@ function InstrumentDirectoryFilters({
   }
 
   function clear() {
-    const empty: InstrumentFilterValues = {}
+    const empty: InstrumentFilterValues = {
+      direction: values.direction,
+      sort: values.sort,
+    }
     setDraft(empty)
     setOwnerName(undefined)
     setOpen(false)
@@ -471,14 +460,10 @@ function InstrumentDirectoryFilters({
       updateSearch({ ...values, location: undefined })
     } else if (id === "manufacturer") {
       updateSearch({ ...values, manufacturer: undefined })
-    } else if (id === "order") {
-      updateSearch({ ...values, direction: undefined, sort: undefined })
     }
   }
 
   const draftStatus = draft.status ?? "active"
-  const draftDirection =
-    draft.direction ?? (draft.sort === "name" ? "asc" : "desc")
   const selectedOwner: WorkspaceSearchResult | undefined = draft.ownerId
     ? {
         context: null,
@@ -640,62 +625,6 @@ function InstrumentDirectoryFilters({
                 value={draft.manufacturer ?? ""}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="instrument-filter-sort">Order by</FieldLabel>
-              <NativeSelect
-                className="w-full"
-                id="instrument-filter-sort"
-                onChange={(event) => {
-                  const nextSort = instrumentSortFieldSchema.safeParse(
-                    event.target.value
-                  ).data
-                  setDraft((current) => ({
-                    ...current,
-                    direction: nextSort
-                      ? (current.direction ??
-                        (nextSort === "name" ? "asc" : "desc"))
-                      : undefined,
-                    sort: nextSort,
-                  }))
-                }}
-                value={draft.sort ?? ""}
-              >
-                <NativeSelectOption value="">
-                  {defaultOrderLabel(
-                    defaultOrdering ?? { direction: "asc", sort: "name" }
-                  )}
-                </NativeSelectOption>
-                <NativeSelectOption value="name">Name</NativeSelectOption>
-                <NativeSelectOption value="created">Created</NativeSelectOption>
-                <NativeSelectOption value="updated">Updated</NativeSelectOption>
-                <NativeSelectOption value="activity">
-                  Last activity
-                </NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            {draft.sort ? (
-              <Field>
-                <FieldLabel htmlFor="instrument-filter-direction">
-                  Direction
-                </FieldLabel>
-                <NativeSelect
-                  className="w-full"
-                  id="instrument-filter-direction"
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      direction: event.target.value === "asc" ? "asc" : "desc",
-                    }))
-                  }
-                  value={draftDirection}
-                >
-                  <NativeSelectOption value="desc">
-                    Descending
-                  </NativeSelectOption>
-                  <NativeSelectOption value="asc">Ascending</NativeSelectOption>
-                </NativeSelect>
-              </Field>
-            ) : null}
           </FieldGroup>
         </FieldSet>
       </form>

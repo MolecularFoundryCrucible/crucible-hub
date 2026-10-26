@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Moved sorting out of the Filters panels on Projects, Instruments, and Data, so lists sort only from the table, and Clear filters no longer resets the order.
 - Fixed Deletion history and deletion requests failing to load when they include a deleted project or instrument.
 - Wrote multi-word statuses in sentence case everywhere, such as In review.
 - Gave the Users, Service accounts, and Deletion requests pages the shared directory toolbar with a Refresh button, and let Projects and Instruments be sorted from the list on phones.

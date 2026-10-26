@@ -150,11 +150,12 @@ describe("global data filter state", () => {
     })
   })
 
-  it("clears filters and both cursors while preserving kind and unrelated state", () => {
+  it("clears filters and both cursors while preserving kind, order, and unrelated state", () => {
     expect(
       clearDataFilters({
         createdFrom: "2026-01-01",
         datasetCursor: "dataset-page-2",
+        direction: "asc",
         instrumentMfid: "instrument-1",
         kind: "datasets",
         projectMfid: "project-1",
@@ -162,12 +163,14 @@ describe("global data filter state", () => {
         preview: "fixture-dataset-1",
         sampleCursor: "sample-page-2",
         scenario: "dense",
+        sort: "name",
         visibility: "private",
       })
     ).toEqual({
       createdFrom: undefined,
       createdTo: undefined,
       datasetCursor: undefined,
+      direction: "asc",
       instrumentMfid: undefined,
       kind: "datasets",
       projectMfid: undefined,
@@ -175,6 +178,7 @@ describe("global data filter state", () => {
       preview: undefined,
       sampleCursor: undefined,
       scenario: "dense",
+      sort: "name",
       visibility: undefined,
     })
   })

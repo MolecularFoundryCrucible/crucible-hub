@@ -23,10 +23,7 @@ import {
   collectionActiveFilter,
   collectionActiveFilters,
 } from "@/components/crucible/collection-filter-panel"
-import {
-  CollectionCreatedRangeFields,
-  CollectionOrderFields,
-} from "@/components/crucible/collection-query-fields"
+import { CollectionCreatedRangeFields } from "@/components/crucible/collection-query-fields"
 import {
   CollectionLoadError,
   CollectionTablePending,
@@ -76,7 +73,6 @@ import {
   sortDirectionSchema,
 } from "@/data/crucible/collection-query"
 import type {
-  CollectionOrdering,
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
@@ -422,7 +418,6 @@ function InstrumentDatasetsPage() {
           actions={
             <div className="flex flex-wrap items-center justify-end gap-2">
               <InstrumentDatasetFilters
-                defaultOrdering={defaultOrdering}
                 onApply={(values) =>
                   updateBrowse({
                     createdFrom: values.createdFrom,
@@ -484,11 +479,9 @@ type InstrumentDatasetFilterValues = {
 }
 
 function InstrumentDatasetFilters({
-  defaultOrdering = defaultCollectionOrdering,
   onApply,
   values,
 }: {
-  defaultOrdering?: CollectionOrdering
   onApply: (values: InstrumentDatasetFilterValues) => void
   values: InstrumentDatasetFilterValues
 }) {
@@ -521,12 +514,6 @@ function InstrumentDatasetFilters({
     collectionActiveFilter(
       "created-to",
       values.createdTo ? `Created to: ${values.createdTo}` : undefined
-    ),
-    collectionActiveFilter(
-      "order",
-      values.sort
-        ? `Order: ${values.sort} (${values.direction === "asc" ? "ascending" : "descending"})`
-        : undefined
     )
   )
 
@@ -546,15 +533,15 @@ function InstrumentDatasetFilters({
   }
 
   function clear() {
-    setDraft({})
+    setDraft({ direction: values.direction, sort: values.sort })
     setRangeInvalid(false)
     setOpen(false)
     onApply({
       createdFrom: undefined,
       createdTo: undefined,
-      direction: undefined,
+      direction: values.direction,
       publicData: undefined,
-      sort: undefined,
+      sort: values.sort,
     })
   }
 
@@ -574,8 +561,6 @@ function InstrumentDatasetFilters({
       onApply({ ...values, createdFrom: undefined })
     } else if (id === "created-to") {
       onApply({ ...values, createdTo: undefined })
-    } else if (id === "order") {
-      onApply({ ...values, direction: undefined, sort: undefined })
     }
   }
 
@@ -628,14 +613,6 @@ function InstrumentDatasetFilters({
             invalid={(field) => rangeInvalid && field === "createdTo"}
             onChange={(field, value) =>
               setDraft((current) => ({ ...current, [field]: value }))
-            }
-            value={draft}
-          />
-          <CollectionOrderFields
-            defaultOrdering={defaultOrdering}
-            idPrefix="instrument-dataset"
-            onChange={(value) =>
-              setDraft((current) => ({ ...current, ...value }))
             }
             value={draft}
           />

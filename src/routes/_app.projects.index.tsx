@@ -66,11 +66,7 @@ import { SortableTableHead } from "@/components/crucible/sortable-table-head"
 import { TableSortControl } from "@/components/crucible/table-sort-control"
 import type { TableSortField } from "@/components/crucible/table-sort-control"
 import { dateOnlySchema } from "@/data/crucible/collection-filters"
-import {
-  capitalize,
-  defaultOrderLabel,
-  sortLabel,
-} from "@/data/crucible/filter-draft"
+import { capitalize } from "@/data/crucible/filter-draft"
 import {
   projectPageLimit,
   projectsCursorQueryOptions,
@@ -240,10 +236,7 @@ function ProjectsPage() {
       <CollectionToolbar
         actions={
           <>
-            <ProjectDirectoryFilters
-              defaultOrdering={preferredSort}
-              values={search}
-            />
+            <ProjectDirectoryFilters values={search} />
             <RefreshButton
               label="Refresh projects"
               onClick={() => void projectResult.refetch()}
@@ -335,13 +328,7 @@ function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
 
 type ProjectFilterValues = Omit<ProjectSearch, "cursor">
 
-function ProjectDirectoryFilters({
-  defaultOrdering,
-  values,
-}: {
-  defaultOrdering?: { direction: SortDirection; sort: ProjectSortField }
-  values: ProjectFilterValues
-}) {
+function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
   const navigate = Route.useNavigate()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<ProjectFilterValues>(values)
@@ -357,8 +344,6 @@ function ProjectDirectoryFilters({
     setDraft(JSON.parse(valuesKey) as ProjectFilterValues)
   }, [valuesKey])
 
-  const effectiveDirection =
-    values.direction ?? (values.sort === "name" ? "asc" : "desc")
   const active = collectionActiveFilters(
     collectionActiveFilter(
       "role",
@@ -371,12 +356,6 @@ function ProjectDirectoryFilters({
     collectionActiveFilter(
       "active-since",
       values.activeSince ? `Active since: ${values.activeSince}` : undefined
-    ),
-    collectionActiveFilter(
-      "order",
-      values.sort
-        ? `Order: ${sortLabel(values.sort)} (${effectiveDirection === "asc" ? "ascending" : "descending"})`
-        : undefined
     )
   )
 
@@ -402,7 +381,10 @@ function ProjectDirectoryFilters({
   }
 
   function clear() {
-    const empty: ProjectFilterValues = {}
+    const empty: ProjectFilterValues = {
+      direction: values.direction,
+      sort: values.sort,
+    }
     setDraft(empty)
     setOpen(false)
     updateSearch(empty)
@@ -418,15 +400,11 @@ function ProjectDirectoryFilters({
       updateSearch({ ...values, affiliation: undefined, role: undefined })
     } else if (id === "active-since") {
       updateSearch({ ...values, activeSince: undefined })
-    } else if (id === "order") {
-      updateSearch({ ...values, direction: undefined, sort: undefined })
     }
   }
 
   const draftRoleValue =
     draft.role ?? (draft.affiliation === "owner" ? "owner" : "")
-  const draftDirection =
-    draft.direction ?? (draft.sort === "name" ? "asc" : "desc")
 
   return (
     <CollectionFilterPanel
@@ -498,68 +476,6 @@ function ProjectDirectoryFilters({
                 value={draft.activeSince ?? ""}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="project-filter-sort">Order by</FieldLabel>
-              <NativeSelect
-                className="w-full"
-                id="project-filter-sort"
-                onChange={(event) => {
-                  const parsed = projectSortFieldSchema.safeParse(
-                    event.target.value
-                  )
-                  const nextSort = parsed.success ? parsed.data : undefined
-                  setDraft((current) => ({
-                    ...current,
-                    direction: nextSort
-                      ? (current.direction ??
-                        (nextSort === "name" ? "asc" : "desc"))
-                      : undefined,
-                    sort: nextSort,
-                  }))
-                }}
-                value={draft.sort ?? ""}
-              >
-                <NativeSelectOption value="">
-                  {defaultOrderLabel(
-                    defaultOrdering ?? { direction: "asc", sort: "name" }
-                  )}
-                </NativeSelectOption>
-                <NativeSelectOption value="name">Name</NativeSelectOption>
-                <NativeSelectOption value="created">Created</NativeSelectOption>
-                <NativeSelectOption value="updated">Updated</NativeSelectOption>
-                <NativeSelectOption value="activity">
-                  Last activity
-                </NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            {draft.sort ? (
-              <Field>
-                <FieldLabel htmlFor="project-filter-direction">
-                  Direction
-                </FieldLabel>
-                <NativeSelect
-                  className="w-full"
-                  id="project-filter-direction"
-                  onChange={(event) => {
-                    const parsed = sortDirectionSchema.safeParse(
-                      event.target.value
-                    )
-                    if (parsed.success) {
-                      setDraft((current) => ({
-                        ...current,
-                        direction: parsed.data,
-                      }))
-                    }
-                  }}
-                  value={draftDirection}
-                >
-                  <NativeSelectOption value="asc">Ascending</NativeSelectOption>
-                  <NativeSelectOption value="desc">
-                    Descending
-                  </NativeSelectOption>
-                </NativeSelect>
-              </Field>
-            ) : null}
           </FieldGroup>
         </FieldSet>
       </form>

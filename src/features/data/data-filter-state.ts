@@ -365,7 +365,6 @@ export function clearDataFilters(
     createdTo: undefined,
     ...emptyFacetSearchState,
     datasetCursor: undefined,
-    direction: undefined,
     instrumentMfid: undefined,
     instrumentMfidIsNull: undefined,
     ownerId: undefined,
@@ -377,7 +376,6 @@ export function clearDataFilters(
     preview: undefined,
     publicData: undefined,
     sampleCursor: undefined,
-    sort: undefined,
     visibility: undefined,
   }
 }

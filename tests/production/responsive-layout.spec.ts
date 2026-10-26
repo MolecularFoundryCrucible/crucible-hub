@@ -375,3 +375,25 @@ test("sorts stacked directory rows from the table", async ({ page }) => {
     await expect(page, path).toHaveURL(/sort=created/)
   }
 })
+
+test("keeps ordering out of the Filters sheet and keeps it when filters clear", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 800, width: 1280 })
+  for (const path of [
+    "/hub/projects?sort=name&direction=desc&activeSince=2026-01-01",
+    "/hub/data?scenario=populated&sort=name&direction=desc&createdFrom=2026-01-01",
+  ]) {
+    await page.goto(path)
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByText(/^Order:/), path).toHaveCount(0)
+    await page.getByRole("button", { name: /^Filters/ }).click()
+    const sheet = page.getByRole("dialog")
+    await expect(sheet, path).toBeVisible()
+    await expect(sheet.getByLabel("Order by"), path).toHaveCount(0)
+    await sheet.getByRole("button", { name: "Clear filters" }).click()
+    await expect(page, path).not.toHaveURL(/activeSince|createdFrom/)
+    await expect(page, path).toHaveURL(/sort=name/)
+    await expect(page, path).toHaveURL(/direction=desc/)
+  }
+})

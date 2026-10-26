@@ -18,16 +18,12 @@ import {
   collectionActiveFilter,
   collectionActiveFilters,
 } from "@/components/crucible/collection-filter-panel"
-import {
-  CollectionCreatedRangeFields,
-  CollectionOrderFields,
-} from "@/components/crucible/collection-query-fields"
+import { CollectionCreatedRangeFields } from "@/components/crucible/collection-query-fields"
 import {
   capitalize,
   facetSelection,
   facetSummary,
   setFacetDraft,
-  sortLabel,
 } from "@/data/crucible/filter-draft"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
@@ -83,7 +79,6 @@ const projectDataFilterRemoval: Readonly<
     measurementIsNull: undefined,
     measurementSet: undefined,
   },
-  order: { direction: undefined, sort: undefined },
   owner: {
     ownerId: undefined,
     ownerIdIsNull: undefined,
@@ -258,12 +253,6 @@ export function ProjectDataFilters({
             resolution.filters.dataFormatIsNull
           )
         : undefined
-    ),
-    collectionActiveFilter(
-      "order",
-      resolution.valid && values.sort
-        ? `Order: ${sortLabel(resolution.filters.sort)} (${resolution.filters.direction === "asc" ? "ascending" : "descending"})`
-        : undefined
     )
   )
   const invalid = (field: keyof ProjectDataFilterSearch) =>
@@ -329,7 +318,11 @@ export function ProjectDataFilters({
   }
 
   function clear() {
-    setDraft({ projectScope: "all" })
+    setDraft({
+      direction: values.direction,
+      projectScope: "all",
+      sort: values.sort,
+    })
     setDraftErrors([])
     void navigate({
       params: { projectMfid },
@@ -341,7 +334,6 @@ export function ProjectDataFilters({
         dataFormatIsNull: undefined,
         dataFormatSet: undefined,
         datasetCursor: undefined,
-        direction: undefined,
         instrumentMfid: undefined,
         instrumentMfidIsNull: undefined,
         measurement: undefined,
@@ -360,7 +352,6 @@ export function ProjectDataFilters({
         sessionName: undefined,
         sessionNameIsNull: undefined,
         sessionNameSet: undefined,
-        sort: undefined,
         visibility: undefined,
       }),
       state: {},
@@ -694,16 +685,6 @@ export function ProjectDataFilters({
                 }
               />
             ) : null}
-            <CollectionOrderFields
-              defaultOrdering={defaultOrdering}
-              describedBy={errorDescription}
-              idPrefix="project-data"
-              invalid={invalid}
-              onChange={(value) =>
-                setDraft((current) => ({ ...current, ...value }))
-              }
-              value={draft}
-            />
           </FieldGroup>
         </FieldSet>
         {draftErrors.length ? (
