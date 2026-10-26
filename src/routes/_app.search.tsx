@@ -32,6 +32,7 @@ import { MfidValue } from "@/components/crucible/mfid-value"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { SegmentedControl } from "@/components/crucible/segmented-control"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PendingRegion } from "@/components/crucible/pending-region"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
@@ -172,6 +173,31 @@ function SearchPage() {
     })
   }
 
+  const typeOptions = [
+    { label: "All", value: "all" },
+    ...(search.projectMfid ? projectKinds : kinds).map((kind) => ({
+      label: kindLabel(kind),
+      value: kind,
+    })),
+    ...(!search.projectMfid
+      ? [{ label: "Scientific metadata", value: "metadata" }]
+      : []),
+  ]
+  const typeValue = metadataMode ? "metadata" : (search.kind ?? "all")
+  const changeType = (nextValue: string) => {
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        kind:
+          nextValue === "all" || nextValue === "metadata"
+            ? undefined
+            : (nextValue as WorkspaceSearchKind),
+        mode: nextValue === "metadata" ? "metadata" : undefined,
+      }),
+      to: "/search",
+    })
+  }
+
   return (
     <PageLayout>
       <SearchBreadcrumb
@@ -278,36 +304,29 @@ function SearchPage() {
           />
         }
         primary={
-          <div className="max-w-full overflow-x-auto pb-1">
-            <SegmentedControl
-              ariaLabel="Resource type filter"
-              className="w-max"
-              onValueChange={(nextValue) => {
-                void navigate({
-                  search: (previous) => ({
-                    ...previous,
-                    kind:
-                      nextValue === "all" || nextValue === "metadata"
-                        ? undefined
-                        : (nextValue as WorkspaceSearchKind),
-                    mode: nextValue === "metadata" ? "metadata" : undefined,
-                  }),
-                  to: "/search",
-                })
-              }}
-              options={[
-                { label: "All", value: "all" },
-                ...(search.projectMfid ? projectKinds : kinds).map((kind) => ({
-                  label: kindLabel(kind),
-                  value: kind,
-                })),
-                ...(!search.projectMfid
-                  ? [{ label: "Scientific metadata", value: "metadata" }]
-                  : []),
-              ]}
-              value={metadataMode ? "metadata" : (search.kind ?? "all")}
-            />
-          </div>
+          <>
+            <div className="max-w-full overflow-x-auto pb-1 @max-labels/content:hidden">
+              <SegmentedControl
+                ariaLabel="Resource type filter"
+                className="w-max"
+                onValueChange={changeType}
+                options={typeOptions}
+                value={typeValue}
+              />
+            </div>
+            <NativeSelect
+              aria-label="Resource type filter"
+              className="@labels/content:hidden"
+              onChange={(event) => changeType(event.target.value)}
+              value={typeValue}
+            >
+              {typeOptions.map((option) => (
+                <NativeSelectOption key={option.value} value={option.value}>
+                  {option.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </>
         }
         sticky={false}
       />

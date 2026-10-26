@@ -51,6 +51,11 @@ const buttonVariantClasses = cva(
         size: ["icon", "icon-xs", "icon-sm", "icon-circle", "table-action"],
         className: "border-border-strong",
       },
+      {
+        variant: "outline",
+        size: "default",
+        className: "max-sm:has-[>.hidden]:border-border-strong",
+      },
     ],
     defaultVariants: {
       variant: "default",

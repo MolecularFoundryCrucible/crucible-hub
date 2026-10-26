@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 export function PageHeader({
-  actionLayout = "stacked",
+  actionLayout = "inline",
   actions,
   description,
   icon,

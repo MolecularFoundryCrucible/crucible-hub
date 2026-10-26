@@ -43,6 +43,11 @@ test.describe("phone", () => {
       "background-color",
       "rgba(0, 0, 0, 0)"
     )
+    expect(
+      await inspector.evaluate(
+        (sheet) => getComputedStyle(sheet, "::after").backgroundColor
+      )
+    ).not.toBe("rgba(0, 0, 0, 0)")
 
     await page.touchscreen.tap(195, 40)
     await expect(page.locator('[data-slot="dialog-content"]')).toHaveCount(0)
@@ -142,6 +147,55 @@ test.describe("phone", () => {
           .evaluate((label) => label.getBoundingClientRect().width)
       ).toBeLessThanOrEqual(1)
     }
+  })
+
+  test("offers search types as a select", async ({ page }) => {
+    await page.goto("/hub/search?q=catalyst")
+    await page.waitForLoadState("networkidle")
+    const select = page.getByRole("combobox", { name: "Resource type filter" })
+    await expect(select).toBeVisible()
+    await expect(
+      page.getByRole("group", { name: "Resource type filter" })
+    ).toBeHidden()
+    await select.selectOption("project")
+    await expect(page).toHaveURL(/kind=project/)
+  })
+
+  test("keeps page header actions beside the title", async ({ page }) => {
+    await page.goto("/hub/data?scenario=populated")
+    await page.waitForLoadState("networkidle")
+    const title = (await page.getByRole("heading", { level: 1 }).boundingBox())!
+    const create = (await page
+      .getByRole("link", { name: "Create sample", exact: true })
+      .boundingBox())!
+    expect(create.x).toBeGreaterThan(title.x + title.width - 1)
+  })
+
+  test("drops the desktop collapse control from the drawer", async ({
+    page,
+  }) => {
+    await openNavigation(page)
+    await expect(
+      page.getByRole("button", { name: "Collapse navigation" })
+    ).toHaveCount(0)
+  })
+
+  test("gives the icon-only Create button the icon button border", async ({
+    page,
+  }) => {
+    await page.goto("/hub/?scenario=populated")
+    await page.waitForLoadState("networkidle")
+    const border = await page
+      .getByRole("button", { name: "Create" })
+      .evaluate((button) => {
+        const probe = document.createElement("div")
+        probe.className = "border border-border-strong"
+        document.body.append(probe)
+        const expected = getComputedStyle(probe).borderTopColor
+        probe.remove()
+        return [getComputedStyle(button).borderTopColor, expected]
+      })
+    expect(border[0]).toBe(border[1])
   })
 
   test("leaves creation to the Create menu", async ({ page }) => {

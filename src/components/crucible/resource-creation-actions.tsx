@@ -2,6 +2,10 @@ import { useRender } from "@base-ui/react/use-render"
 import type { ReactElement } from "react"
 import { Link } from "@tanstack/react-router"
 
+import {
+  CompactLabelTooltip,
+  compactLabelProps,
+} from "@/components/crucible/compact-label-tooltip"
 import { CreateResourceIcon } from "@/components/crucible/icons"
 import {
   PrincipalTypeIcon,
@@ -34,7 +38,7 @@ export function ResourceCreationLink({
     "@labels/content:hidden",
     variant === "default" && "text-current"
   )
-  return useRender({
+  const link = useRender({
     defaultTagName: "a",
     props: {
       children: kind ? (
@@ -45,7 +49,9 @@ export function ResourceCreationLink({
           ) : (
             <ResourceTypeIcon className={typeIconClassName} type={kind} />
           )}
-          <span className="@max-labels/content:sr-only">{label}</span>
+          <span className="@max-labels/content:sr-only" {...compactLabelProps}>
+            {label}
+          </span>
         </>
       ) : (
         <>
@@ -58,6 +64,11 @@ export function ResourceCreationLink({
     render,
     state: { slot: "button" },
   })
+  return kind ? (
+    <CompactLabelTooltip label={label}>{link}</CompactLabelTooltip>
+  ) : (
+    link
+  )
 }
 
 export function ResourceCreationActions({

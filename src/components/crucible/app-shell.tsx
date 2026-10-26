@@ -842,7 +842,7 @@ function SidebarBrand() {
 function SidebarUtilities({ shortcuts }: { shortcuts: DialogHandle }) {
   const { isMobile, state, toggleSidebar } = useSidebar()
   const { setTheme, theme } = useThemePreference()
-  const expanded = isMobile || state === "expanded"
+  const expanded = state === "expanded"
 
   return (
     <SidebarFooter>
@@ -896,21 +896,23 @@ function SidebarUtilities({ shortcuts }: { shortcuts: DialogHandle }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={toggleSidebar}
-            tooltip={expanded ? "Collapse navigation" : "Expand navigation"}
-          >
-            {expanded ? (
-              <CollapseSidebarIcon aria-hidden="true" />
-            ) : (
-              <ExpandSidebarIcon aria-hidden="true" />
-            )}
-            <span>
-              {expanded ? "Collapse navigation" : "Expand navigation"}
-            </span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        {isMobile ? null : (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={toggleSidebar}
+              tooltip={expanded ? "Collapse navigation" : "Expand navigation"}
+            >
+              {expanded ? (
+                <CollapseSidebarIcon aria-hidden="true" />
+              ) : (
+                <ExpandSidebarIcon aria-hidden="true" />
+              )}
+              <span>
+                {expanded ? "Collapse navigation" : "Expand navigation"}
+              </span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
       </SidebarMenu>
     </SidebarFooter>
   )

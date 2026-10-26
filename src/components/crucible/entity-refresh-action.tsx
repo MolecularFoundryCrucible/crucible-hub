@@ -60,6 +60,7 @@ export function EntityRefreshAction({
       <Tooltip>
         <TooltipTrigger render={<span className="inline-flex" />} tabIndex={-1}>
           <RefreshButton
+            compactTooltip={false}
             failed={failed}
             label={failed ? `${label}. Refresh failed. Try again.` : label}
             onClick={() => void refresh()}

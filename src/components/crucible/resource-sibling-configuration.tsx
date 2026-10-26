@@ -1,6 +1,10 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
+import {
+  CompactLabelTooltip,
+  compactLabelProps,
+} from "@/components/crucible/compact-label-tooltip"
 import { createAnchoredResourceSiblingCollection } from "@/components/crucible/anchored-resource-siblings"
 import { CollectionOrderFields } from "@/components/crucible/collection-query-fields"
 import { ResourceSequenceIcon } from "@/components/crucible/icons"
@@ -85,19 +89,26 @@ export function ResourceSiblingConfigurationAction({
 
   return (
     <Dialog onOpenChange={changeOpen} open={open}>
-      <DialogTrigger
-        render={
-          <Button
-            aria-label={`Change resource sequence. ${title}`}
-            className="max-w-resource-sequence min-w-0"
-            type="button"
-            variant={navigation ? "outline" : "ghost"}
-          />
-        }
-      >
-        <ResourceSequenceIcon aria-hidden="true" data-icon="inline-start" />
-        <span className="truncate @max-labels/content:sr-only">{title}</span>
-      </DialogTrigger>
+      <CompactLabelTooltip label={title}>
+        <DialogTrigger
+          render={
+            <Button
+              aria-label={`Change resource sequence. ${title}`}
+              className="max-w-resource-sequence min-w-0"
+              type="button"
+              variant={navigation ? "outline" : "ghost"}
+            />
+          }
+        >
+          <ResourceSequenceIcon aria-hidden="true" data-icon="inline-start" />
+          <span
+            className="truncate @max-labels/content:sr-only"
+            {...compactLabelProps}
+          >
+            {title}
+          </span>
+        </DialogTrigger>
+      </CompactLabelTooltip>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>

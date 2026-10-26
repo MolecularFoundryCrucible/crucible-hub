@@ -1,3 +1,7 @@
+import {
+  CompactLabelTooltip,
+  compactLabelProps,
+} from "@/components/crucible/compact-label-tooltip"
 import { FilterIcon } from "@/components/crucible/icons"
 import { RemovablePill } from "@/components/crucible/removable-pill"
 import { Badge } from "@/components/ui/badge"
@@ -58,29 +62,36 @@ export function CollectionFilterPanel({
   return (
     <>
       <Sheet onOpenChange={onOpenChange} open={open}>
-        <SheetTrigger
-          render={
-            <Button
-              aria-label={
-                activeFilters.length
-                  ? `Filters, ${activeFilters.length} active`
-                  : "Filters"
-              }
-              variant="outline"
-            />
-          }
-        >
-          <FilterIcon aria-hidden="true" data-icon="inline-start" />
-          <span className="@max-labels/content:sr-only">Filters</span>
-          {activeFilters.length ? (
-            <Badge variant="secondary">{activeFilters.length}</Badge>
-          ) : null}
-        </SheetTrigger>
+        <CompactLabelTooltip label="Filters">
+          <SheetTrigger
+            render={
+              <Button
+                aria-label={
+                  activeFilters.length
+                    ? `Filters, ${activeFilters.length} active`
+                    : "Filters"
+                }
+                variant="outline"
+              />
+            }
+          >
+            <FilterIcon aria-hidden="true" data-icon="inline-start" />
+            <span
+              className="@max-labels/content:sr-only"
+              {...compactLabelProps}
+            >
+              Filters
+            </span>
+            {activeFilters.length ? (
+              <Badge variant="secondary">{activeFilters.length}</Badge>
+            ) : null}
+          </SheetTrigger>
+        </CompactLabelTooltip>
         <SheetContent className="w-full sm:max-w-xl">
           <SheetHeader className="border-b">
             <SheetTitle>{title}</SheetTitle>
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
             {children}
           </div>
           <SheetFooter className="flex-row justify-end border-t">

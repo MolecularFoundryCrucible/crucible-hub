@@ -159,3 +159,65 @@ test.describe("window classes", () => {
     await expect(page.locator('[data-slot="sheet-overlay"]')).toHaveCount(0)
   })
 })
+
+test("names compact actions in a tooltip only while their label is hidden", async ({
+  page,
+}) => {
+  const refresh = page.getByRole("button", { name: "Refresh data" })
+  const tooltip = page.locator('[data-slot="tooltip-content"]', {
+    hasText: /^Refresh$/,
+  })
+
+  await page.setViewportSize({ height: 800, width: 700 })
+  await page.goto("/hub/data?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await refresh.hover()
+  await expect(tooltip).toBeVisible()
+
+  await page.mouse.move(0, 0)
+  await page.setViewportSize({ height: 800, width: 1280 })
+  await refresh.hover()
+  await page.waitForTimeout(800)
+  await expect(tooltip).toHaveCount(0)
+})
+
+test("marks pending deletion requests with a dot in the icon rail", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 800, width: 900 })
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const badge = page.locator('[data-sidebar="menu-badge"]')
+  await expect(badge).toBeVisible()
+  const box = (await badge.boundingBox())!
+  expect(box.width).toBeLessThanOrEqual(10)
+  expect(box.height).toBeLessThanOrEqual(10)
+})
+
+test("lays Home out with the shared content grid", async ({ page }) => {
+  await page.setViewportSize({ height: 900, width: 1280 })
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const columns = await page
+    .locator('main [data-slot="card"]')
+    .evaluateAll(
+      (cards) =>
+        new Set(
+          cards.map((card) => Math.round(card.getBoundingClientRect().left))
+        ).size
+    )
+  expect(columns).toBe(2)
+})
+
+test("moves toasts beside an open inspector", async ({ page }) => {
+  await page.setViewportSize({ height: 800, width: 1180 })
+  await page.goto(`/hub/data?scenario=populated&preview=${sample}`)
+  await page.waitForLoadState("networkidle")
+  const inspector = (await page
+    .locator('[data-slot="sheet-content"]')
+    .boundingBox())!
+  const viewport = (await page
+    .locator('[data-slot="toast-viewport"]')
+    .boundingBox())!
+  expect(viewport.x + viewport.width).toBeLessThanOrEqual(inspector.x)
+})

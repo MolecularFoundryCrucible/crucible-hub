@@ -7,6 +7,10 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import { useMemo, useState } from "react"
 
+import {
+  ContentGrid,
+  ContentGridItem,
+} from "@/components/crucible/content-layout"
 import { CardViewAllLink } from "@/components/crucible/card-view-all-link"
 import {
   PanelState,
@@ -204,8 +208,8 @@ function HomePage() {
     <PageLayout>
       <PageHeader title={greeting} />
 
-      <div className="grid min-w-0 gap-6 @split/content:grid-cols-5">
-        <div className="flex min-w-0 flex-col gap-6 @split/content:col-span-3">
+      <ContentGrid>
+        <ContentGridItem className="flex flex-col gap-6" span="wide">
           <section aria-labelledby="recent-research-title" className="min-w-0">
             <Card>
               <CardHeader>
@@ -362,9 +366,9 @@ function HomePage() {
               </CardContent>
             </Card>
           </section>
-        </div>
+        </ContentGridItem>
 
-        <div className="flex min-w-0 flex-col gap-6 @split/content:col-span-2">
+        <ContentGridItem className="flex flex-col gap-6" span="narrow">
           <HomeOwnershipCard
             emptyAction={
               account?.capabilities.can_create_project ? (
@@ -468,8 +472,8 @@ function HomePage() {
               </ResourceList>
             ) : null}
           </HomeOwnershipCard>
-        </div>
-      </div>
+        </ContentGridItem>
+      </ContentGrid>
     </PageLayout>
   )
 }

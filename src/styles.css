@@ -962,6 +962,32 @@ body {
   transition-timing-function: var(--motion-ease-exit);
 }
 
+/* Toasts sit beside an open inspector or docked pane instead of over its
+   header. */
+@media (width >= --theme(--breakpoint-md)) {
+  :root:has(.resource-inspector[data-open]) [data-slot="toast-viewport"] {
+    right: calc(var(--spacing-inspector-width) + var(--spacing) * 4);
+  }
+}
+
+@media (width >= --theme(--breakpoint-wide)) {
+  :root:has([data-inspector-pane="open"]) [data-slot="toast-viewport"] {
+    right: calc(var(--spacing-inspector-width) + var(--spacing) * 4);
+  }
+}
+
+/* A modal sheet under an open dialog dims like the page behind it, the Base UI
+   pattern for nested dialogs. */
+:root:has([data-slot="sheet-overlay"])
+  [data-slot="sheet-content"][data-nested-dialog-open]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--layer-raised);
+  background-color: var(--overlay);
+  pointer-events: none;
+}
+
 /* A dialog over another dimmed overlay keeps a backdrop to catch outside
    presses, but leaves the dimming to the overlay below. */
 :root:has(

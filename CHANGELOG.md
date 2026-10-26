@@ -6,6 +6,9 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Defined responsive behavior once: windows are compact, medium, expanded, or wide, medium windows show the navigation as an icon rail with a modal preview, and page content adapts to the space it actually has.
+- Dimmed the preview under dialogs on narrow screens, offered search types as a select on phones, kept page header actions beside the title, named icon-only actions in tooltips, marked pending deletion requests in the icon rail, and kept toasts clear of the preview.
+
 ## 1.6.5 - 2026-10-23
 
 - Improved touch and phone use: no sideways sidebar scroll, the preview stays open and keeps its own scrolling under a finger, menus and dialogs stay on screen and close when pressing outside, toasts can be swiped away, and sidebar create actions give way to the Create menu.
