@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Made every form text field show and announce its errors and descriptions the same way.
 - Fixed pages redrawing themselves right after a full load with Administrator view on.
 - Moved sorting out of the Filters panels on Projects, Instruments, and Data, so lists sort only from the table, and Clear filters no longer resets the order.
 - Fixed Deletion history and deletion requests failing to load when they include a deleted project or instrument.
