@@ -209,6 +209,37 @@ describe("ResourceChooser", () => {
     expect(onChange).not.toHaveBeenCalled()
   })
 
+  it("keeps the selection while typing and restores it on Escape", async () => {
+    vi.mocked(getWorkspaceSearch).mockResolvedValue(
+      response("instrument", [instrument])
+    )
+    const { onChange } = renderChooser({ value: instrument })
+    const input = screen.getByDisplayValue("Beamline 5.3.2")
+
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: "cat" } })
+    expect(onChange).not.toHaveBeenCalled()
+    fireEvent.keyDown(input, { key: "Escape" })
+
+    await waitFor(() =>
+      expect(screen.getByRole("combobox")).toHaveProperty(
+        "value",
+        "Beamline 5.3.2"
+      )
+    )
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it("keeps the dropdown arrow beside the clear button", () => {
+    renderChooser({ value: instrument })
+    expect(
+      screen.getByRole("button", { name: "Clear instrument" })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Show options" }).className
+    ).not.toContain("hidden")
+  })
+
   it("clears a confirmed selection", () => {
     const { onChange } = renderChooser({ value: instrument })
 

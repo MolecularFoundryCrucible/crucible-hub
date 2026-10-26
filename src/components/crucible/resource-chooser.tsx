@@ -94,9 +94,6 @@ export function ResourceChooser({
           onChange(undefined)
           if (allowBrowse) setOpen(true)
         } else {
-          if (value) {
-            onChange(undefined)
-          }
           setOpen(allowBrowse ? true : nextQuery.trim().length > 0)
         }
       }}
