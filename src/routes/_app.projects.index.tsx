@@ -63,6 +63,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { TableSortControl } from "@/components/crucible/table-sort-control"
+import type { TableSortField } from "@/components/crucible/table-sort-control"
 import { dateOnlySchema } from "@/data/crucible/collection-filters"
 import {
   capitalize,
@@ -97,6 +99,12 @@ const projectSortFieldSchema = z.enum([
   "activity",
 ])
 export type ProjectSortField = z.infer<typeof projectSortFieldSchema>
+
+const sortFields = [
+  { field: "name", label: "Project", preferredDirection: "asc" },
+  { field: "created", kind: "date", label: "Created" },
+  { field: "activity", kind: "date", label: "Last activity" },
+] as const satisfies readonly TableSortField<ProjectSortField>[]
 
 const projectRoleFilterSchema = z.enum([
   "admin",
@@ -614,6 +622,14 @@ function ProjectCollection({
           <CardContent className="px-0">
             <Table
               aria-label="Project collection"
+              before={
+                <TableSortControl
+                  direction={direction}
+                  fields={sortFields}
+                  onChange={onSortChange}
+                  sort={sort}
+                />
+              }
               className="resource-directory-table resource-directory-project-table table-fixed"
             >
               <colgroup>

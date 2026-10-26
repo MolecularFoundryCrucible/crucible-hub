@@ -326,3 +326,52 @@ test("names the sidebar create actions in a Hub tooltip", async ({ page }) => {
   ).toBeVisible()
   await expect(action).not.toHaveAttribute("title")
 })
+
+test("ends every directory toolbar with Refresh", async ({ page }) => {
+  async function expectRefreshLast(path: string) {
+    await page.goto(path)
+    await page.waitForLoadState("networkidle")
+    const toolbar = page.locator('[data-slot="collection-toolbar"]')
+    await expect(toolbar, path).toHaveCount(1)
+    await expect(toolbar.locator("button").last(), path).toHaveAccessibleName(
+      /^Refresh/
+    )
+  }
+
+  await page.setViewportSize({ height: 800, width: 1280 })
+  for (const path of [
+    "/hub/projects",
+    "/hub/instruments",
+    "/hub/data",
+    "/hub/deletion-requests",
+  ]) {
+    await expectRefreshLast(path)
+  }
+  await page.getByRole("switch", { name: "Administrator view" }).click()
+  await expect(
+    page.getByRole("switch", { name: "Administrator view" })
+  ).toBeChecked()
+  for (const path of ["/hub/admin/users", "/hub/admin/service-accounts"]) {
+    await expectRefreshLast(path)
+  }
+  const search = page
+    .locator('[data-slot="collection-toolbar"]')
+    .getByRole("searchbox")
+  await expect(search).toBeVisible()
+  expect((await search.boundingBox())!.width).toBeGreaterThan(240)
+
+  await page.setViewportSize({ height: 800, width: 390 })
+  expect((await search.boundingBox())!.width).toBeGreaterThan(240)
+})
+
+test("sorts stacked directory rows from the table", async ({ page }) => {
+  await page.setViewportSize({ height: 800, width: 390 })
+  for (const path of ["/hub/projects", "/hub/instruments"]) {
+    await page.goto(path)
+    await page.waitForLoadState("networkidle")
+    const select = page.getByRole("combobox", { name: "Sort by" })
+    await expect(select, path).toBeVisible()
+    await select.selectOption({ label: "Created, newest first" })
+    await expect(page, path).toHaveURL(/sort=created/)
+  }
+})

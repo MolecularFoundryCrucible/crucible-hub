@@ -64,7 +64,7 @@ export function CollectionToolbar({
       data-slot="collection-toolbar"
     >
       {primary ? (
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 grow flex-wrap items-center gap-2">
           {primary}
         </div>
       ) : null}

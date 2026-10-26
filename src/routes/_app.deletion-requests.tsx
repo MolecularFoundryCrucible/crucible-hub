@@ -1,9 +1,15 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import {
+  useIsFetching,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { PageHeader } from "@/components/crucible/page-header"
+import { RefreshButton } from "@/components/crucible/refresh-button"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import {
@@ -21,6 +27,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import { projectSummaryQueryOptions } from "@/data/crucible/projects.queries"
+import { crucibleKeys } from "@/data/crucible/query-keys"
 import {
   deletionAuditInfiniteQueryOptions,
   deletionRequestPageLimit,
@@ -133,6 +140,15 @@ function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
   })
   const privilegeMode = useWorkspacePrivilegeMode()
   const auditScope = deletionAuditScope(privilegeMode)
+  const queryClient = useQueryClient()
+  const refreshKeys = [
+    crucibleKeys.deletionRequestQueries(scope),
+    crucibleKeys.deletionAuditQueries(scope),
+  ]
+  const refreshing =
+    useIsFetching({ queryKey: refreshKeys[0] }) +
+      useIsFetching({ queryKey: refreshKeys[1] }) >
+    0
 
   return (
     <ResourcePreviewContext.Provider value={navigation}>
@@ -140,35 +156,49 @@ function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
         <PageHeader title="Deletion requests" />
         <CollectionToolbar
           actions={
-            view !== "approved" && search.projectMfid && projectName ? (
-              <>
-                <ResourceIdentityLink
-                  context={
-                    project?.title?.trim() ? project.project_id : undefined
+            <>
+              {view !== "approved" && search.projectMfid && projectName ? (
+                <>
+                  <ResourceIdentityLink
+                    context={
+                      project?.title?.trim() ? project.project_id : undefined
+                    }
+                    kind="project"
+                    mfid={search.projectMfid}
+                    name={projectName}
+                  >
+                    <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
+                      <ResourceTypeIcon className="shrink-0" type="project" />
+                      <span className="truncate">{projectName}</span>
+                    </span>
+                  </ResourceIdentityLink>
+                  <Link
+                    aria-label="Clear project filter"
+                    className={buttonVariants({ size: "sm", variant: "ghost" })}
+                    from="/deletion-requests"
+                    search={(current) => ({
+                      ...current,
+                      projectMfid: undefined,
+                    })}
+                    to="/deletion-requests"
+                  >
+                    Clear
+                  </Link>
+                </>
+              ) : null}
+              <RefreshButton
+                label="Refresh deletion requests"
+                onClick={() => {
+                  for (const queryKey of refreshKeys) {
+                    void queryClient.refetchQueries({
+                      queryKey,
+                      type: "active",
+                    })
                   }
-                  kind="project"
-                  mfid={search.projectMfid}
-                  name={projectName}
-                >
-                  <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
-                    <ResourceTypeIcon className="shrink-0" type="project" />
-                    <span className="truncate">{projectName}</span>
-                  </span>
-                </ResourceIdentityLink>
-                <Link
-                  aria-label="Clear project filter"
-                  className={buttonVariants({ size: "sm", variant: "ghost" })}
-                  from="/deletion-requests"
-                  search={(current) => ({
-                    ...current,
-                    projectMfid: undefined,
-                  })}
-                  to="/deletion-requests"
-                >
-                  Clear
-                </Link>
-              </>
-            ) : undefined
+                }}
+                refreshing={refreshing}
+              />
+            </>
           }
           primary={
             <SegmentedControl

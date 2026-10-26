@@ -10,6 +10,8 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { DirectorySearchField } from "@/components/crucible/directory-search-field"
+import { RefreshButton } from "@/components/crucible/refresh-button"
+import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -243,10 +245,19 @@ function UsersAdminPage() {
   return (
     <PageLayout>
       <UsersPageHeader canCreate />
-      <div className="flex flex-wrap items-center gap-3">
-        <UserSearchField />
-        <UserActivityFilterField />
-      </div>
+      <CollectionToolbar
+        actions={
+          <>
+            <UserActivityFilterField />
+            <RefreshButton
+              label="Refresh users"
+              onClick={() => void result.refetch()}
+              refreshing={updating}
+            />
+          </>
+        }
+        primary={<UserSearchField />}
+      />
       {result.isPending ? (
         <CollectionTablePending label="users" presentation="users" />
       ) : result.isError && !result.data ? (
@@ -299,10 +310,19 @@ function UsersPending() {
           account ? canOpenUserAdministration(account, privilegeMode) : false
         }
       />
-      <div className="flex flex-wrap items-center gap-3">
-        <UserSearchField />
-        <UserActivityFilterField />
-      </div>
+      <CollectionToolbar
+        actions={
+          <>
+            <UserActivityFilterField />
+            <RefreshButton
+              label="Refresh users"
+              onClick={() => undefined}
+              refreshing={false}
+            />
+          </>
+        }
+        primary={<UserSearchField />}
+      />
       <CollectionTablePending label="users" presentation="users" />
     </PageLayout>
   )

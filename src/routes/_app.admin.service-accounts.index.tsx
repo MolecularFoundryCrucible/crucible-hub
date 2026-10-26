@@ -13,6 +13,8 @@ import { z } from "zod"
 import { ActivityTime } from "@/components/crucible/activity-time"
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
 import { DirectorySearchField } from "@/components/crucible/directory-search-field"
+import { RefreshButton } from "@/components/crucible/refresh-button"
+import { CollectionToolbar } from "@/components/crucible/collection-browser"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
@@ -287,10 +289,19 @@ function ServiceAccountsPage() {
   return (
     <PageLayout>
       <ServiceAccountsPageHeader canCreate />
-      <div className="flex flex-wrap items-center gap-3">
-        <ServiceAccountSearchField />
-        <ServiceAccountActivityFilterField />
-      </div>
+      <CollectionToolbar
+        actions={
+          <>
+            <ServiceAccountActivityFilterField />
+            <RefreshButton
+              label="Refresh service accounts"
+              onClick={() => void result.refetch()}
+              refreshing={updating}
+            />
+          </>
+        }
+        primary={<ServiceAccountSearchField />}
+      />
       {result.isPending ? (
         <CollectionTablePending
           label="service accounts"
@@ -353,10 +364,19 @@ function ServiceAccountsPending() {
             : false
         }
       />
-      <div className="flex flex-wrap items-center gap-3">
-        <ServiceAccountSearchField />
-        <ServiceAccountActivityFilterField />
-      </div>
+      <CollectionToolbar
+        actions={
+          <>
+            <ServiceAccountActivityFilterField />
+            <RefreshButton
+              label="Refresh service accounts"
+              onClick={() => undefined}
+              refreshing={false}
+            />
+          </>
+        }
+        primary={<ServiceAccountSearchField />}
+      />
       <CollectionTablePending
         label="service accounts"
         presentation="service-accounts"
