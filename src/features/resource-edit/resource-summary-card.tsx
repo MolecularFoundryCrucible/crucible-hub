@@ -5,7 +5,10 @@ import { EditableCardTrigger } from "@/components/crucible/editable-card-actions
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
-import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
+import {
+  SummaryFieldIcon,
+  SummaryFieldItem,
+} from "@/components/crucible/summary-field-icon"
 import type { SummaryFieldType } from "@/components/crucible/summary-field-icon"
 import {
   Card,
@@ -156,22 +159,18 @@ export function SummaryFields({ fields }: { fields: readonly SummaryField[] }) {
   return (
     <dl className="grid grid-cols-2 gap-4">
       {fields.map(([label, value, type]) => (
-        <div
-          className={type === "description" ? "col-span-2 min-w-0" : "min-w-0"}
+        <SummaryFieldItem
+          className={type === "description" ? "col-span-2" : undefined}
+          icon={<SummaryFieldIcon type={type} />}
           key={label}
+          label={label}
         >
-          <dt className="text-label text-muted-foreground">{label}</dt>
-          <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
-            <SummaryFieldIcon type={type} />
-            <span className="min-w-0">
-              {type === "status" && typeof value === "string" && value ? (
-                <ResourceStatusBadge status={value} />
-              ) : (
-                (value ?? "-")
-              )}
-            </span>
-          </dd>
-        </div>
+          {type === "status" && typeof value === "string" && value ? (
+            <ResourceStatusBadge status={value} />
+          ) : (
+            (value ?? "-")
+          )}
+        </SummaryFieldItem>
       ))}
     </dl>
   )

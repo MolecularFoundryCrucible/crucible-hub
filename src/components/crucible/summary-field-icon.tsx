@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+
 import {
   DataFormatFieldIcon,
   DataTypeFieldIcon,
@@ -72,5 +74,28 @@ export function SummaryFieldIcon({
       data-icon={dataIcon}
       data-summary-field-icon={type}
     />
+  )
+}
+
+/** One label and value in a summary `dl`, with an optional leading icon. */
+export function SummaryFieldItem({
+  children,
+  className,
+  icon,
+  label,
+}: {
+  children: ReactNode
+  className?: string
+  icon?: ReactNode
+  label: string
+}) {
+  return (
+    <div className={cn("min-w-0", className)}>
+      <dt className="text-label text-muted-foreground">{label}</dt>
+      <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
+        {icon}
+        <span className="min-w-0">{children}</span>
+      </dd>
+    </div>
   )
 }

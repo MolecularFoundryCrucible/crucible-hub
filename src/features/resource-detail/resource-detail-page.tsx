@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, Outlet, useMatchRoute } from "@tanstack/react-router"
 
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
+import { SummaryFieldItem } from "@/components/crucible/summary-field-icon"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import {
   ContentGrid,
@@ -482,20 +483,18 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
             </dl>
           </div>
           <dl className="content-grid-identity-timestamps grid grid-cols-2 gap-4">
-            <div className="min-w-0">
-              <dt className="text-label text-muted-foreground">Created</dt>
-              <dd className="mt-1 flex items-start gap-2 text-body">
-                <IdentityFieldIcon type="created" />
-                <LocalDateTime value={resource.creation_time} />
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-label text-muted-foreground">Updated</dt>
-              <dd className="mt-1 flex items-start gap-2 text-body">
-                <IdentityFieldIcon type="updated" />
-                <LocalDateTime value={resource.modification_time} />
-              </dd>
-            </div>
+            <SummaryFieldItem
+              icon={<IdentityFieldIcon type="created" />}
+              label="Created"
+            >
+              <LocalDateTime value={resource.creation_time} />
+            </SummaryFieldItem>
+            <SummaryFieldItem
+              icon={<IdentityFieldIcon type="updated" />}
+              label="Updated"
+            >
+              <LocalDateTime value={resource.modification_time} />
+            </SummaryFieldItem>
           </dl>
           <div className="content-grid-identity-qr">
             <MfidQrCode

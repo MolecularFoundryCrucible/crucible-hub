@@ -43,7 +43,10 @@ import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-del
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
-import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
+import {
+  SummaryFieldIcon,
+  SummaryFieldItem,
+} from "@/components/crucible/summary-field-icon"
 import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import {
   useWorkspaceMode,
@@ -897,22 +900,17 @@ function InspectorContext({ resource }: { resource: WorkspaceResourceDetail }) {
       </h3>
       <dl className="grid min-w-0 grid-cols-2 gap-3">
         {fields.map((field) => (
-          <div
-            className={
-              field.fullWidth
-                ? "col-span-2 min-w-0"
-                : field.colStart1
-                  ? "col-start-1 min-w-0"
-                  : "min-w-0"
-            }
+          <SummaryFieldItem
+            className={cn(
+              field.fullWidth && "col-span-2",
+              field.colStart1 && "col-start-1"
+            )}
+            icon={field.icon}
             key={field.label}
+            label={field.label}
           >
-            <dt className="text-label text-muted-foreground">{field.label}</dt>
-            <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
-              {field.icon}
-              <span className="min-w-0">{field.value || "-"}</span>
-            </dd>
-          </div>
+            {field.value || "-"}
+          </SummaryFieldItem>
         ))}
       </dl>
     </section>

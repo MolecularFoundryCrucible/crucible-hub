@@ -19,7 +19,10 @@ import { PersonLink } from "@/components/crucible/person-link"
 import { personIsServiceAccount } from "@/components/crucible/person-identity"
 import { ResourceStatusBadge } from "@/components/crucible/resource-status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { SummaryFieldIcon } from "@/components/crucible/summary-field-icon"
+import {
+  SummaryFieldIcon,
+  SummaryFieldItem,
+} from "@/components/crucible/summary-field-icon"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -139,27 +142,25 @@ function InstrumentSummary({
       </CardHeader>
       <CardContent>
         <dl className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 min-w-0">
-            <dt className="text-label text-muted-foreground">Description</dt>
-            <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
-              <SummaryFieldIcon type="description" />
-              <span className="min-w-0">{instrument.description ?? "-"}</span>
-            </dd>
-          </div>
+          <SummaryFieldItem
+            className="col-span-2"
+            icon={<SummaryFieldIcon type="description" />}
+            label="Description"
+          >
+            {instrument.description ?? "-"}
+          </SummaryFieldItem>
           {fields.map(([label, value, type]) => (
-            <div className="min-w-0" key={label}>
-              <dt className="text-label text-muted-foreground">{label}</dt>
-              <dd className="mt-1 flex min-w-0 items-start gap-2 text-body break-words">
-                <SummaryFieldIcon type={type} />
-                <span className="min-w-0">
-                  {type === "status" && value ? (
-                    <ResourceStatusBadge status={value} />
-                  ) : (
-                    (value ?? "-")
-                  )}
-                </span>
-              </dd>
-            </div>
+            <SummaryFieldItem
+              icon={<SummaryFieldIcon type={type} />}
+              key={label}
+              label={label}
+            >
+              {type === "status" && value ? (
+                <ResourceStatusBadge status={value} />
+              ) : (
+                (value ?? "-")
+              )}
+            </SummaryFieldItem>
           ))}
         </dl>
       </CardContent>
@@ -175,18 +176,17 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
           <div className="min-w-0">
             <CardTitle>Identity</CardTitle>
             <dl className="mt-4 grid gap-4">
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Instrument ID
-                </dt>
-                <dd className="mt-1 flex items-start gap-2 text-body break-words">
+              <SummaryFieldItem
+                icon={
                   <ResourceTypeIcon
                     className="mt-0.5 size-4 shrink-0"
                     type="instrument"
                   />
-                  {instrument.instrument_id ?? "-"}
-                </dd>
-              </div>
+                }
+                label="Instrument ID"
+              >
+                {instrument.instrument_id ?? "-"}
+              </SummaryFieldItem>
               <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
@@ -255,23 +255,21 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
             />
           </div>
           <dl className="content-grid-identity-timestamps grid grid-cols-2 gap-4">
-            <div className="min-w-0">
-              <dt className="text-label text-muted-foreground">Created</dt>
-              <dd className="mt-1 flex items-start gap-2 text-body">
-                <IdentityFieldIcon type="created" />
-                <LocalDateTime fallback="-" value={instrument.creation_time} />
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-label text-muted-foreground">Updated</dt>
-              <dd className="mt-1 flex items-start gap-2 text-body">
-                <IdentityFieldIcon type="updated" />
-                <LocalDateTime
-                  fallback="-"
-                  value={instrument.modification_time}
-                />
-              </dd>
-            </div>
+            <SummaryFieldItem
+              icon={<IdentityFieldIcon type="created" />}
+              label="Created"
+            >
+              <LocalDateTime fallback="-" value={instrument.creation_time} />
+            </SummaryFieldItem>
+            <SummaryFieldItem
+              icon={<IdentityFieldIcon type="updated" />}
+              label="Updated"
+            >
+              <LocalDateTime
+                fallback="-"
+                value={instrument.modification_time}
+              />
+            </SummaryFieldItem>
           </dl>
         </ContentGrid>
       </CardContent>
