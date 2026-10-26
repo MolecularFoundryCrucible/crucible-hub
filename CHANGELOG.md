@@ -4,23 +4,15 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
 
-## Unreleased
+## 1.6.6 - 2026-10-26
 
-- Redesigned the Filters panel: one column of sections, searchable value pickers with counts that follow your changes, a Created range slider across the dates your data covers, with typed dates for exact days, an Apply button that shows how many results you will get, and Reset for unapplied changes.
-- Kept the Project and Manager pickers' selection while typing a new search, and made them look like the other filter pickers.
-- Made every form text field show and announce its errors and descriptions the same way.
-- Fixed pages redrawing themselves right after a full load with Administrator view on.
-- Moved sorting out of the Filters panels on Projects, Instruments, and Data, so lists sort only from the table, and Clear filters no longer resets the order.
-- Fixed Deletion history and deletion requests failing to load when they include a deleted project or instrument.
-- Wrote multi-word statuses in sentence case everywhere, such as In review.
-- Gave the Users, Service accounts, and Deletion requests pages the shared directory toolbar with a Refresh button, and let Projects and Instruments be sorted from the list on phones.
-- Fixed the Deletion requests page redrawing itself right after loading.
-- Showed the full text of cut-off names, projects, owners, and file names in the Hub tooltip, only while they are cut off, and named sidebar create actions and status icons in the same tooltip instead of the browser's.
-- Showed full breadcrumb names on keyboard focus, sized the Theme menu to its options, replaced the QR viewfinder with the error when the camera fails, colored the icon rail attention dot as a warning, and removed a stray navigation toggle strip from the phone drawer.
-- Made the Welcome to the Crux greeting rarer.
-- Switched every top bar control to its compact form at one width, aligned the top bar with the page gutters, kept page titles from moving vertically when the window resizes, shortened the top bar label to Admin on, and kept Last activity on two lines in Home rows.
-- Defined responsive behavior once: windows are compact, medium, expanded, or wide, medium windows show the navigation as an icon rail with a modal preview, and page content adapts to the space it actually has.
-- Dimmed the preview under dialogs on narrow screens, offered search types as a select on phones, kept page header actions beside the title, named icon-only actions in tooltips, marked pending deletion requests in the icon rail, and kept toasts clear of the preview.
+- Redesigned the Filters panel on Data, Projects, Instruments, and Search: one column of sections, searchable value pickers whose counts follow your changes, a Created date slider with typed dates for exact days, an Apply button that shows how many results you will get, Reset for unapplied changes, and sorting only from the table.
+- Defined responsive behavior once: compact, medium, expanded, and wide windows, with an icon rail and a modal preview on medium windows and page content that adapts to the space it actually has; the top bar, page titles, and margins now change together and stay steady while resizing.
+- Gave every directory the shared toolbar with Refresh, let Projects and Instruments sort from the list on phones, and showed cut-off names and icon-only actions in the Hub tooltip.
+- Fixed Deletion history and deletion requests failing to load when they include a deleted project or instrument, and pages redrawing themselves after a full load, including with Administrator view on.
+- Kept the Project and Manager pickers' selection while typing, and made every form text field show and announce its errors the same way.
+- Improved phone use: dimmed the preview under dialogs, offered search types as a select, kept page header actions beside the title, and showed the QR scanner's camera error in place of the viewfinder.
+- Smaller fixes: statuses in sentence case, full breadcrumb names on keyboard focus, a Theme menu sized to its options, a shorter Admin on label, a warning-colored dot for pending deletion requests in the icon rail, and a rarer Welcome to the Crux greeting.
 
 ## 1.6.5 - 2026-10-23
 
