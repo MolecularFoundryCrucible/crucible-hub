@@ -669,6 +669,7 @@ function InstrumentDatasetFilters({
               earliest: firstDataset.data?.items[0]?.creation_time,
               latest: lastDataset.data?.items[0]?.creation_time,
             }}
+            boundsPending={firstDataset.isPending || lastDataset.isPending}
             errors={{ to: rangeError }}
             idPrefix="instrument-dataset-created"
             onChange={({ from, to }) => {

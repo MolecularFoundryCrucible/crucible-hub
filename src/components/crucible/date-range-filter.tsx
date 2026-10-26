@@ -8,6 +8,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 
 export type DateRangeValue = { from?: string; to?: string }
@@ -85,6 +86,7 @@ export function dateRangeLabel(label: string, value: DateRangeValue) {
  */
 export function DateRangeFilter({
   bounds,
+  boundsPending = false,
   errors = {},
   idPrefix,
   mode = "range",
@@ -92,6 +94,8 @@ export function DateRangeFilter({
   value,
 }: {
   bounds?: DateRangeBounds
+  /** Whether the bounds are still loading, so the slider shows a skeleton. */
+  boundsPending?: boolean
   errors?: { from?: string; to?: string }
   idPrefix: string
   mode?: "range" | "since"
@@ -129,40 +133,6 @@ export function DateRangeFilter({
 
   return (
     <div className="flex flex-col gap-3">
-      {scale ? (
-        <div className="flex flex-col gap-2">
-          <Slider
-            getThumbLabel={(index) =>
-              mode === "since"
-                ? "Since"
-                : index === 0
-                  ? "Start date"
-                  : "End date"
-            }
-            getThumbValueText={(position) => formatDay(dayString(position))}
-            max={scale.max}
-            min={scale.min}
-            onValueChange={(next) => {
-              const [start, end] = Array.isArray(next) ? next : [next]
-              onChange({
-                from: start <= scale.min ? undefined : dayString(start),
-                to:
-                  mode === "range"
-                    ? end >= scale.max
-                      ? undefined
-                      : dayString(end)
-                    : undefined,
-              })
-            }}
-            step={scale.step}
-            value={positions}
-          />
-          <div className="flex justify-between text-supporting text-muted-foreground tabular-nums">
-            <span>{edgeFormat.format(new Date(scale.min * dayMs))}</span>
-            <span>{edgeFormat.format(new Date(scale.max * dayMs))}</span>
-          </div>
-        </div>
-      ) : null}
       <div className={mode === "range" ? "grid grid-cols-2 gap-3" : undefined}>
         <Field data-invalid={Boolean(errors.from)}>
           <FieldLabel htmlFor={fromId}>
@@ -210,6 +180,50 @@ export function DateRangeFilter({
           </Field>
         ) : null}
       </div>
+      {boundsPending ? (
+        <div aria-hidden="true" className="flex flex-col gap-2 pt-2">
+          <div className="flex h-3 items-center">
+            <Skeleton className="h-1 w-full rounded-full" />
+          </div>
+          <div className="flex justify-between">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </div>
+      ) : scale ? (
+        <div className="flex flex-col gap-2 pt-2">
+          <Slider
+            getThumbLabel={(index) =>
+              mode === "since"
+                ? "Since"
+                : index === 0
+                  ? "Start date"
+                  : "End date"
+            }
+            getThumbValueText={(position) => formatDay(dayString(position))}
+            max={scale.max}
+            min={scale.min}
+            onValueChange={(next) => {
+              const [start, end] = Array.isArray(next) ? next : [next]
+              onChange({
+                from: start <= scale.min ? undefined : dayString(start),
+                to:
+                  mode === "range"
+                    ? end >= scale.max
+                      ? undefined
+                      : dayString(end)
+                    : undefined,
+              })
+            }}
+            step={scale.step}
+            value={positions}
+          />
+          <div className="flex justify-between text-supporting text-muted-foreground tabular-nums">
+            <span>{edgeFormat.format(new Date(scale.min * dayMs))}</span>
+            <span>{edgeFormat.format(new Date(scale.max * dayMs))}</span>
+          </div>
+        </div>
+      ) : null}
       <FieldDescription id={zoneId}>Days in {timeZone}</FieldDescription>
     </div>
   )

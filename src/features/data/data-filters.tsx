@@ -723,6 +723,11 @@ export function DataFilters({
         <FilterSection title="Created">
           <DateRangeFilter
             bounds={createdBounds}
+            boundsPending={
+              kind === "samples"
+                ? firstSample.isPending || lastSample.isPending
+                : firstDataset.isPending || lastDataset.isPending
+            }
             errors={{
               from: fieldError("createdFrom"),
               to: fieldError("createdTo"),

@@ -505,6 +505,7 @@ function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
               earliest: leastActive.data?.items[0]?.last_activity_at,
               latest: mostActive.data?.items[0]?.last_activity_at,
             }}
+            boundsPending={leastActive.isPending || mostActive.isPending}
             idPrefix="project-filter-active"
             mode="since"
             onChange={({ from }) =>
