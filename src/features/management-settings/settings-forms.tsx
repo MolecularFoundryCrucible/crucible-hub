@@ -1,28 +1,20 @@
 import { useState } from "react"
 import type { FormEventHandler, ReactNode } from "react"
-import { useForm, useStore } from "@tanstack/react-form"
+import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { EditableCardActions } from "@/components/crucible/editable-card-actions"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { FieldGroup } from "@/components/ui/field"
 import { invalidateResourceMutationQueries } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import type { FormFieldLike } from "@/features/forms/field-state"
+import { useAppForm } from "@/features/forms/app-form"
 import {
   INSTRUMENT_DESCRIPTION_MAX_LENGTH,
   INSTRUMENT_LOCATION_MAX_LENGTH,
@@ -255,7 +247,7 @@ export function ProjectSettingsForm({
         })
       ),
   })
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: projectValues(project),
     validators: { onChange: projectSettingsSchema },
     onSubmit: async ({ value }) => {
@@ -345,21 +337,14 @@ export function ProjectSettingsForm({
         }
         title="Edit project"
       >
-        <form.Field name="title">
+        <form.AppField name="title">
+          {(field) => <field.TextField label="Title" maxLength={255} />}
+        </form.AppField>
+        <form.AppField name="organization">
           {(field) => (
-            <SettingsTextField field={field} label="Title" maxLength={255} />
+            <field.TextField label="Organization" maxLength={255} required />
           )}
-        </form.Field>
-        <form.Field name="organization">
-          {(field) => (
-            <SettingsTextField
-              field={field}
-              label="Organization"
-              maxLength={255}
-              required
-            />
-          )}
-        </form.Field>
+        </form.AppField>
         <form.Field name="project_id">
           {(field) => (
             <ProjectIdField
@@ -405,7 +390,7 @@ export function InstrumentSettingsForm({
         })
       ),
   })
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: instrumentValues(instrument),
     validators: { onChange: instrumentSettingsSchema },
     onSubmit: async ({ value }) => {
@@ -494,17 +479,16 @@ export function InstrumentSettingsForm({
         }
         title="Edit instrument"
       >
-        <form.Field name="instrument_name">
+        <form.AppField name="instrument_name">
           {(field) => (
-            <SettingsTextField
+            <field.TextField
               autoFocus
-              field={field}
               label="Name"
               maxLength={INSTRUMENT_NAME_MAX_LENGTH}
               required
             />
           )}
-        </form.Field>
+        </form.AppField>
         <form.Field name="instrument_id">
           {(field) => (
             <InstrumentIdField
@@ -516,70 +500,63 @@ export function InstrumentSettingsForm({
             />
           )}
         </form.Field>
-        <form.Field name="instrument_type">
+        <form.AppField name="instrument_type">
           {(field) => (
-            <SettingsTextField
-              field={field}
+            <field.TextField
               label="Instrument type"
               maxLength={INSTRUMENT_TYPE_MAX_LENGTH}
             />
           )}
-        </form.Field>
-        <form.Field name="location">
+        </form.AppField>
+        <form.AppField name="location">
           {(field) => (
-            <SettingsTextField
-              field={field}
+            <field.TextField
               label="Location"
               maxLength={INSTRUMENT_LOCATION_MAX_LENGTH}
               required
             />
           )}
-        </form.Field>
-        <form.Field name="description">
+        </form.AppField>
+        <form.AppField name="description">
           {(field) => (
-            <SettingsTextAreaField
-              field={field}
+            <field.TextAreaField
               label="Description"
               maxLength={INSTRUMENT_DESCRIPTION_MAX_LENGTH}
             />
           )}
-        </form.Field>
-        <form.Field name="manufacturer">
+        </form.AppField>
+        <form.AppField name="manufacturer">
           {(field) => (
-            <SettingsTextField
-              field={field}
+            <field.TextField
               label="Manufacturer"
               maxLength={INSTRUMENT_MANUFACTURER_MAX_LENGTH}
             />
           )}
-        </form.Field>
-        <form.Field name="model">
+        </form.AppField>
+        <form.AppField name="model">
           {(field) => (
-            <SettingsTextField
-              field={field}
+            <field.TextField
               label="Model"
               maxLength={INSTRUMENT_MODEL_MAX_LENGTH}
             />
           )}
-        </form.Field>
-        <form.Field name="other_id">
+        </form.AppField>
+        <form.AppField name="other_id">
           {(field) => (
-            <SettingsTextField
-              field={field}
+            <field.TextField
               label="Other ID"
               maxLength={INSTRUMENT_OTHER_ID_MAX_LENGTH}
             />
           )}
-        </form.Field>
-        <form.Field name="other_id_source">
+        </form.AppField>
+        <form.AppField name="other_id_source">
           {(field) => (
-            <SettingsTextField
-              field={field}
+            <field.TextField
               label="Other ID source"
               maxLength={INSTRUMENT_OTHER_ID_SOURCE_MAX_LENGTH}
             />
           )}
-        </form.Field>
+        </form.AppField>
       </SettingsFormCard>
       <DiscardChangesDialog {...discard.dialog} />
     </>
@@ -618,84 +595,6 @@ function SettingsFormCard({
       </CardContent>
       {actions}
     </Card>
-  )
-}
-
-function SettingsTextField({
-  autoFocus = false,
-  field,
-  label,
-  maxLength,
-  required = false,
-}: {
-  autoFocus?: boolean
-  field: FormFieldLike & {
-    handleBlur: () => void
-    handleChange: (value: string) => void
-    name: string
-    state: FormFieldLike["state"] & {
-      value: string
-    }
-  }
-  label: string
-  maxLength: number
-  required?: boolean
-}) {
-  const invalid = shouldShowFieldError(field)
-  return (
-    <Field data-invalid={invalid}>
-      <FieldLabel htmlFor={field.name} optional={!required} required={required}>
-        {label}
-      </FieldLabel>
-      <Input
-        aria-invalid={invalid || undefined}
-        autoFocus={autoFocus}
-        id={field.name}
-        maxLength={maxLength}
-        name={field.name}
-        onBlur={field.handleBlur}
-        onChange={(event) => field.handleChange(event.target.value)}
-        required={required}
-        value={field.state.value}
-      />
-      <FieldError errors={fieldErrors(field, { invalid })} />
-    </Field>
-  )
-}
-
-function SettingsTextAreaField({
-  field,
-  label,
-  maxLength,
-}: {
-  field: FormFieldLike & {
-    handleBlur: () => void
-    handleChange: (value: string) => void
-    name: string
-    state: FormFieldLike["state"] & {
-      value: string
-    }
-  }
-  label: string
-  maxLength: number
-}) {
-  const invalid = shouldShowFieldError(field)
-  return (
-    <Field data-invalid={invalid}>
-      <FieldLabel htmlFor={field.name} optional>
-        {label}
-      </FieldLabel>
-      <Textarea
-        aria-invalid={invalid || undefined}
-        id={field.name}
-        maxLength={maxLength}
-        name={field.name}
-        onBlur={field.handleBlur}
-        onChange={(event) => field.handleChange(event.target.value)}
-        value={field.state.value}
-      />
-      <FieldError errors={fieldErrors(field, { invalid })} />
-    </Field>
   )
 }
 
