@@ -79,6 +79,11 @@ const patterns = [
   },
   {
     label:
+      "raw page gutter (use page-margin, which steps with the window class in src/styles.css)",
+    expression: /(?:^|[\s"'`:])-?[a-z]+(?:-[a-z]+)?-page-gutter\b/m,
+  },
+  {
+    label:
       "generic container size on the content container (use a named threshold such as @split/content:)",
     expression: /@(?:max-)?(?:3xs|2xs|xs|sm|md|lg|xl|[2-7]xl)\/content:/,
   },

@@ -154,14 +154,14 @@ Dialogs handle focused input (overlays are not stacked where avoidable: the mobi
 
 Window classes set the shell; content thresholds set everything inside it. Both live as tokens in `src/styles.css` (`--breakpoint-*` and `--container-*`), `src/lib/window-class.ts` mirrors the window classes for scripts (a unit test keeps them equal), and the design-token check rejects window breakpoints that change content layout outside the shell and generic container sizes on the content container.
 
-| Window class | Window width                      | Navigation                                                                    | Inspector           | Top bar and gutters                                                    |
-| ------------ | --------------------------------- | ----------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
-| compact      | below `--breakpoint-md` (48 rem)  | drawer                                                                        | modal sheet         | icon-only Create, account avatar only, no shortcut hint; 16 px gutters |
-| medium       | from `md` (48 rem)                | icon rail; expanding it lasts until the window class changes and is not saved | modal sheet         | full top bar; 24 px gutters                                            |
-| expanded     | from `lg` (64 rem)                | the saved sidebar choice                                                      | non-modal overlay   | full top bar; 32 px gutters                                            |
-| wide         | from `--breakpoint-wide` (90 rem) | the saved sidebar choice                                                      | docked preview pane | full top bar; 32 px gutters                                            |
+| Window class | Window width                      | Navigation                                                                    | Inspector           | Top bar and margin                                                         |
+| ------------ | --------------------------------- | ----------------------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------- |
+| compact      | below `--breakpoint-md` (48 rem)  | drawer                                                                        | modal sheet         | icon-only Create, account avatar only, no shortcut hint; 16 px side margin |
+| medium       | from `md` (48 rem)                | icon rail; expanding it lasts until the window class changes and is not saved | modal sheet         | full top bar; 24 px side margin                                            |
+| expanded     | from `lg` (64 rem)                | the saved sidebar choice                                                      | non-modal overlay   | full top bar; 32 px side margin                                            |
+| wide         | from `--breakpoint-wide` (90 rem) | the saved sidebar choice                                                      | docked preview pane | full top bar; 32 px side margin                                            |
 
-Every top bar control changes form at the same boundary, and the top bar padding uses the page gutter tokens so it lines up with the content.
+Every top bar control changes form at the same boundary. The side margin is one variable, `--page-margin`, set per window class in `src/styles.css` (the Material 3 window margins) and used through the `page-margin` spacing utility by the top bar, the page, the footer, and Back to top, so they always line up; the design-token check rejects the raw step tokens elsewhere. Vertical page spacing does not step: it stays at `--spacing-page-block` (24 px), so page titles never move vertically when the window changes size.
 
 The browser reports its window class in the `crucible_hub_window` cookie so the server renders the right navigation mode.
 

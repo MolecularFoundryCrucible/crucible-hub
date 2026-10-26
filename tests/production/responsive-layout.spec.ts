@@ -251,16 +251,24 @@ test("switches every top bar control to its compact form at once", async ({
   await expect.poll(shown).toEqual([true, true, true])
 })
 
-test("aligns the top bar with the page gutters", async ({ page }) => {
-  for (const width of [390, 900, 1280]) {
+test("steps only the side margin with the window class", async ({ page }) => {
+  for (const [width, margin] of [
+    [390, "16px"],
+    [900, "24px"],
+    [1280, "32px"],
+  ] as const) {
     await page.setViewportSize({ height: 800, width })
     await page.goto("/hub/?scenario=populated")
     await page.waitForLoadState("networkidle")
-    const [header, main] = await page.evaluate(() => [
-      getComputedStyle(document.querySelector("header")!).paddingLeft,
-      getComputedStyle(document.querySelector("main")!).paddingLeft,
-    ])
-    expect(header).toBe(main)
+    const [header, main] = await page.evaluate(() =>
+      [
+        getComputedStyle(document.querySelector("header")!),
+        getComputedStyle(document.querySelector("main")!),
+      ].map((style) => [style.paddingLeft, style.paddingTop])
+    )
+    expect(header[0]).toBe(margin)
+    expect(main[0]).toBe(margin)
+    expect(main[1]).toBe("24px")
   }
 })
 

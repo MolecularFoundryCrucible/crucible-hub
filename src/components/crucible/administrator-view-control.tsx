@@ -157,7 +157,7 @@ export function AdministratorViewStatus() {
         aria-hidden="true"
         data-icon="inline-start"
       />
-      <span className="hidden md:inline">Administrator view on</span>
+      <span className="hidden md:inline">Admin on</span>
     </Button>
   )
 }

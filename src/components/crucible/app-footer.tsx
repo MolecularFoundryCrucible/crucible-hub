@@ -48,7 +48,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
       )}
       role="contentinfo"
     >
-      <div className="mx-auto flex w-full max-w-content flex-col items-center gap-y-4 px-page-gutter py-6 text-center text-supporting text-muted-foreground md:flex-row md:items-center md:justify-between md:px-page-gutter-medium md:text-left lg:px-page-gutter-wide">
+      <div className="mx-auto flex w-full max-w-content flex-col items-center gap-y-4 px-page-margin py-6 text-center text-supporting text-muted-foreground md:flex-row md:items-center md:justify-between md:text-left">
         <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 md:justify-start">
           <a
             aria-label="Crucible"

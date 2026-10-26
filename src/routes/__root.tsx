@@ -52,7 +52,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
   }),
   notFoundComponent: () => (
-    <main className="mx-auto flex min-h-screen max-w-reading flex-col justify-center px-page-gutter-wide">
+    <main className="mx-auto flex min-h-screen max-w-reading flex-col justify-center px-page-margin">
       <p className="text-overline text-muted-foreground">404</p>
       <h1 className="mt-2 text-title-page">Page not found</h1>
       <p className="mt-3 text-body-prominent text-muted-foreground">
@@ -108,7 +108,7 @@ function ReportedRootError({ error, info }: ErrorComponentProps) {
   const router = useRouter()
   const report = useRouteErrorReport({ error, info, scope: "root-route" })
   return (
-    <main className="mx-auto flex min-h-svh max-w-reading flex-col items-start justify-center gap-4 p-page-gutter-wide">
+    <main className="mx-auto flex min-h-svh max-w-reading flex-col items-start justify-center gap-4 px-page-margin py-page-block">
       <p className="text-overline text-muted-foreground uppercase">
         Unable to load this page
       </p>
@@ -148,7 +148,7 @@ function CancelledRoute() {
     <div
       aria-busy="true"
       aria-live="polite"
-      className="flex min-h-svh items-center justify-center p-page-gutter-wide"
+      className="flex min-h-svh items-center justify-center px-page-margin py-page-block"
     >
       <span className="sr-only">Refreshing view...</span>
     </div>

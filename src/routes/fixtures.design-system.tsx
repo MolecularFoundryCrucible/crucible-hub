@@ -135,7 +135,7 @@ const fixtureServiceAccount = {
 function DesignSystemFixtures() {
   return (
     <main
-      className="mx-auto flex min-h-svh max-w-content flex-col gap-page-section p-page-gutter md:p-page-gutter-medium xl:p-page-gutter-wide"
+      className="mx-auto flex min-h-svh max-w-content flex-col gap-page-section px-page-margin py-page-block"
       data-testid="design-system-fixture"
     >
       <header className="flex flex-col gap-4 border-b pb-6 md:flex-row md:items-end md:justify-between">

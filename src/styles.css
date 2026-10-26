@@ -290,6 +290,8 @@
   --spacing-page-gutter: 1rem;
   --spacing-page-gutter-medium: 1.5rem;
   --spacing-page-gutter-wide: 2rem;
+  --spacing-page-block: 1.5rem;
+  --spacing-page-margin: var(--page-margin);
   --spacing-page-section: 2rem;
   --spacing-app-header: 3.5rem;
   --spacing-resource-navigation-offset: 1rem;
@@ -507,6 +509,7 @@
 }
 
 :root {
+  --page-margin: var(--spacing-page-gutter);
   --brand-crucible-dark-blue: #031e2d;
   --brand-crucible-light-blue: #a8c4cd;
   --brand-crucible-orange: #ff6600;
@@ -691,6 +694,20 @@
   --graph-muted-opacity: 0.24;
   --graph-hover-overlay-opacity: 0.1;
   --graph-hover-overlay-padding: 6;
+}
+
+/* The page margin steps with the window class (Material 3 window margins);
+   vertical page spacing stays at --spacing-page-block. */
+@media (width >= --theme(--breakpoint-md)) {
+  :root {
+    --page-margin: var(--spacing-page-gutter-medium);
+  }
+}
+
+@media (width >= --theme(--breakpoint-lg)) {
+  :root {
+    --page-margin: var(--spacing-page-gutter-wide);
+  }
 }
 
 .light {

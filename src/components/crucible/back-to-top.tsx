@@ -26,7 +26,7 @@ export function BackToTop() {
   return (
     <Button
       aria-label="Back to top"
-      className="fixed right-page-gutter bottom-page-gutter z-(--layer-floating-utility)"
+      className="fixed right-page-margin bottom-page-margin z-(--layer-floating-utility)"
       onClick={() => {
         const target = document.querySelector<HTMLElement>(pageTopSelector)
         if (!target) return

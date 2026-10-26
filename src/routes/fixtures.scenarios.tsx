@@ -70,7 +70,7 @@ const scenarios = [
 function ScenarioFixtures() {
   if (!import.meta.env.DEV) {
     return (
-      <main className="mx-auto flex min-h-svh max-w-reading items-center p-page-gutter-wide">
+      <main className="mx-auto flex min-h-svh max-w-reading items-center px-page-margin py-page-block">
         <p className="text-body-prominent text-muted-foreground">
           Route scenarios are available only during development.
         </p>
@@ -79,7 +79,7 @@ function ScenarioFixtures() {
   }
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-content flex-col gap-page-section p-page-gutter md:p-page-gutter-medium xl:p-page-gutter-wide">
+    <main className="mx-auto flex min-h-svh max-w-content flex-col gap-page-section px-page-margin py-page-block">
       <header className="max-w-reading">
         <p className="text-overline text-muted-foreground uppercase">
           Crucible Hub
