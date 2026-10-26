@@ -25,10 +25,6 @@ function dayNumber(day: string) {
   return Date.parse(`${day}T00:00:00Z`) / dayMs
 }
 
-function dayString(dayIndex: number) {
-  return new Date(dayIndex * dayMs).toISOString().slice(0, 10)
-}
-
 /** The calendar day (YYYY-MM-DD) of a moment in the given time zone. */
 export function dayInTimeZone(moment: Date | string, timeZone?: string) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -39,16 +35,63 @@ export function dayInTimeZone(moment: Date | string, timeZone?: string) {
   }).format(typeof moment === "string" ? new Date(moment) : moment)
 }
 
+export type DateSliderUnit = "day" | "week" | "month" | "year"
+
+function shiftDay(day: string, change: (date: Date) => void) {
+  const date = new Date(`${day}T00:00:00Z`)
+  change(date)
+  return date.toISOString().slice(0, 10)
+}
+
+function addDays(day: string, days: number) {
+  return shiftDay(day, (date) => date.setUTCDate(date.getUTCDate() + days))
+}
+
+function periodStart(day: string, unit: DateSliderUnit) {
+  if (unit === "week") {
+    const weekday = new Date(`${day}T00:00:00Z`).getUTCDay()
+    return addDays(day, -((weekday + 6) % 7))
+  }
+  if (unit === "month") return `${day.slice(0, 7)}-01`
+  if (unit === "year") return `${day.slice(0, 4)}-01-01`
+  return day
+}
+
+function nextPeriod(start: string, unit: DateSliderUnit) {
+  if (unit === "week") return addDays(start, 7)
+  if (unit === "month") {
+    return shiftDay(start, (date) => date.setUTCMonth(date.getUTCMonth() + 1))
+  }
+  if (unit === "year") {
+    return shiftDay(start, (date) =>
+      date.setUTCFullYear(date.getUTCFullYear() + 1)
+    )
+  }
+  return addDays(start, 1)
+}
+
 /**
- * Slider positions for a span of days: one step per day for a few months,
- * per week for up to two years, and per 30 days beyond. The end is rounded up
- * to a whole step so both ends stay reachable.
+ * Calendar-aligned slider stops for a span of days: days for up to three
+ * months, Monday-to-Sunday weeks for up to two years, months for up to 15
+ * years, and years beyond. `boundaries` holds each period's first day plus the
+ * day after the last period, so stop `i` starts at `boundaries[i]`.
  */
-export function dateSliderScale(earliest: string, latest: string) {
-  const min = dayNumber(earliest)
-  const span = Math.max(dayNumber(latest) - min, 1)
-  const step = span <= 120 ? 1 : span <= 730 ? 7 : 30
-  return { max: min + Math.ceil(span / step) * step, min, step }
+export function dateSliderStops(earliest: string, latest: string) {
+  const span = dayNumber(latest) - dayNumber(earliest)
+  const unit: DateSliderUnit =
+    span <= 92 ? "day" : span <= 731 ? "week" : span <= 5479 ? "month" : "year"
+  const boundaries = [periodStart(earliest, unit)]
+  while (boundaries[boundaries.length - 1] <= latest) {
+    boundaries.push(nextPeriod(boundaries[boundaries.length - 1], unit))
+  }
+  return { boundaries, unit }
+}
+
+const sliderLargeSteps: Record<DateSliderUnit, number> = {
+  day: 7,
+  month: 12,
+  week: 4,
+  year: 5,
 }
 
 const dayFormat = new Intl.DateTimeFormat("en-US", {
@@ -63,6 +106,13 @@ const monthFormat = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
   year: "numeric",
 })
+
+/** A slider stop's name at its unit's precision, e.g. "Mar 2026". */
+function formatPeriod(day: string, unit: DateSliderUnit) {
+  if (unit === "year") return day.slice(0, 4)
+  if (unit === "month") return monthFormat.format(new Date(`${day}T00:00:00Z`))
+  return formatDay(day)
+}
 
 function formatDay(day: string) {
   return dayFormat.format(new Date(`${day}T00:00:00Z`))
@@ -117,19 +167,22 @@ export function DateRangeFilter({
   const latest = bounds?.latest
     ? dayInTimeZone(bounds.latest, timeZone)
     : undefined
-  const scale = earliest && latest ? dateSliderScale(earliest, latest) : null
-  const clamp = (day: number) =>
-    scale ? Math.min(scale.max, Math.max(scale.min, day)) : day
-  const positions = scale
-    ? mode === "range"
-      ? [
-          clamp(value.from ? dayNumber(value.from) : scale.min),
-          clamp(value.to ? dayNumber(value.to) : scale.max),
-        ]
-      : [clamp(value.from ? dayNumber(value.from) : scale.min)]
-    : []
-  const edgeFormat =
-    scale && scale.max - scale.min > 730 ? monthFormat : dayFormat
+  const stops = earliest && latest ? dateSliderStops(earliest, latest) : null
+  const last = stops ? stops.boundaries.length - 1 : 0
+  const startStop = (day: string | undefined) => {
+    if (!stops || !day) return 0
+    const index = stops.boundaries.filter((start) => start <= day).length - 1
+    return Math.min(Math.max(index, 0), last - 1)
+  }
+  const endStop = (day: string | undefined) => {
+    if (!stops || !day) return last
+    const index = stops.boundaries.findIndex((start) => start > day)
+    return index < 1 ? last : index
+  }
+  const positions =
+    mode === "range"
+      ? [startStop(value.from), endStop(value.to)]
+      : [startStop(value.from)]
 
   return (
     <div className="flex flex-col gap-3">
@@ -182,15 +235,15 @@ export function DateRangeFilter({
       </div>
       {boundsPending ? (
         <div aria-hidden="true" className="flex flex-col gap-2 pt-2">
-          <div className="flex h-3 items-center">
-            <Skeleton className="h-1 w-full rounded-full" />
+          <div className="flex h-4 items-center">
+            <Skeleton className="h-1.5 w-full rounded-full" />
           </div>
           <div className="flex justify-between">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-4 w-20" />
           </div>
         </div>
-      ) : scale ? (
+      ) : stops ? (
         <div className="flex flex-col gap-2 pt-2">
           <Slider
             getThumbLabel={(index) =>
@@ -200,27 +253,33 @@ export function DateRangeFilter({
                   ? "Start date"
                   : "End date"
             }
-            getThumbValueText={(position) => formatDay(dayString(position))}
-            max={scale.max}
-            min={scale.min}
+            getThumbValueText={(position, index) =>
+              index === 0
+                ? formatPeriod(stops.boundaries[position], stops.unit)
+                : stops.unit === "day" || stops.unit === "week"
+                  ? formatDay(addDays(stops.boundaries[position], -1))
+                  : formatPeriod(stops.boundaries[position - 1], stops.unit)
+            }
+            largeStep={sliderLargeSteps[stops.unit]}
+            max={mode === "range" ? last : last - 1}
+            min={0}
+            minStepsBetweenValues={1}
             onValueChange={(next) => {
               const [start, end] = Array.isArray(next) ? next : [next]
               onChange({
-                from: start <= scale.min ? undefined : dayString(start),
+                from: start === 0 ? undefined : stops.boundaries[start],
                 to:
-                  mode === "range"
-                    ? end >= scale.max
-                      ? undefined
-                      : dayString(end)
+                  mode === "range" && end !== undefined && end < last
+                    ? addDays(stops.boundaries[end], -1)
                     : undefined,
               })
             }}
-            step={scale.step}
+            step={1}
             value={positions}
           />
           <div className="flex justify-between text-supporting text-muted-foreground tabular-nums">
-            <span>{edgeFormat.format(new Date(scale.min * dayMs))}</span>
-            <span>{edgeFormat.format(new Date(scale.max * dayMs))}</span>
+            <span>{formatPeriod(stops.boundaries[0], stops.unit)}</span>
+            <span>{formatPeriod(stops.boundaries[last - 1], stops.unit)}</span>
           </div>
         </div>
       ) : null}

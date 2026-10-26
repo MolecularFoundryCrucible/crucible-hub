@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   dateRangeLabel,
-  dateSliderScale,
+  dateSliderStops,
   dayInTimeZone,
 } from "./date-range-filter"
 
@@ -14,21 +14,34 @@ describe("date range filter", () => {
   })
 
   it.each([
-    ["2026-08-01", "2026-09-30", 1],
-    ["2025-01-01", "2026-06-30", 7],
-    ["2019-03-01", "2026-10-26", 30],
-  ])("steps a span from %s to %s by %i days", (earliest, latest, step) => {
-    const scale = dateSliderScale(earliest, latest)
-    expect(scale.step).toBe(step)
-    expect((scale.max - scale.min) % step).toBe(0)
-    expect(scale.max).toBeGreaterThanOrEqual(
-      Date.parse(`${latest}T00:00:00Z`) / 86_400_000
-    )
+    ["2026-08-03", "2026-10-15", "day"],
+    ["2025-01-15", "2026-06-30", "week"],
+    ["2019-03-12", "2026-10-26", "month"],
+    ["2001-05-01", "2026-10-26", "year"],
+  ] as const)("steps %s to %s by %s", (earliest, latest, unit) => {
+    expect(dateSliderStops(earliest, latest).unit).toBe(unit)
+  })
+
+  it("aligns stops to calendar periods covering the whole span", () => {
+    const weeks = dateSliderStops("2025-01-15", "2026-06-30")
+    expect(weeks.boundaries[0]).toBe("2025-01-13")
+    expect(
+      weeks.boundaries.every(
+        (day) => new Date(`${day}T00:00:00Z`).getUTCDay() === 1
+      )
+    ).toBe(true)
+
+    const months = dateSliderStops("2019-03-12", "2026-10-26")
+    expect(months.boundaries[0]).toBe("2019-03-01")
+    expect(months.boundaries.at(-1)).toBe("2026-11-01")
+    expect(months.boundaries.every((day) => day.endsWith("-01"))).toBe(true)
   })
 
   it("keeps a single-day span movable", () => {
-    const scale = dateSliderScale("2026-08-01", "2026-08-01")
-    expect(scale.max).toBeGreaterThan(scale.min)
+    expect(dateSliderStops("2026-08-01", "2026-08-01").boundaries).toEqual([
+      "2026-08-01",
+      "2026-08-02",
+    ])
   })
 
   it("labels a range as one filter", () => {

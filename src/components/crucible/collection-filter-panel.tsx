@@ -185,7 +185,10 @@ export function FilterSection({
 }) {
   return (
     <FieldSet className="gap-4 border-b pb-5 last:border-b-0 last:pb-0">
-      <FieldLegend className="mb-3 text-muted-foreground" variant="label">
+      <FieldLegend
+        className="mb-3 text-label-compact text-muted-foreground"
+        variant="label"
+      >
         {title}
       </FieldLegend>
       {children}
