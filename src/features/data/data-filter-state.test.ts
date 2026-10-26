@@ -11,6 +11,12 @@ import {
 } from "./data-filter-state"
 
 describe("global data filter state", () => {
+  it("ignores a direction without a sort, which the panel can no longer fix", () => {
+    const resolution = resolveDataFilters({ direction: "asc" })
+    expect(resolution.valid).toBe(true)
+    expect(resolution).toEqual(resolveDataFilters({}))
+  })
+
   it("parses route filters and keeps cursor validation separate", () => {
     expect(
       dataSearchSchema.parse({

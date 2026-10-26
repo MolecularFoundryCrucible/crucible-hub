@@ -3,6 +3,15 @@ import { describe, expect, it } from "vitest"
 import { resolveProjectDataFilters } from "./project-data-filter-state"
 
 describe("project data filter state", () => {
+  it("ignores a direction without a sort, which the panel can no longer fix", () => {
+    const resolution = resolveProjectDataFilters(
+      { direction: "asc" },
+      "datasets"
+    )
+    expect(resolution.valid).toBe(true)
+    expect(resolution).toEqual(resolveProjectDataFilters({}, "datasets"))
+  })
+
   it("adds the member affiliation unless public data is included", () => {
     const access = { elevated: false, includePublicByDefault: false }
     const excluded = resolveProjectDataFilters(

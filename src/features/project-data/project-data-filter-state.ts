@@ -114,13 +114,6 @@ const domainFiltersSchema = z
         path: ["ownerId"],
       })
     }
-    if (filters.direction && !filters.sort) {
-      context.addIssue({
-        code: "custom",
-        message: "Choose an order before selecting its direction.",
-        path: ["direction"],
-      })
-    }
   })
 
 function orderingOnly({ direction, sort }: CollectionOrdering) {
@@ -226,7 +219,7 @@ export function resolveProjectDataFilters(
       ...orderingOnly(
         normalizeCollectionQueryOptions(
           {
-            direction: domain.data.direction,
+            direction: domain.data.sort ? domain.data.direction : undefined,
             sort: domain.data.sort,
           },
           defaultOrdering

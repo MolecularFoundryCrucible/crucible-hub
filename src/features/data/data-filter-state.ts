@@ -175,13 +175,6 @@ const domainFiltersSchema = z
         "Acquisition instrument filters apply only to datasets."
       )
     }
-    if (filters.direction && !filters.sort) {
-      addIssue(
-        context,
-        "direction",
-        "Choose an order before selecting its direction."
-      )
-    }
     if (
       filters.kind !== "samples" &&
       (filters.sampleType !== undefined || filters.sampleTypeIsNull)
@@ -283,7 +276,7 @@ export function resolveDataFilters(
     ...collectionOrdering(
       normalizeCollectionQueryOptions(
         {
-          direction: domain.data.direction,
+          direction: domain.data.sort ? domain.data.direction : undefined,
           sort: domain.data.sort,
         },
         defaultOrdering
