@@ -198,6 +198,22 @@ test.describe("phone", () => {
     expect(border[0]).toBe(border[1])
   })
 
+  test("sizes the Theme menu to its options", async ({ page }) => {
+    await openNavigation(page)
+    const trigger = (await page
+      .getByRole("button", { name: "Theme" })
+      .boundingBox())!
+    await page.getByRole("button", { name: "Theme" }).click()
+    const menu = (await page.getByRole("menu").boundingBox())!
+    expect(menu.width).toBeLessThan(trigger.width)
+  })
+
+  test("keeps the drawer free of the desktop edge rail", async ({ page }) => {
+    await page.setViewportSize({ height: 800, width: 700 })
+    await openNavigation(page)
+    await expect(page.locator('[data-sidebar="rail"]')).toBeHidden()
+  })
+
   test("leaves creation to the Create menu", async ({ page }) => {
     await page.goto("/hub/?scenario=populated")
     await page.waitForLoadState("networkidle")

@@ -6,5 +6,6 @@ export default defineConfig({
     env: { HUB_DATA_SOURCE: "fixture" },
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
+    setupFiles: ["src/test/setup.ts"],
   },
 })

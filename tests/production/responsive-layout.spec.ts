@@ -76,10 +76,13 @@ test("truncates each breadcrumb segment and keeps room for the page", async ({
   expect(root).toBeGreaterThan(40)
   expect(ancestor).toBeGreaterThan(60)
   expect(current).toBeGreaterThan(ancestor)
-  await expect(page.locator('[data-slot="breadcrumb-page"]')).toHaveAttribute(
-    "title",
-    "NiFe K-edge operando series"
-  )
+  await page.locator('[data-slot="breadcrumb-item"] a').first().focus()
+  await page.keyboard.press("Tab")
+  await expect(
+    page.locator('[data-slot="tooltip-content"]', {
+      hasText: "Operando Catalyst Mapping",
+    })
+  ).toBeVisible()
 })
 
 test("keeps the search shortcut hint on one line", async ({ page }) => {

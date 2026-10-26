@@ -866,6 +866,7 @@ function SidebarUtilities({ shortcuts }: { shortcuts: DialogHandle }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
+              className="w-auto min-w-40"
               side={isMobile ? "top" : "right"}
             >
               <DropdownMenuGroup>

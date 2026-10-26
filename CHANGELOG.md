@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Showed full breadcrumb names on keyboard focus, sized the Theme menu to its options, replaced the QR viewfinder with the error when the camera fails, colored the icon rail attention dot as a warning, and removed a stray navigation toggle strip from the phone drawer.
 - Made the Welcome to the Crux greeting rarer.
 - Switched every top bar control to its compact form at one width, aligned the top bar with the page gutters, kept page titles from moving vertically when the window resizes, shortened the top bar label to Admin on, and kept Last activity on two lines in Home rows.
 - Defined responsive behavior once: windows are compact, medium, expanded, or wide, medium windows show the navigation as an icon rail with a modal preview, and page content adapts to the space it actually has.

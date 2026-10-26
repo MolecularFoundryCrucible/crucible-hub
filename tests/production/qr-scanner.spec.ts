@@ -60,3 +60,18 @@ test("closes the scanner without opening search", async ({ page }) => {
     "false"
   )
 })
+
+test("replaces the viewfinder with the error when the camera is denied", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = () =>
+      Promise.reject(new DOMException("Denied", "NotAllowedError"))
+  })
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: "Scan QR code" }).click()
+  await expect(page.getByRole("alert")).toBeVisible()
+  await expect(page.locator(".qr-viewfinder")).toBeHidden()
+  await expect(page.getByRole("button", { name: "Scan again" })).toBeVisible()
+})

@@ -169,7 +169,7 @@ export function QrCodeScanner({
 
   return (
     <div className="grid gap-4">
-      <div className="qr-viewfinder">
+      <div className="qr-viewfinder" hidden={state === "error"}>
         <video
           aria-label="Camera preview"
           autoPlay
@@ -177,19 +177,17 @@ export function QrCodeScanner({
           playsInline
           ref={videoRef}
         />
-        {state === "error" ? null : (
-          <div aria-hidden="true" className="qr-viewfinder-frame">
-            <svg fill="none" preserveAspectRatio="none" viewBox="0 0 100 100">
-              <path
-                d="M2 22V10a8 8 0 0 1 8-8h12M78 2h12a8 8 0 0 1 8 8v12M98 78v12a8 8 0 0 1-8 8H78M22 98H10a8 8 0 0 1-8-8V78"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="4"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
-          </div>
-        )}
+        <div aria-hidden="true" className="qr-viewfinder-frame">
+          <svg fill="none" preserveAspectRatio="none" viewBox="0 0 100 100">
+            <path
+              d="M2 22V10a8 8 0 0 1 8-8h12M78 2h12a8 8 0 0 1 8 8v12M98 78v12a8 8 0 0 1-8 8H78M22 98H10a8 8 0 0 1-8-8V78"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeWidth="4"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        </div>
       </div>
       <p
         aria-live="polite"

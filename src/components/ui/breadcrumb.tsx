@@ -3,6 +3,7 @@ import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 
 import { cn } from "@/lib/utils"
+import { TruncationTooltip } from "@/components/ui/truncation-tooltip"
 import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
@@ -44,7 +45,7 @@ function BreadcrumbLink({
   render,
   ...props
 }: useRender.ComponentProps<"a">) {
-  return useRender({
+  const link = useRender({
     defaultTagName: "a",
     props: mergeProps<"a">(
       {
@@ -52,7 +53,6 @@ function BreadcrumbLink({
           "block max-w-full min-w-0 truncate transition-colors hover:text-foreground",
           className
         ),
-        title: typeof props.children === "string" ? props.children : undefined,
       },
       props
     ),
@@ -61,13 +61,17 @@ function BreadcrumbLink({
       slot: "breadcrumb-link",
     },
   })
+  return typeof props.children === "string" ? (
+    <TruncationTooltip label={props.children}>{link}</TruncationTooltip>
+  ) : (
+    link
+  )
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
-  return (
+  const page = (
     <span
       data-slot="breadcrumb-page"
-      title={typeof props.children === "string" ? props.children : undefined}
       role="link"
       aria-disabled="true"
       aria-current="page"
@@ -77,6 +81,11 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
       )}
       {...props}
     />
+  )
+  return typeof props.children === "string" ? (
+    <TruncationTooltip label={props.children}>{page}</TruncationTooltip>
+  ) : (
+    page
   )
 }
 
