@@ -267,7 +267,7 @@ function QuickSearchControl({
   return (
     <form
       aria-label="Quick search"
-      className="min-w-0 flex-1 sm:max-w-sm"
+      className="min-w-0 flex-1 md:max-w-sm"
       onSubmit={submit}
       ref={formRef}
       role="search"
@@ -363,7 +363,7 @@ function QuickSearchControl({
           endAdornment={
             <>
               {query.length === 0 ? (
-                <Kbd aria-hidden="true" className="hidden sm:inline-flex">
+                <Kbd aria-hidden="true" className="hidden md:inline-flex">
                   {activeProjectMfid ? "Ctrl Shift K" : "Ctrl K"}
                 </Kbd>
               ) : null}
@@ -501,7 +501,7 @@ function SearchFallbackControl({
   return (
     <form
       aria-label="Quick search"
-      className="min-w-0 flex-1 sm:max-w-sm"
+      className="min-w-0 flex-1 md:max-w-sm"
       onSubmit={(event) => {
         event.preventDefault()
         onShowAll()

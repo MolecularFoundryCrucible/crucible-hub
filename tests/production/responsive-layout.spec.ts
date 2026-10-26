@@ -221,3 +221,60 @@ test("moves toasts beside an open inspector", async ({ page }) => {
     .boundingBox())!
   expect(viewport.x + viewport.width).toBeLessThanOrEqual(inspector.x)
 })
+
+test("switches every top bar control to its compact form at once", async ({
+  page,
+}) => {
+  const shown = () =>
+    page
+      .locator("header")
+      .first()
+      .evaluate((header) => {
+        const visible = (element: Element | null | undefined) =>
+          Boolean(element?.checkVisibility())
+        const create = [...header.querySelectorAll("span")].find(
+          (span) => span.textContent === "Create"
+        )
+        const name = [
+          ...header.querySelectorAll('[aria-label="Open account menu"] *'),
+        ].find((element) => element.textContent === "Avery Chen")
+        const hint = header.querySelector('[data-slot="kbd"]')
+        return [visible(create), visible(name), visible(hint)]
+      })
+
+  await page.setViewportSize({ height: 800, width: 760 })
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  expect(await shown()).toEqual([false, false, false])
+
+  await page.setViewportSize({ height: 800, width: 776 })
+  await expect.poll(shown).toEqual([true, true, true])
+})
+
+test("aligns the top bar with the page gutters", async ({ page }) => {
+  for (const width of [390, 900, 1280]) {
+    await page.setViewportSize({ height: 800, width })
+    await page.goto("/hub/?scenario=populated")
+    await page.waitForLoadState("networkidle")
+    const [header, main] = await page.evaluate(() => [
+      getComputedStyle(document.querySelector("header")!).paddingLeft,
+      getComputedStyle(document.querySelector("main")!).paddingLeft,
+    ])
+    expect(header).toBe(main)
+  }
+})
+
+test("keeps Last activity on two lines in Home rows", async ({ page }) => {
+  await page.setViewportSize({ height: 900, width: 900 })
+  await page.goto("/hub/?scenario=populated")
+  await page.waitForLoadState("networkidle")
+  const label = page
+    .locator("main")
+    .getByText("Last activity", { exact: true })
+    .first()
+  const [labelBox, timeBox] = await label.evaluate((element) => [
+    element.getBoundingClientRect().toJSON() as DOMRect,
+    element.nextElementSibling!.getBoundingClientRect().toJSON() as DOMRect,
+  ])
+  expect(timeBox.top).toBeGreaterThanOrEqual(labelBox.bottom - 1)
+})

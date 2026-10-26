@@ -408,6 +408,7 @@ function HomePage() {
                     trailing={
                       <LabeledTimestamp
                         label="Last activity"
+                        layout="stacked"
                         presentation="activity"
                         value={project.last_activity_at}
                       />
@@ -463,6 +464,7 @@ function HomePage() {
                     trailing={
                       <LabeledTimestamp
                         label="Last activity"
+                        layout="stacked"
                         presentation="activity"
                         value={instrument.last_activity_at}
                       />

@@ -458,7 +458,7 @@ export function AppShell({
             <SidebarRail />
           </Sidebar>
           <PreviewPaneInset>
-            <header className="sticky top-0 z-(--layer-navigation) flex h-app-header items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+            <header className="sticky top-0 z-(--layer-navigation) flex h-app-header items-center gap-3 border-b bg-background/95 px-page-gutter backdrop-blur md:px-page-gutter-medium lg:px-page-gutter-wide">
               <SidebarTrigger className="md:hidden" />
               <AppSearch
                 preferFullProject={pathname.startsWith("/projects/")}
@@ -535,7 +535,7 @@ function AccountControls({
             }
           >
             <PersonIdentity
-              detailsClassName="hidden lg:grid"
+              detailsClassName="hidden md:grid"
               person={account}
               presentation="avatar"
               size="sm"
@@ -971,7 +971,7 @@ function AppMain({ children }: { children: React.ReactNode }) {
   const pending = useOptionalAdministratorViewControl()?.pending ?? false
   return (
     <PendingRegion
-      className="@container/content mx-auto w-full max-w-content flex-1 p-page-gutter sm:p-page-gutter-medium lg:p-page-gutter-wide"
+      className="@container/content mx-auto w-full max-w-content flex-1 p-page-gutter md:p-page-gutter-medium lg:p-page-gutter-wide"
       pending={pending}
       render={<main />}
     >

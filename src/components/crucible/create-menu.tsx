@@ -28,7 +28,7 @@ export function CreateMenu({ account }: { account: WorkspaceAccount }) {
         render={<Button aria-label="Create" variant="outline" />}
       >
         <CreateResourceIcon aria-hidden="true" data-icon="inline-start" />
-        <span className="hidden sm:inline">Create</span>
+        <span className="hidden md:inline">Create</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
         <DropdownMenuGroup>
