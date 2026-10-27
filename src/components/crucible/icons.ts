@@ -70,6 +70,7 @@ export {
   PanelLeftOpen as ExpandSidebarIcon,
   PanelRightClose as HidePreviewPaneIcon,
   PanelRightOpen as ShowPreviewPaneIcon,
+  Eye as PreviewReferenceIcon,
   LoaderCircle as PreparingDownloadIcon,
   Pencil as EditResourceIcon,
   Pencil as RenameUploadIcon,

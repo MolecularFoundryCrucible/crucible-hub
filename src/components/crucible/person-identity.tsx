@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { MfidText } from "@/components/crucible/mfid-text"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { TruncatedText } from "@/components/ui/truncation-tooltip"
@@ -113,8 +113,8 @@ export function PersonIdentity({
             isServiceAccount={isServiceAccount}
             username={username}
           />
-          <MfidText
-            className="mt-1 block whitespace-nowrap text-muted-foreground"
+          <MfidValue
+            className="mt-1"
             presentation="supporting"
             value={person.unique_id}
           />

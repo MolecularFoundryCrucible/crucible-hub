@@ -141,6 +141,9 @@ test("restores project preview deep links in the production runtime", async ({
   })
   await expect(open).toHaveText("Open")
   await expect(open.locator('[data-icon="inline-end"]')).toBeVisible()
+  await expect(
+    panel.locator('[data-slot="sheet-footer"]').locator("a, button")
+  ).toHaveText(["Open", "Print", "Delete"])
   await open.click()
   await expect(page).toHaveURL(
     `/hub/datasets/${dataset}?fromProject=01J6Y8N4Q2R7M9K3T5V0W1X2Z3`

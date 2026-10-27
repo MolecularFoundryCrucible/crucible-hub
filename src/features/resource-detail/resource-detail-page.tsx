@@ -11,7 +11,7 @@ import {
 import { PageHeader } from "@/components/crucible/page-header"
 import { EntityRefreshAction } from "@/components/crucible/entity-refresh-action"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { CopyMfidButton, MfidValue } from "@/components/crucible/mfid-value"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -449,7 +449,7 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
               <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
-                  <MfidValue copyable={false} value={resource.unique_id} />
+                  <MfidValue value={resource.unique_id} />
                 </dd>
               </div>
               <div className="min-w-0">
@@ -499,14 +499,10 @@ function IdentityCard({ resource }: { resource: WorkspaceResourceDetail }) {
           <div className="content-grid-identity-qr">
             <MfidQrCode
               actions={
-                <>
-                  <CopyMfidButton size="icon-sm" value={resource.unique_id} />
-                  <PrintLabelButton
-                    mfid={resource.unique_id}
-                    name={resourceDetailDisplayName(resource)}
-                    variant="icon"
-                  />
-                </>
+                <PrintLabelButton
+                  mfid={resource.unique_id}
+                  name={resourceDetailDisplayName(resource)}
+                />
               }
               dialogActions={
                 <PrintLabelButton

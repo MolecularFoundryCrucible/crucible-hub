@@ -14,7 +14,7 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
-import { CopyMfidButton, MfidValue } from "@/components/crucible/mfid-value"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import { personIsServiceAccount } from "@/components/crucible/person-identity"
 import { StatusBadge } from "@/components/crucible/status-badge"
@@ -190,7 +190,7 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
               <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
-                  <MfidValue copyable={false} value={instrument.unique_id} />
+                  <MfidValue value={instrument.unique_id} />
                 </dd>
               </div>
               <div
@@ -236,14 +236,10 @@ function InstrumentIdentity({ instrument }: { instrument: InstrumentDetail }) {
           <div className="content-grid-identity-qr">
             <MfidQrCode
               actions={
-                <>
-                  <CopyMfidButton size="icon-sm" value={instrument.unique_id} />
-                  <PrintLabelButton
-                    mfid={instrument.unique_id}
-                    name={resourceDetailDisplayName(instrument)}
-                    variant="icon"
-                  />
-                </>
+                <PrintLabelButton
+                  mfid={instrument.unique_id}
+                  name={resourceDetailDisplayName(instrument)}
+                />
               }
               dialogActions={
                 <PrintLabelButton

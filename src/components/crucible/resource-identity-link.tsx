@@ -1,12 +1,18 @@
+import { useContext } from "react"
 import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 
+import { PreviewReferenceIcon } from "@/components/crucible/icons"
 import { IdentityHoverCard } from "@/components/crucible/identity-hover-card"
-import { MfidText } from "@/components/crucible/mfid-text"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { ResourceIdentity } from "@/components/crucible/resource-identity"
 import type { ResourceIdentityPresentation } from "@/components/crucible/resource-identity"
-import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
+import {
+  ResourcePreviewContext,
+  ResourcePreviewLink,
+} from "@/components/crucible/resource-preview-navigation"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
+import { buttonVariants } from "@/components/ui/button"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
@@ -41,6 +47,7 @@ export function ResourceIdentityLink({
   triggerContext?: string | null
 }) {
   const displayName = resourceDisplayName(kind, name, { mfid })
+  const canPreview = useContext(ResourcePreviewContext) !== null
   const routeLink =
     navigation === "preview" ? (
       <ResourcePreviewLink
@@ -79,11 +86,7 @@ export function ResourceIdentityLink({
   const hoverLink = (
     <IdentityHoverCard trigger={link}>
       <ResourceIdentity context={context} kind={kind} name={displayName} />
-      <MfidText
-        className="mt-2 block whitespace-nowrap text-muted-foreground"
-        presentation="supporting"
-        value={mfid}
-      />
+      <MfidValue className="mt-2" presentation="supporting" value={mfid} />
       {details.length ? (
         <dl className="mt-3 grid gap-2">
           {details.map((detail) => (
@@ -95,6 +98,19 @@ export function ResourceIdentityLink({
             </div>
           ))}
         </dl>
+      ) : null}
+      {canPreview && navigation !== "preview" ? (
+        <div className="mt-2 -mr-2 flex justify-end">
+          <ResourcePreviewLink
+            className={buttonVariants({ size: "sm", variant: "ghost" })}
+            mfid={mfid}
+            resourceKind={kind}
+            resourceName={displayName}
+          >
+            <PreviewReferenceIcon aria-hidden="true" data-icon="inline-start" />
+            Preview
+          </ResourcePreviewLink>
+        </div>
       ) : null}
     </IdentityHoverCard>
   )

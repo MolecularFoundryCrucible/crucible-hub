@@ -9,7 +9,7 @@ import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidQrCode } from "@/components/crucible/mfid-qr-code"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { resourceDisplayName } from "@/lib/resource-name"
-import { CopyMfidButton, MfidValue } from "@/components/crucible/mfid-value"
+import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
 import {
   ProjectOverviewPending,
@@ -185,7 +185,7 @@ function ProjectIdentity({
               <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">MFID</dt>
                 <dd className="mt-1">
-                  <MfidValue copyable={false} value={project.unique_id} />
+                  <MfidValue value={project.unique_id} />
                 </dd>
               </div>
               <div className={userRole ? "grid grid-cols-2 gap-4" : "min-w-0"}>
@@ -227,17 +227,13 @@ function ProjectIdentity({
           <div className="content-grid-identity-qr">
             <MfidQrCode
               actions={
-                <>
-                  <CopyMfidButton size="icon-sm" value={project.unique_id} />
-                  <PrintLabelButton
-                    mfid={project.unique_id}
-                    name={resourceDisplayName("project", project.title, {
-                      identifier: project.project_id,
-                      mfid: project.unique_id,
-                    })}
-                    variant="icon"
-                  />
-                </>
+                <PrintLabelButton
+                  mfid={project.unique_id}
+                  name={resourceDisplayName("project", project.title, {
+                    identifier: project.project_id,
+                    mfid: project.unique_id,
+                  })}
+                />
               }
               dialogActions={
                 <PrintLabelButton

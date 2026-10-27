@@ -8,7 +8,8 @@ import type { WorkspaceResourceAccessGrant } from "@/data/crucible/workspace-sou
 
 import { InstrumentPeopleCard } from "./instrument-people-card"
 
-vi.mock("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   Link: ({ children }: { children: React.ReactNode }) => (
     <a href="#test">{children}</a>
   ),

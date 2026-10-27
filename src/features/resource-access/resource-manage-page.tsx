@@ -1,7 +1,6 @@
 import { entryActions } from "@/data/crucible/entry-capabilities"
 import { useState } from "react"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
-import { Link } from "@tanstack/react-router"
 import {
   useQuery,
   useQueryClient,
@@ -27,6 +26,7 @@ import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { RemoveMembersDialog } from "@/components/crucible/remove-members-dialog"
 import type { RemovableMember } from "@/components/crucible/remove-members-dialog"
 import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
 import { VisibilityBadge } from "@/components/crucible/visibility-badge"
@@ -682,30 +682,20 @@ function PrincipalName({ grant }: { grant: WorkspaceResourceAccessGrant }) {
       />
     )
   }
-  if (grant.principal_type === "project") {
+  if (
+    grant.principal_type === "project" ||
+    grant.principal_type === "instrument"
+  ) {
     return (
-      <Link
-        className="hover:underline"
-        params={{ projectMfid: grant.principal_id }}
-        search={{ preview: undefined }}
-        state={{}}
-        to="/projects/$projectMfid"
+      <ResourceIdentityLink
+        className="inline"
+        context={grant.slug}
+        kind={grant.principal_type}
+        mfid={grant.principal_id}
+        name={name}
       >
         {name}
-      </Link>
-    )
-  }
-  if (grant.principal_type === "instrument") {
-    return (
-      <Link
-        className="hover:underline"
-        params={{ instrumentMfid: grant.principal_id }}
-        search={{}}
-        state={{}}
-        to="/instruments/$instrumentMfid"
-      >
-        {name}
-      </Link>
+      </ResourceIdentityLink>
     )
   }
   return name

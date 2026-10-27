@@ -78,9 +78,10 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { useExitSafeValue } from "@/hooks/use-exit-safe"
 import { useWindowClass } from "@/hooks/use-window-class"
+import { InspectorProjectOverview } from "@/features/resource-inspector/inspector-project"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
-import { ResourceGraphLink } from "@/features/resource-graph/resource-graph-link"
+import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { formatBytes } from "@/lib/format"
 import { windowClassAtLeast } from "@/lib/window-class"
 import { resourceDisplayName } from "@/lib/resource-name"
@@ -385,7 +386,7 @@ export function ResourceInspector({
               "grid gap-2 border-t bg-card",
               previewKind === "sample" || previewKind === "dataset"
                 ? "grid-cols-3"
-                : "grid-cols-1"
+                : "grid-cols-2"
             )}
           >
             <InspectorActions
@@ -451,14 +452,9 @@ function InspectorActions({
         onClick={onClick}
         presentation="inspector-footer"
       />
+      <PrintLabelButton mfid={mfid} name={name} variant="inspector-footer" />
       {kind === "sample" || kind === "dataset" ? (
         <>
-          <ResourceGraphLink
-            kind={kind}
-            mfid={mfid}
-            onClick={onClick}
-            presentation="inspector-footer"
-          />
           {resource?.kind === "sample" || resource?.kind === "dataset" ? (
             <ResourceDeletionRequestCard
               mode={mode}
@@ -532,6 +528,9 @@ function InspectorBody({
           <InspectorDatasetThumbnails datasetMfid={resource.unique_id} />
           <InspectorDatasetFiles datasetMfid={resource.unique_id} />
         </>
+      ) : null}
+      {resource.kind === "project" ? (
+        <InspectorProjectOverview projectMfid={resource.unique_id} />
       ) : null}
       {hasScientificContext && (
         <>

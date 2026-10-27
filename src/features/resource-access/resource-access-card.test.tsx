@@ -13,7 +13,8 @@ import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 
 import { ResourceAccessCard, ResourceManagePage } from "./resource-manage-page"
 
-vi.mock("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   Link: ({ children }: { children: React.ReactNode }) => (
     <a href="#test">{children}</a>
   ),

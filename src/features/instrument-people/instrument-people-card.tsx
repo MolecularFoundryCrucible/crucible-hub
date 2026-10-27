@@ -8,6 +8,7 @@ import {
 import { PanelState } from "@/components/crucible/collection-state"
 import { PeopleCard } from "@/components/crucible/people-card"
 import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { buttonVariants } from "@/components/ui/button"
 import { instrumentMembersQueryOptions } from "@/data/crucible/instruments.queries"
@@ -75,15 +76,15 @@ function MemberIdentity({ grant }: { grant: WorkspaceResourceAccessGrant }) {
           <ResourceTypeIcon type="project" />
         </span>
         <div className="min-w-0">
-          <Link
-            className="block truncate text-label hover:underline"
-            params={{ projectMfid: grant.principal_id }}
-            search={{ preview: undefined }}
-            state={{}}
-            to="/projects/$projectMfid"
+          <ResourceIdentityLink
+            className="block truncate text-label"
+            context={grant.slug}
+            kind="project"
+            mfid={grant.principal_id}
+            name={grantName(grant)}
           >
             {grantName(grant)}
-          </Link>
+          </ResourceIdentityLink>
           <p className="truncate text-supporting text-muted-foreground">
             {grant.slug ?? grant.principal_id}
           </p>

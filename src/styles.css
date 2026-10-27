@@ -1963,14 +1963,14 @@ body {
   }
 }
 
-@container identity (min-width: 20rem) and (max-width: 22.749rem) {
+@container identity (min-width: 21.75rem) and (max-width: 24.499rem) {
   .content-grid-identity-qr .mfid-qr-trigger {
     width: var(--spacing-qr-compact);
     height: var(--spacing-qr-compact);
   }
 }
 
-@container identity (max-width: 19.999rem) {
+@container identity (max-width: 21.749rem) {
   .content-grid-identity {
     grid-template-columns: minmax(0, 1fr);
   }

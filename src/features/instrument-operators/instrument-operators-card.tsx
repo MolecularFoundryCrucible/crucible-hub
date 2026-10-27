@@ -1,7 +1,6 @@
 import { entryActions } from "@/data/crucible/entry-capabilities"
 import { useId, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
 
 import {
   AccessGrantListActions,
@@ -24,6 +23,7 @@ import { RemoveMemberIcon } from "@/components/crucible/icons"
 import { personDisplayName } from "@/components/crucible/person-identity"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { PersonLink } from "@/components/crucible/person-link"
+import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
 import { ResourceName } from "@/components/crucible/resource-name"
 import { ResourceSearchCombobox } from "@/components/crucible/resource-search-combobox"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
@@ -382,15 +382,15 @@ export function InstrumentAccessCard({
                       grant.principal_type === "project" ? (
                         <div className="flex min-w-0 flex-1 items-center gap-2">
                           <div className="min-w-0 flex-1">
-                            <Link
-                              className="truncate text-label hover:underline"
-                              params={{ projectMfid: grant.principal_id }}
-                              search={{ preview: undefined }}
-                              state={{}}
-                              to="/projects/$projectMfid"
+                            <ResourceIdentityLink
+                              className="truncate text-label"
+                              context={grant.slug}
+                              kind="project"
+                              mfid={grant.principal_id}
+                              name={grantName(grant)}
                             >
                               {grantName(grant)}
-                            </Link>
+                            </ResourceIdentityLink>
                             <p className="flex min-w-0 items-center gap-1.5 text-body text-muted-foreground">
                               <PrincipalTypeIcon
                                 label="Project"

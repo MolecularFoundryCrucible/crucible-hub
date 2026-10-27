@@ -482,3 +482,21 @@ test("bolds only the record name in a data table row", async ({ page }) => {
   expect(await weight("Project")).toBe("400")
   expect(await weight("Owner")).toBe("400")
 })
+
+test("previews a linked project from its hover card", async ({ page }) => {
+  await page.setViewportSize({ height: 900, width: 1280 })
+  await page.goto("/hub/data?kind=datasets")
+  await page.waitForLoadState("networkidle")
+  await page.locator('tbody td[data-label="Project"] a').first().hover()
+  await page.getByRole("link", { name: "Preview", exact: true }).click()
+  const panel = page.getByRole("dialog")
+  await expect(
+    panel.getByRole("heading", { name: "Operando Catalyst Mapping" })
+  ).toBeVisible()
+  const data = panel.getByRole("region", { name: "Data" })
+  await expect(data.getByText("Samples").locator("..")).toContainText("2")
+  await expect(data.getByText("Datasets").locator("..")).toContainText("3")
+  const members = panel.getByRole("region", { name: "Members (3)" })
+  await expect(members.getByRole("listitem")).toHaveCount(3)
+  await expect(members.getByRole("listitem").nth(1)).toContainText("Editor")
+})

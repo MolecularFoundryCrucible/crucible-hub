@@ -19,11 +19,6 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { labelNameMaxLength } from "@/data/crucible/print"
 import { printWorkspaceResourceLabel } from "@/data/crucible/print.functions"
@@ -38,7 +33,7 @@ export function PrintLabelButton({
 }: {
   mfid: string
   name: string
-  variant?: "button" | "icon"
+  variant?: "button" | "inspector-footer"
 }) {
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState(false)
@@ -52,35 +47,18 @@ export function PrintLabelButton({
       onOpenChangeComplete={exit.onOpenChangeComplete}
       open={open}
     >
-      {variant === "icon" ? (
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <DialogTrigger
-                render={
-                  <Button
-                    aria-label="Print"
-                    className="shrink-0"
-                    size="icon-sm"
-                    type="button"
-                    variant="ghost"
-                  />
-                }
-              />
-            }
-          >
-            <PrintLabelIcon aria-hidden="true" />
-          </TooltipTrigger>
-          <TooltipContent>Print</TooltipContent>
-        </Tooltip>
-      ) : (
-        <DialogTrigger
-          render={<Button size="sm" type="button" variant="outline" />}
-        >
-          <PrintLabelIcon aria-hidden="true" data-icon="inline-start" />
-          Print
-        </DialogTrigger>
-      )}
+      <DialogTrigger
+        render={
+          variant === "inspector-footer" ? (
+            <Button className="w-full" type="button" variant="outline" />
+          ) : (
+            <Button size="sm" type="button" variant="outline" />
+          )
+        }
+      >
+        <PrintLabelIcon aria-hidden="true" data-icon="inline-start" />
+        Print
+      </DialogTrigger>
       {exit.mounted ? (
         <PrintLabelDialogContent
           mfid={mfid}
