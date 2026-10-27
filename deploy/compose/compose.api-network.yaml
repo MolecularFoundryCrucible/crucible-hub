@@ -1,0 +1,14 @@
+# Same machine as the API bundle: the Hub joins the API's network as "hub",
+# where the API bundle's front door forwards /hub/. The session database stays
+# on the Hub's own network.
+services:
+  hub:
+    networks:
+      default:
+      crucible:
+        aliases: [hub]
+
+networks:
+  crucible:
+    name: ${CRUCIBLE_NETWORK:-crucible}
+    external: true

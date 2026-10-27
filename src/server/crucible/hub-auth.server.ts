@@ -7,11 +7,17 @@ import {
   deleteCookie,
   getCookie,
   getRequest,
+  getRequestHeader,
   getRequestIP,
   setCookie,
 } from "@tanstack/react-start/server"
 import { z } from "zod"
 
+import {
+  clientAddress,
+  readSecretSetting,
+  serverApiUrlAllowed,
+} from "./deployment-settings.server"
 import {
   clearLegacyPrivilegeModeCookie,
   writeGlobalPrivilegeMode,
@@ -169,7 +175,14 @@ export class HubLoginRateLimitError extends Error {
 }
 
 export function enforceHubLoginRateLimit() {
-  const ip = getRequestIP({ xForwardedFor: true }) ?? "unknown"
+  const forwardedFor = getRequestHeader("x-forwarded-for")
+  // Temporary: confirms the deployed proxy chain for HUB_TRUSTED_PROXY_HOPS
+  // without logging addresses.
+  console.info("[Crucible Hub] Sign-in forwarded entries", {
+    entries:
+      forwardedFor?.split(",").filter((entry) => entry.trim()).length ?? 0,
+  })
+  const ip = clientAddress(forwardedFor, getRequestIP()) ?? "unknown"
   const now = Date.now()
   if (loginAttempts.size >= maxTrackedLoginClients) {
     for (const [client, timestamps] of loginAttempts) {
@@ -191,14 +204,26 @@ export function enforceHubLoginRateLimit() {
   loginAttempts.set(ip, attempts)
 }
 
+let singleInstanceWarned = false
+
+function warnSingleInstanceDeprecated() {
+  if (singleInstanceWarned) return
+  singleInstanceWarned = true
+  console.warn(
+    "[Crucible Hub] HUB_AUTH_SESSION_MODE=single-instance is deprecated and will be removed in the next major release; use postgres."
+  )
+}
+
 export function productionHubAuthReady() {
   if (process.env.NODE_ENV !== "production") return true
   if (process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true") return false
   const mode = process.env.HUB_AUTH_SESSION_MODE
   if (mode === "postgres")
     return sharedSessionsConfigured() && sharedSessionStoreKind() === mode
-  if (process.env.HUB_AUTH_SESSION_MODE === "single-instance")
+  if (process.env.HUB_AUTH_SESSION_MODE === "single-instance") {
+    warnSingleInstanceDeprecated()
     return !sharedSessionsRequested()
+  }
   return false
 }
 
@@ -319,6 +344,13 @@ export function hubAuthPublicOrigin() {
   return new URL(configuredCallbackUri()).origin
 }
 
+function serverApiUrl(value: string) {
+  if (!serverApiUrlAllowed(value)) {
+    throw new Error("Hub API URL must be a trusted HTTPS URL.")
+  }
+  return new URL(value).toString().replace(/\/$/, "")
+}
+
 function httpsApiUrl(value: string) {
   const url = new URL(value)
   if (
@@ -369,7 +401,7 @@ function cookieOptions(path: string) {
 function config() {
   const baseUrl = process.env.CRUCIBLE_API_BASE_URL
   const publicBaseUrl = process.env.HUB_AUTH_PUBLIC_API_URL ?? baseUrl
-  const secret = process.env.HUB_AUTH_CLIENT_SECRET
+  const secret = readSecretSetting("HUB_AUTH_CLIENT_SECRET")
   const callbackUri = configuredCallbackUri()
   if (
     process.env.HUB_DATA_SOURCE !== "hub-auth" ||
@@ -383,7 +415,7 @@ function config() {
     throw new Error("Hub sign-in is not configured.")
   }
   return {
-    baseUrl: httpsApiUrl(baseUrl),
+    baseUrl: serverApiUrl(baseUrl),
     publicBaseUrl: httpsApiUrl(publicBaseUrl),
     callbackUri,
     secret,

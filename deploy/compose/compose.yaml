@@ -1,0 +1,86 @@
+# Crucible Hub with its own session database. Combine with
+# compose.api-network.yaml (same machine as the API bundle) or
+# compose.published.yaml (separate machine); see README.md.
+name: crucible-hub
+
+services:
+  hub:
+    image: ${HUB_IMAGE:-crucible-hub:local}
+    build:
+      context: ../..
+      args:
+        VITE_APP_VERSION: ${HUB_VERSION:-}
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    depends_on:
+      hub-db:
+        condition: service_healthy
+      hub-setup:
+        condition: service_completed_successfully
+    environment:
+      HUB_DATA_SOURCE: hub-auth
+      HUB_AUTH_PRODUCTION_ENABLED: "true"
+      HUB_AUTH_SESSION_MODE: postgres
+      HUB_AUTH_CALLBACK_URI: ${HUB_PUBLIC_ORIGIN:?Set HUB_PUBLIC_ORIGIN}/hub/auth/callback
+      HUB_AUTH_PUBLIC_API_URL: ${HUB_AUTH_PUBLIC_API_URL:?Set HUB_AUTH_PUBLIC_API_URL}
+      CRUCIBLE_API_BASE_URL: ${CRUCIBLE_API_BASE_URL:?Set CRUCIBLE_API_BASE_URL}
+      HUB_API_ALLOW_HTTP: ${HUB_API_ALLOW_HTTP:-false}
+      HUB_TRUSTED_PROXY_HOPS: ${HUB_TRUSTED_PROXY_HOPS:-1}
+      HUB_SESSION_DATABASE_URL: postgres://crucible_hub_app@hub-db:5432/crucible_hub
+    secrets:
+      - source: hub_auth_client_secret
+        target: HUB_AUTH_CLIENT_SECRET
+      - source: hub_session_keys
+        target: HUB_SESSION_KEYS
+      - source: hub_session_database_password
+        target: HUB_SESSION_DATABASE_PASSWORD
+
+  hub-setup:
+    image: ${HUB_IMAGE:-crucible-hub:local}
+    command: ["node", "scripts/setup-session-store.mjs"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: "no"
+    depends_on:
+      hub-db:
+        condition: service_healthy
+    environment:
+      HUB_SESSION_ADMIN_DATABASE_URL: postgres://postgres@hub-db:5432/crucible_hub
+    secrets:
+      - source: hub_db_admin_password
+        target: HUB_SESSION_ADMIN_DATABASE_PASSWORD
+      - source: hub_session_database_password
+        target: HUB_SESSION_DATABASE_PASSWORD
+
+  hub-db:
+    image: postgres:17
+    cap_drop: [NET_RAW]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crucible_hub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/hub_db_admin_password
+    secrets:
+      - hub_db_admin_password
+    volumes:
+      - hub-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "crucible_hub"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+secrets:
+  hub_auth_client_secret:
+    file: ./secrets/hub_auth_client_secret
+  hub_session_keys:
+    file: ./secrets/hub_session_keys
+  hub_session_database_password:
+    file: ./secrets/hub_session_database_password
+  hub_db_admin_password:
+    file: ./secrets/hub_db_admin_password
+
+volumes:
+  hub-db-data:

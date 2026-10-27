@@ -19,3 +19,6 @@ test-results/
 *.tsbuildinfo
 
 .superpowers/
+
+deploy/compose/secrets/*
+!deploy/compose/secrets/.gitkeep

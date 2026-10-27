@@ -22,7 +22,10 @@ import {
   updateSharedPrivilegeMode,
   withHubAuthRequest,
 } from "./hub-auth.server"
-import { closePostgresSessionPool } from "./hub-session-postgres.server"
+import {
+  checkPostgresSessionStore,
+  closePostgresSessionPool,
+} from "./hub-session-postgres.server"
 import { readSession, replaceSession } from "./hub-session-store.server"
 import { startRequestScope } from "@/test/start-request"
 
@@ -144,7 +147,7 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     await closePostgresSessionPool()
   })
 
-  it("is ready for production only with a configured Cloud SQL store", () => {
+  it("is ready for production only with a configured Postgres store", () => {
     stubSharedEnv()
     vi.stubEnv("NODE_ENV", "production")
     vi.stubEnv("HUB_AUTH_PRODUCTION_ENABLED", "true")
@@ -155,6 +158,13 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     vi.stubEnv("HUB_AUTH_SESSION_MODE", "postgres")
     vi.stubEnv("HUB_SESSION_KEYS", "")
     expect(productionHubAuthReady()).toBe(false)
+  })
+
+  it("reaches the session table from a plain database URL in production", async () => {
+    stubSharedEnv()
+    vi.stubEnv("NODE_ENV", "production")
+    await closePostgresSessionPool()
+    await expect(checkPostgresSessionStore()).resolves.toBeUndefined()
   })
 
   it("keeps a signed-in session across requests through the database", async () => {

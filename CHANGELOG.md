@@ -4,6 +4,17 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
 
+## Unreleased
+
+- Added self-hosting with Docker Compose: `deploy/compose` runs the Hub with its own session database next to a self-hosted Crucible API, on the same machine or a separate one.
+- Accepted a plain `HUB_SESSION_DATABASE_URL` for Postgres sessions in production, filled in from `HUB_SESSION_DATABASE_PASSWORD` when the URL names no password.
+- Read secret settings from `NAME_FILE`, then `/run/secrets/NAME`, then `NAME`, as the Crucible API does.
+- Added `HUB_API_ALLOW_HTTP` to allow a plain-HTTP `CRUCIBLE_API_BASE_URL` to a container name or private address on a private container network; public names and addresses stay HTTPS-only.
+- Added `HUB_TRUSTED_PROXY_HOPS` (default 1) to choose which `X-Forwarded-For` entry the sign-in rate limit trusts; it previously trusted the leftmost entry, which a client can forge. Deployments behind two proxies set it to 2.
+- `/hub/health` reports the session database and returns 503 when Postgres sessions are unreachable.
+- The image includes `scripts/setup-session-store.mjs`, which creates the session roles and schema and applies migrations.
+- Deprecated `HUB_AUTH_SESSION_MODE=single-instance`; it logs a warning and will be removed in the next major release.
+
 ## 1.6.7 - 2026-10-26
 
 - Linked projects and people show their hover card everywhere they are referenced, including People, Operators, and access lists; the card copies the MFID or Crucible ID, and project and instrument cards offer Preview to open them in the side panel.

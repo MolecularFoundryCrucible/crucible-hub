@@ -1,0 +1,6 @@
+# Separate machine: publish the Hub on a private address that only the API
+# bundle's front door can reach.
+services:
+  hub:
+    ports:
+      - ${HUB_BIND_ADDRESS:?Set HUB_BIND_ADDRESS}:${HUB_PORT:-3000}:3000

@@ -4,7 +4,7 @@ Status: Pilot active since October 13, 2026 (v1.0.0), with uploads and ingestion
 
 The Hub's public address is `https://crucible.lbl.gov/hub/`. A dedicated `crucible-hub` Cloud Run service runs with 2 vCPU, 1 GiB, manual scaling fixed at one instance, request-based billing, session affinity, and `internal` ingress, with `HUB_UPLOADS_ENABLED` and `HUB_UPLOAD_INGESTION_ENABLED` set. It is reached through the existing Crucible Nginx reverse proxy. The Hub uses API-owned ORCID sign-in, server-held API tokens, and an opaque `HttpOnly`, `Secure` browser session cookie. API-key mode is local development only.
 
-The service runs `HUB_AUTH_SESSION_MODE=postgres`, keeping sessions in a Hub-owned Cloud SQL database, so deployments and restarts keep people signed in. It runs one instance; scaling beyond one is a separate decision.
+The service runs `HUB_AUTH_SESSION_MODE=postgres`, keeping sessions in a Hub-owned Cloud SQL database, so deployments and restarts keep people signed in. It runs one instance; scaling beyond one is a separate decision. Requests reach it through the LBL reverse proxy and Google's front end, which both append to `X-Forwarded-For`, so the service sets `HUB_TRUSTED_PROXY_HOPS=2` for the sign-in rate limit to see the real client address.
 
 The commands below use placeholders such as `<project-id>`, `<region>`, `<runtime-service-account>`, and `<db-password-secret>`. The concrete values are not recorded in this repository; read them from the deployed service with an account that has access to the project:
 

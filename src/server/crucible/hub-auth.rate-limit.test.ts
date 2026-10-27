@@ -37,6 +37,15 @@ describe("hub login rate limit", () => {
     await expect(attempt("10.0.0.2")).resolves.toBeUndefined()
   })
 
+  it("counts the client behind each trusted proxy separately", async () => {
+    vi.stubEnv("HUB_TRUSTED_PROXY_HOPS", "2")
+    for (let index = 0; index < 30; index += 1) {
+      await expect(
+        attempt(`198.51.100.${index}, 10.0.0.9`)
+      ).resolves.toBeUndefined()
+    }
+  })
+
   it("unblocks a client after the window expires", async () => {
     for (let index = 0; index < 30; index += 1) {
       await attempt("10.0.0.3")

@@ -4,22 +4,33 @@ import { Pool } from "pg"
 import type { PoolClient, PoolConfig } from "pg"
 
 import type { HubSessionBackend } from "./hub-session-backend.server"
+import { readSecretSetting } from "./deployment-settings.server"
 
 const expiry = "now() + make_interval(secs => $3::double precision / 1000)"
 const cleanupInterval = 15 * 60 * 1000
 
 export function postgresSessionsRequested() {
   return Boolean(
-    process.env.HUB_SESSION_DATABASE_URL ||
+    readSecretSetting("HUB_SESSION_DATABASE_URL") ||
     process.env.HUB_SESSION_DATABASE_INSTANCE
   )
 }
 
 export function postgresSessionsConfigured() {
   if (process.env.HUB_SESSION_DATABASE_INSTANCE) {
-    return Boolean(process.env.HUB_SESSION_DATABASE_PASSWORD)
+    return Boolean(readSecretSetting("HUB_SESSION_DATABASE_PASSWORD"))
   }
-  return Boolean(process.env.HUB_SESSION_DATABASE_URL)
+  return Boolean(readSecretSetting("HUB_SESSION_DATABASE_URL"))
+}
+
+/** The session database URL, with the password setting filled in if the URL has none. */
+export function sessionDatabaseUrl() {
+  const value = readSecretSetting("HUB_SESSION_DATABASE_URL")
+  if (!value) return undefined
+  const password = readSecretSetting("HUB_SESSION_DATABASE_PASSWORD")
+  const url = new URL(value)
+  if (password && !url.password) url.password = encodeURIComponent(password)
+  return url.toString()
 }
 
 const poolSettings: PoolConfig = {
@@ -33,7 +44,7 @@ const poolSettings: PoolConfig = {
 async function createPool() {
   const instance = process.env.HUB_SESSION_DATABASE_INSTANCE
   if (instance) {
-    const password = process.env.HUB_SESSION_DATABASE_PASSWORD
+    const password = readSecretSetting("HUB_SESSION_DATABASE_PASSWORD")
     if (!password) throw new Error("Shared Hub sessions are not configured.")
     const { AuthTypes, Connector, IpAddressTypes } =
       await import("@google-cloud/cloud-sql-connector")
@@ -51,13 +62,8 @@ async function createPool() {
       password,
     })
   }
-  const url = process.env.HUB_SESSION_DATABASE_URL
+  const url = sessionDatabaseUrl()
   if (!url) throw new Error("Shared Hub sessions are not configured.")
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "Shared Hub sessions in production require a Cloud SQL instance connection."
-    )
-  }
   return new Pool({ ...poolSettings, connectionString: url })
 }
 
@@ -79,6 +85,11 @@ export async function closePostgresSessionPool() {
   const current = pool
   pool = undefined
   if (current) await (await current).end()
+}
+
+/** Whether the session table is reachable with the Hub's own credentials. */
+export async function checkPostgresSessionStore() {
+  await query("select 1 from hub.session_entries limit 1", [])
 }
 
 async function query(text: string, values: unknown[]) {

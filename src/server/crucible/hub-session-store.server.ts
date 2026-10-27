@@ -10,6 +10,7 @@ import {
 import { z } from "zod"
 
 import type { HubSessionBackend } from "./hub-session-backend.server"
+import { readSecretSetting } from "./deployment-settings.server"
 import {
   postgresSessionBackend,
   postgresSessionsConfigured,
@@ -55,7 +56,7 @@ const elevatedLifetime = 12 * 60 * 60 * 1000
 const issuedLifetime = 10 * 60 * 1000
 
 function configuration() {
-  const value = process.env.HUB_SESSION_KEYS
+  const value = readSecretSetting("HUB_SESSION_KEYS")
   if (!value || !sharedSessionStoreKind())
     throw new Error("Shared Hub sessions are not configured.")
   const keys = value.split(",").map((entry) => {
@@ -83,12 +84,14 @@ export function sharedSessionStoreKind(): SharedSessionStoreKind | null {
 
 export function sharedSessionsConfigured() {
   const kind = sharedSessionStoreKind()
-  if (!kind || !process.env.HUB_SESSION_KEYS) return false
+  if (!kind || !readSecretSetting("HUB_SESSION_KEYS")) return false
   return postgresSessionsConfigured()
 }
 
 export function sharedSessionsRequested() {
-  return Boolean(sharedSessionStoreKind() || process.env.HUB_SESSION_KEYS)
+  return Boolean(
+    sharedSessionStoreKind() || readSecretSetting("HUB_SESSION_KEYS")
+  )
 }
 
 function backend(): HubSessionBackend {

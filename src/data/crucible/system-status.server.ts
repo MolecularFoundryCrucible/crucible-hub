@@ -1,5 +1,6 @@
 import "@tanstack/react-start/server-only"
 
+import { serverApiUrlAllowed } from "@/server/crucible/deployment-settings.server"
 import { createCrucibleClient } from "@/server/crucible/client.server"
 import { crucibleRequestSignal } from "@/server/crucible/request-signal.server"
 import { hubBuild } from "@/lib/build-info"
@@ -59,7 +60,7 @@ function unreachableStatus(latencyMs?: number, url?: string): SystemStatus {
 function readStatusConfiguration() {
   if (process.env.HUB_DATA_SOURCE === "hub-auth") {
     const baseUrl = process.env.CRUCIBLE_API_BASE_URL
-    return baseUrl?.startsWith("https://")
+    return baseUrl && serverApiUrlAllowed(baseUrl)
       ? { mode: "api" as const, baseUrl }
       : { mode: "unavailable" as const }
   }

@@ -54,7 +54,7 @@ Install Chromium once with `npx playwright install chromium`. The [contributor g
 
 ## How it is built
 
-The Hub is a TypeScript app on [TanStack Start](https://tanstack.com/start) with React, TanStack Router and Query, Tailwind CSS, and shadcn components on Base UI. It is a backend for the frontend: browser code calls Hub server functions, which hold the session and call the Crucible API through a client generated from its OpenAPI contract. It deploys as a single container on Google Cloud Run.
+The Hub is a TypeScript app on [TanStack Start](https://tanstack.com/start) with React, TanStack Router and Query, Tailwind CSS, and shadcn components on Base UI. It is a backend for the frontend: browser code calls Hub server functions, which hold the session and call the Crucible API through a client generated from its OpenAPI contract. It deploys as a single container: on Google Cloud Run for the pilot, or [self-hosted with Docker Compose](deploy/compose/README.md) next to a self-hosted Crucible API.
 
 ## Documentation
 
@@ -78,6 +78,7 @@ Delivery and operations:
 - [Roadmap](docs/roadmap.md): status and ordered work
 - [Foundation evidence](docs/phase-0-evidence.md): verification evidence for production readiness
 - [Cloud Run pilot](docs/cloud-run-pilot.md)
+- [Self-hosting with Docker Compose](deploy/compose/README.md)
 - [Crucible API handoff](docs/crucible-api-handoff.md) and [resource graph API handoff](docs/resource-graph-api-handoff.md): requests owned by the API team
 - [Changelog](CHANGELOG.md)
 

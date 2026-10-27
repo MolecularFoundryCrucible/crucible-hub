@@ -6,6 +6,10 @@ import {
   sessionApiFetch,
 } from "@/server/crucible/hub-auth.server"
 import {
+  readSecretSetting,
+  serverApiUrlAllowed,
+} from "@/server/crucible/deployment-settings.server"
+import {
   sharedSessionsRequested,
   sharedSessionsConfigured,
 } from "@/server/crucible/hub-session-store.server"
@@ -15,19 +19,6 @@ export type WorkspaceConfiguration =
   | { mode: "fixture" }
   | { mode: "api"; baseUrl: string; bearerToken?: string; fetch?: typeof fetch }
   | { mode: "unavailable"; reason: string }
-
-function isTrustedApiUrl(value: string) {
-  try {
-    const url = new URL(value)
-    return (
-      url.protocol === "https:" ||
-      (url.protocol === "http:" &&
-        ["127.0.0.1", "::1", "localhost"].includes(url.hostname))
-    )
-  } catch {
-    return false
-  }
-}
 
 export function readWorkspaceConfiguration(): WorkspaceConfiguration {
   if (process.env.HUB_DATA_SOURCE === "hub-auth") {
@@ -44,17 +35,13 @@ export function readWorkspaceConfiguration(): WorkspaceConfiguration {
         reason: "Shared Hub sessions are not configured.",
       }
     }
-    if (
-      !baseUrl ||
-      !isTrustedApiUrl(baseUrl) ||
-      !baseUrl.startsWith("https://")
-    ) {
+    if (!baseUrl || !serverApiUrlAllowed(baseUrl)) {
       return {
         mode: "unavailable",
         reason: "Hub sign-in requires a trusted HTTPS API URL.",
       }
     }
-    if (!process.env.HUB_AUTH_CLIENT_SECRET) {
+    if (!readSecretSetting("HUB_AUTH_CLIENT_SECRET")) {
       return { mode: "unavailable", reason: "Hub sign-in is not configured." }
     }
     if (!hasHubSession())
@@ -81,7 +68,7 @@ export function readWorkspaceConfiguration(): WorkspaceConfiguration {
   }
 
   const baseUrl = process.env.CRUCIBLE_API_BASE_URL
-  const bearerToken = process.env.CRUCIBLE_API_KEY
+  const bearerToken = readSecretSetting("CRUCIBLE_API_KEY")
 
   if (!baseUrl || !bearerToken) {
     return {
@@ -91,7 +78,7 @@ export function readWorkspaceConfiguration(): WorkspaceConfiguration {
     }
   }
 
-  if (!isTrustedApiUrl(baseUrl)) {
+  if (!serverApiUrlAllowed(baseUrl)) {
     return {
       mode: "unavailable",
       reason:
