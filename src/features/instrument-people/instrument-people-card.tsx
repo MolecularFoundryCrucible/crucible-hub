@@ -44,7 +44,7 @@ export function InstrumentPeopleCard({
         query.data
           ? sortAccessGrants(query.data).map((grant) => ({
               key: grantKey(grant),
-              person: <MemberIdentity grant={grant} />,
+              person: <InstrumentMemberIdentity grant={grant} />,
               role: (
                 <AccessRoleBadge
                   label={grant.permission === "owner" ? "Manager" : undefined}
@@ -68,7 +68,11 @@ export function InstrumentPeopleCard({
   )
 }
 
-function MemberIdentity({ grant }: { grant: WorkspaceResourceAccessGrant }) {
+export function InstrumentMemberIdentity({
+  grant,
+}: {
+  grant: WorkspaceResourceAccessGrant
+}) {
   if (grant.principal_type === "project") {
     return (
       <div className="flex min-w-0 flex-1 items-center gap-3">

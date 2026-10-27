@@ -66,8 +66,19 @@ In `.env`, use the separate-machine block: `COMPOSE_FILE=compose.yaml:compose.pu
 | `CRUCIBLE_NETWORK`         | The API bundle's network name (same machine only).                                                                                                                 |
 | `HUB_IMAGE`, `HUB_VERSION` | Image name to build or pull, and the version shown in the Hub.                                                                                                     |
 
+## Published images
+
+Each Hub release is published as `ghcr.io/molecularfoundrycrucible/crucible-hub:<version>` for amd64 and arm64. To use it instead of building, set `HUB_IMAGE` in `.env` and pull before starting:
+
+```sh
+docker compose pull hub hub-setup
+docker compose up -d
+```
+
+The image's `gov.lbl.crucible.api.revision` label names the Crucible API revision the release was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.revision" }}' <image>`); run an API at that revision or later.
+
 ## Checking and upgrading
 
 `/hub/health` returns HTTP 200 with `"sessions": "ok"` when the Hub can reach its session table, and 503 otherwise; Docker uses it as the container health check.
 
-To upgrade, check out the new Hub release tag and run `docker compose up -d --build`. `hub-setup` runs again first and applies any new session migrations; repeating it is safe.
+To upgrade, set `HUB_IMAGE` to the new release and run `docker compose pull hub hub-setup && docker compose up -d`, or, when building, check out the new Hub release tag and run `docker compose up -d --build`. `hub-setup` runs again first and applies any new session migrations; repeating it is safe.

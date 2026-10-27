@@ -78,7 +78,14 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { useExitSafeValue } from "@/hooks/use-exit-safe"
 import { useWindowClass } from "@/hooks/use-window-class"
-import { InspectorProjectOverview } from "@/features/resource-inspector/inspector-project"
+import {
+  projectQueryOptions,
+  projectResourceDetail,
+} from "@/data/crucible/projects.queries"
+import {
+  InspectorInstrumentOverview,
+  InspectorProjectOverview,
+} from "@/features/resource-inspector/inspector-overview"
 import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
@@ -109,12 +116,21 @@ export function ResourceInspector({
   const docked = windowClass === "wide"
   const mode = useWorkspaceMode()
   const scope = useWorkspaceScope()
-  const query = useQuery({
-    ...resourceQueryOptions(scope, preview ?? ""),
-    enabled: Boolean(preview),
-  })
-  const resource = query.data
   const previewIdentity = navigation.previewIdentity
+  // A project preview reads the project with its members, the request the
+  // project page also uses, instead of the generic resource read.
+  const projectPreview = previewIdentity?.kind === "project"
+  const resourceQuery = useQuery({
+    ...resourceQueryOptions(scope, preview ?? ""),
+    enabled: Boolean(preview) && !projectPreview,
+  })
+  const projectQuery = useQuery({
+    ...projectQueryOptions(scope, preview ?? ""),
+    enabled: Boolean(preview) && projectPreview,
+    select: (project) => (project ? projectResourceDetail(project) : null),
+  })
+  const query = projectPreview ? projectQuery : resourceQuery
+  const resource = query.data
   const previewKind = resource?.kind ?? previewIdentity?.kind
   const rawPreviewName = resource?.name ?? previewIdentity?.name
   const previewName = previewKind
@@ -531,6 +547,9 @@ function InspectorBody({
       ) : null}
       {resource.kind === "project" ? (
         <InspectorProjectOverview projectMfid={resource.unique_id} />
+      ) : null}
+      {resource.kind === "instrument" ? (
+        <InspectorInstrumentOverview instrumentMfid={resource.unique_id} />
       ) : null}
       {hasScientificContext && (
         <>
@@ -1142,7 +1161,7 @@ function inspectorContextFields(
           label: "Model",
           value: resource.model,
         },
-        { icon: ownerIcon, label: "Owner", value: owner },
+        { icon: ownerIcon, label: "Manager", value: owner },
         createdField,
         updatedField,
       ]

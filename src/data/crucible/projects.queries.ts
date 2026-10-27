@@ -16,6 +16,7 @@ import type {
   WorkspaceProjectSort,
   WorkspaceSortDirection,
   WorkspaceAccessPermission,
+  WorkspaceResourceDetail,
 } from "./workspace-source"
 
 export const projectPageLimit = 100
@@ -208,4 +209,24 @@ export function projectSummaryQueryOptions(
       )
     },
   })
+}
+
+/** A project read with its members, in the shape the preview panel shows. */
+export function projectResourceDetail(
+  project: WorkspaceProject
+): WorkspaceResourceDetail {
+  return {
+    capabilities: project.capabilities,
+    creation_time: project.creation_time ?? null,
+    kind: "project",
+    modification_time: project.modification_time ?? null,
+    name: project.title ?? project.project_id,
+    organization: project.organization,
+    owner: project.lead,
+    project_id: project.project_id,
+    role: project.role ?? null,
+    scientific_metadata: project.scientific_metadata,
+    status: project.status,
+    unique_id: project.unique_id,
+  }
 }

@@ -6,6 +6,9 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Published each release as a multi-architecture image, `ghcr.io/molecularfoundrycrucible/crucible-hub:<version>`, labelled with the Crucible API revision it was built against, for self-hosted deployments.
+- Instrument previews show how many datasets the instrument has and the people and projects with a role on it, and call its owner Manager as the rest of the Hub does.
+- Project previews load in one request fewer, reading the project and its members together.
 - Removed the temporary sign-in log of `X-Forwarded-For` entry counts used to confirm the pilot proxy chain.
 
 ## 1.7.0 - 2026-10-27

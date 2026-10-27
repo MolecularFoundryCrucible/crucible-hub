@@ -500,3 +500,19 @@ test("previews a linked project from its hover card", async ({ page }) => {
   await expect(members.getByRole("listitem")).toHaveCount(3)
   await expect(members.getByRole("listitem").nth(1)).toContainText("Editor")
 })
+
+test("previews an instrument with its datasets and people", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1280 })
+  await page.goto("/hub/data?kind=datasets&preview=01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
+  await page.waitForLoadState("networkidle")
+  const panel = page.getByRole("dialog")
+  await expect(
+    panel.getByRole("heading", { name: "Hard X-ray Microprobe" })
+  ).toBeVisible()
+  const data = panel.getByRole("region", { name: "Data" })
+  await expect(data.getByText("Datasets").locator("..")).toContainText("3")
+  const people = panel.getByRole("region", { name: "People (2)" })
+  await expect(people.getByRole("listitem").first()).toContainText("Manager")
+})
