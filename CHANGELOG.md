@@ -4,12 +4,14 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
 
-## Unreleased
+## 1.6.7 - 2026-10-26
 
-- Trimmed descriptions that repeated their titles or buttons, dropped "still available" reassurances from error messages, replaced jargon with plain wording, and merged the Danger zone into Resource management.
-- Spaced the toolbar and list the same way on every directory page, dropped the rule under directory titles, and renamed them Samples and Datasets, Projects, Instruments, and Search.
+- Linked projects and people show their hover card everywhere they are referenced, including People, Operators, and access lists; the card copies the MFID or Crucible ID, and project and instrument cards offer Preview to open them in the side panel.
+- Project previews show how many samples and datasets the project holds and its members with their roles.
+- The preview panel ends with Open, Print, and Delete, and resource pages put Copy beside the MFID and a labelled Print under the QR code.
+- Reworked directory pages: titles now read Samples and Datasets, Projects, Instruments, and Search without a rule beneath them, Filters and the active filter pills sit on the left of every collection toolbar with Group by and Refresh on the right, and the toolbar sits the same distance from the list everywhere.
 - Kept only the record name bold in data tables; linked projects and people in other columns now use regular text.
-- Moved Filters and the active filter pills to the left of every collection toolbar, next to the view switch or search, leaving Group by and Refresh on the right.
+- Trimmed descriptions that repeated their titles or buttons, dropped "still available" reassurances from error messages, replaced jargon with plain wording, and merged the Danger zone into Resource management.
 
 ## 1.6.6 - 2026-10-26
 
