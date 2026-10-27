@@ -4,7 +4,7 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
 
-## Unreleased
+## 1.7.0 - 2026-10-27
 
 - Added self-hosting with Docker Compose: `deploy/compose` runs the Hub with its own session database next to a self-hosted Crucible API, on the same machine or a separate one.
 - Accepted a plain `HUB_SESSION_DATABASE_URL` for Postgres sessions in production, filled in from `HUB_SESSION_DATABASE_PASSWORD` when the URL names no password.
