@@ -208,6 +208,7 @@ function SearchPage() {
         projectName={projectName ?? search.projectMfid}
       />
       <PageHeader
+        divider={false}
         actions={
           search.projectMfid ? (
             <div className="flex flex-wrap gap-2">
@@ -245,16 +246,7 @@ function SearchPage() {
             </div>
           ) : null
         }
-        description={
-          search.projectMfid
-            ? `Samples and datasets related to ${projectName ?? search.projectMfid}.`
-            : undefined
-        }
-        title={
-          search.projectMfid
-            ? "Find data in this project"
-            : "Find anything in Crucible"
-        }
+        title={search.projectMfid ? "Search this project" : "Search"}
       />
       <ContentBoundary width="reading">
         <form
@@ -295,7 +287,7 @@ function SearchPage() {
       </ContentBoundary>
       <CollectionSection>
         <CollectionToolbar
-          actions={
+          filters={
             <SearchFilters
               access={publicAccess}
               projectName={projectName}

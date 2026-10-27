@@ -6,6 +6,7 @@ export function PageHeader({
   actionLayout = "inline",
   actions,
   description,
+  divider = true,
   icon,
   identifier,
   title,
@@ -13,6 +14,8 @@ export function PageHeader({
   actionLayout?: "inline" | "stacked"
   actions?: React.ReactNode
   description?: string
+  /** Rule under the header; directories leave it off so the toolbar leads. */
+  divider?: boolean
   icon?: React.ReactNode
   identifier?: string
   title: string
@@ -20,7 +23,8 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "gap-4 border-b pb-6",
+        "gap-4",
+        divider && "border-b pb-6",
         actionLayout === "inline"
           ? "page-header-inline grid items-end"
           : "flex flex-wrap items-end justify-between"

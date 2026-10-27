@@ -152,7 +152,7 @@ export function ProjectDataCollection({
         projectMfid={projectMfid}
         projectScope={projectScope}
         sampleBrowse={sampleBrowse}
-        toolbarActions={
+        toolbarFilters={
           <ProjectDataFilters
             defaultOrdering={defaultOrdering}
             errors={filterResolution.valid ? [] : filterResolution.errors}
@@ -248,7 +248,7 @@ export function ProjectDataCollectionPending({
         projectMfid={projectMfid}
         projectScope={projectScope}
         sampleBrowse={sampleBrowse}
-        toolbarActions={
+        toolbarFilters={
           <ProjectDataFilters
             errors={filterResolution.valid ? [] : filterResolution.errors}
             kind={kind}
@@ -290,7 +290,7 @@ function ProjectBrowseFrame({
   projectMfid,
   projectScope,
   sampleBrowse,
-  toolbarActions,
+  toolbarFilters,
   toolbarPrimary,
 }: {
   children: React.ReactNode
@@ -299,7 +299,7 @@ function ProjectBrowseFrame({
   projectMfid: string
   projectScope: ProjectScope
   sampleBrowse?: ProjectBrowseState<SampleFacetField>
-  toolbarActions: React.ReactNode
+  toolbarFilters: React.ReactNode
   toolbarPrimary: React.ReactNode
 }) {
   const navigate = useNavigate({ from: "/projects/$projectMfid" })
@@ -358,26 +358,24 @@ function ProjectBrowseFrame({
   const toolbar = (
     <CollectionToolbar
       actions={
-        <>
-          {toolbarActions}
-          <CollectionGroupControl
-            disabled={!filters}
-            field={browse.field}
-            id={
-              sampleBrowse
-                ? "project-sample-group-field"
-                : "project-dataset-group-field"
-            }
-            onChange={changeGroup}
-            options={
-              sampleBrowse
-                ? projectSampleBrowseOptions
-                : projectDatasetBrowseOptions
-            }
-            view={browse.view}
-          />
-        </>
+        <CollectionGroupControl
+          disabled={!filters}
+          field={browse.field}
+          id={
+            sampleBrowse
+              ? "project-sample-group-field"
+              : "project-dataset-group-field"
+          }
+          onChange={changeGroup}
+          options={
+            sampleBrowse
+              ? projectSampleBrowseOptions
+              : projectDatasetBrowseOptions
+          }
+          view={browse.view}
+        />
       }
+      filters={toolbarFilters}
       primary={toolbarPrimary}
     />
   )

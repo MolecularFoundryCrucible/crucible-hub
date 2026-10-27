@@ -69,7 +69,7 @@ export function PersonIdentity({
     return (
       <TruncatedText
         className={cn(
-          "block truncate text-label [&>*]:block [&>*]:truncate",
+          "block truncate text-body [&>*]:block [&>*]:truncate",
           className
         )}
         label={nameContent ? null : name}

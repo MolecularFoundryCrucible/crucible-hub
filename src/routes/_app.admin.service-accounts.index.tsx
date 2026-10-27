@@ -295,15 +295,13 @@ function ServiceAccountsPage() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <ServiceAccountActivityFilterField />
-              <RefreshButton
-                label="Refresh service accounts"
-                onClick={() => void result.refetch()}
-                refreshing={updating}
-              />
-            </>
+            <RefreshButton
+              label="Refresh service accounts"
+              onClick={() => void result.refetch()}
+              refreshing={updating}
+            />
           }
+          filters={<ServiceAccountActivityFilterField />}
           primary={<ServiceAccountSearchField />}
         />
         {result.isPending ? (
@@ -372,15 +370,13 @@ function ServiceAccountsPending() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <ServiceAccountActivityFilterField />
-              <RefreshButton
-                label="Refresh service accounts"
-                onClick={() => undefined}
-                refreshing={false}
-              />
-            </>
+            <RefreshButton
+              label="Refresh service accounts"
+              onClick={() => undefined}
+              refreshing={false}
+            />
           }
+          filters={<ServiceAccountActivityFilterField />}
           primary={<ServiceAccountSearchField />}
         />
         <CollectionTablePending
@@ -396,6 +392,7 @@ function ServiceAccountsPageHeader({ canCreate }: { canCreate: boolean }) {
   const search = Route.useSearch()
   return (
     <PageHeader
+      divider={false}
       actions={
         canCreate ? (
           <ResourceCreationLink

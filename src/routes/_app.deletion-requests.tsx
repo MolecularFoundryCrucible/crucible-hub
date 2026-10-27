@@ -163,56 +163,56 @@ function DeletionRequestsContent({ account }: { account: WorkspaceAccount }) {
   return (
     <ResourcePreviewContext.Provider value={navigation}>
       <PageLayout>
-        <PageHeader title="Deletion requests" />
+        <PageHeader divider={false} title="Deletion requests" />
         <CollectionSection>
           <CollectionToolbar
             actions={
-              <>
-                {view !== "approved" && search.projectMfid && projectName ? (
-                  <>
-                    <ResourceIdentityLink
-                      context={
-                        project?.title?.trim() ? project.project_id : undefined
-                      }
-                      kind="project"
-                      mfid={search.projectMfid}
-                      name={projectName}
-                    >
-                      <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
-                        <ResourceTypeIcon className="shrink-0" type="project" />
-                        <span className="truncate">{projectName}</span>
-                      </span>
-                    </ResourceIdentityLink>
-                    <Link
-                      aria-label="Clear project filter"
-                      className={buttonVariants({
-                        size: "sm",
-                        variant: "ghost",
-                      })}
-                      from="/deletion-requests"
-                      search={(current) => ({
-                        ...current,
-                        projectMfid: undefined,
-                      })}
-                      to="/deletion-requests"
-                    >
-                      Clear
-                    </Link>
-                  </>
-                ) : null}
-                <RefreshButton
-                  label="Refresh deletion requests"
-                  onClick={() => {
-                    for (const queryKey of refreshKeys) {
-                      void queryClient.refetchQueries({
-                        queryKey,
-                        type: "active",
-                      })
+              <RefreshButton
+                label="Refresh deletion requests"
+                onClick={() => {
+                  for (const queryKey of refreshKeys) {
+                    void queryClient.refetchQueries({
+                      queryKey,
+                      type: "active",
+                    })
+                  }
+                }}
+                refreshing={refreshing}
+              />
+            }
+            filters={
+              view !== "approved" && search.projectMfid && projectName ? (
+                <>
+                  <ResourceIdentityLink
+                    context={
+                      project?.title?.trim() ? project.project_id : undefined
                     }
-                  }}
-                  refreshing={refreshing}
-                />
-              </>
+                    kind="project"
+                    mfid={search.projectMfid}
+                    name={projectName}
+                  >
+                    <span className="inline-flex max-w-72 min-w-0 items-center gap-2 text-body hover:underline">
+                      <ResourceTypeIcon className="shrink-0" type="project" />
+                      <span className="truncate">{projectName}</span>
+                    </span>
+                  </ResourceIdentityLink>
+                  <Link
+                    aria-label="Clear project filter"
+                    className={buttonVariants({
+                      size: "sm",
+                      variant: "ghost",
+                    })}
+                    from="/deletion-requests"
+                    search={(current) => ({
+                      ...current,
+                      projectMfid: undefined,
+                    })}
+                    to="/deletion-requests"
+                  >
+                    Clear
+                  </Link>
+                </>
+              ) : undefined
             }
             primary={
               <SegmentedControl

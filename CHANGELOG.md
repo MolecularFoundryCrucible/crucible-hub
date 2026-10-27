@@ -7,7 +7,9 @@ The public surface that versions protect is shareable URLs and their search para
 ## Unreleased
 
 - Trimmed descriptions that repeated their titles or buttons, dropped "still available" reassurances from error messages, replaced jargon with plain wording, and merged the Danger zone into Resource management.
-- Spaced the toolbar and list the same way on every directory page.
+- Spaced the toolbar and list the same way on every directory page, dropped the rule under directory titles, and renamed them Samples and Datasets, Projects, Instruments, and Search.
+- Kept only the record name bold in data tables; linked projects and people in other columns now use regular text.
+- Moved Filters and the active filter pills to the left of every collection toolbar, next to the view switch or search, leaving Group by and Refresh on the right.
 
 ## 1.6.6 - 2026-10-26
 

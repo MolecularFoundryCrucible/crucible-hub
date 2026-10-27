@@ -57,12 +57,19 @@ export function CollectionSection({ children }: { children: React.ReactNode }) {
   )
 }
 
+/**
+ * A collection's controls: what is shown (`primary` views, then `filters`)
+ * on the left, how it is shown (`actions` such as Group by and Refresh) on
+ * the right.
+ */
 export function CollectionToolbar({
   actions,
+  filters,
   primary,
   sticky = true,
 }: {
   actions?: React.ReactNode
+  filters?: React.ReactNode
   primary?: React.ReactNode
   sticky?: boolean
 }) {
@@ -75,16 +82,17 @@ export function CollectionToolbar({
       )}
       data-slot="collection-toolbar"
     >
-      {primary ? (
+      {primary || filters ? (
         <div className="flex min-h-9 min-w-0 grow flex-wrap items-center gap-2">
           {primary}
+          {filters}
         </div>
       ) : null}
       {actions ? (
         <div
           className={cn(
             "flex min-h-9 min-w-0 flex-wrap items-center gap-2",
-            primary ? "sm:ml-auto" : "ml-auto"
+            primary || filters ? "sm:ml-auto" : "ml-auto"
           )}
         >
           {actions}

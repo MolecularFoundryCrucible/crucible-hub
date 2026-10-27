@@ -186,41 +186,38 @@ function InstrumentDatasetsPending() {
     <CollectionSection>
       <CollectionToolbar
         actions={
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <InstrumentDatasetFilters
-              onApply={(values) =>
-                updateBrowse({
-                  createdFrom: values.createdFrom,
-                  createdTo: values.createdTo,
-                  publicData: values.publicData,
-                  ...collectionOrderingSearchState(
-                    values.sort,
-                    values.direction
-                  ),
-                })
-              }
-              values={{
-                createdFrom: search.createdFrom,
-                createdTo: search.createdTo,
-                direction: search.direction,
-                publicData: search.publicData,
-                sort: search.sort,
-              }}
-            />
-            <CollectionGroupControl
-              field={browse.field}
-              id="instrument-dataset-group-field"
-              onChange={(field) =>
-                updateBrowse({
-                  ...collectionBrowseSearchState({ kind: "all" }),
-                  groupBy: field,
-                  view: field ? "grouped" : "list",
-                })
-              }
-              options={instrumentDatasetBrowseOptions}
-              view={browse.view}
-            />
-          </div>
+          <CollectionGroupControl
+            field={browse.field}
+            id="instrument-dataset-group-field"
+            onChange={(field) =>
+              updateBrowse({
+                ...collectionBrowseSearchState({ kind: "all" }),
+                groupBy: field,
+                view: field ? "grouped" : "list",
+              })
+            }
+            options={instrumentDatasetBrowseOptions}
+            view={browse.view}
+          />
+        }
+        filters={
+          <InstrumentDatasetFilters
+            onApply={(values) =>
+              updateBrowse({
+                createdFrom: values.createdFrom,
+                createdTo: values.createdTo,
+                publicData: values.publicData,
+                ...collectionOrderingSearchState(values.sort, values.direction),
+              })
+            }
+            values={{
+              createdFrom: search.createdFrom,
+              createdTo: search.createdTo,
+              direction: search.direction,
+              publicData: search.publicData,
+              sort: search.sort,
+            }}
+          />
         }
         primary={<h2 className="text-title-section">Datasets</h2>}
       />
@@ -420,36 +417,36 @@ function InstrumentDatasetsPage() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <InstrumentDatasetFilters
-                onApply={(values) =>
-                  updateBrowse({
-                    createdFrom: values.createdFrom,
-                    createdTo: values.createdTo,
-                    publicData: values.publicData,
-                    ...collectionOrderingSearchState(
-                      values.sort,
-                      values.direction,
-                      defaultOrdering
-                    ),
-                  })
-                }
-                values={{
-                  createdFrom: search.createdFrom,
-                  createdTo: search.createdTo,
-                  direction: search.direction,
-                  publicData: search.publicData,
-                  sort: search.sort,
-                }}
-              />
-              <CollectionGroupControl
-                field={browse.field}
-                id="instrument-dataset-group-field"
-                onChange={changeGroup}
-                options={instrumentDatasetBrowseOptions}
-                view={browse.view}
-              />
-            </div>
+            <CollectionGroupControl
+              field={browse.field}
+              id="instrument-dataset-group-field"
+              onChange={changeGroup}
+              options={instrumentDatasetBrowseOptions}
+              view={browse.view}
+            />
+          }
+          filters={
+            <InstrumentDatasetFilters
+              onApply={(values) =>
+                updateBrowse({
+                  createdFrom: values.createdFrom,
+                  createdTo: values.createdTo,
+                  publicData: values.publicData,
+                  ...collectionOrderingSearchState(
+                    values.sort,
+                    values.direction,
+                    defaultOrdering
+                  ),
+                })
+              }
+              values={{
+                createdFrom: search.createdFrom,
+                createdTo: search.createdTo,
+                direction: search.direction,
+                publicData: search.publicData,
+                sort: search.sort,
+              }}
+            />
           }
           primary={<h2 className="text-title-section">Datasets</h2>}
         />

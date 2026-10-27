@@ -15,7 +15,7 @@ test("serves prefixed production assets and direct deep links", async ({
 }) => {
   await page.goto("/hub/data")
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Samples and datasets"
+    "Samples and Datasets"
   )
   const favicon = page.locator('link[rel="icon"]')
   await expect(favicon).toHaveAttribute(

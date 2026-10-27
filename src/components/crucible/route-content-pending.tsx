@@ -146,7 +146,7 @@ function PendingPrincipalIdentity() {
 export function SearchRoutePending() {
   return (
     <PageLayout>
-      <PageHeader title="Find anything in Crucible" />
+      <PageHeader divider={false} title="Search" />
       <ContentBoundary width="reading">
         <div aria-label="Loading search" className="flex gap-2" role="status">
           <Skeleton className="h-8 flex-1" />

@@ -267,7 +267,7 @@ test("renders the independently queried instrument directory", async ({
   await page.waitForLoadState("networkidle")
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Instrument directory"
+    "Instruments"
   )
   await expect(
     page.getByText("Hard X-ray Microprobe", { exact: true })
@@ -334,9 +334,7 @@ test("opens global search from the keyboard and restores URL-backed results", as
   await page.getByRole("button", { name: "View all results" }).click()
 
   await expect(page).toHaveURL(/\/hub\/search\?q=NiFe/)
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Find anything in Crucible"
-  )
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Search")
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
   await expect(page.getByText("NiFe K-edge operando series")).toBeVisible()
 
@@ -382,9 +380,7 @@ test("submits quick search on enter when no suggestion is highlighted", async ({
   await page.keyboard.press("Enter")
 
   await expect(page).toHaveURL(/\/hub\/search\?q=NiFe/)
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Find anything in Crucible"
-  )
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Search")
   await expect(page.getByText("NiFe oxide catalyst A")).toBeVisible()
 })
 

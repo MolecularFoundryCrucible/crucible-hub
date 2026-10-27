@@ -291,7 +291,6 @@ function DataRoutePending() {
         <CollectionToolbar
           actions={
             <>
-              <DataFilters errors={[]} values={search} />
               {browse ? (
                 <CollectionGroupControl
                   disabled
@@ -317,6 +316,7 @@ function DataRoutePending() {
               />
             </>
           }
+          filters={<DataFilters errors={[]} values={search} />}
           primary={<DataTypeFilters kind={kind} />}
         />
         <CollectionTablePending label="data" presentation="resources" />
@@ -329,7 +329,8 @@ function DataPageHeader() {
   return (
     <PageHeader
       actions={<ResourceCreationActions />}
-      title="Samples and datasets"
+      divider={false}
+      title="Samples and Datasets"
     />
   )
 }
@@ -343,7 +344,7 @@ function DataCollection() {
     return (
       <CollectionSection>
         <CollectionToolbar
-          actions={
+          filters={
             <DataFilters
               defaultOrdering={defaultOrdering}
               errors={resolution.errors}
@@ -628,7 +629,7 @@ function DataResults({
             refreshing={refreshing}
           />
         }
-        toolbarActions={
+        toolbarFilters={
           <DataFilters
             defaultOrdering={defaultOrdering}
             errors={[]}
@@ -772,7 +773,7 @@ function DataBrowseFrame({
   filters,
   refreshAction,
   sampleBrowse,
-  toolbarActions,
+  toolbarFilters,
   toolbarPrimary,
 }: {
   children: React.ReactNode
@@ -780,7 +781,7 @@ function DataBrowseFrame({
   filters: DataCollectionQueryFilters
   refreshAction: React.ReactNode
   sampleBrowse?: DataBrowseState<SampleFacetField>
-  toolbarActions: React.ReactNode
+  toolbarFilters: React.ReactNode
   toolbarPrimary: React.ReactNode
 }) {
   const navigate = Route.useNavigate()
@@ -789,12 +790,8 @@ function DataBrowseFrame({
     return (
       <CollectionSection>
         <CollectionToolbar
-          actions={
-            <>
-              {toolbarActions}
-              {refreshAction}
-            </>
-          }
+          actions={refreshAction}
+          filters={toolbarFilters}
           primary={toolbarPrimary}
         />
         {children}
@@ -857,7 +854,6 @@ function DataBrowseFrame({
         <CollectionToolbar
           actions={
             <>
-              {toolbarActions}
               <CollectionGroupControl
                 field={sampleBrowse.field}
                 id="data-sample-group-field"
@@ -868,6 +864,7 @@ function DataBrowseFrame({
               {refreshAction}
             </>
           }
+          filters={toolbarFilters}
           primary={toolbarPrimary}
         />
         {sampleBrowse.view === "grouped" ? (
@@ -896,7 +893,6 @@ function DataBrowseFrame({
       <CollectionToolbar
         actions={
           <>
-            {toolbarActions}
             <CollectionGroupControl
               field={datasetBrowse.field}
               id="data-dataset-group-field"
@@ -907,6 +903,7 @@ function DataBrowseFrame({
             {refreshAction}
           </>
         }
+        filters={toolbarFilters}
         primary={toolbarPrimary}
       />
       {datasetBrowse.view === "grouped" ? (

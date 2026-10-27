@@ -251,15 +251,13 @@ function InstrumentsPage() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <InstrumentDirectoryFilters values={search} />
-              <RefreshButton
-                label="Refresh instruments"
-                onClick={() => void instrumentResult.refetch()}
-                refreshing={updating}
-              />
-            </>
+            <RefreshButton
+              label="Refresh instruments"
+              onClick={() => void instrumentResult.refetch()}
+              refreshing={updating}
+            />
           }
+          filters={<InstrumentDirectoryFilters values={search} />}
         />
         {instrumentResult.isPending ? (
           <CollectionTablePending
@@ -317,15 +315,13 @@ function InstrumentsRoutePending() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <InstrumentDirectoryFilters values={search} />
-              <RefreshButton
-                label="Refresh instruments"
-                onClick={() => undefined}
-                refreshing={false}
-              />
-            </>
+            <RefreshButton
+              label="Refresh instruments"
+              onClick={() => undefined}
+              refreshing={false}
+            />
           }
+          filters={<InstrumentDirectoryFilters values={search} />}
         />
         <CollectionTablePending
           label="instruments"
@@ -703,7 +699,8 @@ function InstrumentsPageHeader({ canRegister }: { canRegister: boolean }) {
           />
         ) : null
       }
-      title="Instrument directory"
+      divider={false}
+      title="Instruments"
     />
   )
 }

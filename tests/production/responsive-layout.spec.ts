@@ -439,3 +439,46 @@ test("spaces every directory's toolbar and list the same way", async ({
     JSON.stringify(measured)
   ).toHaveProperty("size", 1)
 })
+
+test("keeps Filters on the left of every directory toolbar", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1280 })
+  for (const path of [
+    "/hub/projects",
+    "/hub/instruments",
+    "/hub/data",
+    "/hub/projects/01J6Y8N4Q2R7M9K3T5V0W1X2Z3",
+  ]) {
+    await page.goto(path)
+    await page.waitForLoadState("networkidle")
+    const toolbar = page.locator('[data-slot="collection-toolbar"]').first()
+    const toolbarBox = (await toolbar.boundingBox())!
+    const filtersBox = (await toolbar
+      .getByRole("button", { name: /^Filters/ })
+      .boundingBox())!
+    expect(filtersBox.x + filtersBox.width / 2, path).toBeLessThan(
+      toolbarBox.x + toolbarBox.width / 2
+    )
+  }
+})
+
+test("bolds only the record name in a data table row", async ({ page }) => {
+  await page.setViewportSize({ height: 900, width: 1280 })
+  await page.goto("/hub/data?kind=datasets")
+  await page.waitForLoadState("networkidle")
+  const row = page.locator("tbody tr").first()
+  const weight = (cell: string) =>
+    row
+      .locator(`td[data-label="${cell}"] a`)
+      .first()
+      .evaluate((link) => getComputedStyle(link).fontWeight)
+  expect(
+    await row
+      .locator("[data-directory-name]")
+      .first()
+      .evaluate((name) => getComputedStyle(name).fontWeight)
+  ).toBe("600")
+  expect(await weight("Project")).toBe("400")
+  expect(await weight("Owner")).toBe("400")
+})

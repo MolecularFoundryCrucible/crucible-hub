@@ -240,15 +240,13 @@ function ProjectsPage() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <ProjectDirectoryFilters values={search} />
-              <RefreshButton
-                label="Refresh projects"
-                onClick={() => void projectResult.refetch()}
-                refreshing={updating}
-              />
-            </>
+            <RefreshButton
+              label="Refresh projects"
+              onClick={() => void projectResult.refetch()}
+              refreshing={updating}
+            />
           }
+          filters={<ProjectDirectoryFilters values={search} />}
         />
         {projectResult.isPending ? (
           <CollectionTablePending label="projects" presentation="projects" />
@@ -301,15 +299,13 @@ function ProjectsRoutePending() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <ProjectDirectoryFilters values={Route.useSearch()} />
-              <RefreshButton
-                label="Refresh projects"
-                onClick={() => undefined}
-                refreshing={false}
-              />
-            </>
+            <RefreshButton
+              label="Refresh projects"
+              onClick={() => undefined}
+              refreshing={false}
+            />
           }
+          filters={<ProjectDirectoryFilters values={Route.useSearch()} />}
         />
         <CollectionTablePending label="projects" presentation="projects" />
       </CollectionSection>
@@ -329,7 +325,8 @@ function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
           />
         ) : null
       }
-      title="Your projects"
+      divider={false}
+      title="Projects"
     />
   )
 }

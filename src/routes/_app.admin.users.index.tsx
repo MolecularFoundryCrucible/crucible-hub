@@ -251,15 +251,13 @@ function UsersAdminPage() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <UserActivityFilterField />
-              <RefreshButton
-                label="Refresh users"
-                onClick={() => void result.refetch()}
-                refreshing={updating}
-              />
-            </>
+            <RefreshButton
+              label="Refresh users"
+              onClick={() => void result.refetch()}
+              refreshing={updating}
+            />
           }
+          filters={<UserActivityFilterField />}
           primary={<UserSearchField />}
         />
         {result.isPending ? (
@@ -318,15 +316,13 @@ function UsersPending() {
       <CollectionSection>
         <CollectionToolbar
           actions={
-            <>
-              <UserActivityFilterField />
-              <RefreshButton
-                label="Refresh users"
-                onClick={() => undefined}
-                refreshing={false}
-              />
-            </>
+            <RefreshButton
+              label="Refresh users"
+              onClick={() => undefined}
+              refreshing={false}
+            />
           }
+          filters={<UserActivityFilterField />}
           primary={<UserSearchField />}
         />
         <CollectionTablePending label="users" presentation="users" />
@@ -339,6 +335,7 @@ function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
   const search = Route.useSearch()
   return (
     <PageHeader
+      divider={false}
       actions={
         canCreate ? (
           <ResourceCreationLink

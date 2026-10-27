@@ -121,6 +121,32 @@ export function ResourceOpenCell({
   )
 }
 
+function ProjectReferenceLink({
+  project,
+}: {
+  project: { project_id: string; title?: string | null; unique_id: string }
+}) {
+  const name = resourceDisplayName("project", project.title, {
+    identifier: project.project_id,
+    mfid: project.unique_id,
+  })
+  return (
+    <ResourceIdentityLink
+      className="block min-w-0"
+      context={
+        project.title && project.title !== project.project_id
+          ? project.project_id
+          : null
+      }
+      kind="project"
+      mfid={project.unique_id}
+      name={name}
+    >
+      <TruncatedText className="block truncate">{name}</TruncatedText>
+    </ResourceIdentityLink>
+  )
+}
+
 export function ResourceProjectCell({
   project,
   projectId,
@@ -137,21 +163,7 @@ export function ResourceProjectCell({
   return (
     <TableCell className="resource-collection-project" data-label="Project">
       {project ? (
-        <ResourceIdentityLink
-          context={
-            project.title && project.title !== project.project_id
-              ? project.project_id
-              : null
-          }
-          kind="project"
-          mfid={project.unique_id}
-          name={resourceDisplayName("project", project.title, {
-            identifier: project.project_id,
-            mfid: project.unique_id,
-          })}
-          showTypeIcon={false}
-          triggerContext={null}
-        />
+        <ProjectReferenceLink project={project} />
       ) : (
         <TruncatedText className="block truncate" label={projectId}>
           {relation === "shared"
