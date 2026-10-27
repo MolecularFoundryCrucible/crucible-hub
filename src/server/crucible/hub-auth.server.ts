@@ -176,12 +176,6 @@ export class HubLoginRateLimitError extends Error {
 
 export function enforceHubLoginRateLimit() {
   const forwardedFor = getRequestHeader("x-forwarded-for")
-  // Temporary: confirms the deployed proxy chain for HUB_TRUSTED_PROXY_HOPS
-  // without logging addresses.
-  console.info("[Crucible Hub] Sign-in forwarded entries", {
-    entries:
-      forwardedFor?.split(",").filter((entry) => entry.trim()).length ?? 0,
-  })
   const ip = clientAddress(forwardedFor, getRequestIP()) ?? "unknown"
   const now = Date.now()
   if (loginAttempts.size >= maxTrackedLoginClients) {
