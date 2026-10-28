@@ -25,7 +25,7 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { instrumentIdSchema } from "./slugs"
 
-export const instrumentSortSchema = z.enum([
+const instrumentSortSchema = z.enum([
   "instrument_id",
   "name",
   "created",
@@ -33,7 +33,7 @@ export const instrumentSortSchema = z.enum([
   "activity",
 ])
 
-export const INSTRUMENT_MFID_MAX_LENGTH = 255
+const INSTRUMENT_MFID_MAX_LENGTH = 255
 export const INSTRUMENT_ID_MAX_LENGTH = 25
 export const INSTRUMENT_NAME_MAX_LENGTH = 255
 export const INSTRUMENT_TYPE_MAX_LENGTH = 255
@@ -150,7 +150,7 @@ const instrumentOperatorInputSchema = z
   })
   .strict()
 
-export const instrumentOperatorsInputSchema = z
+const instrumentOperatorsInputSchema = z
   .object({
     instrumentMfid: canonicalInstrumentMfidSchema,
     scenario: fixtureScenarioSchema.optional(),

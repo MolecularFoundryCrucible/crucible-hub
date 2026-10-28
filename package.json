@@ -26,6 +26,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "unused:check": "knip --no-progress",
     "typecheck": "tsc --noEmit",
     "api:generate": "openapi-typescript contracts/crucible-api.json -o src/generated/crucible-api.ts",
     "api:check": "node scripts/check-openapi.mjs",
@@ -38,7 +39,7 @@
     "skills:stale": "node node_modules/@tanstack/intent/dist/cli.mjs stale",
     "audit": "npm audit --omit=dev --audit-level=high",
     "release": "node scripts/release.mjs",
-    "validate:static": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run api:check && npm run boundary:check && npm run design:check && npm run docs:check && npm run secrets:check",
+    "validate:static": "npm run format:check && npm run lint && npm run typecheck && npm run unused:check && npm test && npm run api:check && npm run boundary:check && npm run design:check && npm run docs:check && npm run secrets:check",
     "validate": "npm run validate:static && npm run build"
   },
   "dependencies": {
@@ -92,6 +93,7 @@
     "culori": "^4.0.2",
     "eslint": "10.12.0",
     "jsdom": "28.1.0",
+    "knip": "6.41.0",
     "nitro": "npm:nitro-nightly@3.0.1-20260902-190952-ee541098",
     "openapi-typescript": "7.13.0",
     "prettier": "3.9.10",

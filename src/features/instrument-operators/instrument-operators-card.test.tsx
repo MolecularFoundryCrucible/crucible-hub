@@ -31,10 +31,7 @@ import type {
   WorkspaceResourceAccessGrant,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
-import {
-  InstrumentAccessCard,
-  InstrumentOperatorsCard,
-} from "./instrument-operators-card"
+import { InstrumentAccessCard } from "./instrument-operators-card"
 
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
@@ -209,10 +206,6 @@ describe("InstrumentAccessCard", () => {
       </QueryClientProvider>
     )
   }
-
-  it("exports InstrumentOperatorsCard as an alias", () => {
-    expect(InstrumentOperatorsCard).toBe(InstrumentAccessCard)
-  })
 
   it("renders manager, members, and operators", async () => {
     renderCard()

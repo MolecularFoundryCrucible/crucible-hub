@@ -30,7 +30,7 @@ const deletionRequestSortSchema = z.enum([
 ])
 const deletionReviewDecisionSchema = z.enum(["approved", "rejected"])
 
-export const deletionRequestListInputSchema = z
+const deletionRequestListInputSchema = z
   .object({
     cursor: z.string().min(1).max(4_096).optional(),
     direction: deletionRequestDirectionSchema,
@@ -44,7 +44,7 @@ export const deletionRequestListInputSchema = z
   })
   .strict()
 
-export const deletionRequestReviewInputSchema = z
+const deletionRequestReviewInputSchema = z
   .object({
     decision: deletionReviewDecisionSchema,
     privilegeMode: privilegeModeSchema,
@@ -54,7 +54,7 @@ export const deletionRequestReviewInputSchema = z
   })
   .strict()
 
-export const deletionAuditListInputSchema = z
+const deletionAuditListInputSchema = z
   .object({
     cursor: z.string().min(1).max(4_096).optional(),
     direction: deletionRequestDirectionSchema,

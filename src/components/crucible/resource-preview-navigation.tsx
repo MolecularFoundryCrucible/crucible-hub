@@ -19,7 +19,7 @@ const previewMfidSchema = z
   .regex(/^[a-zA-Z0-9_-]+$/)
 const invalidPreviewSearchValue = ""
 export const globalDataPreviewOrigin = "global-data"
-export const deletionRequestsPreviewOrigin = "deletion-requests"
+const deletionRequestsPreviewOrigin = "deletion-requests"
 export const resourcePreviewSearchSchema = z.object({
   preview: previewMfidSchema.optional().catch(invalidPreviewSearchValue),
 })

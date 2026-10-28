@@ -8,7 +8,7 @@ import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { searchWorkspace, searchWorkspaceMetadata } from "./search.server"
 
-export const searchKindSchema = z.enum([
+const searchKindSchema = z.enum([
   "dataset",
   "instrument",
   "person",
@@ -16,7 +16,7 @@ export const searchKindSchema = z.enum([
   "sample",
 ])
 
-export const searchInputSchema = z.object({
+const searchInputSchema = z.object({
   affiliation: z.enum(["member", "owner"]).optional(),
   kinds: z.array(searchKindSchema).min(1).max(5),
   limit: z.number().int().min(1).max(50),

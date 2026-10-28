@@ -19,14 +19,14 @@ import {
 } from "./service-accounts.server"
 
 const serviceAccountMfidSchema = z.string().trim().min(1).max(255)
-export const serviceAccountPlatformRoleSchema = z.enum([
+const serviceAccountPlatformRoleSchema = z.enum([
   "none",
   "contributor",
   "admin",
 ])
 const profileNameSchema = z.string().trim().min(1).max(255)
 
-export const serviceAccountListInputSchema = z
+const serviceAccountListInputSchema = z
   .object({
     activity: z.enum(userActivityFilters).optional(),
     cursor: z.string().trim().min(1).max(2048).optional(),
@@ -39,14 +39,14 @@ export const serviceAccountListInputSchema = z
   })
   .strict()
 
-export const serviceAccountDetailInputSchema = z
+const serviceAccountDetailInputSchema = z
   .object({
     scenario: fixtureScenarioSchema.optional(),
     serviceAccountMfid: serviceAccountMfidSchema,
   })
   .strict()
 
-export const serviceAccountCreateInputSchema = z
+const serviceAccountCreateInputSchema = z
   .object({
     scenario: fixtureScenarioSchema.optional(),
     unique_id: z.string().trim().length(26).optional(),
@@ -54,7 +54,7 @@ export const serviceAccountCreateInputSchema = z
   })
   .strict()
 
-export const serviceAccountUpdateInputSchema = z
+const serviceAccountUpdateInputSchema = z
   .object({
     changes: z
       .object({
@@ -72,7 +72,7 @@ export const serviceAccountUpdateInputSchema = z
   })
   .strict()
 
-export const serviceAccountRoleUpdateInputSchema = z
+const serviceAccountRoleUpdateInputSchema = z
   .object({
     platformRole: serviceAccountPlatformRoleSchema,
     scenario: fixtureScenarioSchema.optional(),

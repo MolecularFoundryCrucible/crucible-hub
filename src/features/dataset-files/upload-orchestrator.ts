@@ -57,7 +57,7 @@ export class UploadEmptyFileError extends Error {
   }
 }
 
-export class UploadFilenameError extends Error {
+class UploadFilenameError extends Error {
   constructor(issues: readonly string[]) {
     super(issues[0] ?? "The file name is invalid.")
     this.name = "UploadFilenameError"
@@ -88,7 +88,7 @@ function partTransferError(partNumber: number, retryAfter: string | null) {
   )
 }
 
-export function putUploadPart(options: {
+function putUploadPart(options: {
   body: Blob
   headers: Readonly<Record<string, string>>
   onProgress?: (loadedBytes: number) => void

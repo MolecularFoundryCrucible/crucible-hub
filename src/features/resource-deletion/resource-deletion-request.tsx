@@ -30,7 +30,7 @@ type DeletableResource = Extract<
   { kind: "dataset" | "sample" }
 >
 
-export function mergeResourceDeletionRequest(
+function mergeResourceDeletionRequest(
   resource: WorkspaceResourceDetail | null | undefined,
   deletionRequest: WorkspaceDeletionRequest
 ): WorkspaceResourceDetail | null | undefined {

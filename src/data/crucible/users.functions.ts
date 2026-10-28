@@ -25,7 +25,7 @@ const profileNameSchema = z.string().trim().min(1).max(255)
 const profileEmailSchema = z.string().trim().email().max(320).nullable()
 const profileUsernameSchema = usernameSchema.nullable()
 
-export const userListInputSchema = z
+const userListInputSchema = z
   .object({
     cursor: z.string().trim().min(1).max(2048).optional(),
     direction: z.enum(["asc", "desc"]).optional(),
@@ -41,14 +41,14 @@ export const userListInputSchema = z
   })
   .strict()
 
-export const userDetailInputSchema = z
+const userDetailInputSchema = z
   .object({
     scenario: fixtureScenarioSchema.optional(),
     userId: userIdSchema,
   })
   .strict()
 
-export const userPlatformRoleInputSchema = z
+const userPlatformRoleInputSchema = z
   .object({
     platformRole: z.enum(["none", "contributor", "admin"]),
     scenario: fixtureScenarioSchema.optional(),
@@ -56,7 +56,7 @@ export const userPlatformRoleInputSchema = z
   })
   .strict()
 
-export const userUpdateInputSchema = z
+const userUpdateInputSchema = z
   .object({
     changes: z
       .object({
@@ -75,7 +75,7 @@ export const userUpdateInputSchema = z
   })
   .strict()
 
-export const userCreateInputSchema = z
+const userCreateInputSchema = z
   .object({
     email: profileEmailSchema.optional(),
     first_name: z.string().trim().min(1, "Enter a first name.").max(255),

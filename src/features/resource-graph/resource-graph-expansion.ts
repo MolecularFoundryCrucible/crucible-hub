@@ -19,7 +19,7 @@ export type GraphExpansionState = {
   refetch: () => Promise<unknown>
 }
 
-export const graphExpansionModes: readonly GraphExpansionMode[] = [
+const graphExpansionModes: readonly GraphExpansionMode[] = [
   "ancestors",
   "descendants",
   "associations",
@@ -69,14 +69,6 @@ export function graphExpansionState(
 
 export function graphExpansionPending(state?: GraphExpansionState) {
   return Boolean(state?.isPending || state?.isFetching)
-}
-
-export function graphNodeCanExpand(
-  node: WorkspaceResourceGraphNode,
-  states: ReadonlyMap<string, GraphExpansionState>,
-  availableModes?: readonly GraphExpansionMode[]
-) {
-  return graphExpansionModesForNode(node, states, availableModes).length > 0
 }
 
 export function graphExpansionModesForNode(

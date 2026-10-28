@@ -148,7 +148,7 @@ function instrumentValues(
   }
 }
 
-export function projectSettingsChanges(
+function projectSettingsChanges(
   project: ProjectDetail,
   values: ProjectSettingsValues
 ): ProjectSettingsChanges {
@@ -167,7 +167,7 @@ export function projectSettingsChanges(
   return changes
 }
 
-export function instrumentSettingsChanges(
+function instrumentSettingsChanges(
   instrument: InstrumentDetail,
   values: InstrumentSettingsValues
 ): InstrumentSettingsChanges {
@@ -199,7 +199,7 @@ export function instrumentSettingsChanges(
   return changes
 }
 
-export function mergeInstrumentSettingsUpdate(
+function mergeInstrumentSettingsUpdate(
   resource: WorkspaceResourceDetail | null | undefined,
   update: WorkspaceInstrumentDescriptiveUpdate
 ): WorkspaceResourceDetail | null | undefined {

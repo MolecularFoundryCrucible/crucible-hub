@@ -167,7 +167,7 @@ function toWorkspaceAccount(account: {
   }
 }
 
-export function accountKeyRegenerationAvailable() {
+function accountKeyRegenerationAvailable() {
   const configuration = readWorkspaceConfiguration()
   return (
     configuration.mode === "fixture" ||

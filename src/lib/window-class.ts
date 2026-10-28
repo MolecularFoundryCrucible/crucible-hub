@@ -3,7 +3,7 @@
  * `--breakpoint-md`, `--breakpoint-lg` and `--breakpoint-wide` tokens in
  * src/styles.css; window-class.test.ts keeps them in step.
  */
-export const windowClasses = ["compact", "medium", "expanded", "wide"] as const
+const windowClasses = ["compact", "medium", "expanded", "wide"] as const
 
 export type WindowClass = (typeof windowClasses)[number]
 

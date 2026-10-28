@@ -20,7 +20,7 @@ import type {
 
 import { emailSchema, usernameSchema } from "@/data/crucible/slugs"
 
-export const accountProfileSchema = z.object({
+const accountProfileSchema = z.object({
   email: emailSchema,
   first_name: z
     .string()

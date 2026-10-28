@@ -5,9 +5,9 @@ export const INSTRUMENT_ID_MAX_LENGTH = 25
 export const USERNAME_MAX_LENGTH = 24
 export const EMAIL_MAX_LENGTH = 320
 
-export const PROJECT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
-export const INSTRUMENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
-export const USERNAME_PATTERN = /^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$/
+const PROJECT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
+const INSTRUMENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{2,24}$/
+const USERNAME_PATTERN = /^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$/
 
 export const RESERVED_PROJECT_IDS = new Set(["admin", "public", "read_only"])
 

@@ -44,7 +44,7 @@ export function sortAccessGrants(
   })
 }
 
-export function isAccessRole(role: string): role is AccessRole {
+function isAccessRole(role: string): role is AccessRole {
   return role in roleVariants
 }
 

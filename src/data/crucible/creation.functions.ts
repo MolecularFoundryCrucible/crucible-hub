@@ -23,8 +23,7 @@ import {
   SAMPLE_TYPE_MAX_LENGTH,
 } from "./resources.functions"
 
-export const PROJECT_ID_MAX_LENGTH = 25
-export const PROJECT_TEXT_MAX_LENGTH = 255
+const PROJECT_TEXT_MAX_LENGTH = 255
 
 const selectedResourceMfidSchema = z
   .string()

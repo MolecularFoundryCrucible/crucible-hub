@@ -19,8 +19,8 @@ import type {
   WorkspaceResourceGraphRequest,
 } from "./workspace-source"
 
-export const resourceDetailShape = "overview-with-metadata-links-owner"
-export const resourceSummaryShape = "summary-with-owner"
+const resourceDetailShape = "overview-with-metadata-links-owner"
+const resourceSummaryShape = "summary-with-owner"
 
 export function resourceQueryOptions(
   scope: IdentityScope,

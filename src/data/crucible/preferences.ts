@@ -4,23 +4,23 @@ import { resourceSortSchema, sortDirectionSchema } from "./collection-query"
 import { datasetFacetFieldSchema, sampleFacetFieldSchema } from "./facets"
 import { printerIdSchema } from "./print"
 
-export const themePreferenceSchema = z.enum(["system", "light", "dark"])
-export const recordKindPreferenceSchema = z.enum(["samples", "datasets"])
-export const homeRecentScopePreferenceSchema = z.enum(["all", "mine"])
-export const labelPrinterPreferenceSchema = printerIdSchema
-export const directorySortFieldSchema = z.enum([
+const themePreferenceSchema = z.enum(["system", "light", "dark"])
+const recordKindPreferenceSchema = z.enum(["samples", "datasets"])
+const homeRecentScopePreferenceSchema = z.enum(["all", "mine"])
+const labelPrinterPreferenceSchema = printerIdSchema
+const directorySortFieldSchema = z.enum([
   "name",
   "created",
   "updated",
   "activity",
 ])
-export const dataSortPreferenceSchema = z
+const dataSortPreferenceSchema = z
   .object({
     direction: sortDirectionSchema,
     sort: resourceSortSchema,
   })
   .strict()
-export const directorySortPreferenceSchema = z
+const directorySortPreferenceSchema = z
   .object({
     direction: sortDirectionSchema,
     sort: directorySortFieldSchema,

@@ -16,7 +16,7 @@ import {
   resourceQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { InstrumentLifecycleCard } from "@/features/instrument-lifecycle/instrument-lifecycle-card"
-import { InstrumentOperatorsCard } from "@/features/instrument-operators/instrument-operators-card"
+import { InstrumentAccessCard } from "@/features/instrument-operators/instrument-operators-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 import { ResourceForcedDeletionCard } from "@/features/resource-deletion/resource-forced-deletion"
 
@@ -66,7 +66,7 @@ function InstrumentManagePage() {
     <div className="flex min-w-0 flex-col gap-6">
       {canViewAccess ? (
         <ContentBoundary width="reading">
-          <InstrumentOperatorsCard instrument={resource} scope={scope} />
+          <InstrumentAccessCard instrument={resource} scope={scope} />
         </ContentBoundary>
       ) : null}
       {hasResourceManagement ? (

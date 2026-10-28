@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Removed unused components, hooks, and exports, and added a `knip` check to `npm run validate` so unused code is caught.
+- Manual pilot builds no longer offer a deploy option; they build, push, and print the digest like release builds.
 - Release tags now only build and push the pilot image and print its digest; the pilot deploys from a separate deployment repository.
 - Moved the pilot operations runbook to the deployment repository; `docs/cloud-run-pilot.md` now covers release builds, published images, post-deployment checks, and response compression for any deployment.
 
