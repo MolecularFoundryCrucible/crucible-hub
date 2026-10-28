@@ -7,6 +7,7 @@ The public surface that versions protect is shareable URLs and their search para
 ## Unreleased
 
 - Release tags now only build and push the pilot image and print its digest; the pilot deploys from a separate deployment repository.
+- Moved the pilot operations runbook to the deployment repository; `docs/cloud-run-pilot.md` now covers release builds, published images, post-deployment checks, and response compression for any deployment.
 
 ## 1.7.1 - 2026-10-27
 

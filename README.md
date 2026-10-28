@@ -13,7 +13,7 @@ The Crucible API decides what each person may see and do; the Hub presents those
 
 ## Status
 
-Most planned workflows are implemented and run locally against demo fixtures, a staging API, or ORCID sign-in. The production pilot at `https://crucible.lbl.gov/hub/` is open to everyone with a Crucible account, who signs in with ORCID; [the pilot guide](docs/cloud-run-pilot.md) explains the deployment and release process, and the [roadmap](docs/roadmap.md) tracks what remains.
+Most planned workflows are implemented and run locally against demo fixtures, a staging API, or ORCID sign-in. The production pilot at `https://crucible.lbl.gov/hub/` is open to everyone with a Crucible account, who signs in with ORCID; [the release guide](docs/cloud-run-pilot.md) explains how releases are built and published, and the [roadmap](docs/roadmap.md) tracks what remains.
 
 ## Try it locally
 
@@ -77,7 +77,7 @@ Delivery and operations:
 
 - [Roadmap](docs/roadmap.md): status and ordered work
 - [Foundation evidence](docs/phase-0-evidence.md): verification evidence for production readiness
-- [Cloud Run pilot](docs/cloud-run-pilot.md)
+- [Releases and the Cloud Run pilot](docs/cloud-run-pilot.md)
 - [Self-hosting with Docker Compose](deploy/compose/README.md)
 - [Crucible API handoff](docs/crucible-api-handoff.md) and [resource graph API handoff](docs/resource-graph-api-handoff.md): requests owned by the API team
 - [Changelog](CHANGELOG.md)
