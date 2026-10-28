@@ -1,21 +1,30 @@
 # Crucible Hub
 
-Crucible Hub is the web workspace for the Molecular Foundry's [Crucible](https://crucible.lbl.gov) data platform. Researchers use it to find, inspect, organize, share, upload, and manage their samples, datasets, projects, and instruments.
+Crucible Hub is the web workspace for [Crucible](https://crucible.lbl.gov), the Molecular Foundry's scientific data platform. Researchers use it to find, inspect, organize, share, upload, and manage their samples, datasets, projects, and instruments.
 
-## What you can do
+- Browse and search samples and datasets with filters, grouping, and a quick preview.
+- See a resource's summary, files, thumbnails, metadata, and relationships, and explore its neighbours as a graph.
+- Edit metadata, link resources, upload files, and manage projects, members, and access where your permissions allow.
 
-- Browse and search samples and datasets across projects and instruments, with filters, grouping, and a quick preview panel.
-- Open a resource to see its summary, identity, files, thumbnails, scientific metadata, and relationships, and explore its neighbours as a graph.
-- Edit descriptions and metadata, link related resources, upload files, and request deletions, where your permissions allow.
-- Manage projects, members, access, ownership, and instrument lifecycles, with platform administration for authorized staff.
+The Hub is a front end for the Crucible API: the API decides what each person may see and do, and people sign in with ORCID through it. The Molecular Foundry's instance runs at <https://crucible.lbl.gov/hub/> for everyone with a Crucible account.
 
-The Crucible API decides what each person may see and do; the Hub presents those decisions and never grants access itself.
+## Run your own Hub
 
-## Status
+Each release is published as a container image for amd64 and arm64:
 
-Most planned workflows are implemented and run locally against demo fixtures, a staging API, or ORCID sign-in. The production pilot at `https://crucible.lbl.gov/hub/` is open to everyone with a Crucible account, who signs in with ORCID; [the release guide](docs/cloud-run-pilot.md) explains how releases are built and published, and the [roadmap](docs/roadmap.md) tracks what remains.
+```text
+ghcr.io/molecularfoundrycrucible/crucible-hub:<version>
+```
 
-## Try it locally
+The Crucible API is not yet publicly released, so for now self-hosting is open to groups that have access to it. You need:
+
+- A Crucible API, release 3.2.0 or later (each image's `gov.lbl.crucible.api.min-version` label names the oldest it supports), with Hub sign-in configured: your Hub's callback `https://<your address>/hub/auth/callback` allowed, a client secret shared with the Hub, and ORCID sign-in registered for the API.
+- HTTPS in front of both, at one address: the API under `/api/v3/` and the Hub under `/hub/`.
+- Docker with Compose v2.20 or later.
+
+The [self-hosting guide](deploy/compose/README.md) runs the Hub with its own session database, either on the same machine as the API's Compose bundle or on a separate one, and lists every setting and secret.
+
+## Try it without an API
 
 You need Node.js 22.22 and npm 10.9.
 
@@ -24,78 +33,24 @@ npm ci
 npm run dev:fixtures
 ```
 
-Then open <http://127.0.0.1:3000/hub/>. Fixture mode uses built-in demo data, so no account or API access is needed.
+Open <http://127.0.0.1:3000/hub/>. Fixture mode uses built-in demo data, so no account or API is needed.
 
-## Work against a real API
+## Develop
 
-Each development scenario picks how you sign in and which API the Hub talks to:
+Other scenarios connect the dev server to a real API with your API key (`dev:api-local`, `dev:api-staging`, `dev:api-main`) or with ORCID sign-in (`dev:orcid-local`, `dev:orcid-staging`). API-key scenarios act as you and can change real data, so prefer staging. Before opening a pull request, run `npm run validate`.
 
-| Command                     | Sign-in      | API                               |
-| --------------------------- | ------------ | --------------------------------- |
-| `npm run dev:fixtures`      | None (demo)  | None                              |
-| `npm run dev:api-local`     | Your API key | Local HTTPS API                   |
-| `npm run dev:api-staging`   | Your API key | Staging API                       |
-| `npm run dev:api-main`      | Your API key | Production API                    |
-| `npm run dev:orcid-local`   | ORCID        | Local HTTPS API through Tailscale |
-| `npm run dev:orcid-staging` | ORCID        | Staging API through Tailscale     |
+The [contributor guide](CONTRIBUTING.md) covers credentials, scenarios, tests, and review; [AGENTS.md](AGENTS.md) holds the rules for AI coding agents.
 
-API-key scenarios act as you and can change real data, so prefer staging and test resources. Credentials stay on the Hub server and never reach the browser. The [contributor guide](CONTRIBUTING.md#development-scenarios) explains where to put your key or ORCID client secret and how each scenario is configured.
-
-## Everyday commands
-
-| Command                   | What it does                                                          |
-| ------------------------- | --------------------------------------------------------------------- |
-| `npm run validate`        | Full check: formatting, lint, types, unit tests, contracts, and build |
-| `npm run validate:static` | The same checks without the production build                          |
-| `npm run test:browser`    | Browser, accessibility, and workflow tests in Chromium                |
-| `npm run test:production` | Builds the app and checks the production Node server                  |
-
-Install Chromium once with `npx playwright install chromium`. The [contributor guide](CONTRIBUTING.md) lists every command.
-
-## How it is built
-
-The Hub is a TypeScript app on [TanStack Start](https://tanstack.com/start) with React, TanStack Router and Query, Tailwind CSS, and shadcn components on Base UI. It is a backend for the frontend: browser code calls Hub server functions, which hold the session and call the Crucible API through a client generated from its OpenAPI contract. It deploys as a single container: on Google Cloud Run for the pilot, or [self-hosted with Docker Compose](deploy/compose/README.md) next to a self-hosted Crucible API.
+The Hub is a TypeScript app on [TanStack Start](https://tanstack.com/start) (React, TanStack Router and Query, Tailwind CSS, shadcn on Base UI). Browser code calls Hub server functions, which hold the session and call the API through a client generated from its OpenAPI contract.
 
 ## Documentation
 
-Product and design:
-
-- [Product brief](docs/product-brief.md): who the Hub is for and what it must do
-- [Information architecture](docs/information-architecture.md): routes, navigation, and page structure
-- [Design system](docs/design-system.md): visual, interaction, motion, and accessibility rules
-- [Administration workspace](docs/administration-workspace.md): platform administration design
-
-Engineering:
-
-- [Architecture](docs/architecture.md): runtime, security boundaries, and data flow
-- [API integration](docs/api-integration.md): API contract, caching, pagination, and invalidation
-- [Authentication transition](docs/authentication-transition.md): ORCID sign-in and sessions
-- [Design fixtures](docs/design-fixtures.md): the demo data scenarios
-- [Architecture decisions](decisions/README.md): durable choices and their reasons
-
-Delivery and operations:
-
-- [Roadmap](docs/roadmap.md): status and ordered work
-- [Foundation evidence](docs/phase-0-evidence.md): verification evidence for production readiness
-- [Releases and the Cloud Run pilot](docs/cloud-run-pilot.md)
-- [Self-hosting with Docker Compose](deploy/compose/README.md)
-- [Crucible API handoff](docs/crucible-api-handoff.md) and [resource graph API handoff](docs/resource-graph-api-handoff.md): requests owned by the API team
-- [Changelog](CHANGELOG.md)
-
-Working on the code:
-
-- [Contributor guide](CONTRIBUTING.md): setup, scenarios, commands, and review
-- [Agent guide](AGENTS.md): rules for AI coding agents, also a concise summary of repository policy
-- [Skills](skills/README.md): AI agent skills used in this repository
-
-## Related repositories
-
-The Hub follows the API contract owned by `crucible-api` and the cross-repository policy in `crucible-ecosystem`. It borrows interaction lessons from `crucible-lens` and is converging with `crucible_graph_explorer`. `nano-crucible` remains the Python and command-line interface.
+- Product: [brief](docs/product-brief.md), [information architecture](docs/information-architecture.md), [design system](docs/design-system.md), [administration](docs/administration-workspace.md)
+- Engineering: [architecture](docs/architecture.md), [API integration](docs/api-integration.md), [authentication](docs/authentication-transition.md), [demo fixtures](docs/design-fixtures.md), [decisions](decisions/README.md)
+- Delivery: [roadmap](docs/roadmap.md), [releases](docs/cloud-run-pilot.md), [changelog](CHANGELOG.md), [requests to the API team](docs/crucible-api-handoff.md)
 
 ## License
 
-Crucible Hub is released under the [BSD 3-Clause License](LICENSE), copyright the Crucible Development Team. The license covers the source code only: the Crucible and Molecular Foundry names and logos (`src/assets/`, `src/logo.svg`, and the brand icons in `src/components/crucible/brand-icons.tsx`) identify the project and may not be used to endorse or promote derived products, and the ORCID iD icon is used under ORCID's brand guidelines.
+Released under the [BSD 3-Clause License](LICENSE), copyright the Crucible Development Team. The license covers the source code only: the Crucible and Molecular Foundry names and logos (`src/assets/`, `src/logo.svg`, and the brand icons in `src/components/crucible/brand-icons.tsx`) may not be used to endorse or promote derived products, and the ORCID iD icon is used under ORCID's brand guidelines. The UI primitives in `src/components/ui/` and the agent skill in `.agents/skills/shadcn/` come from [shadcn/ui](https://github.com/shadcn-ui/ui) (MIT, Copyright (c) 2023 shadcn). Other dependencies keep their own licenses, listed in `package-lock.json`.
 
-The UI primitives in `src/components/ui/` are generated from [shadcn/ui](https://github.com/shadcn-ui/ui) and the agent skill in `.agents/skills/shadcn/` is vendored from it; shadcn/ui is MIT licensed, Copyright (c) 2023 shadcn. Other dependencies keep their own licenses, listed in `package-lock.json`.
-
-To report a security issue, follow [SECURITY.md](SECURITY.md).
+Report security issues as described in [SECURITY.md](SECURITY.md).
