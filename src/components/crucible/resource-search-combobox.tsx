@@ -372,7 +372,7 @@ function renderFilterComboboxItem(item: WorkspaceSearchResult) {
   )
 }
 
-export function renderComboboxItem(item: WorkspaceSearchResult) {
+function renderComboboxItem(item: WorkspaceSearchResult) {
   return item.kind === "person" ? (
     <span className="min-w-0 text-left">
       <PersonIdentity person={item} presentation="avatar" size="sm" />

@@ -103,7 +103,7 @@ export function DatasetThumbnailsCard({
   )
 }
 
-export function ThumbnailGallery({
+function ThumbnailGallery({
   thumbnails,
 }: {
   thumbnails: readonly WorkspaceDatasetThumbnail[]

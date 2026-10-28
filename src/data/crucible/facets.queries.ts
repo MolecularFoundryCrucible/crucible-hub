@@ -25,7 +25,7 @@ import type { IdentityScope } from "./query-keys"
 import { crucibleKeys } from "./query-keys"
 import { unwrapHubResult } from "./result"
 
-export const facetPageLimit = 100
+const facetPageLimit = 100
 
 export type FacetContext = CollectionFilters &
   Pick<CollectionQueryOptions, "affiliation"> & {

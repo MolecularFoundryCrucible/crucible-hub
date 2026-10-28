@@ -9,7 +9,7 @@ import { HubApiClientError, hubErrorMessage } from "@/data/crucible/result"
 const REAUTHENTICATED_HASH = "#reauthenticated"
 export const REAUTHENTICATION_CHANNEL = "crucible-hub-reauthentication"
 
-export function reauthenticationRequired(error: unknown) {
+function reauthenticationRequired(error: unknown) {
   return (
     error instanceof HubApiClientError &&
     error.details.kind === "reauthentication-required"

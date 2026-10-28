@@ -43,7 +43,7 @@ export function queryRetryDelay(attemptIndex: number, error: unknown) {
   return Math.min(1_000 * 2 ** attemptIndex, maximumRetryDelay)
 }
 
-export function shouldDehydrateCrucibleQuery(query: Query) {
+function shouldDehydrateCrucibleQuery(query: Query) {
   const [namespace, serverId, accountMfid, privilegeMode, family] =
     query.queryKey
   const accountPreferences =

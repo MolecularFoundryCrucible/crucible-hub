@@ -50,7 +50,7 @@ export function applyPersonProfileUpdate(
   ])
 }
 
-export function resourceListKey(
+function resourceListKey(
   kind: WorkspaceResourceDetail["kind"],
   scope: IdentityScope
 ) {
@@ -85,7 +85,7 @@ export function invalidateResourceMutationQueries(
   return Promise.all(invalidations)
 }
 
-export function invalidateResourceDiscoveryQueries(
+function invalidateResourceDiscoveryQueries(
   queryClient: QueryClient,
   scope: IdentityScope
 ) {

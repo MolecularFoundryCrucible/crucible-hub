@@ -68,7 +68,7 @@ export function useSlugConflict() {
   }
 }
 
-export function useSlugAvailability({
+function useSlugAvailability({
   candidate,
   checkAvailability,
   currentValue,

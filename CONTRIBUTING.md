@@ -35,22 +35,23 @@ Add one short, direct `Unreleased` changelog bullet only for user, operator, con
 
 ## Canonical commands
 
-| Command                                    | Purpose                                                                                                |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `npm run validate`                         | Full formatting, lint, type, unit, contract, boundary, token, link, secret, and production-build suite |
-| `npm run validate:static`                  | The same static and unit checks without the production build                                           |
-| `npm run test:browser`                     | Bounded Chromium smoke, responsive, theme, workflow, and accessibility checks used by CI               |
-| `npm run test:production`                  | Production build, Node runtime, `/hub` paths, health, shutdown, and server-function checks             |
-| `npm run api:generate`                     | Regenerate TypeScript from the pinned OpenAPI artifact                                                 |
-| `npm run api:check`                        | Verify artifact digest and deterministic generated output                                              |
-| `npm run boundary:check`                   | Verify browser-reachable code cannot import the server-only adapter                                    |
-| `npm run docs:check`                       | Verify local documentation links                                                                       |
-| `npm run secrets:check`                    | Scan for credentials and secret-like values                                                            |
-| `npm run skills:list`                      | List allowlisted skills from installed TanStack packages                                               |
-| `npm run skills:load -- <package>#<skill>` | Load an installed TanStack skill for the current task                                                  |
-| `npm run skills:stale`                     | Report stale TanStack skill sources without updating them                                              |
-| `npm run audit`                            | Fail on high or critical npm advisories                                                                |
-| `npm run release`                          | Stamp `CHANGELOG.md`, commit, and tag `vX.Y.Z` without invalidating lockfile caches                    |
+| Command                                    | Purpose                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `npm run validate`                         | Full formatting, lint, type, unused-code, unit, contract, boundary, token, link, secret, and production-build suite |
+| `npm run validate:static`                  | The same static and unit checks without the production build                                                        |
+| `npm run test:browser`                     | Bounded Chromium smoke, responsive, theme, workflow, and accessibility checks used by CI                            |
+| `npm run test:production`                  | Production build, Node runtime, `/hub` paths, health, shutdown, and server-function checks                          |
+| `npm run api:generate`                     | Regenerate TypeScript from the pinned OpenAPI artifact                                                              |
+| `npm run api:check`                        | Verify artifact digest and deterministic generated output                                                           |
+| `npm run boundary:check`                   | Verify browser-reachable code cannot import the server-only adapter                                                 |
+| `npm run unused:check`                     | Find unused files, exports, and dependencies with knip (`knip.json`)                                                |
+| `npm run docs:check`                       | Verify local documentation links                                                                                    |
+| `npm run secrets:check`                    | Scan for credentials and secret-like values                                                                         |
+| `npm run skills:list`                      | List allowlisted skills from installed TanStack packages                                                            |
+| `npm run skills:load -- <package>#<skill>` | Load an installed TanStack skill for the current task                                                               |
+| `npm run skills:stale`                     | Report stale TanStack skill sources without updating them                                                           |
+| `npm run audit`                            | Fail on high or critical npm advisories                                                                             |
+| `npm run release`                          | Stamp `CHANGELOG.md`, commit, and tag `vX.Y.Z` without invalidating lockfile caches                                 |
 
 Install Chromium once with `npx playwright install chromium`. CI runs static and unit validation in parallel with one browser job that performs the functional gate, production build, and runtime checks. The bounded browser gate uses one worker without retries so shared server fixtures remain deterministic and failures remain visible. Browser and production specs use [`tests/fixtures.ts`](tests/fixtures.ts), whose automatic fixture fails tests on uncaught page errors.
 

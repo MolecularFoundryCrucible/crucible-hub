@@ -306,7 +306,7 @@ export function FilterValuePicker({
   )
 }
 
-export function facetValueLabel(value: string | null) {
+function facetValueLabel(value: string | null) {
   if (value === null) return "Unspecified"
   return value === "" ? "Empty value" : value
 }

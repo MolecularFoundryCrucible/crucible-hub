@@ -1,13 +1,13 @@
 import { createLucideIcon } from "lucide-react"
 import type { IconNode } from "lucide-react"
 
-export const DatasetIconNode = [
+const DatasetIconNode = [
   ["ellipse", { cx: "12", cy: "5", key: "msslwz", rx: "9", ry: "3" }],
   ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
   ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }],
 ] satisfies IconNode
 
-export const SampleIconNode = [
+const SampleIconNode = [
   [
     "path",
     {
@@ -121,7 +121,6 @@ export {
   Eraser as ClearFinishedUploadsIcon,
   Trash2 as RemoveThumbnailIcon,
   GitFork as ResourceGraphIcon,
-  Network as ExpandGraphNodeIcon,
   ChevronsLeft as GraphAncestorsIcon,
   ChevronsUp as GraphAncestorsVerticalIcon,
   ChevronsRight as GraphDescendantsIcon,

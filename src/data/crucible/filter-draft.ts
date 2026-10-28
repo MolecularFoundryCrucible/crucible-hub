@@ -38,7 +38,7 @@ export function setFacetDraft<TFilters>(
   }
 }
 
-export function sortLabel(sort: string) {
+function sortLabel(sort: string) {
   if (sort === "activity") return "Last activity"
   if (sort === "created") return "Created"
   if (sort === "updated") return "Updated"

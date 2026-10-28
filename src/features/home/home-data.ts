@@ -81,7 +81,7 @@ function creationTime(value: string | null | undefined) {
 }
 
 export const homeProjectLimit = 7
-export const homeInstrumentLimit = 7
+const homeInstrumentLimit = 7
 export const homeRecentResourceLimit = 5
 
 export const homeInstrumentQuery = {
@@ -92,7 +92,7 @@ export const homeInstrumentQuery = {
   status: "active",
 } as const
 
-export const homeRecentResourceQuery = {
+const homeRecentResourceQuery = {
   direction: "desc",
   includeTotal: false,
   limit: homeRecentResourceLimit,

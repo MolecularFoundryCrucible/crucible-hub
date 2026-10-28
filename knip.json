@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/routes/**/*.{ts,tsx}", "scripts/*.mjs", "tests/**/*.{ts,mjs}"],
+  "project": ["src/**/*.{ts,tsx,css}", "scripts/*.mjs", "tests/**/*.{ts,mjs}"],
+  "ignore": ["src/generated/**", "src/components/ui/**"],
+  "ignoreDependencies": ["@tanstack/router-plugin"],
+  "rules": {
+    "types": "off"
+  }
+}

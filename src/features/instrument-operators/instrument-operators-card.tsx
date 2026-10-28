@@ -700,8 +700,6 @@ export function InstrumentAccessCard({
   )
 }
 
-export const InstrumentOperatorsCard = InstrumentAccessCard
-
 function AddOperatorDialog({
   disabled,
   excludedIds,

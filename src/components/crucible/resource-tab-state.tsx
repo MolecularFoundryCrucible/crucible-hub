@@ -269,7 +269,7 @@ export function ResourceTabLoadError({ error, info }: ErrorComponentProps) {
   )
 }
 
-export function ResourceCardPending({ title }: { title: string }) {
+function ResourceCardPending({ title }: { title: string }) {
   return (
     <Card aria-busy="true">
       <CardHeader>

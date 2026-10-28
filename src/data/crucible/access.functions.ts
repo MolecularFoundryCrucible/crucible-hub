@@ -23,14 +23,14 @@ const canonicalResourceAccessMfidSchema = z
   .max(RESOURCE_ACCESS_MFID_MAX_LENGTH)
   .regex(/^[a-zA-Z0-9_-]+$/)
 
-export const resourceAccessPermissionSchema = z.enum([
+const resourceAccessPermissionSchema = z.enum([
   "viewer",
   "contributor",
   "editor",
   "admin",
 ])
 
-export const resourceAccessPrincipalKindSchema = z.enum(["users", "projects"])
+const resourceAccessPrincipalKindSchema = z.enum(["users", "projects"])
 
 export const resourceAccessInputSchema = z
   .object({

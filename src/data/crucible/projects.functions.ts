@@ -25,7 +25,7 @@ import { queryCancellationMiddleware } from "./query-cancellation"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { privilegeModeSchema } from "./privilege-mode"
 
-export const projectSortSchema = z.enum([
+const projectSortSchema = z.enum([
   "project_id",
   "title",
   "created",
@@ -33,7 +33,7 @@ export const projectSortSchema = z.enum([
   "activity",
 ])
 
-export const projectMemberRoleFilterSchema = z.enum([
+const projectMemberRoleFilterSchema = z.enum([
   "viewer",
   "contributor",
   "editor",
@@ -62,7 +62,7 @@ export const projectListInputSchema = z.object({
   sort: projectSortSchema.optional(),
 })
 
-export const userProjectListInputSchema = z
+const userProjectListInputSchema = z
   .object({
     cursor: collectionCursorSchema,
     direction: sortDirectionSchema.optional(),
@@ -104,7 +104,7 @@ const canonicalProjectMfidSchema = z
   .max(255)
   .regex(/^[a-zA-Z0-9_-]+$/)
 
-export const projectMembershipRoleSchema = z.enum([
+const projectMembershipRoleSchema = z.enum([
   "viewer",
   "contributor",
   "editor",

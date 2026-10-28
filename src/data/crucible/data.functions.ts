@@ -27,7 +27,7 @@ import {
   sampleFacetFieldSchema,
 } from "./facets"
 
-export const projectScopeSchema = z.enum(["all", "assigned", "shared"])
+const projectScopeSchema = z.enum(["all", "assigned", "shared"])
 const nullSelector = z.literal(true).optional()
 
 const cursorPageInputFields = {
@@ -200,7 +200,7 @@ const facetPageInputFields = {
   sort: facetSortSchema.optional(),
 }
 
-export const sampleFacetPageInputSchema = z
+const sampleFacetPageInputSchema = z
   .object({
     ...facetPageInputFields,
     ...sampleFacetFilterFields,
@@ -212,7 +212,7 @@ export const sampleFacetPageInputSchema = z
   })
   .transform(normalizeProjectScope)
 
-export const datasetFacetPageInputSchema = z
+const datasetFacetPageInputSchema = z
   .object({
     ...facetPageInputFields,
     ...datasetFacetFilterFields,

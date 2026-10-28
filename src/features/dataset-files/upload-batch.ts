@@ -83,7 +83,7 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback
 }
 
-export function uploadFilenameCounts(
+function uploadFilenameCounts(
   items: readonly UploadItem[]
 ): ReadonlyMap<string, number> {
   const counts = new Map<string, number>()

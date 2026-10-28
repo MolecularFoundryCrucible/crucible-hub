@@ -35,7 +35,7 @@ steps:
       - push
       - --all-tags
       - ${_IMAGE}
-  - id: deploy
+  - id: digest
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     args:
@@ -43,17 +43,10 @@ steps:
       - pipefail
       - -c
       - |
-        if [[ "${_DEPLOY}" != "true" ]]; then
-          exit 0
-        fi
         digest=$(gcloud artifacts docker images describe \
           "${_IMAGE}:${_IMAGE_TAG}" --format='value(image_summary.digest)')
-        gcloud run deploy ${_SERVICE} --project $PROJECT_ID \
-          --region ${_REGION} --image "${_IMAGE}@$${digest}" --quiet
+        echo "Image: ${_IMAGE}@$${digest}"
 substitutions:
-  _DEPLOY: "false"
-  _REGION: us-central1
-  _SERVICE: crucible-hub
   _IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/crucible-hub/app
 options:
   dynamicSubstitutions: true

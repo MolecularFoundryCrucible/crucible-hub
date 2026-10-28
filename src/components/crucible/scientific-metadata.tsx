@@ -19,7 +19,7 @@ export type ScientificMetadataExpansion = ReturnType<
   typeof useScientificMetadataExpansion
 >
 
-export function ScientificMetadataSearch({
+function ScientificMetadataSearch({
   onChange,
   value,
 }: {

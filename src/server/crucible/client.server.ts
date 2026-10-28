@@ -17,7 +17,7 @@ type ClientAuthority = {
   privilegeMode?: WorkspacePrivilegeMode | null
 }
 
-export class CruciblePrivilegeModeError extends Error {
+class CruciblePrivilegeModeError extends Error {
   constructor(
     readonly requestedMode: WorkspacePrivilegeMode,
     readonly appliedMode: string | null

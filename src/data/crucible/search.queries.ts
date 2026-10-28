@@ -11,8 +11,8 @@ import {
 import { unwrapHubResult } from "./result"
 import type { WorkspaceSearchKind } from "./workspace-source"
 
-export const searchGroupLimit = 8
-export const quickSearchGroupLimit = 2
+const searchGroupLimit = 8
+const quickSearchGroupLimit = 2
 
 export function searchQueryOptions(
   scope: IdentityScope,

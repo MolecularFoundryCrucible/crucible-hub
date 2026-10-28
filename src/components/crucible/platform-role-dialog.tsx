@@ -14,15 +14,15 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { hubErrorMessage } from "@/data/crucible/result"
 
-export const platformRoles = ["none", "contributor", "admin"] as const
+const platformRoles = ["none", "contributor", "admin"] as const
 
 export type PlatformRole = (typeof platformRoles)[number]
 
-export function isPlatformRole(role: string): role is PlatformRole {
+function isPlatformRole(role: string): role is PlatformRole {
   return platformRoles.some((candidate) => candidate === role)
 }
 
-export function platformRoleLabel(role: PlatformRole) {
+function platformRoleLabel(role: PlatformRole) {
   if (role === "none") return "No platform role"
   return role === "admin" ? "Admin" : "Contributor"
 }

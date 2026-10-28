@@ -40,7 +40,7 @@ export const resourceMfidInputSchema = z.object({
   scenario: fixtureScenarioSchema.optional(),
 })
 
-export const resourceGraphInputSchema = resourceMfidInputSchema
+const resourceGraphInputSchema = resourceMfidInputSchema
   .extend({
     depth: z.number().int().min(0).max(3).default(1),
     direction: z.enum(["both", "upstream", "downstream"]).default("both"),
@@ -84,7 +84,7 @@ const datasetFilesReadInputSchema = datasetFilesInputSchema.extend({
 
 export const THUMBNAIL_NAME_MAX_LENGTH = 255
 export const THUMBNAIL_SOURCE_MAX_BYTES = 50 * 1024 * 1024
-export const THUMBNAIL_SOURCE_MAX_ENCODED_CHARACTERS =
+const THUMBNAIL_SOURCE_MAX_ENCODED_CHARACTERS =
   4 * Math.ceil(THUMBNAIL_SOURCE_MAX_BYTES / 3)
 export const THUMBNAIL_PREVIEW_BATCH_MAX = 100
 
@@ -99,7 +99,7 @@ const thumbnailBase64Schema = z
   .min(1)
   .max(THUMBNAIL_SOURCE_MAX_ENCODED_CHARACTERS)
 
-export const datasetThumbnailPreviewsInputSchema = z
+const datasetThumbnailPreviewsInputSchema = z
   .object({
     datasetMfids: z
       .array(z.string().trim().min(1).max(255))
@@ -108,37 +108,34 @@ export const datasetThumbnailPreviewsInputSchema = z
   })
   .strict()
 
-export const datasetThumbnailOperationInputSchema = z.discriminatedUnion(
-  "action",
-  [
-    z
-      .object({
-        action: z.literal("add"),
-        datasetMfid: z.string().trim().min(1).max(255),
-        scenario: fixtureScenarioSchema.optional(),
-        thumbnail_b64str: thumbnailBase64Schema,
-        thumbnail_name: thumbnailNameSchema,
-      })
-      .strict(),
-    z
-      .object({
-        action: z.literal("rename"),
-        datasetMfid: z.string().trim().min(1).max(255),
-        scenario: fixtureScenarioSchema.optional(),
-        thumbnailId: z.number().int().positive(),
-        thumbnail_name: thumbnailNameSchema,
-      })
-      .strict(),
-    z
-      .object({
-        action: z.literal("delete"),
-        datasetMfid: z.string().trim().min(1).max(255),
-        scenario: fixtureScenarioSchema.optional(),
-        thumbnailId: z.number().int().positive(),
-      })
-      .strict(),
-  ]
-)
+const datasetThumbnailOperationInputSchema = z.discriminatedUnion("action", [
+  z
+    .object({
+      action: z.literal("add"),
+      datasetMfid: z.string().trim().min(1).max(255),
+      scenario: fixtureScenarioSchema.optional(),
+      thumbnail_b64str: thumbnailBase64Schema,
+      thumbnail_name: thumbnailNameSchema,
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("rename"),
+      datasetMfid: z.string().trim().min(1).max(255),
+      scenario: fixtureScenarioSchema.optional(),
+      thumbnailId: z.number().int().positive(),
+      thumbnail_name: thumbnailNameSchema,
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("delete"),
+      datasetMfid: z.string().trim().min(1).max(255),
+      scenario: fixtureScenarioSchema.optional(),
+      thumbnailId: z.number().int().positive(),
+    })
+    .strict(),
+])
 
 export const fileDownloadInputSchema = z
   .object({
@@ -152,11 +149,11 @@ export const fileDownloadInputSchema = z
   })
   .strict()
 
-export const ingestionClassesInputSchema = z
+const ingestionClassesInputSchema = z
   .object({ scenario: fixtureScenarioSchema.optional() })
   .strict()
 
-export const fileIngestionInputSchema = z
+const fileIngestionInputSchema = z
   .object({
     fileMfid: z
       .string()
@@ -169,7 +166,7 @@ export const fileIngestionInputSchema = z
   })
   .strict()
 
-export const RESOURCE_MFID_MAX_LENGTH = 255
+const RESOURCE_MFID_MAX_LENGTH = 255
 export const SAMPLE_NAME_MAX_LENGTH = 255
 export const SAMPLE_TYPE_MAX_LENGTH = 255
 export const SAMPLE_DESCRIPTION_MAX_LENGTH = 10_000
@@ -190,7 +187,7 @@ const canonicalResourceMfidSchema = z
   .max(RESOURCE_MFID_MAX_LENGTH)
   .regex(/^[a-zA-Z0-9_-]+$/)
 
-export function hasUnsupportedCharacter(text: string) {
+function hasUnsupportedCharacter(text: string) {
   for (let index = 0; index < text.length; index += 1) {
     const unit = text.charCodeAt(index)
     if (unit === 0) return true
@@ -433,7 +430,7 @@ export const datasetDescriptiveUpdateInputSchema = z
   })
   .strict()
 
-export const resourceDeletionRequestInputSchema = z
+const resourceDeletionRequestInputSchema = z
   .object({
     privilegeMode: privilegeModeSchema,
     reason: z.string().trim().min(1).max(2000).optional(),
