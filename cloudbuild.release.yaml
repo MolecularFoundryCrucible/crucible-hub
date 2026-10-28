@@ -39,7 +39,7 @@ steps:
       - push
       - --all-tags
       - ${_IMAGE}
-  - id: deploy
+  - id: digest
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     args:
@@ -49,11 +49,8 @@ steps:
       - |
         digest=$(gcloud artifacts docker images describe \
           "${_IMAGE}:${COMMIT_SHA}" --format='value(image_summary.digest)')
-        gcloud run deploy ${_SERVICE} --project $PROJECT_ID \
-          --region ${_REGION} --image "${_IMAGE}@$${digest}" --quiet
+        echo "Release ${TAG_NAME} image: ${_IMAGE}@$${digest}"
 substitutions:
-  _REGION: us-central1
-  _SERVICE: crucible-hub
   _IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/crucible-hub/app
 options:
   dynamicSubstitutions: true

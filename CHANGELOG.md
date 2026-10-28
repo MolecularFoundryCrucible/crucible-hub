@@ -4,6 +4,10 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
 
+## Unreleased
+
+- Release tags now only build and push the pilot image and print its digest; the pilot deploys from a separate deployment repository.
+
 ## 1.7.1 - 2026-10-27
 
 - Updated `qs` for a denial-of-service advisory, and development tooling (`undici`, `fast-uri`, `body-parser`, and the shadcn CLI) for advisories that did not reach the deployed server.
