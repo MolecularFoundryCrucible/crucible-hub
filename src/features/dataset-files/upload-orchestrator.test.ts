@@ -8,7 +8,7 @@ import {
   signWorkspaceDatasetUploadParts,
 } from "@/data/crucible/uploads.functions"
 
-import { UploadEmptyFileError, uploadDatasetFile } from "./upload-orchestrator"
+import { uploadDatasetFile } from "./upload-orchestrator"
 import type { UploadProgress } from "./upload-orchestrator"
 
 vi.mock("@/data/crucible/uploads.functions", () => ({
@@ -94,11 +94,35 @@ describe("dataset file upload orchestration", () => {
     vi.mocked(abortWorkspaceDatasetUpload).mockResolvedValue(ok(undefined))
   })
 
-  it("rejects empty files before starting a session", async () => {
-    await expect(upload(new File([], "empty.dat"))).rejects.toBeInstanceOf(
-      UploadEmptyFileError
+  it("completes an empty file without uploading parts", async () => {
+    vi.mocked(initializeWorkspaceDatasetUpload).mockResolvedValue(
+      ok({ partSize: 0, state: "uploading", uploadId: "upload-1" })
     )
-    expect(initializeWorkspaceDatasetUpload).not.toHaveBeenCalled()
+    const stored = { filename: "empty.dat", mfid: "file-1", size: 0 }
+    vi.mocked(completeWorkspaceDatasetUpload).mockResolvedValue(
+      ok(stored) as never
+    )
+    FakeUploadRequest.sent = []
+    vi.stubGlobal("XMLHttpRequest", FakeUploadRequest)
+
+    await expect(upload(new File([], "empty.dat"))).resolves.toEqual(stored)
+    expect(initializeWorkspaceDatasetUpload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ size: 0 }),
+      })
+    )
+    expect(signWorkspaceDatasetUploadParts).not.toHaveBeenCalled()
+    expect(FakeUploadRequest.sent).toEqual([])
+    expect(completeWorkspaceDatasetUpload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          crc32cBase64: "AAAAAA==",
+          sha256Hex:
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        }),
+      })
+    )
+    vi.unstubAllGlobals()
   })
 
   it("retries completion while storage is temporarily unavailable", async () => {

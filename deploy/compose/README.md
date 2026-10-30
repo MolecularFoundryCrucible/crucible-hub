@@ -75,7 +75,7 @@ docker compose pull hub hub-setup
 docker compose up -d
 ```
 
-The image's `gov.lbl.crucible.api.min-version` label names the oldest Crucible API release it works with, and `gov.lbl.crucible.api.revision` the exact API revision it was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.min-version" }}' <image>`). Hub 1.7.0 and later need Crucible API 3.2.0 or later.
+The image's `gov.lbl.crucible.api.min-version` label names the oldest Crucible API release it works with, and `gov.lbl.crucible.api.revision` the exact API revision it was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.min-version" }}' <image>`). Hub 1.7.2 and later need Crucible API 3.3.0 or later (1.7.0 and 1.7.1 need 3.2.0).
 
 ## Checking and upgrading
 

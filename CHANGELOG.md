@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Allowed uploading empty files, and replacing a file with empty content, through the signed multipart upload (Crucible API 3.3.0); the Hub now pins the API 3.3.0 contract and needs API 3.3.0 or later.
 - Removed unused components, hooks, and exports, and added a `knip` check to `npm run validate` so unused code is caught.
 - Manual pilot builds no longer offer a deploy option; they build, push, and print the digest like release builds.
 - Release tags now only build and push the pilot image and print its digest; the pilot deploys from a separate deployment repository.

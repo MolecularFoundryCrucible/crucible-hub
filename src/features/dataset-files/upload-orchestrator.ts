@@ -50,13 +50,6 @@ export class UploadReplaceTargetChangedError extends Error {
   }
 }
 
-export class UploadEmptyFileError extends Error {
-  constructor() {
-    super("Empty files cannot be uploaded.")
-    this.name = "UploadEmptyFileError"
-  }
-}
-
 class UploadFilenameError extends Error {
   constructor(issues: readonly string[]) {
     super(issues[0] ?? "The file name is invalid.")
@@ -179,10 +172,6 @@ export async function uploadDatasetFile(options: {
     throw new UploadFilenameError(filenameIssues)
   }
 
-  if (file.size === 0) {
-    throw new UploadEmptyFileError()
-  }
-
   if (file.size > MAX_UPLOAD_SIZE) {
     throw new UploadSizeError()
   }
@@ -234,7 +223,7 @@ export async function uploadDatasetFile(options: {
   const partSize = initiation.partSize
   let parts: ReturnType<typeof planUploadParts>
   try {
-    parts = planUploadParts(file.size, partSize)
+    parts = file.size === 0 ? [] : planUploadParts(file.size, partSize)
     if (parts.length > MAX_UPLOAD_PART_NUMBER) {
       throw new Error("The upload session uses an unsupported part size.")
     }
@@ -268,66 +257,73 @@ export async function uploadDatasetFile(options: {
       throw new Error("The upload could not be started.")
     }
 
-    await runUploadParts({
-      file,
-      parts,
-      signatures: checksums,
-      signal,
-      transport: {
-        readAcknowledgedPartNumbers: async () => {
-          const current = unwrapHubResult(
-            await readWorkspaceDatasetUpload({
-              data: { datasetMfid, uploadId },
-              signal,
-            })
-          )
-          if (current.state !== "uploading") {
-            throw new Error(
-              current.failureCode
-                ? `The upload failed (${current.failureCode}).`
-                : "The upload is no longer accepting parts."
+    if (parts.length > 0) {
+      await runUploadParts({
+        file,
+        parts,
+        signatures: checksums,
+        signal,
+        transport: {
+          readAcknowledgedPartNumbers: async () => {
+            const current = unwrapHubResult(
+              await readWorkspaceDatasetUpload({
+                data: { datasetMfid, uploadId },
+                signal,
+              })
             )
-          }
-          if (current.partSize !== undefined && current.partSize !== partSize) {
-            throw new Error("The upload session uses an unsupported part size.")
-          }
-          return new Set(current.acknowledgedPartNumbers)
+            if (current.state !== "uploading") {
+              throw new Error(
+                current.failureCode
+                  ? `The upload failed (${current.failureCode}).`
+                  : "The upload is no longer accepting parts."
+              )
+            }
+            if (
+              current.partSize !== undefined &&
+              current.partSize !== partSize
+            ) {
+              throw new Error(
+                "The upload session uses an unsupported part size."
+              )
+            }
+            return new Set(current.acknowledgedPartNumbers)
+          },
+          signParts: async (signatures) => {
+            const signed = unwrapHubResult(
+              await signWorkspaceDatasetUploadParts({
+                data: { datasetMfid, parts: [...signatures], uploadId },
+                signal,
+              })
+            )
+            return new Map(
+              signed.map((part) => [
+                part.partNumber,
+                { headers: part.headers, url: part.url },
+              ])
+            )
+          },
+          putPart: (part, signed, body, partSignal, onPartProgress) =>
+            putUploadPart({
+              body,
+              headers: signed.headers,
+              onProgress: onPartProgress,
+              partNumber: part.partNumber,
+              signal: partSignal,
+              url: signed.url,
+            }),
         },
-        signParts: async (signatures) => {
-          const signed = unwrapHubResult(
-            await signWorkspaceDatasetUploadParts({
-              data: { datasetMfid, parts: [...signatures], uploadId },
-              signal,
-            })
-          )
-          return new Map(
-            signed.map((part) => [
-              part.partNumber,
-              { headers: part.headers, url: part.url },
-            ])
-          )
+        wait: (milliseconds) => wait(milliseconds, signal),
+        onPartProgress: (partNumber, loadedBytes) => {
+          partLoaded.set(partNumber, loadedBytes)
+          report()
         },
-        putPart: (part, signed, body, partSignal, onPartProgress) =>
-          putUploadPart({
-            body,
-            headers: signed.headers,
-            onProgress: onPartProgress,
-            partNumber: part.partNumber,
-            signal: partSignal,
-            url: signed.url,
-          }),
-      },
-      wait: (milliseconds) => wait(milliseconds, signal),
-      onPartProgress: (partNumber, loadedBytes) => {
-        partLoaded.set(partNumber, loadedBytes)
-        report()
-      },
-      onPartUploaded: (partNumber) => {
-        partLoaded.delete(partNumber)
-        completedBytes += partSizes.get(partNumber) ?? 0
-        report()
-      },
-    })
+        onPartUploaded: (partNumber) => {
+          partLoaded.delete(partNumber)
+          completedBytes += partSizes.get(partNumber) ?? 0
+          report()
+        },
+      })
+    }
 
     const { crc32cBase64, sha256Hex } = await digests
     phase = "completing"

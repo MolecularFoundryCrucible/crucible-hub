@@ -8,6 +8,7 @@ const runId = Date.now().toString(36)
 const uploadedFilename = `operando-cycle-05-${runId}.h5`
 const secondFilename = `operando-cycle-06-${runId}.h5`
 const failedFilename = `operando-cycle-07-${runId}.h5`
+const emptyFilename = `operando-notes-${runId}.txt`
 
 function dialog(page: Page) {
   return page.getByRole("dialog", { name: "Add files" })
@@ -113,6 +114,32 @@ test("uploads files, requests ingestion, and starts empty when reopened", async 
   await expect(
     dialog(page).getByRole("list", { name: "Selected files" })
   ).toHaveCount(0)
+})
+
+test("uploads an empty file without transferring parts", async ({ page }) => {
+  const partPuts: string[] = []
+  page.on("request", (request) => {
+    if (request.method() === "PUT") partPuts.push(request.url())
+  })
+
+  await page.goto(datasetPath)
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: "Add files" }).click()
+  await chooseFiles(page, [{ name: emptyFilename, text: "" }])
+  await dialog(page)
+    .getByRole("combobox", { name: `Ingestor for ${emptyFilename}` })
+    .selectOption({ label: "No ingestion" })
+
+  await dialog(page).getByRole("button", { name: "Upload 1 file" }).click()
+  await expect(dialog(page).getByText(/^fixture-file-/)).toHaveCount(1, {
+    timeout: 15000,
+  })
+  expect(partPuts).toEqual([])
+
+  await dialog(page).getByRole("button", { name: "Done" }).click()
+  await expect(
+    page.getByRole("row").filter({ hasText: emptyFilename })
+  ).toBeVisible()
 })
 
 test("shows files added elsewhere after refreshing the dataset", async ({

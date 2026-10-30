@@ -70,11 +70,10 @@ describe("upload item issues", () => {
     ])
   })
 
-  it("flags empty files and invalid names", () => {
+  it("flags invalid names and accepts empty files", () => {
     const items = [item("a", "../a.h5", 0)]
     expect(uploadItemIssues(items[0], items, new Map())).toEqual([
       "File names must not contain dot path segments.",
-      "Empty files cannot be uploaded.",
     ])
   })
 

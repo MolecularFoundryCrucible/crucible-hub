@@ -18,7 +18,7 @@ ghcr.io/molecularfoundrycrucible/crucible-hub:<version>
 
 The Crucible API is not yet publicly released, so for now self-hosting is open to groups that have access to it. You need:
 
-- A Crucible API, release 3.2.0 or later (each image's `gov.lbl.crucible.api.min-version` label names the oldest it supports), with Hub sign-in configured: your Hub's callback `https://<your address>/hub/auth/callback` allowed, a client secret shared with the Hub, and ORCID sign-in registered for the API.
+- A Crucible API, release 3.3.0 or later (each image's `gov.lbl.crucible.api.min-version` label names the oldest it supports), with Hub sign-in configured: your Hub's callback `https://<your address>/hub/auth/callback` allowed, a client secret shared with the Hub, and ORCID sign-in registered for the API.
 - HTTPS in front of both, at one address: the API under `/api/v3/` and the Hub under `/hub/`.
 - Docker with Compose v2.20 or later.
 
