@@ -41,6 +41,7 @@ Add one short, direct `Unreleased` changelog bullet only for user, operator, con
 | `npm run validate:static`                  | The same static and unit checks without the production build                                                        |
 | `npm run test:browser`                     | Bounded Chromium smoke, responsive, theme, workflow, and accessibility checks used by CI                            |
 | `npm run test:production`                  | Production build, Node runtime, `/hub` paths, health, shutdown, and server-function checks                          |
+| `npm run api:fetch -- vX.Y.Z`              | Pin a published API release: download and verify its contract asset, update the lock, regenerate                    |
 | `npm run api:generate`                     | Regenerate TypeScript from the pinned OpenAPI artifact                                                              |
 | `npm run api:check`                        | Verify artifact digest and deterministic generated output                                                           |
 | `npm run boundary:check`                   | Verify browser-reachable code cannot import the server-only adapter                                                 |
