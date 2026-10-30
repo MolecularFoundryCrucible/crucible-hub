@@ -4,9 +4,10 @@ Notable changes to Crucible Hub for users, operators, contributors, and downstre
 
 The public surface that versions protect is shareable URLs and their search parameters, QR and MFID deep links, and deployment configuration (environment variables, container image, and health endpoints). A major release breaks that surface or requires manual migration, a minor release adds to it (a new route, linkable parameter, configuration option, or integration), and a patch release covers everything else, including new UI features within existing pages, visual changes, performance work, and fixes. This rule applies from 1.6.1; earlier releases counted UI features as minor.
 
-## Unreleased
+## 1.7.2 - 2026-10-30
 
 - Allowed uploading empty files, and replacing a file with empty content, through the signed multipart upload (Crucible API 3.3.0); the Hub now pins the API 3.3.0 contract and needs API 3.3.0 or later.
+- Rewrote the README around running your own Hub: the published image, its requirements, and the self-hosting guide.
 - Removed unused components, hooks, and exports, and added a `knip` check to `npm run validate` so unused code is caught.
 - Manual pilot builds no longer offer a deploy option; they build, push, and print the digest like release builds.
 - Release tags now only build and push the pilot image and print its digest; the pilot deploys from a separate deployment repository.
