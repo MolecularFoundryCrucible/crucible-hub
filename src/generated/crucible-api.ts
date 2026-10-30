@@ -5889,6 +5889,10 @@ export interface components {
         };
         /** ValidationError */
         ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
@@ -6589,6 +6593,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Proposal sync is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "proposal_sync", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -7673,6 +7684,13 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     generate_dataset_download_links_datasets__dataset_mfid__download_links_get: {
@@ -7716,6 +7734,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -7856,6 +7881,20 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description Ingestion is not enabled on this server (`feature_disabled`, only for `status=requested`) or file storage is not configured (`storage_not_configured`) */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request could not be queued (`ingestion_unavailable`); it is recorded as failed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post: {
@@ -7894,6 +7933,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -8057,6 +8103,13 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     postprocess_dataset_datasets__dataset_mfid__postprocess_post: {
@@ -8121,6 +8174,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Postprocessing is not enabled on this server (`feature_disabled`) */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description The run could not be queued (`pipeline_unavailable`); it is recorded as failed */
             503: {
                 headers: {
@@ -8166,6 +8226,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -8502,6 +8569,13 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     initiate_resumable_upload_datasets__dataset_mfid__upload_initiate_post: {
@@ -8545,6 +8619,13 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     initiate_multipart_upload_datasets__dataset_mfid__upload_initiate_multipart_post: {
@@ -8587,6 +8668,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -9501,6 +9589,13 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     create_file_ingestion_request_files__file_id__ingest_post: {
@@ -9548,6 +9643,20 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Ingestion is not enabled on this server (`feature_disabled`, only for `status=requested`) or file storage is not configured (`storage_not_configured`) */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request could not be queued (`ingestion_unavailable`); it is recorded as failed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -10828,6 +10937,13 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description Printing is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "printing", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     list_printers_print_printers_get: {
@@ -10863,6 +10979,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Printing is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "printing", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

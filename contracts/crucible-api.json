@@ -8372,6 +8372,13 @@
       },
       "ValidationError": {
         "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
           "loc": {
             "items": {
               "anyOf": [
@@ -9776,6 +9783,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Proposal sync is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"proposal_sync\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -13270,6 +13280,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -13379,6 +13392,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "File storage is not configured on this server: `{\"detail\": {\"code\": \"storage_not_configured\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -13683,6 +13699,12 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Ingestion is not enabled on this server (`feature_disabled`, only for `status=requested`) or file storage is not configured (`storage_not_configured`)"
+          },
+          "503": {
+            "description": "The request could not be queued (`ingestion_unavailable`); it is recorded as failed"
           }
         },
         "security": [
@@ -13766,6 +13788,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -14115,6 +14140,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -14230,6 +14258,9 @@
           "422": {
             "description": "Unknown pipeline (`unknown_pipeline`) or invalid parameters (`invalid_parameters`)"
           },
+          "501": {
+            "description": "Postprocessing is not enabled on this server (`feature_disabled`)"
+          },
           "503": {
             "description": "The run could not be queued (`pipeline_unavailable`); it is recorded as failed"
           }
@@ -14315,6 +14346,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -15065,6 +15099,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "File storage is not configured on this server: `{\"detail\": {\"code\": \"storage_not_configured\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -15157,6 +15194,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "File storage is not configured on this server: `{\"detail\": {\"code\": \"storage_not_configured\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -15249,6 +15289,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "File storage is not configured on this server: `{\"detail\": {\"code\": \"storage_not_configured\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -17614,6 +17657,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "File storage is not configured on this server: `{\"detail\": {\"code\": \"storage_not_configured\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -17727,6 +17773,12 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Ingestion is not enabled on this server (`feature_disabled`, only for `status=requested`) or file storage is not configured (`storage_not_configured`)"
+          },
+          "503": {
+            "description": "The request could not be queued (`ingestion_unavailable`); it is recorded as failed"
           }
         },
         "security": [
@@ -21097,6 +21149,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Printing is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"printing\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -21168,6 +21223,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "501": {
+            "description": "Printing is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"printing\", \"message\": ...}}`"
           }
         },
         "security": [

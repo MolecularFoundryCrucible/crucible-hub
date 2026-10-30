@@ -76,7 +76,7 @@ export const initializeWorkspaceDatasetUpload = createServerFn({
           .strict()
           .optional(),
         scenario: fixtureScenarioSchema.optional(),
-        size: z.number().int().min(1).max(MAX_UPLOAD_SIZE),
+        size: z.number().int().min(0).max(MAX_UPLOAD_SIZE),
       })
       .strict()
   )

@@ -102,6 +102,7 @@ function fixtureWorkspace(scenario?: FixtureScenario) {
 const MIB = 1024 * 1024
 
 function fixturePartSize(size: number) {
+  if (size === 0) return 0
   return Math.min(Math.max(Math.ceil(size / 8 / MIB), 8), 64) * MIB
 }
 
@@ -114,7 +115,7 @@ const apiMultipartStatusSchema = z
     existing_file: apiDatasetFileSchema.nullable().optional(),
     failure_code: z.string().nullable().optional(),
     next_part_number_marker: z.number().int().nullable().optional(),
-    part_size: z.number().int().positive().nullable().optional(),
+    part_size: z.number().int().nonnegative().nullable().optional(),
     parts: z
       .array(z.object({ part_number: z.number().int().min(1) }).passthrough())
       .max(STATUS_PAGE_LIMIT)

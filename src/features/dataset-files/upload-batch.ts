@@ -112,7 +112,6 @@ export function uploadItemIssues(
 ): readonly string[] {
   if (item.state.status === "done") return EMPTY_ISSUES
   const issues = [...validateUploadFilename(item.filename)]
-  if (item.file.size === 0) issues.push("Empty files cannot be uploaded.")
   const hasDuplicate = filenameCounts
     ? (filenameCounts.get(item.filename) ?? 0) > 1
     : items.some(
