@@ -28,6 +28,7 @@
     "format:check": "prettier --check .",
     "unused:check": "knip --no-progress",
     "typecheck": "tsc --noEmit",
+    "api:fetch": "node scripts/fetch-openapi.mjs",
     "api:generate": "openapi-typescript contracts/crucible-api.json -o src/generated/crucible-api.ts",
     "api:check": "node scripts/check-openapi.mjs",
     "boundary:check": "node scripts/check-server-boundary.mjs",

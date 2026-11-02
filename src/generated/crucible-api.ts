@@ -995,10 +995,12 @@ export interface paths {
         put?: never;
         /**
          * Complete Resumable Upload
+         * @deprecated
          * @description Finalise a GCS resumable upload.
          *     Requires contributor access to the dataset and ownership of the upload session.
          *     Verifies the blob landed in GCS, registers it as an AssociatedFile on the dataset,
          *     and deletes the upload session record.
+         *     Deprecated: use POST /datasets/{dataset_mfid}/upload/multipart/initiate.
          */
         post: operations["complete_resumable_upload_datasets__dataset_mfid__upload_complete_post"];
         delete?: never;
@@ -1018,11 +1020,13 @@ export interface paths {
         put?: never;
         /**
          * Initiate Resumable Upload
+         * @deprecated
          * @description Initiate a GCS resumable upload session for a large file.
          *     Requires contributor access to the dataset.
          *     Returns an upload_id and a resumable_uri the client uses to PUT chunks directly to GCS
          *     (no API credentials needed for the chunk transfers).
          *     Call POST /datasets/{dataset_mfid}/upload/complete when all chunks are uploaded.
+         *     Deprecated: use POST /datasets/{dataset_mfid}/upload/multipart/initiate.
          */
         post: operations["initiate_resumable_upload_datasets__dataset_mfid__upload_initiate_post"];
         delete?: never;
@@ -1042,11 +1046,13 @@ export interface paths {
         put?: never;
         /**
          * Initiate Multipart Upload
+         * @deprecated
          * @description Vend a short-lived GCS OAuth2 access token for parallel client-side uploads.
          *     Requires contributor access to the dataset.
          *     The client uses this token with google-cloud-storage transfer_manager.upload_chunks_concurrently().
          *     Returns upload_id — pass it to POST /datasets/{dataset_mfid}/upload/complete after the transfer.
          *     If existing_file is set, the file already exists; skip the upload entirely.
+         *     Deprecated: use POST /datasets/{dataset_mfid}/upload/multipart/initiate.
          */
         post: operations["initiate_multipart_upload_datasets__dataset_mfid__upload_initiate_multipart_post"];
         delete?: never;
@@ -8569,7 +8575,7 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            /** @description File storage is not configured on this server (`storage_not_configured`), or it is not Google Cloud Storage, which these routes need (`legacy_upload_unavailable`; upload through `/upload/multipart` instead): `{"detail": {"code": ..., "message": ...}}` */
             501: {
                 headers: {
                     [name: string]: unknown;
@@ -8619,7 +8625,7 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            /** @description File storage is not configured on this server (`storage_not_configured`), or it is not Google Cloud Storage, which these routes need (`legacy_upload_unavailable`; upload through `/upload/multipart` instead): `{"detail": {"code": ..., "message": ...}}` */
             501: {
                 headers: {
                     [name: string]: unknown;
@@ -8669,7 +8675,7 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description File storage is not configured on this server: `{"detail": {"code": "storage_not_configured", "message": ...}}` */
+            /** @description File storage is not configured on this server (`storage_not_configured`), or it is not Google Cloud Storage, which these routes need (`legacy_upload_unavailable`; upload through `/upload/multipart` instead): `{"detail": {"code": ..., "message": ...}}` */
             501: {
                 headers: {
                     [name: string]: unknown;
