@@ -5,6 +5,8 @@ import {
   finishHubLogin,
   hasHubSession,
   hubAuthPublicOrigin,
+  hubSessionIdentity,
+  hubSignInFailureDetails,
   sessionApiFetch,
 } from "./hub-auth.server"
 import { startRequestScope } from "@/test/start-request"
@@ -202,6 +204,118 @@ describe("hub login exchange", () => {
     const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
     const location = await scope.run(() => beginHubLogin("/hub/account", 0))
     expect(new URL(location).searchParams.get("max_age")).toBe("0")
+  })
+
+  describe("re-confirming a sign-in", () => {
+    async function signIn(account: string) {
+      const { scope, location } = await beginLogin("/hub/data")
+      const state = new URL(location).searchParams.get("state")!
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () =>
+          Response.json({ ...tokenResponse, user_unique_id: account })
+        )
+      )
+      const { cookies } = await finishLogin(loginCookie(scope), "code", state)
+      return cookies
+        .find((value) => value.startsWith("crucible_hub_session="))!
+        .split(";")[0]
+    }
+
+    async function stepUp(session: string, returning: string) {
+      const scope = startRequestScope(
+        "http://127.0.0.1:3000/hub/auth/login?max_age=0",
+        { headers: { cookie: session } }
+      )
+      const location = await scope.run(() =>
+        beginHubLogin("/hub/reauthenticated", 0)
+      )
+      const state = new URL(location).searchParams.get("state")!
+      const requests: string[] = []
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (input: string | URL | Request) => {
+          const path = new URL(String(input)).pathname
+          requests.push(path)
+          return path === "/auth/hub/token"
+            ? Response.json({
+                ...tokenResponse,
+                refresh_token: "refresh-2",
+                user_unique_id: returning,
+              })
+            : new Response(null)
+        })
+      )
+      const callback = startRequestScope(
+        "http://127.0.0.1:3000/hub/auth/callback",
+        {
+          headers: {
+            cookie: `${session}; ${loginCookie(scope).split(";")[0]}`,
+          },
+        }
+      )
+      const finished = callback.run(() => finishHubLogin("code", state))
+      return { callback, finished, requests }
+    }
+
+    it("replaces the session when the same account returns", async () => {
+      stubHubAuthEnv()
+      const session = await signIn("0000-0000-0000-000X")
+      const { callback, finished, requests } = await stepUp(
+        session,
+        "0000-0000-0000-000X"
+      )
+      await expect(finished).resolves.toBe("/hub/reauthenticated")
+      expect(requests).toEqual(["/auth/hub/token"])
+      expect(
+        callback
+          .setCookies()
+          .some((value) => /^crucible_hub_session=./.test(value))
+      ).toBe(true)
+    })
+
+    it("keeps the session and revokes the tokens when another account returns", async () => {
+      stubHubAuthEnv()
+      const session = await signIn("0000-0000-0000-000X")
+      const { callback, finished, requests } = await stepUp(
+        session,
+        "mfid-other-account"
+      )
+      const error = await finished.catch((reason: unknown) => reason)
+      expect(hubSignInFailureDetails(error)).toEqual({
+        reason: "account-mismatch",
+      })
+      expect(requests).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
+      expect(
+        callback
+          .setCookies()
+          .some((value) => value.startsWith("crucible_hub_session="))
+      ).toBe(false)
+      const original = startRequestScope("http://127.0.0.1:3000/hub/data", {
+        headers: { cookie: session },
+      })
+      await expect(
+        original.run(async () => hubSessionIdentity())
+      ).resolves.toBe("0000-0000-0000-000X")
+    })
+
+    it("does not restrict a plain sign-in or a step-up without a session", async () => {
+      stubHubAuthEnv()
+      const scope = startRequestScope(
+        "http://127.0.0.1:3000/hub/auth/login?max_age=0"
+      )
+      const location = await scope.run(() => beginHubLogin("/hub/", 0))
+      const state = new URL(location).searchParams.get("state")!
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () =>
+          Response.json({ ...tokenResponse, user_unique_id: "mfid-any" })
+        )
+      )
+      await expect(
+        finishLogin(loginCookie(scope), "code", state)
+      ).resolves.toMatchObject({ destination: "/hub/" })
+    })
   })
 
   it("keeps the session when the API requires a recent sign-in", async () => {

@@ -30,14 +30,16 @@ export const Route = createFileRoute("/auth/callback")({
             },
           })
         } catch (error) {
-          console.error(
-            "[Crucible Hub] Sign-in callback failed",
-            hubSignInFailureDetails(error)
-          )
+          const details = hubSignInFailureDetails(error)
+          console.error("[Crucible Hub] Sign-in callback failed", details)
+          const errorPage =
+            details.reason === "account-mismatch"
+              ? "/hub/auth/error?reason=account-mismatch"
+              : "/hub/auth/error"
           return new Response(null, {
             status: 303,
             headers: {
-              Location: new URL("/hub/auth/error", publicOrigin).toString(),
+              Location: new URL(errorPage, publicOrigin).toString(),
               "Cache-Control": "no-store",
               "Referrer-Policy": "no-referrer",
             },
