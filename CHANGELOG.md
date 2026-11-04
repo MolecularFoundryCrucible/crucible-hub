@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Edit and Done buttons now expose names that include their visible word, such as "Edit members" and "Done editing members", for screen readers and voice control.
+- Warnings now use the brand orange, selected groups in grouped lists show the same marker as the sidebar, and segmented controls have a clearer track and selected edge in the dark theme.
 - Records opened outside a list now get Previous and Next by default (same project and measurement or sample type, oldest first), changeable in Preferences or from the Browse nearby dialog, and Preferences is split into General, Browsing, and History tabs with shorter supporting text.
 - Pinned the API contract from the crucible-api v3.3.0 release asset, which corrects its version and marks the legacy upload routes deprecated, and added `npm run api:fetch -- vX.Y.Z` to pin future releases the same way.
 

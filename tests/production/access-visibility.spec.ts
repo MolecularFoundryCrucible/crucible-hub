@@ -12,9 +12,7 @@ test("shows who has access read-only to a member who cannot manage it", async ({
     page.getByText("Access management", { exact: true })
   ).toBeVisible()
   await expect(page.getByText("Direct access")).toBeVisible()
-  await expect(page.getByRole("button", { name: "Manage access" })).toHaveCount(
-    0
-  )
+  await expect(page.getByRole("button", { name: "Edit access" })).toHaveCount(0)
   await expect(page.getByText("Access management is unavailable")).toHaveCount(
     0
   )

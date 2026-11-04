@@ -167,8 +167,8 @@ function searchResponse(items: readonly WorkspaceSearchResult[]) {
 }
 
 function ensureManaging(name: string) {
-  const toggle = screen.getByRole("button", { name })
-  if (toggle.getAttribute("aria-pressed") !== "true") fireEvent.click(toggle)
+  const toggle = screen.queryByRole("button", { name })
+  if (toggle) fireEvent.click(toggle)
 }
 
 describe("InstrumentAccessCard", () => {
@@ -245,7 +245,7 @@ describe("InstrumentAccessCard", () => {
     expect(screen.getByText("Access management")).toBeTruthy()
     expect(screen.getByText("Jordan Reyes")).toBeTruthy()
     expect(screen.getByText("Beamline Collector")).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "Manage access" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Edit access" })).toBeNull()
   })
 
   it("toggles managing mode and updates a member's role", async () => {
@@ -260,7 +260,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    const manageToggle = screen.getByRole("button", { name: "Manage access" })
+    const manageToggle = screen.getByRole("button", { name: "Edit access" })
     fireEvent.click(manageToggle)
 
     expect(screen.getByText("Role changes save automatically.")).toBeTruthy()
@@ -309,7 +309,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
 
     const revokeButton = screen.getByLabelText("Revoke access for Jordan Reyes")
     fireEvent.click(revokeButton)
@@ -349,7 +349,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    ensureManaging("Manage access")
+    ensureManaging("Edit access")
     const addMemberButton = screen.getByRole("button", { name: "Add member" })
     fireEvent.click(addMemberButton)
 
@@ -418,7 +418,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    ensureManaging("Manage access")
+    ensureManaging("Edit access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -492,7 +492,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    ensureManaging("Manage access")
+    ensureManaging("Edit access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -543,7 +543,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    ensureManaging("Manage access")
+    ensureManaging("Edit access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -579,7 +579,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    ensureManaging("Manage access")
+    ensureManaging("Edit access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add direct access" })
@@ -597,7 +597,7 @@ describe("InstrumentAccessCard", () => {
   it("omits the checkbox from non-revocable rows in managing mode", () => {
     renderCard()
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
 
     expect(
       screen.queryByRole("checkbox", {
@@ -631,7 +631,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
     fireEvent.click(
       screen.getByRole("checkbox", {
         name: "Select Jordan Reyes for revocation",
@@ -680,7 +680,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage access" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
 
     const unassignButton = screen.getByLabelText("Unassign Beamline Collector")
     fireEvent.click(unassignButton)
@@ -723,7 +723,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    ensureManaging("Manage access")
+    ensureManaging("Edit access")
     const addOperatorButton = screen.getByRole("button", {
       name: "Add operator",
     })
@@ -793,7 +793,7 @@ describe("InstrumentAccessCard", () => {
 
     renderCard()
 
-    ensureManaging("Manage access")
+    ensureManaging("Edit access")
     fireEvent.click(screen.getByRole("button", { name: "Add operator" }))
 
     const dialog = screen.getByRole("dialog", { name: "Add operator" })

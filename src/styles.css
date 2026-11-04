@@ -5,6 +5,8 @@
 @import "@fontsource/noto-sans/600.css";
 @import "@fontsource/noto-sans-mono/400.css";
 
+@source not "../deploy";
+
 @custom-variant dark (&:is(.dark *));
 
 [data-slot="sheet-content"].resource-inspector {
@@ -394,6 +396,8 @@
   --color-action-hover: var(--action-hover);
   --color-action-pressed: var(--action-pressed);
   --color-action-selected: var(--action-selected);
+  --color-action-selected-border: var(--action-selected-border);
+  --color-segment-track: var(--segment-track);
   --color-border-strong: var(--border-strong);
   --color-primary-hover: var(--primary-hover);
   --color-overlay: var(--overlay);
@@ -404,6 +408,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-warning-text: var(--warning-text);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-accent-foreground: var(--accent-foreground);
@@ -508,6 +513,20 @@
   color: var(--muted-foreground);
 }
 
+@utility selection-marker {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0.5rem;
+    left: 0;
+    width: 0.125rem;
+    border-radius: 9999px;
+    background: var(--selection);
+  }
+}
+
 :root {
   --page-margin: var(--spacing-page-gutter);
   --brand-crucible-dark-blue: #031e2d;
@@ -565,8 +584,9 @@
   --destructive-foreground: oklch(0.985 0 0);
   --success: oklch(0.5 0.13 150);
   --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.52 0.14 70);
-  --warning-foreground: oklch(0.985 0 0);
+  --warning: var(--palette-orange-5);
+  --warning-foreground: oklch(0.145 0 0);
+  --warning-text: var(--palette-orange-7);
   --info: oklch(0.5 0.14 245);
   --info-foreground: oklch(0.985 0 0);
   --border: var(--palette-neutral-4);
@@ -578,9 +598,11 @@
   --action-hover: var(--palette-neutral-3);
   --action-pressed: var(--palette-blue-3);
   --action-selected: oklch(1 0 0);
+  --action-selected-border: var(--palette-neutral-7);
+  --segment-track: var(--palette-neutral-3);
   --overlay: oklch(0.165 0.012 240 / 10%);
   --ring: var(--palette-blue-9);
-  --selection: var(--palette-orange-6);
+  --selection: var(--palette-orange-5);
   --scan-frame: var(--brand-crucible-orange);
   --scan-mask: oklch(0 0 0 / 45%);
   --chart-1: oklch(0.87 0 0);
@@ -738,8 +760,9 @@
   --destructive-foreground: oklch(0.145 0 0);
   --success: oklch(0.72 0.13 150);
   --success-foreground: oklch(0.145 0 0);
-  --warning: oklch(0.8 0.13 80);
+  --warning: var(--palette-orange-5);
   --warning-foreground: oklch(0.145 0 0);
+  --warning-text: var(--palette-orange-5);
   --info: oklch(0.72 0.12 245);
   --info-foreground: oklch(0.145 0 0);
   --border: var(--palette-neutral-10);
@@ -751,6 +774,8 @@
   --action-hover: var(--palette-neutral-10);
   --action-pressed: var(--palette-blue-7);
   --action-selected: var(--palette-neutral-9);
+  --action-selected-border: var(--palette-neutral-7);
+  --segment-track: var(--palette-neutral-10);
   --overlay: oklch(0 0 0 / 40%);
   --ring: var(--palette-blue-4);
   --selection: var(--palette-orange-5);

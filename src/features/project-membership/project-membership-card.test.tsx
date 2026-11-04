@@ -152,8 +152,8 @@ function renderCard(
 }
 
 function ensureManaging(name: string) {
-  const toggle = screen.getByRole("button", { name })
-  if (toggle.getAttribute("aria-pressed") !== "true") fireEvent.click(toggle)
+  const toggle = screen.queryByRole("button", { name })
+  if (toggle) fireEvent.click(toggle)
 }
 
 describe("ProjectMembershipCard", () => {
@@ -213,7 +213,7 @@ describe("ProjectMembershipCard", () => {
     )
     const queryClient = renderCard()
 
-    ensureManaging("Manage members")
+    ensureManaging("Edit members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)
@@ -270,7 +270,7 @@ describe("ProjectMembershipCard", () => {
     )
     renderCard()
 
-    ensureManaging("Manage members")
+    ensureManaging("Edit members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)
@@ -309,7 +309,7 @@ describe("ProjectMembershipCard", () => {
     vi.mocked(addWorkspaceProjectMember).mockResolvedValue(ok(project.members))
     renderCard()
 
-    ensureManaging("Manage members")
+    ensureManaging("Edit members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)
@@ -362,7 +362,7 @@ describe("ProjectMembershipCard", () => {
     )
     renderCard()
 
-    ensureManaging("Manage members")
+    ensureManaging("Edit members")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
     const searchBox = screen.getByRole("combobox", { name: "Search people" })
     fireEvent.click(searchBox)
@@ -393,7 +393,7 @@ describe("ProjectMembershipCard", () => {
       project: { ...project, members: [owner, account, colleague] },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
 
     expect(
       screen.getByRole("img", { name: "The manager cannot be removed here" })
@@ -443,7 +443,7 @@ describe("ProjectMembershipCard", () => {
       },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
 
     expect(
       screen.getByRole("button", { name: "Remove Jordan Reyes" })
@@ -476,7 +476,7 @@ describe("ProjectMembershipCard", () => {
       project: { ...project, members: [owner, account, colleague] },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
 
     expect(
       screen.queryByRole("checkbox", {
@@ -515,7 +515,7 @@ describe("ProjectMembershipCard", () => {
       project: { ...project, members: [owner, account, colleague, second] },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     )
@@ -576,7 +576,7 @@ describe("ProjectMembershipCard", () => {
       project: { ...project, members: [owner, account, colleague, second] },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     )
@@ -629,7 +629,7 @@ describe("ProjectMembershipCard", () => {
       project: { ...project, members: [owner, account, colleague] },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
     fireEvent.click(screen.getByRole("button", { name: "Remove Jordan Reyes" }))
 
     const dialog = screen.getByRole("dialog", { name: "Remove member?" })
@@ -660,7 +660,7 @@ describe("ProjectMembershipCard", () => {
     )
     renderCard()
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage members" }))
+    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
     const roleSelect = screen.getByLabelText<HTMLSelectElement>(
       "Role for Morgan Lee"
     )

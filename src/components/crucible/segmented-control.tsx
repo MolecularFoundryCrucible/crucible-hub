@@ -17,7 +17,7 @@ export function SegmentedControl<TValue extends string>({
   return (
     <ToggleGroup
       aria-label={ariaLabel}
-      className={cn("gap-1 rounded-lg bg-muted p-1", className)}
+      className={cn("gap-1 rounded-lg bg-segment-track p-1", className)}
       onValueChange={(values) => {
         const selected = values.at(-1)
         const selectedOption = options.find(

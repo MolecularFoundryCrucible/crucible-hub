@@ -14,13 +14,13 @@ const buttonVariantClasses = cva(
         outline:
           "border-action-border bg-action-surface text-foreground shadow-xs hover:bg-action-hover in-data-[slot=button-group]:border-border-strong aria-expanded:bg-action-hover aria-pressed:bg-action-pressed aria-pressed:hover:bg-action-pressed",
         ghost:
-          "border-transparent hover:bg-action-hover hover:text-foreground aria-expanded:bg-action-hover aria-expanded:text-foreground aria-pressed:bg-action-pressed aria-pressed:text-foreground aria-[current=page]:bg-secondary aria-[current=page]:text-secondary-foreground",
+          "border-transparent hover:bg-action-hover hover:text-foreground aria-expanded:bg-action-hover aria-expanded:text-foreground aria-pressed:bg-action-pressed aria-pressed:text-foreground aria-[current=page]:selection-marker aria-[current=page]:bg-secondary aria-[current=page]:text-secondary-foreground data-active:bg-action-pressed data-active:text-foreground",
         destructive:
           "border-destructive/30 bg-destructive/10 text-destructive shadow-xs hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         "destructive-solid":
           "border-transparent bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:border-destructive focus-visible:ring-destructive/30 dark:focus-visible:ring-destructive/40",
         warning:
-          "border-warning/30 bg-warning/10 text-warning shadow-xs hover:bg-warning/20 focus-visible:border-warning/50 focus-visible:ring-warning/25 dark:bg-warning/15 dark:hover:bg-warning/25",
+          "border-warning/30 bg-warning/10 text-warning-text shadow-xs hover:bg-warning/20 focus-visible:border-warning/50 focus-visible:ring-warning/25 dark:bg-warning/15 dark:hover:bg-warning/25",
       },
       size: {
         default:

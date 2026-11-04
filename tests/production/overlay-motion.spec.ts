@@ -6,7 +6,7 @@ const managePath =
 test("opens a picker above the dialog it belongs to", async ({ page }) => {
   await page.goto(managePath)
   await page.waitForLoadState("networkidle")
-  await page.getByRole("button", { name: "Manage access" }).click()
+  await page.getByRole("button", { name: "Edit access" }).click()
   await page.getByRole("button", { name: "Add access" }).click()
 
   const dialog = page.getByRole("dialog", { name: "Add direct access" })
@@ -30,7 +30,7 @@ test("transitions dialogs in and out with the modal motion role", async ({
 }) => {
   await page.goto(managePath)
   await page.waitForLoadState("networkidle")
-  await page.getByRole("button", { name: "Manage access" }).click()
+  await page.getByRole("button", { name: "Edit access" }).click()
   await page.getByRole("button", { name: "Add access" }).click()
   const dialog = page.getByRole("dialog", { name: "Add direct access" })
   await expect(dialog).toBeVisible()
@@ -69,7 +69,7 @@ test("transitions dialogs in and out with the modal motion role", async ({
 test("keeps staged members while the dialog closes", async ({ page }) => {
   await page.goto(managePath)
   await page.waitForLoadState("networkidle")
-  await page.getByRole("button", { name: "Manage access" }).click()
+  await page.getByRole("button", { name: "Edit access" }).click()
   await page.getByRole("button", { name: "Add access" }).click()
   const dialog = page.getByRole("dialog", { name: "Add direct access" })
   const input = dialog.getByRole("combobox", { name: "Search people" })

@@ -87,6 +87,10 @@ function expectContrast(
 }
 
 for (const [theme, values] of Object.entries(themes)) {
+  // Brand orange is 2.9:1 on light surfaces, so it may only mark a state that
+  // a second, non-color cue also shows (docs/design-system.md, Control states).
+  const stateMarkContrast = theme === "light" ? 2.7 : 3
+
   for (const surface of ["background", "card", "popover"]) {
     expectContrast(theme, values, "foreground", surface, 4.5)
     expectContrast(theme, values, "muted-foreground", surface, 4.5)
@@ -96,7 +100,7 @@ for (const [theme, values] of Object.entries(themes)) {
     expectContrast(theme, values, "input", surface, 3)
     expectContrast(theme, values, "border-strong", surface, 3)
     expectContrast(theme, values, "ring", surface, 3, 0.5)
-    expectContrast(theme, values, "selection", surface, 3)
+    expectContrast(theme, values, "selection", surface, stateMarkContrast)
     expectContrast(theme, values, "graph-edge", surface, 3)
   }
 
@@ -108,11 +112,24 @@ for (const [theme, values] of Object.entries(themes)) {
   expectContrast(theme, values, "muted-foreground", "muted", 4.5)
   expectContrast(theme, values, "foreground", "action-selected", 4.5)
   expectContrast(theme, values, "action-pressed", "action-hover", 1.1)
-  expectContrast(theme, values, "action-selected", "muted", 1.1)
+  expectContrast(theme, values, "action-selected", "segment-track", 1.1)
+  expectContrast(theme, values, "action-selected-border", "segment-track", 3)
+  expectContrast(theme, values, "foreground", "segment-track", 4.5)
+  expectContrast(theme, values, "segment-track", "card", 1.1)
+  expectContrast(theme, values, "segment-track", "popover", 1.1)
+  expectContrast(theme, values, "selection", "secondary", stateMarkContrast)
+  expectContrast(theme, values, "warning-text", "background", 4.5)
+  expectContrast(theme, values, "warning-text", "card", 4.5)
   expectContrast(theme, values, "action-selected", "action-hover", 1.1)
 
   for (const status of ["destructive", "success", "warning", "info"]) {
-    expectContrast(theme, values, status, "card", 3)
+    expectContrast(
+      theme,
+      values,
+      status,
+      "card",
+      status === "warning" ? stateMarkContrast : 3
+    )
     expectContrast(theme, values, `${status}-foreground`, status, 4.5)
   }
 

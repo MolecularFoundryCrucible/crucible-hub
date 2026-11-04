@@ -105,14 +105,14 @@ describe("ResourceAccessCard", () => {
   it("offers the manage toggle to people who can manage access", () => {
     renderCard(true)
     expect(screen.getByText("Jordan Reyes")).toBeTruthy()
-    expect(screen.getByRole("button", { name: "Manage access" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Edit access" })).toBeTruthy()
   })
 
   it("shows the same list read-only to people who cannot manage access", () => {
     renderCard(false)
     expect(screen.getByText("Access management")).toBeTruthy()
     expect(screen.getByText("Jordan Reyes")).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "Manage access" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Edit access" })).toBeNull()
   })
 })
 

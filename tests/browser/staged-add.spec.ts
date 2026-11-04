@@ -103,7 +103,7 @@ test("project membership locked removal state", async ({ page }) => {
   )
   await page.waitForLoadState("networkidle")
 
-  await page.getByRole("button", { name: "Manage members" }).click()
+  await page.getByRole("button", { name: "Edit members" }).click()
 
   await expect(
     page.getByRole("img", { name: "The manager cannot be removed here" })

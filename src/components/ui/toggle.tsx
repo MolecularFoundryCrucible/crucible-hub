@@ -14,7 +14,7 @@ function toggleClasses({
 }) {
   return buttonVariants({
     className: cn(
-      "data-pressed:border-border-strong data-pressed:bg-action-selected data-pressed:shadow-xs data-pressed:hover:bg-action-selected",
+      "data-pressed:border-action-selected-border data-pressed:bg-action-selected data-pressed:shadow-xs data-pressed:hover:bg-action-selected",
       className
     ),
     size,
