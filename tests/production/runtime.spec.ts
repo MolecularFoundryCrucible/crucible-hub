@@ -196,3 +196,19 @@ test("hydrates full page loads in the Administrator view", async ({ page }) => {
   }
   expect(errors).toEqual([])
 })
+
+test("explains a sign-in by a different account without offering to switch", async ({
+  page,
+}) => {
+  await page.goto("/hub/auth/error?reason=account-mismatch")
+  await expect(
+    page.getByRole("heading", { name: "A different account signed in" })
+  ).toBeVisible()
+  await expect(
+    page.getByText("You are still signed in as before.")
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "Return to Crucible Hub" })
+  ).toBeVisible()
+})

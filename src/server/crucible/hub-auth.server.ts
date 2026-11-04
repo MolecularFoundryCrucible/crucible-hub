@@ -69,6 +69,7 @@ type Transaction = {
   verifier: string
   returnTo: string
   expiresAt: number
+  expectedAccount?: string
   consumed: boolean
   cancelled: boolean
 }
@@ -125,7 +126,16 @@ function refreshUnavailable(retryAfterMs: number) {
   )
 }
 
+class HubAccountMismatchError extends Error {
+  constructor() {
+    super("A different account returned from re-confirming a sign-in.")
+  }
+}
+
 export function hubSignInFailureDetails(error: unknown) {
+  if (error instanceof HubAccountMismatchError) {
+    return { reason: "account-mismatch" }
+  }
   if (error instanceof TokenRequestError) {
     return { reason: "token-exchange-rejected", status: error.status }
   }
@@ -440,6 +450,23 @@ async function tokenRequest(path: string, body: object): Promise<Tokens> {
   return tokenSchema.parse(await response.json())
 }
 
+async function currentAccount() {
+  const sessionId = getCookie(sessionCookie)
+  if (!sessionId) return undefined
+  return sharedMode()
+    ? (await readSession(sessionId))?.session.tokens.user_unique_id
+    : localSession(sessionId)?.tokens.user_unique_id
+}
+
+async function rejectOtherAccount(
+  expectedAccount: string | undefined,
+  tokens: Tokens
+) {
+  if (!expectedAccount || tokens.user_unique_id === expectedAccount) return
+  await revokeRefreshToken(tokens.refresh_token)
+  throw new HubAccountMismatchError()
+}
+
 export async function beginHubLogin(
   returnTo: string | null,
   maxAge: number | null = null
@@ -455,11 +482,13 @@ export async function beginHubLogin(
   const verifier = randomValue()
   const challenge = createHash("sha256").update(verifier).digest("base64url")
   const transactionId = randomValue()
+  const expectedAccount = maxAge === null ? undefined : await currentAccount()
   const transaction = {
     state,
     verifier,
     returnTo: safeReturnTo(returnTo),
     expiresAt: Date.now() + transactionLifetime,
+    ...(expectedAccount ? { expectedAccount } : {}),
     consumed: false,
     cancelled: false,
   }
@@ -502,6 +531,7 @@ export async function finishHubLogin(code: string, state: string) {
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
     })
+    await rejectOtherAccount(transaction.expectedAccount, tokens)
     const sessionId = randomValue()
     let accepted: boolean
     try {
@@ -547,6 +577,7 @@ export async function finishHubLogin(code: string, state: string) {
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
     })
+    await rejectOtherAccount(transaction.expectedAccount, tokens)
     if (
       transaction.cancelled ||
       store.transactions.get(transactionId) !== transaction
