@@ -65,7 +65,7 @@ describe("SystemStatusPopover", () => {
 
     const trigger = screen.getByRole("button", { name: "API status" })
     expect(trigger).toBeTruthy()
-    expect(screen.queryByText("System Status")).toBeNull()
+    expect(screen.queryByText("System status")).toBeNull()
   })
 
   it("opens popover on click and loads healthy system status", async () => {

@@ -157,6 +157,7 @@ export {
   ChevronsUpDown as SortUnselectedIcon,
   Database as DatabaseIcon,
   Server as ServerIcon,
+  AppWindow as HubApplicationIcon,
   ExternalLink as ExternalLinkIcon,
   X as CloseIcon,
   Minus as IndeterminateSelectionIcon,

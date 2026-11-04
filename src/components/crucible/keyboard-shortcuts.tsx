@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
 import { KeyboardShortcutsIcon } from "@/components/crucible/icons"
@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Kbd } from "@/components/ui/kbd"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar"
 import {
   isDialogKeyboardTarget,
@@ -25,17 +25,17 @@ const navigationShortcuts = {
   p: "/projects",
 } as const
 
-const shortcuts = [
-  ["Ctrl K", "Search Crucible"],
-  ["Ctrl Shift K", "Search data in the current project"],
-  ["G then H", "Go to Home"],
-  ["G then P", "Go to Projects"],
-  ["G then D", "Go to Data"],
-  ["G then I", "Go to Instruments"],
-  ["Ctrl B", "Expand or collapse navigation"],
-  ["?", "Show keyboard shortcuts"],
-  ["Esc", "Close the active dialog or panel"],
-] as const
+type Shortcut = {
+  description: string
+  keys: readonly string[]
+  sequence?: boolean
+}
+
+type ShortcutGroup = { shortcuts: readonly Shortcut[]; title: string }
+
+function goTo(key: string, description: string): Shortcut {
+  return { description, keys: ["G", key], sequence: true }
+}
 
 type ResourceContext = {
   kind: "dataset" | "instrument" | "project" | "sample"
@@ -140,26 +140,6 @@ export function KeyboardShortcuts({
     }
   }, [navigate, pathname])
 
-  const resourceContext = getResourceContext(pathname)
-  const graphActive = /^\/(datasets|samples)\/[^/]+\/graph$/.test(pathname)
-  const contextualShortcuts = resourceContext
-    ? [
-        ["G then O", "Go to this resource's Overview"],
-        ...(resourceContext.kind === "sample" ||
-        resourceContext.kind === "dataset"
-          ? [
-              ["G then G", "Go to this resource's Graph"],
-              ...(resourceContext.kind === "dataset"
-                ? [["G then P", "Go to this dataset's Processing page"]]
-                : []),
-              ["G then M", "Go to this resource's Manage page"],
-              ["← / →", "Previous or next item when opened from a list"],
-              ...(graphActive ? [["F", "Center the focused graph node"]] : []),
-            ]
-          : []),
-      ]
-    : []
-
   return (
     <Dialog handle={handle} open={open} onOpenChange={setOpen}>
       <DialogContent>
@@ -169,39 +149,104 @@ export function KeyboardShortcuts({
             Shortcuts are disabled while typing in a field.
           </DialogDescription>
         </DialogHeader>
-        <dl className="flex flex-col gap-3">
-          {shortcuts.map(([keys, description]) => {
-            const unavailable = keys === "Ctrl Shift K" && !projectActive
-            return (
-              <div className="grid grid-cols-3 items-center gap-4" key={keys}>
-                <dt>
-                  <Kbd>{keys}</Kbd>
-                </dt>
-                <dd
-                  className={
-                    unavailable
-                      ? "col-span-2 text-muted-foreground"
-                      : "col-span-2"
-                  }
-                >
-                  {description}
-                  {unavailable ? " (available inside a project)" : ""}
-                </dd>
-              </div>
-            )
-          })}
-          {contextualShortcuts.map(([keys, description]) => (
-            <div className="grid grid-cols-3 items-center gap-4" key={keys}>
-              <dt>
-                <Kbd>{keys}</Kbd>
-              </dt>
-              <dd className="col-span-2">{description}</dd>
-            </div>
+        <div className="flex flex-col gap-4">
+          {keyboardShortcutGroups(pathname, projectActive).map((group) => (
+            <section
+              aria-label={group.title}
+              className="flex flex-col gap-2"
+              key={group.title}
+            >
+              <h3 className="text-supporting text-muted-foreground">
+                {group.title}
+              </h3>
+              <dl className="flex flex-col gap-2">
+                {group.shortcuts.map((shortcut) => (
+                  <div
+                    className="grid grid-cols-3 items-center gap-4"
+                    key={shortcut.description}
+                  >
+                    <dt>
+                      <ShortcutKeys shortcut={shortcut} />
+                    </dt>
+                    <dd className="col-span-2">{shortcut.description}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
           ))}
-        </dl>
+        </div>
       </DialogContent>
     </Dialog>
   )
+}
+
+function ShortcutKeys({ shortcut }: { shortcut: Shortcut }) {
+  return (
+    <KbdGroup>
+      {shortcut.keys.map((key, index) => (
+        <Fragment key={`${index}-${key}`}>
+          {shortcut.sequence && index > 0 ? (
+            <span className="text-supporting text-muted-foreground">then</span>
+          ) : null}
+          <Kbd>{key}</Kbd>
+        </Fragment>
+      ))}
+    </KbdGroup>
+  )
+}
+
+export function keyboardShortcutGroups(
+  pathname: string,
+  projectActive: boolean
+): ShortcutGroup[] {
+  const context = getResourceContext(pathname)
+  const processingUsesP = context?.kind === "dataset"
+  const hasRecordSections =
+    context?.kind === "dataset" || context?.kind === "sample"
+  const onRecordOverview = /^\/(datasets|samples)\/[^/]+$/.test(pathname)
+  const onGraph = /^\/(datasets|samples)\/[^/]+\/graph$/.test(pathname)
+
+  const groups: ShortcutGroup[] = [
+    {
+      title: "General",
+      shortcuts: [
+        { description: "Search Crucible", keys: ["Ctrl K"] },
+        ...(projectActive
+          ? [{ description: "Search this project", keys: ["Ctrl Shift K"] }]
+          : []),
+        { description: "Expand or collapse navigation", keys: ["Ctrl B"] },
+        { description: "Show keyboard shortcuts", keys: ["?"] },
+        { description: "Close the active dialog or panel", keys: ["Esc"] },
+      ],
+    },
+    {
+      title: "Go to",
+      shortcuts: [
+        goTo("H", "Home"),
+        goTo("D", "Data"),
+        ...(processingUsesP ? [] : [goTo("P", "Projects")]),
+        goTo("I", "Instruments"),
+      ],
+    },
+  ]
+
+  if (context) {
+    groups.push({
+      title: `This ${context.kind}`,
+      shortcuts: [
+        goTo("O", "Overview"),
+        ...(processingUsesP ? [goTo("P", "Processing")] : []),
+        ...(hasRecordSections ? [goTo("G", "Graph"), goTo("M", "Manage")] : []),
+        ...(onRecordOverview
+          ? [{ description: "Previous or next record", keys: ["←", "→"] }]
+          : []),
+        ...(onGraph
+          ? [{ description: "Center the focused graph node", keys: ["F"] }]
+          : []),
+      ],
+    })
+  }
+  return groups
 }
 
 function getResourceContext(pathname: string): ResourceContext | null {

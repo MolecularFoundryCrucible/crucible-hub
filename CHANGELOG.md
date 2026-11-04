@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Grouped the keyboard shortcuts dialog so it lists only what works on the current page, and redesigned the system status popover with flat rows.
+
 ## 1.7.3 - 2026-11-04
 
 - Edit and Done buttons now expose names that include their visible word, such as "Edit members" and "Done editing members", for screen readers and voice control.
