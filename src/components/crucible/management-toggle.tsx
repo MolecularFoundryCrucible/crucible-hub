@@ -19,12 +19,12 @@ export function ManagementToggle({
   onChange: (active: boolean) => void
   subject: string
 }) {
-  const label = `Manage ${subject}`
+  const label = active ? `Done editing ${subject}` : `Edit ${subject}`
   const Icon = active ? FinishManagingIcon : ManageIcon
   const button = (
     <Button
       aria-label={label}
-      aria-pressed={active}
+      data-active={active || undefined}
       disabled={disabled}
       onClick={() => onChange(!active)}
       size="sm"

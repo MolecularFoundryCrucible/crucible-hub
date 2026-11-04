@@ -106,10 +106,11 @@ test.describe("phone", () => {
       name: /^Change resource sequence/,
     })
     await expect(browse).toBeVisible()
+    await expect(browse).toContainText("in this project")
     expect((await browse.boundingBox())!.width).toBeLessThanOrEqual(40)
     expect(
       await browse
-        .getByText("Browse nearby")
+        .getByText("in this project")
         .evaluate((label) => label.getBoundingClientRect().width)
     ).toBeLessThanOrEqual(1)
   })

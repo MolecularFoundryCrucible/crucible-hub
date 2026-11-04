@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import {
@@ -17,6 +17,7 @@ import {
   useClearResourceSiblingNavigation,
 } from "@/components/crucible/resource-sibling-navigation"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogClose,
@@ -34,17 +35,26 @@ import {
 } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { IdentityScope } from "@/data/crucible/query-keys"
+import {
+  isDefaultResourceSequence,
+  resolveResourceSequence,
+  resourceSequenceAffiliation,
+  resourceSequencePreferenceKey,
+} from "@/data/crucible/resource-sequence"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 import { PendingIcon } from "@/components/crucible/pending-icon"
+import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
 
 type Resource = Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
 
 export function ResourceSiblingConfigurationAction({
   navigation,
+  pending: sequencePending = false,
   resource,
   scope,
 }: {
   navigation: ActiveResourceSiblingNavigation | null
+  pending?: boolean
   resource: Resource
   scope: IdentityScope
 }) {
@@ -52,14 +62,25 @@ export function ResourceSiblingConfigurationAction({
   const activate = useActivateResourceSiblingCollection()
   const clear = useClearResourceSiblingNavigation()
   const [open, setOpen] = useState(false)
-  const [configuration, setConfiguration] = useState(defaultConfiguration)
+  const { enabled, preferences, update } = useAccountPreferences()
+  const preferenceKey = resourceSequencePreferenceKey(resource.kind)
+  const saved = preferences.hub?.resource_sequence?.[preferenceKey]
+  const savedConfiguration = () =>
+    resolveResourceSequence(
+      saved?.scope === "off" ? undefined : saved,
+      resource
+    )
+  const saveDefaultId = useId()
+  const [saveDefault, setSaveDefault] = useState(false)
+  const [configuration, setConfiguration] = useState(savedConfiguration)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
 
   function changeOpen(nextOpen: boolean) {
     setOpen(nextOpen)
     if (nextOpen) {
-      setConfiguration(navigation?.configuration ?? defaultConfiguration())
+      setConfiguration(navigation?.configuration ?? savedConfiguration())
+      setSaveDefault(false)
       setError(false)
     }
   }
@@ -71,12 +92,28 @@ export function ResourceSiblingConfigurationAction({
     setError(false)
     try {
       const collection = await createAnchoredResourceSiblingCollection({
+        affiliation: resourceSequenceAffiliation({
+          includePublic: preferences.hub?.include_public_data === true,
+          resource,
+          scope,
+        }),
         configuration,
         queryClient,
         resource,
         scope,
       })
       activate(collection)
+      if (saveDefault) {
+        update({
+          hub: {
+            resource_sequence: {
+              [preferenceKey]: isDefaultResourceSequence(configuration)
+                ? null
+                : configuration,
+            },
+          },
+        })
+      }
       setOpen(false)
     } catch {
       setError(true)
@@ -96,7 +133,7 @@ export function ResourceSiblingConfigurationAction({
               aria-label={`Change resource sequence. ${title}`}
               className="max-w-resource-sequence min-w-0"
               type="button"
-              variant={navigation ? "outline" : "ghost"}
+              variant={navigation || sequencePending ? "outline" : "ghost"}
             />
           }
         >
@@ -138,6 +175,14 @@ export function ResourceSiblingConfigurationAction({
                   {resource.kind === "dataset" ? "datasets" : "samples"}
                 </NativeSelectOption>
                 {resource.project ? (
+                  <NativeSelectOption value="project_subtype">
+                    Same project and{" "}
+                    {resource.kind === "dataset"
+                      ? "measurement"
+                      : "sample type"}
+                  </NativeSelectOption>
+                ) : null}
+                {resource.project ? (
                   <NativeSelectOption value="project">
                     Same project
                   </NativeSelectOption>
@@ -173,6 +218,18 @@ export function ResourceSiblingConfigurationAction({
               }
               value={configuration}
             />
+            {enabled ? (
+              <Field orientation="horizontal">
+                <Checkbox
+                  checked={saveDefault}
+                  id={saveDefaultId}
+                  onCheckedChange={setSaveDefault}
+                />
+                <FieldLabel htmlFor={saveDefaultId}>
+                  Save as my default
+                </FieldLabel>
+              </Field>
+            ) : null}
           </FieldGroup>
           {error ? (
             <FieldError
@@ -189,7 +246,7 @@ export function ResourceSiblingConfigurationAction({
               className="sm:mr-auto"
               disabled={pending}
               onClick={() => {
-                clear?.()
+                clear?.(resource.unique_id)
                 setOpen(false)
               }}
               type="button"
@@ -215,14 +272,6 @@ export function ResourceSiblingConfigurationAction({
   )
 }
 
-function defaultConfiguration(): ResourceSiblingConfiguration {
-  return {
-    direction: "asc",
-    scope: "subtype",
-    sort: "name",
-  }
-}
-
 function resourceSiblingScope(
   value: string
 ): ResourceSiblingConfiguration["scope"] | undefined {
@@ -230,6 +279,7 @@ function resourceSiblingScope(
     value === "instrument" ||
     value === "owner" ||
     value === "project" ||
+    value === "project_subtype" ||
     value === "subtype"
     ? value
     : undefined

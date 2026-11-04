@@ -10,6 +10,7 @@ import {
   PrincipalTypeIcon,
   ResourceTypeIcon,
 } from "@/components/crucible/resource-type-icon"
+import { SegmentedControl } from "@/components/crucible/segmented-control"
 import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import { ThemeSelect } from "@/components/theme-select"
 import { Badge } from "@/components/ui/badge"
@@ -30,10 +31,12 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { PaletteSwatch, paletteSteps } from "@/components/ui/palette-swatch"
 import type { PaletteRamp } from "@/components/ui/palette-swatch"
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -43,6 +46,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+
+const segmentedOptions = [
+  { label: "Samples", value: "samples" },
+  { label: "Datasets", value: "datasets" },
+] as const
 
 export const Route = createFileRoute("/fixtures/design-system")({
   head: () => ({
@@ -275,6 +283,53 @@ function DesignSystemFixtures() {
             </Table>
             <div className="max-w-action">
               <Input aria-label="Input boundary specimen" placeholder="Input" />
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section aria-labelledby="control-state-title">
+        <SectionHeading
+          description="Each state has one treatment in both themes."
+          id="control-state-title"
+          title="Control states"
+        />
+        <Card className="mt-4">
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <Switch aria-label="Switch off" />
+              <Switch aria-label="Switch on" defaultChecked />
+              <Switch
+                aria-label="Warning switch on"
+                defaultChecked
+                variant="warning"
+              />
+              <Checkbox aria-label="Checkbox off" />
+              <Checkbox aria-label="Checkbox on" defaultChecked />
+            </div>
+            <SegmentedControl
+              ariaLabel="Segmented specimen"
+              onValueChange={() => undefined}
+              options={segmentedOptions}
+              value="samples"
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <Button aria-pressed="true" variant="ghost">
+                Done
+              </Button>
+              <Badge variant="warning">Warning</Badge>
+            </div>
+            <div className="grid gap-1">
+              <Button
+                aria-current="page"
+                className="justify-start"
+                variant="ghost"
+              >
+                Selected group
+              </Button>
+              <Button className="justify-start" variant="ghost">
+                Other group
+              </Button>
             </div>
           </CardContent>
         </Card>

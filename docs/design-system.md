@@ -16,13 +16,27 @@ Read this before building or changing any screen. The detailed rules live in [`d
 
 ## Brand colors, one job each
 
-| Color               | Value     | Job                                                                                    | Never                                        |
-| ------------------- | --------- | -------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Crucible dark blue  | `#031e2d` | Ink and primary action in light mode; sidebar in dark mode                             | Large decorative fills                       |
-| Crucible light blue | `#a8c4cd` | Quiet surfaces in light mode (sidebar, selected, pressed); primary action in dark mode | Text or thin lines on light surfaces (1.8:1) |
-| Crucible orange     | `#ff6600` | "You are here" and "this is selected": nav marker, active tab, current graph node      | Buttons, status, stripes, glows              |
+| Color               | Value     | Job                                                                                               | Never                                         |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Crucible dark blue  | `#031e2d` | Ink and primary action in light mode; sidebar in dark mode                                        | Large decorative fills                        |
+| Crucible light blue | `#a8c4cd` | Quiet surfaces in light mode (sidebar, selected, pressed); primary action in dark mode            | Text or thin lines on light surfaces (1.8:1)  |
+| Crucible orange     | `#ff6600` | "You are here" (nav marker, selected group, active tab, current graph node) and the warning state | Primary actions, other status, stripes, glows |
 
-On light surfaces orange uses the darkened selection step (`--palette-orange-6`, 4.4:1). Resource-type colors (dataset, sample, project, instrument, person, service account, file) and status colors (success, warning, info, destructive) are separate roles and never borrow brand colors.
+`selection` and `warning` use `#ff6600` in both themes. It is only 2.9:1 on white, so in the light theme it may mark a state only when a second, non-color cue also shows that state (bolder text, darker text, or a switch's thumb position), and warning text and icons use the darker `warning-text` role (`--palette-orange-7`, 6.2:1 on the warning tint). Resource-type colors (dataset, sample, project, instrument, person, service account, file) and status colors (success, info, destructive) are separate roles and never borrow brand colors.
+
+## Control states
+
+| You are showing                            | Control                                       | Color                                                |
+| ------------------------------------------ | --------------------------------------------- | ---------------------------------------------------- |
+| A setting that takes effect immediately    | `Switch`                                      | `primary` when on                                    |
+| A setting that raises access or risk       | `Switch variant="warning"`                    | `warning` when on                                    |
+| A choice applied later, or picking several | `Checkbox`                                    | `primary` when on                                    |
+| One of a few options or views              | `SegmentedControl`                            | `action-selected` with a 3:1 edge on `segment-track` |
+| A temporary mode on a button               | `aria-pressed` or `data-active` on a `Button` | `action-pressed`                                     |
+| Where you are in a vertical list           | `selection-marker`                            | `selection` bar at the left edge, in both themes     |
+| Where you are in horizontal tabs           | `resourceSectionActiveProps`                  | `selection` underline                                |
+
+Each navigation tree shows one marker: the top-level destination carries it, and a child inside it shows only the selected fill. Ghost `Button`s get the marker from `aria-current="page"`, and `SidebarMenuButton` from `isActive`, so feature code never draws its own.
 
 ## Tokens
 
@@ -38,12 +52,15 @@ Two layers, both only in `src/styles.css`:
 | Divider, card edge                    | `border`                                                                        |
 | Input or icon-only control edge (3:1) | `border-strong`, `input`                                                        |
 | Text-button edge (soft)               | `action-border` on `action-surface`                                             |
-| Hover, pressed, selected              | `action-hover`, `action-pressed`, `secondary`                                   |
+| Hover, pressed                        | `action-hover`, `action-pressed`                                                |
+| Selected list item                    | `secondary` plus the `selection-marker` utility                                 |
+| Selected segment and its track        | `action-selected`, `action-selected-border`, `segment-track`                    |
 | Main action                           | `primary`, `primary-hover`, `primary-foreground`                                |
 | Current location, selection marker    | `selection`                                                                     |
 | Focus ring                            | `ring`                                                                          |
 | Dialog and sheet backdrop             | `overlay`                                                                       |
 | State                                 | `success`, `warning`, `info`, `destructive` (tinted surface plus semantic text) |
+| Warning text and icons                | `warning-text`                                                                  |
 | Resource type                         | `resource-*`                                                                    |
 
 A missing role is a design-system change in `src/styles.css`, never a local color, arbitrary value, or inline `color-mix`. Tailwind's default palette is disabled.
@@ -86,7 +103,7 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 | `<Button variant="ghost">Edit</Button>` on a read-first card                     | An outlined or solid Edit competing with the card's data |
 | Two equal page-header actions solid side by side (Create sample, Create dataset) | A solid action in the top bar and another in the header  |
 | `bg-secondary` via `aria-current="page"` for a selected list item                | A custom selected color in feature code                  |
-| Status as `<Badge variant="warning">Retrying</Badge>`                            | Orange text or icons to signal a warning                 |
+| Status as `<Badge variant="warning">Retrying</Badge>`                            | A custom warning color in feature code                   |
 | Add a role to `src/styles.css` when a job is unserved                            | `bg-[color-mix(...)]` or a hex value in a component      |
 | Save, Create, Print                                                              | "Save scientific metadata", filler helper text           |
 

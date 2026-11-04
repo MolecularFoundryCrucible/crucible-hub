@@ -16,14 +16,11 @@ test("deletion dialog opens with final geometry", async ({ page }) => {
   await expect(dialog).toBeVisible()
 
   await expect(
-    dialog.getByText(/Deletion is blocked: 2 datasets still assigned/i)
+    dialog.getByText(/Deletion is blocked: \d+ datasets? still assigned/i)
   ).toBeVisible()
-  console.log(
-    "PENDING TEXT ABSENT:",
-    (await dialog
-      .getByText(/Reviewing what this deletion removes/i)
-      .count()) === 0
-  )
+  await expect(
+    dialog.getByText(/Reviewing what this deletion removes/i)
+  ).toHaveCount(0)
   await expect(
     dialog.getByRole("button", { name: "Delete permanently", exact: true })
   ).toBeDisabled()

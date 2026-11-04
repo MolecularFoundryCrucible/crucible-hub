@@ -26,6 +26,31 @@ const directorySortPreferenceSchema = z
     sort: directorySortFieldSchema,
   })
   .strict()
+const resourceSequencePreferenceSchema = z
+  .object({
+    direction: sortDirectionSchema,
+    scope: z.enum([
+      "all",
+      "instrument",
+      "off",
+      "owner",
+      "project",
+      "project_subtype",
+      "subtype",
+    ]),
+    sort: resourceSortSchema,
+  })
+  .strict()
+const resourceSequencesPreferenceSchema = z.object({
+  datasets: resourceSequencePreferenceSchema.optional().catch(undefined),
+  samples: resourceSequencePreferenceSchema.optional().catch(undefined),
+})
+const resourceSequencesPatchSchema = z
+  .object({
+    datasets: resourceSequencePreferenceSchema.nullable().optional(),
+    samples: resourceSequencePreferenceSchema.nullable().optional(),
+  })
+  .strict()
 const dataGroupByPreferenceSchema = z.object({
   samples: sampleFacetFieldSchema.optional().catch(undefined),
   datasets: datasetFacetFieldSchema.optional().catch(undefined),
@@ -62,6 +87,9 @@ export const accountPreferencesSchema = z.object({
         .catch(undefined),
       include_public_data: z.boolean().optional().catch(undefined),
       label_printer: labelPrinterPreferenceSchema.optional().catch(undefined),
+      resource_sequence: resourceSequencesPreferenceSchema
+        .optional()
+        .catch(undefined),
     })
     .optional()
     .catch(undefined),
@@ -81,6 +109,7 @@ export const accountPreferencesPatchSchema = z
           .optional(),
         include_public_data: z.boolean().nullable().optional(),
         label_printer: labelPrinterPreferenceSchema.nullable().optional(),
+        resource_sequence: resourceSequencesPatchSchema.nullable().optional(),
       })
       .strict()
       .optional(),
@@ -100,6 +129,9 @@ export type DirectorySortField = z.infer<typeof directorySortFieldSchema>
 export type DataSortPreference = z.infer<typeof dataSortPreferenceSchema>
 export type DirectorySortPreference = z.infer<
   typeof directorySortPreferenceSchema
+>
+export type ResourceSequencePreference = z.infer<
+  typeof resourceSequencePreferenceSchema
 >
 export type AccountPreferences = z.infer<typeof accountPreferencesSchema>
 export type AccountPreferencesPatch = z.infer<

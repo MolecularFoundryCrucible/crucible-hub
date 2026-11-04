@@ -6,7 +6,7 @@ test("batch member removal flow", async ({ page }) => {
   )
   await page.waitForLoadState("networkidle")
 
-  await page.getByRole("button", { name: "Manage members" }).click()
+  await page.getByRole("button", { name: "Edit members" }).click()
 
   const memberList = page.getByRole("list", { name: "Project members" })
   const lockedIdentity = await memberList.getByText("Avery Chen").boundingBox()

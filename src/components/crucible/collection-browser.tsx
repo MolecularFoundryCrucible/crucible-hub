@@ -362,7 +362,12 @@ function CollectionBrowser({
                     type="button"
                     variant="ghost"
                   >
-                    <span className="flex min-w-0 items-center gap-2 overflow-hidden">
+                    <span
+                      className={cn(
+                        "flex min-w-0 items-center gap-2 overflow-hidden",
+                        !active && "text-body"
+                      )}
+                    >
                       <FacetFieldIcon bucket={bucket} field={field} />
                       <FacetBucketName bucket={bucket} field={field} />
                     </span>

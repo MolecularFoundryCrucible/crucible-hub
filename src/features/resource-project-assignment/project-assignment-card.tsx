@@ -202,7 +202,6 @@ export function ProjectAssignmentCard({
             Choose project
           </Button>
         }
-        description={`Reassign this ${resource.kind} to another project.`}
         presentation={presentation}
         title="Transfer project"
       >
