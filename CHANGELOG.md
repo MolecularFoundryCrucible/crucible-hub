@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+## 1.7.3 - 2026-11-04
+
 - Edit and Done buttons now expose names that include their visible word, such as "Edit members" and "Done editing members", for screen readers and voice control.
 - Warnings now use the brand orange, selected groups in grouped lists show the same marker as the sidebar, and segmented controls have a clearer track and selected edge in the dark theme.
 - Records opened outside a list now get Previous and Next by default (same project and measurement or sample type, oldest first), changeable in Preferences or from the Browse nearby dialog, and Preferences is split into General, Browsing, and History tabs with shorter supporting text.
