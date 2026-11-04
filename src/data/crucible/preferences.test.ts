@@ -64,6 +64,30 @@ describe("account preferences", () => {
     ).toEqual({ hub: { include_public_data: false } })
   })
 
+  it("drops an invalid saved neighbour sequence", () => {
+    expect(
+      accountPreferencesSchema.parse({
+        hub: {
+          resource_sequence: {
+            datasets: { direction: "asc", scope: "off", sort: "created" },
+            samples: { direction: "asc", scope: "unknown", sort: "created" },
+          },
+        },
+      })
+    ).toEqual({
+      hub: {
+        resource_sequence: {
+          datasets: { direction: "asc", scope: "off", sort: "created" },
+        },
+      },
+    })
+    expect(
+      accountPreferencesPatchSchema.safeParse({
+        hub: { resource_sequence: { samples: null } },
+      }).success
+    ).toBe(true)
+  })
+
   it("accepts only known, non-empty patches", () => {
     expect(accountPreferencesPatchSchema.safeParse({}).success).toBe(false)
     expect(

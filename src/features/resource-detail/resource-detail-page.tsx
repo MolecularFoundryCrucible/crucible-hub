@@ -34,6 +34,7 @@ import {
   useActiveResourceSiblingNavigation,
 } from "@/components/crucible/resource-sibling-navigation"
 import { ResourceSiblingConfigurationAction } from "@/components/crucible/resource-sibling-configuration"
+import { useDefaultResourceSequence } from "@/components/crucible/use-default-resource-sequence"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
@@ -122,6 +123,12 @@ export function ResourceWorkspace({
   const resourceOptions = resourceSummaryQueryOptions(scope, resourceMfid)
   const { data: resource, dataUpdatedAt } = useSuspenseQuery(resourceOptions)
   const siblingNavigation = useActiveResourceSiblingNavigation(resourceMfid)
+  const sequencePending = useDefaultResourceSequence({
+    enabled: Boolean(overviewMatch),
+    navigation: siblingNavigation,
+    resource,
+    scope,
+  })
   const displayName = resourceDisplayName(resourceKind, resource?.name)
   useRememberRecentlyViewed(
     resource && (resource.kind === "sample" || resource.kind === "dataset")
@@ -219,12 +226,14 @@ export function ResourceWorkspace({
                   configurationAction={
                     <ResourceSiblingConfigurationAction
                       navigation={siblingNavigation}
+                      pending={sequencePending}
                       resource={resource}
                       scope={scope}
                     />
                   }
                   fromProject={fromProject}
                   navigation={siblingNavigation}
+                  pending={sequencePending}
                 />
               ) : null}
               <EntityRefreshAction

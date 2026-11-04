@@ -25,6 +25,7 @@ import type {
   ResourceSort,
   SortDirection,
 } from "@/data/crucible/collection-query"
+import type { ResourceSequenceConfiguration } from "@/data/crucible/resource-sequence"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 
 export type ResourceSibling = {
@@ -47,11 +48,7 @@ export type ResourceSiblingCollection = ResourceSiblingPage & {
   loadPrevious: () => Promise<ResourceSiblingPage>
 }
 
-export type ResourceSiblingConfiguration = {
-  direction: SortDirection
-  scope: "all" | "instrument" | "owner" | "project" | "subtype"
-  sort: ResourceSort
-}
+export type ResourceSiblingConfiguration = ResourceSequenceConfiguration
 
 type ResourceSiblingSequenceFilters = {
   createdFrom?: string
@@ -75,6 +72,7 @@ type ResourceSiblingSequenceFilters = {
 }
 
 type ActiveResourceSiblingSession = ResourceSiblingCollection & {
+  automaticKey?: string
   id: string
   loadErrorDirection: "next" | "previous" | null
   loadingDirection: "next" | "previous" | null
@@ -83,8 +81,15 @@ type ActiveResourceSiblingSession = ResourceSiblingCollection & {
 type ResourceSiblingNavigationContextValue = {
   active: ActiveResourceSiblingSession | null
   activate: (collection: ResourceSiblingCollection) => void
+  activateAutomatic: (
+    collection: ResourceSiblingCollection,
+    key: string
+  ) => void
+  automatic: ActiveResourceSiblingSession | null
   candidateId: string
-  clear: () => void
+  clear: (currentMfid?: string) => void
+  clearAutomatic: () => void
+  clearedMfid: string | null
   loadSibling: (
     direction: "next" | "previous",
     sessionId: string,
@@ -119,10 +124,15 @@ export function ResourceSiblingNavigationProvider({
   const [active, setActive] = useState<ActiveResourceSiblingSession | null>(
     null
   )
+  const [automatic, setAutomatic] =
+    useState<ActiveResourceSiblingSession | null>(null)
+  const [clearedMfid, setClearedMfid] = useState<string | null>(null)
   const [previousResetKey, setPreviousResetKey] = useState(resetKey)
   if (resetKey !== previousResetKey) {
     setPreviousResetKey(resetKey)
     setActive(null)
+    setAutomatic(null)
+    setClearedMfid(null)
   }
   const [candidateId, setCandidateId] = useState(createSiblingSessionId)
   const loadingSession = useRef<string | null>(null)
@@ -151,8 +161,23 @@ export function ResourceSiblingNavigationProvider({
     },
     [start]
   )
-  const clear = useCallback(() => {
+  const activateAutomatic = useCallback(
+    (collection: ResourceSiblingCollection, key: string) => {
+      setAutomatic({
+        ...collection,
+        automaticKey: key,
+        id: createSiblingSessionId(),
+        loadErrorDirection: null,
+        loadingDirection: null,
+      })
+    },
+    []
+  )
+  const clearAutomatic = useCallback(() => setAutomatic(null), [])
+  const clear = useCallback((currentMfid?: string) => {
     setActive(null)
+    setAutomatic(null)
+    setClearedMfid(currentMfid ?? null)
     setCandidateId(createSiblingSessionId())
   }, [])
   const loadSibling = useCallback(
@@ -161,7 +186,17 @@ export function ResourceSiblingNavigationProvider({
       sessionId: string,
       currentMfid: string
     ) => {
-      const session = active
+      const session = active?.id === sessionId ? active : automatic
+      const updateSession = (
+        update: (
+          current: ActiveResourceSiblingSession
+        ) => ActiveResourceSiblingSession
+      ) => {
+        const apply = (current: ActiveResourceSiblingSession | null) =>
+          current?.id === sessionId ? update(current) : current
+        setActive(apply)
+        setAutomatic(apply)
+      }
       const hasMore =
         direction === "next" ? session?.hasNextPage : session?.hasPreviousPage
       if (
@@ -174,15 +209,11 @@ export function ResourceSiblingNavigationProvider({
         return undefined
       }
       loadingSession.current = sessionId
-      setActive((current) =>
-        current?.id === sessionId
-          ? {
-              ...current,
-              loadErrorDirection: null,
-              loadingDirection: direction,
-            }
-          : current
-      )
+      updateSession((current) => ({
+        ...current,
+        loadErrorDirection: null,
+        loadingDirection: direction,
+      }))
       try {
         const page = await (direction === "next"
           ? session.loadNext()
@@ -190,29 +221,21 @@ export function ResourceSiblingNavigationProvider({
         const currentIndex = page.items.findIndex(
           (item) => item.mfid === currentMfid
         )
-        setActive((current) =>
-          current?.id === sessionId
-            ? {
-                ...current,
-                ...page,
-                loadErrorDirection: null,
-                loadingDirection: null,
-              }
-            : current
-        )
+        updateSession((current) => ({
+          ...current,
+          ...page,
+          loadErrorDirection: null,
+          loadingDirection: null,
+        }))
         return currentIndex >= 0
           ? page.items[currentIndex + (direction === "next" ? 1 : -1)]
           : undefined
       } catch {
-        setActive((current) =>
-          current?.id === sessionId
-            ? {
-                ...current,
-                loadErrorDirection: direction,
-                loadingDirection: null,
-              }
-            : current
-        )
+        updateSession((current) => ({
+          ...current,
+          loadErrorDirection: direction,
+          loadingDirection: null,
+        }))
         return undefined
       } finally {
         if (loadingSession.current === sessionId) {
@@ -220,7 +243,7 @@ export function ResourceSiblingNavigationProvider({
         }
       }
     },
-    [active]
+    [active, automatic]
   )
   const registeredByItem = useMemo(() => {
     const map = new Map<string, ResourceSiblingCollection>()
@@ -238,8 +261,12 @@ export function ResourceSiblingNavigationProvider({
     () => ({
       active,
       activate,
+      activateAutomatic,
+      automatic,
       candidateId,
       clear,
+      clearAutomatic,
+      clearedMfid,
       loadSibling,
       registered,
       registeredByItem,
@@ -249,8 +276,12 @@ export function ResourceSiblingNavigationProvider({
     [
       active,
       activate,
+      activateAutomatic,
+      automatic,
       candidateId,
       clear,
+      clearAutomatic,
+      clearedMfid,
       loadSibling,
       register,
       registered,
@@ -273,6 +304,17 @@ export function useActivateResourceSiblingCollection() {
 
 export function useClearResourceSiblingNavigation() {
   return useContext(ResourceSiblingNavigationContext)?.clear
+}
+
+export function useAutomaticResourceSiblingSession() {
+  const navigation = useContext(ResourceSiblingNavigationContext)
+  return navigation
+    ? {
+        activate: navigation.activateAutomatic,
+        clear: navigation.clearAutomatic,
+        clearedMfid: navigation.clearedMfid,
+      }
+    : undefined
 }
 
 export function useRegisterResourceSiblings(
@@ -312,12 +354,12 @@ export function useActiveResourceSiblingNavigation(currentMfid: string) {
   const sessionId = useRouterState({
     select: (state) => state.location.state.resourceSiblingSession,
   })
-  const session =
-    navigation?.active &&
-    (navigation.active.id === sessionId ||
-      navigation.active.anchorMfid === currentMfid)
-      ? navigation.active
-      : undefined
+  const session = [navigation?.active, navigation?.automatic].find(
+    (candidate) =>
+      candidate &&
+      (candidate.id === sessionId || candidate.anchorMfid === currentMfid) &&
+      candidate.items.some((item) => item.mfid === currentMfid)
+  )
   const index = session?.items.findIndex((item) => item.mfid === currentMfid)
   if (!session || index === undefined || index < 0 || !navigation) return null
 
@@ -339,10 +381,12 @@ export function ResourceSiblingNavigationControls({
   configurationAction,
   fromProject,
   navigation,
+  pending = false,
 }: {
   configurationAction: React.ReactNode
   fromProject?: string
   navigation: ActiveResourceSiblingNavigation | null
+  pending?: boolean
 }) {
   const navigate = useNavigate()
   const navigateTo = useCallback(
@@ -431,6 +475,27 @@ export function ResourceSiblingNavigationControls({
     navigation?.previous || navigation?.hasPreviousPage
   )
   const canMoveNext = Boolean(navigation?.next || navigation?.hasNextPage)
+  if (!navigation && pending) {
+    return (
+      <nav aria-label="Browse nearby resources">
+        <ButtonGroup aria-label="Browse nearby" className="max-w-full">
+          <SiblingBoundaryAction
+            canLoad={false}
+            direction="previous"
+            loading={false}
+            onLoad={() => undefined}
+          />
+          {configurationAction}
+          <SiblingBoundaryAction
+            canLoad={false}
+            direction="next"
+            loading={false}
+            onLoad={() => undefined}
+          />
+        </ButtonGroup>
+      </nav>
+    )
+  }
   if (!navigation) {
     return <nav aria-label="Browse nearby resources">{configurationAction}</nav>
   }
@@ -605,7 +670,7 @@ export function resourceSiblingSequenceLabel({
 }: {
   filters: ResourceSiblingSequenceFilters
   kind: "dataset" | "sample"
-  scope?: "instrument" | "owner" | "project"
+  scope?: "instrument" | "owner" | "project" | "project_subtype"
 }) {
   const context =
     kind === "dataset" && filters.measurement !== undefined
@@ -625,7 +690,9 @@ export function resourceSiblingSequenceLabel({
                   : hasSequenceFilters(filters)
                     ? `Filtered ${kind}s`
                     : `${kind === "dataset" ? "Datasets" : "Samples"}`
-  return `${context} · ${resourceSequenceOrder(filters.sort, filters.direction)}`
+  const scoped =
+    scope === "project_subtype" ? `${context} in this project` : context
+  return `${scoped} · ${resourceSequenceOrder(filters.sort, filters.direction)}`
 }
 
 function hasSequenceFilters(filters: ResourceSiblingSequenceFilters) {

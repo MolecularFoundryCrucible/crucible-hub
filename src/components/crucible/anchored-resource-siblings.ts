@@ -16,6 +16,7 @@ import type {
   AnchoredDatasetFilters,
   AnchoredSampleFilters,
 } from "@/data/crucible/data.queries"
+import type { CollectionAffiliation } from "@/data/crucible/collection-query"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type {
   WorkspaceCursorPage,
@@ -28,18 +29,20 @@ const siblingPageLimit = 25
 type Resource = Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
 
 export async function createAnchoredResourceSiblingCollection({
+  affiliation,
   configuration,
   queryClient,
   resource,
   scope,
 }: {
+  affiliation?: CollectionAffiliation
   configuration: ResourceSiblingConfiguration
   queryClient: QueryClient
   resource: Resource
   scope: IdentityScope
 }): Promise<ResourceSiblingCollection> {
   if (resource.kind === "sample") {
-    const anchoredFilters = sampleFilters(resource, configuration)
+    const anchoredFilters = sampleFilters(resource, configuration, affiliation)
     const { anchorMfid, ...filters } = anchoredFilters
     return createAnchoredCollection({
       anchorMfid,
@@ -66,18 +69,13 @@ export async function createAnchoredResourceSiblingCollection({
       label: resourceSiblingSequenceLabel({
         filters,
         kind: "sample",
-        scope:
-          configuration.scope === "project"
-            ? "project"
-            : configuration.scope === "owner"
-              ? "owner"
-              : undefined,
+        scope: labelScope(configuration),
       }),
       mapName: (sample) => resourceDisplayName("sample", sample.sample_name),
     })
   }
 
-  const anchoredFilters = datasetFilters(resource, configuration)
+  const anchoredFilters = datasetFilters(resource, configuration, affiliation)
   const { anchorMfid, ...filters } = anchoredFilters
   return createAnchoredCollection({
     anchorMfid,
@@ -104,29 +102,39 @@ export async function createAnchoredResourceSiblingCollection({
     label: resourceSiblingSequenceLabel({
       filters,
       kind: "dataset",
-      scope:
-        configuration.scope === "project"
-          ? "project"
-          : configuration.scope === "instrument"
-            ? "instrument"
-            : configuration.scope === "owner"
-              ? "owner"
-              : undefined,
+      scope: labelScope(configuration),
     }),
     mapName: (dataset) => resourceDisplayName("dataset", dataset.dataset_name),
   })
 }
 
+function labelScope({ scope }: ResourceSiblingConfiguration) {
+  return scope === "all" || scope === "subtype" ? undefined : scope
+}
+
 function sampleFilters(
   resource: Extract<Resource, { kind: "sample" }>,
-  configuration: ResourceSiblingConfiguration
+  configuration: ResourceSiblingConfiguration,
+  affiliation: CollectionAffiliation | undefined
 ): AnchoredSampleFilters {
   const base = {
+    ...(affiliation && configuration.scope !== "all" ? { affiliation } : {}),
     anchorMfid: resource.unique_id,
     direction: configuration.direction,
     limit: siblingPageLimit,
     sort: configuration.sort,
   } satisfies AnchoredSampleFilters
+  if (configuration.scope === "project_subtype") {
+    if (!resource.project) throw new Error("This sample has no project.")
+    return {
+      ...base,
+      projectMfid: resource.project.unique_id,
+      projectScope: "assigned",
+      ...(resource.sample_type === null
+        ? { sampleTypeIsNull: true }
+        : { sampleType: resource.sample_type }),
+    }
+  }
   if (configuration.scope === "project") {
     if (!resource.project) throw new Error("This sample has no project.")
     return {
@@ -152,14 +160,27 @@ function sampleFilters(
 
 function datasetFilters(
   resource: Extract<Resource, { kind: "dataset" }>,
-  configuration: ResourceSiblingConfiguration
+  configuration: ResourceSiblingConfiguration,
+  affiliation: CollectionAffiliation | undefined
 ): AnchoredDatasetFilters {
   const base = {
+    ...(affiliation && configuration.scope !== "all" ? { affiliation } : {}),
     anchorMfid: resource.unique_id,
     direction: configuration.direction,
     limit: siblingPageLimit,
     sort: configuration.sort,
   } satisfies AnchoredDatasetFilters
+  if (configuration.scope === "project_subtype") {
+    if (!resource.project) throw new Error("This dataset has no project.")
+    return {
+      ...base,
+      projectMfid: resource.project.unique_id,
+      projectScope: "assigned",
+      ...(resource.measurement === null
+        ? { measurementIsNull: true }
+        : { measurement: resource.measurement }),
+    }
+  }
   if (configuration.scope === "project") {
     if (!resource.project) throw new Error("This dataset has no project.")
     return {
