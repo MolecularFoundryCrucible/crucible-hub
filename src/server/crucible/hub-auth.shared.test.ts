@@ -15,6 +15,8 @@ import {
   beginHubLogin,
   finishHubLogin,
   hasHubSession,
+  hubSessionIdentity,
+  hubSignInFailureDetails,
   logoutHubSession,
   productionHubAuthReady,
   sessionApiFetch,
@@ -124,7 +126,7 @@ async function signedInSession(
         return { error, signedIn: hasHubSession() }
       }
     })
-  return { call, inRequest, requests, sessionId }
+  return { call, inRequest, requests, sessionCookie, sessionId }
 }
 
 describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
@@ -165,6 +167,52 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     vi.stubEnv("NODE_ENV", "production")
     await closePostgresSessionPool()
     await expect(checkPostgresSessionStore()).resolves.toBeUndefined()
+  })
+
+  it("keeps the session and revokes the tokens when re-confirming returns another account", async () => {
+    stubSharedEnv()
+    const { sessionCookie, requests } = await signedInSession(() =>
+      Response.json([])
+    )
+    const stepUp = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/login?max_age=0",
+      { headers: { cookie: sessionCookie } }
+    )
+    const location = await stepUp.run(() =>
+      beginHubLogin("/hub/reauthenticated", 0)
+    )
+    const state = new URL(location).searchParams.get("state")!
+    const loginCookie = stepUp
+      .setCookies()
+      .find((value) => value.startsWith("crucible_hub_login="))!
+      .split(";")[0]
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request) => {
+        const path = pathOf(input)
+        requests.push(path)
+        return path === "/auth/hub/token"
+          ? Response.json({ ...tokenResponse, user_unique_id: "mfid-other" })
+          : new Response(null)
+      })
+    )
+    const callback = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/callback",
+      { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
+    )
+    const error = await callback
+      .run(() => finishHubLogin("code", state))
+      .catch((reason: unknown) => reason)
+    expect(hubSignInFailureDetails(error)).toEqual({
+      reason: "account-mismatch",
+    })
+    expect(requests.slice(-2)).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
+    const after = startRequestScope("http://127.0.0.1:3000/hub/data", {
+      headers: { cookie: sessionCookie },
+    })
+    await expect(
+      after.run(() => withHubAuthRequest(async () => hubSessionIdentity()))
+    ).resolves.toBe(tokenResponse.user_unique_id)
   })
 
   it("keeps a signed-in session across requests through the database", async () => {

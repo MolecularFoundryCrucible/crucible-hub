@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Fixed re-confirming a sign-in for a sensitive action silently switching accounts: if a different account returns, the Hub now keeps your session, discards the new sign-in, and says so.
 - Pinned the API contract from the crucible-api v3.3.0 release asset, which corrects its version and marks the legacy upload routes deprecated, and added `npm run api:fetch -- vX.Y.Z` to pin future releases the same way.
 
 ## 1.7.2 - 2026-10-30

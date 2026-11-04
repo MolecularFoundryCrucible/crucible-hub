@@ -42,6 +42,7 @@ const transactionSchema = z.object({
   verifier: z.string(),
   returnTo: z.string(),
   expiresAt: z.number().int(),
+  expectedAccount: z.string().optional(),
 })
 
 export type SharedSession = z.infer<typeof sessionSchema>
