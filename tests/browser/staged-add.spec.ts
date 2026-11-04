@@ -6,6 +6,7 @@ test("staged member commit flow", async ({ page }) => {
   )
   await page.waitForLoadState("networkidle")
 
+  await page.getByRole("button", { name: "Edit access" }).click()
   await page.getByRole("button", { name: "Add member" }).click()
 
   const dialog = page.getByRole("dialog", { name: "Add direct access" })
@@ -40,6 +41,7 @@ test("staged project member commit flow", async ({ page }) => {
   )
   await page.waitForLoadState("networkidle")
 
+  await page.getByRole("button", { name: "Edit members" }).click()
   await page.getByRole("button", { name: "Add member" }).click()
 
   const dialog = page.getByRole("dialog", { name: "Add member" })
@@ -69,6 +71,7 @@ test("manage page staged direct-access flow", async ({ page }) => {
   )
   await page.waitForLoadState("networkidle")
 
+  await page.getByRole("button", { name: "Edit access" }).click()
   await page.getByRole("button", { name: "Add access" }).click()
 
   const dialog = page.getByRole("dialog", { name: "Add direct access" })
