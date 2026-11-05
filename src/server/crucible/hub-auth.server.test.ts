@@ -9,6 +9,7 @@ import {
   hubSessionIdentity,
   hubSignInErrorReason,
   hubSignInFailureDetails,
+  hubSignInMethods,
   hubSignInOrigin,
   sessionApiFetch,
 } from "./hub-auth.server"
@@ -348,6 +349,57 @@ describe("hub login exchange", () => {
     await expect(finishLogin(transactionCookie, "code", state)).rejects.toThrow(
       "The Crucible sign-in request failed."
     )
+  })
+
+  it("forwards the chosen sign-in provider", async () => {
+    stubHubAuthEnv()
+    const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
+    const location = await scope.run(() =>
+      beginHubLogin("/hub/", null, "orcid")
+    )
+    expect(new URL(location).searchParams.get("provider")).toBe("orcid")
+  })
+
+  describe("sign-in methods", () => {
+    it("lists the methods the API offers", async () => {
+      stubHubAuthEnv()
+      const fetch = vi.fn(async () =>
+        Response.json([
+          { key: "orcid", display_name: "ORCID", is_orcid: true, kind: "oidc" },
+          { key: "lbl", display_name: "Berkeley Lab", is_orcid: false },
+        ])
+      )
+      vi.stubGlobal("fetch", fetch)
+      await expect(hubSignInMethods()).resolves.toEqual([
+        { key: "orcid", display_name: "ORCID", is_orcid: true },
+        { key: "lbl", display_name: "Berkeley Lab", is_orcid: false },
+      ])
+      expect(String((fetch.mock.calls[0] as unknown[])[0])).toBe(
+        "https://api.example.test/auth/methods"
+      )
+    })
+
+    it.each([
+      ["the request fails", () => Promise.reject(new TypeError("offline"))],
+      [
+        "the API answers with an error",
+        async () => new Response(null, { status: 503 }),
+      ],
+      ["the response is malformed", async () => Response.json([{ key: 1 }])],
+    ])("returns nothing when %s", async (_label, respond) => {
+      stubHubAuthEnv()
+      vi.stubGlobal("fetch", vi.fn(respond))
+      await expect(hubSignInMethods()).resolves.toBeNull()
+    })
+
+    it("does not ask without Hub sign-in", async () => {
+      stubHubAuthEnv()
+      vi.stubEnv("HUB_DATA_SOURCE", "fixture")
+      const fetch = vi.fn()
+      vi.stubGlobal("fetch", fetch)
+      await expect(hubSignInMethods()).resolves.toBeNull()
+      expect(fetch).not.toHaveBeenCalled()
+    })
   })
 
   it("forwards max_age to force ORCID re-authentication", async () => {

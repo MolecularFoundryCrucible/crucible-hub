@@ -10,10 +10,10 @@ import {
 } from "@/components/crucible/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { hubLoginHref } from "@/data/crucible/hub-login-link"
+import { hubSignInChoices } from "@/data/crucible/hub-login-link"
 import {
   getHubSessionSnapshot,
-  getHubSignInOrigin,
+  getHubSignInOptions,
 } from "@/data/crucible/session.functions"
 import { announceHubSignOut } from "@/data/crucible/session-tabs"
 
@@ -25,13 +25,13 @@ export const Route = createFileRoute("/auth/sign-in")({
       .optional()
       .catch(undefined),
   }),
-  loader: () => getHubSignInOrigin(),
+  loader: () => getHubSignInOptions(),
   component: SignInPage,
 })
 
 function SignInPage() {
   const { returnTo, signedOut } = Route.useSearch()
-  const signInOrigin = Route.useLoaderData()
+  const { methods, origin } = Route.useLoaderData()
   useEffect(() => {
     if (!signedOut) return
     void getHubSessionSnapshot()
@@ -40,33 +40,37 @@ function SignInPage() {
       })
       .catch(() => undefined)
   }, [signedOut])
-  const loginUrl = hubLoginHref(signInOrigin, returnTo)
+
+  const choices = hubSignInChoices(methods, origin, returnTo)
+  const offersOrcid = methods?.some((method) => method.is_orcid) ?? false
 
   return (
     <AuthPage
       title="Sign in to Crucible"
       footer={
-        <>
-          <span>
-            {signedOut
-              ? "Your ORCID session may still be active."
-              : "New to ORCID?"}
-          </span>
-          <Button
-            nativeButton={false}
-            render={
-              <a
-                href="https://orcid.org"
-                referrerPolicy="no-referrer"
-                rel="noopener noreferrer"
-              />
-            }
-            size="sm"
-            variant="ghost"
-          >
-            {signedOut ? "Open ORCID" : "Learn more"}
-          </Button>
-        </>
+        offersOrcid ? (
+          <>
+            <span>
+              {signedOut
+                ? "Your ORCID session may still be active."
+                : "New to ORCID?"}
+            </span>
+            <Button
+              nativeButton={false}
+              render={
+                <a
+                  href="https://orcid.org"
+                  referrerPolicy="no-referrer"
+                  rel="noopener noreferrer"
+                />
+              }
+              size="sm"
+              variant="ghost"
+            >
+              {signedOut ? "Open ORCID" : "Learn more"}
+            </Button>
+          </>
+        ) : null
       }
     >
       <div className="flex flex-col gap-auth-brand-gap">
@@ -89,21 +93,28 @@ function SignInPage() {
             Signed out here. API revocation could not be confirmed.
           </Badge>
         ) : null}
-        <Button
-          className="self-center"
-          nativeButton={false}
-          render={<a href={loginUrl} />}
-          size="lg"
-          variant="outline"
-        >
-          <img
-            alt=""
-            aria-hidden="true"
-            className="size-orcid-id-icon"
-            src={orcidIdUrl}
-          />
-          Sign in with ORCID
-        </Button>
+        <div className="flex flex-col items-center gap-2">
+          {choices.map((choice) => (
+            <Button
+              className={choices.length > 1 ? "w-full" : undefined}
+              key={choice.href}
+              nativeButton={false}
+              render={<a href={choice.href} />}
+              size="lg"
+              variant="outline"
+            >
+              {choice.isOrcid ? (
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  className="size-orcid-id-icon"
+                  src={orcidIdUrl}
+                />
+              ) : null}
+              {choice.label}
+            </Button>
+          ))}
+        </div>
       </div>
     </AuthPage>
   )

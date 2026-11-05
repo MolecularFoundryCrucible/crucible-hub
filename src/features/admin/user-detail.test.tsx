@@ -291,7 +291,7 @@ describe("UserDetailView API key provisioning", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Rotate key" }))
 
     const signIn = await within(dialog).findByRole("button", {
-      name: "Sign in with ORCID",
+      name: "Sign in again",
     })
     const href = new URL(signIn.getAttribute("href") ?? "", "https://hub.test")
     expect(href.pathname).toBe("/hub/auth/login")

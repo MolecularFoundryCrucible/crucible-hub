@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import type { MouseEvent } from "react"
 
-import orcidIdUrl from "@/assets/orcid-id.svg"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { Button } from "@/components/ui/button"
 import { HubApiClientError, hubErrorMessage } from "@/data/crucible/result"
@@ -59,8 +58,8 @@ function ReauthenticationPrompt({ reason }: { reason: string }) {
   return (
     <span className="flex flex-col items-start gap-2 text-foreground">
       <span>
-        {reason} Confirm it's you with ORCID in a new window; what you entered
-        here stays as it is.
+        {reason} Confirm it's you in a new window; what you entered here stays
+        as it is.
       </span>
       <Button
         nativeButton={false}
@@ -73,13 +72,7 @@ function ReauthenticationPrompt({ reason }: { reason: string }) {
         size="sm"
         variant="outline"
       >
-        <img
-          alt=""
-          aria-hidden="true"
-          className="size-orcid-id-icon"
-          src={orcidIdUrl}
-        />
-        Sign in with ORCID
+        Sign in again
       </Button>
     </span>
   )

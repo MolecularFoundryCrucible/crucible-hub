@@ -423,6 +423,33 @@ export function hubSignInOrigin() {
   return hubAuthPublicOrigin()
 }
 
+const signInMethodsSchema = z
+  .array(
+    z.object({
+      key: z.string().min(1).max(64),
+      display_name: z.string().min(1).max(80),
+      is_orcid: z.boolean(),
+    })
+  )
+  .max(10)
+
+export type HubSignInMethod = z.infer<typeof signInMethodsSchema>[number]
+
+export async function hubSignInMethods(): Promise<HubSignInMethod[] | null> {
+  if (process.env.HUB_DATA_SOURCE !== "hub-auth") return null
+  try {
+    const { baseUrl } = config()
+    const response = await fetch(`${baseUrl}/auth/methods`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!response.ok) return null
+    return signInMethodsSchema.parse(await response.json())
+  } catch {
+    return null
+  }
+}
+
 function serverApiUrl(value: string) {
   if (!serverApiUrlAllowed(value)) {
     throw new Error("Hub API URL must be a trusted HTTPS URL.")
@@ -561,7 +588,8 @@ async function rejectStaleSignIn(
 
 export async function beginHubLogin(
   returnTo: string | null,
-  maxAge: number | null = null
+  maxAge: number | null = null,
+  provider: string | null = null
 ) {
   const { publicBaseUrl, callbackUri } = config()
   if (!sharedMode()) {
@@ -597,6 +625,7 @@ export async function beginHubLogin(
   url.searchParams.set("code_challenge_method", "S256")
   if (maxAge !== null) url.searchParams.set("max_age", String(maxAge))
   if (expectedAccount) url.searchParams.set("required_user", expectedAccount)
+  if (provider) url.searchParams.set("provider", provider)
   return url.toString()
 }
 

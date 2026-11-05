@@ -27,7 +27,7 @@ describe("reauthentication prompt", () => {
     vi.stubGlobal("open", open)
     render(<>{hubActionError(stepUpError, "Failed.")}</>)
 
-    const link = screen.getByRole("button", { name: /Sign in with ORCID/ })
+    const link = screen.getByRole("button", { name: "Sign in again" })
     const fallback = new URL(
       link.getAttribute("href") ?? "",
       "https://hub.test"

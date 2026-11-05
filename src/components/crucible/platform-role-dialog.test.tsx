@@ -52,9 +52,7 @@ describe("PlatformRoleDialog", () => {
     expect(
       await screen.findByText(/Changing this role needs a recent sign-in\./)
     ).toBeTruthy()
-    expect(
-      screen.getByRole("button", { name: /Sign in with ORCID/ })
-    ).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Sign in again" })).toBeTruthy()
     expect(onOpenChange).not.toHaveBeenCalled()
   })
 
