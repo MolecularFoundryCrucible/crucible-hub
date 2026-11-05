@@ -148,7 +148,7 @@ const testUser: WorkspaceAdminUser = {
   username: "testuser",
 }
 
-function renderUserDetail() {
+function renderUserDetail(user: WorkspaceAdminUser = testUser) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -166,7 +166,7 @@ function renderUserDetail() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <UserDetailView scope={scope} user={testUser} />
+      <UserDetailView scope={scope} user={user} />
     </QueryClientProvider>
   )
 }
@@ -177,11 +177,28 @@ describe("UserDetailView projects table sorting", () => {
   it("renders identity card without redundant account type", () => {
     renderUserDetail()
 
-    expect(screen.getByText("Crucible ID / ORCID")).toBeTruthy()
+    expect(screen.getByText("Crucible ID")).toBeTruthy()
     expect(screen.getByText("Username")).toBeTruthy()
     expect(screen.getByText("Platform role")).toBeTruthy()
     expect(screen.getByText("Email")).toBeTruthy()
     expect(screen.queryByText("Account type")).toBeNull()
+    expect(screen.queryByText("ORCID")).toBeNull()
+  })
+
+  it("shows a linked ORCID and whether it is verified", () => {
+    renderUserDetail({
+      ...testUser,
+      orcid: "0000-0002-1825-0097",
+      orcid_verified: false,
+    })
+
+    expect(screen.getByText("ORCID")).toBeTruthy()
+    expect(
+      screen.getByRole("link", {
+        name: "https://orcid.org/0000-0002-1825-0097",
+      })
+    ).toBeTruthy()
+    expect(screen.getByText("Not verified")).toBeTruthy()
   })
 
   it("renders sortable headers for Project, Created, and Updated, and non-sortable Lead and Role", () => {

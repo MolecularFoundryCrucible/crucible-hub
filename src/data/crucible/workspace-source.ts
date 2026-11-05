@@ -7,7 +7,13 @@ type Schema<TSchemaName extends keyof components["schemas"]> =
 
 export type WorkspacePerson = Pick<
   Schema<"UserPublicRead">,
-  "first_name" | "is_service_account" | "last_name" | "unique_id" | "username"
+  | "first_name"
+  | "is_service_account"
+  | "last_name"
+  | "orcid"
+  | "orcid_verified"
+  | "unique_id"
+  | "username"
 >
 
 export type WorkspaceAccount = Omit<
@@ -20,6 +26,8 @@ export type WorkspaceAccount = Omit<
     | "is_service_account"
     | "last_active_at"
     | "last_name"
+    | "orcid"
+    | "orcid_verified"
     | "unique_id"
     | "username"
   >,

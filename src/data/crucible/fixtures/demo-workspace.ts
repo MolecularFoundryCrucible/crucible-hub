@@ -36,6 +36,8 @@ const account = {
   last_name: "Chen",
   email: "avery.chen@example.invalid",
   is_service_account: false,
+  orcid: "0000-0000-0000-000X",
+  orcid_verified: true,
 } satisfies Schema<"AccountProfileRead">
 
 const collaborator = {
@@ -44,6 +46,8 @@ const collaborator = {
   first_name: "Morgan",
   is_service_account: false,
   last_name: "Lee",
+  orcid: "0000-0000-0000-0018",
+  orcid_verified: false,
 } satisfies Schema<"UserPublicRead">
 
 const externalResearcher = {

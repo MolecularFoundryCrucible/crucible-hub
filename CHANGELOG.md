@@ -10,6 +10,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Fixed sign-in failing as expired when the Hub was opened through a different address than its configured callback: the sign-in button now starts on the configured address. Sign-in failure logs now give a specific reason, and `expired-transaction` now means only that the login timed out.
 - Fixed sign-in being refused as too many requests on a single-instance Hub after many abandoned sign-ins: expired sign-ins no longer count toward the pending limit.
 - Updated to the unreleased Crucible API contract at `af30781` on main, which adds a person's linked ORCID to user responses, sign-in methods and step-up account checks, and makes the access routes the only way to change whether a resource is public. Releases built from it need that API version.
+- Profiles, the account page, and user administration show a person's linked ORCID, marked with the ORCID iD icon once it has been verified by signing in. The administration field formerly labelled Crucible ID / ORCID is now Crucible ID, since the two can differ.
 
 ## 1.7.3 - 2026-11-04
 

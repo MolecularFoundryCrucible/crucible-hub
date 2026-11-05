@@ -48,6 +48,8 @@ function toWorkspaceAdminUser(
     last_active_at:
       "last_active_at" in user ? (user.last_active_at ?? null) : null,
     last_name: user.last_name,
+    orcid: user.orcid ?? null,
+    orcid_verified: user.orcid_verified ?? null,
     platform_role:
       "platform_role" in user && typeof user.platform_role === "string"
         ? user.platform_role

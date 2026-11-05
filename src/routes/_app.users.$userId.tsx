@@ -5,6 +5,7 @@ import { ActivityTime } from "@/components/crucible/activity-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import { MfidValue } from "@/components/crucible/mfid-value"
+import { OrcidValue } from "@/components/crucible/orcid-value"
 import { AccountIcon } from "@/components/crucible/icons"
 import {
   PersonIdentity,
@@ -287,6 +288,17 @@ function ReadOnlyPersonProfileCard({
                 <MfidValue value={person.unique_id} />
               </dd>
             </div>
+            {person.orcid ? (
+              <div className="col-span-2 flex min-w-0 flex-col gap-1">
+                <dt className="text-label text-muted-foreground">ORCID</dt>
+                <dd>
+                  <OrcidValue
+                    orcid={person.orcid}
+                    verified={person.orcid_verified}
+                  />
+                </dd>
+              </div>
+            ) : null}
             {lastActiveAt !== undefined ? (
               <div className="flex min-w-0 flex-col gap-1">
                 <dt className="text-label text-muted-foreground">

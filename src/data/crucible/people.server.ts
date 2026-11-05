@@ -20,6 +20,8 @@ function toWorkspacePerson(
     first_name: person.first_name,
     is_service_account: person.is_service_account ?? false,
     last_name: person.last_name,
+    orcid: person.orcid ?? null,
+    orcid_verified: person.orcid_verified ?? null,
     unique_id: person.unique_id,
     username: person.username,
   }

@@ -18,6 +18,7 @@ import {
   EditableCardTrigger,
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
+import { OrcidValue } from "@/components/crucible/orcid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -401,12 +402,23 @@ function UserProfileCard({
               </div>
               <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">
-                  Crucible ID / ORCID
+                  Crucible ID
                 </dt>
                 <dd className="mt-1">
                   <MfidValue value={user.unique_id} />
                 </dd>
               </div>
+              {user.orcid ? (
+                <div className="col-span-2 min-w-0">
+                  <dt className="text-label text-muted-foreground">ORCID</dt>
+                  <dd className="mt-1">
+                    <OrcidValue
+                      orcid={user.orcid}
+                      verified={user.orcid_verified}
+                    />
+                  </dd>
+                </div>
+              ) : null}
             </dl>
           </CardContent>
         </Card>
@@ -501,12 +513,23 @@ function UserProfileCard({
               </div>
               <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">
-                  Crucible ID / ORCID
+                  Crucible ID
                 </dt>
                 <dd className="mt-1">
                   <MfidValue value={user.unique_id} />
                 </dd>
               </div>
+              {user.orcid ? (
+                <div className="col-span-2 min-w-0">
+                  <dt className="text-label text-muted-foreground">ORCID</dt>
+                  <dd className="mt-1">
+                    <OrcidValue
+                      orcid={user.orcid}
+                      verified={user.orcid_verified}
+                    />
+                  </dd>
+                </div>
+              ) : null}
             </dl>
             {saveError ? (
               <p className="mt-4 text-body text-destructive" role="alert">
