@@ -26,7 +26,7 @@ function redirectReturnTo() {
     : `${window.location.pathname}${window.location.search}${REAUTHENTICATED_HASH}`
 }
 
-function ReauthenticationPrompt() {
+function ReauthenticationPrompt({ reason }: { reason: string }) {
   const [confirmed, setConfirmed] = useState(false)
 
   useEffect(() => {
@@ -59,8 +59,8 @@ function ReauthenticationPrompt() {
   return (
     <span className="flex flex-col items-start gap-2 text-foreground">
       <span>
-        Issuing credentials needs a recent sign-in. Confirm it's you with ORCID
-        in a new window; what you entered here stays as it is.
+        {reason} Confirm it's you with ORCID in a new window; what you entered
+        here stays as it is.
       </span>
       <Button
         nativeButton={false}
@@ -87,10 +87,11 @@ function ReauthenticationPrompt() {
 
 export function hubActionError(
   error: unknown,
-  fallback: string
+  fallback: string,
+  reason = "Issuing credentials needs a recent sign-in."
 ): React.ReactNode {
   if (!reauthenticationRequired(error)) return hubErrorMessage(error, fallback)
-  return <ReauthenticationPrompt />
+  return <ReauthenticationPrompt reason={reason} />
 }
 
 export function useReauthenticationNotice() {
