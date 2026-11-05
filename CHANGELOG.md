@@ -12,6 +12,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Updated to the unreleased Crucible API contract at `af30781` on main, which adds a person's linked ORCID to user responses, sign-in methods and step-up account checks, and makes the access routes the only way to change whether a resource is public. Releases built from it need that API version.
 - Profiles, the account page, and user administration show a person's linked ORCID, marked with the ORCID iD icon once it has been verified by signing in. The administration field formerly labelled Crucible ID / ORCID is now Crucible ID, since the two can differ.
 - Changing a platform role now offers to confirm your sign-in when the API asks for a recent one, the same way issuing API keys does, instead of showing a generic error.
+- Confirming your sign-in for a sensitive action now asks the API for the signed-in account and checks that the sign-in really was new; an earlier sign-in is discarded and your session kept. Sign-in errors returned by the API now show a specific page, for example when sign-in is temporarily unavailable.
 
 ## 1.7.3 - 2026-11-04
 

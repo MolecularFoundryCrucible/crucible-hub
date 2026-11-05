@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import {
   finishHubLogin,
   hubAuthPublicOrigin,
+  hubSignInErrorReason,
   hubSignInFailureDetails,
 } from "@/server/crucible/hub-auth.server"
 
@@ -13,10 +14,22 @@ export const Route = createFileRoute("/auth/callback")({
         const url = new URL(request.url)
         const code = url.searchParams.get("code")
         const state = url.searchParams.get("state")
+        const providerError = url.searchParams.get("error")
         const publicOrigin = hubAuthPublicOrigin()
         try {
           let destination: string
-          if (code && state && code.length <= 512 && state.length <= 256) {
+          if (state && state.length <= 256 && providerError !== null) {
+            destination = await finishHubLogin(
+              null,
+              state,
+              providerError.slice(0, 64)
+            )
+          } else if (
+            code &&
+            state &&
+            code.length <= 512 &&
+            state.length <= 256
+          ) {
             destination = await finishHubLogin(code, state)
           } else {
             throw new Error("Invalid sign-in response.")
@@ -32,10 +45,10 @@ export const Route = createFileRoute("/auth/callback")({
         } catch (error) {
           const details = hubSignInFailureDetails(error)
           console.error("[Crucible Hub] Sign-in callback failed", details)
-          const errorPage =
-            details.reason === "account-mismatch"
-              ? "/hub/auth/error?reason=account-mismatch"
-              : "/hub/auth/error"
+          const reason = hubSignInErrorReason(details)
+          const errorPage = reason
+            ? `/hub/auth/error?reason=${reason}`
+            : "/hub/auth/error"
           return new Response(null, {
             status: 303,
             headers: {

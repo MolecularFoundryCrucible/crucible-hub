@@ -43,6 +43,7 @@ const transactionSchema = z.object({
   returnTo: z.string(),
   expiresAt: z.number().int(),
   expectedAccount: z.string().optional(),
+  maxAge: z.number().int().nonnegative().optional(),
 })
 
 export type SharedSession = z.infer<typeof sessionSchema>

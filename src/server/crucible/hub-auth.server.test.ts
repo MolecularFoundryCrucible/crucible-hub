@@ -7,6 +7,7 @@ import {
   hasHubSession,
   hubAuthPublicOrigin,
   hubSessionIdentity,
+  hubSignInErrorReason,
   hubSignInFailureDetails,
   hubSignInOrigin,
   sessionApiFetch,
@@ -172,6 +173,93 @@ describe("hub login exchange", () => {
     ).rejects.toThrow("The sign-in request could not be verified.")
   })
 
+  describe("a callback that returns an error", () => {
+    async function finishWithError(error: string, state?: string) {
+      const { scope, location } = await beginLogin("/hub/data")
+      const transactionCookie = loginCookie(scope)
+      const fetch = vi.fn(async () => Response.json(tokenResponse))
+      vi.stubGlobal("fetch", fetch)
+      const callback = startRequestScope(
+        "http://127.0.0.1:3000/hub/auth/callback",
+        { headers: { cookie: transactionCookie.split(";")[0] } }
+      )
+      const failure: unknown = await callback
+        .run(() =>
+          finishHubLogin(
+            null,
+            state ?? new URL(location).searchParams.get("state")!,
+            error
+          )
+        )
+        .catch((reason: unknown) => reason)
+      return { failure, fetch, transactionCookie, location }
+    }
+
+    it.each([
+      "access_denied",
+      "login_required",
+      "temporarily_unavailable",
+      "server_error",
+    ])("reports %s without exchanging a code", async (error) => {
+      stubHubAuthEnv()
+      const { failure, fetch } = await finishWithError(error)
+      expect(hubSignInFailureDetails(failure)).toEqual({
+        reason: "provider-error",
+        error,
+      })
+      expect(fetch).not.toHaveBeenCalled()
+    })
+
+    it("does not log an unrecognised error value", async () => {
+      stubHubAuthEnv()
+      const { failure } = await finishWithError("<script>")
+      expect(hubSignInFailureDetails(failure)).toEqual({
+        reason: "provider-error",
+        error: "other",
+      })
+    })
+
+    it("checks the state before trusting the error", async () => {
+      stubHubAuthEnv()
+      const { failure } = await finishWithError(
+        "login_required",
+        "wrong-state-wrong-state-wrong-1"
+      )
+      expect(hubSignInFailureDetails(failure)).toEqual({
+        reason: "state-mismatch",
+      })
+    })
+
+    it("ends the sign-in so its callback cannot be replayed", async () => {
+      stubHubAuthEnv()
+      const { transactionCookie, location } =
+        await finishWithError("access_denied")
+      const failure: unknown = await finishLogin(
+        transactionCookie,
+        "code",
+        new URL(location).searchParams.get("state")!
+      ).catch((reason: unknown) => reason)
+      expect(hubSignInFailureDetails(failure)).toEqual({
+        reason: "unknown-transaction",
+      })
+    })
+  })
+
+  it.each([
+    [{ reason: "account-mismatch" }, "account-mismatch"],
+    [{ reason: "provider-error", error: "login_required" }, "account-mismatch"],
+    [{ reason: "stale-sign-in" }, "stale-sign-in"],
+    [
+      { reason: "provider-error", error: "temporarily_unavailable" },
+      "unavailable",
+    ],
+    [{ reason: "provider-error", error: "server_error" }, "unavailable"],
+    [{ reason: "provider-error", error: "access_denied" }, null],
+    [{ reason: "expired-transaction" }, null],
+  ] as const)("shows %o as the %s sign-in error", (details, expected) => {
+    expect(hubSignInErrorReason(details)).toBe(expected)
+  })
+
   it("consumes a sign-in transaction once", async () => {
     stubHubAuthEnv()
     const { scope, location } = await beginLogin("/hub/data")
@@ -290,7 +378,11 @@ describe("hub login exchange", () => {
         .split(";")[0]
     }
 
-    async function stepUp(session: string, returning: string) {
+    async function stepUp(
+      session: string,
+      returning: string,
+      authTime: string | null = new Date().toISOString()
+    ) {
       const scope = startRequestScope(
         "http://127.0.0.1:3000/hub/auth/login?max_age=0",
         { headers: { cookie: session } }
@@ -308,6 +400,7 @@ describe("hub login exchange", () => {
           return path === "/auth/hub/token"
             ? Response.json({
                 ...tokenResponse,
+                auth_time: authTime,
                 refresh_token: "refresh-2",
                 user_unique_id: returning,
               })
@@ -323,8 +416,73 @@ describe("hub login exchange", () => {
         }
       )
       const finished = callback.run(() => finishHubLogin("code", state))
-      return { callback, finished, requests }
+      return { callback, finished, location, requests }
     }
+
+    async function expectSessionKept(session: string) {
+      const original = startRequestScope("http://127.0.0.1:3000/hub/data", {
+        headers: { cookie: session },
+      })
+      await expect(
+        original.run(async () => hubSessionIdentity())
+      ).resolves.toBe("0000-0000-0000-000X")
+    }
+
+    it("asks the API for the signed-in account", async () => {
+      stubHubAuthEnv()
+      const session = await signIn("0000-0000-0000-000X")
+      const { finished, location } = await stepUp(
+        session,
+        "0000-0000-0000-000X"
+      )
+      await finished
+      expect(new URL(location).searchParams.get("required_user")).toBe(
+        "0000-0000-0000-000X"
+      )
+    })
+
+    it.each([
+      [
+        "an earlier sign-in",
+        () => new Date(Date.now() - 120_000).toISOString(),
+      ],
+      ["no sign-in time", () => null],
+    ])(
+      "keeps the session and revokes the tokens when the API reports %s",
+      async (_label, authTime) => {
+        stubHubAuthEnv()
+        const session = await signIn("0000-0000-0000-000X")
+        const { callback, finished, requests } = await stepUp(
+          session,
+          "0000-0000-0000-000X",
+          authTime()
+        )
+        const error = await finished.catch((reason: unknown) => reason)
+        expect(hubSignInFailureDetails(error)).toEqual({
+          reason: "stale-sign-in",
+        })
+        expect(requests).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
+        expect(
+          callback
+            .setCookies()
+            .some((value) => value.startsWith("crucible_hub_session="))
+        ).toBe(false)
+        await expectSessionKept(session)
+      }
+    )
+
+    it("accepts a sign-in time rounded down to the second", async () => {
+      stubHubAuthEnv()
+      const session = await signIn("0000-0000-0000-000X")
+      const { finished } = await stepUp(
+        session,
+        "0000-0000-0000-000X",
+        new Date(Math.floor(Date.now() / 1000) * 1000 - 1000)
+          .toISOString()
+          .replace(/\.\d+Z$/, "Z")
+      )
+      await expect(finished).resolves.toBe("/hub/reauthenticated")
+    })
 
     it("replaces the session when the same account returns", async () => {
       stubHubAuthEnv()

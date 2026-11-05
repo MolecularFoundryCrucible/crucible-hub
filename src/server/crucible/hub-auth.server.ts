@@ -51,6 +51,7 @@ const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
 const sessionCookie = "crucible_hub_session"
 const transactionCookie = "crucible_hub_login"
 const transactionLifetime = 10 * 60 * 1000
+const authTimeTolerance = 30 * 1000
 const sessionIdleLifetime = 7 * 24 * 60 * 60 * 1000
 const sessionAbsoluteLifetime = 30 * 24 * 60 * 60 * 1000
 
@@ -61,6 +62,7 @@ const tokenSchema = z.object({
   refresh_expires_at: z.iso.datetime({ offset: true }),
   token_type: z.literal("Bearer").default("Bearer"),
   user_unique_id: z.string().min(1),
+  auth_time: z.iso.datetime({ offset: true }).nullable().optional(),
 })
 
 type Tokens = z.infer<typeof tokenSchema>
@@ -70,6 +72,7 @@ type Transaction = {
   returnTo: string
   expiresAt: number
   expectedAccount?: string
+  maxAge?: number
   consumed: boolean
   cancelled: boolean
 }
@@ -145,9 +148,37 @@ class HubLoginUnavailableError extends Error {
   }
 }
 
+class HubStaleSignInError extends Error {
+  constructor() {
+    super("Re-confirming a sign-in did not return a recent sign-in.")
+  }
+}
+
+const providerErrors = new Set([
+  "access_denied",
+  "login_required",
+  "temporarily_unavailable",
+  "server_error",
+])
+
+class HubSignInRefusedError extends Error {
+  readonly error: string
+
+  constructor(error: string) {
+    super("The sign-in provider returned an error.")
+    this.error = providerErrors.has(error) ? error : "other"
+  }
+}
+
 export function hubSignInFailureDetails(error: unknown) {
   if (error instanceof HubAccountMismatchError) {
     return { reason: "account-mismatch" }
+  }
+  if (error instanceof HubStaleSignInError) {
+    return { reason: "stale-sign-in" }
+  }
+  if (error instanceof HubSignInRefusedError) {
+    return { reason: "provider-error", error: error.error }
   }
   if (error instanceof HubLoginUnavailableError) {
     return { reason: error.reason }
@@ -173,6 +204,22 @@ export function hubSignInFailureDetails(error: unknown) {
     }
   }
   return { reason: "unexpected" }
+}
+
+export type HubSignInErrorReason =
+  "account-mismatch" | "stale-sign-in" | "unavailable"
+
+export function hubSignInErrorReason(
+  details: ReturnType<typeof hubSignInFailureDetails>
+): HubSignInErrorReason | null {
+  if (details.reason === "account-mismatch") return "account-mismatch"
+  if (details.reason === "stale-sign-in") return "stale-sign-in"
+  if (details.reason !== "provider-error") return null
+  if (details.error === "login_required") return "account-mismatch"
+  return details.error === "temporarily_unavailable" ||
+    details.error === "server_error"
+    ? "unavailable"
+    : null
 }
 
 const storeKey = Symbol.for("crucible.hub.auth.local-store")
@@ -495,6 +542,23 @@ async function rejectOtherAccount(
   throw new HubAccountMismatchError()
 }
 
+async function rejectStaleSignIn(
+  transaction: Pick<Transaction, "expectedAccount" | "expiresAt" | "maxAge">,
+  tokens: Tokens
+) {
+  if (!transaction.expectedAccount || transaction.maxAge === undefined) return
+  const startedAt = transaction.expiresAt - transactionLifetime
+  const authTime = Date.parse(tokens.auth_time ?? "")
+  if (
+    Number.isFinite(authTime) &&
+    authTime >= startedAt - transaction.maxAge * 1000 - authTimeTolerance
+  ) {
+    return
+  }
+  await revokeRefreshToken(tokens.refresh_token)
+  throw new HubStaleSignInError()
+}
+
 export async function beginHubLogin(
   returnTo: string | null,
   maxAge: number | null = null
@@ -515,6 +579,7 @@ export async function beginHubLogin(
     returnTo: safeReturnTo(returnTo),
     expiresAt: Date.now() + transactionLifetime,
     ...(expectedAccount ? { expectedAccount } : {}),
+    ...(maxAge === null ? {} : { maxAge }),
     consumed: false,
     cancelled: false,
   }
@@ -531,10 +596,15 @@ export async function beginHubLogin(
   url.searchParams.set("code_challenge", challenge)
   url.searchParams.set("code_challenge_method", "S256")
   if (maxAge !== null) url.searchParams.set("max_age", String(maxAge))
+  if (expectedAccount) url.searchParams.set("required_user", expectedAccount)
   return url.toString()
 }
 
-export async function finishHubLogin(code: string, state: string) {
+export async function finishHubLogin(
+  code: string | null,
+  state: string,
+  providerError: string | null = null
+) {
   const { callbackUri } = config()
   const transactionId = getCookie(transactionCookie)
   deleteCookie(transactionCookie, cookieOptions("/hub/auth"))
@@ -553,12 +623,16 @@ export async function finishHubLogin(code: string, state: string) {
     ) {
       throw new Error("The sign-in request could not be verified.")
     }
+    if (providerError !== null || code === null) {
+      throw new HubSignInRefusedError(providerError ?? "")
+    }
     const tokens = await tokenRequest("/auth/hub/token", {
       code,
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
     })
     await rejectOtherAccount(transaction.expectedAccount, tokens)
+    await rejectStaleSignIn(transaction, tokens)
     const sessionId = randomValue()
     let accepted: boolean
     try {
@@ -601,12 +675,16 @@ export async function finishHubLogin(code: string, state: string) {
     ) {
       throw new Error("The sign-in request could not be verified.")
     }
+    if (providerError !== null || code === null) {
+      throw new HubSignInRefusedError(providerError ?? "")
+    }
     const tokens = await tokenRequest("/auth/hub/token", {
       code,
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
     })
     await rejectOtherAccount(transaction.expectedAccount, tokens)
+    await rejectStaleSignIn(transaction, tokens)
     if (
       transaction.cancelled ||
       store.transactions.get(transactionId) !== transaction
