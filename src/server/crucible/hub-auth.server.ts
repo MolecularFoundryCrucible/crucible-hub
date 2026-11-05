@@ -132,9 +132,25 @@ class HubAccountMismatchError extends Error {
   }
 }
 
+class HubLoginUnavailableError extends Error {
+  constructor(
+    readonly reason:
+      | "cancelled-transaction"
+      | "expired-transaction"
+      | "missing-login-cookie"
+      | "reused-transaction"
+      | "unknown-transaction"
+  ) {
+    super("The sign-in request has expired.")
+  }
+}
+
 export function hubSignInFailureDetails(error: unknown) {
   if (error instanceof HubAccountMismatchError) {
     return { reason: "account-mismatch" }
+  }
+  if (error instanceof HubLoginUnavailableError) {
+    return { reason: error.reason }
   }
   if (error instanceof TokenRequestError) {
     return { reason: "token-exchange-rejected", status: error.status }
@@ -145,7 +161,6 @@ export function hubSignInFailureDetails(error: unknown) {
   if (error instanceof Error) {
     const knownReasons: Record<string, string> = {
       "Invalid sign-in response.": "invalid-callback-response",
-      "The sign-in request has expired.": "expired-transaction",
       "The sign-in request could not be verified.": "state-mismatch",
       "Hub sign-in is not configured.": "configuration",
       "Hub sign-in callback is not configured correctly.": "configuration",
@@ -184,6 +199,13 @@ export class HubLoginRateLimitError extends Error {
   }
 }
 
+function pruneExpiredLocalTransactions() {
+  const now = Date.now()
+  for (const [id, transaction] of store.transactions) {
+    if (transaction.expiresAt < now) store.transactions.delete(id)
+  }
+}
+
 export function enforceHubLoginRateLimit() {
   const forwardedFor = getRequestHeader("x-forwarded-for")
   const ip = clientAddress(forwardedFor, getRequestIP()) ?? "unknown"
@@ -195,6 +217,7 @@ export function enforceHubLoginRateLimit() {
       }
     }
   }
+  if (!sharedMode()) pruneExpiredLocalTransactions()
   const attempts = (loginAttempts.get(ip) ?? []).filter(
     (timestamp) => now - timestamp < loginRateWindow
   )
@@ -348,6 +371,11 @@ export function hubAuthPublicOrigin() {
   return new URL(configuredCallbackUri()).origin
 }
 
+export function hubSignInOrigin() {
+  if (process.env.HUB_DATA_SOURCE !== "hub-auth") return null
+  return hubAuthPublicOrigin()
+}
+
 function serverApiUrl(value: string) {
   if (!serverApiUrlAllowed(value)) {
     throw new Error("Hub API URL must be a trusted HTTPS URL.")
@@ -473,9 +501,7 @@ export async function beginHubLogin(
 ) {
   const { publicBaseUrl, callbackUri } = config()
   if (!sharedMode()) {
-    for (const [id, transaction] of store.transactions) {
-      if (transaction.expiresAt < Date.now()) store.transactions.delete(id)
-    }
+    pruneExpiredLocalTransactions()
     for (const id of store.sessions.keys()) localSession(id)
   }
   const state = randomValue()
@@ -512,11 +538,12 @@ export async function finishHubLogin(code: string, state: string) {
   const { callbackUri } = config()
   const transactionId = getCookie(transactionCookie)
   deleteCookie(transactionCookie, cookieOptions("/hub/auth"))
-  if (!transactionId) throw new Error("The sign-in request has expired.")
+  if (!transactionId) throw new HubLoginUnavailableError("missing-login-cookie")
   if (sharedMode()) {
     const transaction = await consumeTransaction(transactionId)
-    if (!transaction || transaction.expiresAt < Date.now()) {
-      throw new Error("The sign-in request has expired.")
+    if (!transaction) throw new HubLoginUnavailableError("unknown-transaction")
+    if (transaction.expiresAt < Date.now()) {
+      throw new HubLoginUnavailableError("expired-transaction")
     }
     const expected = Buffer.from(transaction.state)
     const actual = Buffer.from(state)
@@ -547,20 +574,22 @@ export async function finishHubLogin(code: string, state: string) {
     }
     if (!accepted) {
       await revokeRefreshToken(tokens.refresh_token)
-      throw new Error("The sign-in request has expired.")
+      throw new HubLoginUnavailableError("cancelled-transaction")
     }
     clearLegacyPrivilegeModeCookie()
     setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
   }
   const transaction = store.transactions.get(transactionId)
-  if (
-    !transaction ||
-    transaction.expiresAt < Date.now() ||
-    transaction.consumed ||
-    transaction.cancelled
-  ) {
-    throw new Error("The sign-in request has expired.")
+  if (!transaction) throw new HubLoginUnavailableError("unknown-transaction")
+  if (transaction.cancelled) {
+    throw new HubLoginUnavailableError("cancelled-transaction")
+  }
+  if (transaction.consumed) {
+    throw new HubLoginUnavailableError("reused-transaction")
+  }
+  if (transaction.expiresAt < Date.now()) {
+    throw new HubLoginUnavailableError("expired-transaction")
   }
   transaction.consumed = true
   try {
@@ -583,7 +612,7 @@ export async function finishHubLogin(code: string, state: string) {
       store.transactions.get(transactionId) !== transaction
     ) {
       await revokeRefreshToken(tokens.refresh_token)
-      throw new Error("The sign-in request has expired.")
+      throw new HubLoginUnavailableError("cancelled-transaction")
     }
     const previous = getCookie(sessionCookie)
     if (previous) store.sessions.delete(previous)

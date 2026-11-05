@@ -10,7 +10,11 @@ import {
 } from "@/components/crucible/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getHubSessionSnapshot } from "@/data/crucible/session.functions"
+import { hubLoginHref } from "@/data/crucible/hub-login-link"
+import {
+  getHubSessionSnapshot,
+  getHubSignInOrigin,
+} from "@/data/crucible/session.functions"
 import { announceHubSignOut } from "@/data/crucible/session-tabs"
 
 export const Route = createFileRoute("/auth/sign-in")({
@@ -21,11 +25,13 @@ export const Route = createFileRoute("/auth/sign-in")({
       .optional()
       .catch(undefined),
   }),
+  loader: () => getHubSignInOrigin(),
   component: SignInPage,
 })
 
 function SignInPage() {
   const { returnTo, signedOut } = Route.useSearch()
+  const signInOrigin = Route.useLoaderData()
   useEffect(() => {
     if (!signedOut) return
     void getHubSessionSnapshot()
@@ -34,9 +40,7 @@ function SignInPage() {
       })
       .catch(() => undefined)
   }, [signedOut])
-  const loginUrl = returnTo
-    ? `/hub/auth/login?${new URLSearchParams({ returnTo })}`
-    : "/hub/auth/login"
+  const loginUrl = hubLoginHref(signInOrigin, returnTo)
 
   return (
     <AuthPage

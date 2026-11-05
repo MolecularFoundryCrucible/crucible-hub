@@ -2,11 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   beginHubLogin,
+  enforceHubLoginRateLimit,
   finishHubLogin,
   hasHubSession,
   hubAuthPublicOrigin,
   hubSessionIdentity,
   hubSignInFailureDetails,
+  hubSignInOrigin,
   sessionApiFetch,
 } from "./hub-auth.server"
 import { startRequestScope } from "@/test/start-request"
@@ -180,9 +182,70 @@ describe("hub login exchange", () => {
       vi.fn(async () => Response.json(tokenResponse))
     )
     await finishLogin(transactionCookie, "code", state)
-    await expect(finishLogin(transactionCookie, "code", state)).rejects.toThrow(
-      "The sign-in request has expired."
+    const failure: unknown = await finishLogin(
+      transactionCookie,
+      "code",
+      state
+    ).catch((error: unknown) => error)
+    expect(failure).toMatchObject({
+      message: "The sign-in request has expired.",
+    })
+    expect(hubSignInFailureDetails(failure)).toEqual({
+      reason: "unknown-transaction",
+    })
+  })
+
+  it("reports a callback that arrives without the login cookie", async () => {
+    stubHubAuthEnv()
+    const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/callback")
+    const failure: unknown = await scope
+      .run(() => finishHubLogin("code", "state"))
+      .catch((error: unknown) => error)
+    expect(hubSignInFailureDetails(failure)).toEqual({
+      reason: "missing-login-cookie",
+    })
+  })
+
+  it("reports a callback that arrives after the login expired", async () => {
+    stubHubAuthEnv()
+    vi.useFakeTimers({ toFake: ["Date"] })
+    const { scope, location } = await beginLogin("/hub/data")
+    const transactionCookie = loginCookie(scope)
+    const state = new URL(location).searchParams.get("state")!
+    vi.setSystemTime(Date.now() + 11 * 60 * 1000)
+    const failure: unknown = await finishLogin(
+      transactionCookie,
+      "code",
+      state
+    ).catch((error: unknown) => error)
+    expect(hubSignInFailureDetails(failure)).toEqual({
+      reason: "expired-transaction",
+    })
+  })
+
+  it("does not count expired sign-ins toward the pending limit", async () => {
+    stubHubAuthEnv()
+    vi.useFakeTimers({ toFake: ["Date"] })
+    const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
+    await scope.run(async () => {
+      for (let index = 0; index < 500; index += 1) {
+        await beginHubLogin(null)
+      }
+    })
+    vi.setSystemTime(Date.now() + 11 * 60 * 1000)
+    await expect(
+      scope.run(async () => enforceHubLoginRateLimit())
+    ).resolves.toBeUndefined()
+  })
+
+  it("starts sign-in on the callback's address only with Hub sign-in on", () => {
+    vi.stubEnv(
+      "HUB_AUTH_CALLBACK_URI",
+      "https://hub.example.test/hub/auth/callback"
     )
+    expect(hubSignInOrigin()).toBeNull()
+    vi.stubEnv("HUB_DATA_SOURCE", "hub-auth")
+    expect(hubSignInOrigin()).toBe("https://hub.example.test")
   })
 
   it("rejects the callback when the token exchange is rejected", async () => {

@@ -7,6 +7,8 @@ The public surface that versions protect is shareable URLs and their search para
 ## Unreleased
 
 - Grouped the keyboard shortcuts dialog so it lists only what works on the current page, and redesigned the system status popover with flat rows.
+- Fixed sign-in failing as expired when the Hub was opened through a different address than its configured callback: the sign-in button now starts on the configured address. Sign-in failure logs now give a specific reason, and `expired-transaction` now means only that the login timed out.
+- Fixed sign-in being refused as too many requests on a single-instance Hub after many abandoned sign-ins: expired sign-ins no longer count toward the pending limit.
 
 ## 1.7.3 - 2026-11-04
 
