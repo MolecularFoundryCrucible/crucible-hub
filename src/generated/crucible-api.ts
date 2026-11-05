@@ -372,15 +372,7 @@ export interface paths {
         };
         /**
          * Redirect Exchange
-         * @description Exchange the ORCID authorization code for an access token and user information.
-         *
-         *     Args:
-         *         request: Request object containing the HTTP request
-         *         code: ORCID authorization code
-         *         state: Optional state parameter (default is None)
-         *
-         *     Returns:
-         *         RedirectResponse to the appropriate page after successful authentication
+         * @description Finish the ORCID sign-in and set a short-lived session cookie.
          */
         get: operations["redirect_exchange_auth_callback_get"];
         put?: never;
@@ -417,6 +409,23 @@ export interface paths {
         };
         /** Begin Hub Login */
         get: operations["begin_hub_login_auth_hub_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/oidc/{key}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Finish Provider Login */
+        get: operations["finish_provider_login_auth_hub_oidc__key__callback_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -491,6 +500,26 @@ export interface paths {
          * @description Redirect the user to the ORCID login page to begin authentication.
          */
         get: operations["orcid_login_auth_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sign In Methods
+         * @description The ways to sign in through the Hub on this deployment; empty when Hub sign-in is off.
+         */
+        get: operations["list_sign_in_methods_auth_methods_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2214,27 +2243,6 @@ export interface paths {
         patch: operations["set_project_user_role_projects__project_ref__users__user_ref__patch"];
         trace?: never;
     };
-    "/regenerate_apikey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Regenerate Apikey Deprecated
-         * @deprecated
-         * @description Deprecated: use POST /auth/apikey/regenerate.
-         */
-        get: operations["regenerate_apikey_deprecated_regenerate_apikey_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/resources/metadata/search": {
         parameters: {
             query?: never;
@@ -3093,6 +3101,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{user_ref}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable User
+         * @description Switch an account off: every sign-in, API key and Hub session stops working. Other server
+         *     workers honor it within the API key cache lifetime. Platform administrators only.
+         */
+        post: operations["disable_user_users__user_ref__disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enable User
+         * @description Switch an account back on. Hub sessions ended by disabling stay ended. Platform administrators only.
+         */
+        post: operations["enable_user_users__user_ref__enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{user_ref}/platform_role": {
         parameters: {
             query?: never;
@@ -3211,6 +3260,16 @@ export interface components {
             is_service_account: boolean | null;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
             /** Role */
             role: string;
             /** Unique Id */
@@ -3276,6 +3335,11 @@ export interface components {
             api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
             authorization: components["schemas"]["AccountAuthorizationRead"];
             capabilities: components["schemas"]["AccountCapabilities"];
+            /**
+             * Disabled At
+             * @description When an administrator switched this account off; empty for an active account.
+             */
+            disabled_at?: string | null;
             /** Email */
             email?: string | null;
             /** First Name */
@@ -3292,6 +3356,16 @@ export interface components {
             last_active_at?: string | null;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
             platform_role?: components["schemas"]["PlatformRole"] | null;
             /** Unique Id */
             unique_id: string;
@@ -3429,6 +3503,21 @@ export interface components {
             source_mfid: string;
             /** Target Mfid */
             target_mfid: string;
+        };
+        /** AuthMethodRead */
+        AuthMethodRead: {
+            /** Display Name */
+            display_name: string;
+            /** Is Orcid */
+            is_orcid: boolean;
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @default oidc
+             * @constant
+             */
+            kind: "oidc";
         };
         /** BarcodePrintRequest */
         BarcodePrintRequest: {
@@ -3820,8 +3909,6 @@ export interface components {
             instrument_name?: string | null;
             /** Measurement */
             measurement?: string | null;
-            /** Public */
-            public?: boolean | null;
             /** Session Name */
             session_name?: string | null;
             /** Timestamp */
@@ -4182,6 +4269,8 @@ export interface components {
             access_expires_at: string;
             /** Access Token */
             access_token: string;
+            /** Auth Time */
+            auth_time?: string | null;
             /**
              * Refresh Expires At
              * Format: date-time
@@ -4322,9 +4411,9 @@ export interface components {
             owner?: components["schemas"]["UserPublicRead"] | null;
             /**
              * Owner Orcid
-             * @description Canonical owner identity: human ORCID or service-account MFID.
+             * @description Canonical owner identity: human ORCID or service-account MFID. Null when the instrument has no owner.
              */
-            owner_orcid: string;
+            owner_orcid?: string | null;
             /**
              * Resource Type
              * @default instrument
@@ -5047,7 +5136,7 @@ export interface components {
         /** ProjectSyncResult */
         ProjectSyncResult: {
             /** Orcid */
-            orcid: string;
+            orcid?: string | null;
             /**
              * Projects Added
              * @default []
@@ -5484,8 +5573,6 @@ export interface components {
         SampleUpdate: {
             /** Description */
             description?: string | null;
-            /** Public */
-            public?: boolean | null;
             /** Sample Name */
             sample_name?: string;
             /** Sample Type */
@@ -5837,6 +5924,16 @@ export interface components {
             is_service_account: boolean;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
             /** Unique Id */
             unique_id: string;
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
@@ -5846,6 +5943,11 @@ export interface components {
         /** UserRead */
         UserRead: {
             api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
+            /**
+             * Disabled At
+             * @description When an administrator switched this account off; empty for an active account.
+             */
+            disabled_at?: string | null;
             /** Email */
             email?: string | null;
             /** First Name */
@@ -5862,6 +5964,16 @@ export interface components {
             last_active_at?: string | null;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
             platform_role?: components["schemas"]["PlatformRole"] | null;
             /** Unique Id */
             unique_id: string;
@@ -6607,6 +6719,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description The proposal service could not be reached */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     verify_account_apikey_account_verify_get: {
@@ -6654,9 +6773,10 @@ export interface operations {
     };
     redirect_exchange_deprecated_auth_get: {
         parameters: {
-            query: {
-                code: string;
-                state?: string;
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
             };
             header?: never;
             path?: never;
@@ -6666,6 +6786,13 @@ export interface operations {
         responses: {
             /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
             307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in could not be matched to this browser, or ORCID reported an error */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6716,6 +6843,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description This ORCID cannot be used with this account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     regenerate_apikey_auth_apikey_regenerate_post: {
@@ -6744,13 +6878,21 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description This ORCID cannot be used with this account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     redirect_exchange_auth_callback_get: {
         parameters: {
-            query: {
-                code: string;
-                state?: string;
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
             };
             header?: never;
             path?: never;
@@ -6760,6 +6902,13 @@ export interface operations {
         responses: {
             /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
             307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in could not be matched to this browser, or ORCID reported an error */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6796,7 +6945,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error */
             302: {
                 headers: {
                     "Cache-Control"?: "no-store";
@@ -6808,7 +6957,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Sign-in failed */
+            /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
             400: {
                 headers: {
                     "Cache-Control"?: "no-store";
@@ -6856,8 +7005,12 @@ export interface operations {
                 state: string;
                 code_challenge: string;
                 code_challenge_method: string;
-                /** @description Maximum seconds since the user's last ORCID authentication. 0 forces ORCID to re-authenticate; use it before credential-creating operations that require a recent sign-in. */
+                /** @description Maximum seconds since the user's last authentication at the provider. 0 forces the provider to re-authenticate; use it before credential-creating operations that require a recent sign-in. */
                 max_age?: number | null;
+                /** @description The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice. */
+                provider?: string | null;
+                /** @description The unique_id that must sign in. Any other account gets error=login_required and no code. It passes through the browser, so the Hub must still compare the account it receives. */
+                required_user?: string | null;
             };
             header?: never;
             path?: never;
@@ -6865,7 +7018,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description A page to choose how to sign in, when several providers are listed and none is named */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Redirect to the provider, or to the Hub with an error when the provider cannot be reached */
             302: {
                 headers: {
                     "Cache-Control"?: "no-store";
@@ -6917,6 +7084,73 @@ export interface operations {
             };
             /** @description Hub sign-in unavailable */
             503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    finish_provider_login_auth_hub_oidc__key__callback_get: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error */
+            302: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
                 headers: {
                     "Cache-Control"?: "no-store";
                     Pragma?: "no-cache";
@@ -7174,11 +7408,39 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Redirect to the ORCID sign-in page */
-            307: {
+            302: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description ORCID cannot be reached */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_sign_in_methods_auth_methods_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthMethodRead"][];
+                };
             };
         };
     };
@@ -7239,7 +7501,7 @@ export interface operations {
                 keyword?: string | null;
                 public?: boolean | null;
                 dataset_name?: string | null;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /**
                  * @deprecated
@@ -7263,7 +7525,7 @@ export interface operations {
                 measurement_is_null?: boolean | null;
                 /** @description Filter by whether data_format is null. */
                 data_format_is_null?: boolean | null;
-                /** @description Filter by whether the stored owner identifier is null. */
+                /** @description Filter by whether the record has an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Filter by whether a canonical registered instrument is assigned. */
                 instrument_mfid_is_null?: boolean | null;
@@ -7386,6 +7648,7 @@ export interface operations {
                 session_name?: string | null;
                 measurement?: string | null;
                 data_format?: string | null;
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict contributing datasets by whether session_name is null. */
                 session_name_is_null?: boolean | null;
@@ -7393,7 +7656,7 @@ export interface operations {
                 measurement_is_null?: boolean | null;
                 /** @description Restrict contributing datasets by whether data_format is null. */
                 data_format_is_null?: boolean | null;
-                /** @description Restrict contributing datasets by whether the stored owner identifier is null. */
+                /** @description Restrict contributing datasets by whether they have an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Restrict contributing datasets by canonical instrument assignment. */
                 instrument_mfid_is_null?: boolean | null;
@@ -7483,7 +7746,7 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
@@ -9992,7 +10255,7 @@ export interface operations {
                 instrument_name?: string | null;
                 manufacturer?: string | null;
                 model?: string | null;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /**
                  * @deprecated
@@ -10088,7 +10351,7 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
                 affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict results to one lifecycle status. */
                 status?: components["schemas"]["InstrumentStatus"] | null;
@@ -10711,7 +10974,14 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Redirect to the ORCID sign-in page */
-            307: {
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ORCID cannot be reached */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11511,34 +11781,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-        };
-    };
-    regenerate_apikey_deprecated_regenerate_apikey_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
-                };
-            };
-            /** @description Redirect to sign-in when there is no ORCID session cookie */
-            307: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -12362,7 +12604,7 @@ export interface operations {
                 public?: boolean | null;
                 sample_name?: string | null;
                 sample_type?: string | null;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /**
                  * @deprecated
@@ -12373,7 +12615,7 @@ export interface operations {
                 timestamp?: string | null;
                 /** @description Filter by whether sample_type is null. */
                 sample_type_is_null?: boolean | null;
-                /** @description Filter by whether the stored owner identifier is null. */
+                /** @description Filter by whether the record has an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Filter by whether a canonical primary project is assigned. */
                 project_mfid_is_null?: boolean | null;
@@ -12488,10 +12730,11 @@ export interface operations {
                 field: components["schemas"]["SampleFacetField"];
                 dataset_mfid?: string | null;
                 sample_type?: string | null;
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict contributing samples by whether sample_type is null. */
                 sample_type_is_null?: boolean | null;
-                /** @description Restrict contributing samples by whether the stored owner identifier is null. */
+                /** @description Restrict contributing samples by whether they have an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Restrict contributing samples by canonical primary project assignment. */
                 project_mfid_is_null?: boolean | null;
@@ -12537,7 +12780,7 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
@@ -13073,6 +13316,13 @@ export interface operations {
             };
             /** @description Redirect to sign-in when there is no ORCID session cookie */
             307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This ORCID cannot be used with this account */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13772,6 +14022,105 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EffectiveResourceAccessRead"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_user_users__user_ref__disable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description A Hub session needs a recent sign-in to change a human administrator */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This is the last active human platform administrator */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_user_users__user_ref__enable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description A Hub session needs a recent sign-in to change a human administrator */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

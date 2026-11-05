@@ -146,6 +146,30 @@
             "title": "Last Name",
             "type": "string"
           },
+          "orcid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The person's linked ORCID, when they have one.",
+            "title": "Orcid"
+          },
+          "orcid_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the ORCID was confirmed by signing in with it; null without an ORCID.",
+            "title": "Orcid Verified"
+          },
           "role": {
             "title": "Role",
             "type": "string"
@@ -341,6 +365,19 @@
           "capabilities": {
             "$ref": "#/components/schemas/AccountCapabilities"
           },
+          "disabled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When an administrator switched this account off; empty for an active account.",
+            "title": "Disabled At"
+          },
           "email": {
             "anyOf": [
               {
@@ -384,6 +421,30 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "orcid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The person's linked ORCID, when they have one.",
+            "title": "Orcid"
+          },
+          "orcid_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the ORCID was confirmed by signing in with it; null without an ORCID.",
+            "title": "Orcid Verified"
           },
           "platform_role": {
             "anyOf": [
@@ -736,6 +797,35 @@
           "relationship_type"
         ],
         "title": "AssociationGraphEdge",
+        "type": "object"
+      },
+      "AuthMethodRead": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "is_orcid": {
+            "title": "Is Orcid",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "const": "oidc",
+            "default": "oidc",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "display_name",
+          "is_orcid"
+        ],
+        "title": "AuthMethodRead",
         "type": "object"
       },
       "BarcodePrintRequest": {
@@ -2040,17 +2130,6 @@
             ],
             "title": "Measurement"
           },
-          "public": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Public"
-          },
           "session_name": {
             "anyOf": [
               {
@@ -3003,6 +3082,18 @@
             "title": "Access Token",
             "type": "string"
           },
+          "auth_time": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auth Time"
+          },
           "refresh_expires_at": {
             "format": "date-time",
             "title": "Refresh Expires At",
@@ -3511,9 +3602,16 @@
             ]
           },
           "owner_orcid": {
-            "description": "Canonical owner identity: human ORCID or service-account MFID.",
-            "title": "Owner Orcid",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical owner identity: human ORCID or service-account MFID. Null when the instrument has no owner.",
+            "title": "Owner Orcid"
           },
           "resource_type": {
             "anyOf": [
@@ -3569,7 +3667,6 @@
         "required": [
           "unique_id",
           "instrument_name",
-          "owner_orcid",
           "location"
         ],
         "title": "InstrumentResponse",
@@ -5971,8 +6068,15 @@
       "ProjectSyncResult": {
         "properties": {
           "orcid": {
-            "title": "Orcid",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orcid"
           },
           "projects_added": {
             "default": [],
@@ -5999,9 +6103,6 @@
             "type": "array"
           }
         },
-        "required": [
-          "orcid"
-        ],
         "title": "ProjectSyncResult",
         "type": "object"
       },
@@ -7346,17 +7447,6 @@
             ],
             "title": "Description"
           },
-          "public": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Public"
-          },
           "sample_name": {
             "minLength": 1,
             "title": "Sample Name",
@@ -8174,6 +8264,30 @@
             "title": "Last Name",
             "type": "string"
           },
+          "orcid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The person's linked ORCID, when they have one.",
+            "title": "Orcid"
+          },
+          "orcid_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the ORCID was confirmed by signing in with it; null without an ORCID.",
+            "title": "Orcid Verified"
+          },
           "unique_id": {
             "title": "Unique Id",
             "type": "string"
@@ -8220,6 +8334,19 @@
               }
             ]
           },
+          "disabled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When an administrator switched this account off; empty for an active account.",
+            "title": "Disabled At"
+          },
           "email": {
             "anyOf": [
               {
@@ -8263,6 +8390,30 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "orcid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The person's linked ORCID, when they have one.",
+            "title": "Orcid"
+          },
+          "orcid_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the ORCID was confirmed by signing in with it; null without an ORCID.",
+            "title": "Orcid Verified"
           },
           "platform_role": {
             "anyOf": [
@@ -8424,7 +8575,7 @@
   },
   "info": {
     "title": "FastAPI",
-    "version": "3.3.0"
+    "version": "3.3.1"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -9786,6 +9937,9 @@
           },
           "501": {
             "description": "Proposal sync is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"proposal_sync\", \"message\": ...}}`"
+          },
+          "502": {
+            "description": "The proposal service could not be reached"
           }
         },
         "security": [
@@ -9882,10 +10036,17 @@
           {
             "in": "query",
             "name": "code",
-            "required": true,
+            "required": false,
             "schema": {
-              "title": "Code",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
             }
           },
           {
@@ -9893,14 +10054,40 @@
             "name": "state",
             "required": false,
             "schema": {
-              "title": "State",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
             }
           }
         ],
         "responses": {
           "307": {
             "description": "Redirect back to the page that started sign-in, with a short-lived session cookie"
+          },
+          "400": {
+            "description": "Sign-in could not be matched to this browser, or ORCID reported an error"
           },
           "422": {
             "content": {
@@ -9945,6 +10132,9 @@
           },
           "307": {
             "description": "Redirect to sign-in when there is no ORCID session cookie"
+          },
+          "409": {
+            "description": "This ORCID cannot be used with this account"
           }
         },
         "summary": "Get Apikey",
@@ -9975,6 +10165,9 @@
           },
           "307": {
             "description": "Redirect to sign-in when there is no ORCID session cookie"
+          },
+          "409": {
+            "description": "This ORCID cannot be used with this account"
           }
         },
         "summary": "Regenerate Apikey",
@@ -9985,16 +10178,23 @@
     },
     "/auth/callback": {
       "get": {
-        "description": "Exchange the ORCID authorization code for an access token and user information.\n\nArgs:\n    request: Request object containing the HTTP request\n    code: ORCID authorization code\n    state: Optional state parameter (default is None)\n\nReturns:\n    RedirectResponse to the appropriate page after successful authentication",
+        "description": "Finish the ORCID sign-in and set a short-lived session cookie.",
         "operationId": "redirect_exchange_auth_callback_get",
         "parameters": [
           {
             "in": "query",
             "name": "code",
-            "required": true,
+            "required": false,
             "schema": {
-              "title": "Code",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
             }
           },
           {
@@ -10002,14 +10202,40 @@
             "name": "state",
             "required": false,
             "schema": {
-              "title": "State",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
             }
           }
         ],
         "responses": {
           "307": {
             "description": "Redirect back to the page that started sign-in, with a short-lived session cookie"
+          },
+          "400": {
+            "description": "Sign-in could not be matched to this browser, or ORCID reported an error"
           },
           "422": {
             "content": {
@@ -10089,7 +10315,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Successful Response",
+            "description": "Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error",
             "headers": {
               "Cache-Control": {
                 "schema": {
@@ -10121,7 +10347,7 @@
             }
           },
           "400": {
-            "description": "Sign-in failed",
+            "description": "The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to",
             "headers": {
               "Cache-Control": {
                 "schema": {
@@ -10289,7 +10515,7 @@
             }
           },
           {
-            "description": "Maximum seconds since the user's last ORCID authentication. 0 forces ORCID to re-authenticate; use it before credential-creating operations that require a recent sign-in.",
+            "description": "Maximum seconds since the user's last authentication at the provider. 0 forces the provider to re-authenticate; use it before credential-creating operations that require a recent sign-in.",
             "in": "query",
             "name": "max_age",
             "required": false,
@@ -10304,14 +10530,88 @@
                   "type": "null"
                 }
               ],
-              "description": "Maximum seconds since the user's last ORCID authentication. 0 forces ORCID to re-authenticate; use it before credential-creating operations that require a recent sign-in.",
+              "description": "Maximum seconds since the user's last authentication at the provider. 0 forces the provider to re-authenticate; use it before credential-creating operations that require a recent sign-in.",
               "title": "Max Age"
+            }
+          },
+          {
+            "description": "The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice.",
+            "in": "query",
+            "name": "provider",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice.",
+              "title": "Provider"
+            }
+          },
+          {
+            "description": "The unique_id that must sign in. Any other account gets error=login_required and no code. It passes through the browser, so the Hub must still compare the account it receives.",
+            "in": "query",
+            "name": "required_user",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The unique_id that must sign in. Any other account gets error=login_required and no code. It passes through the browser, so the Hub must still compare the account it receives.",
+              "title": "Required User"
             }
           }
         ],
         "responses": {
+          "200": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "A page to choose how to sign in, when several providers are listed and none is named",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
           "302": {
-            "description": "Successful Response",
+            "description": "Redirect to the provider, or to the Hub with an error when the provider cannot be reached",
             "headers": {
               "Cache-Control": {
                 "schema": {
@@ -10479,6 +10779,215 @@
           }
         },
         "summary": "Begin Hub Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/hub/oidc/{key}/callback": {
+      "get": {
+        "operationId": "finish_provider_login_auth_hub_oidc__key__callback_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2048,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "description": "The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Invalid authentication request; submitted values and validation context are omitted",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "500": {
+            "description": "Authentication request failed; response contains no internal error details",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          }
+        },
+        "summary": "Finish Provider Login",
         "tags": [
           "auth"
         ]
@@ -11083,11 +11592,45 @@
         "description": "Redirect the user to the ORCID login page to begin authentication.",
         "operationId": "orcid_login_auth_login_get",
         "responses": {
-          "307": {
+          "302": {
             "description": "Redirect to the ORCID sign-in page"
+          },
+          "502": {
+            "description": "ORCID cannot be reached"
           }
         },
         "summary": "Orcid Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/methods": {
+      "get": {
+        "description": "The ways to sign in through the Hub on this deployment; empty when Hub sign-in is off.",
+        "operationId": "list_sign_in_methods_auth_methods_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuthMethodRead"
+                  },
+                  "title": "Response List Sign In Methods Auth Methods Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          }
+        },
+        "summary": "List Sign In Methods",
         "tags": [
           "auth"
         ]
@@ -11611,7 +12154,7 @@
             }
           },
           {
-            "description": "Exact stable owner identifier for a human or service account.",
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -11625,7 +12168,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Exact stable owner identifier for a human or service account.",
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -11820,7 +12363,7 @@
             }
           },
           {
-            "description": "Filter by whether the stored owner identifier is null.",
+            "description": "Filter by whether the record has an owner.",
             "in": "query",
             "name": "owner_id_is_null",
             "required": false,
@@ -11833,7 +12376,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by whether the stored owner identifier is null.",
+              "description": "Filter by whether the record has an owner.",
               "title": "Owner Id Is Null"
             }
           },
@@ -12409,6 +12952,7 @@
             }
           },
           {
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -12422,6 +12966,7 @@
                   "type": "null"
                 }
               ],
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -12480,7 +13025,7 @@
             }
           },
           {
-            "description": "Restrict contributing datasets by whether the stored owner identifier is null.",
+            "description": "Restrict contributing datasets by whether they have an owner.",
             "in": "query",
             "name": "owner_id_is_null",
             "required": false,
@@ -12493,7 +13038,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Restrict contributing datasets by whether the stored owner identifier is null.",
+              "description": "Restrict contributing datasets by whether they have an owner.",
               "title": "Owner Id Is Null"
             }
           },
@@ -12742,7 +13287,7 @@
             }
           },
           {
-            "description": "Exact stable owner identifier for a human or service account.",
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -12756,7 +13301,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Exact stable owner identifier for a human or service account.",
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -18673,7 +19218,7 @@
             }
           },
           {
-            "description": "Exact stable owner identifier for a human or service account.",
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -18687,7 +19232,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Exact stable owner identifier for a human or service account.",
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -18995,7 +19540,7 @@
             }
           },
           {
-            "description": "Exact stable owner identifier for a human or service account.",
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -19009,7 +19554,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Exact stable owner identifier for a human or service account.",
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -20656,8 +21201,11 @@
         "description": "Deprecated: use GET /auth/login.",
         "operationId": "orcid_login_deprecated_login_get",
         "responses": {
-          "307": {
+          "302": {
             "description": "Redirect to the ORCID sign-in page"
+          },
+          "502": {
+            "description": "ORCID cannot be reached"
           }
         },
         "summary": "Orcid Login Deprecated",
@@ -22663,37 +23211,6 @@
         "summary": "Add Users To Project",
         "tags": [
           "projects"
-        ]
-      }
-    },
-    "/regenerate_apikey": {
-      "get": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /auth/apikey/regenerate.",
-        "operationId": "regenerate_apikey_deprecated_regenerate_apikey_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "307": {
-            "description": "Redirect to sign-in when there is no ORCID session cookie"
-          }
-        },
-        "summary": "Regenerate Apikey Deprecated",
-        "tags": [
-          "auth"
         ]
       }
     },
@@ -24997,7 +25514,7 @@
             }
           },
           {
-            "description": "Exact stable owner identifier for a human or service account.",
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -25011,7 +25528,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Exact stable owner identifier for a human or service account.",
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -25086,7 +25603,7 @@
             }
           },
           {
-            "description": "Filter by whether the stored owner identifier is null.",
+            "description": "Filter by whether the record has an owner.",
             "in": "query",
             "name": "owner_id_is_null",
             "required": false,
@@ -25099,7 +25616,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by whether the stored owner identifier is null.",
+              "description": "Filter by whether the record has an owner.",
               "title": "Owner Id Is Null"
             }
           },
@@ -25590,6 +26107,7 @@
             }
           },
           {
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -25603,6 +26121,7 @@
                   "type": "null"
                 }
               ],
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -25625,7 +26144,7 @@
             }
           },
           {
-            "description": "Restrict contributing samples by whether the stored owner identifier is null.",
+            "description": "Restrict contributing samples by whether they have an owner.",
             "in": "query",
             "name": "owner_id_is_null",
             "required": false,
@@ -25638,7 +26157,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Restrict contributing samples by whether the stored owner identifier is null.",
+              "description": "Restrict contributing samples by whether they have an owner.",
               "title": "Owner Id Is Null"
             }
           },
@@ -25780,7 +26299,7 @@
             }
           },
           {
-            "description": "Exact stable owner identifier for a human or service account.",
+            "description": "Exact owner: unique_id, linked ORCID, username or email.",
             "in": "query",
             "name": "owner_id",
             "required": false,
@@ -25794,7 +26313,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Exact stable owner identifier for a human or service account.",
+              "description": "Exact owner: unique_id, linked ORCID, username or email.",
               "title": "Owner Id"
             }
           },
@@ -27063,6 +27582,9 @@
           },
           "307": {
             "description": "Redirect to sign-in when there is no ORCID session cookie"
+          },
+          "409": {
+            "description": "This ORCID cannot be used with this account"
           }
         },
         "summary": "Get Apikey Deprecated",
@@ -28803,6 +29325,179 @@
           }
         ],
         "summary": "Read User Access To Dataset",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{user_ref}/disable": {
+      "post": {
+        "description": "Switch an account off: every sign-in, API key and Hub session stops working. Other server\nworkers honor it within the API key cache lifetime. Platform administrators only.",
+        "operationId": "disable_user_users__user_ref__disable_post",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A Hub session needs a recent sign-in to change a human administrator"
+          },
+          "409": {
+            "description": "This is the last active human platform administrator"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Disable User",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{user_ref}/enable": {
+      "post": {
+        "description": "Switch an account back on. Hub sessions ended by disabling stay ended. Platform administrators only.",
+        "operationId": "enable_user_users__user_ref__enable_post",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A Hub session needs a recent sign-in to change a human administrator"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Enable User",
         "tags": [
           "users"
         ]
