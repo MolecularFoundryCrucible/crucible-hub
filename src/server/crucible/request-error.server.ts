@@ -37,6 +37,13 @@ const hubConflictCodes = new Set<string>([
   "storage_location_invalid",
   "replace_in_progress",
   "file_changed",
+  "identity_lookup_off",
+  "last_sign_in_method",
+  "link_expired",
+  "already_yours",
+  "linked_elsewhere",
+  "second_orcid",
+  "orcid_of_another",
 ])
 
 export function isHubConflictCode(code: unknown): code is HubConflictCode {

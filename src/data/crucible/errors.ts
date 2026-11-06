@@ -14,7 +14,16 @@ export type HubApiErrorKind =
 export type HubConflictField = "email" | "username"
 
 export type HubConflictCode =
-  "storage_location_invalid" | "replace_in_progress" | "file_changed"
+  | "storage_location_invalid"
+  | "replace_in_progress"
+  | "file_changed"
+  | "identity_lookup_off"
+  | "last_sign_in_method"
+  | "link_expired"
+  | "already_yours"
+  | "linked_elsewhere"
+  | "second_orcid"
+  | "orcid_of_another"
 
 export type HubApiError = {
   kind: HubApiErrorKind

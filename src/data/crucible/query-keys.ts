@@ -53,6 +53,12 @@ export const crucibleKeys = {
     [...scope, "account", "credential-status"] as const,
   accountProfile: (scope: IdentityScope) =>
     [...scope, "account", "profile"] as const,
+  accountIdentities: (scope: IdentityScope) =>
+    [...scope, "account", "identities"] as const,
+  accountPendingLink: (scope: IdentityScope) =>
+    [...scope, "account", "pending-link"] as const,
+  signInMethods: (scope: IdentityScope) =>
+    [...scope, "account", "sign-in-methods"] as const,
   accountPreferences: (scope: IdentityScope) =>
     [...scope.slice(0, 3), "account", "preferences"] as const,
   recentResources: (scope: IdentityScope) =>

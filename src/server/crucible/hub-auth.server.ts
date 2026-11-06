@@ -985,6 +985,79 @@ export function sessionApiFetch(): typeof fetch {
   }
 }
 
+export function hubSessionId() {
+  return session()
+}
+
+export function hubSharedSessions() {
+  return sharedMode()
+}
+
+export async function hubSessionAccessToken() {
+  const sessionId = session()
+  if (sharedMode()) {
+    const current = await readSession(sessionId)
+    if (!current) {
+      clearSharedRequestSession()
+      throw new Error("The Hub session has ended.")
+    }
+    const { tokens } = current.session
+    if (Date.parse(tokens.access_expires_at) > Date.now() + 30000) {
+      return tokens.access_token
+    }
+    const refreshed = await refreshSharedSession(
+      sessionId,
+      tokens.refresh_token
+    )
+    if (!refreshed) throw new Error("The Hub session has ended.")
+    return refreshed.access_token
+  }
+  const current = localSession(sessionId)
+  if (!current) throw new Error("The Hub session has ended.")
+  if (Date.parse(current.tokens.access_expires_at) > Date.now() + 30000) {
+    return current.tokens.access_token
+  }
+  const refreshed = await refresh(sessionId)
+  if (!refreshed) throw new Error("The Hub session has expired.")
+  return refreshed.access_token
+}
+
+export async function hubClientPost(
+  path: string,
+  body: object,
+  signal?: AbortSignal
+) {
+  const { baseUrl, secret } = config()
+  const timeout = AbortSignal.timeout(15000)
+  return fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: basicAuthorization(secret),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+  })
+}
+
+export function hubLinkCallbackUri() {
+  return `${hubAuthPublicOrigin()}/hub/auth/link/callback`
+}
+
+export function hubApiAuthorizationUrl(value: string) {
+  const { publicBaseUrl } = config()
+  const url = new URL(value)
+  if (
+    !url.href.startsWith(`${publicBaseUrl}/`) ||
+    url.username ||
+    url.password
+  ) {
+    throw new Error("The API returned an unexpected sign-in address.")
+  }
+  return url.href
+}
+
 async function revokeRefreshToken(refreshToken: string) {
   try {
     const { baseUrl, secret } = config()

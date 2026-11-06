@@ -36,6 +36,8 @@ export type WorkspaceAccount = Omit<
   is_service_account: boolean
 }
 
+export type WorkspaceAccountIdentity = Schema<"IdentityRead">
+
 export type WorkspaceAccountProfileUpdate = {
   email?: string | null
   first_name?: string

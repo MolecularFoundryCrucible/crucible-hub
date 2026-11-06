@@ -236,3 +236,20 @@ test("offers to retry when sign-in is unavailable", async ({ page }) => {
     "/hub/auth/sign-in"
   )
 })
+
+test("lists the account's sign-in methods and keeps the only one", async ({
+  page,
+}) => {
+  await page.goto("/hub/account")
+  await expect(page.getByText("Sign-in methods", { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "0000-0000-0000-000X, verified" }).first()
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Remove" })).toBeDisabled()
+})
+
+test("reports a sign-in method that was not added", async ({ page }) => {
+  await page.goto("/hub/account?link=retry")
+  await expect(page.getByText("Sign-in method not added")).toBeVisible()
+  await expect(page).toHaveURL(/\/hub\/account$/)
+})

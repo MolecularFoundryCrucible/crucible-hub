@@ -14,6 +14,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Changing a platform role now offers to confirm your sign-in when the API asks for a recent one, the same way issuing API keys does, instead of showing a generic error.
 - Confirming your sign-in for a sensitive action now asks the API for the signed-in account and checks that the sign-in really was new; an earlier sign-in is discarded and your session kept. Sign-in errors returned by the API now show a specific page, for example when sign-in is temporarily unavailable.
 - The sign-in page offers the sign-in methods the API lists, one button each when there are several, and shows the ORCID iD mark and ORCID links only for ORCID. Without a list it shows a plain Sign in button, and the sign-in-again prompt now reads Sign in again.
+- My profile has a Sign-in methods section that lists each way you sign in, adds another one after you sign in with it and confirm, and removes one after a warning. Your only sign-in method can't be removed.
 
 ## 1.7.3 - 2026-11-04
 

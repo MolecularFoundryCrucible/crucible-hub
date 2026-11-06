@@ -7,6 +7,7 @@ import {
   hasHubSession,
   hubAuthPublicOrigin,
   hubSessionIdentity,
+  hubApiAuthorizationUrl,
   hubSignInErrorReason,
   hubSignInFailureDetails,
   hubSignInMethods,
@@ -349,6 +350,21 @@ describe("hub login exchange", () => {
     await expect(finishLogin(transactionCookie, "code", state)).rejects.toThrow(
       "The Crucible sign-in request failed."
     )
+  })
+
+  it("only sends the browser to the configured API", () => {
+    stubHubAuthEnv()
+    expect(
+      hubApiAuthorizationUrl("https://api.example.test/auth/hub/link/start?t=1")
+    ).toBe("https://api.example.test/auth/hub/link/start?t=1")
+    for (const url of [
+      "https://evil.example.test/auth/hub/link/start",
+      "https://api.example.test.evil.example/start",
+      "https://user@api.example.test/start",
+      "http://api.example.test/start",
+    ]) {
+      expect(() => hubApiAuthorizationUrl(url)).toThrow()
+    }
   })
 
   it("forwards the chosen sign-in provider", async () => {

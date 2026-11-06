@@ -25,6 +25,11 @@ import {
   withHubAuthRequest,
 } from "./hub-auth.server"
 import {
+  createHubLink,
+  finishHubLinkCallback,
+  previewHubLink,
+} from "./hub-link.server"
+import {
   checkPostgresSessionStore,
   closePostgresSessionPool,
 } from "./hub-session-postgres.server"
@@ -215,6 +220,32 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     await expect(
       after.run(() => withHubAuthRequest(async () => hubSessionIdentity()))
     ).resolves.toBe(tokenResponse.user_unique_id)
+  })
+
+  it("keeps a pending sign-in link in the database for its own session only", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T22:00:00.000Z"))
+    stubSharedEnv()
+    const owner = await signedInSession((path) =>
+      path === "/auth/hub/link/preview"
+        ? Response.json({ provider_name: "ORCID", status: "available" })
+        : new Response(null, { status: 404 })
+    )
+    const { state } = await owner.inRequest(() => createHubLink("orcid"))
+    await expect(
+      owner.inRequest(() =>
+        finishHubLinkCallback({ code: "link-code", error: null, state })
+      )
+    ).resolves.toBe("pending")
+    await expect(
+      owner.inRequest(() => previewHubLink())
+    ).resolves.toMatchObject({ providerName: "ORCID", status: "available" })
+    const other = await signedInSession(() => new Response(null))
+    await expect(
+      other.inRequest(() =>
+        finishHubLinkCallback({ code: "link-code", error: null, state })
+      )
+    ).resolves.toBe("expired")
   })
 
   it("keeps a signed-in session across requests through the database", async () => {
