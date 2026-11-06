@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only"
 
 import { hubApiAuthorizationUrl } from "@/server/crucible/hub-auth.server"
 import { createHubLink } from "@/server/crucible/hub-link.server"
+import { requireAdministratorView } from "@/server/crucible/privilege-mode.server"
 import { CrucibleResponseError } from "@/server/crucible/request-error.server"
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
@@ -34,6 +35,25 @@ function toWorkspaceAccountIdentity(
   }
 }
 
+function fixtureIdentities(
+  person: { orcid?: string | null; orcid_verified?: boolean | null },
+  referenceTime: string
+): WorkspaceAccountIdentity[] {
+  if (!person.orcid) return []
+  return [
+    {
+      created_at: referenceTime,
+      id: 1,
+      label: null,
+      last_used_at: person.orcid_verified ? referenceTime : null,
+      orcid: person.orcid,
+      provider_key: "orcid",
+      provider_name: "ORCID",
+      verified_at: person.orcid_verified ? referenceTime : null,
+    },
+  ]
+}
+
 export async function readWorkspaceAccountIdentities(
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal
@@ -42,24 +62,43 @@ export async function readWorkspaceAccountIdentities(
   if (configuration.mode === "fixture") {
     const source = readWorkspaceFixture(scenario)
     if (source.status === "unavailable") throw new Error(source.reason)
-    const { account, referenceTime } = source.workspace
-    return [
-      {
-        created_at: referenceTime,
-        id: 1,
-        label: null,
-        last_used_at: referenceTime,
-        orcid: account.orcid ?? null,
-        provider_key: "orcid",
-        provider_name: "ORCID",
-        verified_at: account.orcid_verified ? referenceTime : null,
-      },
-    ]
+    return fixtureIdentities(
+      source.workspace.account,
+      source.workspace.referenceTime
+    )
   }
   const result = await createCrucibleClient(configuration).GET(
     "/account/identities",
     { signal: crucibleRequestSignal(requestSignal) }
   )
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response, result.error)
+  }
+  return result.data.map(toWorkspaceAccountIdentity)
+}
+
+export async function readWorkspaceUserIdentities(
+  userId: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceAccountIdentity[]> {
+  const configuration = apiConfiguration()
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario)
+    if (source.status === "unavailable") throw new Error(source.reason)
+    const person = [source.workspace.account, ...source.workspace.people].find(
+      (candidate) => candidate.unique_id === userId
+    )
+    return person
+      ? fixtureIdentities(person, source.workspace.referenceTime)
+      : []
+  }
+  const result = await createCrucibleClient(configuration, {
+    privilegeMode: requireAdministratorView(),
+  }).GET("/users/{user_ref}/identities", {
+    params: { path: { user_ref: userId } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
   if (!result.data) {
     throw new CrucibleResponseError(result.response, result.error)
   }

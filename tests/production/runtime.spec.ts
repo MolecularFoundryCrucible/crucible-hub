@@ -243,9 +243,13 @@ test("lists the account's sign-in methods and keeps the only one", async ({
   await page.goto("/hub/account")
   await expect(page.getByText("Sign-in methods", { exact: true })).toBeVisible()
   await expect(
-    page.getByRole("link", { name: "0000-0000-0000-000X, verified" }).first()
+    page.getByRole("link", { name: "0000-0000-0000-000X" })
   ).toBeVisible()
-  await expect(page.getByRole("button", { name: "Remove" })).toBeDisabled()
+  await page.getByRole("button", { name: "Actions for ORCID" }).click()
+  await expect(page.getByRole("menuitem", { name: /Remove/ })).toHaveAttribute(
+    "aria-disabled",
+    "true"
+  )
 })
 
 test("reports a sign-in method that was not added", async ({ page }) => {

@@ -76,6 +76,11 @@ const failure = (kind: string, conflictCode?: string) => ({
   },
 })
 
+async function chooseFromMenu(trigger: string, item: string | RegExp) {
+  fireEvent.click(await screen.findByRole("button", { name: trigger }))
+  return screen.findByRole("menuitem", { name: item })
+}
+
 function renderCard(linkOutcome?: AccountLinkOutcome) {
   const onLinkOutcomeHandled = vi.fn()
   render(
@@ -125,15 +130,17 @@ describe("AccountSignInMethodsCard", () => {
 
     expect(await screen.findByText("ORCID")).toBeTruthy()
     expect(
-      screen.getByRole("link", { name: "0000-0002-1825-0097, verified" })
+      screen.getByRole("link", { name: "0000-0002-1825-0097" })
     ).toBeTruthy()
+    expect(screen.getByText("Verified")).toBeTruthy()
+    const remove = await chooseFromMenu("Actions for ORCID", /Remove/)
+    expect(remove.getAttribute("aria-disabled")).toBe("true")
+    cleanup()
+    renderCard()
     expect(
-      screen.getByRole("button", { name: "Remove" }).hasAttribute("disabled")
-    ).toBe(true)
-    expect(
-      await screen.findByRole("button", { name: "Add Berkeley Lab" })
+      await chooseFromMenu("Add sign-in method", "Berkeley Lab")
     ).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "Add ORCID" })).toBeNull()
+    expect(screen.queryByRole("menuitem", { name: "ORCID" })).toBeNull()
   })
 
   it("warns before removing a login", async () => {
@@ -142,8 +149,12 @@ describe("AccountSignInMethodsCard", () => {
     )
     renderCard()
 
-    const remove = await screen.findAllByRole("button", { name: "Remove" })
-    fireEvent.click(remove[1])
+    fireEvent.click(
+      await chooseFromMenu(
+        "Actions for Berkeley Lab (a.chen@lab.example)",
+        "Remove"
+      )
+    )
     expect(
       await screen.findByText(/creates a new, separate Crucible account/)
     ).toBeTruthy()
@@ -163,9 +174,7 @@ describe("AccountSignInMethodsCard", () => {
     vi.stubGlobal("location", { ...window.location, assign })
     renderCard()
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Add Berkeley Lab" })
-    )
+    fireEvent.click(await chooseFromMenu("Add sign-in method", "Berkeley Lab"))
     await waitFor(() =>
       expect(assign).toHaveBeenCalledWith(
         "https://api.example.test/auth/hub/link/start?x=1"
@@ -184,9 +193,7 @@ describe("AccountSignInMethodsCard", () => {
     )
     renderCard()
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Add Berkeley Lab" })
-    )
+    fireEvent.click(await chooseFromMenu("Add sign-in method", "Berkeley Lab"))
     expect(
       await screen.findByText(/Adding a sign-in method needs a recent sign-in/)
     ).toBeTruthy()

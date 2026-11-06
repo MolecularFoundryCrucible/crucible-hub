@@ -7,7 +7,6 @@ import {
   EditableCardTrigger,
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
-import { OrcidValue } from "@/components/crucible/orcid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import {
@@ -163,29 +162,12 @@ export function AccountProfileForm({
                 )}
               </dd>
             </div>
-            <div
-              className={
-                account.orcid
-                  ? "col-span-2 min-w-0 @fields:col-span-1"
-                  : "col-span-2 min-w-0"
-              }
-            >
+            <div className="col-span-2 min-w-0">
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd className="mt-1">
                 <MfidValue value={account.unique_id} />
               </dd>
             </div>
-            {account.orcid ? (
-              <div className="col-span-2 min-w-0 @fields:col-span-1">
-                <dt className="text-label text-muted-foreground">ORCID</dt>
-                <dd className="mt-1">
-                  <OrcidValue
-                    orcid={account.orcid}
-                    verified={account.orcid_verified}
-                  />
-                </dd>
-              </div>
-            ) : null}
           </dl>
         </CardContent>
       </Card>

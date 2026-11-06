@@ -18,7 +18,6 @@ import {
   EditableCardTrigger,
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
-import { OrcidValue } from "@/components/crucible/orcid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PersonIdentity } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
@@ -84,6 +83,8 @@ import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-cr
 import { resourceDisplayName } from "@/lib/resource-name"
 import { formatUsername } from "@/lib/username"
 import { hubActionError } from "@/components/crucible/reauthentication"
+import { PersonSignInMethodsCard } from "@/features/account-profile/account-sign-in-methods-card"
+import { cn } from "@/lib/utils"
 import { useAppForm } from "@/features/forms/app-form"
 
 const platformRoleDescriptions = {
@@ -173,11 +174,15 @@ export function UserDetailView({
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
-        <UserProfileCard
-          className={!canManageApiKey ? "@split/content:col-span-2" : undefined}
-          scope={scope}
-          user={user}
-        />
+        <div
+          className={cn(
+            "flex min-w-0 flex-col gap-4",
+            !canManageApiKey && "@split/content:col-span-2"
+          )}
+        >
+          <UserProfileCard scope={scope} user={user} />
+          <PersonSignInMethodsCard scope={scope} userId={user.unique_id} />
+        </div>
         {canManageApiKey ? (
           <UserApiCredentialSection
             onCredentialMinted={setCredential}
@@ -197,11 +202,9 @@ export function UserDetailView({
 }
 
 function UserProfileCard({
-  className,
   scope,
   user,
 }: {
-  className?: string
   scope: IdentityScope
   user: WorkspaceAdminUser
 }) {
@@ -339,7 +342,7 @@ function UserProfileCard({
   if (!editing) {
     return (
       <>
-        <Card className={className}>
+        <Card>
           <CardHeader>
             <CardTitle>Identity</CardTitle>
             <CardAction>
@@ -392,7 +395,7 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0">
+              <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">Email</dt>
                 <dd className="mt-1 text-body break-words">
                   {user.email || (
@@ -400,13 +403,7 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div
-                className={
-                  user.orcid
-                    ? "col-span-2 min-w-0 @fields:col-span-1"
-                    : "col-span-2 min-w-0"
-                }
-              >
+              <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID
                 </dt>
@@ -414,17 +411,6 @@ function UserProfileCard({
                   <MfidValue value={user.unique_id} />
                 </dd>
               </div>
-              {user.orcid ? (
-                <div className="col-span-2 min-w-0 @fields:col-span-1">
-                  <dt className="text-label text-muted-foreground">ORCID</dt>
-                  <dd className="mt-1">
-                    <OrcidValue
-                      orcid={user.orcid}
-                      verified={user.orcid_verified}
-                    />
-                  </dd>
-                </div>
-              ) : null}
             </dl>
           </CardContent>
         </Card>
@@ -443,7 +429,7 @@ function UserProfileCard({
 
   return (
     <>
-      <Card aria-busy={isSubmitting} className={className}>
+      <Card aria-busy={isSubmitting}>
         <CardHeader>
           <CardTitle>Edit identity</CardTitle>
         </CardHeader>
@@ -503,7 +489,7 @@ function UserProfileCard({
               </FieldGroup>
             </fieldset>
             <dl className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
-              <div className={user.orcid ? "col-span-2 min-w-0" : "min-w-0"}>
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Platform role
                 </dt>
@@ -525,17 +511,6 @@ function UserProfileCard({
                   <MfidValue value={user.unique_id} />
                 </dd>
               </div>
-              {user.orcid ? (
-                <div className="col-span-2 min-w-0 @fields:col-span-1">
-                  <dt className="text-label text-muted-foreground">ORCID</dt>
-                  <dd className="mt-1">
-                    <OrcidValue
-                      orcid={user.orcid}
-                      verified={user.orcid_verified}
-                    />
-                  </dd>
-                </div>
-              ) : null}
             </dl>
             {saveError ? (
               <p className="mt-4 text-body text-destructive" role="alert">

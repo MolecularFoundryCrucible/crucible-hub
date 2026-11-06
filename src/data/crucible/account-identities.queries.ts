@@ -3,6 +3,7 @@ import { queryOptions } from "@tanstack/react-query"
 import {
   getPendingWorkspaceAccountLink,
   getWorkspaceAccountIdentities,
+  getWorkspaceUserIdentities,
 } from "./account-identities.functions"
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import type { IdentityScope } from "./query-keys"
@@ -38,5 +39,20 @@ export function signInMethodsQueryOptions(scope: IdentityScope) {
     queryKey: crucibleKeys.signInMethods(scope),
     queryFn: async () => (await getHubSignInOptions()).methods,
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function userIdentitiesQueryOptions(
+  scope: IdentityScope,
+  userId: string
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  return queryOptions({
+    queryKey: crucibleKeys.userIdentities(scope, userId),
+    queryFn: async ({ signal }) =>
+      unwrapHubResult(
+        await getWorkspaceUserIdentities({ data: { scenario, userId }, signal })
+      ),
+    retry: scenario ? false : undefined,
   })
 }

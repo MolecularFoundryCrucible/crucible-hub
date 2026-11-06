@@ -29,6 +29,28 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   }
 })
 
+vi.mock(
+  "@/data/crucible/account-identities.functions",
+  async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
+    getWorkspaceUserIdentities: vi.fn(async () => ({
+      status: "ok",
+      data: [
+        {
+          created_at: "2026-10-01T00:00:00Z",
+          id: 7,
+          label: null,
+          last_used_at: null,
+          orcid: "0000-0002-1825-0097",
+          provider_key: "orcid",
+          provider_name: "ORCID",
+          verified_at: null,
+        },
+      ],
+    })),
+  })
+)
+
 vi.mock("@/data/crucible/users.functions", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   provisionWorkspaceUserApiKeyFn: vi.fn(),
@@ -185,20 +207,18 @@ describe("UserDetailView projects table sorting", () => {
     expect(screen.queryByText("ORCID")).toBeNull()
   })
 
-  it("shows a linked ORCID and whether it is verified", () => {
-    renderUserDetail({
-      ...testUser,
-      orcid: "0000-0002-1825-0097",
-      orcid_verified: false,
-    })
+  it("lists the person's sign-in methods without offering changes", async () => {
+    renderUserDetail()
 
-    expect(screen.getByText("ORCID")).toBeTruthy()
+    expect(await screen.findByText("Sign-in methods")).toBeTruthy()
     expect(
-      screen.getByRole("link", {
-        name: "0000-0002-1825-0097",
-      })
+      await screen.findByRole("link", { name: "0000-0002-1825-0097" })
     ).toBeTruthy()
     expect(screen.getByText("Not verified")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull()
+    expect(
+      screen.queryByRole("button", { name: "Add sign-in method" })
+    ).toBeNull()
   })
 
   it("renders sortable headers for Project, Created, and Updated, and non-sortable Lead and Role", () => {

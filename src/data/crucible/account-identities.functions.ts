@@ -11,6 +11,7 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import {
   readWorkspaceAccountIdentities,
+  readWorkspaceUserIdentities,
   removeWorkspaceAccountIdentity,
   startWorkspaceAccountLink,
 } from "./account-identities.server"
@@ -24,6 +25,27 @@ export const getWorkspaceAccountIdentities = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceAccountIdentities(data.scenario, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceUserIdentities = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(
+    z
+      .object({
+        scenario: fixtureScenarioSchema.optional(),
+        userId: z.string().trim().min(1).max(255),
+      })
+      .strict()
+  )
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceUserIdentities(
+        data.userId,
+        data.scenario,
+        context.requestSignal
+      )
     )
   })
 

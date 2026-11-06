@@ -161,6 +161,11 @@ export {
   ExternalLink as ExternalLinkIcon,
   X as CloseIcon,
   Minus as IndeterminateSelectionIcon,
+  LogIn as SignInMethodIcon,
+  Ellipsis as CredentialActionsIcon,
+  Plus as AddSignInMethodIcon,
+  Trash2 as RemoveSignInMethodIcon,
+  BadgeCheck as VerifiedCredentialIcon,
 } from "lucide-react"
 
 export type { IconNode } from "lucide-react"
