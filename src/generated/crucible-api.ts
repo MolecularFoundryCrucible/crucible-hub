@@ -143,6 +143,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/account/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Account Identities
+         * @description The ways you sign in.
+         */
+        get: operations["list_account_identities_account_identities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/identities/{identity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlink Account Identity
+         * @description Remove one of your ways to sign in. Your other Hub sessions end; this one stays. Your last
+         *     way to sign in cannot be removed. Signing in again with a removed login from a provider that
+         *     lets anyone register creates a new, separate account.
+         */
+        delete: operations["unlink_account_identity_account_identities__identity_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/identities/{provider_key}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Account Link
+         * @description Start adding another way to sign in. Returns a one-time address on the API to send the
+         *     person's browser to; the provider asks them to sign in, and the Hub then previews and confirms
+         *     the link with POST /auth/hub/link/preview and /auth/hub/link/confirm.
+         */
+        post: operations["start_account_link_account_identities__provider_key__link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/account/join_requests": {
         parameters: {
             query?: never;
@@ -392,6 +456,66 @@ export interface paths {
         };
         /** Finish Hub Login */
         get: operations["finish_hub_login_auth_hub_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/link/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Hub Link
+         * @description Add the login to the account of the person who started the link and is confirming it now.
+         */
+        post: operations["confirm_hub_link_auth_hub_link_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/link/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Hub Link
+         * @description Name the login a link code would add, for the confirmation page. Changes nothing.
+         */
+        post: operations["preview_hub_link_auth_hub_link_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/link/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Start Hub Link
+         * @description Continue a link the Hub started: opened once, by the person's browser.
+         */
+        get: operations["start_hub_link_auth_hub_link_start_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4286,6 +4410,40 @@ export interface components {
             /** User Unique Id */
             user_unique_id: string;
         };
+        /**
+         * IdentityRead
+         * @description One way the person signs in. Only an ORCID shows its identifier, since ORCIDs are public.
+         */
+        IdentityRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /**
+             * Label
+             * @description What the provider calls this login, such as an email address; for an ORCID, the ORCID.
+             */
+            label?: string | null;
+            /** Last Used At */
+            last_used_at?: string | null;
+            /** Orcid */
+            orcid?: string | null;
+            /**
+             * Provider Key
+             * @description The provider's key from GET /auth/methods; null when the provider is no longer listed.
+             */
+            provider_key?: string | null;
+            /** Provider Name */
+            provider_name: string;
+            /**
+             * Verified At
+             * @description When the person last proved this login by signing in with it; null when an administrator entered it.
+             */
+            verified_at?: string | null;
+        };
         /** IngestionRequest */
         IngestionRequest: {
             /** Dataset Mfid */
@@ -4598,11 +4756,59 @@ export interface components {
             /** Target Mfid */
             target_mfid: string;
         };
+        /** LinkCode */
+        LinkCode: {
+            /** Code */
+            code: string;
+            /** Code Verifier */
+            code_verifier: string;
+            /** Redirect Uri */
+            redirect_uri: string;
+            /**
+             * Session Token
+             * @description The access token of the Hub session confirming the link; it must belong to the person who started it.
+             */
+            session_token: string;
+        };
+        /** LinkPreviewRead */
+        LinkPreviewRead: {
+            /** Label */
+            label?: string | null;
+            /** Orcid */
+            orcid?: string | null;
+            /** Provider Key */
+            provider_key?: string | null;
+            /** Provider Name */
+            provider_name: string;
+            /**
+             * Status
+             * @description available and already_yours can be confirmed; already_yours marks the login verified. The others are refused.
+             * @enum {string}
+             */
+            status: "available" | "already_yours" | "linked_elsewhere" | "second_orcid" | "orcid_of_another";
+        };
         /**
          * LinkRelationshipType
          * @enum {string}
          */
         LinkRelationshipType: "is_derived_from" | "is_part_of";
+        /** LinkStart */
+        LinkStart: {
+            /** Callback Uri */
+            callback_uri: string;
+            /** Code Challenge */
+            code_challenge: string;
+            /** State */
+            state: string;
+        };
+        /** LinkStartRead */
+        LinkStartRead: {
+            /**
+             * Authorization Url
+             * @description A one-time address on the API. Send the person's browser there; it continues to the provider.
+             */
+            authorization_url: string;
+        };
         /** LinkedResource */
         LinkedResource: {
             /**
@@ -6316,6 +6522,183 @@ export interface operations {
             };
         };
     };
+    list_account_identities_account_identities_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_account_identity_account_identities__identity_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                identity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: API keys cannot change how you sign in */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of your logins */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `last_sign_in_method`, or `identity_lookup_off` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_account_link_account_identities__provider_key__link_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                provider_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkStartRead"];
+                };
+            };
+            /** @description Unknown provider or invalid link request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: API keys cannot change how you sign in */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `identity_lookup_off` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Hub sign-in unavailable, or the provider cannot be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     get_account_join_requests_account_join_requests_get: {
         parameters: {
             query?: {
@@ -6938,6 +7321,7 @@ export interface operations {
                 code?: string | null;
                 state?: string | null;
                 error?: string | null;
+                iss?: string | null;
             };
             header?: never;
             path?: never;
@@ -6958,6 +7342,251 @@ export interface operations {
                 content?: never;
             };
             /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirm_hub_link_auth_hub_link_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityRead"];
+                };
+            };
+            /** @description Invalid client, link code or session */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `identity_lookup_off`, or the preview status that refuses the link: `linked_elsewhere`, `second_orcid`, `orcid_of_another` */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    preview_hub_link_auth_hub_link_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkPreviewRead"];
+                };
+            };
+            /** @description Invalid client, link code or session */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `identity_lookup_off`: linking waits for the identity lookup setting */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    start_hub_link_auth_hub_link_start_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to the provider, which asks the person to sign in again, or to the Hub with an error */
+            302: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown, used or expired start address */
             400: {
                 headers: {
                     "Cache-Control"?: "no-store";
@@ -7102,6 +7731,7 @@ export interface operations {
                 code?: string | null;
                 state?: string | null;
                 error?: string | null;
+                iss?: string | null;
             };
             header?: never;
             path: {
