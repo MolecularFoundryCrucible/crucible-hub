@@ -446,6 +446,19 @@
             "description": "Whether the ORCID was confirmed by signing in with it; null without an ORCID.",
             "title": "Orcid Verified"
           },
+          "pending_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When this account was created waiting for an administrator's approval; empty once approved. Only administrators see waiting accounts.",
+            "title": "Pending At"
+          },
           "platform_role": {
             "anyOf": [
               {
@@ -530,6 +543,42 @@
           }
         },
         "title": "AccountProfileUpdate",
+        "type": "object"
+      },
+      "AdminIdentityCreate": {
+        "properties": {
+          "issuer": {
+            "description": "The issuer of a listed provider.",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Issuer",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "subject": {
+            "description": "The provider's subject for this person, such as their ORCID.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuer",
+          "subject"
+        ],
+        "title": "AdminIdentityCreate",
         "type": "object"
       },
       "Affiliation": {
@@ -8638,6 +8687,19 @@
             ],
             "description": "Whether the ORCID was confirmed by signing in with it; null without an ORCID.",
             "title": "Orcid Verified"
+          },
+          "pending_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When this account was created waiting for an administrator's approval; empty once approved. Only administrators see waiting accounts.",
+            "title": "Pending At"
           },
           "platform_role": {
             "anyOf": [
@@ -28843,6 +28905,18 @@
             }
           },
           {
+            "description": "List only accounts waiting for approval instead of active ones. Platform administrators only.",
+            "in": "query",
+            "name": "pending",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "List only accounts waiting for approval instead of active ones. Platform administrators only.",
+              "title": "Pending",
+              "type": "boolean"
+            }
+          },
+          {
             "in": "query",
             "name": "first_name",
             "required": false,
@@ -30300,6 +30374,94 @@
         ]
       }
     },
+    "/users/{user_ref}/approve": {
+      "post": {
+        "description": "Let an account that waits for approval in. Platform administrators only.",
+        "operationId": "approve_user_users__user_ref__approve_post",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "404": {
+            "description": "No such account"
+          },
+          "409": {
+            "description": "`not_pending`: the account is not waiting for approval"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve User",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/users/{user_ref}/datasets": {
       "get": {
         "deprecated": true,
@@ -30653,6 +30815,290 @@
         ]
       }
     },
+    "/users/{user_ref}/identities": {
+      "get": {
+        "description": "A person's logins: your own, or anyone's for platform administrators.",
+        "operationId": "list_user_identities_users__user_ref__identities_get",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IdentityRead"
+                  },
+                  "title": "Response List User Identities Users  User Ref  Identities Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List User Identities",
+        "tags": [
+          "account"
+        ]
+      },
+      "post": {
+        "description": "Add a login to a person, such as the ORCID they gave you. It stays unverified until they sign\nin with it. Platform administrators, from a Hub session with a recent sign-in.",
+        "operationId": "add_user_identity_users__user_ref__identities_post",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIdentityCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "description": "Not the issuer of a listed provider"
+          },
+          "401": {
+            "description": "A Hub session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "`hub_session_required`: API keys cannot change how you sign in"
+          },
+          "409": {
+            "description": "`linked_elsewhere`, `second_orcid`, `orcid_of_another`, `already_yours`, `service_account`, or `identity_lookup_off`"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add User Identity",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/users/{user_ref}/identities/{identity_id}": {
+      "delete": {
+        "description": "Remove one of a person's logins, never their last. Ends all their Hub sessions. Platform\nadministrators, from a Hub session with a recent sign-in.",
+        "operationId": "remove_user_identity_users__user_ref__identities__identity_id__delete",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identity_id",
+            "required": true,
+            "schema": {
+              "title": "Identity Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A Hub session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "`hub_session_required`: API keys cannot change how you sign in"
+          },
+          "404": {
+            "description": "Not one of this person's logins"
+          },
+          "409": {
+            "description": "`last_sign_in_method`, `service_account`, or `identity_lookup_off`"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove User Identity",
+        "tags": [
+          "account"
+        ]
+      }
+    },
     "/users/{user_ref}/platform_role": {
       "patch": {
         "description": "Change a human user's platform role. Human platform administrators only.",
@@ -30952,6 +31398,87 @@
           }
         ],
         "summary": "Read Projects For User",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{user_ref}/reject": {
+      "post": {
+        "description": "Delete an account that waits for approval, freeing its username and login. Active accounts\nare never deleted. Platform administrators only.",
+        "operationId": "reject_user_users__user_ref__reject_post",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "404": {
+            "description": "No such account"
+          },
+          "409": {
+            "description": "`not_pending`, or `still_referenced` when something besides its own group and logins points at the account"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reject User",
         "tags": [
           "users"
         ]

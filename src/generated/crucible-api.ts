@@ -3184,6 +3184,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{user_ref}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve User
+         * @description Let an account that waits for approval in. Platform administrators only.
+         */
+        post: operations["approve_user_users__user_ref__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{user_ref}/datasets": {
         parameters: {
             query?: never;
@@ -3266,6 +3286,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{user_ref}/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List User Identities
+         * @description A person's logins: your own, or anyone's for platform administrators.
+         */
+        get: operations["list_user_identities_users__user_ref__identities_get"];
+        put?: never;
+        /**
+         * Add User Identity
+         * @description Add a login to a person, such as the ORCID they gave you. It stays unverified until they sign
+         *     in with it. Platform administrators, from a Hub session with a recent sign-in.
+         */
+        post: operations["add_user_identity_users__user_ref__identities_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/identities/{identity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove User Identity
+         * @description Remove one of a person's logins, never their last. Ends all their Hub sessions. Platform
+         *     administrators, from a Hub session with a recent sign-in.
+         */
+        delete: operations["remove_user_identity_users__user_ref__identities__identity_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{user_ref}/platform_role": {
         parameters: {
             query?: never;
@@ -3308,6 +3374,27 @@ export interface paths {
         get: operations["read_projects_for_user_users__user_ref__projects_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject User
+         * @description Delete an account that waits for approval, freeing its username and login. Active accounts
+         *     are never deleted. Platform administrators only.
+         */
+        post: operations["reject_user_users__user_ref__reject_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3490,6 +3577,11 @@ export interface components {
              * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
              */
             orcid_verified?: boolean | null;
+            /**
+             * Pending At
+             * @description When this account was created waiting for an administrator's approval; empty once approved. Only administrators see waiting accounts.
+             */
+            pending_at?: string | null;
             platform_role?: components["schemas"]["PlatformRole"] | null;
             /** Unique Id */
             unique_id: string;
@@ -3510,6 +3602,21 @@ export interface components {
             last_name?: string;
             /** Username */
             username?: string | null;
+        };
+        /** AdminIdentityCreate */
+        AdminIdentityCreate: {
+            /**
+             * Issuer
+             * @description The issuer of a listed provider.
+             */
+            issuer: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Subject
+             * @description The provider's subject for this person, such as their ORCID.
+             */
+            subject: string;
         };
         /**
          * Affiliation
@@ -6180,6 +6287,11 @@ export interface components {
              * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
              */
             orcid_verified?: boolean | null;
+            /**
+             * Pending At
+             * @description When this account was created waiting for an administrator's approval; empty once approved. Only administrators see waiting accounts.
+             */
+            pending_at?: string | null;
             platform_role?: components["schemas"]["PlatformRole"] | null;
             /** Unique Id */
             unique_id: string;
@@ -13973,6 +14085,8 @@ export interface operations {
                 permissive?: boolean;
                 /** @description Restrict results to service accounts or human users. */
                 is_service_account?: boolean | null;
+                /** @description List only accounts waiting for approval instead of active ones. Platform administrators only. */
+                pending?: boolean;
                 first_name?: string | null;
                 last_name?: string | null;
                 /** @description Case-insensitive substring search. Searches the fields named in search_fields, or by default first_name, last_name, username, unique_id, and, for platform administrators, email. */
@@ -14584,6 +14698,59 @@ export interface operations {
             };
         };
     };
+    approve_user_users__user_ref__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description No such account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `not_pending`: the account is not waiting for approval */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_user_datasets_users__user_ref__datasets_get: {
         parameters: {
             query?: never;
@@ -14763,6 +14930,182 @@ export interface operations {
             };
         };
     };
+    list_user_identities_users__user_ref__identities_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_user_identity_users__user_ref__identities_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminIdentityCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityRead"];
+                };
+            };
+            /** @description Not the issuer of a listed provider */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: API keys cannot change how you sign in */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `linked_elsewhere`, `second_orcid`, `orcid_of_another`, `already_yours`, `service_account`, or `identity_lookup_off` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_user_identity_users__user_ref__identities__identity_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+                identity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: API keys cannot change how you sign in */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of this person's logins */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `last_sign_in_method`, `service_account`, or `identity_lookup_off` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_user_platform_role_users__user_ref__platform_role_patch: {
         parameters: {
             query?: never;
@@ -14847,6 +15190,57 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_ProjectWithLead_"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_user_users__user_ref__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `not_pending`, or `still_referenced` when something besides its own group and logins points at the account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
