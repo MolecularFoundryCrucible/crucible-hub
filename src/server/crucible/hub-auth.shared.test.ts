@@ -107,8 +107,8 @@ async function signedInSession(
   const sessionId = sessionCookie.slice("crucible_hub_session=".length)
 
   let currentCookie = sessionCookie
-  const inRequest = <T>(work: () => Promise<T>) => {
-    const scope = startRequestScope("http://127.0.0.1:3000/hub/data", {
+  const inRequest = <T>(work: () => Promise<T>, path = "/hub/data") => {
+    const scope = startRequestScope(`http://127.0.0.1:3000${path}`, {
       headers: { cookie: currentCookie },
     })
     return scope
@@ -233,8 +233,9 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     )
     const { state } = await owner.inRequest(() => createHubLink("orcid"))
     await expect(
-      owner.inRequest(() =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+      owner.inRequest(
+        () => finishHubLinkCallback({ code: "link-code", error: null, state }),
+        "/hub/auth/link/callback"
       )
     ).resolves.toBe("pending")
     await expect(
@@ -242,8 +243,9 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     ).resolves.toMatchObject({ providerName: "ORCID", status: "available" })
     const other = await signedInSession(() => new Response(null))
     await expect(
-      other.inRequest(() =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+      other.inRequest(
+        () => finishHubLinkCallback({ code: "link-code", error: null, state }),
+        "/hub/auth/link/callback"
       )
     ).resolves.toBe("expired")
   })

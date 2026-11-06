@@ -348,7 +348,7 @@ export async function withHubAuthRequest<T>(
   const request = getRequest()
   const path = new URL(request.url).pathname
   if (
-    path.startsWith("/hub/auth/") ||
+    (path.startsWith("/hub/auth/") && !path.startsWith("/hub/auth/link/")) ||
     path === "/hub/health" ||
     request.headers.get(backgroundRequestHeader) === "1"
   ) {
@@ -1002,8 +1002,12 @@ export async function hubSessionAccessToken() {
       throw new Error("The Hub session has ended.")
     }
     const { tokens } = current.session
-    if (Date.parse(tokens.access_expires_at) > Date.now() + 30000) {
-      return tokens.access_token
+    const accessExpiresAt = Date.parse(tokens.access_expires_at)
+    if (accessExpiresAt > Date.now() + 30000) return tokens.access_token
+    const retryAt = current.session.refreshRetryAt ?? 0
+    if (retryAt > Date.now() && !refreshClaimed(current.session)) {
+      if (accessExpiresAt > Date.now()) return tokens.access_token
+      throw refreshUnavailable(retryAt - Date.now())
     }
     const refreshed = await refreshSharedSession(
       sessionId,
@@ -1014,8 +1018,14 @@ export async function hubSessionAccessToken() {
   }
   const current = localSession(sessionId)
   if (!current) throw new Error("The Hub session has ended.")
-  if (Date.parse(current.tokens.access_expires_at) > Date.now() + 30000) {
-    return current.tokens.access_token
+  if (Date.parse(current.tokens.refresh_expires_at) <= Date.now())
+    throw new Error("The Hub session has expired.")
+  const accessExpiresAt = Date.parse(current.tokens.access_expires_at)
+  if (accessExpiresAt > Date.now() + 30000) return current.tokens.access_token
+  const retryAt = current.refreshRetryAt ?? 0
+  if (retryAt > Date.now()) {
+    if (accessExpiresAt > Date.now()) return current.tokens.access_token
+    throw refreshUnavailable(retryAt - Date.now())
   }
   const refreshed = await refresh(sessionId)
   if (!refreshed) throw new Error("The Hub session has expired.")

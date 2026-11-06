@@ -6,6 +6,7 @@ import {
   finishHubLogin,
   hasHubSession,
   hubAuthPublicOrigin,
+  hubSessionAccessToken,
   hubSessionIdentity,
   hubApiAuthorizationUrl,
   hubSignInErrorReason,
@@ -703,7 +704,7 @@ describe("hub login exchange", () => {
         }
       })
     }
-    return { call, requests }
+    return { call, requests, sessionCookie }
   }
 
   it("keeps the session and the current access token when a refresh is rate limited", async () => {
@@ -727,6 +728,28 @@ describe("hub login exchange", () => {
       "/datasets",
       "/datasets",
     ])
+  })
+
+  it("hands out the current access token for a link while a refresh is rate limited", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T22:59:45.000Z"))
+    stubHubAuthEnv()
+    const { call, requests, sessionCookie } = await signedInSession((path) =>
+      path === "/auth/hub/refresh"
+        ? new Response(null, { headers: { "Retry-After": "20" }, status: 429 })
+        : Response.json([])
+    )
+    await call()
+    const linkScope = startRequestScope("http://127.0.0.1:3000/hub/data", {
+      headers: { cookie: sessionCookie },
+    })
+
+    await expect(linkScope.run(() => hubSessionAccessToken())).resolves.toBe(
+      tokenResponse.access_token
+    )
+    expect(
+      requests.filter((path) => path === "/auth/hub/refresh")
+    ).toHaveLength(1)
   })
 
   it("waits out a rate-limited refresh after expiry and then recovers", async () => {
