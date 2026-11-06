@@ -11,6 +11,7 @@ export function OrcidValue({
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-body">
       <a
+        aria-label={verified ? `${orcid}, verified` : undefined}
         className="inline-flex min-w-0 items-center gap-1.5 rounded-sm font-mono break-all underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
         href={href}
         referrerPolicy="no-referrer"
@@ -26,7 +27,6 @@ export function OrcidValue({
           />
         ) : null}
         {orcid}
-        {verified ? <span className="sr-only">, verified</span> : null}
       </a>
       {verified ? null : (
         <span className="text-muted-foreground">Not verified</span>
