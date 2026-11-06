@@ -170,6 +170,8 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
   })
 
   it("keeps the session and revokes the tokens when re-confirming returns another account", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
     stubSharedEnv()
     const { sessionCookie, requests } = await signedInSession(() =>
       Response.json([])

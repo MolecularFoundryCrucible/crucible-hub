@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   beginHubLogin,
@@ -270,6 +270,11 @@ describe("hub login exchange", () => {
   })
 
   describe("re-confirming a sign-in", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] })
+      vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
+    })
+
     async function signIn(account: string) {
       const { scope, location } = await beginLogin("/hub/data")
       const state = new URL(location).searchParams.get("state")!
