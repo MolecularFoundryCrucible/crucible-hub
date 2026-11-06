@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import type { UseQueryResult } from "@tanstack/react-query"
+import type { QueryKey, UseQueryResult } from "@tanstack/react-query"
 
 import orcidIdUrl from "@/assets/orcid-id.svg"
 import { ActivityTime } from "@/components/crucible/activity-time"
@@ -50,6 +50,7 @@ import {
   cancelWorkspaceAccountLinkFn,
   confirmWorkspaceAccountLinkFn,
   removeWorkspaceAccountIdentityFn,
+  removeWorkspaceUserIdentityFn,
   startWorkspaceAccountLinkFn,
 } from "@/data/crucible/account-identities.functions"
 import {
@@ -65,6 +66,7 @@ import {
   hubErrorMessage,
   unwrapHubResult,
 } from "@/data/crucible/result"
+import type { HubResult } from "@/data/crucible/result"
 import type { WorkspaceAccountIdentity } from "@/data/crucible/workspace-source"
 
 export type AccountLinkOutcome =
@@ -163,8 +165,14 @@ export function AccountSignInMethodsCard({
       renderActions={(identity) => (
         <RemoveSignInMethodAction
           identity={identity}
+          invalidate={accountIdentitiesQueryOptions(scope).queryKey}
+          owner={{ kind: "self" }}
+          remove={() =>
+            removeWorkspaceAccountIdentityFn({
+              data: { identityId: identity.id },
+            })
+          }
           removable={list.length > 1}
-          scope={scope}
         />
       )}
     >
@@ -176,19 +184,35 @@ export function AccountSignInMethodsCard({
 }
 
 export function PersonSignInMethodsCard({
+  personName,
   scope,
   userId,
 }: {
+  personName: string
   scope: IdentityScope
   userId: string
 }) {
   const identities = useQuery(userIdentitiesQueryOptions(scope, userId))
   if (conflictCode(identities.error) === "identity_lookup_off") return null
+  const count = identities.data?.length ?? 0
   return (
     <SignInMethodsCard
       emptyText="This person has no sign-in methods."
       errorText="This person's sign-in methods could not be loaded."
       query={identities}
+      renderActions={(identity) => (
+        <RemoveSignInMethodAction
+          identity={identity}
+          invalidate={userIdentitiesQueryOptions(scope, userId).queryKey}
+          owner={{ kind: "person", name: personName }}
+          remove={() =>
+            removeWorkspaceUserIdentityFn({
+              data: { identityId: identity.id, userId },
+            })
+          }
+          removable={count > 1}
+        />
+      )}
     />
   )
 }
@@ -324,14 +348,35 @@ function SignInMethodRow({
   )
 }
 
+type RemovalOwner = { kind: "self" } | { kind: "person"; name: string }
+
+function removalCopy(owner: RemovalOwner, name: string) {
+  if (owner.kind === "self") {
+    return {
+      description: `You won't be able to sign in with ${name} any more, and your Hub sessions on other browsers and devices will end. If anyone can register with this provider, signing in with it again later creates a new, separate Crucible account.`,
+      last: "This is your only way to sign in, so it can't be removed.",
+      unavailable: "Remove (your only sign-in method)",
+    }
+  }
+  return {
+    description: `${owner.name} won't be able to sign in with ${name} any more, and all of their Hub sessions will end. If anyone can register with this provider, signing in with it again later creates a new, separate Crucible account.`,
+    last: "This is their only way to sign in, so it can't be removed.",
+    unavailable: "Remove (their only sign-in method)",
+  }
+}
+
 function RemoveSignInMethodAction({
   identity,
+  invalidate,
+  owner,
+  remove,
   removable,
-  scope,
 }: {
   identity: WorkspaceAccountIdentity
+  invalidate: QueryKey
+  owner: RemovalOwner
+  remove: () => Promise<HubResult<unknown>>
   removable: boolean
-  scope: IdentityScope
 }) {
   const queryClient = useQueryClient()
   const [confirming, setConfirming] = useState(false)
@@ -340,17 +385,13 @@ function RemoveSignInMethodAction({
     label: identity.label,
     providerName: identity.provider_name,
   })
+  const copy = removalCopy(owner, name)
   const mutation = useMutation({
-    mutationFn: async () =>
-      unwrapHubResult(
-        await removeWorkspaceAccountIdentityFn({
-          data: { identityId: identity.id },
-        })
-      ),
+    mutationFn: async () => unwrapHubResult(await remove()),
     onError: (cause) =>
       setError(
         conflictCode(cause) === "last_sign_in_method"
-          ? "This is your only way to sign in, so it can't be removed."
+          ? copy.last
           : hubActionError(
               cause,
               "The sign-in method could not be removed.",
@@ -361,9 +402,7 @@ function RemoveSignInMethodAction({
       setConfirming(false)
       setError(undefined)
       notifySuccess("Sign-in method removed", name)
-      void queryClient.invalidateQueries({
-        queryKey: accountIdentitiesQueryOptions(scope).queryKey,
-      })
+      void queryClient.invalidateQueries({ queryKey: invalidate })
     },
   })
 
@@ -388,13 +427,13 @@ function RemoveSignInMethodAction({
             variant="destructive"
           >
             <RemoveSignInMethodIcon aria-hidden="true" />
-            {removable ? "Remove" : "Remove (your only sign-in method)"}
+            {removable ? "Remove" : copy.unavailable}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ConfirmationDialog
         confirmLabel="Remove"
-        description={`You won't be able to sign in with ${name} any more, and your Hub sessions on other browsers and devices will end. If anyone can register with this provider, signing in with it again later creates a new, separate Crucible account.`}
+        description={copy.description}
         error={error}
         kind="alert"
         onConfirm={() => mutation.mutate()}

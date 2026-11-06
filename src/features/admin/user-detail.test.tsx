@@ -15,6 +15,10 @@ import type {
   WorkspaceUserProject,
 } from "@/data/crucible/workspace-source"
 import { provisionWorkspaceUserApiKeyFn } from "@/data/crucible/users.functions"
+import {
+  getWorkspaceUserIdentities,
+  removeWorkspaceUserIdentityFn,
+} from "@/data/crucible/account-identities.functions"
 
 import { UserDetailView } from "./user-detail"
 
@@ -33,6 +37,10 @@ vi.mock(
   "@/data/crucible/account-identities.functions",
   async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
+    removeWorkspaceUserIdentityFn: vi.fn(async () => ({
+      status: "ok",
+      data: undefined,
+    })),
     getWorkspaceUserIdentities: vi.fn(async () => ({
       status: "ok",
       data: [
@@ -207,7 +215,7 @@ describe("UserDetailView projects table sorting", () => {
     expect(screen.queryByText("ORCID")).toBeNull()
   })
 
-  it("lists the person's sign-in methods without offering changes", async () => {
+  it("lists the person's sign-in methods and keeps their only one", async () => {
     renderUserDetail()
 
     expect(await screen.findByText("Sign-in methods")).toBeTruthy()
@@ -215,10 +223,62 @@ describe("UserDetailView projects table sorting", () => {
       await screen.findByRole("link", { name: "0000-0002-1825-0097" })
     ).toBeTruthy()
     expect(screen.getByText("Not verified")).toBeTruthy()
-    expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull()
     expect(
       screen.queryByRole("button", { name: "Add sign-in method" })
     ).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Actions for ORCID" }))
+    expect(
+      (
+        await screen.findByRole("menuitem", {
+          name: "Remove (their only sign-in method)",
+        })
+      ).getAttribute("aria-disabled")
+    ).toBe("true")
+  })
+
+  it("removes one of a person's logins after naming them in the warning", async () => {
+    vi.mocked(getWorkspaceUserIdentities).mockResolvedValueOnce({
+      status: "ok",
+      data: [
+        {
+          created_at: "2026-10-01T00:00:00Z",
+          id: 7,
+          label: null,
+          last_used_at: null,
+          orcid: "0000-0002-1825-0097",
+          provider_key: "orcid",
+          provider_name: "ORCID",
+          verified_at: "2026-10-01T00:00:00Z",
+        },
+        {
+          created_at: "2026-10-02T00:00:00Z",
+          id: 8,
+          label: "test@lab.example",
+          last_used_at: null,
+          orcid: null,
+          provider_key: "lbl",
+          provider_name: "Berkeley Lab",
+          verified_at: null,
+        },
+      ],
+    })
+    renderUserDetail()
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Actions for Berkeley Lab (test@lab.example)",
+      })
+    )
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
+    expect(
+      await screen.findByText(/^Test User won.t be able to sign in with/)
+    ).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+    await waitFor(() =>
+      expect(vi.mocked(removeWorkspaceUserIdentityFn)).toHaveBeenCalledWith({
+        data: { identityId: 8, userId: "test-user" },
+      })
+    )
   })
 
   it("renders sortable headers for Project, Created, and Updated, and non-sortable Lead and Role", () => {

@@ -13,6 +13,7 @@ import {
   readWorkspaceAccountIdentities,
   readWorkspaceUserIdentities,
   removeWorkspaceAccountIdentity,
+  removeWorkspaceUserIdentity,
   startWorkspaceAccountLink,
 } from "./account-identities.server"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
@@ -58,6 +59,27 @@ export const removeWorkspaceAccountIdentityFn = createServerFn({
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       removeWorkspaceAccountIdentity(data.identityId, context.requestSignal)
+    )
+  })
+
+export const removeWorkspaceUserIdentityFn = createServerFn({ method: "POST" })
+  .middleware([queryCancellationMiddleware])
+  .validator(
+    z
+      .object({
+        identityId: z.number().int().positive(),
+        userId: z.string().trim().min(1).max(255),
+      })
+      .strict()
+  )
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      removeWorkspaceUserIdentity(
+        data.userId,
+        data.identityId,
+        context.requestSignal
+      )
     )
   })
 

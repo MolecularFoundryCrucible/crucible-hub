@@ -19,7 +19,10 @@ import {
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
-import { PersonIdentity } from "@/components/crucible/person-identity"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import { PlatformRoleDialog } from "@/components/crucible/platform-role-dialog"
@@ -181,7 +184,11 @@ export function UserDetailView({
           )}
         >
           <UserProfileCard scope={scope} user={user} />
-          <PersonSignInMethodsCard scope={scope} userId={user.unique_id} />
+          <PersonSignInMethodsCard
+            personName={personDisplayName(user)}
+            scope={scope}
+            userId={user.unique_id}
+          />
         </div>
         {canManageApiKey ? (
           <UserApiCredentialSection

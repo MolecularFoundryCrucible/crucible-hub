@@ -127,6 +127,28 @@ export async function removeWorkspaceAccountIdentity(
   }
 }
 
+export async function removeWorkspaceUserIdentity(
+  userId: string,
+  identityId: number,
+  requestSignal?: AbortSignal
+) {
+  const configuration = apiConfiguration()
+  if (configuration.mode === "fixture") {
+    throw new CrucibleResponseError(new Response(null, { status: 409 }), {
+      detail: { code: "last_sign_in_method" },
+    })
+  }
+  const result = await createCrucibleClient(configuration, {
+    privilegeMode: requireAdministratorView(),
+  }).DELETE("/users/{user_ref}/identities/{identity_id}", {
+    params: { path: { identity_id: identityId, user_ref: userId } },
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.response.ok) {
+    throw new CrucibleResponseError(result.response, result.error)
+  }
+}
+
 export async function startWorkspaceAccountLink(
   providerKey: string,
   requestSignal?: AbortSignal
