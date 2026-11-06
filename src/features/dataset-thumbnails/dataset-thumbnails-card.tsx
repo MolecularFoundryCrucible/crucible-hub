@@ -40,6 +40,8 @@ import type {
 } from "@/data/crucible/workspace-source"
 import { formatBytes } from "@/lib/format"
 
+import { ThumbnailViewer } from "./thumbnail-viewer"
+
 const acceptedThumbnailTypes =
   "image/jpeg,image/png,image/webp,image/tiff,image/bmp,image/gif,.tif,.tiff"
 
@@ -108,24 +110,39 @@ function ThumbnailGallery({
 }: {
   thumbnails: readonly WorkspaceDatasetThumbnail[]
 }) {
+  const [viewing, setViewing] = useState<number | null>(null)
   return (
-    <ul className="grid gap-4 @fields:grid-cols-2 @fields-wide:grid-cols-3">
-      {thumbnails.map((thumbnail) => (
-        <li key={thumbnail.id}>
-          <figure className="overflow-hidden rounded-lg border bg-muted/20">
-            <DatasetThumbnailImage
-              alt=""
-              className="aspect-video w-full bg-card object-contain"
-              loading="lazy"
-              thumbnail={thumbnail}
-            />
-            <figcaption className="truncate border-t px-3 py-2 text-label">
-              {thumbnail.thumbnail_name}
-            </figcaption>
-          </figure>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="grid gap-4 @fields:grid-cols-2 @fields-wide:grid-cols-3">
+        {thumbnails.map((thumbnail, index) => (
+          <li key={thumbnail.id}>
+            <figure className="overflow-hidden rounded-lg border bg-muted/20 has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50">
+              <Button
+                aria-label={`Enlarge ${thumbnail.thumbnail_name}`}
+                onClick={() => setViewing(index)}
+                size="media"
+                variant="ghost"
+              >
+                <DatasetThumbnailImage
+                  alt=""
+                  className="aspect-video w-full bg-card object-contain"
+                  loading="lazy"
+                  thumbnail={thumbnail}
+                />
+              </Button>
+              <figcaption className="truncate border-t px-3 py-2 text-label">
+                {thumbnail.thumbnail_name}
+              </figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+      <ThumbnailViewer
+        index={viewing}
+        onIndexChange={setViewing}
+        thumbnails={thumbnails}
+      />
+    </>
   )
 }
 

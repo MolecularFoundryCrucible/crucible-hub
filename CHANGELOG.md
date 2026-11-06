@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Clicking a dataset thumbnail opens it in a larger view, with Previous and Next (or the arrow keys) to step through the dataset's other thumbnails.
+
 ## 1.7.3 - 2026-11-04
 
 - Edit and Done buttons now expose names that include their visible word, such as "Edit members" and "Done editing members", for screen readers and voice control.
