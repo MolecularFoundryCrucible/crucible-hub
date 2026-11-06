@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { PendingUsersCard } from "./pending-users-card"
+import { PendingUserActions, PendingUsersCard } from "./pending-users-card"
 import { identityScope } from "@/data/crucible/query-keys"
 import {
   approveWorkspaceUserFn,
@@ -133,5 +133,35 @@ describe("PendingUsersCard", () => {
     expect(
       await screen.findByText("This account is no longer waiting for approval.")
     ).toBeTruthy()
+  })
+
+  it("leaves the deleted account unfetched when rejecting navigates away", async () => {
+    vi.mocked(rejectWorkspaceUserFn).mockResolvedValue({
+      status: "ok",
+      data: null,
+    } as never)
+    const client = new QueryClient()
+    const invalidate = vi.spyOn(client, "invalidateQueries")
+    const onRejected = vi.fn()
+    render(
+      <QueryClientProvider client={client}>
+        <PendingUserActions
+          onRejected={onRejected}
+          scope={identityScope("server-1", "admin-1", "elevated")}
+          user={waiting}
+        />
+      </QueryClientProvider>
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Reject" }))
+    fireEvent.click(
+      (await screen.findAllByRole("button", { name: "Reject" })).find(
+        (button) => button.closest("[role=alertdialog]")
+      )!
+    )
+    await waitFor(() => expect(onRejected).toHaveBeenCalled())
+    expect(invalidate).toHaveBeenCalledWith(
+      expect.objectContaining({ refetchType: "none" })
+    )
   })
 })

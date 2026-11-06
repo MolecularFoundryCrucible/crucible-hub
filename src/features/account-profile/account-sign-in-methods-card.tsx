@@ -147,7 +147,14 @@ export function AccountSignInMethodsCard({
     onLinkOutcomeHandled()
   }, [linkOutcome, onLinkOutcomeHandled])
 
-  if (conflictCode(identities.error) === "identity_lookup_off") return null
+  const lookupOff = conflictCode(identities.error) === "identity_lookup_off"
+  useEffect(() => {
+    if (!lookupOff || linkOutcome !== "pending") return
+    void cancelWorkspaceAccountLinkFn().catch(() => undefined)
+    onLinkOutcomeHandled()
+  }, [linkOutcome, lookupOff, onLinkOutcomeHandled])
+
+  if (lookupOff) return null
 
   const list = identities.data ?? []
   const addable = identities.data
@@ -195,6 +202,7 @@ export function PersonSignInMethodsCard({
   const identities = useQuery(userIdentitiesQueryOptions(scope, userId))
   if (conflictCode(identities.error) === "identity_lookup_off") return null
   const count = identities.data?.length ?? 0
+  const own = userId === scope[2]
   return (
     <SignInMethodsCard
       emptyText="This person has no sign-in methods."
@@ -204,11 +212,15 @@ export function PersonSignInMethodsCard({
         <RemoveSignInMethodAction
           identity={identity}
           invalidate={userIdentitiesQueryOptions(scope, userId).queryKey}
-          owner={{ kind: "person", name: personName }}
+          owner={own ? { kind: "self" } : { kind: "person", name: personName }}
           remove={() =>
-            removeWorkspaceUserIdentityFn({
-              data: { identityId: identity.id, userId },
-            })
+            own
+              ? removeWorkspaceAccountIdentityFn({
+                  data: { identityId: identity.id },
+                })
+              : removeWorkspaceUserIdentityFn({
+                  data: { identityId: identity.id, userId },
+                })
           }
           removable={count > 1}
         />

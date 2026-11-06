@@ -41,9 +41,10 @@ function approvalError(error: unknown, fallback: string) {
 
 function useRefreshUsers(scope: IdentityScope) {
   const queryClient = useQueryClient()
-  return () =>
+  return (refetchType: "active" | "none" = "active") =>
     void queryClient.invalidateQueries({
       queryKey: crucibleKeys.userAdminQueries(scope),
+      refetchType,
     })
 }
 
@@ -140,7 +141,7 @@ export function PendingUserActions({
       setRejecting(false)
       setError(undefined)
       notifySuccess("Request rejected", name)
-      refresh()
+      refresh(onRejected ? "none" : "active")
       onRejected?.()
     },
   })

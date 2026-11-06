@@ -17,6 +17,7 @@ import type {
 import { provisionWorkspaceUserApiKeyFn } from "@/data/crucible/users.functions"
 import {
   getWorkspaceUserIdentities,
+  removeWorkspaceAccountIdentityFn,
   removeWorkspaceUserIdentityFn,
 } from "@/data/crucible/account-identities.functions"
 
@@ -37,6 +38,10 @@ vi.mock(
   "@/data/crucible/account-identities.functions",
   async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
+    removeWorkspaceAccountIdentityFn: vi.fn(async () => ({
+      status: "ok",
+      data: undefined,
+    })),
     removeWorkspaceUserIdentityFn: vi.fn(async () => ({
       status: "ok",
       data: undefined,
@@ -279,6 +284,53 @@ describe("UserDetailView projects table sorting", () => {
         data: { identityId: 8, userId: "test-user" },
       })
     )
+  })
+
+  it("removes an administrator's own login the way My profile does, keeping their session", async () => {
+    vi.mocked(removeWorkspaceUserIdentityFn).mockClear()
+    vi.mocked(getWorkspaceUserIdentities).mockResolvedValueOnce({
+      status: "ok",
+      data: [
+        {
+          created_at: "2026-10-01T00:00:00Z",
+          id: 7,
+          label: null,
+          last_used_at: null,
+          orcid: "0000-0002-1825-0097",
+          provider_key: "orcid",
+          provider_name: "ORCID",
+          verified_at: "2026-10-01T00:00:00Z",
+        },
+        {
+          created_at: "2026-10-02T00:00:00Z",
+          id: 8,
+          label: "test@lab.example",
+          last_used_at: null,
+          orcid: null,
+          provider_key: "lbl",
+          provider_name: "Berkeley Lab",
+          verified_at: null,
+        },
+      ],
+    })
+    renderUserDetail({ ...testUser, unique_id: "account" })
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Actions for Berkeley Lab (test@lab.example)",
+      })
+    )
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
+    expect(
+      await screen.findByText(/^You won.t be able to sign in with/)
+    ).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+    await waitFor(() =>
+      expect(vi.mocked(removeWorkspaceAccountIdentityFn)).toHaveBeenCalledWith({
+        data: { identityId: 8 },
+      })
+    )
+    expect(vi.mocked(removeWorkspaceUserIdentityFn)).not.toHaveBeenCalled()
   })
 
   it("renders sortable headers for Project, Created, and Updated, and non-sortable Lead and Role", () => {

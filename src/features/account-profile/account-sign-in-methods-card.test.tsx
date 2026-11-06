@@ -14,6 +14,7 @@ import {
 } from "./account-sign-in-methods-card"
 import type { AccountLinkOutcome } from "./account-sign-in-methods-card"
 import {
+  cancelWorkspaceAccountLinkFn,
   confirmWorkspaceAccountLinkFn,
   getPendingWorkspaceAccountLink,
   getWorkspaceAccountIdentities,
@@ -211,6 +212,16 @@ describe("AccountSignInMethodsCard", () => {
     await waitFor(() =>
       expect(screen.queryByText("Sign-in methods")).toBeNull()
     )
+  })
+
+  it("drops a returning link while the API has sign-in methods turned off", async () => {
+    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(
+      failure("conflict", "identity_lookup_off") as never
+    )
+    const { onLinkOutcomeHandled } = renderCard("pending")
+
+    await waitFor(() => expect(onLinkOutcomeHandled).toHaveBeenCalled())
+    expect(vi.mocked(cancelWorkspaceAccountLinkFn)).toHaveBeenCalled()
   })
 
   it("confirms an available login and returns to the list", async () => {
