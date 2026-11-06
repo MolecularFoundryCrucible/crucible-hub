@@ -195,7 +195,7 @@ describe("UserDetailView projects table sorting", () => {
     expect(screen.getByText("ORCID")).toBeTruthy()
     expect(
       screen.getByRole("link", {
-        name: "https://orcid.org/0000-0002-1825-0097",
+        name: "0000-0002-1825-0097",
       })
     ).toBeTruthy()
     expect(screen.getByText("Not verified")).toBeTruthy()

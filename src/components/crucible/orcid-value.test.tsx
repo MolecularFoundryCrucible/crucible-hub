@@ -10,7 +10,7 @@ describe("OrcidValue", () => {
     render(<OrcidValue orcid="0000-0002-1825-0097" verified />)
 
     const link = screen.getByRole("link", {
-      name: "https://orcid.org/0000-0002-1825-0097, verified",
+      name: "0000-0002-1825-0097, verified",
     })
     expect(link.getAttribute("href")).toBe(
       "https://orcid.org/0000-0002-1825-0097"
@@ -27,7 +27,7 @@ describe("OrcidValue", () => {
 
       expect(
         screen.getByRole("link", {
-          name: "https://orcid.org/0000-0002-1825-0097",
+          name: "0000-0002-1825-0097",
         })
       ).toBeTruthy()
       expect(document.querySelector("img")).toBeNull()

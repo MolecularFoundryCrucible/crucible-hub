@@ -163,14 +163,20 @@ export function AccountProfileForm({
                 )}
               </dd>
             </div>
-            <div className="col-span-2 min-w-0">
+            <div
+              className={
+                account.orcid
+                  ? "col-span-2 min-w-0 @fields:col-span-1"
+                  : "col-span-2 min-w-0"
+              }
+            >
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd className="mt-1">
                 <MfidValue value={account.unique_id} />
               </dd>
             </div>
             {account.orcid ? (
-              <div className="col-span-2 min-w-0">
+              <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">ORCID</dt>
                 <dd className="mt-1">
                   <OrcidValue

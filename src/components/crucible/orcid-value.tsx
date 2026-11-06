@@ -25,7 +25,7 @@ export function OrcidValue({
             src={orcidIdUrl}
           />
         ) : null}
-        {href}
+        {orcid}
         {verified ? <span className="sr-only">, verified</span> : null}
       </a>
       {verified ? null : (

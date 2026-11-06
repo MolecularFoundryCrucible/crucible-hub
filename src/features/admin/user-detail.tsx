@@ -392,7 +392,7 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0 @fields:col-span-1">
+              <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">Email</dt>
                 <dd className="mt-1 text-body break-words">
                   {user.email || (
@@ -400,7 +400,13 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0">
+              <div
+                className={
+                  user.orcid
+                    ? "col-span-2 min-w-0 @fields:col-span-1"
+                    : "col-span-2 min-w-0"
+                }
+              >
                 <dt className="text-label text-muted-foreground">
                   Crucible ID
                 </dt>
@@ -409,7 +415,7 @@ function UserProfileCard({
                 </dd>
               </div>
               {user.orcid ? (
-                <div className="col-span-2 min-w-0">
+                <div className="col-span-2 min-w-0 @fields:col-span-1">
                   <dt className="text-label text-muted-foreground">ORCID</dt>
                   <dd className="mt-1">
                     <OrcidValue
@@ -497,7 +503,7 @@ function UserProfileCard({
               </FieldGroup>
             </fieldset>
             <dl className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
-              <div className="min-w-0">
+              <div className={user.orcid ? "col-span-2 min-w-0" : "min-w-0"}>
                 <dt className="text-label text-muted-foreground">
                   Platform role
                 </dt>
@@ -520,7 +526,7 @@ function UserProfileCard({
                 </dd>
               </div>
               {user.orcid ? (
-                <div className="col-span-2 min-w-0">
+                <div className="col-span-2 min-w-0 @fields:col-span-1">
                   <dt className="text-label text-muted-foreground">ORCID</dt>
                   <dd className="mt-1">
                     <OrcidValue
