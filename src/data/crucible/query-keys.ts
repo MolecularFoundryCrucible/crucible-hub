@@ -123,6 +123,8 @@ export const crucibleKeys = {
     [...scope, "admin", "users", "detail", userId] as const,
   userIdentities: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "identities", userId] as const,
+  pendingUsers: (scope: IdentityScope) =>
+    [...scope, "admin", "users", "pending"] as const,
   deletionRequestQueries: (scope: IdentityScope) =>
     [...scope, "deletion-requests"] as const,
   deletionRequests: (scope: IdentityScope, filters: ListFilters) =>

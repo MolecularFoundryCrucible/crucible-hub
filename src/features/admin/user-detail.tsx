@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -35,6 +36,7 @@ import {
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -86,6 +88,7 @@ import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-cr
 import { resourceDisplayName } from "@/lib/resource-name"
 import { formatUsername } from "@/lib/username"
 import { hubActionError } from "@/components/crucible/reauthentication"
+import { PendingUserActions } from "@/features/admin/pending-users-card"
 import { PersonSignInMethodsCard } from "@/features/account-profile/account-sign-in-methods-card"
 import { cn } from "@/lib/utils"
 import { useAppForm } from "@/features/forms/app-form"
@@ -176,6 +179,9 @@ export function UserDetailView({
 
   return (
     <div className="flex flex-col gap-6">
+      {user.pending_at ? (
+        <PendingApprovalBanner scope={scope} user={user} />
+      ) : null}
       <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
         <div
           className={cn(
@@ -205,6 +211,36 @@ export function UserDetailView({
         title="User API key provisioned"
       />
     </div>
+  )
+}
+
+function PendingApprovalBanner({
+  scope,
+  user,
+}: {
+  scope: IdentityScope
+  user: WorkspaceAdminUser
+}) {
+  const navigate = useNavigate()
+  return (
+    <Card>
+      <CardContent className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="flex items-center gap-2 text-label">
+            <Badge variant="warning">Waiting for approval</Badge>
+          </span>
+          <span className="text-supporting text-muted-foreground">
+            Requested <ActivityTime fallback="" value={user.pending_at} />. This
+            person can sign in once approved.
+          </span>
+        </div>
+        <PendingUserActions
+          onRejected={() => void navigate({ to: "/admin/users" })}
+          scope={scope}
+          user={user}
+        />
+      </CardContent>
+    </Card>
   )
 }
 

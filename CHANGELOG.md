@@ -15,6 +15,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Confirming your sign-in for a sensitive action now asks the API for the signed-in account and checks that the sign-in really was new; an earlier sign-in is discarded and your session kept. Sign-in errors returned by the API now show a specific page, for example when sign-in is temporarily unavailable.
 - The sign-in page offers the sign-in methods the API lists, one button each when there are several, and shows the ORCID iD mark and ORCID links only for ORCID. Without a list it shows a plain Sign in button, and the sign-in-again prompt now reads Sign in again.
 - My profile has a Sign-in methods section that lists each way you sign in with its verified state and last use, adds another one from the Add sign-in method menu after you sign in with it and confirm, and removes one from its menu after a warning. Your only sign-in method can't be removed. Administrators see the same list on a person's page and can remove a login there, never the person's last, which ends that person's Hub sessions; only the person can add one.
+- Administrators see accounts waiting for approval above the Users list, with a count on the Users link, and can approve them or reject them after a confirmation, there or on the person's page.
 
 ## 1.7.3 - 2026-11-04
 

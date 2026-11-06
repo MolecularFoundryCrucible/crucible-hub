@@ -55,7 +55,11 @@ import {
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { TimeZoneSync } from "@/components/crucible/time-zone-sync"
-import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
+import {
+  useAccountPreferencesEnabled,
+  useOptionalWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
+import { pendingUsersQueryOptions } from "@/data/crucible/user-approvals.queries"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { createDialogHandle } from "@/components/ui/dialog"
 import type { DialogHandle } from "@/components/ui/dialog"
@@ -105,7 +109,10 @@ import {
   canUseAdministratorView,
 } from "@/data/crucible/administration"
 import { pendingDeletionRequestsCountQueryOptions } from "@/data/crucible/deletion-requests.queries"
-import { identityScope } from "@/data/crucible/query-keys"
+import {
+  identityScope,
+  identityScopeWithPrivilegeMode,
+} from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
   projectQueryOptions,
@@ -979,6 +986,26 @@ function AppMain({ children }: { children: React.ReactNode }) {
  * Administration links follow the requested mode, so they slide in or out with
  * the switch; they stay inert until the switch completes.
  */
+function PendingUsersBadge() {
+  const scope = useOptionalWorkspaceScope()
+  const query = useQuery({
+    ...pendingUsersQueryOptions(
+      identityScopeWithPrivilegeMode(
+        scope ?? identityScope("anonymous", "anonymous", "normal"),
+        "elevated"
+      )
+    ),
+    enabled: Boolean(scope),
+  })
+  const count = query.data?.total ?? query.data?.items.length ?? 0
+  if (count <= 0) return null
+  return (
+    <SidebarMenuBadge aria-label={`${count} accounts waiting for approval`}>
+      {count}
+    </SidebarMenuBadge>
+  )
+}
+
 function SidebarAdministrationLinks({
   account,
   pathname,
@@ -1022,6 +1049,7 @@ function SidebarAdministrationLinks({
               <PrincipalTypeIcon type="user" />
               <span>Users</span>
             </SidebarMenuButton>
+            <PendingUsersBadge />
           </SidebarMenuItem>
         ) : null}
         {canOpenServiceAccountAdministration(account, mode) ? (

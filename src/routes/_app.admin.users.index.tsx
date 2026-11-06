@@ -83,6 +83,7 @@ import type {
   WorkspaceAdminUser,
 } from "@/data/crucible/workspace-source"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
+import { PendingUsersCard } from "@/features/admin/pending-users-card"
 import { UserCreateDialog } from "@/features/admin/user-create-dialog"
 import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { formatUsername } from "@/lib/username"
@@ -248,6 +249,7 @@ function UsersAdminPage() {
   return (
     <PageLayout>
       <UsersPageHeader canCreate />
+      <PendingUsersCard scope={administrationScope} />
       <CollectionSection>
         <CollectionToolbar
           actions={

@@ -36,7 +36,7 @@ type UserListInput = {
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
 
-function toWorkspaceAdminUser(
+export function toWorkspaceAdminUser(
   user: Schema<"UserRead"> | Schema<"UserPublicRead">
 ): WorkspaceAdminUser {
   return {
@@ -50,6 +50,7 @@ function toWorkspaceAdminUser(
     last_name: user.last_name,
     orcid: user.orcid ?? null,
     orcid_verified: user.orcid_verified ?? null,
+    pending_at: "pending_at" in user ? (user.pending_at ?? null) : null,
     platform_role:
       "platform_role" in user && typeof user.platform_role === "string"
         ? user.platform_role

@@ -24,6 +24,8 @@ export type HubConflictCode =
   | "linked_elsewhere"
   | "second_orcid"
   | "orcid_of_another"
+  | "not_pending"
+  | "still_referenced"
 
 export type HubApiError = {
   kind: HubApiErrorKind

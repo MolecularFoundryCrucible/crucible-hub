@@ -44,6 +44,8 @@ const hubConflictCodes = new Set<string>([
   "linked_elsewhere",
   "second_orcid",
   "orcid_of_another",
+  "not_pending",
+  "still_referenced",
 ])
 
 export function isHubConflictCode(code: unknown): code is HubConflictCode {
