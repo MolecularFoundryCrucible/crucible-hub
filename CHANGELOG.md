@@ -19,6 +19,7 @@ The public surface that versions protect is shareable URLs and their search para
 - My profile now has one Security card for Sign-in methods and API keys, both as tables. You can have several API keys: create one with a name and an expiry of up to a year, see it once, and rename or revoke each key from its menu; an Active and Inactive switch shows revoked and expired keys. This replaces Regenerate key. On a person's page, administrators see the same card and can revoke a key, which replaces Provision, Rotate, and Revoke API key. The Users list drops its API key column, which can't describe several keys. When an action needs a recent sign-in, the Hub now opens the sign-in window itself and finishes the action once you have signed in; if the browser blocks the window, the Sign in again button does the same. A verified sign-in method shows a check icon instead of a Verified badge, and the only sign-in method's Remove item no longer repeats why it is unavailable.
 - Fixed the collapsed navigation cutting off the Administrator view outline when the item below it is selected, and clipping the selected item's right edge by a pixel.
 - Administrators see accounts waiting for approval above the Users list, with a count on the Users link, and can approve them or reject them after a confirmation, there or on the person's page.
+- Clicking a dataset thumbnail opens it in a larger view, with Previous and Next (or the arrow keys) to step through the dataset's other thumbnails.
 
 ## 1.7.3 - 2026-11-04
 

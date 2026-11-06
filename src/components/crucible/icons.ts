@@ -38,6 +38,8 @@ export {
   ArrowLeft as BackPreviewIcon,
   ChevronLeft as PreviousSiblingIcon,
   ChevronRight as NextSiblingIcon,
+  ChevronLeft as PreviousImageIcon,
+  ChevronRight as NextImageIcon,
   X as CloseInspectorIcon,
   ArrowLeft as BackToProjectIcon,
   ArrowRight as OpenFullPageIcon,
