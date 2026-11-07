@@ -50,7 +50,10 @@ import {
 import { formatUsername } from "@/lib/username"
 import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
-import { hubActionError } from "@/components/crucible/reauthentication"
+import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
 import { useAppForm } from "@/features/forms/app-form"
 
 const serviceAccountProfileSchema = z.object({
@@ -410,14 +413,16 @@ function ServiceAccountCredentialCard({
     useState<WorkspaceServiceAccountCredential>()
   const [error, setError] = useState<React.ReactNode>()
   const mutation = useMutation({
-    mutationFn: async () =>
-      unwrapHubResult(
-        await rotateWorkspaceServiceAccountKey({
-          data: {
-            scenario: fixtureScenarioFromScope(scope),
-            serviceAccountMfid: account.unique_id,
-          },
-        })
+    mutationFn: () =>
+      withReauthentication(async () =>
+        unwrapHubResult(
+          await rotateWorkspaceServiceAccountKey({
+            data: {
+              scenario: fixtureScenarioFromScope(scope),
+              serviceAccountMfid: account.unique_id,
+            },
+          })
+        )
       ),
   })
   const status = account.api_key_status
@@ -432,7 +437,14 @@ function ServiceAccountCredentialCard({
         queryKey: crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
       })
     } catch (cause) {
-      setError(hubActionError(cause, "The API key could not be rotated."))
+      setError(
+        hubActionError(
+          cause,
+          "The API key could not be rotated.",
+          undefined,
+          () => void rotateKey()
+        )
+      )
     }
   }
 

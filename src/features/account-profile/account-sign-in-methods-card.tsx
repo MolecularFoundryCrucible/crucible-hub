@@ -19,7 +19,10 @@ import {
 import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { OrcidValue } from "@/components/crucible/orcid-value"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
-import { hubActionError } from "@/components/crucible/reauthentication"
+import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
 import {
   SecuritySection,
   SecuritySectionMessage,
@@ -401,7 +404,8 @@ function RemoveSignInMethodAction({
   })
   const copy = removalCopy(owner, name)
   const mutation = useMutation({
-    mutationFn: async () => unwrapHubResult(await remove()),
+    mutationFn: () =>
+      withReauthentication(async () => unwrapHubResult(await remove())),
     onError: (cause) =>
       setError(
         conflictCode(cause) === "last_sign_in_method"
@@ -409,7 +413,11 @@ function RemoveSignInMethodAction({
           : hubActionError(
               cause,
               "The sign-in method could not be removed.",
-              "Removing a sign-in method needs a recent sign-in."
+              "Removing a sign-in method needs a recent sign-in.",
+              () => {
+                setError(undefined)
+                mutation.mutate()
+              }
             )
       ),
     onSuccess: () => {
@@ -472,18 +480,24 @@ function AddSignInMethodMenu({
 }) {
   const [error, setError] = useState<React.ReactNode>()
   const mutation = useMutation({
-    mutationFn: async (providerKey: string) =>
-      unwrapHubResult(
-        await startWorkspaceAccountLinkFn({ data: { providerKey } })
+    mutationFn: (providerKey: string) =>
+      withReauthentication(async () =>
+        unwrapHubResult(
+          await startWorkspaceAccountLinkFn({ data: { providerKey } })
+        )
       ),
-    onError: (cause) =>
+    onError: (cause, providerKey) =>
       setError(
         conflictCode(cause) === "too_many_links"
           ? "You've started too many sign-in links. Try again in about 10 minutes."
           : hubActionError(
               cause,
               "The sign-in method could not be added.",
-              "Adding a sign-in method needs a recent sign-in."
+              "Adding a sign-in method needs a recent sign-in.",
+              () => {
+                setError(undefined)
+                mutation.mutate(providerKey)
+              }
             )
       ),
     onSuccess: ({ authorizationUrl }) => {

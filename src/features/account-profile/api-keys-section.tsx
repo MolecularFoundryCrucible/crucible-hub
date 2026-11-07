@@ -22,7 +22,10 @@ import {
 } from "@/components/crucible/icons"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { notifySuccess } from "@/components/crucible/notifications"
-import { hubActionError } from "@/components/crucible/reauthentication"
+import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
 import {
   SecuritySection,
   SecuritySectionMessage,
@@ -424,16 +427,22 @@ function RevokeApiKeyDialog({
   const name = keyName(apiKey)
   const userId = owner.kind === "person" ? owner.userId : undefined
   const mutation = useMutation({
-    mutationFn: async () =>
-      unwrapHubResult(
-        await revokeWorkspaceApiKeyFn({ data: { keyId: apiKey.id, userId } })
+    mutationFn: () =>
+      withReauthentication(async () =>
+        unwrapHubResult(
+          await revokeWorkspaceApiKeyFn({ data: { keyId: apiKey.id, userId } })
+        )
       ),
     onError: (cause) =>
       setError(
         hubActionError(
           cause,
           "The API key could not be revoked.",
-          "Revoking another administrator's API key needs a recent sign-in."
+          "Revoking another administrator's API key needs a recent sign-in.",
+          () => {
+            setError(undefined)
+            mutation.mutate()
+          }
         )
       ),
     onSuccess: () => {
@@ -477,18 +486,20 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
   const [apiKey, setApiKey] = useState<string>()
   const trimmed = name.trim()
   const mutation = useMutation({
-    mutationFn: async () =>
-      unwrapHubResult(
-        await createWorkspaceApiKeyFn({
-          data: {
-            expiresAt:
-              days === 365
-                ? null
-                : new Date(Date.now() + days * 86_400_000).toISOString(),
-            name: trimmed,
-            scenario: fixtureScenarioFromScope(scope),
-          },
-        })
+    mutationFn: () =>
+      withReauthentication(async () =>
+        unwrapHubResult(
+          await createWorkspaceApiKeyFn({
+            data: {
+              expiresAt:
+                days === 365
+                  ? null
+                  : new Date(Date.now() + days * 86_400_000).toISOString(),
+              name: trimmed,
+              scenario: fixtureScenarioFromScope(scope),
+            },
+          })
+        )
       ),
     onError: (cause) => {
       const code = conflictCode(cause)
@@ -500,7 +511,11 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
             : hubActionError(
                 cause,
                 "The API key could not be created.",
-                "Creating an API key needs a recent sign-in."
+                "Creating an API key needs a recent sign-in.",
+                () => {
+                  setError(undefined)
+                  mutation.mutate()
+                }
               )
       )
     },

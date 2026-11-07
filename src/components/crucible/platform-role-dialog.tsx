@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react"
 
 import { PendingIcon } from "@/components/crucible/pending-icon"
-import { hubActionError } from "@/components/crucible/reauthentication"
+import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -61,7 +64,7 @@ export function PlatformRoleDialog({
     setPending(true)
     setError(undefined)
     try {
-      await onChange(selectedRole)
+      await withReauthentication(() => onChange(selectedRole))
       onChanged?.()
       onOpenChange(false)
       setSelectedRole(undefined)
@@ -70,7 +73,8 @@ export function PlatformRoleDialog({
         hubActionError(
           cause,
           "The platform role could not be changed.",
-          "Changing this role needs a recent sign-in."
+          "Changing this role needs a recent sign-in.",
+          () => void confirm()
         )
       )
     } finally {
