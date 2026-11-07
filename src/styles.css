@@ -656,7 +656,8 @@
   --graph-grid-dot: 1.25px;
   --graph-grid-size: 20px;
   --sidebar-width: 16rem;
-  --sidebar-width-icon: 3rem;
+  /* The collapsed rail's 1px border would leave 31px for 32px icon buttons. */
+  --sidebar-width-icon: calc(3rem + 1px);
   --sidebar-width-mobile: 18rem;
   interpolate-size: allow-keywords;
   --motion-fast: 120ms;
