@@ -11,6 +11,7 @@ import {
 } from "./account-sign-in-methods-card"
 import type { AccountLinkOutcome } from "./account-sign-in-methods-card"
 import { ApiKeysSection } from "./api-keys-section"
+import { SessionsSection } from "./sessions-section"
 
 const workspaceRoute = getRouteApi("/_app")
 
@@ -48,6 +49,7 @@ export function AccountSecurityCard({
         onLinkOutcomeHandled={onLinkOutcomeHandled}
         scope={scope}
       />
+      <SessionsSection owner={{ kind: "self" }} scope={scope} />
       <ApiKeysSection owner={{ canCreate, kind: "self" }} scope={scope} />
     </SecurityCard>
   )
@@ -70,6 +72,10 @@ export function PersonSecurityCard({
         personName={personName}
         scope={scope}
         userId={userId}
+      />
+      <SessionsSection
+        owner={{ kind: "person", name: personName, userId }}
+        scope={scope}
       />
       {canManageApiKeys ? (
         <ApiKeysSection

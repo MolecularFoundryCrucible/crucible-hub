@@ -171,6 +171,7 @@ export {
   Ban as RevokeApiKeyIcon,
   KeyRound as ApiKeyIcon,
   ShieldCheck as SecurityIcon,
+  MonitorSmartphone as SignedInSessionIcon,
   Trash2 as RemoveSignInMethodIcon,
   BadgeCheck as VerifiedCredentialIcon,
 } from "lucide-react"

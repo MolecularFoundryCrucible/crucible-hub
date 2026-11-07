@@ -55,6 +55,8 @@ export const crucibleKeys = {
     [...scope, "account", "api-keys", state] as const,
   accountApiKeyQueries: (scope: IdentityScope) =>
     [...scope, "account", "api-keys"] as const,
+  accountSessions: (scope: IdentityScope) =>
+    [...scope, "account", "sessions"] as const,
   accountIdentities: (scope: IdentityScope) =>
     [...scope, "account", "identities"] as const,
   accountPendingLink: (scope: IdentityScope) =>
@@ -127,6 +129,8 @@ export const crucibleKeys = {
     [...scope, "admin", "users", "api-keys", userId, state] as const,
   userApiKeyQueries: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "api-keys", userId] as const,
+  userSessions: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "sessions", userId] as const,
   userIdentities: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "identities", userId] as const,
   pendingUsers: (scope: IdentityScope) =>

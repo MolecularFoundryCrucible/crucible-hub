@@ -33,9 +33,21 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
     Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
       <a href={to}>{children}</a>
     ),
+    getRouteApi: () => ({
+      useLoaderData: () => ({ sessionAuth: true, status: "ready" }),
+    }),
     useBlocker: () => ({ proceed: vi.fn(), reset: vi.fn(), status: "idle" }),
   }
 })
+
+vi.mock("@/data/crucible/sessions.functions", () => ({
+  endOtherWorkspaceSessionsFn: vi.fn(),
+  endWorkspaceSessionFn: vi.fn(),
+  getWorkspaceSessions: vi.fn(async () => ({
+    data: { items: [], nextCursor: null, total: 0 },
+    status: "ok",
+  })),
+}))
 
 vi.mock(
   "@/data/crucible/account-identities.functions",

@@ -62,6 +62,14 @@ export type WorkspaceApiKeyPage = {
 
 export type WorkspaceCreatedApiKey = Schema<"ApiKeyCreated">
 
+export type WorkspaceSignedInSession = Schema<"SessionRead">
+
+export type WorkspaceSignedInSessionPage = {
+  items: WorkspaceSignedInSession[]
+  nextCursor: string | null
+  total: number
+}
+
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 
 export type WorkspaceProject = Pick<
