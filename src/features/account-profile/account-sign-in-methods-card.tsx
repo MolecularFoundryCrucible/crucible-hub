@@ -6,9 +6,9 @@ import orcidIdUrl from "@/assets/orcid-id.svg"
 import { ActivityTime } from "@/components/crucible/activity-time"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
-  CredentialList,
-  CredentialRow,
-} from "@/components/crucible/credential-row"
+  CredentialName,
+  CredentialTablePending,
+} from "@/components/crucible/credential-table"
 import {
   AddSignInMethodIcon,
   CredentialActionsIcon,
@@ -18,16 +18,13 @@ import {
 } from "@/components/crucible/icons"
 import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { OrcidValue } from "@/components/crucible/orcid-value"
+import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { hubActionError } from "@/components/crucible/reauthentication"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  SecuritySection,
+  SecuritySectionMessage,
+} from "@/components/crucible/security-section"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -45,7 +42,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
   cancelWorkspaceAccountLinkFn,
   confirmWorkspaceAccountLinkFn,
@@ -127,7 +131,7 @@ export function addableSignInMethods(
   )
 }
 
-export function AccountSignInMethodsCard({
+export function AccountSignInMethodsSection({
   linkOutcome,
   onLinkOutcomeHandled,
   scope,
@@ -162,7 +166,7 @@ export function AccountSignInMethodsCard({
     : []
 
   return (
-    <SignInMethodsCard
+    <SignInMethodsSection
       action={
         addable.length > 0 ? <AddSignInMethodMenu methods={addable} /> : null
       }
@@ -186,11 +190,11 @@ export function AccountSignInMethodsCard({
       {linkOutcome === "pending" ? (
         <PendingLinkDialog onDone={onLinkOutcomeHandled} scope={scope} />
       ) : null}
-    </SignInMethodsCard>
+    </SignInMethodsSection>
   )
 }
 
-export function PersonSignInMethodsCard({
+export function PersonSignInMethodsSection({
   personName,
   scope,
   userId,
@@ -204,7 +208,7 @@ export function PersonSignInMethodsCard({
   const count = identities.data?.length ?? 0
   const own = userId === scope[2]
   return (
-    <SignInMethodsCard
+    <SignInMethodsSection
       emptyText="This person has no sign-in methods."
       errorText="This person's sign-in methods could not be loaded."
       query={identities}
@@ -229,7 +233,7 @@ export function PersonSignInMethodsCard({
   )
 }
 
-function SignInMethodsCard({
+function SignInMethodsSection({
   action,
   children,
   emptyText,
@@ -242,23 +246,13 @@ function SignInMethodsCard({
   emptyText: string
   errorText: string
   query: UseQueryResult<WorkspaceAccountIdentity[]>
-  renderActions?: (identity: WorkspaceAccountIdentity) => React.ReactNode
+  renderActions: (identity: WorkspaceAccountIdentity) => React.ReactNode
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <SignInMethodIcon aria-hidden="true" />
-          Sign-in methods
-        </CardTitle>
-        {action ? <CardAction>{action}</CardAction> : null}
-      </CardHeader>
-      <CardContent>
-        {query.isError ? (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-body text-muted-foreground" role="alert">
-              {hubErrorMessage(query.error, errorText)}
-            </p>
+    <SecuritySection action={action} title="Sign-in methods">
+      {query.isError ? (
+        <SecuritySectionMessage
+          action={
             <Button
               onClick={() => void query.refetch()}
               size="sm"
@@ -266,34 +260,44 @@ function SignInMethodsCard({
             >
               Retry
             </Button>
-          </div>
-        ) : query.isPending ? (
-          <CredentialList>
-            <li className="flex items-center gap-3" role="status">
-              <Skeleton className="size-9 rounded-md" />
-              <div className="flex flex-1 flex-col gap-1.5">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-40" />
-              </div>
-              <span className="sr-only">Loading sign-in methods</span>
-            </li>
-          </CredentialList>
-        ) : query.data.length === 0 ? (
-          <p className="text-body text-muted-foreground">{emptyText}</p>
-        ) : (
-          <CredentialList>
+          }
+          role="alert"
+        >
+          {hubErrorMessage(query.error, errorText)}
+        </SecuritySectionMessage>
+      ) : query.isPending ? (
+        <CredentialTablePending label="Loading sign-in methods" />
+      ) : query.data.length === 0 ? (
+        <SecuritySectionMessage>{emptyText}</SecuritySectionMessage>
+      ) : (
+        <Table aria-label="Sign-in methods">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-(--card-spacing)">Method</TableHead>
+              <TableHead className="hidden @xl:table-cell" kind="date">
+                Added
+              </TableHead>
+              <TableHead className="hidden @md:table-cell" kind="date">
+                Last used
+              </TableHead>
+              <TableHead className="pr-(--card-spacing)" kind="action">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {query.data.map((identity) => (
               <SignInMethodRow
-                actions={renderActions?.(identity)}
+                actions={renderActions(identity)}
                 identity={identity}
                 key={identity.id}
               />
             ))}
-          </CredentialList>
-        )}
-      </CardContent>
+          </TableBody>
+        </Table>
+      )}
       {children}
-    </Card>
+    </SecuritySection>
   )
 }
 
@@ -301,62 +305,61 @@ function SignInMethodRow({
   actions,
   identity,
 }: {
-  actions?: React.ReactNode
+  actions: React.ReactNode
   identity: WorkspaceAccountIdentity
 }) {
   const verified = identity.verified_at !== null
   return (
-    <CredentialRow
-      actions={actions}
-      badge={
-        verified ? (
-          <Badge variant="success">
-            <VerifiedCredentialIcon
-              aria-hidden="true"
-              data-icon="inline-start"
-            />
-            Verified
-          </Badge>
-        ) : (
-          <Badge variant="outline">Not verified</Badge>
-        )
-      }
-      details={
-        <>
-          {verified ? "Verified " : "Added "}
-          <ActivityTime
-            fallback=""
-            value={verified ? identity.verified_at : identity.created_at}
-          />
-          {" · "}
-          {identity.last_used_at ? (
+    <TableRow>
+      <TableCell className="w-full max-w-0 pl-(--card-spacing)">
+        <CredentialName
+          icon={
+            identity.orcid && verified ? (
+              <img alt="" className="size-icon-label" src={orcidIdUrl} />
+            ) : (
+              <SignInMethodIcon aria-hidden="true" />
+            )
+          }
+          name={
             <>
-              Last used{" "}
-              <ActivityTime fallback="" value={identity.last_used_at} />
+              {identity.provider_name}
+              {verified ? (
+                <VerifiedCredentialIcon
+                  aria-label="Verified"
+                  className="size-icon-label shrink-0 text-success"
+                  role="img"
+                />
+              ) : null}
             </>
-          ) : (
-            "Never used"
-          )}
-        </>
-      }
-      icon={
-        identity.orcid && verified ? (
-          <img alt="" className="size-5" src={orcidIdUrl} />
-        ) : (
-          <SignInMethodIcon className="size-4" />
-        )
-      }
-      subtitle={
-        identity.orcid ? (
-          <OrcidValue orcid={identity.orcid} plain verified={verified} />
-        ) : identity.label ? (
-          <span className="text-body break-words text-muted-foreground">
-            {identity.label}
+          }
+          subtitle={
+            identity.orcid ? (
+              <OrcidValue
+                orcid={identity.orcid}
+                plain={verified}
+                verified={verified}
+              />
+            ) : (
+              identity.label
+            )
+          }
+        >
+          <span className="@md:hidden">
+            Last used{" "}
+            <ActivityTime fallback="never" value={identity.last_used_at} />
           </span>
-        ) : null
-      }
-      title={identity.provider_name}
-    />
+        </CredentialName>
+      </TableCell>
+      <TableCell className="hidden @xl:table-cell" kind="date">
+        <LocalDateTime dateOnly value={identity.created_at} />
+      </TableCell>
+      <TableCell className="hidden @md:table-cell" kind="date">
+        <ActivityTime fallback="Never" value={identity.last_used_at} />
+      </TableCell>
+      <TableCell className="pr-(--card-spacing)" kind="action">
+        {actions}
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -367,7 +370,6 @@ function removalCopy(owner: RemovalOwner, name: string) {
     return {
       description: `You won't be able to sign in with ${name} any more, and your Hub sessions on other browsers and devices will end. If anyone can register with this provider, signing in with it again later creates a new, separate Crucible account.`,
       last: "This is your only way to sign in, so it can't be removed.",
-      unavailable: "Remove (your only sign-in method)",
     }
   }
   return {
@@ -439,7 +441,7 @@ function RemoveSignInMethodAction({
             variant="destructive"
           >
             <RemoveSignInMethodIcon aria-hidden="true" />
-            {removable ? "Remove" : copy.unavailable}
+            Remove
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

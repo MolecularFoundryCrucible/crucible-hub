@@ -9,7 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
-  AccountSignInMethodsCard,
+  AccountSignInMethodsSection,
   addableSignInMethods,
 } from "./account-sign-in-methods-card"
 import type { AccountLinkOutcome } from "./account-sign-in-methods-card"
@@ -90,7 +90,7 @@ function renderCard(linkOutcome?: AccountLinkOutcome) {
         new QueryClient({ defaultOptions: { queries: { retry: false } } })
       }
     >
-      <AccountSignInMethodsCard
+      <AccountSignInMethodsSection
         linkOutcome={linkOutcome}
         onLinkOutcomeHandled={onLinkOutcomeHandled}
         scope={identityScope("server-1", "person-1")}
@@ -133,7 +133,7 @@ describe("AccountSignInMethodsCard", () => {
     expect(
       screen.getByRole("link", { name: "0000-0002-1825-0097" })
     ).toBeTruthy()
-    expect(screen.getByText("Verified")).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Verified" })).toBeTruthy()
     const remove = await chooseFromMenu("Actions for ORCID", /Remove/)
     expect(remove.getAttribute("aria-disabled")).toBe("true")
     cleanup()

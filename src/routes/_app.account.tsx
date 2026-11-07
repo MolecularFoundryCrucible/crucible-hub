@@ -12,9 +12,8 @@ import { PageLayout } from "@/components/crucible/page-layout"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { AccountCapabilitiesCard } from "@/features/account-profile/account-capabilities-card"
-import { AccountCredentialCard } from "@/features/account-profile/account-credential-card"
 import { AccountProfileForm } from "@/features/account-profile/account-profile-form"
-import { AccountSignInMethodsCard } from "@/features/account-profile/account-sign-in-methods-card"
+import { AccountSecurityCard } from "@/features/account-profile/security-card"
 
 export const Route = createFileRoute("/_app/account")({
   head: () => ({ meta: [{ title: "Profile | Crucible Hub" }] }),
@@ -43,12 +42,11 @@ function AccountPage() {
         <ContentGrid variant="split">
           <div className="flex min-w-0 flex-col gap-page-section">
             <AccountProfileForm account={account} scope={scope} />
-            <AccountSignInMethodsCard
+            <AccountSecurityCard
               linkOutcome={link}
               onLinkOutcomeHandled={clearLinkOutcome}
               scope={scope}
             />
-            <AccountCredentialCard scope={scope} />
           </div>
           <AccountCapabilitiesCard account={account} />
         </ContentGrid>

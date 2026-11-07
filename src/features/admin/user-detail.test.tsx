@@ -14,7 +14,10 @@ import type {
   WorkspaceAdminUser,
   WorkspaceUserProject,
 } from "@/data/crucible/workspace-source"
-import { provisionWorkspaceUserApiKeyFn } from "@/data/crucible/users.functions"
+import {
+  getWorkspaceApiKeys,
+  revokeWorkspaceApiKeyFn,
+} from "@/data/crucible/api-keys.functions"
 import {
   getWorkspaceUserIdentities,
   removeWorkspaceAccountIdentityFn,
@@ -64,9 +67,14 @@ vi.mock(
   })
 )
 
-vi.mock("@/data/crucible/users.functions", async (importOriginal) => ({
-  ...(await importOriginal<Record<string, unknown>>()),
-  provisionWorkspaceUserApiKeyFn: vi.fn(),
+vi.mock("@/data/crucible/api-keys.functions", () => ({
+  createWorkspaceApiKeyFn: vi.fn(),
+  getWorkspaceApiKeys: vi.fn(async () => ({
+    data: { items: [], nextCursor: null, total: 0 },
+    status: "ok",
+  })),
+  renameWorkspaceApiKeyFn: vi.fn(),
+  revokeWorkspaceApiKeyFn: vi.fn(),
 }))
 
 const mockProjects: WorkspaceUserProject[] = [
@@ -235,7 +243,7 @@ describe("UserDetailView projects table sorting", () => {
     expect(
       (
         await screen.findByRole("menuitem", {
-          name: "Remove (their only sign-in method)",
+          name: "Remove",
         })
       ).getAttribute("aria-disabled")
     ).toBe("true")
@@ -362,14 +370,22 @@ describe("UserDetailView projects table sorting", () => {
       name: /(sort by project|project, sorted)/i,
     })
 
-    const initialRows = screen.getAllByRole("row").slice(1)
+    const initialRows = within(
+      screen.getByRole("table", { name: "User projects" })
+    )
+      .getAllByRole("row")
+      .slice(1)
     expect(initialRows[0].textContent).toContain("Alpha Project")
     expect(initialRows[1].textContent).toContain("Beta Project")
     expect(initialRows[2].textContent).toContain("Gamma Project")
 
     fireEvent.click(projectButton)
     await waitFor(() => {
-      const rowsDesc = screen.getAllByRole("row").slice(1)
+      const rowsDesc = within(
+        screen.getByRole("table", { name: "User projects" })
+      )
+        .getAllByRole("row")
+        .slice(1)
       expect(rowsDesc[0].textContent).toContain("Gamma Project")
       expect(rowsDesc[1].textContent).toContain("Beta Project")
       expect(rowsDesc[2].textContent).toContain("Alpha Project")
@@ -384,7 +400,11 @@ describe("UserDetailView projects table sorting", () => {
     })
     fireEvent.click(createdButton)
     await waitFor(() => {
-      const rowsDesc = screen.getAllByRole("row").slice(1)
+      const rowsDesc = within(
+        screen.getByRole("table", { name: "User projects" })
+      )
+        .getAllByRole("row")
+        .slice(1)
       expect(rowsDesc[0].textContent).toContain("Gamma Project")
       expect(rowsDesc[1].textContent).toContain("Beta Project")
       expect(rowsDesc[2].textContent).toContain("Alpha Project")
@@ -393,7 +413,11 @@ describe("UserDetailView projects table sorting", () => {
     const updatedButton = screen.getByRole("button", { name: /updated/i })
     fireEvent.click(updatedButton)
     await waitFor(() => {
-      const rowsUpdated = screen.getAllByRole("row").slice(1)
+      const rowsUpdated = within(
+        screen.getByRole("table", { name: "User projects" })
+      )
+        .getAllByRole("row")
+        .slice(1)
       expect(rowsUpdated[0].textContent).toContain("Alpha Project")
       expect(rowsUpdated[1].textContent).toContain("Beta Project")
       expect(rowsUpdated[2].textContent).toContain("Gamma Project")
@@ -401,11 +425,31 @@ describe("UserDetailView projects table sorting", () => {
   })
 })
 
-describe("UserDetailView API key provisioning", () => {
+describe("UserDetailView API keys", () => {
   afterEach(cleanup)
 
-  it("asks for a fresh sign-in inside the confirmation dialog", async () => {
-    vi.mocked(provisionWorkspaceUserApiKeyFn).mockResolvedValue({
+  it("lists a person's keys and asks for a fresh sign-in to revoke one", async () => {
+    vi.mocked(getWorkspaceApiKeys).mockResolvedValue({
+      data: {
+        items: [
+          {
+            created_at: "2026-09-01T00:00:00Z",
+            expires_at: "2027-09-01T00:00:00Z",
+            id: 7,
+            last4: "7f3a",
+            last_used_at: null,
+            name: "Beamline laptop",
+            older_routes: false,
+            revoked_at: null,
+            status: "active",
+          },
+        ],
+        nextCursor: null,
+        total: 1,
+      },
+      status: "ok",
+    })
+    vi.mocked(revokeWorkspaceApiKeyFn).mockResolvedValue({
       error: {
         correlationId: "request-1",
         kind: "reauthentication-required",
@@ -416,11 +460,18 @@ describe("UserDetailView API key provisioning", () => {
     })
     renderUserDetail()
 
-    fireEvent.click(screen.getByRole("button", { name: "Rotate API key" }))
+    const table = await screen.findByRole("table", { name: "Active API keys" })
+    expect(within(table).getByText("Beamline laptop")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "New key" })).toBeNull()
+    fireEvent.click(
+      within(table).getByRole("button", { name: "Actions for Beamline laptop" })
+    )
+    expect(screen.queryByRole("menuitem", { name: "Rename" })).toBeNull()
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Revoke" }))
     const dialog = await screen.findByRole("alertdialog", {
-      name: "Rotate user API key",
+      name: "Revoke Beamline laptop?",
     })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Rotate key" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Revoke" }))
 
     const signIn = await within(dialog).findByRole("button", {
       name: "Sign in again",
@@ -428,7 +479,8 @@ describe("UserDetailView API key provisioning", () => {
     const href = new URL(signIn.getAttribute("href") ?? "", "https://hub.test")
     expect(href.pathname).toBe("/hub/auth/login")
     expect(href.searchParams.get("max_age")).toBe("0")
-    expect(href.searchParams.get("returnTo")).toMatch(/#reauthenticated$/)
-    expect(screen.getByRole("alertdialog")).toBe(dialog)
+    expect(vi.mocked(revokeWorkspaceApiKeyFn)).toHaveBeenCalledWith({
+      data: { keyId: 7, userId: expect.any(String) },
+    })
   })
 })

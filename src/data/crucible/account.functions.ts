@@ -9,8 +9,6 @@ import {
   checkWorkspaceUsernameExactMatch,
   patchWorkspaceAccount,
   readWorkspaceAccount,
-  readWorkspaceAccountCredentialStatus,
-  regenerateWorkspaceAccountApiKey,
 } from "./account.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { usernameSchema } from "./slugs"
@@ -47,18 +45,6 @@ export const getWorkspaceAccount = createServerFn({ method: "GET" })
     )
   })
 
-export const getWorkspaceAccountCredentialStatus = createServerFn({
-  method: "GET",
-})
-  .middleware([queryCancellationMiddleware])
-  .validator(z.object({ scenario: fixtureScenarioSchema.optional() }))
-  .handler(async ({ context, data }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      readWorkspaceAccountCredentialStatus(data.scenario, context.requestSignal)
-    )
-  })
-
 export const updateWorkspaceAccount = createServerFn({ method: "POST" })
   .middleware([queryCancellationMiddleware])
   .validator(accountProfileUpdateInputSchema)
@@ -85,14 +71,5 @@ export const checkWorkspaceUsername = createServerFn({ method: "GET" })
         data.scenario,
         context.requestSignal
       )
-    )
-  })
-
-export const regenerateAccountApiKey = createServerFn({ method: "POST" })
-  .middleware([queryCancellationMiddleware])
-  .handler(async ({ context }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      regenerateWorkspaceAccountApiKey(context.requestSignal)
     )
   })

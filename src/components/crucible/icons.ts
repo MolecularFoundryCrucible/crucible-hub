@@ -164,6 +164,11 @@ export {
   LogIn as SignInMethodIcon,
   Ellipsis as CredentialActionsIcon,
   Plus as AddSignInMethodIcon,
+  Plus as CreateApiKeyIcon,
+  Pencil as RenameApiKeyIcon,
+  Ban as RevokeApiKeyIcon,
+  KeyRound as ApiKeyIcon,
+  ShieldCheck as SecurityIcon,
   Trash2 as RemoveSignInMethodIcon,
   BadgeCheck as VerifiedCredentialIcon,
 } from "lucide-react"

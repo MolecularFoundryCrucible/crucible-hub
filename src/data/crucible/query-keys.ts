@@ -49,10 +49,12 @@ export function identityScopeWithPrivilegeMode(
 }
 
 export const crucibleKeys = {
-  accountCredentialStatus: (scope: IdentityScope) =>
-    [...scope, "account", "credential-status"] as const,
   accountProfile: (scope: IdentityScope) =>
     [...scope, "account", "profile"] as const,
+  accountApiKeys: (scope: IdentityScope, state: string) =>
+    [...scope, "account", "api-keys", state] as const,
+  accountApiKeyQueries: (scope: IdentityScope) =>
+    [...scope, "account", "api-keys"] as const,
   accountIdentities: (scope: IdentityScope) =>
     [...scope, "account", "identities"] as const,
   accountPendingLink: (scope: IdentityScope) =>
@@ -121,6 +123,10 @@ export const crucibleKeys = {
     ] as const,
   userAdminDetail: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "detail", userId] as const,
+  userApiKeys: (scope: IdentityScope, userId: string, state: string) =>
+    [...scope, "admin", "users", "api-keys", userId, state] as const,
+  userApiKeyQueries: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "api-keys", userId] as const,
   userIdentities: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "identities", userId] as const,
   pendingUsers: (scope: IdentityScope) =>

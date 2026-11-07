@@ -13,10 +13,8 @@ import {
   checkWorkspaceEmailExactMatch,
   createWorkspaceUser,
   patchWorkspaceUser,
-  provisionWorkspaceUserApiKey,
   readWorkspaceUserDetail,
   readWorkspaceUsers,
-  revokeWorkspaceUserApiKey,
   updateWorkspaceUserPlatformRole,
 } from "./users.server"
 
@@ -132,20 +130,6 @@ export const createWorkspaceUserFn = createServerFn({ method: "POST" })
     )
   })
 
-export const provisionWorkspaceUserApiKeyFn = createServerFn({ method: "POST" })
-  .middleware([queryCancellationMiddleware])
-  .validator(userDetailInputSchema)
-  .handler(async ({ context, data }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      provisionWorkspaceUserApiKey(
-        data.userId,
-        data.scenario,
-        context.requestSignal
-      )
-    )
-  })
-
 export const updateWorkspaceUserPlatformRoleFn = createServerFn({
   method: "POST",
 })
@@ -157,20 +141,6 @@ export const updateWorkspaceUserPlatformRoleFn = createServerFn({
       updateWorkspaceUserPlatformRole(
         data.userId,
         data.platformRole,
-        data.scenario,
-        context.requestSignal
-      )
-    )
-  })
-
-export const revokeWorkspaceUserApiKeyFn = createServerFn({ method: "POST" })
-  .middleware([queryCancellationMiddleware])
-  .validator(userDetailInputSchema)
-  .handler(async ({ context, data }) => {
-    setResponseHeader("Cache-Control", "no-store")
-    return safeCrucibleCall(context.correlationId, () =>
-      revokeWorkspaceUserApiKey(
-        data.userId,
         data.scenario,
         context.requestSignal
       )

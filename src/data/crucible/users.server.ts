@@ -317,31 +317,6 @@ export async function updateWorkspaceUserPlatformRole(
   return toWorkspaceAdminUser(result.data)
 }
 
-export async function revokeWorkspaceUserApiKey(
-  userId: string,
-  _scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
-): Promise<void> {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode === "unavailable") {
-    throw new Error(configuration.reason)
-  }
-  if (configuration.mode === "fixture") {
-    return
-  }
-
-  const client = createCrucibleClient(configuration, {
-    privilegeMode: requireAdministratorView(),
-  })
-  const result = await client.DELETE("/users/{user_ref}/apikey", {
-    params: { path: { user_ref: userId } },
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (result.response.status >= 400) {
-    throw new CrucibleResponseError(result.response)
-  }
-}
-
 export async function createWorkspaceUser(
   input: WorkspaceUserCreate,
   _scenario?: FixtureScenario,
@@ -384,32 +359,6 @@ export async function createWorkspaceUser(
   if (!result.data)
     throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
-}
-
-export async function provisionWorkspaceUserApiKey(
-  userId: string,
-  _scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
-): Promise<{ api_key: string }> {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode === "unavailable") {
-    throw new Error(configuration.reason)
-  }
-  if (configuration.mode === "fixture") {
-    return {
-      api_key: `crucible_mock_key_${userId.slice(-6)}`,
-    }
-  }
-
-  const client = createCrucibleClient(configuration, {
-    privilegeMode: requireAdministratorView(),
-  })
-  const result = await client.POST("/users/{user_ref}/apikey/regenerate", {
-    params: { path: { user_ref: userId } },
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (!result.data) throw new CrucibleResponseError(result.response)
-  return result.data
 }
 
 export async function checkWorkspaceEmailExactMatch(

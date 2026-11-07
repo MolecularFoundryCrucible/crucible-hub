@@ -50,6 +50,18 @@ export type WorkspaceApiCredentialStatus = Pick<
   "created_at" | "expires_at" | "last_used_at" | "valid"
 >
 
+export type WorkspaceApiKey = Schema<"ApiKeyListItem">
+
+export type WorkspaceApiKeyState = "active" | "inactive"
+
+export type WorkspaceApiKeyPage = {
+  items: WorkspaceApiKey[]
+  nextCursor: string | null
+  total: number
+}
+
+export type WorkspaceCreatedApiKey = Schema<"ApiKeyCreated">
+
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 
 export type WorkspaceProject = Pick<
