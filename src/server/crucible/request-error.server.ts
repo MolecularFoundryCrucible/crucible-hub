@@ -46,6 +46,9 @@ const hubConflictCodes = new Set<string>([
   "orcid_of_another",
   "not_pending",
   "still_referenced",
+  "too_many_links",
+  "too_many_keys",
+  "hub_session_required",
 ])
 
 export function isHubConflictCode(code: unknown): code is HubConflictCode {
@@ -88,8 +91,8 @@ export class CrucibleResponseError extends Error {
     this.status = source.status
     this.retryAfterSeconds = readRetryAfterSeconds(source.headers)
     this.reauthenticationRequired = isStepUpChallenge(source)
-    if (source.status === 409) {
-      this.conflictFields = readConflictFields(body)
+    if (source.status === 409) this.conflictFields = readConflictFields(body)
+    if ([403, 409, 429].includes(source.status)) {
       this.conflictCode = readConflictCode(body)
     }
     if (source.status === 422) {

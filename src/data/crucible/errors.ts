@@ -26,6 +26,9 @@ export type HubConflictCode =
   | "orcid_of_another"
   | "not_pending"
   | "still_referenced"
+  | "too_many_links"
+  | "too_many_keys"
+  | "hub_session_required"
 
 export type HubApiError = {
   kind: HubApiErrorKind

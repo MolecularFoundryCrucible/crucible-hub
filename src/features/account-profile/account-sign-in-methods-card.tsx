@@ -476,11 +476,13 @@ function AddSignInMethodMenu({
       ),
     onError: (cause) =>
       setError(
-        hubActionError(
-          cause,
-          "The sign-in method could not be added.",
-          "Adding a sign-in method needs a recent sign-in."
-        )
+        conflictCode(cause) === "too_many_links"
+          ? "You've started too many sign-in links. Try again in about 10 minutes."
+          : hubActionError(
+              cause,
+              "The sign-in method could not be added.",
+              "Adding a sign-in method needs a recent sign-in."
+            )
       ),
     onSuccess: ({ authorizationUrl }) => {
       window.location.assign(authorizationUrl)

@@ -4,6 +4,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import { z } from "zod"
 
 import {
+  hubIssuerMatches,
   hubClientPost,
   hubLinkCallbackUri,
   hubSessionAccessToken,
@@ -111,6 +112,7 @@ export async function createHubLink(providerKey: string) {
 export async function finishHubLinkCallback(input: {
   code: string | null
   error: string | null
+  iss: string | null
   state: string | null
 }): Promise<HubLinkCallbackOutcome> {
   let sessionId: string
@@ -122,6 +124,10 @@ export async function finishHubLinkCallback(input: {
   const link = await pendingLink(sessionId)
   if (!link) return "expired"
   if (!input.state || !stateMatches(link.state, input.state)) return "failed"
+  if (!hubIssuerMatches(input.iss)) {
+    await endLink(sessionId)
+    return "failed"
+  }
   if (input.error !== null) {
     await endLink(sessionId)
     if (input.error === "login_required") return "retry"
@@ -162,7 +168,7 @@ async function linkRequest(path: string, signal?: AbortSignal) {
 export async function previewHubLink(
   signal?: AbortSignal
 ): Promise<HubLinkPreview | null> {
-  const result = await linkRequest("/auth/hub/link/preview", signal)
+  const result = await linkRequest("/oauth/link/preview", signal)
   if (!result) return null
   const preview = previewSchema.parse(await result.response.json())
   return {
@@ -175,7 +181,7 @@ export async function previewHubLink(
 }
 
 export async function confirmHubLink(signal?: AbortSignal) {
-  const result = await linkRequest("/auth/hub/link/confirm", signal)
+  const result = await linkRequest("/oauth/link/confirm", signal)
   if (!result) throw linkExpired()
   await endLink(result.sessionId)
 }

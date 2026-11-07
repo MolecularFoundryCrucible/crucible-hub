@@ -629,10 +629,21 @@ export async function beginHubLogin(
   return url.toString()
 }
 
+export function hubIssuerMatches(issuer: string | null) {
+  const configured =
+    process.env.HUB_AUTH_PUBLIC_API_URL ?? process.env.CRUCIBLE_API_BASE_URL
+  return (
+    issuer !== null &&
+    configured !== undefined &&
+    issuer === configured.replace(/\/+$/, "")
+  )
+}
+
 export async function finishHubLogin(
   code: string | null,
   state: string,
-  providerError: string | null = null
+  providerError: string | null,
+  issuer: string | null
 ) {
   const { callbackUri } = config()
   const transactionId = getCookie(transactionCookie)
@@ -651,6 +662,9 @@ export async function finishHubLogin(
       !timingSafeEqual(expected, actual)
     ) {
       throw new Error("The sign-in request could not be verified.")
+    }
+    if (!hubIssuerMatches(issuer)) {
+      throw new Error("The sign-in response came from another server.")
     }
     if (providerError !== null || code === null) {
       throw new HubSignInRefusedError(providerError ?? "")
@@ -703,6 +717,9 @@ export async function finishHubLogin(
       !timingSafeEqual(expected, actual)
     ) {
       throw new Error("The sign-in request could not be verified.")
+    }
+    if (!hubIssuerMatches(issuer)) {
+      throw new Error("The sign-in response came from another server.")
     }
     if (providerError !== null || code === null) {
       throw new HubSignInRefusedError(providerError ?? "")

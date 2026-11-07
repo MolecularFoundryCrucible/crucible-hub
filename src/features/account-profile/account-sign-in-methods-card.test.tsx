@@ -168,7 +168,7 @@ describe("AccountSignInMethodsCard", () => {
     vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([orcidLogin]))
     vi.mocked(startWorkspaceAccountLinkFn).mockResolvedValue(
       ok({
-        authorizationUrl: "https://api.example.test/auth/hub/link/start?x=1",
+        authorizationUrl: "https://api.example.test/oauth/link/start?x=1",
       })
     )
     const assign = vi.fn()
@@ -178,7 +178,7 @@ describe("AccountSignInMethodsCard", () => {
     fireEvent.click(await chooseFromMenu("Add sign-in method", "Berkeley Lab"))
     await waitFor(() =>
       expect(assign).toHaveBeenCalledWith(
-        "https://api.example.test/auth/hub/link/start?x=1"
+        "https://api.example.test/oauth/link/start?x=1"
       )
     )
     expect(vi.mocked(startWorkspaceAccountLinkFn)).toHaveBeenCalledWith({
@@ -197,6 +197,21 @@ describe("AccountSignInMethodsCard", () => {
     fireEvent.click(await chooseFromMenu("Add sign-in method", "Berkeley Lab"))
     expect(
       await screen.findByText(/Adding a sign-in method needs a recent sign-in/)
+    ).toBeTruthy()
+  })
+
+  it("asks to wait after too many sign-in links", async () => {
+    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([orcidLogin]))
+    vi.mocked(startWorkspaceAccountLinkFn).mockResolvedValue(
+      failure("rate-limited", "too_many_links") as never
+    )
+    renderCard()
+
+    fireEvent.click(await chooseFromMenu("Add sign-in method", "Berkeley Lab"))
+    expect(
+      await screen.findByText(
+        "You've started too many sign-in links. Try again in about 10 minutes."
+      )
     ).toBeTruthy()
   })
 

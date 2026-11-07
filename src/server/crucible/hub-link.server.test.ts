@@ -45,7 +45,12 @@ async function signIn(accessToken = "access-1") {
     { headers: { cookie: transaction } }
   )
   await callback.run(() =>
-    finishHubLogin("code", new URL(location).searchParams.get("state")!)
+    finishHubLogin(
+      "code",
+      new URL(location).searchParams.get("state")!,
+      null,
+      "https://api.example.test"
+    )
   )
   return callback
     .setCookies()
@@ -111,7 +116,12 @@ describe("linking another way to sign in", () => {
     const { state } = await startLink(session)
     await expect(
       inSession(session, () =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+        finishHubLinkCallback({
+          code: "link-code",
+          error: null,
+          iss: "https://api.example.test",
+          state,
+        })
       )
     ).resolves.toBe("pending")
 
@@ -131,7 +141,7 @@ describe("linking another way to sign in", () => {
       status: "available",
     })
     expect(calls).toHaveLength(1)
-    expect(calls[0]?.path).toBe("/auth/hub/link/preview")
+    expect(calls[0]?.path).toBe("/oauth/link/preview")
     expect(calls[0]?.authorization).toMatch(/^Basic /)
     expect(calls[0]?.body).toMatchObject({
       code: "link-code",
@@ -144,7 +154,12 @@ describe("linking another way to sign in", () => {
     const session = await signIn()
     const { state } = await startLink(session)
     await inSession(session, () =>
-      finishHubLinkCallback({ code: "link-code", error: null, state })
+      finishHubLinkCallback({
+        code: "link-code",
+        error: null,
+        iss: "https://api.example.test",
+        state,
+      })
     )
     stubApi(() => Response.json({ provider_name: "ORCID", status: "new" }))
     await expect(
@@ -158,12 +173,22 @@ describe("linking another way to sign in", () => {
     const { state } = await startLink(owner)
     await expect(
       inSession(other, () =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+        finishHubLinkCallback({
+          code: "link-code",
+          error: null,
+          iss: "https://api.example.test",
+          state,
+        })
       )
     ).resolves.toBe("expired")
     await expect(
       inSession(null, () =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+        finishHubLinkCallback({
+          code: "link-code",
+          error: null,
+          iss: "https://api.example.test",
+          state,
+        })
       )
     ).resolves.toBe("signed-out")
   })
@@ -176,12 +201,36 @@ describe("linking another way to sign in", () => {
         finishHubLinkCallback({
           code: "link-code",
           error: null,
+          iss: "https://api.example.test",
           state: "wrong-state",
         })
       )
     ).resolves.toBe("failed")
     await expect(inSession(session, () => previewHubLink())).resolves.toBeNull()
   })
+
+  it.each([["https://evil.example.test"], [null]])(
+    "refuses and ends a link answered by issuer %s",
+    async (iss) => {
+      const session = await signIn()
+      const { state } = await startLink(session)
+      await expect(
+        inSession(session, () =>
+          finishHubLinkCallback({ code: "link-code", error: null, iss, state })
+        )
+      ).resolves.toBe("failed")
+      await expect(
+        inSession(session, () =>
+          finishHubLinkCallback({
+            code: "link-code",
+            error: null,
+            iss: "https://api.example.test",
+            state,
+          })
+        )
+      ).resolves.toBe("expired")
+    }
+  )
 
   it.each([
     ["login_required", "retry"],
@@ -194,12 +243,22 @@ describe("linking another way to sign in", () => {
       const { state } = await startLink(session)
       await expect(
         inSession(session, () =>
-          finishHubLinkCallback({ code: null, error, state })
+          finishHubLinkCallback({
+            code: null,
+            error,
+            iss: "https://api.example.test",
+            state,
+          })
         )
       ).resolves.toBe(outcome)
       await expect(
         inSession(session, () =>
-          finishHubLinkCallback({ code: "link-code", error: null, state })
+          finishHubLinkCallback({
+            code: "link-code",
+            error: null,
+            iss: "https://api.example.test",
+            state,
+          })
         )
       ).resolves.toBe("expired")
     }
@@ -211,7 +270,12 @@ describe("linking another way to sign in", () => {
     vi.setSystemTime(Date.now() + 10 * 60 * 1000 + 1)
     await expect(
       inSession(session, () =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+        finishHubLinkCallback({
+          code: "link-code",
+          error: null,
+          iss: "https://api.example.test",
+          state,
+        })
       )
     ).resolves.toBe("expired")
   })
@@ -220,11 +284,16 @@ describe("linking another way to sign in", () => {
     const session = await signIn()
     const { state } = await startLink(session)
     await inSession(session, () =>
-      finishHubLinkCallback({ code: "link-code", error: null, state })
+      finishHubLinkCallback({
+        code: "link-code",
+        error: null,
+        iss: "https://api.example.test",
+        state,
+      })
     )
     const calls = stubApi(() => Response.json({ id: 2 }))
     await inSession(session, () => confirmHubLink())
-    expect(calls.map((call) => call.path)).toEqual(["/auth/hub/link/confirm"])
+    expect(calls.map((call) => call.path)).toEqual(["/oauth/link/confirm"])
     await expect(inSession(session, () => previewHubLink())).resolves.toBeNull()
   })
 
@@ -237,7 +306,12 @@ describe("linking another way to sign in", () => {
       const session = await signIn()
       const { state } = await startLink(session)
       await inSession(session, () =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+        finishHubLinkCallback({
+          code: "link-code",
+          error: null,
+          iss: "https://api.example.test",
+          state,
+        })
       )
       stubApi(() =>
         body ? Response.json(body, { status }) : new Response(null, { status })
@@ -257,7 +331,12 @@ describe("linking another way to sign in", () => {
     const session = await signIn()
     const { state } = await startLink(session)
     await inSession(session, () =>
-      finishHubLinkCallback({ code: "link-code", error: null, state })
+      finishHubLinkCallback({
+        code: "link-code",
+        error: null,
+        iss: "https://api.example.test",
+        state,
+      })
     )
     stubApi(() => new Response(null, { status: 401 }))
     await inSession(session, () => confirmHubLink()).catch(() => undefined)
@@ -271,7 +350,12 @@ describe("linking another way to sign in", () => {
     await inSession(session, () => cancelHubLink())
     await expect(
       inSession(session, () =>
-        finishHubLinkCallback({ code: "link-code", error: null, state })
+        finishHubLinkCallback({
+          code: "link-code",
+          error: null,
+          iss: "https://api.example.test",
+          state,
+        })
       )
     ).resolves.toBe("expired")
   })

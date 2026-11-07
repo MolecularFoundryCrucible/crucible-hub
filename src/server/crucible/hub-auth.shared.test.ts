@@ -99,7 +99,9 @@ async function signedInSession(
     "http://127.0.0.1:3000/hub/auth/callback",
     { headers: { cookie: loginCookie } }
   )
-  await callbackScope.run(() => finishHubLogin("code", state))
+  await callbackScope.run(() =>
+    finishHubLogin("code", state, null, "https://api.example.test")
+  )
   const sessionCookie = callbackScope
     .setCookies()
     .find((value) => value.startsWith("crucible_hub_session="))!
@@ -208,7 +210,9 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
       { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
     )
     const error = await callback
-      .run(() => finishHubLogin("code", state))
+      .run(() =>
+        finishHubLogin("code", state, null, "https://api.example.test")
+      )
       .catch((reason: unknown) => reason)
     expect(hubSignInFailureDetails(error)).toEqual({
       reason: "account-mismatch",
@@ -227,14 +231,20 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     vi.setSystemTime(new Date("2026-10-06T22:00:00.000Z"))
     stubSharedEnv()
     const owner = await signedInSession((path) =>
-      path === "/auth/hub/link/preview"
+      path === "/oauth/link/preview"
         ? Response.json({ provider_name: "ORCID", status: "available" })
         : new Response(null, { status: 404 })
     )
     const { state } = await owner.inRequest(() => createHubLink("orcid"))
     await expect(
       owner.inRequest(
-        () => finishHubLinkCallback({ code: "link-code", error: null, state }),
+        () =>
+          finishHubLinkCallback({
+            code: "link-code",
+            error: null,
+            iss: "https://api.example.test",
+            state,
+          }),
         "/hub/auth/link/callback"
       )
     ).resolves.toBe("pending")
@@ -244,7 +254,13 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     const other = await signedInSession(() => new Response(null))
     await expect(
       other.inRequest(
-        () => finishHubLinkCallback({ code: "link-code", error: null, state }),
+        () =>
+          finishHubLinkCallback({
+            code: "link-code",
+            error: null,
+            iss: "https://api.example.test",
+            state,
+          }),
         "/hub/auth/link/callback"
       )
     ).resolves.toBe("expired")

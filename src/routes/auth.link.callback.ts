@@ -20,6 +20,7 @@ export const Route = createFileRoute("/auth/link/callback")({
             error: url.searchParams.has("error")
               ? (bounded(url.searchParams.get("error"), 64) ?? "other")
               : null,
+            iss: url.searchParams.get("iss"),
             state: bounded(url.searchParams.get("state"), 256),
           })
         } catch (error) {

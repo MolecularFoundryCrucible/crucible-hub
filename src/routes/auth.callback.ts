@@ -15,6 +15,7 @@ export const Route = createFileRoute("/auth/callback")({
         const code = url.searchParams.get("code")
         const state = url.searchParams.get("state")
         const providerError = url.searchParams.get("error")
+        const issuer = url.searchParams.get("iss")
         const publicOrigin = hubAuthPublicOrigin()
         try {
           let destination: string
@@ -22,7 +23,8 @@ export const Route = createFileRoute("/auth/callback")({
             destination = await finishHubLogin(
               null,
               state,
-              providerError.slice(0, 64)
+              providerError.slice(0, 64),
+              issuer
             )
           } else if (
             code &&
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/auth/callback")({
             code.length <= 512 &&
             state.length <= 256
           ) {
-            destination = await finishHubLogin(code, state)
+            destination = await finishHubLogin(code, state, null, issuer)
           } else {
             throw new Error("Invalid sign-in response.")
           }

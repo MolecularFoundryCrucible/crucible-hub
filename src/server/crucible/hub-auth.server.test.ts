@@ -58,12 +58,15 @@ function loginCookie(scope: StartRequestScope): string {
 async function finishLogin(
   transactionCookie: string,
   code: string,
-  state: string
+  state: string,
+  issuer: string | null = "https://api.example.test"
 ) {
   const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/callback", {
     headers: { cookie: transactionCookie.split(";")[0] },
   })
-  const destination = await scope.run(() => finishHubLogin(code, state))
+  const destination = await scope.run(() =>
+    finishHubLogin(code, state, null, issuer)
+  )
   return { destination, cookies: scope.setCookies() }
 }
 
@@ -176,6 +179,43 @@ describe("hub login exchange", () => {
     ).rejects.toThrow("The sign-in request could not be verified.")
   })
 
+  it.each([
+    ["another server", "https://evil.example.test"],
+    ["a trailing slash", "https://api.example.test/"],
+    ["no issuer", null],
+  ])("rejects a callback from %s", async (_case, issuer) => {
+    stubHubAuthEnv()
+    const { scope, location } = await beginLogin("/hub/data")
+    const fetch = vi.fn(async () => Response.json(tokenResponse))
+    vi.stubGlobal("fetch", fetch)
+    await expect(
+      finishLogin(
+        loginCookie(scope),
+        "code",
+        new URL(location).searchParams.get("state")!,
+        issuer
+      )
+    ).rejects.toThrow("The sign-in response came from another server.")
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("accepts the issuer when the configured address ends in a slash", async () => {
+    stubHubAuthEnv()
+    vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "https://api.example.test/")
+    const { scope, location } = await beginLogin("/hub/data")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json(tokenResponse))
+    )
+    await expect(
+      finishLogin(
+        loginCookie(scope),
+        "code",
+        new URL(location).searchParams.get("state")!
+      )
+    ).resolves.toMatchObject({ destination: "/hub/data" })
+  })
+
   describe("a callback that returns an error", () => {
     async function finishWithError(error: string, state?: string) {
       const { scope, location } = await beginLogin("/hub/data")
@@ -191,7 +231,8 @@ describe("hub login exchange", () => {
           finishHubLogin(
             null,
             state ?? new URL(location).searchParams.get("state")!,
-            error
+            error,
+            "https://api.example.test"
           )
         )
         .catch((reason: unknown) => reason)
@@ -290,7 +331,9 @@ describe("hub login exchange", () => {
     stubHubAuthEnv()
     const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/callback")
     const failure: unknown = await scope
-      .run(() => finishHubLogin("code", "state"))
+      .run(() =>
+        finishHubLogin("code", "state", null, "https://api.example.test")
+      )
       .catch((error: unknown) => error)
     expect(hubSignInFailureDetails(failure)).toEqual({
       reason: "missing-login-cookie",
@@ -356,10 +399,10 @@ describe("hub login exchange", () => {
   it("only sends the browser to the configured API", () => {
     stubHubAuthEnv()
     expect(
-      hubApiAuthorizationUrl("https://api.example.test/auth/hub/link/start?t=1")
-    ).toBe("https://api.example.test/auth/hub/link/start?t=1")
+      hubApiAuthorizationUrl("https://api.example.test/oauth/link/start?t=1")
+    ).toBe("https://api.example.test/oauth/link/start?t=1")
     for (const url of [
-      "https://evil.example.test/auth/hub/link/start",
+      "https://evil.example.test/oauth/link/start",
       "https://api.example.test.evil.example/start",
       "https://user@api.example.test/start",
       "http://api.example.test/start",
@@ -484,7 +527,9 @@ describe("hub login exchange", () => {
           },
         }
       )
-      const finished = callback.run(() => finishHubLogin("code", state))
+      const finished = callback.run(() =>
+        finishHubLogin("code", state, null, "https://api.example.test")
+      )
       return { callback, finished, location, requests }
     }
 

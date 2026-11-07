@@ -164,6 +164,18 @@ describe("safe Crucible calls", () => {
     )
   })
 
+  it.each([
+    [429, "too_many_links"],
+    [403, "hub_session_required"],
+  ])("forwards the code of a %i refusal", async (status, code) => {
+    const result = await safeCrucibleCall("refused", async () => {
+      throw new CrucibleResponseError(new Response(null, { status }), {
+        detail: { code },
+      })
+    })
+    expect(result.status === "error" && result.error.conflictCode).toBe(code)
+  })
+
   it("asks for a fresh sign-in on a step-up challenge", async () => {
     const result = await safeCrucibleCall("step-up", async () => {
       throw new CrucibleResponseError(
