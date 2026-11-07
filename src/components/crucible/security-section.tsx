@@ -17,9 +17,9 @@ export function SecuritySection({
       className="flex flex-col gap-2 border-t pt-4 first:border-t-0 first:pt-0"
     >
       <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 px-(--card-spacing)">
-        <h3 className="font-heading text-label" id={headingId}>
+        <h2 className="font-heading text-label" id={headingId}>
           {title}
-        </h3>
+        </h2>
         {action ? (
           <div className="flex flex-wrap items-center gap-2">{action}</div>
         ) : null}
