@@ -413,6 +413,14 @@ function UserProfileCard({
                   )}
                 </dd>
               </div>
+              <div className="col-span-2 min-w-0 @fields:col-span-1">
+                <dt className="text-label text-muted-foreground">
+                  Last active
+                </dt>
+                <dd className="mt-1 text-body">
+                  <ActivityTime fallback="Never" value={user.last_active_at} />
+                </dd>
+              </div>
               <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID

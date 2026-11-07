@@ -1,10 +1,10 @@
-import { lazyRouteComponent } from "@tanstack/react-router"
+import { lazyNamed } from "@/lib/lazy-named"
 
 import { intentPreloadProps } from "@/lib/intent-preload"
 
 const loadResourceGraphCanvas = () => import("./resource-graph-canvas")
 
-export const ResourceGraphCanvas = lazyRouteComponent(
+export const ResourceGraphCanvas = lazyNamed(
   loadResourceGraphCanvas,
   "ResourceGraphCanvas"
 )
@@ -14,7 +14,7 @@ let warmed = false
 function warmResourceGraph() {
   if (warmed) return
   warmed = true
-  void ResourceGraphCanvas.preload?.()
+  void ResourceGraphCanvas.preload()
   loadResourceGraphCanvas()
     .then((module) => module.warmResourceGraphLayoutEngine())
     .catch(() => {

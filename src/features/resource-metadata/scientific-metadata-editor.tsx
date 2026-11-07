@@ -1,5 +1,5 @@
 import { Suspense, useState } from "react"
-import { lazyRouteComponent } from "@tanstack/react-router"
+import { lazyNamed } from "@/lib/lazy-named"
 import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import {
   ScientificMetadataExpansionAction,
@@ -23,7 +23,7 @@ export type EditableResource = {
   unique_id: string
 }
 
-const ScientificMetadataForm = lazyRouteComponent(
+const ScientificMetadataForm = lazyNamed(
   () => import("./scientific-metadata-form"),
   "ScientificMetadataForm"
 )
@@ -51,7 +51,7 @@ export function ScientificMetadataEditor({
                 <EditableCardTrigger
                   label="Edit scientific metadata"
                   onClick={() => setEditing(true)}
-                  onPreload={() => void ScientificMetadataForm.preload?.()}
+                  onPreload={() => void ScientificMetadataForm.preload()}
                 />
               ) : null}
             </div>

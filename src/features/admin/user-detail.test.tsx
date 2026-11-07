@@ -224,6 +224,7 @@ describe("UserDetailView projects table sorting", () => {
     expect(screen.getByText("Username")).toBeTruthy()
     expect(screen.getByText("Platform role")).toBeTruthy()
     expect(screen.getByText("Email")).toBeTruthy()
+    expect(screen.getByText("Last active")).toBeTruthy()
     expect(screen.queryByText("Account type")).toBeNull()
     expect(screen.queryByText("ORCID")).toBeNull()
   })

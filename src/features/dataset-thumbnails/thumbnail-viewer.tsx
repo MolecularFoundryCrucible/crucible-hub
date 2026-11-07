@@ -1,3 +1,5 @@
+import { useRef } from "react"
+
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
 import { NextImageIcon, PreviousImageIcon } from "@/components/crucible/icons"
 import { Button } from "@/components/ui/button"
@@ -8,6 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import type { WorkspaceDatasetThumbnail } from "@/data/crucible/workspace-source"
+
+const swipeDistance = 48
 
 export function ThumbnailViewer({
   index,
@@ -23,6 +27,11 @@ export function ThumbnailViewer({
   const current = index ?? 0
   const hasPrevious = current > 0
   const hasNext = current < count - 1
+  const swipeStart = useRef<{ x: number; y: number } | null>(null)
+
+  function step(offset: -1 | 1) {
+    if (offset < 0 ? hasPrevious : hasNext) onIndexChange(current + offset)
+  }
 
   return (
     <Dialog
@@ -32,12 +41,9 @@ export function ThumbnailViewer({
       <DialogContent
         className="sm:max-w-2xl"
         onKeyDown={(event) => {
-          if (event.key === "ArrowLeft" && hasPrevious) {
+          if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
             event.preventDefault()
-            onIndexChange(current - 1)
-          } else if (event.key === "ArrowRight" && hasNext) {
-            event.preventDefault()
-            onIndexChange(current + 1)
+            step(event.key === "ArrowLeft" ? -1 : 1)
           }
         }}
       >
@@ -48,11 +54,33 @@ export function ThumbnailViewer({
                 {thumbnail.thumbnail_name}
               </DialogTitle>
             </DialogHeader>
-            <DatasetThumbnailImage
-              alt={thumbnail.thumbnail_name}
-              className="mx-auto h-auto max-h-dialog-media w-full max-w-128 rounded-md object-contain"
-              thumbnail={thumbnail}
-            />
+            <div
+              className="touch-pan-y"
+              onTouchEnd={(event) => {
+                const start = swipeStart.current
+                const touch = event.changedTouches[0]
+                swipeStart.current = null
+                if (!start) return
+                const dx = touch.clientX - start.x
+                const dy = touch.clientY - start.y
+                if (Math.abs(dx) < swipeDistance || Math.abs(dx) < Math.abs(dy))
+                  return
+                step(dx < 0 ? 1 : -1)
+              }}
+              onTouchStart={(event) => {
+                const touch = event.touches[0]
+                swipeStart.current =
+                  event.touches.length === 1
+                    ? { x: touch.clientX, y: touch.clientY }
+                    : null
+              }}
+            >
+              <DatasetThumbnailImage
+                alt={thumbnail.thumbnail_name}
+                className="mx-auto h-auto max-h-dialog-media w-full max-w-128 rounded-md object-contain"
+                thumbnail={thumbnail}
+              />
+            </div>
             {count > 1 ? (
               <div className="flex items-center justify-between gap-2">
                 <Button

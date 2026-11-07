@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { UseQueryResult } from "@tanstack/react-query"
-import { lazyRouteComponent } from "@tanstack/react-router"
+import { lazyNamed } from "@/lib/lazy-named"
 
 import {
   PanelState,
@@ -88,7 +88,7 @@ import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
-const UploadFilesDialog = lazyRouteComponent(
+const UploadFilesDialog = lazyNamed(
   () => import("@/features/dataset-files/upload-dialog"),
   "UploadFilesDialog"
 )

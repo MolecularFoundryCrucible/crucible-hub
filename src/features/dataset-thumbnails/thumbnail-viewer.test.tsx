@@ -60,4 +60,26 @@ describe("ThumbnailViewer", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Close" }))
     expect(screen.queryByRole("img", { name: "Detail" })).toBeNull()
   })
+
+  it("steps with a horizontal swipe and ignores vertical ones", async () => {
+    render(<Harness start={1} />)
+    const image = await screen.findByRole("img", { name: "Detail" })
+    const swipe = (from: [number, number], to: [number, number]) => {
+      fireEvent.touchStart(image, {
+        touches: [{ clientX: from[0], clientY: from[1] }],
+      })
+      fireEvent.touchEnd(image, {
+        changedTouches: [{ clientX: to[0], clientY: to[1] }],
+      })
+    }
+
+    swipe([200, 100], [190, 300])
+    expect(screen.getByText("2 of 3")).toBeTruthy()
+    swipe([200, 100], [80, 110])
+    expect(screen.getByRole("img", { name: "Edge" })).toBeTruthy()
+    swipe([200, 100], [80, 110])
+    expect(screen.getByText("3 of 3")).toBeTruthy()
+    swipe([80, 100], [220, 95])
+    expect(screen.getByRole("img", { name: "Detail" })).toBeTruthy()
+  })
 })
