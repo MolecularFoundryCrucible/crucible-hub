@@ -4,17 +4,20 @@ import type { ReactNode } from "react"
 export function SecuritySection({
   action,
   children,
+  id,
   title,
 }: {
   action?: ReactNode
   children: ReactNode
+  id?: string
   title: string
 }) {
   const headingId = useId()
   return (
     <section
       aria-labelledby={headingId}
-      className="flex flex-col gap-2 border-t pt-4 first:border-t-0 first:pt-0"
+      className="flex scroll-mt-20 flex-col gap-2 border-t pt-4 first:border-t-0 first:pt-0"
+      id={id}
     >
       <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 px-(--card-spacing)">
         <h2 className="font-heading text-label" id={headingId}>

@@ -1,4 +1,4 @@
-import { useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import {
   useInfiniteQuery,
   useMutation,
@@ -114,6 +114,16 @@ export function ApiKeysSection({
   const keys = query.data?.pages.flatMap((page) => page.items) ?? []
   const total = query.data?.pages[0]?.total ?? null
   const active = state === "active"
+  const anchorId = owner.kind === "self" ? "api-keys" : undefined
+  const anchored = useRef(false)
+
+  useEffect(() => {
+    if (!anchorId || anchored.current || query.isPending) return
+    anchored.current = true
+    if (window.location.hash === `#${anchorId}`) {
+      document.getElementById(anchorId)?.scrollIntoView({ block: "start" })
+    }
+  }, [anchorId, query.isPending])
 
   return (
     <SecuritySection
@@ -130,6 +140,7 @@ export function ApiKeysSection({
           ) : null}
         </>
       }
+      id={anchorId}
       title="API keys"
     >
       {query.isError && keys.length === 0 ? (

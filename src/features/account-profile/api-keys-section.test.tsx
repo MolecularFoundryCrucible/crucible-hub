@@ -102,6 +102,9 @@ describe("ApiKeysSection", () => {
     const table = await screen.findByRole("table", { name: "Active API keys" })
     expect(within(table).getByText("Analysis workstation")).toBeTruthy()
     expect(within(table).getByText("7f3a")).toBeTruthy()
+    expect(document.getElementById("api-keys")?.textContent).toContain(
+      "API keys"
+    )
     expect(within(table).getByRole("columnheader", { name: "Expires" }))
   })
 
