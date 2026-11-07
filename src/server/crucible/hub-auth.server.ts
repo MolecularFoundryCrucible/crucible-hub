@@ -677,12 +677,14 @@ export async function finishHubLogin(
     await rejectOtherAccount(transaction.expectedAccount, tokens)
     await rejectStaleSignIn(transaction, tokens)
     const sessionId = randomValue()
+    const previousId = getCookie(sessionCookie) ?? null
+    const previous = previousId ? await readSession(previousId) : null
     let accepted: boolean
     try {
       accepted = await createSessionAfterCallback(
         transactionId,
         sessionId,
-        getCookie(sessionCookie) ?? null,
+        previousId,
         newSharedSession(tokens)
       )
     } catch (error) {
@@ -693,6 +695,8 @@ export async function finishHubLogin(
       await revokeRefreshToken(tokens.refresh_token)
       throw new HubLoginUnavailableError("cancelled-transaction")
     }
+    if (previous)
+      await revokeRefreshToken(previous.session.tokens.refresh_token)
     clearLegacyPrivilegeModeCookie()
     setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
@@ -738,8 +742,9 @@ export async function finishHubLogin(
       await revokeRefreshToken(tokens.refresh_token)
       throw new HubLoginUnavailableError("cancelled-transaction")
     }
-    const previous = getCookie(sessionCookie)
-    if (previous) store.sessions.delete(previous)
+    const previousId = getCookie(sessionCookie)
+    const previous = previousId ? store.sessions.get(previousId) : undefined
+    if (previousId) store.sessions.delete(previousId)
     const sessionId = randomValue()
     const now = Date.now()
     store.sessions.set(sessionId, {
@@ -747,6 +752,7 @@ export async function finishHubLogin(
       expiresAt: now + sessionAbsoluteLifetime,
       idleExpiresAt: now + sessionIdleLifetime,
     })
+    if (previous) await revokeRefreshToken(previous.tokens.refresh_token)
     await writeGlobalPrivilegeMode("normal")
     setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo

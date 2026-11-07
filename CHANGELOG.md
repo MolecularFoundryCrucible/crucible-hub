@@ -22,6 +22,7 @@ The public surface that versions protect is shareable URLs and their search para
 - Swiping left or right on an enlarged dataset thumbnail steps to the next or previous one.
 - Navigation items have a little space between them, so a selected or highlighted item no longer touches its neighbours.
 - Fixed a React warning in development ("called use() to suspend ... but did not call use() when it finished") when opening lazily loaded dialogs and editors: they now load with `React.lazy` instead of the router's route-component loader.
+- Fixed signing in again leaving the previous session open on the API until it expired: when a sign-in replaces this browser's Hub session, the Hub now revokes the old one, so it no longer piles up under Sessions.
 - Administrators see accounts waiting for approval above the Users list, with a count on the Users link, and can approve them or reject them after a confirmation, there or on the person's page.
 - Clicking a dataset thumbnail opens it in a larger view, with Previous and Next (or the arrow keys) to step through the dataset's other thumbnails.
 

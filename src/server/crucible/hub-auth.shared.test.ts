@@ -226,6 +226,52 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     ).resolves.toBe(tokenResponse.user_unique_id)
   })
 
+  it("ends the replaced session when the same account signs in again", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
+    stubSharedEnv()
+    const { sessionCookie } = await signedInSession(() => Response.json([]))
+    const stepUp = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/login?max_age=0",
+      { headers: { cookie: sessionCookie } }
+    )
+    const location = await stepUp.run(() =>
+      beginHubLogin("/hub/reauthenticated", 0)
+    )
+    const state = new URL(location).searchParams.get("state")!
+    const loginCookie = stepUp
+      .setCookies()
+      .find((value) => value.startsWith("crucible_hub_login="))!
+      .split(";")[0]
+    const revoked: unknown[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const path = pathOf(input)
+        if (path === "/auth/hub/revoke") {
+          revoked.push(JSON.parse(String(init?.body)))
+        }
+        return path === "/auth/hub/token"
+          ? Response.json({
+              ...tokenResponse,
+              auth_time: new Date().toISOString(),
+              refresh_token: "refresh-2",
+            })
+          : new Response(null)
+      })
+    )
+    const callback = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/callback",
+      { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
+    )
+    await expect(
+      callback.run(() =>
+        finishHubLogin("code", state, null, "https://api.example.test")
+      )
+    ).resolves.toBe("/hub/reauthenticated")
+    expect(revoked).toEqual([{ token: "refresh-1" }])
+  })
+
   it("keeps a pending sign-in link in the database for its own session only", async () => {
     vi.useFakeTimers({ toFake: ["Date"] })
     vi.setSystemTime(new Date("2026-10-06T22:00:00.000Z"))

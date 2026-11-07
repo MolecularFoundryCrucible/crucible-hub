@@ -504,11 +504,15 @@ describe("hub login exchange", () => {
       )
       const state = new URL(location).searchParams.get("state")!
       const requests: string[] = []
+      const revoked: unknown[] = []
       vi.stubGlobal(
         "fetch",
-        vi.fn(async (input: string | URL | Request) => {
+        vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
           const path = new URL(String(input)).pathname
           requests.push(path)
+          if (path === "/auth/hub/revoke") {
+            revoked.push(JSON.parse(String(init?.body)))
+          }
           return path === "/auth/hub/token"
             ? Response.json({
                 ...tokenResponse,
@@ -530,7 +534,7 @@ describe("hub login exchange", () => {
       const finished = callback.run(() =>
         finishHubLogin("code", state, null, "https://api.example.test")
       )
-      return { callback, finished, location, requests }
+      return { callback, finished, location, requests, revoked }
     }
 
     async function expectSessionKept(session: string) {
@@ -598,15 +602,16 @@ describe("hub login exchange", () => {
       await expect(finished).resolves.toBe("/hub/reauthenticated")
     })
 
-    it("replaces the session when the same account returns", async () => {
+    it("replaces the session and ends the old one when the same account returns", async () => {
       stubHubAuthEnv()
       const session = await signIn("0000-0000-0000-000X")
-      const { callback, finished, requests } = await stepUp(
+      const { callback, finished, requests, revoked } = await stepUp(
         session,
         "0000-0000-0000-000X"
       )
       await expect(finished).resolves.toBe("/hub/reauthenticated")
-      expect(requests).toEqual(["/auth/hub/token"])
+      expect(requests).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
+      expect(revoked).toEqual([{ token: "refresh-1" }])
       expect(
         callback
           .setCookies()
