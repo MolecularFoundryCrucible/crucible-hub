@@ -1173,6 +1173,67 @@
         "title": "Body_create_user_users_post",
         "type": "object"
       },
+      "Body_device_code_entered_oauth_device_post": {
+        "properties": {
+          "user_code": {
+            "maxLength": 64,
+            "title": "User Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_code"
+        ],
+        "title": "Body_device_code_entered_oauth_device_post",
+        "type": "object"
+      },
+      "Body_device_decided_oauth_device_approve_post": {
+        "properties": {
+          "decision": {
+            "pattern": "^(approve|deny)$",
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_token": {
+            "maxLength": 2048,
+            "title": "Decision Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision_token",
+          "decision"
+        ],
+        "title": "Body_device_decided_oauth_device_approve_post",
+        "type": "object"
+      },
+      "Body_password_sign_in_oauth_password_post": {
+        "properties": {
+          "password": {
+            "maxLength": 1024,
+            "title": "Password",
+            "type": "string"
+          },
+          "state": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "State",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 255,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "state"
+        ],
+        "title": "Body_password_sign_in_oauth_password_post",
+        "type": "object"
+      },
       "Body_resolve_users_users_resolve_post": {
         "properties": {
           "emails": {
@@ -5948,6 +6009,60 @@
         "title": "PaginatedResponse[ServiceAccountAdminRead]",
         "type": "object"
       },
+      "PaginatedResponse_SessionRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SessionRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "limit",
+          "items"
+        ],
+        "title": "PaginatedResponse[SessionRead]",
+        "type": "object"
+      },
       "PaginatedResponse_Union_UserRead__UserPublicRead__": {
         "properties": {
           "items": {
@@ -8227,6 +8342,68 @@
           "api_key"
         ],
         "title": "ServiceAccountRead",
+        "type": "object"
+      },
+      "SessionRead": {
+        "description": "One signed-in session. Never its tokens.",
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "current": {
+            "default": false,
+            "description": "The session making this request",
+            "title": "Current",
+            "type": "boolean"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_used_at": {
+            "description": "When it last got new tokens (it refreshes about every 15 minutes while in use)",
+            "format": "date-time",
+            "title": "Last Used At",
+            "type": "string"
+          },
+          "signed_in_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the person last signed in for it",
+            "title": "Signed In At"
+          }
+        },
+        "required": [
+          "id",
+          "client_id",
+          "client_name",
+          "created_at",
+          "last_used_at",
+          "expires_at"
+        ],
+        "title": "SessionRead",
         "type": "object"
       },
       "SignedPart": {
@@ -11061,6 +11238,252 @@
           }
         ],
         "summary": "Remove Recent Resource",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/sessions": {
+      "delete": {
+        "description": "Sign out everywhere else: end every session but this one. Needs a recent sign-in.",
+        "operationId": "end_other_account_sessions_account_sessions_delete",
+        "parameters": [
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A session needs a sign-in within the last 10 minutes (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "`hub_session_required`: an API key cannot end sessions"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "End Other Account Sessions",
+        "tags": [
+          "account"
+        ]
+      },
+      "get": {
+        "description": "Your signed-in sessions: the Hub, the command line, devices you approved. Never their tokens.\n`current` marks the session making the request.",
+        "operationId": "list_account_sessions_account_sessions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque continuation cursor from next_cursor.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor from next_cursor.",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_SessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid cursor"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Account Sessions",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/sessions/{session_id}": {
+      "delete": {
+        "description": "End one of your sessions at once; ending the current one signs you out. Needs a recent sign-in\n(OWASP ASVS 5.0 V7.5.2).",
+        "operationId": "end_account_session_account_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A session needs a sign-in within the last 10 minutes (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "`hub_session_required`: an API key cannot end sessions"
+          },
+          "404": {
+            "description": "Not one of your active sessions"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "End Account Session",
         "tags": [
           "account"
         ]
@@ -22672,6 +23095,310 @@
         ]
       }
     },
+    "/oauth/device": {
+      "get": {
+        "description": "Where a person enters the code a program on another device shows.",
+        "operationId": "device_code_form_oauth_device_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "user_code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Device Code Form",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Check the code within the per-address attempt limit, then sign the person in afresh.",
+        "operationId": "device_code_entered_oauth_device_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_device_code_entered_oauth_device_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "302": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Unknown or expired code; the same answer for every reason"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Device Code Entered",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/device/approve": {
+      "post": {
+        "description": "Record Approve or Deny once. The program learns it at its next poll.",
+        "operationId": "device_decided_oauth_device_approve_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_device_decided_oauth_device_approve_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "The decision cannot be matched to this browser, or it came too late"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Device Decided",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/device/callback": {
+      "get": {
+        "description": "After the fresh sign-in: show what is being approved, for whom.",
+        "operationId": "device_signed_in_oauth_device_callback_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 2048,
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          },
+          {
+            "in": "query",
+            "name": "iss",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Iss"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "The sign-in cannot be matched to this browser, or it failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Device Signed In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/device_authorization": {
+      "post": {
+        "description": "Start a device sign-in (RFC 8628) for a public client on a machine without a browser: show the\nperson the user code and the verification address, then poll /oauth/token with\n`grant_type=urn:ietf:params:oauth:grant-type:device_code`, the device code and the client_id.",
+        "operationId": "device_authorization_oauth_device_authorization_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "device_code, user_code, verification_uri, verification_uri_complete, expires_in and interval (RFC 8628 3.2)",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 6749 error"
+          },
+          "401": {
+            "description": "`invalid_client`"
+          },
+          "503": {
+            "description": "Sign-in unavailable"
+          }
+        },
+        "summary": "Device Authorization",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/oauth/link/confirm": {
       "post": {
         "description": "Add the login to the account of the person who started the link and is confirming it now.",
@@ -22830,6 +23557,119 @@
           }
         },
         "summary": "Start Hub Link",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/password": {
+      "get": {
+        "description": "The password form for a sign-in started at /oauth/authorize with provider=password.",
+        "operationId": "password_form_oauth_password_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "State",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Unknown, used or expired sign-in"
+          },
+          "404": {
+            "description": "Passwords are off"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Password Form",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Check a password within the attempt limits. Every failure, for whatever reason, gives the same\npage, status and time. A typo keeps the sign-in; only a success uses it up.",
+        "operationId": "password_sign_in_oauth_password_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_password_sign_in_oauth_password_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "303": {
+            "description": "Back to the client with code, state and iss"
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Unknown, used or expired sign-in"
+          },
+          "401": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Sign-in failed; the same answer for every reason"
+          },
+          "403": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "The account waits for approval"
+          },
+          "404": {
+            "description": "Passwords are off"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Password Sign In",
         "tags": [
           "auth"
         ]
@@ -32174,6 +33014,282 @@
         "summary": "Read User Samples",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/users/{user_ref}/sessions": {
+      "delete": {
+        "description": "End all of a person's sessions (ASVS V7.4.5). Another human administrator's needs a recent sign-in.",
+        "operationId": "end_all_user_sessions_users__user_ref__sessions_delete",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform administrator, or `hub_session_required` for another human administrator"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "End All User Sessions",
+        "tags": [
+          "account"
+        ]
+      },
+      "get": {
+        "description": "A person's signed-in sessions. Platform administrators only.",
+        "operationId": "list_user_sessions_users__user_ref__sessions_get",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque continuation cursor from next_cursor.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor from next_cursor.",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_SessionRead_"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform administrator"
+          },
+          "422": {
+            "description": "Invalid cursor"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List User Sessions",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/users/{user_ref}/sessions/{session_id}": {
+      "delete": {
+        "description": "End one of a person's sessions (ASVS V7.4.5). Another human administrator's needs a recent sign-in.",
+        "operationId": "end_user_session_users__user_ref__sessions__session_id__delete",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform administrator, or `hub_session_required` for another human administrator"
+          },
+          "404": {
+            "description": "Not one of this person's active sessions"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "End User Session",
+        "tags": [
+          "account"
         ]
       }
     }
