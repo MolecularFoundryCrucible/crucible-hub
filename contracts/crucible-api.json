@@ -469,6 +469,21 @@
               }
             ]
           },
+          "sign_in_methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.",
+            "title": "Sign In Methods"
+          },
           "unique_id": {
             "title": "Unique Id",
             "type": "string"
@@ -1053,10 +1068,25 @@
             "type": "string"
           },
           "kind": {
-            "const": "oidc",
             "default": "oidc",
+            "enum": [
+              "oidc",
+              "password"
+            ],
             "title": "Kind",
             "type": "string"
+          },
+          "registration_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "On the password entry only: where people ask for an account, present while registration is open",
+            "title": "Registration Url"
           }
         },
         "required": [
@@ -1207,6 +1237,32 @@
         "title": "Body_device_decided_oauth_device_approve_post",
         "type": "object"
       },
+      "Body_password_link_submitted_oauth_password_link_post": {
+        "properties": {
+          "confirm": {
+            "maxLength": 1024,
+            "title": "Confirm",
+            "type": "string"
+          },
+          "form_token": {
+            "maxLength": 2048,
+            "title": "Form Token",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 1024,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password",
+          "confirm",
+          "form_token"
+        ],
+        "title": "Body_password_link_submitted_oauth_password_link_post",
+        "type": "object"
+      },
       "Body_password_sign_in_oauth_password_post": {
         "properties": {
           "password": {
@@ -1232,6 +1288,56 @@
           "state"
         ],
         "title": "Body_password_sign_in_oauth_password_post",
+        "type": "object"
+      },
+      "Body_registration_submitted_oauth_register_post": {
+        "properties": {
+          "confirm": {
+            "maxLength": 1024,
+            "title": "Confirm",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "maxLength": 100,
+            "title": "First Name",
+            "type": "string"
+          },
+          "form_token": {
+            "maxLength": 2048,
+            "title": "Form Token",
+            "type": "string"
+          },
+          "last_name": {
+            "maxLength": 100,
+            "title": "Last Name",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 1024,
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 64,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "email",
+          "username",
+          "password",
+          "confirm",
+          "form_token"
+        ],
+        "title": "Body_registration_submitted_oauth_register_post",
         "type": "object"
       },
       "Body_resolve_users_users_resolve_post": {
@@ -3611,6 +3717,82 @@
           }
         },
         "title": "IngestionRequest",
+        "type": "object"
+      },
+      "IngestionRequestUpdate": {
+        "description": "What an ingestion consumer reports back. Other fields of the request are ignored.",
+        "properties": {
+          "dataset_mfid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Mfid"
+          },
+          "file_mfid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Mfid"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "ingestion_githash": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingestion Githash"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "time_completed": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Completed"
+          }
+        },
+        "title": "IngestionRequestUpdate",
         "type": "object"
       },
       "InstrumentAffiliation": {
@@ -6176,6 +6358,59 @@
           "items"
         ],
         "title": "PaginatedResponse[UserPublicRead]",
+        "type": "object"
+      },
+      "PasswordChange": {
+        "description": "Set your first password, or change it. The current password is needed only to change one.",
+        "properties": {
+          "current_password": {
+            "anyOf": [
+              {
+                "maxLength": 1024,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Password"
+          },
+          "new_password": {
+            "maxLength": 1024,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "new_password"
+        ],
+        "title": "PasswordChange",
+        "type": "object"
+      },
+      "PasswordLinkRead": {
+        "description": "A one-time link to set or reset a password, shown only in this response.",
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "purpose": {
+            "description": "`setup` when the person has no password yet, `reset` when they have one",
+            "title": "Purpose",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "purpose",
+          "expires_at"
+        ],
+        "title": "PasswordLinkRead",
         "type": "object"
       },
       "PipelineRead": {
@@ -9132,6 +9367,21 @@
               }
             ]
           },
+          "sign_in_methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.",
+            "title": "Sign In Methods"
+          },
           "unique_id": {
             "title": "Unique Id",
             "type": "string"
@@ -9732,72 +9982,18 @@
     "/account/apikey": {
       "get": {
         "deprecated": true,
-        "description": "Return the authenticated caller's current API key.\n\nDeprecated: API keys will be stored hashed and become unreadable. Use\nPOST /account/apikey/regenerate, which returns a new key once.",
+        "description": "Removed: API keys are stored hashed and cannot be read back. Use POST /account/apikeys.",
         "operationId": "get_account_apikey_account_apikey_get",
-        "parameters": [
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyRead"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "403": {
-            "description": "Hub sessions cannot read API keys (`api_key_read_not_allowed`)"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Get Account Apikey",
         "tags": [
           "account"
@@ -9807,72 +10003,18 @@
     "/account/apikey/regenerate": {
       "post": {
         "deprecated": true,
-        "description": "Replace the key the single-key routes show (`older_routes` in GET /account/apikeys) and return the new one once.\nDeprecated: create keys with POST /account/apikeys and revoke them with DELETE /account/apikeys/{key_id}.",
+        "description": "Removed: create keys with POST /account/apikeys and revoke them with DELETE /account/apikeys/{key_id}.",
         "operationId": "regenerate_account_apikey_account_apikey_regenerate_post",
-        "parameters": [
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyRead"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "401": {
-            "description": "Hub sessions need an ORCID sign-in within the last 10 minutes (`insufficient_user_authentication`, RFC 9470 challenge)"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Regenerate Account Apikey",
         "tags": [
           "account"
@@ -10052,7 +10194,7 @@
             "description": "A Hub session needs a recent sign-in (`insufficient_user_authentication`)"
           },
           "403": {
-            "description": "`hub_session_required`: an API key cannot create keys"
+            "description": "`hub_session_required`: an API key cannot create keys; `browser_sign_in_required`: nor can a session approved with a device code"
           },
           "409": {
             "description": "`too_many_keys`: at most 10 active keys"
@@ -10369,7 +10511,7 @@
             "description": "A Hub session needs a recent sign-in (`insufficient_user_authentication`)"
           },
           "403": {
-            "description": "`hub_session_required`: API keys cannot change how you sign in"
+            "description": "`hub_session_required`: API keys cannot change how you sign in; `browser_sign_in_required`: nor can a session approved with a device code"
           },
           "404": {
             "description": "Not one of your logins"
@@ -10475,7 +10617,7 @@
             "description": "A Hub session needs a recent sign-in (`insufficient_user_authentication`)"
           },
           "403": {
-            "description": "`hub_session_required`: API keys cannot change how you sign in"
+            "description": "`hub_session_required`: API keys cannot change how you sign in; `browser_sign_in_required`: nor can a session approved with a device code"
           },
           "409": {
             "description": "`identity_lookup_off`"
@@ -10615,6 +10757,89 @@
         ],
         "summary": "Get Account Join Requests",
         "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/password": {
+      "post": {
+        "description": "Set a first password, or change yours, from a browser session with a recent sign-in. Changing\nneeds the current password and ends your other sessions, keeping this one. Passwords sign in with\nthe username, so an account without one sets it first with PATCH /account/profile. API keys are\nnever touched.",
+        "operationId": "set_account_password_account_password_post",
+        "parameters": [
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "`hub_session_required` for an API key, `browser_sign_in_required` for a session approved with a device code"
+          },
+          "409": {
+            "description": "`service_account`, `username_required` (set one with PATCH /account/profile first), or `password_changed` when another request changed it first"
+          },
+          "422": {
+            "description": "Field errors in FastAPI's shape: `current_password_required` or `current_password_invalid` (counted against the account's attempt limit) on `current_password`, `password_rejected` with `ctx.reason` on `new_password`"
+          },
+          "501": {
+            "description": "Passwords is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"passwords\", \"message\": ...}}`"
+          },
+          "503": {
+            "description": "The server is busy checking passwords"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Account Password",
+        "tags": [
+          "users",
           "account"
         ]
       }
@@ -11289,7 +11514,7 @@
             "description": "A session needs a sign-in within the last 10 minutes (`insufficient_user_authentication`)"
           },
           "403": {
-            "description": "`hub_session_required`: an API key cannot end sessions"
+            "description": "`hub_session_required`: an API key cannot end sessions; `browser_sign_in_required`: nor can a session approved with a device code"
           },
           "422": {
             "content": {
@@ -11462,7 +11687,7 @@
             "description": "A session needs a sign-in within the last 10 minutes (`insufficient_user_authentication`)"
           },
           "403": {
-            "description": "`hub_session_required`: an API key cannot end sessions"
+            "description": "`hub_session_required`: an API key cannot end sessions; `browser_sign_in_required`: nor can a session approved with a device code"
           },
           "404": {
             "description": "Not one of your active sessions"
@@ -13255,7 +13480,7 @@
     },
     "/auth/methods": {
       "get": {
-        "description": "The ways to sign in through the Hub on this deployment; empty when Hub sign-in is off.",
+        "description": "The ways to sign in on this deployment, each a `provider` value for the sign-in routes; empty\nwhen sign-in is off. With passwords on, the last entry is `password`, which carries\n`registration_url` while people can ask for an account.",
         "operationId": "list_sign_in_methods_auth_methods_get",
         "responses": {
           "200": {
@@ -15807,18 +16032,21 @@
             }
           },
           {
+            "description": "An ingestor name, such as one from GET /ingestors",
             "in": "query",
             "name": "ingestion_class",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "pattern": "^[A-Za-z0-9_.-]{1,128}$",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "An ingestor name, such as one from GET /ingestors",
               "title": "Ingestion Class"
             }
           },
@@ -19884,18 +20112,21 @@
             }
           },
           {
+            "description": "An ingestor name, such as one from GET /ingestors",
             "in": "query",
             "name": "ingestion_class",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "pattern": "^[A-Za-z0-9_.-]{1,128}$",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
+              "description": "An ingestor name, such as one from GET /ingestors",
               "title": "Ingestion Class"
             }
           },
@@ -20468,7 +20699,7 @@
         ]
       },
       "patch": {
-        "description": "Updates an ingestion request. Requires edit access to the parent dataset.",
+        "description": "Records an ingestion's outcome: `status`, `time_completed` and `ingestion_githash`. Other\nfields in the body are ignored; the dataset and file cannot change. Requires edit access to the\nparent dataset.",
         "operationId": "patch_ingestion_request_ingestion_requests__request_id__patch",
         "parameters": [
           {
@@ -20503,7 +20734,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestionRequest"
+                "$ref": "#/components/schemas/IngestionRequestUpdate"
               }
             }
           },
@@ -23670,6 +23901,228 @@
           }
         },
         "summary": "Password Sign In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/password-link": {
+      "get": {
+        "description": "Where a password link leads. Opening it does not use it up, so a mail scanner that follows\nthe link changes nothing.",
+        "operationId": "password_link_page_oauth_password_link_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "303": {
+            "description": "The token moved into a cookie; the same page without it"
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Unknown, used or expired link"
+          },
+          "404": {
+            "description": "Passwords are off"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Password Link Page",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Set the password and use up the link. Two tabs cannot both succeed: the link's row is locked.",
+        "operationId": "password_link_submitted_oauth_password_link_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_password_link_submitted_oauth_password_link_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Unknown, used or expired link, or a form from another browser"
+          },
+          "404": {
+            "description": "Passwords are off"
+          },
+          "422": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "The passwords differ or break a rule"
+          },
+          "503": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "The server is busy checking passwords"
+          }
+        },
+        "summary": "Password Link Submitted",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/register": {
+      "get": {
+        "description": "Where someone asks for an account with a password, when the server allows it\n(CRUCIBLE_AUTH_PASSWORD_REGISTRATION=approval). An administrator approves each one.",
+        "operationId": "registration_form_oauth_register_get",
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "404": {
+            "description": "Password registration is off"
+          }
+        },
+        "summary": "Registration Form",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Create an account that waits for an administrator's approval. Every submission counts against\nthe address's limit, so one source cannot fill the approval list. It signs nobody in.",
+        "operationId": "registration_submitted_oauth_register_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_registration_submitted_oauth_register_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "A form from another browser, or one that waited too long"
+          },
+          "404": {
+            "description": "Password registration is off"
+          },
+          "409": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "The username or email is already in use; one answer for both"
+          },
+          "422": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "A field breaks a rule, or the passwords differ"
+          },
+          "429": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Too many requests from this address; wait a minute"
+          },
+          "503": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "The server is busy checking passwords"
+          }
+        },
+        "summary": "Registration Submitted",
         "tags": [
           "auth"
         ]
@@ -31457,69 +31910,27 @@
       },
       "post": {
         "deprecated": true,
-        "description": "Return the user's API key, minting one if they don't have it yet. Admin only. 404 if the user doesn't exist.\n\nDeprecated: returning an existing key will stop when keys are stored hashed. Use\nPOST /users/{user_ref}/apikey/regenerate. Hub sessions already receive 409 when a key exists.",
+        "description": "Removed: people create their own keys with POST /account/apikeys.",
         "operationId": "get_or_provision_user_apikey_users__user_ref__apikey_post",
         "parameters": [
           {
-            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
             "in": "path",
             "name": "user_ref",
             "required": true,
             "schema": {
-              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
               "title": "User Ref",
               "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
             }
           }
         ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyRead"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "401": {
-            "description": "Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`)"
-          },
-          "409": {
-            "description": "Hub sessions cannot read an existing key (`api_key_exists`)"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           },
           "422": {
             "content": {
@@ -31532,11 +31943,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Get Or Provision User Apikey",
         "tags": [
           "users"
@@ -31546,66 +31952,27 @@
     "/users/{user_ref}/apikey/regenerate": {
       "post": {
         "deprecated": true,
-        "description": "Replace the key the single-key routes show and return the new one once. Admin only.\nDeprecated: revoke a person's keys one by one with DELETE /users/{user_ref}/apikeys/{key_id}.",
+        "description": "Removed: administrators revoke keys with DELETE /users/{user_ref}/apikeys/{key_id}.",
         "operationId": "regenerate_user_apikey_users__user_ref__apikey_regenerate_post",
         "parameters": [
           {
-            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
             "in": "path",
             "name": "user_ref",
             "required": true,
             "schema": {
-              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
               "title": "User Ref",
               "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
             }
           }
         ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyRead"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "401": {
-            "description": "Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`)"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           },
           "422": {
             "content": {
@@ -31618,11 +31985,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Regenerate User Apikey",
         "tags": [
           "users"
@@ -32515,7 +32877,7 @@
             "description": "A Hub session needs a recent sign-in (`insufficient_user_authentication`)"
           },
           "403": {
-            "description": "`hub_session_required`: API keys cannot change how you sign in"
+            "description": "`hub_session_required`: API keys cannot change how you sign in; `browser_sign_in_required`: nor can a session approved with a device code"
           },
           "404": {
             "description": "Not one of this person's logins"
@@ -32542,6 +32904,193 @@
         "summary": "Remove User Identity",
         "tags": [
           "account"
+        ]
+      }
+    },
+    "/users/{user_ref}/password": {
+      "delete": {
+        "description": "Remove a person's password, for example after a compromise: it stops working at once, their\nsessions end and any password link is cancelled. Issue a new link afterwards with\nPOST /users/{user_ref}/password-link. API keys are not touched; revoke them separately.\nPlatform administrators, or yourself if you have another way to sign in.",
+        "operationId": "remove_user_password_users__user_ref__password_delete",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "Not a platform administrator; `hub_session_required` for any human administrator, yourself included; `browser_sign_in_required` for a session approved with a device code"
+          },
+          "404": {
+            "description": "No such person, or `no_password`"
+          },
+          "409": {
+            "description": "`service_account`, or `last_sign_in_method` when removing your own only way in"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove User Password",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{user_ref}/password-link": {
+      "post": {
+        "description": "A one-time link for the person to set a password, or choose a new one, shown only here.\nIt replaces any earlier link, works once, and lasts CRUCIBLE_AUTH_PASSWORD_LINK_HOURS. Using it\nends the person's sessions and does not sign them in. Platform administrators only.",
+        "operationId": "issue_password_link_users__user_ref__password_link_post",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordLinkRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "Not a platform administrator; `hub_session_required` for any human administrator, yourself included; `browser_sign_in_required` for a session approved with a device code"
+          },
+          "404": {
+            "description": "No such person"
+          },
+          "409": {
+            "description": "`service_account`, `account_disabled` or `account_pending`"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "501": {
+            "description": "Passwords is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"passwords\", \"message\": ...}}`"
+          },
+          "503": {
+            "description": "The public API address is not set"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Issue Password Link",
+        "tags": [
+          "users"
         ]
       }
     },
