@@ -7,9 +7,9 @@ The API bundle's front door (Caddy) serves both at one address: `/api/v3/` goes 
 ## Requirements
 
 - Docker with Compose v2.20 or later.
-- The API bundle running with its Hub sign-in settings: the Hub callback `https://<your address>/hub/auth/callback` in its allowed Hub callbacks, and the same client secret as `secrets/hub_auth_client_secret` here.
+- The API bundle running with its Hub sign-in settings (`compose.hub.yaml` in its `COMPOSE_FILE`): the Hub callbacks `<your address>/hub/auth/callback` and `<your address>/hub/auth/link/callback` among its allowed redirects, and the same client secret as `secrets/hub_auth_client_secret` here.
 - HTTPS at the front door, unless everything runs on one machine at `http://localhost`. The Hub accepts an HTTP callback and public API address only on `localhost`, `127.0.0.1` or `[::1]`, and drops `Secure` from its cookies only then. Open the Hub at exactly the address in `HUB_PUBLIC_ORIGIN`: the Hub refuses changes sent from another origin, so `127.0.0.1` and `localhost` are not interchangeable.
-- ORCID sign-in registered for the API: ORCID needs the API's own callback (`<public API address>/auth/hub/callback`), not the Hub's.
+- A way to sign in through the API. Passwords are on by default in the API bundle. ORCID needs the bundle's `compose.orcid.yaml`, HTTPS, and an ORCID application whose redirect is the API's own callback (`<public API address>/auth/hub/callback`), not the Hub's.
 
 ## Secrets
 
@@ -45,6 +45,8 @@ cp example.env .env
 # Edit HUB_PUBLIC_ORIGIN, HUB_AUTH_PUBLIC_API_URL, and CRUCIBLE_API_BASE_URL.
 docker compose up -d --build
 ```
+
+For a trial on one machine with the API bundle's defaults, set `HUB_PUBLIC_ORIGIN=http://localhost:8080` and `HUB_AUTH_PUBLIC_API_URL=http://localhost:8080/api/v3`, then open `http://localhost:8080/hub/`.
 
 `example.env` selects `compose.yaml` and `compose.api-network.yaml` and sets `HUB_API_ALLOW_HTTP=true`, because `http://api:8000` never leaves the Docker network. Even with that setting, the Hub accepts plain HTTP only for a container name or a private address. The Hub and setup containers drop every Linux capability and the database drops `NET_RAW`, so none of them can intercept traffic on the shared network; do the same for the API bundle's containers, and keep the API's database off the shared network. Set `CRUCIBLE_HUB_UPSTREAM=hub:3000` in the API bundle so its front door forwards `/hub/`.
 
