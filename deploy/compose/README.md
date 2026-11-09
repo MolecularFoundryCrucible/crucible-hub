@@ -8,7 +8,7 @@ The API bundle's front door (Caddy) serves both at one address: `/api/v3/` goes 
 
 - Docker with Compose v2.20 or later.
 - The API bundle running with its Hub sign-in settings: the Hub callback `https://<your address>/hub/auth/callback` in its allowed Hub callbacks, and the same client secret as `secrets/hub_auth_client_secret` here.
-- HTTPS at the front door. Sign-in sets `Secure` cookies and the Hub refuses an HTTP callback.
+- HTTPS at the front door, unless everything runs on one machine at `http://localhost`. The Hub accepts an HTTP callback and public API address only on `localhost`, `127.0.0.1` or `[::1]`, and drops `Secure` from its cookies only then. Open the Hub at exactly the address in `HUB_PUBLIC_ORIGIN`: the Hub refuses changes sent from another origin, so `127.0.0.1` and `localhost` are not interchangeable.
 - ORCID sign-in registered for the API: ORCID needs the API's own callback (`<public API address>/auth/hub/callback`), not the Hub's.
 
 ## Secrets
@@ -59,7 +59,7 @@ In `.env`, use the separate-machine block: `COMPOSE_FILE=compose.yaml:compose.pu
 | Setting                    | Meaning                                                                                                                                                            |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `HUB_PUBLIC_ORIGIN`        | The address people use, such as `https://crucible.example.org`. The callback becomes `<origin>/hub/auth/callback`.                                                 |
-| `HUB_AUTH_PUBLIC_API_URL`  | The API base address browsers use for sign-in. Always HTTPS.                                                                                                       |
+| `HUB_AUTH_PUBLIC_API_URL`  | The API base address browsers use for sign-in. HTTPS, or HTTP on a loopback host for a one-machine install.                                                        |
 | `CRUCIBLE_API_BASE_URL`    | The API base address the Hub server calls.                                                                                                                         |
 | `HUB_API_ALLOW_HTTP`       | `true` allows an `http://` `CRUCIBLE_API_BASE_URL` to a container name or private address, never a public one. Access tokens travel on that connection.            |
 | `HUB_TRUSTED_PROXY_HOPS`   | Proxies in front of the Hub that append to `X-Forwarded-For` (default 1). The Hub limits sign-in attempts per client address taken from that header; 0 ignores it. |

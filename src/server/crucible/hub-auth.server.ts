@@ -397,12 +397,18 @@ function randomValue() {
 
 const loopbackHosts = new Set(["127.0.0.1", "localhost", "[::1]"])
 
+function isHttpsOrLoopback(url: URL) {
+  return (
+    url.protocol === "https:" ||
+    (url.protocol === "http:" && loopbackHosts.has(url.hostname))
+  )
+}
+
 function configuredCallbackUri() {
   const value = process.env.HUB_AUTH_CALLBACK_URI ?? localCallbackUri
   const url = new URL(value)
   if (
-    (url.protocol !== "https:" &&
-      !(url.protocol === "http:" && loopbackHosts.has(url.hostname))) ||
+    !isHttpsOrLoopback(url) ||
     url.pathname !== "/hub/auth/callback" ||
     url.search ||
     url.hash ||
@@ -473,10 +479,10 @@ function serverApiUrl(value: string) {
   return new URL(value).toString().replace(/\/$/, "")
 }
 
-function httpsApiUrl(value: string) {
+function publicApiUrl(value: string) {
   const url = new URL(value)
   if (
-    url.protocol !== "https:" ||
+    !isHttpsOrLoopback(url) ||
     url.username ||
     url.password ||
     url.search ||
@@ -530,15 +536,13 @@ function config() {
     !productionHubAuthReady() ||
     !baseUrl ||
     !publicBaseUrl ||
-    !secret ||
-    (process.env.NODE_ENV === "production" &&
-      new URL(callbackUri).protocol !== "https:")
+    !secret
   ) {
     throw new Error("Hub sign-in is not configured.")
   }
   return {
     baseUrl: serverApiUrl(baseUrl),
-    publicBaseUrl: httpsApiUrl(publicBaseUrl),
+    publicBaseUrl: publicApiUrl(publicBaseUrl),
     callbackUri,
     secret,
   }

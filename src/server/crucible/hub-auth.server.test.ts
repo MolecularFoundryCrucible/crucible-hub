@@ -921,6 +921,35 @@ describe("hub login exchange", () => {
     }
   )
 
+  it("signs in over plain HTTP on this machine in production", async () => {
+    stubHubAuthEnv()
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("HUB_AUTH_PRODUCTION_ENABLED", "true")
+    vi.stubEnv("HUB_AUTH_SESSION_MODE", "single-instance")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "http://127.0.0.1:8000/api/v3")
+    vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "http://localhost:8080/api/v3")
+    vi.stubEnv(
+      "HUB_AUTH_CALLBACK_URI",
+      "http://localhost:8080/hub/auth/callback"
+    )
+    vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    const { scope, location } = await beginLogin("/hub/data")
+
+    expect(location.startsWith("http://localhost:8080/api/v3/")).toBe(true)
+    expect(loginCookie(scope)).not.toContain("Secure")
+    expect(
+      hubApiAuthorizationUrl("http://localhost:8080/api/v3/oauth/link/start")
+    ).toBe("http://localhost:8080/api/v3/oauth/link/start")
+  })
+
+  it("rejects a plain HTTP public API address on a non-loopback host", async () => {
+    stubHubAuthEnv()
+    vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "http://api.example.test")
+    await expect(beginLogin("/hub/data")).rejects.toThrow(
+      "Hub API URL must be a trusted HTTPS URL."
+    )
+  })
+
   it("rejects a plain HTTP callback on a non-loopback host", async () => {
     stubHubAuthEnv()
     vi.stubEnv(
