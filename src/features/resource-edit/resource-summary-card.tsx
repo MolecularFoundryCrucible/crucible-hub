@@ -1,6 +1,6 @@
 import { Suspense, useState } from "react"
 import type { ReactNode } from "react"
-import { lazyRouteComponent } from "@tanstack/react-router"
+import { lazyNamed } from "@/lib/lazy-named"
 import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
@@ -30,11 +30,11 @@ export type SampleDetail = Extract<WorkspaceResourceDetail, { kind: "sample" }>
 
 export type SummaryField = readonly [string, ReactNode, SummaryFieldType]
 
-const SampleSummaryForm = lazyRouteComponent(
+const SampleSummaryForm = lazyNamed(
   () => import("./resource-summary-form"),
   "SampleSummaryForm"
 )
-const DatasetSummaryForm = lazyRouteComponent(
+const DatasetSummaryForm = lazyNamed(
   () => import("./resource-summary-form"),
   "DatasetSummaryForm"
 )
@@ -87,7 +87,7 @@ function SampleSummaryCard({
           <EditableCardTrigger
             label="Edit summary"
             onClick={() => setEditing(true)}
-            onPreload={() => void SampleSummaryForm.preload?.()}
+            onPreload={() => void SampleSummaryForm.preload()}
           />
         ) : undefined
       }
@@ -126,7 +126,7 @@ function DatasetSummaryCard({
           <EditableCardTrigger
             label="Edit summary"
             onClick={() => setEditing(true)}
-            onPreload={() => void DatasetSummaryForm.preload?.()}
+            onPreload={() => void DatasetSummaryForm.preload()}
           />
         ) : undefined
       }

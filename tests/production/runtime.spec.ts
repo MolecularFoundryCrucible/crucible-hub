@@ -212,3 +212,48 @@ test("explains a sign-in by a different account without offering to switch", asy
     page.getByRole("button", { name: "Return to Crucible Hub" })
   ).toBeVisible()
 })
+
+test("explains a sign-in that was not recent without discarding the session", async ({
+  page,
+}) => {
+  await page.goto("/hub/auth/error?reason=stale-sign-in")
+  await expect(
+    page.getByRole("heading", { name: "Sign-in was not recent" })
+  ).toBeVisible()
+  await expect(
+    page.getByText("You are still signed in as before.")
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0)
+})
+
+test("offers to retry when sign-in is unavailable", async ({ page }) => {
+  await page.goto("/hub/auth/error?reason=unavailable")
+  await expect(
+    page.getByRole("heading", { name: "Sign-in is unavailable" })
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Try again" })).toHaveAttribute(
+    "href",
+    "/hub/auth/sign-in"
+  )
+})
+
+test("lists the account's sign-in methods and keeps the only one", async ({
+  page,
+}) => {
+  await page.goto("/hub/account")
+  await expect(page.getByText("Sign-in methods", { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "0000-0000-0000-000X" })
+  ).toBeVisible()
+  await page.getByRole("button", { name: "Actions for ORCID" }).click()
+  await expect(page.getByRole("menuitem", { name: /Remove/ })).toHaveAttribute(
+    "aria-disabled",
+    "true"
+  )
+})
+
+test("reports a sign-in method that was not added", async ({ page }) => {
+  await page.goto("/hub/account?link=retry")
+  await expect(page.getByText("Sign-in method not added")).toBeVisible()
+  await expect(page).toHaveURL(/\/hub\/account$/)
+})

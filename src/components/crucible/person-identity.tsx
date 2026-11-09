@@ -18,6 +18,8 @@ export type PersonIdentityProfile = {
   is_service_account?: boolean | null
   last_name?: string | null
   name?: string | null
+  orcid?: string | null
+  orcid_verified?: boolean | null
   unique_id: string
   username?: string | null
 }

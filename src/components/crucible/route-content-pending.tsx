@@ -76,13 +76,7 @@ export function IdentityDetailContentPending({
   const serviceAccount = kind === "service_account"
   const fields = serviceAccount
     ? ["Username", "Platform role", "Crucible ID", "Last active"]
-    : [
-        "Username",
-        "Platform role",
-        "Email",
-        "Crucible ID / ORCID",
-        "Last active",
-      ]
+    : ["Username", "Platform role", "Email", "Crucible ID", "Last active"]
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">

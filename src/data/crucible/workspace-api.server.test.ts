@@ -41,6 +41,7 @@ describe("API workspace adapter", () => {
           last_name: "Lovelace",
           email: "private@example.invalid",
           is_service_account: false,
+          sign_in_methods: ["password", "ORCID"],
         })
       }
       return json({}, 404)
@@ -78,6 +79,7 @@ describe("API workspace adapter", () => {
       first_name: "Ada",
       is_service_account: false,
       last_name: "Lovelace",
+      sign_in_methods: ["password", "ORCID"],
     })
     expect(source.workspace.projects).toEqual([])
     expect(source.workspace.samples).toEqual([])

@@ -10,7 +10,6 @@ import { readWorkspaceFixture } from "./workspace-fixture.server"
 import type {
   WorkspaceAccount,
   WorkspaceAccountProfileUpdate,
-  WorkspaceApiCredentialStatus,
 } from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
@@ -47,35 +46,6 @@ export async function readWorkspaceAccount(
   }
 
   return toWorkspaceAccount(result.data)
-}
-
-export async function readWorkspaceAccountCredentialStatus(
-  scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
-): Promise<WorkspaceApiCredentialStatus> {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode === "unavailable") {
-    throw new Error(configuration.reason)
-  }
-  if (configuration.mode === "fixture") {
-    const source = readWorkspaceFixture(scenario, readGlobalPrivilegeMode())
-    if (source.status === "unavailable") throw new Error(source.reason)
-    return {
-      created_at: source.workspace.referenceTime,
-      expires_at: "2027-09-01T16:00:00Z",
-      last_used_at: null,
-      valid: true,
-    }
-  }
-
-  const client = createCrucibleClient(configuration)
-  const result = await client.GET("/account/verify", {
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (!result.data) {
-    throw new CrucibleResponseError(result.response)
-  }
-  return result.data
 }
 
 export async function patchWorkspaceAccount(
@@ -151,6 +121,9 @@ function toWorkspaceAccount(account: {
   is_service_account?: boolean | null
   last_active_at?: string | null
   last_name: string
+  orcid?: string | null
+  orcid_verified?: boolean | null
+  sign_in_methods?: string[] | null
   unique_id: string
   username?: string | null
 }): WorkspaceAccount {
@@ -162,36 +135,10 @@ function toWorkspaceAccount(account: {
     is_service_account: account.is_service_account ?? false,
     last_active_at: account.last_active_at ?? null,
     last_name: account.last_name,
+    orcid: account.orcid ?? null,
+    orcid_verified: account.orcid_verified ?? null,
+    sign_in_methods: account.sign_in_methods ?? null,
     unique_id: account.unique_id,
     username: account.username ?? null,
   }
-}
-
-function accountKeyRegenerationAvailable() {
-  const configuration = readWorkspaceConfiguration()
-  return (
-    configuration.mode === "fixture" ||
-    (configuration.mode === "api" && !configuration.bearerToken)
-  )
-}
-
-export async function regenerateWorkspaceAccountApiKey(
-  requestSignal?: AbortSignal
-): Promise<{ api_key: string }> {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode === "unavailable") {
-    throw new Error(configuration.reason)
-  }
-  if (!accountKeyRegenerationAvailable()) {
-    throw new CrucibleResponseError(403)
-  }
-  if (configuration.mode === "fixture") {
-    return { api_key: `fixture-key-${crypto.randomUUID()}` }
-  }
-  const result = await createCrucibleClient(configuration).POST(
-    "/account/apikey/regenerate",
-    { signal: crucibleRequestSignal(requestSignal) }
-  )
-  if (!result.data) throw new CrucibleResponseError(result.response)
-  return { api_key: result.data.api_key }
 }

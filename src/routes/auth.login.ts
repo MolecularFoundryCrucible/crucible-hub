@@ -14,6 +14,7 @@ export const Route = createFileRoute("/auth/login")({
           enforceHubLoginRateLimit()
           const search = new URL(request.url).searchParams
           const maxAge = search.get("max_age")
+          const provider = search.get("provider")
           return new Response(null, {
             status: 302,
             headers: {
@@ -23,6 +24,9 @@ export const Route = createFileRoute("/auth/login")({
                   /^\d{1,5}$/.test(maxAge) &&
                   Number(maxAge) <= 86_400
                   ? Number(maxAge)
+                  : null,
+                provider !== null && /^[A-Za-z0-9_.-]{1,64}$/.test(provider)
+                  ? provider
                   : null
               ),
               "Cache-Control": "no-store",

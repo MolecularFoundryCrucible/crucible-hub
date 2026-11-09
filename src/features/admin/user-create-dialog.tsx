@@ -191,7 +191,7 @@ export function UserCreateDialog({
                   return (
                     <Field data-invalid={invalid}>
                       <FieldLabel htmlFor={field.name} optional>
-                        Crucible ID or ORCID
+                        ORCID
                       </FieldLabel>
                       <IdentifierInput
                         aria-invalid={invalid || undefined}

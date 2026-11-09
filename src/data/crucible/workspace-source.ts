@@ -7,7 +7,13 @@ type Schema<TSchemaName extends keyof components["schemas"]> =
 
 export type WorkspacePerson = Pick<
   Schema<"UserPublicRead">,
-  "first_name" | "is_service_account" | "last_name" | "unique_id" | "username"
+  | "first_name"
+  | "is_service_account"
+  | "last_name"
+  | "orcid"
+  | "orcid_verified"
+  | "unique_id"
+  | "username"
 >
 
 export type WorkspaceAccount = Omit<
@@ -20,6 +26,9 @@ export type WorkspaceAccount = Omit<
     | "is_service_account"
     | "last_active_at"
     | "last_name"
+    | "orcid"
+    | "orcid_verified"
+    | "sign_in_methods"
     | "unique_id"
     | "username"
   >,
@@ -27,6 +36,8 @@ export type WorkspaceAccount = Omit<
 > & {
   is_service_account: boolean
 }
+
+export type WorkspaceAccountIdentity = Schema<"IdentityRead">
 
 export type WorkspaceAccountProfileUpdate = {
   email?: string | null
@@ -39,6 +50,32 @@ export type WorkspaceApiCredentialStatus = Pick<
   Schema<"ApiKeyVerify">,
   "created_at" | "expires_at" | "last_used_at" | "valid"
 >
+
+export type WorkspaceApiKey = Schema<"ApiKeyListItem">
+
+export type WorkspacePasswordLink = {
+  expires_at: string
+  purpose: "setup" | "reset"
+  url: string
+}
+
+export type WorkspaceApiKeyState = "active" | "inactive"
+
+export type WorkspaceApiKeyPage = {
+  items: WorkspaceApiKey[]
+  nextCursor: string | null
+  total: number
+}
+
+export type WorkspaceCreatedApiKey = Schema<"ApiKeyCreated">
+
+export type WorkspaceSignedInSession = Schema<"SessionRead">
+
+export type WorkspaceSignedInSessionPage = {
+  items: WorkspaceSignedInSession[]
+  nextCursor: string | null
+  total: number
+}
 
 export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 

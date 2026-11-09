@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react"
 
 import { PendingIcon } from "@/components/crucible/pending-icon"
+import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { hubErrorMessage } from "@/data/crucible/result"
 
 const platformRoles = ["none", "contributor", "admin"] as const
 
@@ -45,7 +48,7 @@ export function PlatformRoleDialog({
   roleDescriptions: Record<PlatformRole, string>
 }) {
   const [selectedRole, setSelectedRole] = useState<PlatformRole>()
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<React.ReactNode>()
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
@@ -61,13 +64,18 @@ export function PlatformRoleDialog({
     setPending(true)
     setError(undefined)
     try {
-      await onChange(selectedRole)
+      await withReauthentication(() => onChange(selectedRole))
       onChanged?.()
       onOpenChange(false)
       setSelectedRole(undefined)
     } catch (cause) {
       setError(
-        hubErrorMessage(cause, "The platform role could not be changed.")
+        hubActionError(
+          cause,
+          "The platform role could not be changed.",
+          "Changing this role needs a recent sign-in.",
+          () => void confirm()
+        )
       )
     } finally {
       setPending(false)

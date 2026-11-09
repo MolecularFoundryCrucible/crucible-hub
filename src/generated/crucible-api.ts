@@ -4,6 +4,27 @@
  */
 
 export interface paths {
+    "/.well-known/oauth-authorization-server": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Authorization Server Metadata
+         * @description What this API's OAuth server offers and where (RFC 8414). Served under the API address, not
+         *     the host root; `issuer` is the API's public address, the same value as `iss` in redirects.
+         */
+        get: operations["authorization_server_metadata__well_known_oauth_authorization_server_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/access_groups": {
         parameters: {
             query?: never;
@@ -109,10 +130,7 @@ export interface paths {
         /**
          * Get Account Apikey
          * @deprecated
-         * @description Return the authenticated caller's current API key.
-         *
-         *     Deprecated: API keys will be stored hashed and become unreadable. Use
-         *     POST /account/apikey/regenerate, which returns a new key once.
+         * @description Removed: API keys are stored hashed and cannot be read back. Use POST /account/apikeys.
          */
         get: operations["get_account_apikey_account_apikey_get"];
         put?: never;
@@ -134,9 +152,122 @@ export interface paths {
         put?: never;
         /**
          * Regenerate Account Apikey
-         * @description Issue a new API key for the caller and revoke the previous one. The key is returned only once.
+         * @deprecated
+         * @description Removed: create keys with POST /account/apikeys and revoke them with DELETE /account/apikeys/{key_id}.
          */
         post: operations["regenerate_account_apikey_account_apikey_regenerate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/apikeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Account Apikeys
+         * @description Your API keys, never the keys themselves.
+         */
+        get: operations["list_account_apikeys_account_apikeys_get"];
+        put?: never;
+        /**
+         * Create Account Apikey
+         * @description Create another API key. The key is shown only in this response. Needs a Hub session with a recent sign-in.
+         */
+        post: operations["create_account_apikey_account_apikeys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/apikeys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke Account Apikey
+         * @description Revoke one of your API keys. It stops working within a minute everywhere, at once on this server.
+         */
+        delete: operations["revoke_account_apikey_account_apikeys__key_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Rename Account Apikey
+         * @description Rename one of your API keys.
+         */
+        patch: operations["rename_account_apikey_account_apikeys__key_id__patch"];
+        trace?: never;
+    };
+    "/account/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Account Identities
+         * @description The ways you sign in.
+         */
+        get: operations["list_account_identities_account_identities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/identities/{identity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlink Account Identity
+         * @description Remove one of your ways to sign in. Your other Hub sessions end; this one stays. Your last
+         *     way to sign in cannot be removed. Signing in again with a removed login from a provider that
+         *     lets anyone register creates a new, separate account.
+         */
+        delete: operations["unlink_account_identity_account_identities__identity_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/identities/{provider_key}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Account Link
+         * @description Start adding another way to sign in. Returns a one-time address on the API to send the
+         *     person's browser to; the provider asks them to sign in, and the Hub then previews and confirms
+         *     the link with POST /oauth/link/preview and /oauth/link/confirm.
+         */
+        post: operations["start_account_link_account_identities__provider_key__link_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -158,6 +289,29 @@ export interface paths {
         get: operations["get_account_join_requests_account_join_requests_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Account Password
+         * @description Set a first password, or change yours, from a browser session with a recent sign-in. Changing
+         *     needs the current password and ends your other sessions, keeping this one. Passwords sign in with
+         *     the username, so an account without one sets it first with PATCH /account/profile. API keys are
+         *     never touched.
+         */
+        post: operations["set_account_password_account_password_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -255,6 +409,52 @@ export interface paths {
          * @description Remove one resource from the caller's recently viewed resources. Succeeds when it is not in the list.
          */
         delete: operations["remove_recent_resource_account_recent_resources__resource_mfid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Account Sessions
+         * @description Your signed-in sessions: the Hub, the command line, devices you approved. Never their tokens.
+         *     `current` marks the session making the request.
+         */
+        get: operations["list_account_sessions_account_sessions_get"];
+        put?: never;
+        post?: never;
+        /**
+         * End Other Account Sessions
+         * @description Sign out everywhere else: end every session but this one. Needs a recent sign-in.
+         */
+        delete: operations["end_other_account_sessions_account_sessions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * End Account Session
+         * @description End one of your sessions at once; ending the current one signs you out. Needs a recent sign-in
+         *     (OWASP ASVS 5.0 V7.5.2).
+         */
+        delete: operations["end_account_session_account_sessions__session_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -372,15 +572,7 @@ export interface paths {
         };
         /**
          * Redirect Exchange
-         * @description Exchange the ORCID authorization code for an access token and user information.
-         *
-         *     Args:
-         *         request: Request object containing the HTTP request
-         *         code: ORCID authorization code
-         *         state: Optional state parameter (default is None)
-         *
-         *     Returns:
-         *         RedirectResponse to the appropriate page after successful authentication
+         * @description Finish the ORCID sign-in and set a short-lived session cookie.
          */
         get: operations["redirect_exchange_auth_callback_get"];
         put?: never;
@@ -415,8 +607,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Begin Hub Login */
+        /**
+         * Begin Hub Login
+         * @description The Hub's sign-in start; the same as GET /oauth/authorize with response_type=code.
+         */
         get: operations["begin_hub_login_auth_hub_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/hub/oidc/{key}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Finish Provider Login */
+        get: operations["finish_provider_login_auth_hub_oidc__key__callback_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -491,6 +703,28 @@ export interface paths {
          * @description Redirect the user to the ORCID login page to begin authentication.
          */
         get: operations["orcid_login_auth_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sign In Methods
+         * @description The ways to sign in on this deployment, each a `provider` value for the sign-in routes; empty
+         *     when sign-in is off. With passwords on, the last entry is `password`, which carries
+         *     `registration_url` while people can ask for an account.
+         */
+        get: operations["list_sign_in_methods_auth_methods_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1551,7 +1785,9 @@ export interface paths {
         head?: never;
         /**
          * Patch Ingestion Request
-         * @description Updates an ingestion request. Requires edit access to the parent dataset.
+         * @description Records an ingestion's outcome: `status`, `time_completed` and `ingestion_githash`. Other
+         *     fields in the body are ignored; the dataset and file cannot change. Requires edit access to the
+         *     parent dataset.
          */
         patch: operations["patch_ingestion_request_ingestion_requests__request_id__patch"];
         trace?: never;
@@ -1899,6 +2135,293 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/oauth/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Authorize
+         * @description The OAuth 2.0 authorization endpoint (RFC 6749 4.1) for registered clients: `response_type=code`,
+         *     `client_id`, an exact `redirect_uri`, `state`, and PKCE with S256. The answer comes back to the
+         *     redirect with `code` or `error`, `state`, and `iss` (RFC 9207).
+         */
+        get: operations["authorize_oauth_authorize_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Device Code Form
+         * @description Where a person enters the code a program on another device shows.
+         */
+        get: operations["device_code_form_oauth_device_get"];
+        put?: never;
+        /**
+         * Device Code Entered
+         * @description Check the code within the per-address attempt limit, then sign the person in afresh.
+         */
+        post: operations["device_code_entered_oauth_device_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/device/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Device Decided
+         * @description Record Approve or Deny once. The program learns it at its next poll.
+         */
+        post: operations["device_decided_oauth_device_approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/device/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Device Signed In
+         * @description After the fresh sign-in: show what is being approved, for whom.
+         */
+        get: operations["device_signed_in_oauth_device_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/device_authorization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Device Authorization
+         * @description Start a device sign-in (RFC 8628) for a public client on a machine without a browser: show the
+         *     person the user code and the verification address, then poll /oauth/token with
+         *     `grant_type=urn:ietf:params:oauth:grant-type:device_code`, the device code and the client_id.
+         */
+        post: operations["device_authorization_oauth_device_authorization_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/link/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Hub Link
+         * @description Add the login to the account of the person who started the link and is confirming it now.
+         */
+        post: operations["confirm_hub_link_oauth_link_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/link/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Hub Link
+         * @description Name the login a link code would add, for the confirmation page. Changes nothing.
+         */
+        post: operations["preview_hub_link_oauth_link_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/link/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Start Hub Link
+         * @description Continue a link the Hub started: opened once, by the person's browser.
+         */
+        get: operations["start_hub_link_oauth_link_start_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Password Form
+         * @description The password form for a sign-in started at /oauth/authorize with provider=password.
+         */
+        get: operations["password_form_oauth_password_get"];
+        put?: never;
+        /**
+         * Password Sign In
+         * @description Check a password within the attempt limits. Every failure, for whatever reason, gives the same
+         *     page, status and time. A typo keeps the sign-in; only a success uses it up.
+         */
+        post: operations["password_sign_in_oauth_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/password-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Password Link Page
+         * @description Where a password link leads. Opening it does not use it up, so a mail scanner that follows
+         *     the link changes nothing.
+         */
+        get: operations["password_link_page_oauth_password_link_get"];
+        put?: never;
+        /**
+         * Password Link Submitted
+         * @description Set the password and use up the link. Two tabs cannot both succeed: the link's row is locked.
+         */
+        post: operations["password_link_submitted_oauth_password_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Registration Form
+         * @description Where someone asks for an account with a password, when the server allows it
+         *     (CRUCIBLE_AUTH_PASSWORD_REGISTRATION=approval). An administrator approves each one.
+         */
+        get: operations["registration_form_oauth_register_get"];
+        put?: never;
+        /**
+         * Registration Submitted
+         * @description Create an account that waits for an administrator's approval. Every submission counts against
+         *     the address's limit, so one source cannot fill the approval list. It signs nobody in.
+         */
+        post: operations["registration_submitted_oauth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke
+         * @description Token revocation (RFC 7009): `token`, and optionally `token_type_hint`. Ends the whole session
+         *     the token belongs to. Clients authenticate with HTTP Basic.
+         */
+        post: operations["revoke_oauth_revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Token
+         * @description The OAuth 2.0 token endpoint (RFC 6749): `grant_type=authorization_code` with `code`,
+         *     `redirect_uri` and the PKCE `code_verifier`, or `grant_type=refresh_token`. Clients authenticate
+         *     with HTTP Basic. Refresh tokens rotate, and presenting a used one ends the whole session.
+         */
+        post: operations["token_oauth_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pipelines": {
         parameters: {
             query?: never;
@@ -2212,27 +2735,6 @@ export interface paths {
          *     POST /resources/{mfid}/transfer_ownership.
          */
         patch: operations["set_project_user_role_projects__project_ref__users__user_ref__patch"];
-        trace?: never;
-    };
-    "/regenerate_apikey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Regenerate Apikey Deprecated
-         * @deprecated
-         * @description Deprecated: use POST /auth/apikey/regenerate.
-         */
-        get: operations["regenerate_apikey_deprecated_regenerate_apikey_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/resources/metadata/search": {
@@ -2929,7 +3431,7 @@ export interface paths {
         head?: never;
         /**
          * Update User
-         * @description Partially update a user record. Only fields provided in the request body are modified.
+         * @description Partially update a user record. Only fields provided in the request body are modified. Changing another human administrator needs a Hub session with a recent sign-in.
          */
         patch: operations["update_user_users__user_ref__patch"];
         trace?: never;
@@ -2993,15 +3495,12 @@ export interface paths {
         /**
          * Get Or Provision User Apikey
          * @deprecated
-         * @description Return the user's API key, minting one if they don't have it yet. Admin only. 404 if the user doesn't exist.
-         *
-         *     Deprecated: returning an existing key will stop when keys are stored hashed. Use
-         *     POST /users/{user_ref}/apikey/regenerate. Hub sessions already receive 409 when a key exists.
+         * @description Removed: people create their own keys with POST /account/apikeys.
          */
         post: operations["get_or_provision_user_apikey_users__user_ref__apikey_post"];
         /**
          * Delete User Apikey
-         * @description Revoke every API key held by the user. Platform administrators only. 204 on success.
+         * @description Revoke every API key held by the user. Platform administrators only; another human administrator's keys need a Hub session with a recent sign-in. 204 on success.
          */
         delete: operations["delete_user_apikey_users__user_ref__apikey_delete"];
         options?: never;
@@ -3020,7 +3519,8 @@ export interface paths {
         put?: never;
         /**
          * Regenerate User Apikey
-         * @description Issue a new API key for the user and revoke the previous one. Admin only. The key is returned only once.
+         * @deprecated
+         * @description Removed: administrators revoke keys with DELETE /users/{user_ref}/apikeys/{key_id}.
          */
         post: operations["regenerate_user_apikey_users__user_ref__apikey_regenerate_post"];
         delete?: never;
@@ -3046,6 +3546,66 @@ export interface paths {
         get: operations["verify_user_apikey_users__user_ref__apikey_verify_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/apikeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List User Apikeys
+         * @description A person's API keys, never the keys themselves. Platform administrators only.
+         */
+        get: operations["list_user_apikeys_users__user_ref__apikeys_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/apikeys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke User Apikey
+         * @description Revoke one of a person's API keys. Platform administrators only; another human administrator's keys need a Hub session with a recent sign-in.
+         */
+        delete: operations["revoke_user_apikey_users__user_ref__apikeys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve User
+         * @description Let an account that waits for approval in. Platform administrators only.
+         */
+        post: operations["approve_user_users__user_ref__approve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3087,6 +3647,133 @@ export interface paths {
         get: operations["read_user_access_to_dataset_users__user_ref__datasets__dataset_mfid__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable User
+         * @description Switch an account off: every sign-in, API key and Hub session stops working. Other server
+         *     workers honor it within the API key cache lifetime. Platform administrators only.
+         */
+        post: operations["disable_user_users__user_ref__disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enable User
+         * @description Switch an account back on. Hub sessions ended by disabling stay ended. Platform administrators only.
+         */
+        post: operations["enable_user_users__user_ref__enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List User Identities
+         * @description A person's logins: your own, or anyone's for platform administrators.
+         */
+        get: operations["list_user_identities_users__user_ref__identities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/identities/{identity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove User Identity
+         * @description Remove one of a person's logins, never their last. Ends all their Hub sessions. Platform
+         *     administrators, from a Hub session with a recent sign-in.
+         */
+        delete: operations["remove_user_identity_users__user_ref__identities__identity_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove User Password
+         * @description Remove a person's password, for example after a compromise: it stops working at once, their
+         *     sessions end and any password link is cancelled. Issue a new link afterwards with
+         *     POST /users/{user_ref}/password-link. API keys are not touched; revoke them separately.
+         *     Platform administrators, or yourself if you have another way to sign in.
+         */
+        delete: operations["remove_user_password_users__user_ref__password_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/password-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue Password Link
+         * @description A one-time link for the person to set a password, or choose a new one, shown only here.
+         *     It replaces any earlier link, works once, and lasts CRUCIBLE_AUTH_PASSWORD_LINK_HOURS. Using it
+         *     ends the person's sessions and does not sign them in. Platform administrators only.
+         */
+        post: operations["issue_password_link_users__user_ref__password_link_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3141,6 +3828,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{user_ref}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject User
+         * @description Delete an account that waits for approval, freeing its username and login. Active accounts
+         *     are never deleted. Platform administrators only.
+         */
+        post: operations["reject_user_users__user_ref__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{user_ref}/samples": {
         parameters: {
             query?: never;
@@ -3157,6 +3865,50 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List User Sessions
+         * @description A person's signed-in sessions. Platform administrators only.
+         */
+        get: operations["list_user_sessions_users__user_ref__sessions_get"];
+        put?: never;
+        post?: never;
+        /**
+         * End All User Sessions
+         * @description End all of a person's sessions (ASVS V7.4.5). Another human administrator's needs a recent sign-in.
+         */
+        delete: operations["end_all_user_sessions_users__user_ref__sessions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_ref}/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * End User Session
+         * @description End one of a person's sessions (ASVS V7.4.5). Another human administrator's needs a recent sign-in.
+         */
+        delete: operations["end_user_session_users__user_ref__sessions__session_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3211,6 +3963,16 @@ export interface components {
             is_service_account: boolean | null;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
             /** Role */
             role: string;
             /** Unique Id */
@@ -3276,6 +4038,11 @@ export interface components {
             api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
             authorization: components["schemas"]["AccountAuthorizationRead"];
             capabilities: components["schemas"]["AccountCapabilities"];
+            /**
+             * Disabled At
+             * @description When an administrator switched this account off; empty for an active account.
+             */
+            disabled_at?: string | null;
             /** Email */
             email?: string | null;
             /** First Name */
@@ -3292,7 +4059,27 @@ export interface components {
             last_active_at?: string | null;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
+            /**
+             * Pending At
+             * @description When this account was created waiting for an administrator's approval; empty once approved. Only administrators see waiting accounts.
+             */
+            pending_at?: string | null;
             platform_role?: components["schemas"]["PlatformRole"] | null;
+            /**
+             * Sign In Methods
+             * @description Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.
+             */
+            sign_in_methods?: string[] | null;
             /** Unique Id */
             unique_id: string;
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
@@ -3318,10 +4105,101 @@ export interface components {
          * @enum {string}
          */
         Affiliation: "owner";
+        /** ApiKeyCreate */
+        ApiKeyCreate: {
+            /**
+             * Expires At
+             * @description When the key stops working, at most a year from now; a year when omitted.
+             */
+            expires_at?: string | null;
+            /**
+             * Name
+             * @description What the key is for, such as the machine or script that uses it.
+             */
+            name: string;
+        };
+        /** ApiKeyCreated */
+        ApiKeyCreated: {
+            /**
+             * Api Key
+             * @description The key. Shown only in this response; store it now.
+             */
+            api_key: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Id */
+            id: number;
+            /**
+             * Last4
+             * @description The key's last four characters, to recognise it. The key itself is never shown again.
+             */
+            last4: string;
+            /** Last Used At */
+            last_used_at?: string | null;
+            /** Name */
+            name?: string | null;
+            /**
+             * Older Routes
+             * @description The key the deprecated single-key routes show and regenerate replaces.
+             * @default false
+             */
+            older_routes: boolean;
+            /** Revoked At */
+            revoked_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "expired" | "revoked";
+        };
+        /** ApiKeyListItem */
+        ApiKeyListItem: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Id */
+            id: number;
+            /**
+             * Last4
+             * @description The key's last four characters, to recognise it. The key itself is never shown again.
+             */
+            last4: string;
+            /** Last Used At */
+            last_used_at?: string | null;
+            /** Name */
+            name?: string | null;
+            /**
+             * Older Routes
+             * @description The key the deprecated single-key routes show and regenerate replaces.
+             * @default false
+             */
+            older_routes: boolean;
+            /** Revoked At */
+            revoked_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "expired" | "revoked";
+        };
         /** ApiKeyRead */
         ApiKeyRead: {
             /** Api Key */
             api_key: string;
+        };
+        /** ApiKeyRename */
+        ApiKeyRename: {
+            /** Name */
+            name: string;
         };
         /** ApiKeyVerify */
         ApiKeyVerify: {
@@ -3430,6 +4308,26 @@ export interface components {
             /** Target Mfid */
             target_mfid: string;
         };
+        /** AuthMethodRead */
+        AuthMethodRead: {
+            /** Display Name */
+            display_name: string;
+            /** Is Orcid */
+            is_orcid: boolean;
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @default oidc
+             * @enum {string}
+             */
+            kind: "oidc" | "password";
+            /**
+             * Registration Url
+             * @description On the password entry only: where people ask for an account, present while registration is open
+             */
+            registration_url?: string | null;
+        };
         /** BarcodePrintRequest */
         BarcodePrintRequest: {
             /**
@@ -3473,6 +4371,53 @@ export interface components {
             /** Project Ids */
             project_ids?: string[] | null;
             user_info: components["schemas"]["UserCreate"];
+        };
+        /** Body_device_code_entered_oauth_device_post */
+        Body_device_code_entered_oauth_device_post: {
+            /** User Code */
+            user_code: string;
+        };
+        /** Body_device_decided_oauth_device_approve_post */
+        Body_device_decided_oauth_device_approve_post: {
+            /** Decision */
+            decision: string;
+            /** Decision Token */
+            decision_token: string;
+        };
+        /** Body_password_link_submitted_oauth_password_link_post */
+        Body_password_link_submitted_oauth_password_link_post: {
+            /** Confirm */
+            confirm: string;
+            /** Form Token */
+            form_token: string;
+            /** Password */
+            password: string;
+        };
+        /** Body_password_sign_in_oauth_password_post */
+        Body_password_sign_in_oauth_password_post: {
+            /** Password */
+            password: string;
+            /** State */
+            state: string;
+            /** Username */
+            username: string;
+        };
+        /** Body_registration_submitted_oauth_register_post */
+        Body_registration_submitted_oauth_register_post: {
+            /** Confirm */
+            confirm: string;
+            /** Email */
+            email: string;
+            /** First Name */
+            first_name: string;
+            /** Form Token */
+            form_token: string;
+            /** Last Name */
+            last_name: string;
+            /** Password */
+            password: string;
+            /** Username */
+            username: string;
         };
         /** Body_resolve_users_users_resolve_post */
         Body_resolve_users_users_resolve_post: {
@@ -3820,8 +4765,6 @@ export interface components {
             instrument_name?: string | null;
             /** Measurement */
             measurement?: string | null;
-            /** Public */
-            public?: boolean | null;
             /** Session Name */
             session_name?: string | null;
             /** Timestamp */
@@ -4182,6 +5125,8 @@ export interface components {
             access_expires_at: string;
             /** Access Token */
             access_token: string;
+            /** Auth Time */
+            auth_time?: string | null;
             /**
              * Refresh Expires At
              * Format: date-time
@@ -4196,6 +5141,40 @@ export interface components {
             token_type: string;
             /** User Unique Id */
             user_unique_id: string;
+        };
+        /**
+         * IdentityRead
+         * @description One way the person signs in. Only an ORCID shows its identifier, since ORCIDs are public.
+         */
+        IdentityRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /**
+             * Label
+             * @description What the provider calls this login, such as an email address; for an ORCID, the ORCID.
+             */
+            label?: string | null;
+            /** Last Used At */
+            last_used_at?: string | null;
+            /** Orcid */
+            orcid?: string | null;
+            /**
+             * Provider Key
+             * @description The provider's key from GET /auth/methods; null when the provider is no longer listed.
+             */
+            provider_key?: string | null;
+            /** Provider Name */
+            provider_name: string;
+            /**
+             * Verified At
+             * @description When the person last proved this login by signing in with it; null when an administrator entered it.
+             */
+            verified_at?: string | null;
         };
         /** IngestionRequest */
         IngestionRequest: {
@@ -4217,6 +5196,24 @@ export interface components {
             time_completed?: string | null;
             /** Time Created */
             time_created?: string | null;
+        };
+        /**
+         * IngestionRequestUpdate
+         * @description What an ingestion consumer reports back. Other fields of the request are ignored.
+         */
+        IngestionRequestUpdate: {
+            /** Dataset Mfid */
+            dataset_mfid?: string | null;
+            /** File Mfid */
+            file_mfid?: string | null;
+            /** Id */
+            id?: number | null;
+            /** Ingestion Githash */
+            ingestion_githash?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Time Completed */
+            time_completed?: string | null;
         };
         /**
          * InstrumentAffiliation
@@ -4322,9 +5319,9 @@ export interface components {
             owner?: components["schemas"]["UserPublicRead"] | null;
             /**
              * Owner Orcid
-             * @description Canonical owner identity: human ORCID or service-account MFID.
+             * @description Canonical owner identity: human ORCID or service-account MFID. Null when the instrument has no owner.
              */
-            owner_orcid: string;
+            owner_orcid?: string | null;
             /**
              * Resource Type
              * @default instrument
@@ -4509,11 +5506,59 @@ export interface components {
             /** Target Mfid */
             target_mfid: string;
         };
+        /** LinkCode */
+        LinkCode: {
+            /** Code */
+            code: string;
+            /** Code Verifier */
+            code_verifier: string;
+            /** Redirect Uri */
+            redirect_uri: string;
+            /**
+             * Session Token
+             * @description The access token of the Hub session confirming the link; it must belong to the person who started it.
+             */
+            session_token: string;
+        };
+        /** LinkPreviewRead */
+        LinkPreviewRead: {
+            /** Label */
+            label?: string | null;
+            /** Orcid */
+            orcid?: string | null;
+            /** Provider Key */
+            provider_key?: string | null;
+            /** Provider Name */
+            provider_name: string;
+            /**
+             * Status
+             * @description available and already_yours can be confirmed; already_yours marks the login verified. The others are refused.
+             * @enum {string}
+             */
+            status: "available" | "already_yours" | "linked_elsewhere" | "second_orcid" | "orcid_of_another";
+        };
         /**
          * LinkRelationshipType
          * @enum {string}
          */
         LinkRelationshipType: "is_derived_from" | "is_part_of";
+        /** LinkStart */
+        LinkStart: {
+            /** Callback Uri */
+            callback_uri: string;
+            /** Code Challenge */
+            code_challenge: string;
+            /** State */
+            state: string;
+        };
+        /** LinkStartRead */
+        LinkStartRead: {
+            /**
+             * Authorization Url
+             * @description A one-time address on the API. Send the person's browser there; it continues to the provider.
+             */
+            authorization_url: string;
+        };
         /** LinkedResource */
         LinkedResource: {
             /**
@@ -4623,6 +5668,19 @@ export interface components {
         PaginatedResponse_AccessGroupMemberRead_: {
             /** Items */
             items: components["schemas"]["AccessGroupMemberRead"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
+        /** PaginatedResponse[ApiKeyListItem] */
+        PaginatedResponse_ApiKeyListItem_: {
+            /** Items */
+            items: components["schemas"]["ApiKeyListItem"][];
             /** Limit */
             limit: number;
             /** Next Cursor */
@@ -4840,6 +5898,19 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /** PaginatedResponse[SessionRead] */
+        PaginatedResponse_SessionRead_: {
+            /** Items */
+            items: components["schemas"]["SessionRead"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
         /** PaginatedResponse[Union[UserRead, UserPublicRead]] */
         PaginatedResponse_Union_UserRead__UserPublicRead__: {
             /** Items */
@@ -4865,6 +5936,34 @@ export interface components {
             offset?: number | null;
             /** Total */
             total?: number | null;
+        };
+        /**
+         * PasswordChange
+         * @description Set your first password, or change it. The current password is needed only to change one.
+         */
+        PasswordChange: {
+            /** Current Password */
+            current_password?: string | null;
+            /** New Password */
+            new_password: string;
+        };
+        /**
+         * PasswordLinkRead
+         * @description A one-time link to set or reset a password, shown only in this response.
+         */
+        PasswordLinkRead: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Purpose
+             * @description `setup` when the person has no password yet, `reset` when they have one
+             */
+            purpose: string;
+            /** Url */
+            url: string;
         };
         /** PipelineRead */
         PipelineRead: {
@@ -5047,7 +6146,7 @@ export interface components {
         /** ProjectSyncResult */
         ProjectSyncResult: {
             /** Orcid */
-            orcid: string;
+            orcid?: string | null;
             /**
              * Projects Added
              * @default []
@@ -5484,8 +6583,6 @@ export interface components {
         SampleUpdate: {
             /** Description */
             description?: string | null;
-            /** Public */
-            public?: boolean | null;
             /** Sample Name */
             sample_name?: string;
             /** Sample Type */
@@ -5592,6 +6689,45 @@ export interface components {
             unique_id: string;
             /** Username */
             username: string;
+        };
+        /**
+         * SessionRead
+         * @description One signed-in session. Never its tokens.
+         */
+        SessionRead: {
+            /** Client Id */
+            client_id: string;
+            /** Client Name */
+            client_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Current
+             * @description The session making this request
+             * @default false
+             */
+            current: boolean;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: string;
+            /**
+             * Last Used At
+             * Format: date-time
+             * @description When it last got new tokens (it refreshes about every 15 minutes while in use)
+             */
+            last_used_at: string;
+            /**
+             * Signed In At
+             * @description When the person last signed in for it
+             */
+            signed_in_at?: string | null;
         };
         /** SignedPart */
         SignedPart: {
@@ -5837,6 +6973,16 @@ export interface components {
             is_service_account: boolean;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
             /** Unique Id */
             unique_id: string;
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
@@ -5846,6 +6992,11 @@ export interface components {
         /** UserRead */
         UserRead: {
             api_key_status?: components["schemas"]["ServiceAccountKeyStatus"] | null;
+            /**
+             * Disabled At
+             * @description When an administrator switched this account off; empty for an active account.
+             */
+            disabled_at?: string | null;
             /** Email */
             email?: string | null;
             /** First Name */
@@ -5862,7 +7013,27 @@ export interface components {
             last_active_at?: string | null;
             /** Last Name */
             last_name: string;
+            /**
+             * Orcid
+             * @description The person's linked ORCID, when they have one.
+             */
+            orcid?: string | null;
+            /**
+             * Orcid Verified
+             * @description Whether the ORCID was confirmed by signing in with it; null without an ORCID.
+             */
+            orcid_verified?: boolean | null;
+            /**
+             * Pending At
+             * @description When this account was created waiting for an administrator's approval; empty once approved. Only administrators see waiting accounts.
+             */
+            pending_at?: string | null;
             platform_role?: components["schemas"]["PlatformRole"] | null;
+            /**
+             * Sign In Methods
+             * @description Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.
+             */
+            sign_in_methods?: string[] | null;
             /** Unique Id */
             unique_id: string;
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
@@ -5924,6 +7095,34 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    authorization_server_metadata__well_known_oauth_authorization_server_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorization server metadata (RFC 8414) */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description No sign-in clients are registered */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     create_access_group_access_groups_post: {
         parameters: {
             query?: never;
@@ -6121,6 +7320,52 @@ export interface operations {
     get_account_apikey_account_apikey_get: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    regenerate_account_apikey_account_apikey_regenerate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_account_apikeys_account_apikeys_get: {
+        parameters: {
+            query?: {
+                /** @description active, or inactive for expired and revoked keys */
+                state?: "active" | "inactive";
+                limit?: number;
+                /** @description Opaque continuation cursor from next_cursor. */
+                cursor?: string | null;
+            };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
@@ -6140,11 +7385,104 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
+                    "application/json": components["schemas"]["PaginatedResponse_ApiKeyListItem_"];
                 };
             };
-            /** @description Hub sessions cannot read API keys (`api_key_read_not_allowed`) */
+            /** @description Invalid cursor */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_account_apikey_account_apikeys_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyCreated"];
+                };
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: an API key cannot create keys; `browser_sign_in_required`: nor can a session approved with a device code */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `too_many_keys`: at most 10 active keys */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description expires_at in the past or more than a year away */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_account_apikey_account_apikeys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                key_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of your keys */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6161,7 +7499,56 @@ export interface operations {
             };
         };
     };
-    regenerate_account_apikey_account_apikey_regenerate_post: {
+    rename_account_apikey_account_apikeys__key_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                key_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyRename"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyListItem"];
+                };
+            };
+            /** @description Not one of your keys */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_account_identities_account_identities_get: {
         parameters: {
             query?: never;
             header?: {
@@ -6183,11 +7570,68 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
+                    "application/json": components["schemas"]["IdentityRead"][];
                 };
             };
-            /** @description Hub sessions need an ORCID sign-in within the last 10 minutes (`insufficient_user_authentication`, RFC 9470 challenge) */
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_account_identity_account_identities__identity_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                identity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: API keys cannot change how you sign in; `browser_sign_in_required`: nor can a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of your logins */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `last_sign_in_method`, or `identity_lookup_off` */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6201,6 +7645,90 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    start_account_link_account_identities__provider_key__link_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                provider_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkStartRead"];
+                };
+            };
+            /** @description Unknown provider or invalid link request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: API keys cannot change how you sign in; `browser_sign_in_required`: nor can a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `identity_lookup_off` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description `too_many_links`: more than 5 links started in 10 minutes */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hub sign-in unavailable, or the provider cannot be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6241,6 +7769,77 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    set_account_password_account_password_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required` for an API key, `browser_sign_in_required` for a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `service_account`, `username_required` (set one with PATCH /account/profile first), or `password_changed` when another request changed it first */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Field errors in FastAPI's shape: `current_password_required` or `current_password_invalid` (counted against the account's attempt limit) on `current_password`, `password_rejected` with `ctx.reason` on `new_password` */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Passwords is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "passwords", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The server is busy checking passwords */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6566,6 +8165,149 @@ export interface operations {
             };
         };
     };
+    list_account_sessions_account_sessions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque continuation cursor from next_cursor. */
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_SessionRead_"];
+                };
+            };
+            /** @description Invalid cursor */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    end_other_account_sessions_account_sessions_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A session needs a sign-in within the last 10 minutes (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: an API key cannot end sessions; `browser_sign_in_required`: nor can a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_account_session_account_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A session needs a sign-in within the last 10 minutes (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: an API key cannot end sessions; `browser_sign_in_required`: nor can a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of your active sessions */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     sync_account_projects_account_sync_projects_post: {
         parameters: {
             query?: never;
@@ -6602,6 +8344,13 @@ export interface operations {
             };
             /** @description Proposal sync is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "proposal_sync", "message": ...}}` */
             501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The proposal service could not be reached */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6654,9 +8403,10 @@ export interface operations {
     };
     redirect_exchange_deprecated_auth_get: {
         parameters: {
-            query: {
-                code: string;
-                state?: string;
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
             };
             header?: never;
             path?: never;
@@ -6666,6 +8416,13 @@ export interface operations {
         responses: {
             /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
             307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in could not be matched to this browser, or ORCID reported an error */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6716,6 +8473,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description This ORCID cannot be used with this account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     regenerate_apikey_auth_apikey_regenerate_post: {
@@ -6744,13 +8508,21 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description This ORCID cannot be used with this account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     redirect_exchange_auth_callback_get: {
         parameters: {
-            query: {
-                code: string;
-                state?: string;
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
             };
             header?: never;
             path?: never;
@@ -6760,6 +8532,13 @@ export interface operations {
         responses: {
             /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
             307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in could not be matched to this browser, or ORCID reported an error */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6789,6 +8568,7 @@ export interface operations {
                 code?: string | null;
                 state?: string | null;
                 error?: string | null;
+                iss?: string | null;
             };
             header?: never;
             path?: never;
@@ -6796,7 +8576,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error */
             302: {
                 headers: {
                     "Cache-Control"?: "no-store";
@@ -6808,7 +8588,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Sign-in failed */
+            /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
             400: {
                 headers: {
                     "Cache-Control"?: "no-store";
@@ -6856,8 +8636,12 @@ export interface operations {
                 state: string;
                 code_challenge: string;
                 code_challenge_method: string;
-                /** @description Maximum seconds since the user's last ORCID authentication. 0 forces ORCID to re-authenticate; use it before credential-creating operations that require a recent sign-in. */
+                /** @description Maximum seconds since the user's last authentication at the provider. 0 forces the provider to re-authenticate; use it before credential-creating operations that require a recent sign-in. */
                 max_age?: number | null;
+                /** @description The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice. */
+                provider?: string | null;
+                /** @description The unique_id that must sign in. Any other account gets error=login_required and no code. It passes through the browser, so the Hub must still compare the account it receives. */
+                required_user?: string | null;
             };
             header?: never;
             path?: never;
@@ -6865,7 +8649,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description A page to choose how to sign in, when several providers are listed and none is named */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Redirect to the provider, or to the Hub with an error when the provider cannot be reached */
             302: {
                 headers: {
                     "Cache-Control"?: "no-store";
@@ -6917,6 +8715,74 @@ export interface operations {
             };
             /** @description Hub sign-in unavailable */
             503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    finish_provider_login_auth_hub_oidc__key__callback_get: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
+                iss?: string | null;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error */
+            302: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
                 headers: {
                     "Cache-Control"?: "no-store";
                     Pragma?: "no-cache";
@@ -7174,11 +9040,39 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Redirect to the ORCID sign-in page */
-            307: {
+            302: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description ORCID cannot be reached */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_sign_in_methods_auth_methods_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthMethodRead"][];
+                };
             };
         };
     };
@@ -7239,7 +9133,7 @@ export interface operations {
                 keyword?: string | null;
                 public?: boolean | null;
                 dataset_name?: string | null;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /**
                  * @deprecated
@@ -7263,7 +9157,7 @@ export interface operations {
                 measurement_is_null?: boolean | null;
                 /** @description Filter by whether data_format is null. */
                 data_format_is_null?: boolean | null;
-                /** @description Filter by whether the stored owner identifier is null. */
+                /** @description Filter by whether the record has an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Filter by whether a canonical registered instrument is assigned. */
                 instrument_mfid_is_null?: boolean | null;
@@ -7386,6 +9280,7 @@ export interface operations {
                 session_name?: string | null;
                 measurement?: string | null;
                 data_format?: string | null;
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict contributing datasets by whether session_name is null. */
                 session_name_is_null?: boolean | null;
@@ -7393,7 +9288,7 @@ export interface operations {
                 measurement_is_null?: boolean | null;
                 /** @description Restrict contributing datasets by whether data_format is null. */
                 data_format_is_null?: boolean | null;
-                /** @description Restrict contributing datasets by whether the stored owner identifier is null. */
+                /** @description Restrict contributing datasets by whether they have an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Restrict contributing datasets by canonical instrument assignment. */
                 instrument_mfid_is_null?: boolean | null;
@@ -7483,7 +9378,7 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
@@ -7842,6 +9737,7 @@ export interface operations {
     create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post: {
         parameters: {
             query?: {
+                /** @description An ingestor name, such as one from GET /ingestors */
                 ingestion_class?: string | null;
                 status?: "requested" | "not_requested";
             };
@@ -9607,6 +11503,7 @@ export interface operations {
     create_file_ingestion_request_files__file_id__ingest_post: {
         parameters: {
             query?: {
+                /** @description An ingestor name, such as one from GET /ingestors */
                 ingestion_class?: string | null;
                 status?: "requested" | "not_requested";
             };
@@ -9915,7 +11812,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["IngestionRequest"];
+                "application/json": components["schemas"]["IngestionRequestUpdate"];
             };
         };
         responses: {
@@ -9992,7 +11889,7 @@ export interface operations {
                 instrument_name?: string | null;
                 manufacturer?: string | null;
                 model?: string | null;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /**
                  * @deprecated
@@ -10088,7 +11985,7 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
                 affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict results to one lifecycle status. */
                 status?: components["schemas"]["InstrumentStatus"] | null;
@@ -10711,7 +12608,14 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Redirect to the ORCID sign-in page */
-            307: {
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ORCID cannot be reached */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10737,6 +12641,852 @@ export interface operations {
                 content: {
                     "text/plain": string;
                 };
+            };
+        };
+    };
+    authorize_oauth_authorize_get: {
+        parameters: {
+            query?: {
+                response_type?: string | null;
+                client_id?: string | null;
+                redirect_uri?: string | null;
+                /** @description Required, 16 to 256 ASCII characters */
+                state?: string | null;
+                /** @description Required: PKCE with S256 */
+                code_challenge?: string | null;
+                code_challenge_method?: string | null;
+                /** @description Maximum seconds since the person last signed in at the provider; 0 asks the provider to sign them in again. */
+                max_age?: number | null;
+                /** @description The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice. */
+                provider?: string | null;
+                /** @description The unique_id that must sign in; any other account gets error=login_required. */
+                required_user?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page to choose how to sign in, when several providers are listed and none is named */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description To the provider, or back to the client with `error`, `state` and `iss` */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown client or redirect, which are never redirected to */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Sign-in unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    device_code_form_oauth_device_get: {
+        parameters: {
+            query?: {
+                user_code?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    device_code_entered_oauth_device_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_device_code_entered_oauth_device_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown or expired code; the same answer for every reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    device_decided_oauth_device_approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_device_decided_oauth_device_approve_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description The decision cannot be matched to this browser, or it came too late */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    device_signed_in_oauth_device_callback_get: {
+        parameters: {
+            query?: {
+                state?: string;
+                code?: string | null;
+                error?: string | null;
+                iss?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description The sign-in cannot be matched to this browser, or it failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    device_authorization_oauth_device_authorization_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    [key: string]: string;
+                };
+            };
+        };
+        responses: {
+            /** @description device_code, user_code, verification_uri, verification_uri_complete, expires_in and interval (RFC 8628 3.2) */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description RFC 6749 error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `invalid_client` */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirm_hub_link_oauth_link_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityRead"];
+                };
+            };
+            /** @description Invalid client, link code or session, or `insufficient_user_authentication` when the session that started the link has no sign-in within 10 minutes */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `identity_lookup_off`, or the preview status that refuses the link: `linked_elsewhere`, `second_orcid`, `orcid_of_another` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    preview_hub_link_oauth_link_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkPreviewRead"];
+                };
+            };
+            /** @description Invalid client, link code or session, or `insufficient_user_authentication` when the session that started the link has no sign-in within 10 minutes */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `identity_lookup_off`: linking waits for the identity lookup setting */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Hub sign-in unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    start_hub_link_oauth_link_start_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to the provider, which asks the person to sign in again, or to the Hub with an error */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown, used or expired start address */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_form_oauth_password_get: {
+        parameters: {
+            query: {
+                state: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Unknown, used or expired sign-in */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Passwords are off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_sign_in_oauth_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_password_sign_in_oauth_password_post"];
+            };
+        };
+        responses: {
+            /** @description Back to the client with code, state and iss */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown, used or expired sign-in */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Sign-in failed; the same answer for every reason */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description The account waits for approval */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Passwords are off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_link_page_oauth_password_link_get: {
+        parameters: {
+            query?: {
+                token?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description The token moved into a cookie; the same page without it */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown, used or expired link */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Passwords are off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_link_submitted_oauth_password_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_password_link_submitted_oauth_password_link_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Unknown, used or expired link, or a form from another browser */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Passwords are off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The passwords differ or break a rule */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description The server is busy checking passwords */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+        };
+    };
+    registration_form_oauth_register_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Password registration is off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    registration_submitted_oauth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_registration_submitted_oauth_register_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description A form from another browser, or one that waited too long */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Password registration is off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The username or email is already in use; one answer for both */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description A field breaks a rule, or the passwords differ */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description Too many requests from this address; wait a minute */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+            /** @description The server is busy checking passwords */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": unknown;
+                };
+            };
+        };
+    };
+    revoke_oauth_revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    [key: string]: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Processed; unknown tokens and other clients' tokens are treated alike */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description `invalid_client` */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    token_oauth_token_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    [key: string]: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Tokens: access_token, token_type Bearer, expires_in, refresh_token, and auth_time when known */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        access_token?: string;
+                        auth_time?: number;
+                        expires_in?: number;
+                        refresh_token?: string;
+                        token_type?: string;
+                    };
+                };
+            };
+            /** @description RFC 6749 error, such as `invalid_grant` or `invalid_request` */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `invalid_client` */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -11511,34 +14261,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-        };
-    };
-    regenerate_apikey_deprecated_regenerate_apikey_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
-                };
-            };
-            /** @description Redirect to sign-in when there is no ORCID session cookie */
-            307: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -12362,7 +15084,7 @@ export interface operations {
                 public?: boolean | null;
                 sample_name?: string | null;
                 sample_type?: string | null;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /**
                  * @deprecated
@@ -12373,7 +15095,7 @@ export interface operations {
                 timestamp?: string | null;
                 /** @description Filter by whether sample_type is null. */
                 sample_type_is_null?: boolean | null;
-                /** @description Filter by whether the stored owner identifier is null. */
+                /** @description Filter by whether the record has an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Filter by whether a canonical primary project is assigned. */
                 project_mfid_is_null?: boolean | null;
@@ -12488,10 +15210,11 @@ export interface operations {
                 field: components["schemas"]["SampleFacetField"];
                 dataset_mfid?: string | null;
                 sample_type?: string | null;
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict contributing samples by whether sample_type is null. */
                 sample_type_is_null?: boolean | null;
-                /** @description Restrict contributing samples by whether the stored owner identifier is null. */
+                /** @description Restrict contributing samples by whether they have an owner. */
                 owner_id_is_null?: boolean | null;
                 /** @description Restrict contributing samples by canonical primary project assignment. */
                 project_mfid_is_null?: boolean | null;
@@ -12537,7 +15260,7 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact stable owner identifier for a human or service account. */
+                /** @description Exact owner: unique_id, linked ORCID, username or email. */
                 owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
@@ -13078,6 +15801,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description This ORCID cannot be used with this account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     list_users_users_get: {
@@ -13093,6 +15823,8 @@ export interface operations {
                 permissive?: boolean;
                 /** @description Restrict results to service accounts or human users. */
                 is_service_account?: boolean | null;
+                /** @description List only accounts waiting for approval instead of active ones. Platform administrators only. */
+                pending?: boolean;
                 first_name?: string | null;
                 last_name?: string | null;
                 /** @description Case-insensitive substring search. Searches the fields named in search_fields, or by default first_name, last_name, username, unique_id, and, for platform administrators, email. */
@@ -13532,44 +16264,22 @@ export interface operations {
     get_or_provision_user_apikey_users__user_ref__apikey_post: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
                 user_ref: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
+                    "application/json": unknown;
                 };
-            };
-            /** @description Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`) */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Hub sessions cannot read an existing key (`api_key_exists`) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -13622,37 +16332,22 @@ export interface operations {
     regenerate_user_apikey_users__user_ref__apikey_regenerate_post: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
                 user_ref: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
+                    "application/json": unknown;
                 };
-            };
-            /** @description Hub sessions need a recent ORCID sign-in (`insufficient_user_authentication`) */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -13692,6 +16387,147 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApiKeyVerify"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_apikeys_users__user_ref__apikeys_get: {
+        parameters: {
+            query?: {
+                /** @description active, or inactive for expired and revoked keys */
+                state?: "active" | "inactive";
+                limit?: number;
+                /** @description Opaque continuation cursor from next_cursor. */
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_ApiKeyListItem_"];
+                };
+            };
+            /** @description Invalid cursor */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_user_apikey_users__user_ref__apikeys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+                key_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of this person's keys */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_user_users__user_ref__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description No such account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `not_pending`: the account is not waiting for approval */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -13781,6 +16617,356 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    disable_user_users__user_ref__disable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description A Hub session needs a recent sign-in to change a human administrator */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This is the last active human platform administrator */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_user_users__user_ref__enable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description A Hub session needs a recent sign-in to change a human administrator */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_identities_users__user_ref__identities_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_user_identity_users__user_ref__identities__identity_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+                identity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: API keys cannot change how you sign in; `browser_sign_in_required`: nor can a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of this person's logins */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `last_sign_in_method`, `service_account`, or `identity_lookup_off` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_user_password_users__user_ref__password_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a platform administrator; `hub_session_required` for any human administrator, yourself included; `browser_sign_in_required` for a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such person, or `no_password` */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `service_account`, or `last_sign_in_method` when removing your own only way in */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    issue_password_link_users__user_ref__password_link_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordLinkRead"];
+                };
+            };
+            /** @description A session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a platform administrator; `hub_session_required` for any human administrator, yourself included; `browser_sign_in_required` for a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such person */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `service_account`, `account_disabled` or `account_pending` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Passwords is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "passwords", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The public API address is not set */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -13880,6 +17066,57 @@ export interface operations {
             };
         };
     };
+    reject_user_users__user_ref__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `not_pending`, or `still_referenced` when something besides its own group and logins points at the account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_user_samples_users__user_ref__samples_get: {
         parameters: {
             query?: never;
@@ -13907,6 +17144,150 @@ export interface operations {
                 content: {
                     "application/json": string[];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_sessions_users__user_ref__sessions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque continuation cursor from next_cursor. */
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_SessionRead_"];
+                };
+            };
+            /** @description Not a platform administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid cursor */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    end_all_user_sessions_users__user_ref__sessions_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a platform administrator, or `hub_session_required` for another human administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_user_session_users__user_ref__sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a platform administrator, or `hub_session_required` for another human administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of this person's active sessions */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -1,4 +1,3 @@
-import { ApiKeyStatusBadge } from "@/components/crucible/api-credential-card"
 import { useMemo } from "react"
 import {
   useInfiniteQuery,
@@ -83,6 +82,7 @@ import type {
   WorkspaceAdminUser,
 } from "@/data/crucible/workspace-source"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
+import { PendingUsersCard } from "@/features/admin/pending-users-card"
 import { UserCreateDialog } from "@/features/admin/user-create-dialog"
 import { useEnteringClassName } from "@/hooks/use-entering-keys"
 import { formatUsername } from "@/lib/username"
@@ -248,6 +248,7 @@ function UsersAdminPage() {
   return (
     <PageLayout>
       <UsersPageHeader canCreate />
+      <PendingUsersCard scope={administrationScope} />
       <CollectionSection>
         <CollectionToolbar
           actions={
@@ -439,7 +440,6 @@ function UserCollection({
                 <col className="identity-directory-mfid-column identity-directory-optional w-column-id @identity-wide:w-column-id-wide" />
                 <col className="identity-directory-email-column w-column-secondary" />
                 <col className="identity-directory-role-column" />
-                <col className="identity-directory-key-column" />
                 <col className="identity-directory-activity-column" />
                 <col className="identity-directory-action-column" />
               </colgroup>
@@ -472,9 +472,6 @@ function UserCollection({
                   />
                   <TableHead className="identity-directory-role">
                     Platform role
-                  </TableHead>
-                  <TableHead className="identity-directory-key">
-                    API key
                   </TableHead>
                   <SortableTableHead
                     active={sort === "last_active"}
@@ -553,12 +550,6 @@ function UserCollection({
                             None
                           </span>
                         )}
-                      </TableCell>
-                      <TableCell
-                        className="identity-directory-key"
-                        data-label="API key"
-                      >
-                        <ApiKeyStatusBadge status={user.api_key_status} />
                       </TableCell>
                       <TableCell
                         className="identity-directory-activity"

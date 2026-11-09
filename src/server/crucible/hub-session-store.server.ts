@@ -43,9 +43,19 @@ const transactionSchema = z.object({
   returnTo: z.string(),
   expiresAt: z.number().int(),
   expectedAccount: z.string().optional(),
+  maxAge: z.number().int().nonnegative().optional(),
+})
+
+const linkSchema = z.object({
+  state: z.string(),
+  verifier: z.string(),
+  providerKey: z.string(),
+  expiresAt: z.number().int(),
+  code: z.string().optional(),
 })
 
 export type SharedSession = z.infer<typeof sessionSchema>
+export type SharedLink = z.infer<typeof linkSchema>
 export type SharedTransaction = z.infer<typeof transactionSchema>
 export type StoredSession = { raw: string; session: SharedSession }
 export type SharedSessionStoreKind = "postgres"
@@ -103,7 +113,10 @@ function key(kind: string, id: string) {
   return `${prefix}${kind}:${createHash("sha256").update(id).digest("hex")}`
 }
 
-function seal(value: SharedSession | SharedTransaction, storageKey: string) {
+function seal(
+  value: SharedSession | SharedTransaction | SharedLink,
+  storageKey: string
+) {
   const current = configuration().keys[0]
   const nonce = randomBytes(12)
   const cipher = createCipheriv("aes-256-gcm", current.key, nonce)
@@ -187,6 +200,27 @@ export async function consumeTransaction(id: string) {
   const storageKey = key("transaction", id)
   const raw = await backend().take(storageKey)
   return raw ? transactionSchema.parse(open(raw, storageKey)) : null
+}
+
+export async function saveLink(sessionId: string, link: SharedLink) {
+  const storageKey = key("link", sessionId)
+  await backend().set(
+    storageKey,
+    seal(link, storageKey),
+    lifetime(link.expiresAt)
+  )
+}
+
+export async function readLink(sessionId: string) {
+  const storageKey = key("link", sessionId)
+  const raw = await backend().get(storageKey)
+  return raw ? linkSchema.parse(open(raw, storageKey)) : null
+}
+
+export async function takeLink(sessionId: string) {
+  const storageKey = key("link", sessionId)
+  const raw = await backend().take(storageKey)
+  return raw ? linkSchema.parse(open(raw, storageKey)) : null
 }
 
 export async function cancelTransaction(id: string) {

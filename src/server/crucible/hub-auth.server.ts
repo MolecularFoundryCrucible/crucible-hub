@@ -51,6 +51,7 @@ const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
 const sessionCookie = "crucible_hub_session"
 const transactionCookie = "crucible_hub_login"
 const transactionLifetime = 10 * 60 * 1000
+const authTimeTolerance = 30 * 1000
 const sessionIdleLifetime = 7 * 24 * 60 * 60 * 1000
 const sessionAbsoluteLifetime = 30 * 24 * 60 * 60 * 1000
 
@@ -61,6 +62,7 @@ const tokenSchema = z.object({
   refresh_expires_at: z.iso.datetime({ offset: true }),
   token_type: z.literal("Bearer").default("Bearer"),
   user_unique_id: z.string().min(1),
+  auth_time: z.iso.datetime({ offset: true }).nullable().optional(),
 })
 
 type Tokens = z.infer<typeof tokenSchema>
@@ -70,6 +72,7 @@ type Transaction = {
   returnTo: string
   expiresAt: number
   expectedAccount?: string
+  maxAge?: number
   consumed: boolean
   cancelled: boolean
 }
@@ -132,9 +135,53 @@ class HubAccountMismatchError extends Error {
   }
 }
 
+class HubLoginUnavailableError extends Error {
+  constructor(
+    readonly reason:
+      | "cancelled-transaction"
+      | "expired-transaction"
+      | "missing-login-cookie"
+      | "reused-transaction"
+      | "unknown-transaction"
+  ) {
+    super("The sign-in request has expired.")
+  }
+}
+
+class HubStaleSignInError extends Error {
+  constructor() {
+    super("Re-confirming a sign-in did not return a recent sign-in.")
+  }
+}
+
+const providerErrors = new Set([
+  "access_denied",
+  "login_required",
+  "temporarily_unavailable",
+  "server_error",
+])
+
+class HubSignInRefusedError extends Error {
+  readonly error: string
+
+  constructor(error: string) {
+    super("The sign-in provider returned an error.")
+    this.error = providerErrors.has(error) ? error : "other"
+  }
+}
+
 export function hubSignInFailureDetails(error: unknown) {
   if (error instanceof HubAccountMismatchError) {
     return { reason: "account-mismatch" }
+  }
+  if (error instanceof HubStaleSignInError) {
+    return { reason: "stale-sign-in" }
+  }
+  if (error instanceof HubSignInRefusedError) {
+    return { reason: "provider-error", error: error.error }
+  }
+  if (error instanceof HubLoginUnavailableError) {
+    return { reason: error.reason }
   }
   if (error instanceof TokenRequestError) {
     return { reason: "token-exchange-rejected", status: error.status }
@@ -145,7 +192,6 @@ export function hubSignInFailureDetails(error: unknown) {
   if (error instanceof Error) {
     const knownReasons: Record<string, string> = {
       "Invalid sign-in response.": "invalid-callback-response",
-      "The sign-in request has expired.": "expired-transaction",
       "The sign-in request could not be verified.": "state-mismatch",
       "Hub sign-in is not configured.": "configuration",
       "Hub sign-in callback is not configured correctly.": "configuration",
@@ -158,6 +204,22 @@ export function hubSignInFailureDetails(error: unknown) {
     }
   }
   return { reason: "unexpected" }
+}
+
+export type HubSignInErrorReason =
+  "account-mismatch" | "stale-sign-in" | "unavailable"
+
+export function hubSignInErrorReason(
+  details: ReturnType<typeof hubSignInFailureDetails>
+): HubSignInErrorReason | null {
+  if (details.reason === "account-mismatch") return "account-mismatch"
+  if (details.reason === "stale-sign-in") return "stale-sign-in"
+  if (details.reason !== "provider-error") return null
+  if (details.error === "login_required") return "account-mismatch"
+  return details.error === "temporarily_unavailable" ||
+    details.error === "server_error"
+    ? "unavailable"
+    : null
 }
 
 const storeKey = Symbol.for("crucible.hub.auth.local-store")
@@ -184,6 +246,13 @@ export class HubLoginRateLimitError extends Error {
   }
 }
 
+function pruneExpiredLocalTransactions() {
+  const now = Date.now()
+  for (const [id, transaction] of store.transactions) {
+    if (transaction.expiresAt < now) store.transactions.delete(id)
+  }
+}
+
 export function enforceHubLoginRateLimit() {
   const forwardedFor = getRequestHeader("x-forwarded-for")
   const ip = clientAddress(forwardedFor, getRequestIP()) ?? "unknown"
@@ -195,6 +264,7 @@ export function enforceHubLoginRateLimit() {
       }
     }
   }
+  if (!sharedMode()) pruneExpiredLocalTransactions()
   const attempts = (loginAttempts.get(ip) ?? []).filter(
     (timestamp) => now - timestamp < loginRateWindow
   )
@@ -278,7 +348,7 @@ export async function withHubAuthRequest<T>(
   const request = getRequest()
   const path = new URL(request.url).pathname
   if (
-    path.startsWith("/hub/auth/") ||
+    (path.startsWith("/hub/auth/") && !path.startsWith("/hub/auth/link/")) ||
     path === "/hub/health" ||
     request.headers.get(backgroundRequestHeader) === "1"
   ) {
@@ -327,12 +397,18 @@ function randomValue() {
 
 const loopbackHosts = new Set(["127.0.0.1", "localhost", "[::1]"])
 
+function isHttpsOrLoopback(url: URL) {
+  return (
+    url.protocol === "https:" ||
+    (url.protocol === "http:" && loopbackHosts.has(url.hostname))
+  )
+}
+
 function configuredCallbackUri() {
   const value = process.env.HUB_AUTH_CALLBACK_URI ?? localCallbackUri
   const url = new URL(value)
   if (
-    (url.protocol !== "https:" &&
-      !(url.protocol === "http:" && loopbackHosts.has(url.hostname))) ||
+    !isHttpsOrLoopback(url) ||
     url.pathname !== "/hub/auth/callback" ||
     url.search ||
     url.hash ||
@@ -348,6 +424,54 @@ export function hubAuthPublicOrigin() {
   return new URL(configuredCallbackUri()).origin
 }
 
+export function hubSignInOrigin() {
+  if (process.env.HUB_DATA_SOURCE !== "hub-auth") return null
+  return hubAuthPublicOrigin()
+}
+
+const signInMethodsSchema = z
+  .array(
+    z.object({
+      key: z.string().min(1).max(64),
+      display_name: z.string().min(1).max(80),
+      is_orcid: z.boolean(),
+      kind: z.enum(["oidc", "password"]).catch("oidc").default("oidc"),
+      registration_url: z
+        .string()
+        .max(2048)
+        .refine(isWebUrl)
+        .nullish()
+        .catch(null)
+        .transform((value) => value ?? null),
+    })
+  )
+  .max(10)
+
+function isWebUrl(value: string) {
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol)
+  } catch {
+    return false
+  }
+}
+
+export type HubSignInMethod = z.infer<typeof signInMethodsSchema>[number]
+
+export async function hubSignInMethods(): Promise<HubSignInMethod[] | null> {
+  if (process.env.HUB_DATA_SOURCE !== "hub-auth") return null
+  try {
+    const { baseUrl } = config()
+    const response = await fetch(`${baseUrl}/auth/methods`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!response.ok) return null
+    return signInMethodsSchema.parse(await response.json())
+  } catch {
+    return null
+  }
+}
+
 function serverApiUrl(value: string) {
   if (!serverApiUrlAllowed(value)) {
     throw new Error("Hub API URL must be a trusted HTTPS URL.")
@@ -355,10 +479,10 @@ function serverApiUrl(value: string) {
   return new URL(value).toString().replace(/\/$/, "")
 }
 
-function httpsApiUrl(value: string) {
+function publicApiUrl(value: string) {
   const url = new URL(value)
   if (
-    url.protocol !== "https:" ||
+    !isHttpsOrLoopback(url) ||
     url.username ||
     url.password ||
     url.search ||
@@ -412,15 +536,13 @@ function config() {
     !productionHubAuthReady() ||
     !baseUrl ||
     !publicBaseUrl ||
-    !secret ||
-    (process.env.NODE_ENV === "production" &&
-      new URL(callbackUri).protocol !== "https:")
+    !secret
   ) {
     throw new Error("Hub sign-in is not configured.")
   }
   return {
     baseUrl: serverApiUrl(baseUrl),
-    publicBaseUrl: httpsApiUrl(publicBaseUrl),
+    publicBaseUrl: publicApiUrl(publicBaseUrl),
     callbackUri,
     secret,
   }
@@ -467,15 +589,31 @@ async function rejectOtherAccount(
   throw new HubAccountMismatchError()
 }
 
+async function rejectStaleSignIn(
+  transaction: Pick<Transaction, "expectedAccount" | "expiresAt" | "maxAge">,
+  tokens: Tokens
+) {
+  if (!transaction.expectedAccount || transaction.maxAge === undefined) return
+  const startedAt = transaction.expiresAt - transactionLifetime
+  const authTime = Date.parse(tokens.auth_time ?? "")
+  if (
+    Number.isFinite(authTime) &&
+    authTime >= startedAt - transaction.maxAge * 1000 - authTimeTolerance
+  ) {
+    return
+  }
+  await revokeRefreshToken(tokens.refresh_token)
+  throw new HubStaleSignInError()
+}
+
 export async function beginHubLogin(
   returnTo: string | null,
-  maxAge: number | null = null
+  maxAge: number | null = null,
+  provider: string | null = null
 ) {
   const { publicBaseUrl, callbackUri } = config()
   if (!sharedMode()) {
-    for (const [id, transaction] of store.transactions) {
-      if (transaction.expiresAt < Date.now()) store.transactions.delete(id)
-    }
+    pruneExpiredLocalTransactions()
     for (const id of store.sessions.keys()) localSession(id)
   }
   const state = randomValue()
@@ -489,6 +627,7 @@ export async function beginHubLogin(
     returnTo: safeReturnTo(returnTo),
     expiresAt: Date.now() + transactionLifetime,
     ...(expectedAccount ? { expectedAccount } : {}),
+    ...(maxAge === null ? {} : { maxAge }),
     consumed: false,
     cancelled: false,
   }
@@ -505,18 +644,36 @@ export async function beginHubLogin(
   url.searchParams.set("code_challenge", challenge)
   url.searchParams.set("code_challenge_method", "S256")
   if (maxAge !== null) url.searchParams.set("max_age", String(maxAge))
+  if (expectedAccount) url.searchParams.set("required_user", expectedAccount)
+  if (provider) url.searchParams.set("provider", provider)
   return url.toString()
 }
 
-export async function finishHubLogin(code: string, state: string) {
+export function hubIssuerMatches(issuer: string | null) {
+  const configured =
+    process.env.HUB_AUTH_PUBLIC_API_URL ?? process.env.CRUCIBLE_API_BASE_URL
+  return (
+    issuer !== null &&
+    configured !== undefined &&
+    issuer === configured.replace(/\/+$/, "")
+  )
+}
+
+export async function finishHubLogin(
+  code: string | null,
+  state: string,
+  providerError: string | null,
+  issuer: string | null
+) {
   const { callbackUri } = config()
   const transactionId = getCookie(transactionCookie)
   deleteCookie(transactionCookie, cookieOptions("/hub/auth"))
-  if (!transactionId) throw new Error("The sign-in request has expired.")
+  if (!transactionId) throw new HubLoginUnavailableError("missing-login-cookie")
   if (sharedMode()) {
     const transaction = await consumeTransaction(transactionId)
-    if (!transaction || transaction.expiresAt < Date.now()) {
-      throw new Error("The sign-in request has expired.")
+    if (!transaction) throw new HubLoginUnavailableError("unknown-transaction")
+    if (transaction.expiresAt < Date.now()) {
+      throw new HubLoginUnavailableError("expired-transaction")
     }
     const expected = Buffer.from(transaction.state)
     const actual = Buffer.from(state)
@@ -526,19 +683,28 @@ export async function finishHubLogin(code: string, state: string) {
     ) {
       throw new Error("The sign-in request could not be verified.")
     }
+    if (!hubIssuerMatches(issuer)) {
+      throw new Error("The sign-in response came from another server.")
+    }
+    if (providerError !== null || code === null) {
+      throw new HubSignInRefusedError(providerError ?? "")
+    }
     const tokens = await tokenRequest("/auth/hub/token", {
       code,
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
     })
     await rejectOtherAccount(transaction.expectedAccount, tokens)
+    await rejectStaleSignIn(transaction, tokens)
     const sessionId = randomValue()
+    const previousId = getCookie(sessionCookie) ?? null
+    const previous = previousId ? await readSession(previousId) : null
     let accepted: boolean
     try {
       accepted = await createSessionAfterCallback(
         transactionId,
         sessionId,
-        getCookie(sessionCookie) ?? null,
+        previousId,
         newSharedSession(tokens)
       )
     } catch (error) {
@@ -547,20 +713,24 @@ export async function finishHubLogin(code: string, state: string) {
     }
     if (!accepted) {
       await revokeRefreshToken(tokens.refresh_token)
-      throw new Error("The sign-in request has expired.")
+      throw new HubLoginUnavailableError("cancelled-transaction")
     }
+    if (previous)
+      await revokeRefreshToken(previous.session.tokens.refresh_token)
     clearLegacyPrivilegeModeCookie()
     setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
   }
   const transaction = store.transactions.get(transactionId)
-  if (
-    !transaction ||
-    transaction.expiresAt < Date.now() ||
-    transaction.consumed ||
-    transaction.cancelled
-  ) {
-    throw new Error("The sign-in request has expired.")
+  if (!transaction) throw new HubLoginUnavailableError("unknown-transaction")
+  if (transaction.cancelled) {
+    throw new HubLoginUnavailableError("cancelled-transaction")
+  }
+  if (transaction.consumed) {
+    throw new HubLoginUnavailableError("reused-transaction")
+  }
+  if (transaction.expiresAt < Date.now()) {
+    throw new HubLoginUnavailableError("expired-transaction")
   }
   transaction.consumed = true
   try {
@@ -572,21 +742,29 @@ export async function finishHubLogin(code: string, state: string) {
     ) {
       throw new Error("The sign-in request could not be verified.")
     }
+    if (!hubIssuerMatches(issuer)) {
+      throw new Error("The sign-in response came from another server.")
+    }
+    if (providerError !== null || code === null) {
+      throw new HubSignInRefusedError(providerError ?? "")
+    }
     const tokens = await tokenRequest("/auth/hub/token", {
       code,
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
     })
     await rejectOtherAccount(transaction.expectedAccount, tokens)
+    await rejectStaleSignIn(transaction, tokens)
     if (
       transaction.cancelled ||
       store.transactions.get(transactionId) !== transaction
     ) {
       await revokeRefreshToken(tokens.refresh_token)
-      throw new Error("The sign-in request has expired.")
+      throw new HubLoginUnavailableError("cancelled-transaction")
     }
-    const previous = getCookie(sessionCookie)
-    if (previous) store.sessions.delete(previous)
+    const previousId = getCookie(sessionCookie)
+    const previous = previousId ? store.sessions.get(previousId) : undefined
+    if (previousId) store.sessions.delete(previousId)
     const sessionId = randomValue()
     const now = Date.now()
     store.sessions.set(sessionId, {
@@ -594,6 +772,7 @@ export async function finishHubLogin(code: string, state: string) {
       expiresAt: now + sessionAbsoluteLifetime,
       idleExpiresAt: now + sessionIdleLifetime,
     })
+    if (previous) await revokeRefreshToken(previous.tokens.refresh_token)
     await writeGlobalPrivilegeMode("normal")
     setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
@@ -847,6 +1026,89 @@ export function sessionApiFetch(): typeof fetch {
     }
     return response
   }
+}
+
+export function hubSessionId() {
+  return session()
+}
+
+export function hubSharedSessions() {
+  return sharedMode()
+}
+
+export async function hubSessionAccessToken() {
+  const sessionId = session()
+  if (sharedMode()) {
+    const current = await readSession(sessionId)
+    if (!current) {
+      clearSharedRequestSession()
+      throw new Error("The Hub session has ended.")
+    }
+    const { tokens } = current.session
+    const accessExpiresAt = Date.parse(tokens.access_expires_at)
+    if (accessExpiresAt > Date.now() + 30000) return tokens.access_token
+    const retryAt = current.session.refreshRetryAt ?? 0
+    if (retryAt > Date.now() && !refreshClaimed(current.session)) {
+      if (accessExpiresAt > Date.now()) return tokens.access_token
+      throw refreshUnavailable(retryAt - Date.now())
+    }
+    const refreshed = await refreshSharedSession(
+      sessionId,
+      tokens.refresh_token
+    )
+    if (!refreshed) throw new Error("The Hub session has ended.")
+    return refreshed.access_token
+  }
+  const current = localSession(sessionId)
+  if (!current) throw new Error("The Hub session has ended.")
+  if (Date.parse(current.tokens.refresh_expires_at) <= Date.now())
+    throw new Error("The Hub session has expired.")
+  const accessExpiresAt = Date.parse(current.tokens.access_expires_at)
+  if (accessExpiresAt > Date.now() + 30000) return current.tokens.access_token
+  const retryAt = current.refreshRetryAt ?? 0
+  if (retryAt > Date.now()) {
+    if (accessExpiresAt > Date.now()) return current.tokens.access_token
+    throw refreshUnavailable(retryAt - Date.now())
+  }
+  const refreshed = await refresh(sessionId)
+  if (!refreshed) throw new Error("The Hub session has expired.")
+  return refreshed.access_token
+}
+
+export async function hubClientPost(
+  path: string,
+  body: object,
+  signal?: AbortSignal
+) {
+  const { baseUrl, secret } = config()
+  const timeout = AbortSignal.timeout(15000)
+  return fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: basicAuthorization(secret),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+  })
+}
+
+export function hubLinkCallbackUri() {
+  return `${hubAuthPublicOrigin()}/hub/auth/link/callback`
+}
+
+export function hubApiAuthorizationUrl(value: string) {
+  const { publicBaseUrl } = config()
+  const url = new URL(value)
+  if (
+    !url.href.startsWith(`${publicBaseUrl}/`) ||
+    url.username ||
+    url.password
+  ) {
+    throw new Error("The API returned an unexpected sign-in address.")
+  }
+  return url.href
 }
 
 async function revokeRefreshToken(refreshToken: string) {

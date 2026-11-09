@@ -6,10 +6,8 @@ import {
   checkWorkspaceEmailExactMatch,
   createWorkspaceUser,
   patchWorkspaceUser,
-  provisionWorkspaceUserApiKey,
   readWorkspaceUserDetail,
   readWorkspaceUsers,
-  revokeWorkspaceUserApiKey,
   updateWorkspaceUserPlatformRole,
 } from "./users.server"
 
@@ -235,7 +233,7 @@ describe("workspace user source", () => {
     )
   })
 
-  it("carries API key status on user records and provisions keys without exposing secrets", async () => {
+  it("carries API key status on user records", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")
 
@@ -243,31 +241,6 @@ describe("workspace user source", () => {
     expect(account).toMatchObject({
       api_key_status: { valid: true },
       user_capabilities: { can_change_platform_role: true },
-    })
-    await expect(
-      provisionWorkspaceUserApiKey("0000-0000-0000-000X")
-    ).resolves.toEqual({ api_key: "crucible_mock_key_0-000X" })
-
-    vi.stubEnv("HUB_DATA_SOURCE", "api")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
-    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
-
-    const fetchMock = vi.fn(async (request: Request) => {
-      expect(request.method).toBe("POST")
-      expect(new URL(request.url).pathname).toBe(
-        "/users/user-1/apikey/regenerate"
-      )
-      expect(request.headers.get("Crucible-Privilege-Mode")).toBe("elevated")
-      return crucibleApiResponse(
-        { api_key: "crucible_live_key" },
-        {},
-        "elevated"
-      )
-    })
-    vi.stubGlobal("fetch", fetchMock)
-
-    await expect(provisionWorkspaceUserApiKey("user-1")).resolves.toEqual({
-      api_key: "crucible_live_key",
     })
   })
 
@@ -417,35 +390,6 @@ describe("workspace user source", () => {
       platform_role: "admin",
       user_capabilities: { can_change_platform_role: true },
     })
-  })
-
-  it("revokes user API keys without returning secrets", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      revokeWorkspaceUserApiKey("0000-0000-0000-0018")
-    ).resolves.toBe(undefined)
-
-    vi.stubEnv("HUB_DATA_SOURCE", "api")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
-    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
-
-    const fetchMock = vi.fn(async (request: Request) => {
-      expect(request.method).toBe("DELETE")
-      expect(new URL(request.url).pathname).toBe("/users/user-1/apikey")
-      expect(request.headers.get("Crucible-Privilege-Mode")).toBe("elevated")
-      return new Response(null, {
-        headers: {
-          "Cache-Control": "no-store",
-          "Crucible-Privilege-Mode": "elevated",
-        },
-        status: 204,
-      })
-    })
-    vi.stubGlobal("fetch", fetchMock)
-
-    await expect(revokeWorkspaceUserApiKey("user-1")).resolves.toBe(undefined)
   })
 
   it("does not bypass the production fixture guard", async () => {

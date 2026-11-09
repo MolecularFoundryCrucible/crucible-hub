@@ -88,6 +88,7 @@ export async function readWorkspaceFromApi({
       first_name: accountResult.data.first_name,
       is_service_account: accountResult.data.is_service_account ?? false,
       last_name: accountResult.data.last_name,
+      sign_in_methods: accountResult.data.sign_in_methods ?? null,
     }
     const workspace: Workspace = {
       id: account.unique_id,

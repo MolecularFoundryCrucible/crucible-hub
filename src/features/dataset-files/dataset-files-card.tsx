@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { lazyRouteComponent } from "@tanstack/react-router"
+import { lazyNamed } from "@/lib/lazy-named"
 
 import {
   PanelState,
@@ -57,7 +57,7 @@ import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 
-const UploadFilesDialog = lazyRouteComponent(
+const UploadFilesDialog = lazyNamed(
   () => import("./upload-dialog"),
   "UploadFilesDialog"
 )

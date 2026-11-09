@@ -49,10 +49,20 @@ export function identityScopeWithPrivilegeMode(
 }
 
 export const crucibleKeys = {
-  accountCredentialStatus: (scope: IdentityScope) =>
-    [...scope, "account", "credential-status"] as const,
   accountProfile: (scope: IdentityScope) =>
     [...scope, "account", "profile"] as const,
+  accountApiKeys: (scope: IdentityScope, state: string) =>
+    [...scope, "account", "api-keys", state] as const,
+  accountApiKeyQueries: (scope: IdentityScope) =>
+    [...scope, "account", "api-keys"] as const,
+  accountSessions: (scope: IdentityScope) =>
+    [...scope, "account", "sessions"] as const,
+  accountIdentities: (scope: IdentityScope) =>
+    [...scope, "account", "identities"] as const,
+  accountPendingLink: (scope: IdentityScope) =>
+    [...scope, "account", "pending-link"] as const,
+  signInMethods: (scope: IdentityScope) =>
+    [...scope, "account", "sign-in-methods"] as const,
   accountPreferences: (scope: IdentityScope) =>
     [...scope.slice(0, 3), "account", "preferences"] as const,
   recentResources: (scope: IdentityScope) =>
@@ -115,6 +125,16 @@ export const crucibleKeys = {
     ] as const,
   userAdminDetail: (scope: IdentityScope, userId: string) =>
     [...scope, "admin", "users", "detail", userId] as const,
+  userApiKeys: (scope: IdentityScope, userId: string, state: string) =>
+    [...scope, "admin", "users", "api-keys", userId, state] as const,
+  userApiKeyQueries: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "api-keys", userId] as const,
+  userSessions: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "sessions", userId] as const,
+  userIdentities: (scope: IdentityScope, userId: string) =>
+    [...scope, "admin", "users", "identities", userId] as const,
+  pendingUsers: (scope: IdentityScope) =>
+    [...scope, "admin", "users", "pending"] as const,
   deletionRequestQueries: (scope: IdentityScope) =>
     [...scope, "deletion-requests"] as const,
   deletionRequests: (scope: IdentityScope, filters: ListFilters) =>

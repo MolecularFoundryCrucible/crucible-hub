@@ -56,6 +56,7 @@ import { ResourceSiblingNavigationProvider } from "@/components/crucible/resourc
 import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { TimeZoneSync } from "@/components/crucible/time-zone-sync"
 import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
+import { PendingUsersBadge } from "@/components/crucible/pending-users-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { createDialogHandle } from "@/components/ui/dialog"
 import type { DialogHandle } from "@/components/ui/dialog"
@@ -1022,6 +1023,9 @@ function SidebarAdministrationLinks({
               <PrincipalTypeIcon type="user" />
               <span>Users</span>
             </SidebarMenuButton>
+            <PendingUsersBadge
+              enabled={privilegeMode === "elevated" && !pending}
+            />
           </SidebarMenuItem>
         ) : null}
         {canOpenServiceAccountAdministration(account, mode) ? (

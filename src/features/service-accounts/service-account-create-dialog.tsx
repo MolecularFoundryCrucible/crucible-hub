@@ -28,7 +28,10 @@ import { createWorkspaceServiceAccount } from "@/data/crucible/service-accounts.
 import { usernameSchema } from "@/data/crucible/slugs"
 import { hubConflictFields, unwrapHubResult } from "@/data/crucible/result"
 import type { WorkspaceServiceAccountCredential } from "@/data/crucible/workspace-source"
-import { hubActionError } from "@/components/crucible/reauthentication"
+import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
 import { useAppForm } from "@/features/forms/app-form"
 
 const createServiceAccountSchema = z.object({
@@ -56,15 +59,17 @@ export function ServiceAccountCreateDialog({
   const [error, setError] = useState<React.ReactNode>()
   const usernameConflict = useSlugConflict()
   const mutation = useMutation({
-    mutationFn: async (values: z.infer<typeof createServiceAccountSchema>) =>
-      unwrapHubResult(
-        await createWorkspaceServiceAccount({
-          data: {
-            scenario: fixtureScenarioFromScope(scope),
-            unique_id: values.unique_id || undefined,
-            username: values.username,
-          },
-        })
+    mutationFn: (values: z.infer<typeof createServiceAccountSchema>) =>
+      withReauthentication(async () =>
+        unwrapHubResult(
+          await createWorkspaceServiceAccount({
+            data: {
+              scenario: fixtureScenarioFromScope(scope),
+              unique_id: values.unique_id || undefined,
+              username: values.username,
+            },
+          })
+        )
       ),
   })
   const form = useAppForm({
@@ -84,7 +89,12 @@ export function ServiceAccountCreateDialog({
           usernameConflict.reject(value.username)
         }
         setError(
-          hubActionError(cause, "The service account could not be created.")
+          hubActionError(
+            cause,
+            "The service account could not be created.",
+            undefined,
+            () => void form.handleSubmit()
+          )
         )
       }
     },

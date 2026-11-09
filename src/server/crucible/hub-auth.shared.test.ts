@@ -25,6 +25,11 @@ import {
   withHubAuthRequest,
 } from "./hub-auth.server"
 import {
+  createHubLink,
+  finishHubLinkCallback,
+  previewHubLink,
+} from "./hub-link.server"
+import {
   checkPostgresSessionStore,
   closePostgresSessionPool,
 } from "./hub-session-postgres.server"
@@ -94,7 +99,9 @@ async function signedInSession(
     "http://127.0.0.1:3000/hub/auth/callback",
     { headers: { cookie: loginCookie } }
   )
-  await callbackScope.run(() => finishHubLogin("code", state))
+  await callbackScope.run(() =>
+    finishHubLogin("code", state, null, "https://api.example.test")
+  )
   const sessionCookie = callbackScope
     .setCookies()
     .find((value) => value.startsWith("crucible_hub_session="))!
@@ -102,8 +109,8 @@ async function signedInSession(
   const sessionId = sessionCookie.slice("crucible_hub_session=".length)
 
   let currentCookie = sessionCookie
-  const inRequest = <T>(work: () => Promise<T>) => {
-    const scope = startRequestScope("http://127.0.0.1:3000/hub/data", {
+  const inRequest = <T>(work: () => Promise<T>, path = "/hub/data") => {
+    const scope = startRequestScope(`http://127.0.0.1:3000${path}`, {
       headers: { cookie: currentCookie },
     })
     return scope
@@ -170,6 +177,8 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
   })
 
   it("keeps the session and revokes the tokens when re-confirming returns another account", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
     stubSharedEnv()
     const { sessionCookie, requests } = await signedInSession(() =>
       Response.json([])
@@ -201,7 +210,9 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
       { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
     )
     const error = await callback
-      .run(() => finishHubLogin("code", state))
+      .run(() =>
+        finishHubLogin("code", state, null, "https://api.example.test")
+      )
       .catch((reason: unknown) => reason)
     expect(hubSignInFailureDetails(error)).toEqual({
       reason: "account-mismatch",
@@ -213,6 +224,92 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     await expect(
       after.run(() => withHubAuthRequest(async () => hubSessionIdentity()))
     ).resolves.toBe(tokenResponse.user_unique_id)
+  })
+
+  it("ends the replaced session when the same account signs in again", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
+    stubSharedEnv()
+    const { sessionCookie } = await signedInSession(() => Response.json([]))
+    const stepUp = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/login?max_age=0",
+      { headers: { cookie: sessionCookie } }
+    )
+    const location = await stepUp.run(() =>
+      beginHubLogin("/hub/reauthenticated", 0)
+    )
+    const state = new URL(location).searchParams.get("state")!
+    const loginCookie = stepUp
+      .setCookies()
+      .find((value) => value.startsWith("crucible_hub_login="))!
+      .split(";")[0]
+    const revoked: unknown[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const path = pathOf(input)
+        if (path === "/auth/hub/revoke") {
+          revoked.push(JSON.parse(String(init?.body)))
+        }
+        return path === "/auth/hub/token"
+          ? Response.json({
+              ...tokenResponse,
+              auth_time: new Date().toISOString(),
+              refresh_token: "refresh-2",
+            })
+          : new Response(null)
+      })
+    )
+    const callback = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/callback",
+      { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
+    )
+    await expect(
+      callback.run(() =>
+        finishHubLogin("code", state, null, "https://api.example.test")
+      )
+    ).resolves.toBe("/hub/reauthenticated")
+    expect(revoked).toEqual([{ token: "refresh-1" }])
+  })
+
+  it("keeps a pending sign-in link in the database for its own session only", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T22:00:00.000Z"))
+    stubSharedEnv()
+    const owner = await signedInSession((path) =>
+      path === "/oauth/link/preview"
+        ? Response.json({ provider_name: "ORCID", status: "available" })
+        : new Response(null, { status: 404 })
+    )
+    const { state } = await owner.inRequest(() => createHubLink("orcid"))
+    await expect(
+      owner.inRequest(
+        () =>
+          finishHubLinkCallback({
+            code: "link-code",
+            error: null,
+            iss: "https://api.example.test",
+            state,
+          }),
+        "/hub/auth/link/callback"
+      )
+    ).resolves.toBe("pending")
+    await expect(
+      owner.inRequest(() => previewHubLink())
+    ).resolves.toMatchObject({ providerName: "ORCID", status: "available" })
+    const other = await signedInSession(() => new Response(null))
+    await expect(
+      other.inRequest(
+        () =>
+          finishHubLinkCallback({
+            code: "link-code",
+            error: null,
+            iss: "https://api.example.test",
+            state,
+          }),
+        "/hub/auth/link/callback"
+      )
+    ).resolves.toBe("expired")
   })
 
   it("keeps a signed-in session across requests through the database", async () => {

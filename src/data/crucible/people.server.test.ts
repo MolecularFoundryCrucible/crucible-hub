@@ -35,6 +35,8 @@ describe("workspace person source", () => {
           first_name: "Morgan",
           is_service_account: false,
           last_name: "Lee",
+          orcid: "0000-0000-0000-0018",
+          orcid_verified: true,
           unique_id: "0000-0000-0000-0018",
           username: "morgan.lee",
         })
@@ -47,6 +49,8 @@ describe("workspace person source", () => {
       first_name: "Morgan",
       is_service_account: false,
       last_name: "Lee",
+      orcid: "0000-0000-0000-0018",
+      orcid_verified: true,
       unique_id: "0000-0000-0000-0018",
       username: "morgan.lee",
     })

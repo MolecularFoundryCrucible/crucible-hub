@@ -315,6 +315,7 @@
   --spacing-group-count-column: 5rem;
   --spacing-inspector-width: 26rem;
   --spacing-dialog-viewport: calc(100dvh - 1rem);
+  --spacing-dialog-media: calc(100dvh - 12rem);
   --spacing-metadata-editor-height: 20rem;
   --spacing-graph-canvas: 38rem;
   --spacing-graph-canvas-dense: 42rem;
@@ -656,7 +657,8 @@
   --graph-grid-dot: 1.25px;
   --graph-grid-size: 20px;
   --sidebar-width: 16rem;
-  --sidebar-width-icon: 3rem;
+  /* The collapsed rail's 1px border would leave 31px for 32px icon buttons. */
+  --sidebar-width-icon: calc(3rem + 1px);
   --sidebar-width-mobile: 18rem;
   interpolate-size: allow-keywords;
   --motion-fast: 120ms;

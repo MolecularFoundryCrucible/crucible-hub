@@ -40,6 +40,7 @@ import { Route as AppResourcesResourceMfidRouteImport } from './routes/_app.reso
 import { Route as AppSamplesSampleMfidRouteImport } from './routes/_app.samples.$sampleMfid'
 import { Route as AppSamplesNewRouteImport } from './routes/_app.samples.new'
 import { Route as AppUsersUserIdRouteImport } from './routes/_app.users.$userId'
+import { Route as AuthLinkCallbackRouteImport } from './routes/auth.link.callback'
 import { Route as FilesFileMfidOpenRouteImport } from './routes/files.$fileMfid.open'
 import { Route as AppAdminServiceAccountsIndexRouteImport } from './routes/_app.admin.service-accounts.index'
 import { Route as AppAdminServiceAccountsServiceAccountMfidRouteImport } from './routes/_app.admin.service-accounts.$serviceAccountMfid'
@@ -224,6 +225,11 @@ const AppUsersUserIdRoute = AppUsersUserIdRouteImport.update({
   id: '/users/$userId',
   path: '/users/$userId',
   getParentRoute: () => AppRoute,
+} as any)
+const AuthLinkCallbackRoute = AuthLinkCallbackRouteImport.update({
+  id: '/auth/link/callback',
+  path: '/auth/link/callback',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FilesFileMfidOpenRoute = FilesFileMfidOpenRouteImport.update({
   id: '/files/$fileMfid/open',
@@ -421,6 +427,7 @@ export interface FileRoutesByFullPath {
   '/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/samples/new': typeof AppSamplesNewRoute
   '/users/$userId': typeof AppUsersUserIdRoute
+  '/auth/link/callback': typeof AuthLinkCallbackRoute
   '/files/$fileMfid/open': typeof FilesFileMfidOpenRoute
   '/instruments/': typeof AppInstrumentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
@@ -477,6 +484,7 @@ export interface FileRoutesByTo {
   '/resources/$resourceMfid': typeof AppResourcesResourceMfidRoute
   '/samples/new': typeof AppSamplesNewRoute
   '/users/$userId': typeof AppUsersUserIdRoute
+  '/auth/link/callback': typeof AuthLinkCallbackRoute
   '/files/$fileMfid/open': typeof FilesFileMfidOpenRoute
   '/instruments': typeof AppInstrumentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
@@ -537,6 +545,7 @@ export interface FileRoutesById {
   '/_app/samples/$sampleMfid': typeof AppSamplesSampleMfidRouteWithChildren
   '/_app/samples/new': typeof AppSamplesNewRoute
   '/_app/users/$userId': typeof AppUsersUserIdRoute
+  '/auth/link/callback': typeof AuthLinkCallbackRoute
   '/files/$fileMfid/open': typeof FilesFileMfidOpenRoute
   '/_app/instruments/': typeof AppInstrumentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/samples/$sampleMfid'
     | '/samples/new'
     | '/users/$userId'
+    | '/auth/link/callback'
     | '/files/$fileMfid/open'
     | '/instruments/'
     | '/projects/'
@@ -655,6 +665,7 @@ export interface FileRouteTypes {
     | '/resources/$resourceMfid'
     | '/samples/new'
     | '/users/$userId'
+    | '/auth/link/callback'
     | '/files/$fileMfid/open'
     | '/instruments'
     | '/projects'
@@ -714,6 +725,7 @@ export interface FileRouteTypes {
     | '/_app/samples/$sampleMfid'
     | '/_app/samples/new'
     | '/_app/users/$userId'
+    | '/auth/link/callback'
     | '/files/$fileMfid/open'
     | '/_app/instruments/'
     | '/_app/projects/'
@@ -760,6 +772,7 @@ export interface RootRouteChildren {
   FilesUnavailableRoute: typeof FilesUnavailableRoute
   FixturesDesignSystemRoute: typeof FixturesDesignSystemRoute
   FixturesScenariosRoute: typeof FixturesScenariosRoute
+  AuthLinkCallbackRoute: typeof AuthLinkCallbackRoute
   FilesFileMfidOpenRoute: typeof FilesFileMfidOpenRoute
 }
 
@@ -981,6 +994,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/users/$userId'
       preLoaderRoute: typeof AppUsersUserIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/auth/link/callback': {
+      id: '/auth/link/callback'
+      path: '/auth/link/callback'
+      fullPath: '/auth/link/callback'
+      preLoaderRoute: typeof AuthLinkCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/files/$fileMfid/open': {
       id: '/files/$fileMfid/open'
@@ -1377,6 +1397,7 @@ const rootRouteChildren: RootRouteChildren = {
   FilesUnavailableRoute: FilesUnavailableRoute,
   FixturesDesignSystemRoute: FixturesDesignSystemRoute,
   FixturesScenariosRoute: FixturesScenariosRoute,
+  AuthLinkCallbackRoute: AuthLinkCallbackRoute,
   FilesFileMfidOpenRoute: FilesFileMfidOpenRoute,
 }
 export const routeTree = rootRouteImport

@@ -429,7 +429,12 @@ test("searches public-safe people and opens canonical person detail", async ({
   await expect(page).toHaveURL(/\/hub\/users\/0000-0000-0000-0018/)
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Morgan Lee")
   await expect(page.getByText("@morgan.lee")).toBeVisible()
-  await expect(page.getByText("0000-0000-0000-0018")).toBeVisible()
+  await expect(
+    page.getByText("0000-0000-0000-0018", { exact: true }).first()
+  ).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: /0000-0000-0000-0018/ })
+  ).toHaveAttribute("href", "https://orcid.org/0000-0000-0000-0018")
   await expect(page.getByText("private@example.invalid")).toHaveCount(0)
 })
 

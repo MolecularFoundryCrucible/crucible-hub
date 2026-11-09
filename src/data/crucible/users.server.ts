@@ -36,7 +36,7 @@ type UserListInput = {
 type Schema<TSchemaName extends keyof components["schemas"]> =
   components["schemas"][TSchemaName]
 
-function toWorkspaceAdminUser(
+export function toWorkspaceAdminUser(
   user: Schema<"UserRead"> | Schema<"UserPublicRead">
 ): WorkspaceAdminUser {
   return {
@@ -48,10 +48,15 @@ function toWorkspaceAdminUser(
     last_active_at:
       "last_active_at" in user ? (user.last_active_at ?? null) : null,
     last_name: user.last_name,
+    orcid: user.orcid ?? null,
+    orcid_verified: user.orcid_verified ?? null,
+    pending_at: "pending_at" in user ? (user.pending_at ?? null) : null,
     platform_role:
       "platform_role" in user && typeof user.platform_role === "string"
         ? user.platform_role
         : null,
+    sign_in_methods:
+      "sign_in_methods" in user ? (user.sign_in_methods ?? null) : null,
     unique_id: user.unique_id,
     user_capabilities:
       "user_capabilities" in user && user.user_capabilities
@@ -314,31 +319,6 @@ export async function updateWorkspaceUserPlatformRole(
   return toWorkspaceAdminUser(result.data)
 }
 
-export async function revokeWorkspaceUserApiKey(
-  userId: string,
-  _scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
-): Promise<void> {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode === "unavailable") {
-    throw new Error(configuration.reason)
-  }
-  if (configuration.mode === "fixture") {
-    return
-  }
-
-  const client = createCrucibleClient(configuration, {
-    privilegeMode: requireAdministratorView(),
-  })
-  const result = await client.DELETE("/users/{user_ref}/apikey", {
-    params: { path: { user_ref: userId } },
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (result.response.status >= 400) {
-    throw new CrucibleResponseError(result.response)
-  }
-}
-
 export async function createWorkspaceUser(
   input: WorkspaceUserCreate,
   _scenario?: FixtureScenario,
@@ -381,32 +361,6 @@ export async function createWorkspaceUser(
   if (!result.data)
     throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
-}
-
-export async function provisionWorkspaceUserApiKey(
-  userId: string,
-  _scenario?: FixtureScenario,
-  requestSignal?: AbortSignal
-): Promise<{ api_key: string }> {
-  const configuration = readWorkspaceConfiguration()
-  if (configuration.mode === "unavailable") {
-    throw new Error(configuration.reason)
-  }
-  if (configuration.mode === "fixture") {
-    return {
-      api_key: `crucible_mock_key_${userId.slice(-6)}`,
-    }
-  }
-
-  const client = createCrucibleClient(configuration, {
-    privilegeMode: requireAdministratorView(),
-  })
-  const result = await client.POST("/users/{user_ref}/apikey/regenerate", {
-    params: { path: { user_ref: userId } },
-    signal: crucibleRequestSignal(requestSignal),
-  })
-  if (!result.data) throw new CrucibleResponseError(result.response)
-  return result.data
 }
 
 export async function checkWorkspaceEmailExactMatch(

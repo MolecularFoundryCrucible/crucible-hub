@@ -1,25 +1,24 @@
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import {
-  ApiCredentialCard,
-  RotateCredentialAction,
-} from "@/components/crucible/api-credential-card"
-import {
   CollectionTablePending,
   PanelState,
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
-import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import {
   EditableCardActions,
   EditableCardTrigger,
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
-import { PersonIdentity } from "@/components/crucible/person-identity"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import { PlatformRoleDialog } from "@/components/crucible/platform-role-dialog"
@@ -32,6 +31,7 @@ import {
 } from "@/components/crucible/resource-collection-cells"
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { ActivityTime } from "@/components/crucible/activity-time"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -62,8 +62,6 @@ import {
 } from "@/data/crucible/result"
 import { emailSchema, usernameSchema } from "@/data/crucible/slugs"
 import {
-  provisionWorkspaceUserApiKeyFn,
-  revokeWorkspaceUserApiKeyFn,
   updateWorkspaceUser,
   updateWorkspaceUserPlatformRoleFn,
 } from "@/data/crucible/users.functions"
@@ -79,10 +77,12 @@ import {
 } from "@/features/forms/discard-changes"
 import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
-import { OneTimeCredentialDialog } from "@/features/service-accounts/one-time-credential-dialog"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { formatUsername } from "@/lib/username"
-import { hubActionError } from "@/components/crucible/reauthentication"
+import { PendingUserActions } from "@/features/admin/pending-users-card"
+import { PersonSecurityCard } from "@/features/account-profile/security-card"
+import { EmailValue } from "@/components/crucible/email-value"
+import { formatSignInMethods } from "@/lib/sign-in-methods"
 import { useAppForm } from "@/features/forms/app-form"
 
 const platformRoleDescriptions = {
@@ -162,45 +162,68 @@ export function UserDetailView({
   scope: IdentityScope
   user: WorkspaceAdminUser
 }) {
-  const [credential, setCredential] = useState<{
-    api_key: string
-    unique_id: string
-    username: string | null
-  }>()
-  const canManageApiKey = user.user_capabilities?.can_manage_api_key !== false
+  const canManageApiKeys = user.user_capabilities?.can_manage_api_key !== false
 
   return (
     <div className="flex flex-col gap-6">
+      {user.pending_at ? (
+        <PendingApprovalBanner scope={scope} user={user} />
+      ) : null}
       <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
-        <UserProfileCard
-          className={!canManageApiKey ? "@split/content:col-span-2" : undefined}
+        <UserProfileCard scope={scope} user={user} />
+        <PersonSecurityCard
+          canManageApiKeys={canManageApiKeys}
+          password={{
+            canHavePassword: !user.is_service_account && !user.pending_at,
+            signInMethods: user.sign_in_methods,
+          }}
+          personName={personDisplayName(user)}
           scope={scope}
-          user={user}
+          userId={user.unique_id}
         />
-        {canManageApiKey ? (
-          <UserApiCredentialSection
-            onCredentialMinted={setCredential}
-            scope={scope}
-            user={user}
-          />
-        ) : null}
       </div>
       <UserProjectsSection scope={scope} user={user} />
-      <OneTimeCredentialDialog
-        credential={credential}
-        onClose={() => setCredential(undefined)}
-        title="User API key provisioned"
-      />
     </div>
   )
 }
 
-function UserProfileCard({
-  className,
+function PendingApprovalBanner({
   scope,
   user,
 }: {
-  className?: string
+  scope: IdentityScope
+  user: WorkspaceAdminUser
+}) {
+  const navigate = useNavigate()
+  return (
+    <Card>
+      <CardContent className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="flex items-center gap-2 text-label">
+            <Badge variant="warning">Waiting for approval</Badge>
+          </span>
+          <span className="text-supporting text-muted-foreground">
+            Requested <ActivityTime fallback="" value={user.pending_at} />
+            {user.sign_in_methods?.length
+              ? `, signs in with ${formatSignInMethods(user.sign_in_methods)}`
+              : null}
+            . This person can sign in once approved.
+          </span>
+        </div>
+        <PendingUserActions
+          onRejected={() => void navigate({ to: "/admin/users" })}
+          scope={scope}
+          user={user}
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
+function UserProfileCard({
+  scope,
+  user,
+}: {
   scope: IdentityScope
   user: WorkspaceAdminUser
 }) {
@@ -338,7 +361,7 @@ function UserProfileCard({
   if (!editing) {
     return (
       <>
-        <Card className={className}>
+        <Card>
           <CardHeader>
             <CardTitle>Identity</CardTitle>
             <CardAction>
@@ -394,14 +417,24 @@ function UserProfileCard({
               <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">Email</dt>
                 <dd className="mt-1 text-body break-words">
-                  {user.email || (
+                  {user.email ? (
+                    <EmailValue email={user.email} />
+                  ) : (
                     <span className="text-muted-foreground">None</span>
                   )}
                 </dd>
               </div>
+              <div className="col-span-2 min-w-0 @fields:col-span-1">
+                <dt className="text-label text-muted-foreground">
+                  Last active
+                </dt>
+                <dd className="mt-1 text-body">
+                  <ActivityTime fallback="Never" value={user.last_active_at} />
+                </dd>
+              </div>
               <div className="col-span-2 min-w-0">
                 <dt className="text-label text-muted-foreground">
-                  Crucible ID / ORCID
+                  Crucible ID
                 </dt>
                 <dd className="mt-1">
                   <MfidValue value={user.unique_id} />
@@ -425,7 +458,7 @@ function UserProfileCard({
 
   return (
     <>
-      <Card aria-busy={isSubmitting} className={className}>
+      <Card aria-busy={isSubmitting}>
         <CardHeader>
           <CardTitle>Edit identity</CardTitle>
         </CardHeader>
@@ -501,7 +534,7 @@ function UserProfileCard({
               </div>
               <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">
-                  Crucible ID / ORCID
+                  Crucible ID
                 </dt>
                 <dd className="mt-1">
                   <MfidValue value={user.unique_id} />
@@ -536,152 +569,6 @@ function UserProfileCard({
         </form.Subscribe>
       </Card>
       <DiscardChangesDialog {...discard.dialog} />
-    </>
-  )
-}
-
-function UserApiCredentialSection({
-  onCredentialMinted,
-  scope,
-  user,
-}: {
-  onCredentialMinted: (cred: {
-    api_key: string
-    unique_id: string
-    username: string | null
-  }) => void
-  scope: IdentityScope
-  user: WorkspaceAdminUser
-}) {
-  const queryClient = useQueryClient()
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false)
-  const [provisionError, setProvisionError] = useState<React.ReactNode>()
-  const [revokeError, setRevokeError] = useState<React.ReactNode>()
-
-  useEffect(() => {
-    setConfirmOpen(false)
-    setRevokeConfirmOpen(false)
-    setProvisionError(undefined)
-    setRevokeError(undefined)
-  }, [user.unique_id])
-
-  const mutation = useMutation({
-    mutationFn: async () =>
-      unwrapHubResult(
-        await provisionWorkspaceUserApiKeyFn({
-          data: {
-            scenario: fixtureScenarioFromScope(scope),
-            userId: user.unique_id,
-          },
-        })
-      ),
-    onSuccess: (result) => {
-      setConfirmOpen(false)
-      onCredentialMinted({
-        api_key: result.api_key,
-        unique_id: user.unique_id,
-        username: user.username ?? null,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.userAdminDetail(scope, user.unique_id),
-      })
-    },
-    onError: (err) => {
-      setProvisionError(hubActionError(err, "Failed to provision API key."))
-    },
-  })
-
-  const revokeMutation = useMutation({
-    mutationFn: async () =>
-      unwrapHubResult(
-        await revokeWorkspaceUserApiKeyFn({
-          data: {
-            scenario: fixtureScenarioFromScope(scope),
-            userId: user.unique_id,
-          },
-        })
-      ),
-    onSuccess: () => {
-      setRevokeConfirmOpen(false)
-      void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.userAdminDetail(scope, user.unique_id),
-      })
-    },
-    onError: (err) => {
-      setRevokeError(hubErrorMessage(err, "Failed to revoke API key."))
-    },
-  })
-
-  const hasValidKey = user.api_key_status?.valid === true
-
-  return (
-    <>
-      <ApiCredentialCard
-        action={
-          <div className="flex flex-wrap justify-end gap-2">
-            <RotateCredentialAction
-              label={hasValidKey ? "Rotate API key" : "Provision API key"}
-              onClick={() => {
-                setProvisionError(undefined)
-                setConfirmOpen(true)
-              }}
-              pending={mutation.isPending}
-            />
-            {hasValidKey ? (
-              <Button
-                disabled={revokeMutation.isPending}
-                onClick={() => {
-                  setRevokeError(undefined)
-                  setRevokeConfirmOpen(true)
-                }}
-                size="sm"
-                type="button"
-                variant="destructive"
-              >
-                Revoke API key
-              </Button>
-            ) : null}
-          </div>
-        }
-        lastActiveAt={user.last_active_at}
-        status={user.api_key_status}
-      />
-      <ConfirmationDialog
-        kind="alert"
-        confirmLabel={hasValidKey ? "Rotate key" : "Provision key"}
-        description={
-          hasValidKey
-            ? "Rotating will immediately invalidate the existing API key for this user. Any scripts using it will stop working until updated."
-            : "This will generate a new active API credential for this user."
-        }
-        error={provisionError}
-        onConfirm={() => {
-          setProvisionError(undefined)
-          mutation.mutate()
-        }}
-        onOpenChange={setConfirmOpen}
-        open={confirmOpen}
-        pending={mutation.isPending}
-        pendingLabel={hasValidKey ? "Rotating key" : "Provisioning key"}
-        title={hasValidKey ? "Rotate user API key" : "Provision user API key"}
-      />
-      <ConfirmationDialog
-        kind="alert"
-        confirmLabel="Revoke key"
-        description="The API key will stop working immediately. Any scripts using it must be provisioned with a replacement credential."
-        error={revokeError}
-        onConfirm={() => {
-          setRevokeError(undefined)
-          revokeMutation.mutate()
-        }}
-        onOpenChange={setRevokeConfirmOpen}
-        open={revokeConfirmOpen}
-        pending={revokeMutation.isPending}
-        pendingLabel="Revoking key"
-        title="Revoke user API key?"
-        variant="destructive"
-      />
     </>
   )
 }

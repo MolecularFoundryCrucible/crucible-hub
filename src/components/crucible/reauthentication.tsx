@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { MouseEvent } from "react"
 
-import orcidIdUrl from "@/assets/orcid-id.svg"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { Button } from "@/components/ui/button"
 import { HubApiClientError, hubErrorMessage } from "@/data/crucible/result"
@@ -26,26 +25,79 @@ function redirectReturnTo() {
     : `${window.location.pathname}${window.location.search}${REAUTHENTICATED_HASH}`
 }
 
-function ReauthenticationPrompt() {
+function openReauthenticationPopup() {
+  return window.open(
+    reauthenticationHref("/hub/reauthenticated"),
+    "crucible-hub-reauthentication",
+    "popup,width=520,height=720"
+  )
+}
+
+const popupClosedGraceMs = 500
+
+function confirmInPopup(): Promise<boolean> {
+  const popup = openReauthenticationPopup()
+  if (!popup) return Promise.resolve(false)
+  return new Promise((resolve) => {
+    const channel = new BroadcastChannel(REAUTHENTICATION_CHANNEL)
+    let closedAt: number | null = null
+    const finish = (confirmed: boolean) => {
+      window.clearInterval(watch)
+      channel.close()
+      resolve(confirmed)
+    }
+    channel.onmessage = () => finish(true)
+    const watch = window.setInterval(() => {
+      if (!popup.closed) return
+      closedAt ??= Date.now()
+      if (Date.now() - closedAt >= popupClosedGraceMs) finish(false)
+    }, 250)
+  })
+}
+
+export async function withReauthentication<T>(
+  attempt: () => Promise<T>
+): Promise<T> {
+  try {
+    return await attempt()
+  } catch (error) {
+    if (!reauthenticationRequired(error) || !(await confirmInPopup())) {
+      throw error
+    }
+    return attempt()
+  }
+}
+
+function ReauthenticationPrompt({
+  reason,
+  retry,
+}: {
+  reason: string
+  retry?: () => void
+}) {
   const [confirmed, setConfirmed] = useState(false)
+  const opened = useRef(false)
 
   useEffect(() => {
     const channel = new BroadcastChannel(REAUTHENTICATION_CHANNEL)
     channel.onmessage = () => {
+      if (!opened.current) return
+      opened.current = false
+      if (retry) {
+        retry()
+        return
+      }
       setConfirmed(true)
       notifySuccess("Signed in again", "You can retry the action now.")
     }
     return () => channel.close()
-  }, [])
+  }, [retry])
 
   function openPopup(event: MouseEvent<HTMLAnchorElement>) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-    const popup = window.open(
-      reauthenticationHref("/hub/reauthenticated"),
-      "crucible-hub-reauthentication",
-      "popup,width=520,height=720"
-    )
-    if (popup) event.preventDefault()
+    if (!openReauthenticationPopup()) return
+    opened.current = true
+    event.preventDefault()
   }
 
   if (confirmed) {
@@ -59,8 +111,8 @@ function ReauthenticationPrompt() {
   return (
     <span className="flex flex-col items-start gap-2 text-foreground">
       <span>
-        Issuing credentials needs a recent sign-in. Confirm it's you with ORCID
-        in a new window; what you entered here stays as it is.
+        {reason} Confirm it's you in a new window; what you entered here stays
+        as it is.
       </span>
       <Button
         nativeButton={false}
@@ -73,13 +125,7 @@ function ReauthenticationPrompt() {
         size="sm"
         variant="outline"
       >
-        <img
-          alt=""
-          aria-hidden="true"
-          className="size-orcid-id-icon"
-          src={orcidIdUrl}
-        />
-        Sign in with ORCID
+        Sign in again
       </Button>
     </span>
   )
@@ -87,10 +133,12 @@ function ReauthenticationPrompt() {
 
 export function hubActionError(
   error: unknown,
-  fallback: string
+  fallback: string,
+  reason = "Issuing credentials needs a recent sign-in.",
+  retry?: () => void
 ): React.ReactNode {
   if (!reauthenticationRequired(error)) return hubErrorMessage(error, fallback)
-  return <ReauthenticationPrompt />
+  return <ReauthenticationPrompt reason={reason} retry={retry} />
 }
 
 export function useReauthenticationNotice() {

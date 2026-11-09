@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { lazyRouteComponent } from "@tanstack/react-router"
+import { lazyNamed } from "@/lib/lazy-named"
 
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-const QRCodeSVG = lazyRouteComponent(() => import("qrcode.react"), "QRCodeSVG")
+const QRCodeSVG = lazyNamed(() => import("qrcode.react"), "QRCodeSVG")
 
 export function MfidQrCode({
   actions,

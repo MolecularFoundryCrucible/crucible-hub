@@ -224,6 +224,17 @@ function zonedDayNumber(date: Date, timeZone: string) {
   )
 }
 
+export function formatCalendarDate(
+  value: string | null | undefined,
+  timeZone?: string
+) {
+  const date = parseTimestamp(value)
+  if (!date) return null
+  return (
+    timeZone ? zonedFormatter("date", timeZone) : localDateFormatter
+  ).format(date)
+}
+
 export function formatDateInZone(
   value: string | null | undefined,
   timeZone: string

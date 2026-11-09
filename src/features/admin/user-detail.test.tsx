@@ -14,7 +14,15 @@ import type {
   WorkspaceAdminUser,
   WorkspaceUserProject,
 } from "@/data/crucible/workspace-source"
-import { provisionWorkspaceUserApiKeyFn } from "@/data/crucible/users.functions"
+import {
+  getWorkspaceApiKeys,
+  revokeWorkspaceApiKeyFn,
+} from "@/data/crucible/api-keys.functions"
+import {
+  getWorkspaceUserIdentities,
+  removeWorkspaceAccountIdentityFn,
+  removeWorkspaceUserIdentityFn,
+} from "@/data/crucible/account-identities.functions"
 
 import { UserDetailView } from "./user-detail"
 
@@ -25,13 +33,60 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
     Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
       <a href={to}>{children}</a>
     ),
+    getRouteApi: () => ({
+      useLoaderData: () => ({ sessionAuth: true, status: "ready" }),
+    }),
     useBlocker: () => ({ proceed: vi.fn(), reset: vi.fn(), status: "idle" }),
   }
 })
 
-vi.mock("@/data/crucible/users.functions", async (importOriginal) => ({
-  ...(await importOriginal<Record<string, unknown>>()),
-  provisionWorkspaceUserApiKeyFn: vi.fn(),
+vi.mock("@/data/crucible/sessions.functions", () => ({
+  endOtherWorkspaceSessionsFn: vi.fn(),
+  endWorkspaceSessionFn: vi.fn(),
+  getWorkspaceSessions: vi.fn(async () => ({
+    data: { items: [], nextCursor: null, total: 0 },
+    status: "ok",
+  })),
+}))
+
+vi.mock(
+  "@/data/crucible/account-identities.functions",
+  async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
+    removeWorkspaceAccountIdentityFn: vi.fn(async () => ({
+      status: "ok",
+      data: undefined,
+    })),
+    removeWorkspaceUserIdentityFn: vi.fn(async () => ({
+      status: "ok",
+      data: undefined,
+    })),
+    getWorkspaceUserIdentities: vi.fn(async () => ({
+      status: "ok",
+      data: [
+        {
+          created_at: "2026-10-01T00:00:00Z",
+          id: 7,
+          label: null,
+          last_used_at: null,
+          orcid: "0000-0002-1825-0097",
+          provider_key: "orcid",
+          provider_name: "ORCID",
+          verified_at: null,
+        },
+      ],
+    })),
+  })
+)
+
+vi.mock("@/data/crucible/api-keys.functions", () => ({
+  createWorkspaceApiKeyFn: vi.fn(),
+  getWorkspaceApiKeys: vi.fn(async () => ({
+    data: { items: [], nextCursor: null, total: 0 },
+    status: "ok",
+  })),
+  renameWorkspaceApiKeyFn: vi.fn(),
+  revokeWorkspaceApiKeyFn: vi.fn(),
 }))
 
 const mockProjects: WorkspaceUserProject[] = [
@@ -148,7 +203,7 @@ const testUser: WorkspaceAdminUser = {
   username: "testuser",
 }
 
-function renderUserDetail() {
+function renderUserDetail(user: WorkspaceAdminUser = testUser) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -166,7 +221,7 @@ function renderUserDetail() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <UserDetailView scope={scope} user={testUser} />
+      <UserDetailView scope={scope} user={user} />
     </QueryClientProvider>
   )
 }
@@ -177,11 +232,130 @@ describe("UserDetailView projects table sorting", () => {
   it("renders identity card without redundant account type", () => {
     renderUserDetail()
 
-    expect(screen.getByText("Crucible ID / ORCID")).toBeTruthy()
+    expect(screen.getByText("Crucible ID")).toBeTruthy()
     expect(screen.getByText("Username")).toBeTruthy()
     expect(screen.getByText("Platform role")).toBeTruthy()
     expect(screen.getByText("Email")).toBeTruthy()
+    expect(screen.getByText("Last active")).toBeTruthy()
     expect(screen.queryByText("Account type")).toBeNull()
+    expect(screen.queryByText("ORCID")).toBeNull()
+  })
+
+  it("lists the person's sign-in methods and keeps their only one", async () => {
+    renderUserDetail()
+
+    expect(await screen.findByText("Sign-in methods")).toBeTruthy()
+    expect(
+      await screen.findByRole("link", { name: "0000-0002-1825-0097" })
+    ).toBeTruthy()
+    expect(
+      within(screen.getByRole("table", { name: "Sign-in methods" })).getByText(
+        "Not verified"
+      )
+    ).toBeTruthy()
+    expect(
+      screen.queryByRole("button", { name: "Add sign-in method" })
+    ).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Actions for ORCID" }))
+    expect(
+      (
+        await screen.findByRole("menuitem", {
+          name: "Remove",
+        })
+      ).getAttribute("aria-disabled")
+    ).toBe("true")
+  })
+
+  it("removes one of a person's logins after naming them in the warning", async () => {
+    vi.mocked(getWorkspaceUserIdentities).mockResolvedValueOnce({
+      status: "ok",
+      data: [
+        {
+          created_at: "2026-10-01T00:00:00Z",
+          id: 7,
+          label: null,
+          last_used_at: null,
+          orcid: "0000-0002-1825-0097",
+          provider_key: "orcid",
+          provider_name: "ORCID",
+          verified_at: "2026-10-01T00:00:00Z",
+        },
+        {
+          created_at: "2026-10-02T00:00:00Z",
+          id: 8,
+          label: "test@lab.example",
+          last_used_at: null,
+          orcid: null,
+          provider_key: "lbl",
+          provider_name: "Berkeley Lab",
+          verified_at: null,
+        },
+      ],
+    })
+    renderUserDetail()
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Actions for Berkeley Lab (test@lab.example)",
+      })
+    )
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
+    expect(
+      await screen.findByText(/^Test User won.t be able to sign in with/)
+    ).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+    await waitFor(() =>
+      expect(vi.mocked(removeWorkspaceUserIdentityFn)).toHaveBeenCalledWith({
+        data: { identityId: 8, userId: "test-user" },
+      })
+    )
+  })
+
+  it("removes an administrator's own login the way My profile does, keeping their session", async () => {
+    vi.mocked(removeWorkspaceUserIdentityFn).mockClear()
+    vi.mocked(getWorkspaceUserIdentities).mockResolvedValueOnce({
+      status: "ok",
+      data: [
+        {
+          created_at: "2026-10-01T00:00:00Z",
+          id: 7,
+          label: null,
+          last_used_at: null,
+          orcid: "0000-0002-1825-0097",
+          provider_key: "orcid",
+          provider_name: "ORCID",
+          verified_at: "2026-10-01T00:00:00Z",
+        },
+        {
+          created_at: "2026-10-02T00:00:00Z",
+          id: 8,
+          label: "test@lab.example",
+          last_used_at: null,
+          orcid: null,
+          provider_key: "lbl",
+          provider_name: "Berkeley Lab",
+          verified_at: null,
+        },
+      ],
+    })
+    renderUserDetail({ ...testUser, unique_id: "account" })
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Actions for Berkeley Lab (test@lab.example)",
+      })
+    )
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
+    expect(
+      await screen.findByText(/^You won.t be able to sign in with/)
+    ).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+    await waitFor(() =>
+      expect(vi.mocked(removeWorkspaceAccountIdentityFn)).toHaveBeenCalledWith({
+        data: { identityId: 8 },
+      })
+    )
+    expect(vi.mocked(removeWorkspaceUserIdentityFn)).not.toHaveBeenCalled()
   })
 
   it("renders sortable headers for Project, Created, and Updated, and non-sortable Lead and Role", () => {
@@ -213,14 +387,22 @@ describe("UserDetailView projects table sorting", () => {
       name: /(sort by project|project, sorted)/i,
     })
 
-    const initialRows = screen.getAllByRole("row").slice(1)
+    const initialRows = within(
+      screen.getByRole("table", { name: "User projects" })
+    )
+      .getAllByRole("row")
+      .slice(1)
     expect(initialRows[0].textContent).toContain("Alpha Project")
     expect(initialRows[1].textContent).toContain("Beta Project")
     expect(initialRows[2].textContent).toContain("Gamma Project")
 
     fireEvent.click(projectButton)
     await waitFor(() => {
-      const rowsDesc = screen.getAllByRole("row").slice(1)
+      const rowsDesc = within(
+        screen.getByRole("table", { name: "User projects" })
+      )
+        .getAllByRole("row")
+        .slice(1)
       expect(rowsDesc[0].textContent).toContain("Gamma Project")
       expect(rowsDesc[1].textContent).toContain("Beta Project")
       expect(rowsDesc[2].textContent).toContain("Alpha Project")
@@ -235,7 +417,11 @@ describe("UserDetailView projects table sorting", () => {
     })
     fireEvent.click(createdButton)
     await waitFor(() => {
-      const rowsDesc = screen.getAllByRole("row").slice(1)
+      const rowsDesc = within(
+        screen.getByRole("table", { name: "User projects" })
+      )
+        .getAllByRole("row")
+        .slice(1)
       expect(rowsDesc[0].textContent).toContain("Gamma Project")
       expect(rowsDesc[1].textContent).toContain("Beta Project")
       expect(rowsDesc[2].textContent).toContain("Alpha Project")
@@ -244,7 +430,11 @@ describe("UserDetailView projects table sorting", () => {
     const updatedButton = screen.getByRole("button", { name: /updated/i })
     fireEvent.click(updatedButton)
     await waitFor(() => {
-      const rowsUpdated = screen.getAllByRole("row").slice(1)
+      const rowsUpdated = within(
+        screen.getByRole("table", { name: "User projects" })
+      )
+        .getAllByRole("row")
+        .slice(1)
       expect(rowsUpdated[0].textContent).toContain("Alpha Project")
       expect(rowsUpdated[1].textContent).toContain("Beta Project")
       expect(rowsUpdated[2].textContent).toContain("Gamma Project")
@@ -252,11 +442,31 @@ describe("UserDetailView projects table sorting", () => {
   })
 })
 
-describe("UserDetailView API key provisioning", () => {
+describe("UserDetailView API keys", () => {
   afterEach(cleanup)
 
-  it("asks for a fresh sign-in inside the confirmation dialog", async () => {
-    vi.mocked(provisionWorkspaceUserApiKeyFn).mockResolvedValue({
+  it("lists a person's keys and asks for a fresh sign-in to revoke one", async () => {
+    vi.mocked(getWorkspaceApiKeys).mockResolvedValue({
+      data: {
+        items: [
+          {
+            created_at: "2026-09-01T00:00:00Z",
+            expires_at: "2027-09-01T00:00:00Z",
+            id: 7,
+            last4: "7f3a",
+            last_used_at: null,
+            name: "Beamline laptop",
+            older_routes: false,
+            revoked_at: null,
+            status: "active",
+          },
+        ],
+        nextCursor: null,
+        total: 1,
+      },
+      status: "ok",
+    })
+    vi.mocked(revokeWorkspaceApiKeyFn).mockResolvedValue({
       error: {
         correlationId: "request-1",
         kind: "reauthentication-required",
@@ -267,19 +477,27 @@ describe("UserDetailView API key provisioning", () => {
     })
     renderUserDetail()
 
-    fireEvent.click(screen.getByRole("button", { name: "Rotate API key" }))
+    const table = await screen.findByRole("table", { name: "Active API keys" })
+    expect(within(table).getByText("Beamline laptop")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "New key" })).toBeNull()
+    fireEvent.click(
+      within(table).getByRole("button", { name: "Actions for Beamline laptop" })
+    )
+    expect(screen.queryByRole("menuitem", { name: "Rename" })).toBeNull()
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Revoke" }))
     const dialog = await screen.findByRole("alertdialog", {
-      name: "Rotate user API key",
+      name: "Revoke Beamline laptop?",
     })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Rotate key" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Revoke" }))
 
     const signIn = await within(dialog).findByRole("button", {
-      name: "Sign in with ORCID",
+      name: "Sign in again",
     })
     const href = new URL(signIn.getAttribute("href") ?? "", "https://hub.test")
     expect(href.pathname).toBe("/hub/auth/login")
     expect(href.searchParams.get("max_age")).toBe("0")
-    expect(href.searchParams.get("returnTo")).toMatch(/#reauthenticated$/)
-    expect(screen.getByRole("alertdialog")).toBe(dialog)
+    expect(vi.mocked(revokeWorkspaceApiKeyFn)).toHaveBeenCalledWith({
+      data: { keyId: 7, userId: expect.any(String) },
+    })
   })
 })
