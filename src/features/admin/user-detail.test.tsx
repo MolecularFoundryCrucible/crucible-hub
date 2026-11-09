@@ -248,7 +248,11 @@ describe("UserDetailView projects table sorting", () => {
     expect(
       await screen.findByRole("link", { name: "0000-0002-1825-0097" })
     ).toBeTruthy()
-    expect(screen.getByText("Not verified")).toBeTruthy()
+    expect(
+      within(screen.getByRole("table", { name: "Sign-in methods" })).getByText(
+        "Not verified"
+      )
+    ).toBeTruthy()
     expect(
       screen.queryByRole("button", { name: "Add sign-in method" })
     ).toBeNull()

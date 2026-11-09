@@ -28,6 +28,7 @@ export type WorkspaceAccount = Omit<
     | "last_name"
     | "orcid"
     | "orcid_verified"
+    | "sign_in_methods"
     | "unique_id"
     | "username"
   >,
@@ -51,6 +52,12 @@ export type WorkspaceApiCredentialStatus = Pick<
 >
 
 export type WorkspaceApiKey = Schema<"ApiKeyListItem">
+
+export type WorkspacePasswordLink = {
+  expires_at: string
+  purpose: "setup" | "reset"
+  url: string
+}
 
 export type WorkspaceApiKeyState = "active" | "inactive"
 

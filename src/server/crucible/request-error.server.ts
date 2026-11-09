@@ -49,6 +49,14 @@ const hubConflictCodes = new Set<string>([
   "too_many_links",
   "too_many_keys",
   "hub_session_required",
+  "browser_sign_in_required",
+  "username_required",
+  "service_account",
+  "password_changed",
+  "no_password",
+  "account_disabled",
+  "account_pending",
+  "feature_disabled",
 ])
 
 export function isHubConflictCode(code: unknown): code is HubConflictCode {
@@ -92,7 +100,7 @@ export class CrucibleResponseError extends Error {
     this.retryAfterSeconds = readRetryAfterSeconds(source.headers)
     this.reauthenticationRequired = isStepUpChallenge(source)
     if (source.status === 409) this.conflictFields = readConflictFields(body)
-    if ([403, 409, 429].includes(source.status)) {
+    if ([403, 404, 409, 429, 501].includes(source.status)) {
       this.conflictCode = readConflictCode(body)
     }
     if (source.status === 422) {
@@ -102,7 +110,42 @@ export class CrucibleResponseError extends Error {
   }
 }
 
-export type ValueIssueKind = "invalid_number" | "unsupported_character"
+export type ValueIssueKind =
+  | "invalid_number"
+  | "unsupported_character"
+  | "current_password_required"
+  | "current_password_invalid"
+  | `password_${PasswordRejection}`
+
+type PasswordRejection = "too_short" | "too_long" | "common" | "personal"
+
+const passwordRejections = new Set<string>([
+  "too_short",
+  "too_long",
+  "common",
+  "personal",
+])
+
+function valueIssueKind(issue: {
+  ctx?: unknown
+  type?: unknown
+}): ValueIssueKind | undefined {
+  switch (issue.type) {
+    case "invalid_number":
+    case "unsupported_character":
+    case "current_password_required":
+    case "current_password_invalid":
+      return issue.type
+    case "password_rejected": {
+      const reason = (issue.ctx as { reason?: unknown } | null)?.reason
+      return typeof reason === "string" && passwordRejections.has(reason)
+        ? `password_${reason as PasswordRejection}`
+        : undefined
+    }
+    default:
+      return undefined
+  }
+}
 
 function readValueIssues(
   body: unknown
@@ -110,16 +153,12 @@ function readValueIssues(
   const detail = (body as { detail?: unknown } | null)?.detail
   if (!Array.isArray(detail)) return []
   return detail.flatMap((entry: unknown) => {
-    const issue = entry as { loc?: unknown; type?: unknown }
-    if (
-      issue.type !== "invalid_number" &&
-      issue.type !== "unsupported_character"
-    )
-      return []
+    const issue = entry as { ctx?: unknown; loc?: unknown; type?: unknown }
+    const kind = valueIssueKind(issue)
+    if (!kind) return []
     const path = Array.isArray(issue.loc)
       ? issue.loc.filter((part) => part !== "body").map(String)
       : []
-    const kind: ValueIssueKind = issue.type
     return [{ field: path.join(".") || "value", kind }]
   })
 }

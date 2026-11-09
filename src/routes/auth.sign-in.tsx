@@ -43,6 +43,8 @@ function SignInPage() {
 
   const choices = hubSignInChoices(methods, origin, returnTo)
   const offersOrcid = methods?.some((method) => method.is_orcid) ?? false
+  const registrationUrl =
+    methods?.find((method) => method.registration_url)?.registration_url ?? null
 
   return (
     <AuthPage
@@ -115,6 +117,19 @@ function SignInPage() {
             </Button>
           ))}
         </div>
+        {registrationUrl ? (
+          <p className="flex flex-wrap items-center justify-center gap-x-1 text-supporting text-muted-foreground">
+            No account yet?
+            <Button
+              nativeButton={false}
+              render={<a href={registrationUrl} />}
+              size="sm"
+              variant="ghost"
+            >
+              Ask for one
+            </Button>
+          </p>
+        ) : null}
       </div>
     </AuthPage>
   )

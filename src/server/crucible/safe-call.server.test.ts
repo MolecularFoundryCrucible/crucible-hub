@@ -176,6 +176,52 @@ describe("safe Crucible calls", () => {
     expect(result.status === "error" && result.error.conflictCode).toBe(code)
   })
 
+  it.each([
+    [404, "no_password"],
+    [501, "feature_disabled"],
+    [403, "browser_sign_in_required"],
+    [409, "username_required"],
+  ])("forwards the password code of a %i answer", async (status, code) => {
+    const result = await safeCrucibleCall("password", async () => {
+      throw new CrucibleResponseError(new Response(null, { status }), {
+        detail: { code, feature: "passwords" },
+      })
+    })
+    expect(result.status === "error" && result.error.conflictCode).toBe(code)
+  })
+
+  it("names the password field the API refused", async () => {
+    const result = await safeCrucibleCall("password", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 422 }), {
+        detail: [
+          {
+            ctx: { reason: "common" },
+            loc: ["body", "new_password"],
+            msg: "From the API",
+            type: "password_rejected",
+          },
+          {
+            loc: ["body", "current_password"],
+            msg: "From the API",
+            type: "current_password_invalid",
+          },
+          {
+            ctx: { reason: "unheard_of" },
+            loc: ["body", "new_password"],
+            type: "password_rejected",
+          },
+        ],
+      })
+    })
+    expect(result.status === "error" && result.error.fieldErrors).toEqual({
+      current_password: ["That isn't your current password."],
+      new_password: [
+        "This password is commonly used, so it is easy to guess. Choose another one.",
+      ],
+    })
+    expect(JSON.stringify(result)).not.toContain("From the API")
+  })
+
   it("asks for a fresh sign-in on a step-up challenge", async () => {
     const result = await safeCrucibleCall("step-up", async () => {
       throw new CrucibleResponseError(

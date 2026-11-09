@@ -55,6 +55,8 @@ export function toWorkspaceAdminUser(
       "platform_role" in user && typeof user.platform_role === "string"
         ? user.platform_role
         : null,
+    sign_in_methods:
+      "sign_in_methods" in user ? (user.sign_in_methods ?? null) : null,
     unique_id: user.unique_id,
     user_capabilities:
       "user_capabilities" in user && user.user_capabilities

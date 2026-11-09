@@ -29,6 +29,14 @@ export type HubConflictCode =
   | "too_many_links"
   | "too_many_keys"
   | "hub_session_required"
+  | "browser_sign_in_required"
+  | "username_required"
+  | "service_account"
+  | "password_changed"
+  | "no_password"
+  | "account_disabled"
+  | "account_pending"
+  | "feature_disabled"
 
 export type HubApiError = {
   kind: HubApiErrorKind

@@ -11,7 +11,10 @@ import {
 } from "@/components/crucible/credential-table"
 import {
   AddSignInMethodIcon,
+  ChangePasswordIcon,
   CredentialActionsIcon,
+  PasswordIcon,
+  PasswordLinkIcon,
   RemoveSignInMethodIcon,
   SignInMethodIcon,
   VerifiedCredentialIcon,
@@ -66,8 +69,10 @@ import {
   signInMethodsQueryOptions,
   userIdentitiesQueryOptions,
 } from "@/data/crucible/account-identities.queries"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
 import type { HubConflictCode } from "@/data/crucible/errors"
 import type { IdentityScope } from "@/data/crucible/query-keys"
+import { crucibleKeys } from "@/data/crucible/query-keys"
 import {
   HubApiClientError,
   hubErrorMessage,
@@ -76,10 +81,30 @@ import {
 import type { HubResult } from "@/data/crucible/result"
 import type { WorkspaceAccountIdentity } from "@/data/crucible/workspace-source"
 
+import {
+  PasswordLinkDialog,
+  RemovePasswordDialog,
+  SetPasswordDialog,
+  useIssuePasswordLink,
+} from "./password-actions"
+
 export type AccountLinkOutcome =
   "pending" | "retry" | "cancelled" | "expired" | "failed"
 
-type SignInMethod = { display_name: string; is_orcid: boolean; key: string }
+type SignInMethod = {
+  display_name: string
+  is_orcid: boolean
+  key: string
+  kind?: "oidc" | "password"
+}
+
+function passwordsOffered(methods: readonly SignInMethod[] | null | undefined) {
+  return methods?.some((method) => method.kind === "password") ?? false
+}
+
+function hasPasswordFrom(signInMethods: readonly string[] | null | undefined) {
+  return signInMethods ? signInMethods.includes("password") : null
+}
 
 const linkOutcomeMessages: Record<
   Exclude<AccountLinkOutcome, "pending">,
@@ -130,7 +155,10 @@ export function addableSignInMethods(
   )
   const hasOrcid = identities.some((identity) => identity.orcid)
   return (methods ?? []).filter(
-    (method) => !linked.has(method.key) && !(method.is_orcid && hasOrcid)
+    (method) =>
+      method.kind !== "password" &&
+      !linked.has(method.key) &&
+      !(method.is_orcid && hasOrcid)
   )
 }
 
@@ -145,7 +173,10 @@ export function AccountSignInMethodsSection({
 }) {
   const identities = useQuery(accountIdentitiesQueryOptions(scope))
   const methods = useQuery(signInMethodsQueryOptions(scope))
+  const account = useQuery(accountQueryOptions(scope)).data
   const announced = useRef(false)
+  const [settingPassword, setSettingPassword] = useState(false)
+  const [removingPassword, setRemovingPassword] = useState(false)
 
   useEffect(() => {
     if (!linkOutcome || linkOutcome === "pending" || announced.current) return
@@ -167,14 +198,49 @@ export function AccountSignInMethodsSection({
   const addable = identities.data
     ? addableSignInMethods(methods.data, list)
     : []
+  const hasPassword = hasPasswordFrom(account?.sign_in_methods)
+  const canSetPassword =
+    passwordsOffered(methods.data) &&
+    hasPassword !== true &&
+    account?.is_service_account !== true
+  const ways = list.length + (hasPassword ? 1 : 0)
 
   return (
     <SignInMethodsSection
       action={
-        addable.length > 0 ? <AddSignInMethodMenu methods={addable} /> : null
+        addable.length > 0 || canSetPassword ? (
+          <AddSignInMethodMenu
+            methods={addable}
+            onSetPassword={
+              canSetPassword ? () => setSettingPassword(true) : undefined
+            }
+          />
+        ) : null
       }
       emptyText="You have no sign-in methods."
       errorText="Your sign-in methods could not be loaded."
+      passwordRow={
+        hasPassword ? (
+          <PasswordRow
+            actions={
+              <PasswordRowMenu>
+                <DropdownMenuItem onClick={() => setSettingPassword(true)}>
+                  <ChangePasswordIcon aria-hidden="true" />
+                  Change password
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={list.length === 0}
+                  onClick={() => setRemovingPassword(true)}
+                  variant="destructive"
+                >
+                  <RemoveSignInMethodIcon aria-hidden="true" />
+                  Remove
+                </DropdownMenuItem>
+              </PasswordRowMenu>
+            }
+          />
+        ) : null
+      }
       query={identities}
       renderActions={(identity) => (
         <RemoveSignInMethodAction
@@ -186,34 +252,117 @@ export function AccountSignInMethodsSection({
               data: { identityId: identity.id },
             })
           }
-          removable={list.length > 1}
+          removable={ways > 1}
         />
       )}
     >
       {linkOutcome === "pending" ? (
         <PendingLinkDialog onDone={onLinkOutcomeHandled} scope={scope} />
       ) : null}
+      <SetPasswordDialog
+        hasPassword={hasPassword}
+        key={String(hasPassword)}
+        onOpenChange={setSettingPassword}
+        open={settingPassword}
+        scope={scope}
+        username={account?.username ?? null}
+      />
+      {account ? (
+        <RemovePasswordDialog
+          invalidate={[
+            crucibleKeys.accountProfile(scope),
+            crucibleKeys.accountSessions(scope),
+          ]}
+          onOpenChange={setRemovingPassword}
+          open={removingPassword}
+          owner={{ kind: "self" }}
+          userId={account.unique_id}
+        />
+      ) : null}
     </SignInMethodsSection>
   )
 }
 
+export type PersonPasswordState = {
+  canHavePassword: boolean
+  signInMethods: readonly string[] | null | undefined
+}
+
 export function PersonSignInMethodsSection({
+  password,
   personName,
   scope,
   userId,
 }: {
+  password?: PersonPasswordState
   personName: string
   scope: IdentityScope
   userId: string
 }) {
   const identities = useQuery(userIdentitiesQueryOptions(scope, userId))
+  const methods = useQuery(signInMethodsQueryOptions(scope))
+  const link = useIssuePasswordLink(scope, userId)
+  const [removingPassword, setRemovingPassword] = useState(false)
   if (conflictCode(identities.error) === "identity_lookup_off") return null
-  const count = identities.data?.length ?? 0
+  const hasPassword = hasPasswordFrom(password?.signInMethods)
+  const count = (identities.data?.length ?? 0) + (hasPassword ? 1 : 0)
   const own = userId === scope[2]
+  const managesPasswords =
+    password?.canHavePassword === true && passwordsOffered(methods.data)
   return (
     <SignInMethodsSection
+      action={
+        managesPasswords && hasPassword === false ? (
+          <div className="flex flex-col items-end gap-2">
+            <Button
+              disabled={link.pending}
+              onClick={link.issue}
+              size="sm"
+              variant="outline"
+            >
+              <PasswordLinkIcon aria-hidden="true" data-icon="inline-start" />
+              Password setup link
+            </Button>
+            {link.error ? (
+              <p
+                className="max-w-xs text-right text-body text-destructive"
+                role="alert"
+              >
+                {link.error}
+              </p>
+            ) : null}
+          </div>
+        ) : null
+      }
       emptyText="This person has no sign-in methods."
       errorText="This person's sign-in methods could not be loaded."
+      passwordRow={
+        hasPassword ? (
+          <PasswordRow
+            actions={
+              managesPasswords ? (
+                <PasswordRowMenu>
+                  <DropdownMenuItem
+                    disabled={link.pending}
+                    onClick={link.issue}
+                  >
+                    <PasswordLinkIcon aria-hidden="true" />
+                    Password reset link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setRemovingPassword(true)}
+                    variant="destructive"
+                  >
+                    <RemoveSignInMethodIcon aria-hidden="true" />
+                    Remove
+                  </DropdownMenuItem>
+                </PasswordRowMenu>
+              ) : null
+            }
+            error={link.error}
+          />
+        ) : null
+      }
       query={identities}
       renderActions={(identity) => (
         <RemoveSignInMethodAction
@@ -232,7 +381,76 @@ export function PersonSignInMethodsSection({
           removable={count > 1}
         />
       )}
-    />
+    >
+      <PasswordLinkDialog
+        link={link.link}
+        onClose={link.clear}
+        personName={own ? "yourself" : personName}
+      />
+      <RemovePasswordDialog
+        invalidate={[
+          crucibleKeys.userAdminDetail(scope, userId),
+          crucibleKeys.userSessions(scope, userId),
+          crucibleKeys.accountProfile(scope),
+        ]}
+        onOpenChange={setRemovingPassword}
+        open={removingPassword}
+        owner={{ kind: "person", name: personName }}
+        userId={userId}
+      />
+    </SignInMethodsSection>
+  )
+}
+
+function PasswordRowMenu({ children }: { children: React.ReactNode }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label="Actions for Password"
+            size="icon-sm"
+            variant="ghost"
+          />
+        }
+      >
+        <CredentialActionsIcon aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-48">
+        {children}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function PasswordRow({
+  actions,
+  error,
+}: {
+  actions: React.ReactNode
+  error?: React.ReactNode
+}) {
+  return (
+    <TableRow>
+      <TableCell className="w-full max-w-0 pl-(--card-spacing)">
+        <CredentialName
+          icon={<PasswordIcon aria-hidden="true" />}
+          name="Password"
+          subtitle={
+            error ? (
+              <span className="text-destructive" role="alert">
+                {error}
+              </span>
+            ) : undefined
+          }
+        />
+      </TableCell>
+      <TableCell className="hidden @xl:table-cell" kind="date" />
+      <TableCell className="hidden @md:table-cell" kind="date" />
+      <TableCell className="pr-(--card-spacing)" kind="action">
+        {actions}
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -241,6 +459,7 @@ function SignInMethodsSection({
   children,
   emptyText,
   errorText,
+  passwordRow,
   query,
   renderActions,
 }: {
@@ -248,6 +467,7 @@ function SignInMethodsSection({
   children?: React.ReactNode
   emptyText: string
   errorText: string
+  passwordRow?: React.ReactNode
   query: UseQueryResult<WorkspaceAccountIdentity[]>
   renderActions: (identity: WorkspaceAccountIdentity) => React.ReactNode
 }) {
@@ -270,7 +490,7 @@ function SignInMethodsSection({
         </SecuritySectionMessage>
       ) : query.isPending ? (
         <CredentialTablePending label="Loading sign-in methods" />
-      ) : query.data.length === 0 ? (
+      ) : query.data.length === 0 && !passwordRow ? (
         <SecuritySectionMessage>{emptyText}</SecuritySectionMessage>
       ) : (
         <Table aria-label="Sign-in methods">
@@ -289,6 +509,7 @@ function SignInMethodsSection({
             </TableRow>
           </TableHeader>
           <TableBody>
+            {passwordRow}
             {query.data.map((identity) => (
               <SignInMethodRow
                 actions={renderActions(identity)}
@@ -475,8 +696,10 @@ function RemoveSignInMethodAction({
 
 function AddSignInMethodMenu({
   methods,
+  onSetPassword,
 }: {
   methods: readonly SignInMethod[]
+  onSetPassword?: () => void
 }) {
   const [error, setError] = useState<React.ReactNode>()
   const mutation = useMutation({
@@ -534,6 +757,17 @@ function AddSignInMethodMenu({
                 {method.display_name}
               </DropdownMenuItem>
             ))}
+            {onSetPassword ? (
+              <DropdownMenuItem
+                onClick={() => {
+                  setError(undefined)
+                  onSetPassword()
+                }}
+              >
+                <PasswordIcon aria-hidden="true" />
+                Password
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

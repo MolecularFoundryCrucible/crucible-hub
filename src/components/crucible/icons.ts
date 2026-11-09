@@ -174,6 +174,9 @@ export {
   MonitorSmartphone as SignedInSessionIcon,
   Trash2 as RemoveSignInMethodIcon,
   BadgeCheck as VerifiedCredentialIcon,
+  RectangleEllipsis as PasswordIcon,
+  Pencil as ChangePasswordIcon,
+  Link as PasswordLinkIcon,
 } from "lucide-react"
 
 export type { IconNode } from "lucide-react"

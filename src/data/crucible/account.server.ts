@@ -123,6 +123,7 @@ function toWorkspaceAccount(account: {
   last_name: string
   orcid?: string | null
   orcid_verified?: boolean | null
+  sign_in_methods?: string[] | null
   unique_id: string
   username?: string | null
 }): WorkspaceAccount {
@@ -136,6 +137,7 @@ function toWorkspaceAccount(account: {
     last_name: account.last_name,
     orcid: account.orcid ?? null,
     orcid_verified: account.orcid_verified ?? null,
+    sign_in_methods: account.sign_in_methods ?? null,
     unique_id: account.unique_id,
     username: account.username ?? null,
   }

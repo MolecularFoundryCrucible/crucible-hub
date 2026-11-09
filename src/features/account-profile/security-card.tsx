@@ -9,7 +9,10 @@ import {
   AccountSignInMethodsSection,
   PersonSignInMethodsSection,
 } from "./account-sign-in-methods-card"
-import type { AccountLinkOutcome } from "./account-sign-in-methods-card"
+import type {
+  AccountLinkOutcome,
+  PersonPasswordState,
+} from "./account-sign-in-methods-card"
 import { ApiKeysSection } from "./api-keys-section"
 import { SessionsSection } from "./sessions-section"
 
@@ -57,11 +60,13 @@ export function AccountSecurityCard({
 
 export function PersonSecurityCard({
   canManageApiKeys,
+  password,
   personName,
   scope,
   userId,
 }: {
   canManageApiKeys: boolean
+  password?: PersonPasswordState
   personName: string
   scope: IdentityScope
   userId: string
@@ -69,6 +74,7 @@ export function PersonSecurityCard({
   return (
     <SecurityCard>
       <PersonSignInMethodsSection
+        password={password}
         personName={personName}
         scope={scope}
         userId={userId}

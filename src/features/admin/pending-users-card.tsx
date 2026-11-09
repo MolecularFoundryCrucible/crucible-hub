@@ -26,6 +26,7 @@ import {
 } from "@/data/crucible/user-approvals.functions"
 import { pendingUsersQueryOptions } from "@/data/crucible/user-approvals.queries"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
+import { formatSignInMethods } from "@/lib/sign-in-methods"
 
 const approvalErrors: Partial<Record<HubConflictCode, string>> = {
   not_pending: "This account is no longer waiting for approval.",
@@ -95,7 +96,10 @@ function PendingUserRow({
           <PersonIdentity person={user} />
         </Link>
         <span className="text-supporting text-muted-foreground">
-          {user.email ? `${user.email} · ` : null}
+          {user.email ? `${user.email} (not verified) · ` : null}
+          {user.sign_in_methods?.length
+            ? `Signs in with ${formatSignInMethods(user.sign_in_methods)} · `
+            : null}
           Requested <ActivityTime fallback="" value={user.pending_at} />
         </span>
       </div>

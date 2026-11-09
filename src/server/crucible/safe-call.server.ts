@@ -78,8 +78,20 @@ export async function safeCrucibleCall<T>(
   }
 }
 
+const valueIssueMessages: Record<ValueIssueKind, string> = {
+  invalid_number: "A number is not a valid finite value.",
+  unsupported_character: "A value contains a character Crucible cannot store.",
+  current_password_required: "Enter your current password.",
+  current_password_invalid: "That isn't your current password.",
+  password_too_short:
+    "Use a longer password. A few unrelated words make a strong password that is easy to remember.",
+  password_too_long: "Use a shorter password.",
+  password_common:
+    "This password is commonly used, so it is easy to guess. Choose another one.",
+  password_personal:
+    "Don't use your username, email address, name or the name of this service as your password.",
+}
+
 function valueIssueMessage(kind: ValueIssueKind) {
-  return kind === "invalid_number"
-    ? "A number is not a valid finite value."
-    : "A value contains a character Crucible cannot store."
+  return valueIssueMessages[kind]
 }

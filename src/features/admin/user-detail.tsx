@@ -81,6 +81,8 @@ import { resourceDisplayName } from "@/lib/resource-name"
 import { formatUsername } from "@/lib/username"
 import { PendingUserActions } from "@/features/admin/pending-users-card"
 import { PersonSecurityCard } from "@/features/account-profile/security-card"
+import { EmailValue } from "@/components/crucible/email-value"
+import { formatSignInMethods } from "@/lib/sign-in-methods"
 import { useAppForm } from "@/features/forms/app-form"
 
 const platformRoleDescriptions = {
@@ -171,6 +173,10 @@ export function UserDetailView({
         <UserProfileCard scope={scope} user={user} />
         <PersonSecurityCard
           canManageApiKeys={canManageApiKeys}
+          password={{
+            canHavePassword: !user.is_service_account && !user.pending_at,
+            signInMethods: user.sign_in_methods,
+          }}
           personName={personDisplayName(user)}
           scope={scope}
           userId={user.unique_id}
@@ -197,8 +203,11 @@ function PendingApprovalBanner({
             <Badge variant="warning">Waiting for approval</Badge>
           </span>
           <span className="text-supporting text-muted-foreground">
-            Requested <ActivityTime fallback="" value={user.pending_at} />. This
-            person can sign in once approved.
+            Requested <ActivityTime fallback="" value={user.pending_at} />
+            {user.sign_in_methods?.length
+              ? `, signs in with ${formatSignInMethods(user.sign_in_methods)}`
+              : null}
+            . This person can sign in once approved.
           </span>
         </div>
         <PendingUserActions
@@ -408,7 +417,9 @@ function UserProfileCard({
               <div className="col-span-2 min-w-0 @fields:col-span-1">
                 <dt className="text-label text-muted-foreground">Email</dt>
                 <dd className="mt-1 text-body break-words">
-                  {user.email || (
+                  {user.email ? (
+                    <EmailValue email={user.email} />
+                  ) : (
                     <span className="text-muted-foreground">None</span>
                   )}
                 </dd>

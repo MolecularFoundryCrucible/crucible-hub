@@ -5,11 +5,13 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   AccountSignInMethodsSection,
+  PersonSignInMethodsSection,
   addableSignInMethods,
 } from "./account-sign-in-methods-card"
 import type { AccountLinkOutcome } from "./account-sign-in-methods-card"
@@ -18,8 +20,14 @@ import {
   confirmWorkspaceAccountLinkFn,
   getPendingWorkspaceAccountLink,
   getWorkspaceAccountIdentities,
+  getWorkspaceUserIdentities,
   startWorkspaceAccountLinkFn,
 } from "@/data/crucible/account-identities.functions"
+import { getWorkspaceAccount } from "@/data/crucible/account.functions"
+import {
+  issueWorkspaceUserPasswordLinkFn,
+  setWorkspaceAccountPasswordFn,
+} from "@/data/crucible/passwords.functions"
 import { identityScope } from "@/data/crucible/query-keys"
 import { getHubSignInOptions } from "@/data/crucible/session.functions"
 import type { WorkspaceAccountIdentity } from "@/data/crucible/workspace-source"
@@ -29,8 +37,18 @@ vi.mock("@/data/crucible/account-identities.functions", () => ({
   confirmWorkspaceAccountLinkFn: vi.fn(),
   getPendingWorkspaceAccountLink: vi.fn(),
   getWorkspaceAccountIdentities: vi.fn(),
+  getWorkspaceUserIdentities: vi.fn(),
   removeWorkspaceAccountIdentityFn: vi.fn(),
+  removeWorkspaceUserIdentityFn: vi.fn(),
   startWorkspaceAccountLinkFn: vi.fn(),
+}))
+vi.mock("@/data/crucible/account.functions", () => ({
+  getWorkspaceAccount: vi.fn(),
+}))
+vi.mock("@/data/crucible/passwords.functions", () => ({
+  issueWorkspaceUserPasswordLinkFn: vi.fn(),
+  removeWorkspaceUserPasswordFn: vi.fn(),
+  setWorkspaceAccountPasswordFn: vi.fn(),
 }))
 vi.mock("@/data/crucible/session.functions", () => ({
   getHubSignInOptions: vi.fn(),
@@ -62,8 +80,38 @@ const labLogin: WorkspaceAccountIdentity = {
   verified_at: null,
 }
 
-const orcidMethod = { display_name: "ORCID", is_orcid: true, key: "orcid" }
-const labMethod = { display_name: "Berkeley Lab", is_orcid: false, key: "lbl" }
+const orcidMethod = {
+  display_name: "ORCID",
+  is_orcid: true,
+  key: "orcid",
+  kind: "oidc" as const,
+  registration_url: null,
+}
+const labMethod = {
+  ...orcidMethod,
+  display_name: "Berkeley Lab",
+  is_orcid: false,
+  key: "lbl",
+}
+const passwordMethod = {
+  ...orcidMethod,
+  display_name: "Password",
+  is_orcid: false,
+  key: "password",
+  kind: "password" as const,
+}
+
+function mockAccount(signInMethods: string[] | null) {
+  vi.mocked(getWorkspaceAccount).mockResolvedValue({
+    data: {
+      is_service_account: false,
+      sign_in_methods: signInMethods,
+      unique_id: "person-1",
+      username: "achen",
+    },
+    status: "ok",
+  } as never)
+}
 
 const ok = <T,>(data: T) => ({ status: "ok" as const, data })
 const failure = (kind: string, conflictCode?: string) => ({
@@ -112,6 +160,9 @@ describe("addableSignInMethods", () => {
       )
     ).toEqual([])
     expect(addableSignInMethods(null, [orcidLogin])).toEqual([])
+    expect(addableSignInMethods([passwordMethod, labMethod], [])).toEqual([
+      labMethod,
+    ])
   })
 })
 
@@ -122,6 +173,7 @@ describe("AccountSignInMethodsCard", () => {
       methods: [orcidMethod, labMethod],
       origin: null,
     })
+    mockAccount(null)
   })
   afterEach(cleanup)
 
@@ -300,5 +352,180 @@ describe("AccountSignInMethodsCard", () => {
       "Sign-in method not added",
       expect.stringContaining("didn't ask you to sign in again")
     )
+  })
+
+  it("sets a first password from the add menu", async () => {
+    vi.mocked(getHubSignInOptions).mockResolvedValue({
+      methods: [orcidMethod, passwordMethod],
+      origin: null,
+    })
+    mockAccount(["ORCID"])
+    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([orcidLogin]))
+    vi.mocked(setWorkspaceAccountPasswordFn).mockResolvedValue(ok(undefined))
+    renderCard()
+
+    fireEvent.click(await chooseFromMenu("Add sign-in method", "Password"))
+    const dialog = await screen.findByRole("dialog", { name: "Set a password" })
+    expect(screen.getByText(/sign in with your username, achen/)).toBeTruthy()
+    fireEvent.change(screen.getByLabelText("New password"), {
+      target: { value: "correct horse battery" },
+    })
+    fireEvent.change(screen.getByLabelText("Confirm new password"), {
+      target: { value: "correct horse battery" },
+    })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Set password" })
+    )
+    await waitFor(() =>
+      expect(vi.mocked(setWorkspaceAccountPasswordFn)).toHaveBeenCalledWith({
+        data: { newPassword: "correct horse battery" },
+      })
+    )
+  })
+
+  it("refuses mismatched passwords without asking the API", async () => {
+    vi.mocked(getHubSignInOptions).mockResolvedValue({
+      methods: [passwordMethod],
+      origin: null,
+    })
+    mockAccount([])
+    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([]))
+    renderCard()
+
+    fireEvent.click(await chooseFromMenu("Add sign-in method", "Password"))
+    const dialog = await screen.findByRole("dialog", { name: "Set a password" })
+    fireEvent.change(screen.getByLabelText("New password"), {
+      target: { value: "one long password" },
+    })
+    fireEvent.change(screen.getByLabelText("Confirm new password"), {
+      target: { value: "another long password" },
+    })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Set password" })
+    )
+    expect(await screen.findByText("The passwords don't match.")).toBeTruthy()
+    expect(vi.mocked(setWorkspaceAccountPasswordFn)).not.toHaveBeenCalled()
+  })
+
+  it("asks for the current password when the API says one exists", async () => {
+    vi.mocked(getHubSignInOptions).mockResolvedValue({
+      methods: [orcidMethod, passwordMethod],
+      origin: null,
+    })
+    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([orcidLogin]))
+    vi.mocked(setWorkspaceAccountPasswordFn).mockResolvedValueOnce({
+      status: "error",
+      error: {
+        correlationId: "test",
+        fieldErrors: { current_password: ["Enter your current password."] },
+        kind: "validation",
+        message: "Enter your current password.",
+        retryable: false,
+      },
+    })
+    renderCard()
+
+    fireEvent.click(await chooseFromMenu("Add sign-in method", "Password"))
+    const dialog = await screen.findByRole("dialog", { name: "Set a password" })
+    for (const label of ["New password", "Confirm new password"]) {
+      fireEvent.change(screen.getByLabelText(label), {
+        target: { value: "a new long password" },
+      })
+    }
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Set password" })
+    )
+    expect(
+      await screen.findByText("Enter your current password to change it.")
+    ).toBeTruthy()
+    expect(screen.getByRole("dialog", { name: "Change password" })).toBeTruthy()
+    expect(screen.getByLabelText("Current password")).toBeTruthy()
+  })
+
+  it("lists a password and offers to change it", async () => {
+    vi.mocked(getHubSignInOptions).mockResolvedValue({
+      methods: [orcidMethod, passwordMethod],
+      origin: null,
+    })
+    mockAccount(["password", "ORCID"])
+    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([orcidLogin]))
+    renderCard()
+
+    fireEvent.click(
+      await chooseFromMenu("Actions for Password", "Change password")
+    )
+    expect(
+      await screen.findByRole("dialog", { name: "Change password" })
+    ).toBeTruthy()
+    expect(screen.getByLabelText("Current password")).toBeTruthy()
+    cleanup()
+    renderCard()
+    const remove = await chooseFromMenu("Actions for ORCID", /Remove/)
+    expect(remove.getAttribute("aria-disabled")).toBeNull()
+  })
+})
+
+describe("PersonSignInMethodsSection passwords", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getHubSignInOptions).mockResolvedValue({
+      methods: [orcidMethod, passwordMethod],
+      origin: null,
+    })
+    vi.mocked(getWorkspaceUserIdentities).mockResolvedValue(ok([orcidLogin]))
+  })
+  afterEach(cleanup)
+
+  function renderPerson(signInMethods: string[]) {
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        <PersonSignInMethodsSection
+          password={{ canHavePassword: true, signInMethods }}
+          personName="Ada Chen"
+          scope={identityScope("server-1", "admin-1")}
+          userId="person-2"
+        />
+      </QueryClientProvider>
+    )
+  }
+
+  it("creates a setup link for someone without a password", async () => {
+    vi.mocked(issueWorkspaceUserPasswordLinkFn).mockResolvedValue(
+      ok({
+        expires_at: "2026-11-10T00:00:00Z",
+        purpose: "setup" as const,
+        url: "https://api.example.test/oauth/password-link#t",
+      })
+    )
+    renderPerson(["ORCID"])
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Password setup link" })
+    )
+    expect(
+      await screen.findByRole("dialog", { name: "Password setup link" })
+    ).toBeTruthy()
+    expect(
+      screen.getByDisplayValue("https://api.example.test/oauth/password-link#t")
+    ).toBeTruthy()
+    expect(
+      screen.getByText(/Send this link to Ada Chen privately/)
+    ).toBeTruthy()
+  })
+
+  it("offers a reset link and removal for someone with a password", async () => {
+    renderPerson(["password", "ORCID"])
+
+    expect(
+      await chooseFromMenu("Actions for Password", "Password reset link")
+    ).toBeTruthy()
+    expect(screen.getByRole("menuitem", { name: "Remove" })).toBeTruthy()
+    expect(
+      screen.queryByRole("button", { name: "Password setup link" })
+    ).toBeNull()
   })
 })

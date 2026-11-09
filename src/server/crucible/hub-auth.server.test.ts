@@ -431,12 +431,53 @@ describe("hub login exchange", () => {
       )
       vi.stubGlobal("fetch", fetch)
       await expect(hubSignInMethods()).resolves.toEqual([
-        { key: "orcid", display_name: "ORCID", is_orcid: true },
-        { key: "lbl", display_name: "Berkeley Lab", is_orcid: false },
+        {
+          key: "orcid",
+          display_name: "ORCID",
+          is_orcid: true,
+          kind: "oidc",
+          registration_url: null,
+        },
+        {
+          key: "lbl",
+          display_name: "Berkeley Lab",
+          is_orcid: false,
+          kind: "oidc",
+          registration_url: null,
+        },
       ])
       expect(String((fetch.mock.calls[0] as unknown[])[0])).toBe(
         "https://api.example.test/auth/methods"
       )
+    })
+
+    it("keeps the password entry and only a web registration address", async () => {
+      stubHubAuthEnv()
+      const password = {
+        key: "password",
+        display_name: "Password",
+        is_orcid: false,
+        kind: "password",
+      }
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () =>
+          Response.json([
+            {
+              ...password,
+              registration_url: "https://api.example.test/oauth/register",
+            },
+            { ...password, key: "other", registration_url: "javascript:x" },
+          ])
+        )
+      )
+      await expect(hubSignInMethods()).resolves.toEqual([
+        {
+          ...password,
+          registration_url: "https://api.example.test/oauth/register",
+        },
+        { ...password, key: "other", registration_url: null },
+      ])
     })
 
     it.each([

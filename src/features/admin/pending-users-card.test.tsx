@@ -37,6 +37,7 @@ const waiting: WorkspaceAdminUser = {
   is_service_account: false,
   last_name: "Rivera",
   pending_at: "2026-11-05T10:00:00Z",
+  sign_in_methods: ["password"],
   unique_id: "01JBQ0000000000000000000JR",
   username: "jo.rivera",
 }
@@ -96,7 +97,11 @@ describe("PendingUsersCard", () => {
     renderCard()
 
     expect(await screen.findByText("Waiting for approval")).toBeTruthy()
-    expect(screen.getByText(/jo\.rivera@example\.invalid/)).toBeTruthy()
+    expect(
+      screen.getByText(
+        /jo\.rivera@example\.invalid \(not verified\) · Signs in with Password/
+      )
+    ).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Approve" }))
     await waitFor(() =>
       expect(vi.mocked(approveWorkspaceUserFn)).toHaveBeenCalledWith({

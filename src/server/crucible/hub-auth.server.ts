@@ -429,9 +429,25 @@ const signInMethodsSchema = z
       key: z.string().min(1).max(64),
       display_name: z.string().min(1).max(80),
       is_orcid: z.boolean(),
+      kind: z.enum(["oidc", "password"]).catch("oidc").default("oidc"),
+      registration_url: z
+        .string()
+        .max(2048)
+        .refine(isWebUrl)
+        .nullish()
+        .catch(null)
+        .transform((value) => value ?? null),
     })
   )
   .max(10)
+
+function isWebUrl(value: string) {
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol)
+  } catch {
+    return false
+  }
+}
 
 export type HubSignInMethod = z.infer<typeof signInMethodsSchema>[number]
 
