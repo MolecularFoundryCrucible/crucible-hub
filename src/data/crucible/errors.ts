@@ -39,6 +39,9 @@ export type HubConflictCode =
   | "account_pending"
   | "feature_disabled"
   | "lead_must_be_caller"
+  | "filename_exists"
+  | "filename_immutable"
+  | "pending_deletion"
 
 export type HubApiError = {
   kind: HubApiErrorKind

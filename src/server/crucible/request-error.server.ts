@@ -44,6 +44,9 @@ function readConflictCode(body: unknown) {
 
 const hubConflictCodes = new Set<string>([
   "lead_must_be_caller",
+  "filename_exists",
+  "filename_immutable",
+  "pending_deletion",
   "storage_location_invalid",
   "replace_in_progress",
   "file_changed",

@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- People who can edit a dataset can rename its stored files from the file's menu on Overview. A name already used in the dataset, a file stored outside Crucible, or a dataset with a deletion request each get their own message.
 - Creating a project makes you its lead; only an administrator in Administrator view can choose someone else, as Crucible API 4.0.0 requires. A refused lead explains that leadership can be transferred from the project's Manage tab afterwards.
 - On a Crucible server with uploads switched off, each file in the upload list now says File uploads aren't turned on for this Crucible server.
 - The Processing tab of a dataset lists its post-processing runs, refreshing while one is queued or running, and people who can edit the dataset can start a pipeline from Run pipeline. Fixed lists and pages retrying errors that cannot succeed, such as no permission or not found, which delayed the error by several seconds.
